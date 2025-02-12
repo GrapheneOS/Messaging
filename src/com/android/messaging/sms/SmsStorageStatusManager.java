@@ -67,7 +67,7 @@ public class SmsStorageStatusManager {
                 .getPendingIntentForLowStorageNotifications(context);
 
         final NotificationCompat.Builder builder =
-                new NotificationCompat.Builder(context, NotificationChannelUtil.ALERTS);
+                new NotificationCompat.Builder(context, NotificationChannelUtil.ALERTS_CHANNEL);
         builder.setContentTitle(resources.getString(R.string.sms_storage_low_title))
                 .setTicker(resources.getString(R.string.sms_storage_low_notification_ticker))
                 .setSmallIcon(R.drawable.ic_failed_light)

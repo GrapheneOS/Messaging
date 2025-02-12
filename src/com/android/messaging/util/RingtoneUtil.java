@@ -15,6 +15,7 @@
  */
 package com.android.messaging.util;
 
+import android.app.NotificationChannel;
 import android.content.Context;
 import android.net.Uri;
 import android.provider.Settings;
@@ -30,7 +31,7 @@ public class RingtoneUtil {
      * @param ringtoneString is the ringtone to resolve
      * @return the Uri of the ringtone or the fallback ringtone
      */
-    public static Uri getNotificationRingtoneUri(String ringtoneString) {
+    public static Uri getNotificationRingtoneUri(String conversationId, String ringtoneString) {
         if (ringtoneString == null) {
             // No override specified, fall back to system-wide setting.
             final BuglePrefs prefs = BuglePrefs.getApplicationPrefs();
@@ -39,7 +40,11 @@ public class RingtoneUtil {
             ringtoneString = prefs.getString(prefKey, null);
         }
 
-        if (!TextUtils.isEmpty(ringtoneString)) {
+        NotificationChannel channel =
+                NotificationChannelUtil.INSTANCE.getConversationChannel(conversationId);
+        if (channel != null) {
+            return channel.getSound();
+        } else if (!TextUtils.isEmpty(ringtoneString)) {
             // We have set a value, even if it is the default Uri at some point
             return Uri.parse(ringtoneString);
         } else if (ringtoneString == null) {

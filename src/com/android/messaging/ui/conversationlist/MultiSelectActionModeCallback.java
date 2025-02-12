@@ -38,8 +38,6 @@ public class MultiSelectActionModeCallback implements Callback {
         void onActionBarDelete(Collection<SelectedConversation> conversations);
         void onActionBarArchive(Iterable<SelectedConversation> conversations,
                 boolean isToArchive);
-        void onActionBarNotification(Iterable<SelectedConversation> conversations,
-                boolean isNotificationOn);
         void onActionBarAddContact(final SelectedConversation conversation);
         void onActionBarBlock(final SelectedConversation conversation);
         void onActionBarHome();
@@ -73,8 +71,6 @@ public class MultiSelectActionModeCallback implements Callback {
     private MenuItem mUnarchiveMenuItem;
     private MenuItem mAddContactMenuItem;
     private MenuItem mBlockMenuItem;
-    private MenuItem mNotificationOnMenuItem;
-    private MenuItem mNotificationOffMenuItem;
     private boolean mHasInflated;
 
     public MultiSelectActionModeCallback(final Listener listener) {
@@ -90,8 +86,6 @@ public class MultiSelectActionModeCallback implements Callback {
         mUnarchiveMenuItem = menu.findItem(R.id.action_unarchive);
         mAddContactMenuItem = menu.findItem(R.id.action_add_contact);
         mBlockMenuItem = menu.findItem(R.id.action_block);
-        mNotificationOffMenuItem = menu.findItem(R.id.action_notification_off);
-        mNotificationOnMenuItem = menu.findItem(R.id.action_notification_on);
         mHasInflated = true;
         updateActionIconsVisiblity();
         return true;
@@ -115,14 +109,6 @@ public class MultiSelectActionModeCallback implements Callback {
         }
         if (itemId == R.id.action_unarchive) {
             mListener.onActionBarArchive(mSelectedConversations.values(), false);
-            return true;
-        }
-        if (itemId == R.id.action_notification_off) {
-            mListener.onActionBarNotification(mSelectedConversations.values(), false);
-            return true;
-        }
-        if (itemId == R.id.action_notification_on) {
-            mListener.onActionBarNotification(mSelectedConversations.values(), true);
             return true;
         }
         if (itemId == R.id.action_add_contact) {
@@ -215,10 +201,6 @@ public class MultiSelectActionModeCallback implements Callback {
                 break;
             }
         }
-        // If we have notification off conversations we show on button, if we have notification on
-        // conversation we show off button. We can show both if we have a mixture.
-        mNotificationOffMenuItem.setVisible(hasCurrentlyOnNotification);
-        mNotificationOnMenuItem.setVisible(hasCurrentlyOffNotification);
 
         mArchiveMenuItem.setVisible(hasCurrentlyUnarchived);
         mUnarchiveMenuItem.setVisible(hasCurrentlyArchived);

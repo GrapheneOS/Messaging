@@ -984,6 +984,6 @@
     <string name="disallow_emergency_call">Can\'t make a voice call to emergency services here.</string>
 
     <!-- Notification channel labels -->
-    <string name="conversations_channel">Conversations</string>
+    <string name="incoming_messages_channel">Incoming messages</string>
     <string name="alerts_channel">Alerts</string>
 </resources>

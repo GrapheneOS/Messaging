@@ -89,11 +89,8 @@ public class ApplicationSettingsActivity extends BugleActionBarActivity {
     public static class ApplicationSettingsFragment extends PreferenceFragment implements
             OnSharedPreferenceChangeListener {
 
-        private String mNotificationsEnabledPreferenceKey;
-        private TwoStatePreference mNotificationsEnabledPreference;
-        private String mRingtonePreferenceKey;
-        private RingtonePreference mRingtonePreference;
-        private Preference mVibratePreference;
+        private String mNotificationsPrefKey;
+        private Preference mNotificationsPreference;
         private String mSmsDisabledPrefKey;
         private Preference mSmsDisabledPreference;
         private String mSmsEnabledPrefKey;
@@ -111,22 +108,21 @@ public class ApplicationSettingsActivity extends BugleActionBarActivity {
             getPreferenceManager().setSharedPreferencesName(BuglePrefs.SHARED_PREFERENCES_NAME);
             addPreferencesFromResource(R.xml.preferences_application);
 
-            mNotificationsEnabledPreferenceKey =
-                    getString(R.string.notifications_enabled_pref_key);
-            mNotificationsEnabledPreference = (TwoStatePreference) findPreference(
-                    mNotificationsEnabledPreferenceKey);
-            mRingtonePreferenceKey = getString(R.string.notification_sound_pref_key);
-            mRingtonePreference = (RingtonePreference) findPreference(mRingtonePreferenceKey);
-            mVibratePreference = findPreference(
-                    getString(R.string.notification_vibration_pref_key));
+            mNotificationsPrefKey = getString(R.string.notifications_category_pref_key);
+            mNotificationsPreference = findPreference(mNotificationsPrefKey);
             mSmsDisabledPrefKey = getString(R.string.sms_disabled_pref_key);
             mSmsDisabledPreference = findPreference(mSmsDisabledPrefKey);
             mSmsEnabledPrefKey = getString(R.string.sms_enabled_pref_key);
             mSmsEnabledPreference = findPreference(mSmsEnabledPrefKey);
             mIsSmsPreferenceClicked = false;
 
-            final SharedPreferences prefs = getPreferenceScreen().getSharedPreferences();
-            updateSoundSummary(prefs);
+            mNotificationsPreference.setOnPreferenceClickListener(preference -> {
+                Intent intent = new Intent()
+                        .setAction(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                        .putExtra(Settings.EXTRA_APP_PACKAGE, getContext().getPackageName());
+                getContext().startActivity(intent);
+                return false;
+            });
 
             if (!DebugUtils.isDebugEnabled()) {
                 final Preference debugCategory = findPreference(getString(
@@ -174,35 +170,6 @@ public class ApplicationSettingsActivity extends BugleActionBarActivity {
             return super.onPreferenceTreeClick(preferenceScreen, preference);
         }
 
-        private void updateSoundSummary(final SharedPreferences sharedPreferences) {
-            // The silent ringtone just returns an empty string
-            String ringtoneName = mRingtonePreference.getContext().getString(
-                    R.string.silent_ringtone);
-
-            String ringtoneString = sharedPreferences.getString(mRingtonePreferenceKey, null);
-
-            // Bootstrap the default setting in the preferences so that we have a valid selection
-            // in the dialog the first time that the user opens it.
-            if (ringtoneString == null) {
-                ringtoneString = Settings.System.DEFAULT_NOTIFICATION_URI.toString();
-                final SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putString(mRingtonePreferenceKey, ringtoneString);
-                editor.apply();
-            }
-
-            if (!TextUtils.isEmpty(ringtoneString)) {
-                final Uri ringtoneUri = Uri.parse(ringtoneString);
-                final Ringtone tone = RingtoneManager.getRingtone(mRingtonePreference.getContext(),
-                        ringtoneUri);
-
-                if (tone != null) {
-                    ringtoneName = tone.getTitle(mRingtonePreference.getContext());
-                }
-            }
-
-            mRingtonePreference.setSummary(ringtoneName);
-        }
-
         private void updateSmsEnabledPreferences() {
             final String defaultSmsAppLabel = getString(R.string.default_sms_app,
                     PhoneUtils.getDefault().getDefaultSmsAppLabel());
@@ -229,14 +196,8 @@ public class ApplicationSettingsActivity extends BugleActionBarActivity {
                 getPreferenceScreen().removePreference(mSmsEnabledPreference);
                 mSmsDisabledPreference.setSummary(defaultSmsAppLabel);
             }
-            updateNotificationsPreferences();
 
             mIsSmsPreferenceClicked = false;
-        }
-
-        private void updateNotificationsPreferences() {
-            final boolean canNotify = PhoneUtils.getDefault().isDefaultSmsApp();
-            mNotificationsEnabledPreference.setEnabled(canNotify);
         }
 
         @Override
@@ -252,17 +213,11 @@ public class ApplicationSettingsActivity extends BugleActionBarActivity {
         public void onResume() {
             super.onResume();
             updateSmsEnabledPreferences();
-            updateNotificationsPreferences();
         }
 
         @Override
         public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences,
                 final String key) {
-            if (key.equals(mNotificationsEnabledPreferenceKey)) {
-                updateNotificationsPreferences();
-            } else if (key.equals(mRingtonePreferenceKey)) {
-                updateSoundSummary(sharedPreferences);
-            }
         }
 
         @Override

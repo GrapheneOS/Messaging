@@ -185,7 +185,7 @@ public final class SmsReceiver extends BroadcastReceiver {
                 .getPendingIntentForSecondaryUserNewMessageNotification(context);
 
         final NotificationCompat.Builder builder =
-                new NotificationCompat.Builder(context, NotificationChannelUtil.CONVERSATIONS);
+                new NotificationCompat.Builder(context, NotificationChannelUtil.INCOMING_MESSAGES);
         builder.setContentTitle(resources.getString(R.string.secondary_user_new_message_title))
                 .setTicker(resources.getString(R.string.secondary_user_new_message_ticker))
                 .setSmallIcon(R.drawable.ic_sms_light)
