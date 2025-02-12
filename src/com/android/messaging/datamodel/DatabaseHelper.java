@@ -114,7 +114,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         /* Last read message timestamp */
         public static final String LAST_READ_TIMESTAMP = "last_read_timestamp";
 
-        /* Avatar for the conversation. Could be for group of individual */
+        /* Avatar for the conversation. Could be for group or individual */
         public static final String ICON = "icon";
 
         /* Participant contact ID if this conversation has a single participant. -1 otherwise */

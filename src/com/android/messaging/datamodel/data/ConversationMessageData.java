@@ -26,6 +26,8 @@ import com.android.messaging.datamodel.DatabaseHelper;
 import com.android.messaging.datamodel.DatabaseHelper.MessageColumns;
 import com.android.messaging.datamodel.DatabaseHelper.PartColumns;
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns;
+import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns;
+import com.android.messaging.datamodel.data.ConversationListItemData.ConversationListViewColumns;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.BugleGservices;
 import com.android.messaging.util.BugleGservicesKeys;
@@ -75,6 +77,7 @@ public class ConversationMessageData {
     private long mSenderContactId;
     private String mSenderContactLookupKey;
     private String mSelfParticipantId;
+    private String mIcon;
 
     /** Are we similar enough to the previous/next messages that we can cluster them? */
     private boolean mCanClusterWithPreviousMessage;
@@ -87,6 +90,7 @@ public class ConversationMessageData {
         mMessageId = cursor.getString(INDEX_MESSAGE_ID);
         mConversationId = cursor.getString(INDEX_CONVERSATION_ID);
         mParticipantId = cursor.getString(INDEX_PARTICIPANT_ID);
+        mIcon = cursor.getString(INDEX_ICON);
         mPartsCount = cursor.getInt(INDEX_PARTS_COUNT);
 
         mParts = makeParts(
@@ -513,6 +517,10 @@ public class ConversationMessageData {
         return mSelfParticipantId;
     }
 
+    public final String getIconUri() {
+        return mIcon;
+    }
+
     public boolean getIsIncoming() {
         return (mStatus >= MessageData.BUGLE_STATUS_FIRST_INCOMING);
     }
@@ -711,6 +719,9 @@ public class ConversationMessageData {
             + DatabaseHelper.MESSAGES_TABLE + '.' + MessageColumns.SENDER_PARTICIPANT_ID
             + " as " + ConversationMessageViewColumns.PARTICIPANT_ID + ", "
 
+            + DatabaseHelper.CONVERSATIONS_TABLE + '.' + ConversationColumns.ICON
+            + " as " + ConversationListViewColumns.ICON + ", "
+
             + makeCaseWhenString(PartColumns._ID, false,
                     ConversationMessageViewColumns.PARTS_IDS) + ", "
             + makeCaseWhenString(PartColumns.CONTENT_TYPE, true,
@@ -776,6 +787,9 @@ public class ConversationMessageData {
             + " LEFT JOIN " + DatabaseHelper.PARTICIPANTS_TABLE
             + " ON (" + DatabaseHelper.MESSAGES_TABLE + '.' +  MessageColumns.SENDER_PARTICIPANT_ID
             + '=' + DatabaseHelper.PARTICIPANTS_TABLE + '.' + ParticipantColumns._ID + ")"
+            + " LEFT JOIN " + DatabaseHelper.CONVERSATIONS_TABLE
+            + " ON (" + DatabaseHelper.MESSAGES_TABLE + '.' + MessageColumns.CONVERSATION_ID
+            + '=' + DatabaseHelper.CONVERSATIONS_TABLE + '.' + ConversationColumns._ID + ")"
             // Exclude draft messages from main view
             + " WHERE (" + DatabaseHelper.MESSAGES_TABLE + "." + MessageColumns.STATUS
             + " <> " + MessageData.BUGLE_STATUS_OUTGOING_DRAFT;
@@ -811,6 +825,7 @@ public class ConversationMessageData {
         static final String _ID = MessageColumns._ID;
         static final String CONVERSATION_ID = MessageColumns.CONVERSATION_ID;
         static final String PARTICIPANT_ID = MessageColumns.SENDER_PARTICIPANT_ID;
+        static final String ICON = ConversationColumns.ICON;
         static final String PARTS_COUNT = "parts_count";
         static final String SENT_TIMESTAMP = MessageColumns.SENT_TIMESTAMP;
         static final String RECEIVED_TIMESTAMP = MessageColumns.RECEIVED_TIMESTAMP;
@@ -847,6 +862,8 @@ public class ConversationMessageData {
     private static final int INDEX_CONVERSATION_ID               = sIndexIncrementer++;
     private static final int INDEX_PARTICIPANT_ID                = sIndexIncrementer++;
 
+    private static final int INDEX_ICON                          = sIndexIncrementer++;
+
     private static final int INDEX_PARTS_IDS                     = sIndexIncrementer++;
     private static final int INDEX_PARTS_CONTENT_TYPES           = sIndexIncrementer++;
     private static final int INDEX_PARTS_CONTENT_URIS            = sIndexIncrementer++;
@@ -882,6 +899,8 @@ public class ConversationMessageData {
         ConversationMessageViewColumns._ID,
         ConversationMessageViewColumns.CONVERSATION_ID,
         ConversationMessageViewColumns.PARTICIPANT_ID,
+
+        ConversationMessageViewColumns.ICON,
 
         ConversationMessageViewColumns.PARTS_IDS,
         ConversationMessageViewColumns.PARTS_CONTENT_TYPES,
