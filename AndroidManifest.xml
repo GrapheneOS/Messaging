@@ -435,6 +435,10 @@
             android:exported="false">
         </receiver>
 
+        <!-- Broadcast receiver that will be notified to mark messages as read -->
+        <receiver android:name=".receiver.ConversationReadReceiver"
+            android:exported="false" />
+
         <!-- Broadcast receiver that will be notified for ActionService alarms. -->
         <receiver
             android:name=".datamodel.action.ActionServiceImpl$PendingActionReceiver"
