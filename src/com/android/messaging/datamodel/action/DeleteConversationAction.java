@@ -35,6 +35,7 @@ import com.android.messaging.datamodel.MessagingContentProvider;
 import com.android.messaging.sms.MmsUtils;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.LogUtil;
+import com.android.messaging.util.NotificationChannelUtil;
 import com.android.messaging.widget.WidgetConversationProvider;
 
 import java.util.ArrayList;
@@ -73,6 +74,8 @@ public class DeleteConversationAction extends Action implements Parcelable {
         final String conversationId = actionParameters.getString(KEY_CONVERSATION_ID);
         final long cutoffTimestamp = actionParameters.getLong(KEY_CUTOFF_TIMESTAMP);
 
+        NotificationChannelUtil.INSTANCE.deleteChannel(conversationId);
+
         if (!TextUtils.isEmpty(conversationId)) {
             // First find the thread id for this conversation.
             final long threadId = BugleDatabaseOperations.getThreadId(db, conversationId);
@@ -82,10 +85,6 @@ public class DeleteConversationAction extends Action implements Parcelable {
                         + conversationId);
 
                 BugleActionToasts.onConversationDeleted();
-
-                // Remove notifications if necessary
-                BugleNotifications.update(true /* silent */, null /* conversationId */,
-                        BugleNotifications.UPDATE_MESSAGES);
 
                 // We have changed the conversation list
                 MessagingContentProvider.notifyConversationListChanged();

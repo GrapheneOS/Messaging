@@ -29,6 +29,7 @@ import com.android.messaging.datamodel.DatabaseWrapper;
 import com.android.messaging.datamodel.MessagingContentProvider;
 import com.android.messaging.sms.MmsUtils;
 import com.android.messaging.util.LogUtil;
+import com.android.messaging.util.PendingIntentConstants;
 
 /**
  * Action used to mark all the messages in a conversation as read
@@ -85,7 +86,7 @@ public class MarkAsReadAction extends Action implements Parcelable {
         }
         // After marking messages as read, update the notifications. This will
         // clear the now stale notifications.
-        BugleNotifications.update(false/*silent*/, BugleNotifications.UPDATE_ALL);
+        BugleNotifications.cancel(PendingIntentConstants.SMS_NOTIFICATION_ID, conversationId);
         return null;
     }
 

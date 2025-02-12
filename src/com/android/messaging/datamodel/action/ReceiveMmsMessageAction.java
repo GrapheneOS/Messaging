@@ -136,8 +136,7 @@ public class ReceiveMmsMessageAction extends Action implements Parcelable {
                 MessagingContentProvider.notifyPartsChanged();
 
                 // Show a notification to let the user know a new message has arrived
-                BugleNotifications.update(false/*silent*/, conversationId,
-                        BugleNotifications.UPDATE_ALL);
+                BugleNotifications.update(conversationId, BugleNotifications.UPDATE_ALL);
 
                 // Send the NotifyRespInd with DEFERRED status since no auto download
                 actionParameters.putString(KEY_TRANSACTION_ID, mms.mTransactionId);

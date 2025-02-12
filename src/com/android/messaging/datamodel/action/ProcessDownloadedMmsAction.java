@@ -382,7 +382,7 @@ public class ProcessDownloadedMmsAction extends Action {
             ProcessPendingMessagesAction.scheduleProcessPendingMessagesAction(failed, this);
         }
         if (failed) {
-            BugleNotifications.update(false, BugleNotifications.UPDATE_ERRORS);
+            BugleNotifications.update(BugleNotifications.UPDATE_ERRORS);
         }
 
         return message;
@@ -547,7 +547,7 @@ public class ProcessDownloadedMmsAction extends Action {
         }
 
         // Show a notification to let the user know a new message has arrived
-        BugleNotifications.update(false /*silent*/, conversationId, BugleNotifications.UPDATE_ALL);
+        BugleNotifications.update(conversationId, BugleNotifications.UPDATE_ALL);
 
         // Messages may have changed in two conversations
         if (conversationId != null) {

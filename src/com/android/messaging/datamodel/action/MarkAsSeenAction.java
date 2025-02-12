@@ -27,7 +27,9 @@ import com.android.messaging.datamodel.DatabaseHelper;
 import com.android.messaging.datamodel.DatabaseHelper.MessageColumns;
 import com.android.messaging.datamodel.DatabaseWrapper;
 import com.android.messaging.datamodel.MessagingContentProvider;
+import com.android.messaging.util.Assert;
 import com.android.messaging.util.LogUtil;
+import com.android.messaging.util.PendingIntentConstants;
 
 /**
  * Action used to mark all messages as seen
@@ -98,7 +100,7 @@ public class MarkAsSeenAction extends Action implements Parcelable {
         }
         // After marking messages as seen, update the notifications. This will
         // clear the now stale notifications.
-        BugleNotifications.update(false/*silent*/, BugleNotifications.UPDATE_ALL);
+        BugleNotifications.cancel(PendingIntentConstants.SMS_NOTIFICATION_ID, conversationId);
         return null;
     }
 
