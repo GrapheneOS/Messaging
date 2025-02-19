@@ -327,6 +327,10 @@
                   android:grantUriPermissions="true"
                   android:exported="false" />
 
+        <provider android:name=".datamodel.SharedMemoryImageProvider"
+            android:authorities="${applicationId}.datamodel.SharedMemoryImageProvider"
+            android:grantUriPermissions="true"
+            android:exported="false" />
 
         <!-- Action Services -->
         <service android:name=".datamodel.action.ActionServiceImpl"
