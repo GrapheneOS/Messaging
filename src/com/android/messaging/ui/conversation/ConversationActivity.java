@@ -185,6 +185,11 @@ public class ConversationActivity extends BugleActionBarActivity
         } else if (conversation != null && mUiState.shouldShowConversationFragment()) {
             conversation.updateActionBar(actionBar);
         }
+
+        if (isLaunchedFromBubble()) {
+            actionBar.setHomeButtonEnabled(false);
+            actionBar.setDisplayHomeAsUpEnabled(false);
+        }
     }
 
     @Override
