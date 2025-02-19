@@ -127,7 +127,7 @@ public class NoConfirmationSmsSendService extends IntentService {
                 }
                 InsertNewMessageAction.insertNewMessage(messageData);
             }
-            UpdateMessageNotificationAction.updateMessageNotification();
+            BugleNotifications.updateWithInlineReply(conversationId, message);
         }
     }
 

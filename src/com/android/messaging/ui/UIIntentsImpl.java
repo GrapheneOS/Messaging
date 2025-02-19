@@ -44,6 +44,7 @@ import com.android.messaging.datamodel.MessagingContentProvider;
 import com.android.messaging.datamodel.data.MessageData;
 import com.android.messaging.datamodel.data.MessagePartData;
 import com.android.messaging.datamodel.data.ParticipantData;
+import com.android.messaging.receiver.ConversationReadReceiver;
 import com.android.messaging.receiver.NotificationReceiver;
 import com.android.messaging.sms.MmsSmsUtils;
 import com.android.messaging.ui.appsettings.ApplicationSettingsActivity;
@@ -392,6 +393,17 @@ public class UIIntentsImpl extends UIIntents {
     }
 
     @Override
+    public Intent getShortcutIntentForConversationActivity(final Context context,
+                                                           final String conversationId) {
+        Intent conversationActivityIntent = UIIntents.get().getIntentForConversationActivity(
+                context, conversationId, null);
+        conversationActivityIntent.setData(
+                MessagingContentProvider.buildConversationMetadataUri(conversationId));
+        conversationActivityIntent.setAction(Intent.ACTION_VIEW);
+        return conversationActivityIntent;
+    }
+
+    @Override
     public Intent getIntentForConversationActivity(final Context context,
             final String conversationId, final MessageData draft) {
         final Intent intent = getConversationActivityIntent(context, conversationId, draft,
@@ -574,5 +586,14 @@ public class UIIntentsImpl extends UIIntents {
         configureIntent.setData(Uri.parse(configureIntent.toUri(Intent.URI_INTENT_SCHEME)));
         configureIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_HISTORY);
         return getPendingIntentWithParentStack(context, configureIntent, 0);
+    }
+
+    @Override
+    public PendingIntent getPendingIntentForMarkingAsRead(Context context, String conversationId) {
+        final Intent intent = new Intent(context, ConversationReadReceiver.class);
+        intent.setAction(ACTION_MESSAGE_READ);
+        intent.putExtra(UI_INTENT_EXTRA_CONVERSATION_ID, conversationId);
+        intent.setIdentifier(conversationId);
+        return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
     }
 }

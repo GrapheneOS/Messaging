@@ -107,6 +107,8 @@ public abstract class UIIntents {
     // Message position to scroll to.
     public static final String UI_INTENT_EXTRA_MESSAGE_POSITION = "message_position";
 
+    public static final String ACTION_MESSAGE_READ = "com.android.messaging.action.MESSAGE_READ";
+
     /**
      * Launch the permission check activity
      */
@@ -306,6 +308,12 @@ public abstract class UIIntents {
             final String conversationId, final MessageData draft);
 
     /**
+     * Get an Intent for showing a conversation from notification bubble or shortcut.
+     */
+    public abstract Intent getShortcutIntentForConversationActivity(
+            final Context context, final String conversationId);
+
+    /**
      * Get an Intent for showing a conversation from the widget.
      */
     public abstract Intent getIntentForConversationActivity(final Context context,
@@ -372,5 +380,11 @@ public abstract class UIIntents {
      */
     public abstract PendingIntent getWidgetPendingIntentForConfigurationActivity(
             final Context context, final int appWidgetId);
+
+    /**
+     * Get a PendingIntent for marking a conversation as read.
+     */
+    public abstract PendingIntent getPendingIntentForMarkingAsRead(
+            final Context context, final String conversationId);
 
 }

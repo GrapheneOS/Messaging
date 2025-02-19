@@ -193,4 +193,6 @@
     <dimen name="directory_header_padding_bottom">8dp</dimen>
     <dimen name="directory_header_text_size">14sp</dimen>
 
+    <dimen name="max_bubbled_activity_height">600dp</dimen>
+
 </resources>

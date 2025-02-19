@@ -990,4 +990,6 @@
     <!-- Notification channel labels -->
     <string name="incoming_messages_channel">Incoming messages</string>
     <string name="alerts_channel">Alerts</string>
+
+    <string name="mark_as_read">Mark as read</string>
 </resources>

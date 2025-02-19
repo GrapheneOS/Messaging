@@ -336,6 +336,32 @@ public class BugleNotifications {
                 conversation.mNotificationVibrate
         );
 
+        if (conversation.mIsGroup) {
+            Person groupPerson = createGroupPerson(context, conversation);
+            setUpShortcuts(context, conversation, notifBuilder, groupPerson);
+        } else {
+            setUpShortcuts(context, conversation, notifBuilder, latestPerson);
+        }
+
+        final PendingIntent markAsReadPendingIntent =
+                UIIntents.get().getPendingIntentForMarkingAsRead(context, conversationId);
+        final NotificationCompat.Action markAsReadActionBuilder =
+                new NotificationCompat.Action.Builder(0,
+                        context.getString(R.string.mark_as_read), markAsReadPendingIntent).build();
+        notifBuilder.addAction(markAsReadActionBuilder);
+
+        final String selfId = conversation.mSelfParticipantId;
+
+        final boolean requiresMms =
+                MmsSmsUtils.getRequireMmsForEmailAddress(
+                        conversation.mIncludeEmailAddress, conversation.mSubId) ||
+                        (conversation.mIsGroup && MmsUtils.groupMmsEnabled(conversation.mSubId));
+
+        final int requestCode = state.getReplyIntentRequestCode();
+        final PendingIntent replyPendingIntent = UIIntents.get()
+                .getPendingIntentForSendingMessageToConversation(context,
+                        conversationId, selfId, requiresMms, requestCode);
+
         final NotificationCompat.Action.Builder replyActionBuilder =
                 new NotificationCompat.Action.Builder(0,
                         context.getString(R.string.notification_reply_prompt), replyPendingIntent);
@@ -512,6 +538,51 @@ public class BugleNotifications {
                         .notify(tag, PendingIntentConstants.SMS_NOTIFICATION_ID, recoveredBuilder.build());
             }
         }
+    }
+
+    private static void setUpShortcuts(Context context, Conversation conversation,
+                                       NotificationCompat.Builder notifBuilder, Person person) {
+        Intent conversationActivityIntent = UIIntents.get().getShortcutIntentForConversationActivity(
+                context, conversation.mConversationId);
+        ShortcutInfoCompat.Builder shortcutBuilder =
+                new ShortcutInfoCompat.Builder(context, conversation.mConversationId)
+                        .setShortLabel(conversation.getTitle())
+                        .setLocusId(new LocusIdCompat(conversation.mConversationId))
+                        .setLongLived(true)
+                        .setPerson(person)
+                        .setIntent(conversationActivityIntent);
+
+        IconCompat icon;
+        IconCompat personIcon = person.getIcon();
+        if (personIcon != null) {
+            icon = personIcon;
+        } else {
+            icon = IconCompat.createWithResource(context, R.drawable.ic_launcher_foreground);
+        }
+        shortcutBuilder.setIcon(icon);
+
+        ShortcutManagerCompat.pushDynamicShortcut(context, shortcutBuilder.build());
+        notifBuilder.setShortcutId(conversation.mConversationId);
+
+        NotificationCompat.BubbleMetadata.Builder bubbleBuilder =
+                new NotificationCompat.BubbleMetadata.Builder(conversation.mConversationId);
+        bubbleBuilder.setDesiredHeightResId(R.dimen.max_bubbled_activity_height);
+        notifBuilder.setBubbleMetadata(bubbleBuilder.build());
+    }
+
+    private static Person createGroupPerson(Context context, Conversation conversation) {
+        Person.Builder personBuilder = new Person.Builder()
+                .setName(conversation.getTitle())
+                .setKey(conversation.mConversationId);
+
+        if (conversation.mIconUri != null) {
+            Bitmap groupIconBitmap = getAvatarBitmap(context, Uri.parse(conversation.mIconUri));
+            if (groupIconBitmap != null) {
+                personBuilder.setIcon(IconCompat.createWithBitmap(groupIconBitmap));
+            }
+        }
+
+        return personBuilder.build();
     }
 }
 
