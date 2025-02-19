@@ -318,6 +318,10 @@
     <string name="notification_video">Video</string>
     <!-- Shown in notifications when there's a vcard. [CHAR LIMIT=25] -->
     <string name="notification_vcard">Contact card</string>
+    <!-- Shown in notifications when there's a file. [CHAR LIMIT=25] -->
+    <string name="notification_file">File</string>
+    <!-- Shown in notifications when there's an unsupported file. [CHAR LIMIT=25] -->
+    <string name="notification_unsupported_file">Unsupported file</string>
     <!-- Notification action label for download MMS when set to manual downloads. [CHAR LIMIT=15] -->
     <string name="notification_download_mms">Download</string>
     <!-- Notification action label for SMS reply (visible on wearable device only). [CHAR LIMIT=15] -->

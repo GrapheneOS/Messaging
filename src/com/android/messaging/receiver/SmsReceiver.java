@@ -166,16 +166,6 @@ public final class SmsReceiver extends BroadcastReceiver {
         SecondaryUserNotificationState() {
             super(null);
         }
-
-        @Override
-        protected Style build(Builder builder) {
-            return null;
-        }
-
-        @Override
-        public boolean getNotificationVibrate() {
-            return true;
-        }
     }
 
     public static void postNewMessageSecondaryUserNotification() {
