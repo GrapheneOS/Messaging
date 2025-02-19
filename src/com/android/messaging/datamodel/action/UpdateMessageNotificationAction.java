@@ -35,7 +35,7 @@ public class UpdateMessageNotificationAction extends Action {
 
     @Override
     protected Object executeAction() {
-        BugleNotifications.update(true /* silent */, BugleNotifications.UPDATE_MESSAGES);
+        BugleNotifications.update(BugleNotifications.UPDATE_MESSAGES);
         return null;
     }
 

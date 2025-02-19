@@ -67,10 +67,6 @@
     <dimen name="compose_message_send_button_padding_right">12dp</dimen>
     <dimen name="compose_message_text_box_padding_side">8dp</dimen>
 
-    <!-- Notification related dimensions. -->
-    <dimen name="notification_wearable_image_height">240dp</dimen>
-    <dimen name="notification_wearable_image_width">240dp</dimen>
-
     <!-- Contact Picker related dimensions. -->
     <dimen name="contact_list_text_size">16sp</dimen>
     <dimen name="contact_list_detail_text_size">14sp</dimen>

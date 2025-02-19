@@ -103,7 +103,7 @@ public class RedownloadMmsAction extends Action implements Parcelable {
         }
         // Immediately update the notifications in case we came from the download action from a
         // heads-up notification. This will dismiss the heads-up notification.
-        BugleNotifications.update(false/*silent*/, BugleNotifications.UPDATE_ALL);
+        BugleNotifications.update(BugleNotifications.UPDATE_ALL);
         return message;
     }
 

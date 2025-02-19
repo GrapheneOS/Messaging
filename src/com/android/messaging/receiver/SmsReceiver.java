@@ -192,12 +192,6 @@ public final class SmsReceiver extends BroadcastReceiver {
         final NotificationManagerCompat notificationManager =
                 NotificationManagerCompat.from(Factory.get().getApplicationContext());
 
-        int defaults = Notification.DEFAULT_SOUND | Notification.DEFAULT_LIGHTS;
-        if (BugleNotifications.shouldVibrate(new SecondaryUserNotificationState())) {
-            defaults |= Notification.DEFAULT_VIBRATE;
-        }
-        notification.defaults = defaults;
-
         notificationManager.notify(getNotificationTag(),
                 PendingIntentConstants.SMS_SECONDARY_USER_NOTIFICATION_ID, notification);
     }

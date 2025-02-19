@@ -272,7 +272,7 @@ public class ProcessSentMessageAction extends Action {
             // We shouldn't show any notifications if we're not allowed to modify Telephony for
             // this message.
             if (failed) {
-                BugleNotifications.update(false, BugleNotifications.UPDATE_ERRORS);
+                BugleNotifications.update(BugleNotifications.UPDATE_ERRORS);
             }
             BugleActionToasts.onSendMessageOrManualDownloadActionCompleted(
                     conversationId, !failed, status, isSms, subId, true/*isSend*/);

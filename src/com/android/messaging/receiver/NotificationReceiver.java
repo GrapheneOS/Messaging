@@ -49,7 +49,6 @@ public class NotificationReceiver extends BroadcastReceiver {
                 for (final String conversationId :
                         ConversationIdSet.createSet(conversationIdSetString)) {
                     MarkAsSeenAction.markAsSeen(conversationId);
-                    BugleNotifications.resetLastMessageDing(conversationId);
                 }
             }
         }
