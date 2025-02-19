@@ -139,11 +139,7 @@ public abstract class AbstractConversationListActivity  extends BugleActionBarAc
                             @Override
                             public void onClick(final DialogInterface dialog,
                                     final int button) {
-                                for (final SelectedConversation conversation : conversations) {
-                                    DeleteConversationAction.deleteConversation(
-                                            conversation.conversationId,
-                                            conversation.timestamp);
-                                }
+                                DeleteConversationAction.deleteConversations(conversations);
                                 exitMultiSelectState();
                             }
                 })

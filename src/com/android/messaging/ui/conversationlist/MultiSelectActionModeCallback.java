@@ -43,7 +43,7 @@ public class MultiSelectActionModeCallback implements Callback {
         void onActionBarHome();
     }
 
-    static class SelectedConversation {
+    public static class SelectedConversation {
         public final String conversationId;
         public final long timestamp;
         public final String icon;

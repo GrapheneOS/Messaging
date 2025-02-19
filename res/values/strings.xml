@@ -937,6 +937,14 @@
     <string name="view_more_messages">View more messages</string>
     <!-- Toast message telling the user a conversation has been deleted -->
     <string name="conversation_deleted">Conversation deleted</string>
+    <plurals name="conversations_deleted">
+        <item quantity="one">@string/conversation_deleted</item>
+        <item quantity="other">%d conversations deleted</item>
+    </plurals>
+    <plurals name="failed_to_delete_conversations">
+        <item quantity="one">Failed to delete a conversation</item>
+        <item quantity="other">Failed to delete %d conversations</item>
+    </plurals>
     <!-- Displayed when user adds a new conversation widget. Tapping on the widget in this
           mode will bring user to the conversation selection screen -->
     <string name="tap_to_configure">Conversation deleted. Tap to show a different Messaging conversation</string>

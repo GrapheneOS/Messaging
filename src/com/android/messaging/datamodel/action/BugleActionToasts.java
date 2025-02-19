@@ -113,8 +113,18 @@ public class BugleActionToasts {
         }
     }
 
-    public static void onConversationDeleted() {
-        showToast(R.string.conversation_deleted);
+    public static void onConversationsDeleted(int count) {
+        Context context = Factory.get().getApplicationContext();
+        String message = context.getResources()
+                .getQuantityString(R.plurals.conversations_deleted, count, count);
+        showToast(message);
+    }
+
+    public static void onFailedToDeleteConversations(int count) {
+        Context context = Factory.get().getApplicationContext();
+        String message = context.getResources()
+                .getQuantityString(R.plurals.failed_to_delete_conversations, count, count);
+        showToast(message);
     }
 
     private static void showToast(final int messageResId) {
