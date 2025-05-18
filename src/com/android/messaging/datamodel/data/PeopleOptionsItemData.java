@@ -88,19 +88,19 @@ public class PeopleOptionsItemData {
 
                 final String conversationTitle = cursor.getString(INDEX_CONVERSATION_NAME);
 
-                final boolean notificationEnabled = cursor.getInt(INDEX_NOTIFICATION_ENABLED) == 1;
+                final boolean legacyNotificationEnabled =
+                        cursor.getInt(INDEX_NOTIFICATION_ENABLED) == 1;
 
-                final String ringtoneString = cursor.getString(INDEX_NOTIFICATION_SOUND_URI);
-                Uri ringtoneUri = RingtoneUtil.getNotificationRingtoneUri(conversationId, ringtoneString);
+                final String legacyRingtoneString = cursor.getString(INDEX_NOTIFICATION_SOUND_URI);
 
-                final boolean vibrationEnabled = cursor.getInt(INDEX_NOTIFICATION_VIBRATION) == 1;
+                final boolean legacyVibrationEnabled = cursor.getInt(INDEX_NOTIFICATION_VIBRATION) == 1;
 
                 NotificationChannelUtil.INSTANCE.createConversationChannel(
                         conversationId,
                         conversationTitle,
-                        notificationEnabled,
-                        ringtoneUri,
-                        vibrationEnabled
+                        legacyNotificationEnabled,
+                        legacyRingtoneString,
+                        legacyVibrationEnabled
                 );
                 break;
 

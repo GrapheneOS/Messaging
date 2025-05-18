@@ -15,7 +15,6 @@
  */
 package com.android.messaging.util;
 
-import android.app.NotificationChannel;
 import android.content.Context;
 import android.net.Uri;
 import android.provider.Settings;
@@ -28,31 +27,40 @@ public class RingtoneUtil {
     /**
      * Return a ringtone Uri for the string representation passed in. Use the app
      * and system defaults as fallbacks
-     * @param ringtoneString is the ringtone to resolve
+     * @param legacyRingtoneString The ringtone to resolve. Pulled from the old notification system.
      * @return the Uri of the ringtone or the fallback ringtone
      */
-    public static Uri getNotificationRingtoneUri(String conversationId, String ringtoneString) {
-        if (ringtoneString == null) {
-            // No override specified, fall back to system-wide setting.
-            final BuglePrefs prefs = BuglePrefs.getApplicationPrefs();
-            final Context context = Factory.get().getApplicationContext();
-            final String prefKey = context.getString(R.string.notification_sound_pref_key);
-            ringtoneString = prefs.getString(prefKey, null);
-        }
-
-        NotificationChannel channel =
+    public static Uri getNotificationRingtoneUri(String conversationId, String legacyRingtoneString) {
+        var channel =
                 NotificationChannelUtil.INSTANCE.getConversationChannel(conversationId);
         if (channel != null) {
             return channel.getSound();
-        } else if (!TextUtils.isEmpty(ringtoneString)) {
-            // We have set a value, even if it is the default Uri at some point
-            return Uri.parse(ringtoneString);
-        } else if (ringtoneString == null) {
-            // We have no setting specified (== null), so we default to the system default
-            return Settings.System.DEFAULT_NOTIFICATION_URI;
         } else {
-            // An empty string (== "") here is the result of selecting "None" as the ringtone
-            return null;
+            String ringtone = legacyRingtoneString;
+            if (ringtone == null) {
+                // No override specified, fall back to global setting.
+                var defaultChannel = NotificationChannelUtil.INSTANCE.getNotificationManager()
+                        .getNotificationChannel(NotificationChannelUtil.INCOMING_MESSAGES);
+                if (defaultChannel != null) {
+                    return defaultChannel.getSound();
+                } else {
+                    final BuglePrefs prefs = BuglePrefs.getApplicationPrefs();
+                    final Context context = Factory.get().getApplicationContext();
+                    final String prefKey = context.getString(R.string.notification_sound_pref_key);
+                    ringtone = prefs.getString(prefKey, null);
+                }
+            }
+
+            if (!TextUtils.isEmpty(ringtone)) {
+                // We have set a value, even if it is the default Uri at some point
+                return Uri.parse(ringtone);
+            } else if (ringtone == null) {
+                // We have no setting specified (== null), so we default to the system default
+                return Settings.System.DEFAULT_NOTIFICATION_URI;
+            } else {
+                // An empty string (== "") here is the result of selecting "None" as the ringtone
+                return null;
+            }
         }
     }
 }

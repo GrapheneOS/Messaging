@@ -253,7 +253,13 @@ public class BugleNotifications {
         final NotificationCompat.Builder notifBuilder =
                 new NotificationCompat.Builder(context, conversationId);
         notifBuilder.setCategory(Notification.CATEGORY_MESSAGE);
-        final Uri ringtoneUri = RingtoneUtil.getNotificationRingtoneUri(conversationId, state.getRingtoneUri());
+        NotificationChannel channel = NotificationChannelUtil.INSTANCE.createConversationChannel(
+                conversationId,
+                conversation.getTitle(),
+                conversation.mNotificationEnabled,
+                state.getRingtoneUri(),
+                conversation.mNotificationVibrate
+        );
 
         // If the notification's conversation is currently observable (focused or in the
         // conversation list),  then play a notification beep at a low volume and don't display an
@@ -264,7 +270,7 @@ public class BugleNotifications {
                         "sCurrentlyDisplayedConversationId so NOT showing notification," +
                         " but playing soft sound. conversationId: " + conversationId);
             }
-            playObservableConversationNotificationSound(ringtoneUri);
+            playObservableConversationNotificationSound(channel.getSound());
             return;
         }
         state.mBaseRequestCode = state.mType;
@@ -320,21 +326,6 @@ public class BugleNotifications {
             latestPerson = message.getPerson();
         }
         notifBuilder.setWhen(conversation.mReceivedTimestamp);
-
-        final boolean notificationsEnabled;
-        NotificationChannel channel = NotificationChannelUtil.INSTANCE.getConversationChannel(conversationId);
-        if (channel != null) {
-            notificationsEnabled = channel.getImportance() > 0;
-        } else {
-            notificationsEnabled = conversation.mNotificationEnabled;
-        }
-        NotificationChannelUtil.INSTANCE.createConversationChannel(
-                conversationId,
-                conversation.getTitle(),
-                notificationsEnabled,
-                ringtoneUri,
-                conversation.mNotificationVibrate
-        );
 
         if (conversation.mIsGroup) {
             Person groupPerson = createGroupPerson(context, conversation);

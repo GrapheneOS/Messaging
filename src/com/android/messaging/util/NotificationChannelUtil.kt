@@ -14,7 +14,7 @@ object NotificationChannelUtil {
     const val INCOMING_MESSAGES = "Conversations"
     const val ALERTS_CHANNEL = "Alerts"
 
-    private fun getNotificationManager(): NotificationManager {
+    fun getNotificationManager(): NotificationManager {
         val context = Factory.get().applicationContext
         return context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     }
@@ -41,36 +41,52 @@ object NotificationChannelUtil {
      * Creates a notification channel with the user's old preferences.
      * @param conversationId The id of the conversation channel.
      * @param conversationTitle The title of the conversation channel.
-     * @param notificationsEnabled Whether notifications are enabled in the channel.
-     * @param ringtoneUri The [Uri] of the ringtone to use for notifications.
-     * @param vibrationEnabled Whether vibration is enabled in the channel.
+     * @param legacyNotificationsEnabled Whether notifications are enabled in the channel. Pulled
+     * from the old notifications system.
+     * @param legacyRingtoneString The [Uri] of the ringtone to use for notifications. Pulled from the
+     * old notifications system.
+     * @param legacyVibrationEnabled Whether vibration is enabled in the channel. Pulled from the
+     * old notifications system.
      */
     fun createConversationChannel(
         conversationId: String,
         conversationTitle: String,
-        notificationsEnabled: Boolean,
-        ringtoneUri: Uri?,
-        vibrationEnabled: Boolean
-    ) {
+        legacyNotificationsEnabled: Boolean = true,
+        legacyRingtoneString: String? = null,
+        legacyVibrationEnabled: Boolean = false
+    ): NotificationChannel {
         val notificationManager = getNotificationManager()
-        val channel = NotificationChannel(
-            conversationId,
-            conversationTitle,
-            if (notificationsEnabled) {
-                // Ensure that notifications create a banner by default
-                NotificationManager.IMPORTANCE_HIGH
-            } else {
-                NotificationManager.IMPORTANCE_NONE
-            }
-        )
+        val defaultNotificationChannel =
+            notificationManager.getNotificationChannel(INCOMING_MESSAGES)
+        val existingChannel = getConversationChannel(conversationId)
+        val channel = existingChannel
+            ?: NotificationChannel(
+                conversationId,
+                conversationTitle,
+                if (legacyNotificationsEnabled) {
+                    defaultNotificationChannel.importance
+                } else {
+                    NotificationManager.IMPORTANCE_NONE
+                }
+            )
+        val ringtoneUri =
+            RingtoneUtil.getNotificationRingtoneUri(conversationId, legacyRingtoneString)
         val audioAttributes = AudioAttributes.Builder()
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .setUsage(AudioAttributes.USAGE_NOTIFICATION)
             .build()
         channel.setSound(ringtoneUri, audioAttributes)
-        channel.enableVibration(vibrationEnabled)
+        channel.enableVibration(
+            if (legacyVibrationEnabled) {
+                // Only return false if there is no existing channel
+                existingChannel?.shouldVibrate() == true
+            } else {
+                defaultNotificationChannel.shouldVibrate()
+            }
+        )
         channel.setConversationId(INCOMING_MESSAGES, conversationId)
         notificationManager.createNotificationChannel(channel)
+        return channel
     }
 
     /**
