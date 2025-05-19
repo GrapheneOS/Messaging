@@ -117,11 +117,13 @@ public class MessageNotificationState {
         final Uri mAvatarUri;
         final Uri mAttachmentUri;
         final String mAttachmentType;
+        final String mContactUriString;
 
         MessageLineInfo(final String authorId, final String authorFullName,
                 final String authorFirstName, final CharSequence text, final Uri attachmentUri,
                 final String attachmentType, final boolean isManualDownloadNeeded,
-                final Uri avatarUri, final String messageId, final long timestamp) {
+                final Uri avatarUri, final String messageId, final long timestamp,
+                final String contactUriString) {
             mAuthorId = authorId;
             mMessageId = messageId;
             mName = authorFullName == null ? authorFirstName : authorFullName;
@@ -143,6 +145,7 @@ public class MessageNotificationState {
             mAvatarUri = avatarUri;
             mAttachmentUri = attachmentUri;
             mAttachmentType = attachmentType;
+            mContactUriString = contactUriString;
         }
 
         static CharSequence formatAttachmentTag(final String attachmentType) {
@@ -167,19 +170,24 @@ public class MessageNotificationState {
             return spannableString;
         }
 
-        public MessagingStyle.Message createStyledMessage() {
-            Person.Builder person = new Person.Builder()
+        public Person createPerson() {
+            Person.Builder builder = new Person.Builder()
                     .setKey(mAuthorId)
-                    .setName(mName);
+                    .setName(mName)
+                    .setUri(mContactUriString);
 
             Context context = Factory.get().getApplicationContext();
             Bitmap avatarBitmap = BugleNotifications.getAvatarBitmap(context, mAvatarUri);
             if (avatarBitmap != null) {
-                person.setIcon(IconCompat.createWithBitmap(avatarBitmap));
+                builder.setIcon(IconCompat.createWithBitmap(avatarBitmap));
             }
 
+            return builder.build();
+        }
+
+        public MessagingStyle.Message createStyledMessage(Person person) {
             MessagingStyle.Message message =
-                    new MessagingStyle.Message(mText, mTimestamp, person.build());
+                    new MessagingStyle.Message(mText, mTimestamp, person);
             if (mAttachmentUri != null && ContentType.isImageType(mAttachmentType)) {
                 message.setData(mAttachmentType,
                         SharedMemoryImageProvider.Companion.buildUri(mAttachmentUri, mAttachmentType));
@@ -536,10 +544,17 @@ public class MessageNotificationState {
                         attachmentUri = messagePartData.getContentUri();
                         attachmentType = messagePartData.getContentType();
                     }
+
+                    Uri contactUri = convMessageData.getSenderContactLookupUri();
+                    String contactUriString = null;
+                    if (contactUri != null) {
+                        contactUriString = contactUri.toString();
+                    }
+
                     conversation.mLineInfos.add(new MessageLineInfo(authorId,
                             authorFullName, authorFirstName, text,
                             attachmentUri, attachmentType, isManualDownloadNeeded, avatarUri,
-                            messageId, timestamp));
+                            messageId, timestamp, contactUriString));
                     messageCount++;
                     conversation.mTotalMessageCount++;
                 } while (convMessageCursor.moveToNext());

@@ -311,6 +311,10 @@ public class BugleNotifications {
         Person latestPerson = null;
         List<MessageNotificationState.MessageLineInfo> reversedLineInfos = conversation.mLineInfos.reversed();
         for (MessageNotificationState.MessageLineInfo messageLineInfo : reversedLineInfos) {
+            // Add people associated with this notification
+            Person currentPerson = messageLineInfo.createPerson();
+            notifBuilder.addPerson(currentPerson);
+
             // Don't repeat messages by checking the timestamp
             if (messageLineInfo.mTimestamp <= oldestExistingTimestamp) {
                 if (reversedLineInfos.getLast() == messageLineInfo) {
@@ -320,10 +324,10 @@ public class BugleNotifications {
                 continue;
             }
 
-            MessagingStyle.Message message = messageLineInfo.createStyledMessage();
+            MessagingStyle.Message message = messageLineInfo.createStyledMessage(currentPerson);
             style.addMessage(message);
             style.setGroupConversation(conversation.mIsGroup);
-            latestPerson = message.getPerson();
+            latestPerson = currentPerson;
         }
         notifBuilder.setWhen(conversation.mReceivedTimestamp);
 
