@@ -47,6 +47,7 @@ import com.android.messaging.ui.CompositeAdapter;
 import com.android.messaging.ui.PersonItemView;
 import com.android.messaging.ui.conversation.ConversationActivity;
 import com.android.messaging.util.Assert;
+import com.android.messaging.util.NotificationChannelUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -119,6 +120,14 @@ public class PeopleAndOptionsFragment extends Fragment
             final boolean isChecked) {
         switch (item.getItemId()) {
             case PeopleOptionsItemData.SETTING_NOTIFICATIONS:
+                NotificationChannelUtil.INSTANCE.createConversationChannel(
+                        mBinding.getData().getConversationId(),
+                        item.getConversationTitle(),
+                        item.getLegacyNotificationEnabled(),
+                        item.getLegacyRingtoneString(),
+                        item.getLegacyVibrationEnabled()
+                );
+
                 Intent intent = new Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
                         .putExtra(Settings.EXTRA_APP_PACKAGE, getContext().getPackageName())
                         .putExtra(Settings.EXTRA_CHANNEL_ID, mBinding.getData().getConversationId())

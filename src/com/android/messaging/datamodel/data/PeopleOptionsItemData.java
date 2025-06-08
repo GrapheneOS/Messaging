@@ -17,15 +17,11 @@ package com.android.messaging.datamodel.data;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.media.Ringtone;
-import android.media.RingtoneManager;
-import android.net.Uri;
 
 import com.android.messaging.R;
 import com.android.messaging.datamodel.data.ConversationListItemData.ConversationListViewColumns;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.NotificationChannelUtil;
-import com.android.messaging.util.RingtoneUtil;
 
 public class PeopleOptionsItemData {
     public static final String[] PROJECTION = {
@@ -59,6 +55,10 @@ public class PeopleOptionsItemData {
     private boolean mEnabled;
     private int mItemId;
     private ParticipantData mOtherParticipant;
+    private String mConversationTitle;
+    private boolean mLegacyNotificationEnabled;
+    private String mLegacyRingtoneString;
+    private boolean mLegacyVibrationEnabled;
 
     private final Context mContext;
 
@@ -78,30 +78,15 @@ public class PeopleOptionsItemData {
         mEnabled = true;
         mItemId = settingType;
         mOtherParticipant = otherParticipant;
+        mConversationTitle = cursor.getString(INDEX_CONVERSATION_NAME);
+        mLegacyVibrationEnabled = cursor.getInt(INDEX_NOTIFICATION_ENABLED) == 1;
+        mLegacyRingtoneString = cursor.getString(INDEX_NOTIFICATION_SOUND_URI);
+        mLegacyVibrationEnabled = cursor.getInt(INDEX_NOTIFICATION_VIBRATION) == 1;
 
         switch (settingType) {
             case SETTING_NOTIFICATIONS:
                 mTitle = mContext.getString(R.string.notifications_enabled_conversation_pref_title);
                 mCheckable = false;
-
-                final String conversationId = cursor.getString(INDEX_CONVERSATION_ID);
-
-                final String conversationTitle = cursor.getString(INDEX_CONVERSATION_NAME);
-
-                final boolean legacyNotificationEnabled =
-                        cursor.getInt(INDEX_NOTIFICATION_ENABLED) == 1;
-
-                final String legacyRingtoneString = cursor.getString(INDEX_NOTIFICATION_SOUND_URI);
-
-                final boolean legacyVibrationEnabled = cursor.getInt(INDEX_NOTIFICATION_VIBRATION) == 1;
-
-                NotificationChannelUtil.INSTANCE.createConversationChannel(
-                        conversationId,
-                        conversationTitle,
-                        legacyNotificationEnabled,
-                        legacyRingtoneString,
-                        legacyVibrationEnabled
-                );
                 break;
 
             case SETTING_BLOCKED:
@@ -139,6 +124,22 @@ public class PeopleOptionsItemData {
 
     public int getItemId() {
         return mItemId;
+    }
+
+    public String getConversationTitle() {
+        return mConversationTitle;
+    }
+
+    public boolean getLegacyNotificationEnabled() {
+        return mLegacyNotificationEnabled;
+    }
+
+    public String getLegacyRingtoneString() {
+        return mLegacyRingtoneString;
+    }
+
+    public boolean getLegacyVibrationEnabled() {
+        return mLegacyVibrationEnabled;
     }
 
     public ParticipantData getOtherParticipant() {
