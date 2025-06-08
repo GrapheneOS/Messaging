@@ -38,22 +38,25 @@ public class MarkAsReadAction extends Action implements Parcelable {
     private static final String TAG = LogUtil.BUGLE_DATAMODEL_TAG;
 
     private static final String KEY_CONVERSATION_ID = "conversation_id";
+    private static final String KEY_CANCEL_NOTIFICATION = "cancel_notification";
 
     /**
      * Mark all the messages as read for a particular conversation.
      */
-    public static void markAsRead(final String conversationId) {
-        final MarkAsReadAction action = new MarkAsReadAction(conversationId);
+    public static void markAsRead(final String conversationId, final boolean cancelNotification) {
+        final MarkAsReadAction action = new MarkAsReadAction(conversationId, cancelNotification);
         action.start();
     }
 
-    private MarkAsReadAction(final String conversationId) {
+    private MarkAsReadAction(final String conversationId, final boolean cancelNotification) {
         actionParameters.putString(KEY_CONVERSATION_ID, conversationId);
+        actionParameters.putBoolean(KEY_CANCEL_NOTIFICATION, cancelNotification);
     }
 
     @Override
     protected Object executeAction() {
         final String conversationId = actionParameters.getString(KEY_CONVERSATION_ID);
+        final boolean cancelNotification = actionParameters.getBoolean(KEY_CANCEL_NOTIFICATION);
 
         // TODO: Consider doing this in background service to avoid delaying other actions
         final DatabaseWrapper db = DataModel.get().getDatabase();
@@ -84,9 +87,13 @@ public class MarkAsReadAction extends Action implements Parcelable {
         } finally {
             db.endTransaction();
         }
+
         // After marking messages as read, update the notifications. This will
         // clear the now stale notifications.
-        BugleNotifications.cancel(PendingIntentConstants.SMS_NOTIFICATION_ID, conversationId);
+        if (cancelNotification) {
+            BugleNotifications.cancel(PendingIntentConstants.SMS_NOTIFICATION_ID, conversationId);
+        }
+
         return null;
     }
 

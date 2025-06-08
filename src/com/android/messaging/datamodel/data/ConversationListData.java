@@ -174,10 +174,6 @@ public class ConversationListData extends BindableData
         mLoaderManager.initLoader(BLOCKED_PARTICIPANTS_AVAILABLE_LOADER, mArgs, this);
     }
 
-    public void handleMessagesSeen() {
-        BugleNotifications.markAllMessagesAsSeen();
-    }
-
     @Override
     protected void unregisterListeners() {
         mListener = null;
@@ -198,9 +194,6 @@ public class ConversationListData extends BindableData
     public void setScrolledToNewestConversation(boolean scrolledToNewestConversation) {
         DataModel.get().setConversationListScrolledToNewestConversation(
                 scrolledToNewestConversation);
-        if (scrolledToNewestConversation) {
-            handleMessagesSeen();
-        }
     }
 
     public HashSet<String> getBlockedParticipants() {

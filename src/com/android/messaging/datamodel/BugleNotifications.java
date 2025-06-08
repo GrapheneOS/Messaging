@@ -442,8 +442,8 @@ public class BugleNotifications {
     /**
      * When we open a particular conversation, call this to mark all messages as read.
      */
-    public static void markMessagesAsRead(final String conversationId) {
-        MarkAsReadAction.markAsRead(conversationId);
+    public static void markMessagesAsRead(final String conversationId, final boolean cancelNotification) {
+        MarkAsReadAction.markAsRead(conversationId, cancelNotification);
     }
 
     public static void notifyEmergencySmsFailed(final String emergencyNumber,

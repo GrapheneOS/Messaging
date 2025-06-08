@@ -10,7 +10,7 @@ class ConversationReadReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         if (intent?.action == UIIntents.ACTION_MESSAGE_READ) {
             val conversationId = intent.getStringExtra(UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID)
-            MarkAsReadAction.markAsRead(conversationId)
+            MarkAsReadAction.markAsRead(conversationId, true)
         }
     }
 }

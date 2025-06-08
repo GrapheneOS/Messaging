@@ -502,11 +502,11 @@ public class ConversationData extends BindableData {
         return mConversationId;
     }
 
-    public void setFocus() {
+    public void setFocus(boolean cancelNotification) {
         DataModel.get().setFocusedConversation(mConversationId);
         // As we are loading the conversation assume the user has read the messages...
         // Do this late though so that it doesn't get in the way of other actions
-        BugleNotifications.markMessagesAsRead(mConversationId);
+        BugleNotifications.markMessagesAsRead(mConversationId, cancelNotification);
     }
 
     public void unsetFocus() {

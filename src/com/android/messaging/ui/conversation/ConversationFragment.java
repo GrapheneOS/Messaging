@@ -727,8 +727,8 @@ public class ConversationFragment extends Fragment implements ConversationDataLi
 
     void setConversationFocus() {
         // Cancelling notifications causes bubbles to be removed from the screen
-        if (mHost.isActiveAndFocused() && !getActivity().isLaunchedFromBubble()) {
-            mBinding.getData().setFocus();
+        if (mHost.isActiveAndFocused()) {
+            mBinding.getData().setFocus(!getActivity().isLaunchedFromBubble());
         }
     }
 
