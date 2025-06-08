@@ -176,8 +176,6 @@ public class ConversationListData extends BindableData
 
     public void handleMessagesSeen() {
         BugleNotifications.markAllMessagesAsSeen();
-
-        SmsReceiver.cancelSecondaryUserNotification();
     }
 
     @Override

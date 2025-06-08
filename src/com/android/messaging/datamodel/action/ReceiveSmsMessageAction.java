@@ -23,6 +23,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.provider.Telephony.Sms;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.android.messaging.Factory;
 import com.android.messaging.datamodel.BugleDatabaseOperations;
@@ -35,7 +36,6 @@ import com.android.messaging.datamodel.data.MessageData;
 import com.android.messaging.datamodel.data.ParticipantData;
 import com.android.messaging.sms.MmsSmsUtils;
 import com.android.messaging.util.LogUtil;
-import com.android.messaging.util.OsUtil;
 
 /**
  * Action used to "receive" an incoming message
@@ -94,79 +94,73 @@ public class ReceiveSmsMessageAction extends Action implements Parcelable {
                 DataModel.get().isNewMessageObservable(conversationId);
 
         MessageData message = null;
-        // Only the primary user gets to insert the message into the telephony db and into bugle's
-        // db. The secondary user goes through this path, but skips doing the actual insert. It
-        // goes through this path because it needs to compute messageInFocusedConversation in order
-        // to calculate whether to skip the notification and play a soft sound if the user is
-        // already in the conversation.
-        if (!OsUtil.isSecondaryUser()) {
-            final boolean read = messageValues.getAsBoolean(Sms.Inbox.READ)
-                    || messageInFocusedConversation;
-            // If you have read it you have seen it
-            final boolean seen = read || messageInObservableConversation || blocked;
-            messageValues.put(Sms.Inbox.READ, read ? Integer.valueOf(1) : Integer.valueOf(0));
+        final boolean read = messageValues.getAsBoolean(Sms.Inbox.READ)
+                || messageInFocusedConversation;
+        // If you have read it you have seen it
+        final boolean seen = read || messageInObservableConversation || blocked;
+        messageValues.put(Sms.Inbox.READ, read ? Integer.valueOf(1) : Integer.valueOf(0));
 
-            // incoming messages are marked as seen in the telephony db
-            messageValues.put(Sms.Inbox.SEEN, 1);
+        // incoming messages are marked as seen in the telephony db
+        messageValues.put(Sms.Inbox.SEEN, 1);
 
-            // Insert into telephony
-            final Uri messageUri = context.getContentResolver().insert(Sms.Inbox.CONTENT_URI,
-                    messageValues);
+        // Insert into telephony
+        final Uri messageUri = context.getContentResolver().insert(Sms.Inbox.CONTENT_URI,
+                messageValues);
 
-            if (messageUri != null) {
-                if (LogUtil.isLoggable(TAG, LogUtil.DEBUG)) {
-                    LogUtil.d(TAG, "ReceiveSmsMessageAction: Inserted SMS message into telephony, "
-                            + "uri = " + messageUri);
-                }
-            } else {
-                LogUtil.e(TAG, "ReceiveSmsMessageAction: Failed to insert SMS into telephony!");
+        if (messageUri != null) {
+            if (LogUtil.isLoggable(TAG, LogUtil.DEBUG)) {
+                LogUtil.d(TAG, "ReceiveSmsMessageAction: Inserted SMS message into telephony, "
+                        + "uri = " + messageUri);
             }
+        } else {
+            LogUtil.e(TAG, "ReceiveSmsMessageAction: Failed to insert SMS into telephony!");
+        }
 
-            final String text = messageValues.getAsString(Sms.BODY);
-            final String subject = messageValues.getAsString(Sms.SUBJECT);
-            final long sent = messageValues.getAsLong(Sms.DATE_SENT);
-            final ParticipantData self = ParticipantData.getSelfParticipant(subId);
-            final Integer pathPresent = messageValues.getAsInteger(Sms.REPLY_PATH_PRESENT);
-            final String smsServiceCenter = messageValues.getAsString(Sms.SERVICE_CENTER);
-            String conversationServiceCenter = null;
-            // Only set service center if message REPLY_PATH_PRESENT = 1
-            if (pathPresent != null && pathPresent == 1 && !TextUtils.isEmpty(smsServiceCenter)) {
-                conversationServiceCenter = smsServiceCenter;
-            }
-            db.beginTransaction();
-            try {
-                final String participantId =
-                        BugleDatabaseOperations.getOrCreateParticipantInTransaction(db, rawSender);
-                final String selfId =
-                        BugleDatabaseOperations.getOrCreateParticipantInTransaction(db, self);
+        final String text = messageValues.getAsString(Sms.BODY);
+        final String subject = messageValues.getAsString(Sms.SUBJECT);
+        final long sent = messageValues.getAsLong(Sms.DATE_SENT);
+        final ParticipantData self = ParticipantData.getSelfParticipant(subId);
+        final Integer pathPresent = messageValues.getAsInteger(Sms.REPLY_PATH_PRESENT);
+        final String smsServiceCenter = messageValues.getAsString(Sms.SERVICE_CENTER);
+        String conversationServiceCenter = null;
+        // Only set service center if message REPLY_PATH_PRESENT = 1
+        if (pathPresent != null && pathPresent == 1 && !TextUtils.isEmpty(smsServiceCenter)) {
+            conversationServiceCenter = smsServiceCenter;
+        }
+        db.beginTransaction();
+        try {
+            final String participantId =
+                    BugleDatabaseOperations.getOrCreateParticipantInTransaction(db, rawSender);
+            final String selfId =
+                    BugleDatabaseOperations.getOrCreateParticipantInTransaction(db, self);
 
-                message = MessageData.createReceivedSmsMessage(messageUri, conversationId,
-                        participantId, selfId, text, subject, sent, received, seen, read);
+            message = MessageData.createReceivedSmsMessage(messageUri, conversationId,
+                    participantId, selfId, text, subject, sent, received, seen, read);
 
-                BugleDatabaseOperations.insertNewMessageInTransaction(db, message);
+            BugleDatabaseOperations.insertNewMessageInTransaction(db, message);
 
-                BugleDatabaseOperations.updateConversationMetadataInTransaction(db, conversationId,
-                        message.getMessageId(), message.getReceivedTimeStamp(), blocked,
-                        conversationServiceCenter, true /* shouldAutoSwitchSelfId */);
+            BugleDatabaseOperations.updateConversationMetadataInTransaction(db, conversationId,
+                    message.getMessageId(), message.getReceivedTimeStamp(), blocked,
+                    conversationServiceCenter, true /* shouldAutoSwitchSelfId */);
 
-                final ParticipantData sender = ParticipantData.getFromId(db, participantId);
-                BugleActionToasts.onMessageReceived(conversationId, sender, message);
-                db.setTransactionSuccessful();
-            } finally {
-                db.endTransaction();
-            }
+            final ParticipantData sender = ParticipantData.getFromId(db, participantId);
+            BugleActionToasts.onMessageReceived(conversationId, sender, message);
+            db.setTransactionSuccessful();
+        } catch (Exception e) {
+            Log.e(TAG, "executeAction: Failed to add message to DB", e);
+        } finally {
+            db.endTransaction();
+        }
+
+        if (message != null) {
             LogUtil.i(TAG, "ReceiveSmsMessageAction: Received SMS message " + message.getMessageId()
                     + " in conversation " + message.getConversationId()
                     + ", uri = " + messageUri);
-
-            actionParameters.putInt(KEY_SUB_ID, subId);
-            ProcessPendingMessagesAction.scheduleProcessPendingMessagesAction(false, this);
-        } else {
-            if (LogUtil.isLoggable(TAG, LogUtil.DEBUG)) {
-                LogUtil.d(TAG, "ReceiveSmsMessageAction: Not inserting received SMS message for "
-                        + "secondary user.");
-            }
         }
+
+        actionParameters.putInt(KEY_SUB_ID, subId);
+        ProcessPendingMessagesAction.scheduleProcessPendingMessagesAction(false, this);
+
         // Show a notification to let the user know a new message has arrived
         BugleNotifications.update(conversationId, BugleNotifications.UPDATE_ALL);
 
