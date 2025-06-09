@@ -151,7 +151,7 @@ public class BugleNotifications {
         // Send per-conversation notifications (if there are multiple conversations).
         Optional<Conversation> conversation =
                 state.mConversationsList.mConversations.stream().findFirst();
-        conversation.ifPresent(conv -> processAndSend(state, softSound, conv));
+        conversation.ifPresent(conv -> processAndSend(state, conv));
     }
 
     /**
@@ -246,14 +246,14 @@ public class BugleNotifications {
         return tag;
     }
 
-    private static void processAndSend(final MessageNotificationState state, final boolean softSound,
-                                       final Conversation conversation) {
+    private static void processAndSend(final MessageNotificationState state, final Conversation conversation) {
         final Context context = Factory.get().getApplicationContext();
         final String conversationId = conversation.mConversationId;
         final NotificationCompat.Builder notifBuilder =
                 new NotificationCompat.Builder(context, conversationId);
         notifBuilder.setCategory(Notification.CATEGORY_MESSAGE);
-        NotificationChannel channel = NotificationChannelUtil.INSTANCE.createConversationChannel(
+
+        NotificationChannelUtil.INSTANCE.createConversationChannel(
                 conversationId,
                 conversation.getTitle(),
                 conversation.mNotificationEnabled,
@@ -261,18 +261,6 @@ public class BugleNotifications {
                 conversation.mNotificationVibrate
         );
 
-        // If the notification's conversation is currently observable (focused or in the
-        // conversation list),  then play a notification beep at a low volume and don't display an
-        // actual notification.
-        if (softSound) {
-            if (LogUtil.isLoggable(TAG, LogUtil.VERBOSE)) {
-                LogUtil.v(TAG, "processAndSend: fromConversationId == " +
-                        "sCurrentlyDisplayedConversationId so NOT showing notification," +
-                        " but playing soft sound. conversationId: " + conversationId);
-            }
-            playObservableConversationNotificationSound(channel.getSound());
-            return;
-        }
         state.mBaseRequestCode = state.mType;
 
         final PendingIntent clearIntent = state.getClearIntent(conversationId);
