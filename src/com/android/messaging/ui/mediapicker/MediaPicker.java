@@ -17,11 +17,13 @@
 package com.android.messaging.ui.mediapicker;
 
 import android.app.Activity;
-import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+
+import androidx.fragment.app.Fragment;
+import androidx.loader.app.LoaderManager;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.ActionBar;
@@ -198,7 +200,7 @@ public class MediaPicker extends Fragment implements DraftMessageSubscriptionDat
     @Override
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mBinding.getData().init(getLoaderManager());
+        mBinding.getData().init(LoaderManager.getInstance(this));
     }
 
     @Override
@@ -438,7 +440,7 @@ public class MediaPicker extends Fragment implements DraftMessageSubscriptionDat
         if (mBinding.isBound() && getActivity() != null) {
             mBinding.unbind();
             mBinding.bind(DataModel.get().createMediaPickerData(getActivity()));
-            mBinding.getData().init(getLoaderManager());
+            mBinding.getData().init(LoaderManager.getInstance(this));
         }
     }
 

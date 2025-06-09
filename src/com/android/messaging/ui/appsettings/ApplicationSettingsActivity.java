@@ -16,22 +16,12 @@
 
 package com.android.messaging.ui.appsettings;
 
-import android.app.FragmentTransaction;
 import android.app.role.RoleManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
-import android.media.Ringtone;
-import android.media.RingtoneManager;
-import android.net.Uri;
 import android.os.Bundle;
-import android.preference.Preference;
-import android.preference.PreferenceFragment;
-import android.preference.PreferenceScreen;
-import android.preference.RingtonePreference;
-import android.preference.TwoStatePreference;
 import android.provider.Settings;
-import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -43,7 +33,13 @@ import com.android.messaging.util.BuglePrefs;
 import com.android.messaging.util.DebugUtils;
 import com.android.messaging.util.PhoneUtils;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.app.NavUtils;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.preference.Preference;
+import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceScreen;
 
 public class ApplicationSettingsActivity extends BugleActionBarActivity {
     @Override
@@ -57,7 +53,7 @@ public class ApplicationSettingsActivity extends BugleActionBarActivity {
             getSupportActionBar().setTitle(getString(R.string.settings_activity_title));
         }
 
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         ft.replace(android.R.id.content, new ApplicationSettingsFragment());
         ft.commit();
     }
@@ -86,7 +82,7 @@ public class ApplicationSettingsActivity extends BugleActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public static class ApplicationSettingsFragment extends PreferenceFragment implements
+    public static class ApplicationSettingsFragment extends PreferenceFragmentCompat implements
             OnSharedPreferenceChangeListener {
 
         private String mNotificationsPrefKey;
@@ -102,9 +98,7 @@ public class ApplicationSettingsActivity extends BugleActionBarActivity {
         }
 
         @Override
-        public void onCreate(final Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-
+        public void onCreatePreferences(@Nullable Bundle savedInstanceState, String rootKey) {
             getPreferenceManager().setSharedPreferencesName(BuglePrefs.SHARED_PREFERENCES_NAME);
             addPreferencesFromResource(R.xml.preferences_application);
 
@@ -161,13 +155,12 @@ public class ApplicationSettingsActivity extends BugleActionBarActivity {
         }
 
         @Override
-        public boolean onPreferenceTreeClick (PreferenceScreen preferenceScreen,
-                Preference preference) {
+        public boolean onPreferenceTreeClick(@NonNull Preference preference) {
             if (preference.getKey() ==  mSmsDisabledPrefKey ||
                     preference.getKey() == mSmsEnabledPrefKey) {
                 mIsSmsPreferenceClicked = true;
             }
-            return super.onPreferenceTreeClick(preferenceScreen, preference);
+            return super.onPreferenceTreeClick(preference);
         }
 
         private void updateSmsEnabledPreferences() {

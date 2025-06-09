@@ -17,7 +17,6 @@
 package com.android.messaging.ui.contact;
 
 import android.app.Activity;
-import android.app.Fragment;
 import android.database.Cursor;
 import android.graphics.Rect;
 import android.os.Bundle;
@@ -67,7 +66,8 @@ import java.util.Set;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.widget.Toolbar;
 import androidx.appcompat.widget.Toolbar.OnMenuItemClickListener;
-
+import androidx.fragment.app.Fragment;
+import androidx.loader.app.LoaderManager;
 
 /**
  * Shows lists of contacts to start conversations with.
@@ -130,7 +130,7 @@ public class ContactPickerFragment extends Fragment implements ContactPickerData
 
         if (ContactUtil.hasReadContactsPermission()) {
             mBinding.bind(DataModel.get().createContactPickerData(getActivity(), this));
-            mBinding.getData().init(getLoaderManager(), mBinding);
+            mBinding.getData().init(LoaderManager.getInstance(this), mBinding);
         }
     }
 

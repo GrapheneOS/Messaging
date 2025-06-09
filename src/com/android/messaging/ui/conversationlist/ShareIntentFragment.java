@@ -19,11 +19,13 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.app.Dialog;
-import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.database.Cursor;
 import android.os.Bundle;
+
+import androidx.fragment.app.DialogFragment;
+import androidx.loader.app.LoaderManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -79,7 +81,7 @@ public class ShareIntentFragment extends DialogFragment implements ConversationL
                         ViewGroup.LayoutParams.WRAP_CONTENT);
             }
         };
-        mListBinding.getData().init(getLoaderManager(), mListBinding);
+        mListBinding.getData().init(LoaderManager.getInstance(this), mListBinding);
         mAdapter = new ShareIntentAdapter(activity, null, this);
         mRecyclerView = (RecyclerView) view.findViewById(android.R.id.list);
         mRecyclerView.setLayoutManager(manager);

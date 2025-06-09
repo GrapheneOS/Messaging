@@ -15,7 +15,6 @@
  */
 package com.android.messaging.ui.attachmentchooser;
 
-import android.app.Fragment;
 import android.content.Context;
 import android.graphics.Rect;
 import android.net.Uri;
@@ -45,6 +44,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import androidx.appcompat.app.ActionBar;
+import androidx.fragment.app.Fragment;
 
 public class AttachmentChooserFragment extends Fragment implements DraftMessageDataListener,
         AttachmentGridHost {

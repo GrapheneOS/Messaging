@@ -139,7 +139,7 @@ public class ConversationListActivity extends AbstractConversationListActivity {
     public void onWindowFocusChanged(final boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         final ConversationListFragment conversationListFragment =
-                (ConversationListFragment) getFragmentManager().findFragmentById(
+                (ConversationListFragment) getSupportFragmentManager().findFragmentById(
                         R.id.conversation_list_fragment);
         // When the screen is turned on, the last used activity gets resumed, but it gets
         // window focus only after the lock screen is unlocked.
