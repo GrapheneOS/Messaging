@@ -175,6 +175,10 @@ public class ConversationListData extends BindableData
         mLoaderManager.initLoader(BLOCKED_PARTICIPANTS_AVAILABLE_LOADER, mArgs, this);
     }
 
+    public void handleSecondaryUserMessagesSeen() {
+        SmsReceiver.cancelSecondaryUserNotification();
+    }
+
     @Override
     protected void unregisterListeners() {
         mListener = null;
@@ -195,6 +199,9 @@ public class ConversationListData extends BindableData
     public void setScrolledToNewestConversation(boolean scrolledToNewestConversation) {
         DataModel.get().setConversationListScrolledToNewestConversation(
                 scrolledToNewestConversation);
+        if (scrolledToNewestConversation) {
+            handleSecondaryUserMessagesSeen();
+        }
     }
 
     public HashSet<String> getBlockedParticipants() {

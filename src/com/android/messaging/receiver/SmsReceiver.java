@@ -16,23 +16,33 @@
 
 package com.android.messaging.receiver;
 
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.provider.Telephony;
 import android.provider.Telephony.Sms;
 
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+
 import com.android.messaging.Factory;
+import com.android.messaging.R;
 import com.android.messaging.datamodel.action.ReceiveSmsMessageAction;
 import com.android.messaging.sms.MmsUtils;
+import com.android.messaging.ui.UIIntents;
 import com.android.messaging.util.BugleGservices;
 import com.android.messaging.util.BugleGservicesKeys;
 import com.android.messaging.util.DebugUtils;
 import com.android.messaging.util.LogUtil;
+import com.android.messaging.util.NotificationChannelUtil;
 import com.android.messaging.util.OsUtil;
+import com.android.messaging.util.PendingIntentConstants;
 import com.android.messaging.util.PhoneUtils;
 
 import java.util.ArrayList;
@@ -143,9 +153,51 @@ public final class SmsReceiver extends BroadcastReceiver {
                     (Telephony.Sms.Intents.SMS_RECEIVED_ACTION.equals(action) ||
                             // TODO: update this with the actual constant from Telephony
                             "android.provider.Telephony.MMS_DOWNLOADED".equals(action))) {
-                deliverSmsIntent(context, intent);
+                postNewMessageSecondaryUserNotification();
             }
         }
+    }
+
+    public static void postNewMessageSecondaryUserNotification() {
+        final Context context = Factory.get().getApplicationContext();
+        final Resources resources = context.getResources();
+        final PendingIntent pendingIntent = UIIntents.get()
+                .getPendingIntentForSecondaryUserNewMessageNotification(context);
+
+        final NotificationCompat.Builder builder =
+                new NotificationCompat.Builder(context, NotificationChannelUtil.INCOMING_MESSAGES);
+        builder.setContentTitle(resources.getString(R.string.secondary_user_new_message_title))
+                .setTicker(resources.getString(R.string.secondary_user_new_message_ticker))
+                .setSmallIcon(R.drawable.ic_sms_light)
+                // Returning PRIORITY_HIGH causes L to put up a HUD notification. Without it, the ticker
+                // isn't displayed.
+                .setPriority(Notification.PRIORITY_HIGH)
+                .setContentIntent(pendingIntent);
+
+        final NotificationCompat.BigTextStyle bigTextStyle =
+                new NotificationCompat.BigTextStyle(builder);
+        bigTextStyle.bigText(resources.getString(R.string.secondary_user_new_message_title));
+        final Notification notification = bigTextStyle.build();
+
+        final NotificationManagerCompat notificationManager =
+                NotificationManagerCompat.from(Factory.get().getApplicationContext());
+
+        notificationManager.notify(getNotificationTag(),
+                PendingIntentConstants.SMS_SECONDARY_USER_NOTIFICATION_ID, notification);
+    }
+
+    private static String getNotificationTag() {
+        return Factory.get().getApplicationContext().getPackageName() + ":secondaryuser";
+    }
+
+    /**
+     * Cancel the notification
+     */
+    public static void cancelSecondaryUserNotification() {
+        final NotificationManagerCompat notificationManager =
+                NotificationManagerCompat.from(Factory.get().getApplicationContext());
+        notificationManager.cancel(getNotificationTag(),
+                PendingIntentConstants.SMS_SECONDARY_USER_NOTIFICATION_ID);
     }
 
     /**
