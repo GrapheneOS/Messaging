@@ -18,7 +18,6 @@ package com.android.messaging.ui.debug;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.DialogFragment;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -33,6 +32,8 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import androidx.fragment.app.DialogFragment;
 
 import com.android.messaging.R;
 import com.android.messaging.datamodel.action.ReceiveMmsMessageAction;

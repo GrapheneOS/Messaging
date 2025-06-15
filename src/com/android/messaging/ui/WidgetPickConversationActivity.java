@@ -16,10 +16,12 @@
 
 package com.android.messaging.ui;
 
-import android.app.Fragment;
 import android.appwidget.AppWidgetManager;
 import android.content.Intent;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
 
 import com.android.messaging.Factory;
 import com.android.messaging.datamodel.data.ConversationListItemData;
@@ -59,11 +61,11 @@ public class WidgetPickConversationActivity extends BaseBugleActivity implements
         final Bundle bundle = new Bundle();
         bundle.putBoolean(ShareIntentFragment.HIDE_NEW_CONVERSATION_BUTTON_KEY, true);
         convPicker.setArguments(bundle);
-        convPicker.show(getFragmentManager(), "ShareIntentFragment");
+        convPicker.show(getSupportFragmentManager(), "ShareIntentFragment");
     }
 
     @Override
-    public void onAttachFragment(final Fragment fragment) {
+    public void onAttachFragment(@NonNull final Fragment fragment) {
         final Intent intent = getIntent();
         final String action = intent.getAction();
         if (!AppWidgetManager.ACTION_APPWIDGET_CONFIGURE.equals(action)) {

@@ -16,17 +16,12 @@
 
 package com.android.messaging.ui.appsettings;
 
-import android.app.FragmentTransaction;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.preference.Preference;
-import android.preference.Preference.OnPreferenceClickListener;
-import android.preference.PreferenceCategory;
-import android.preference.PreferenceFragment;
 import android.text.TextUtils;
 import android.view.MenuItem;
 
@@ -42,7 +37,12 @@ import com.android.messaging.util.BuglePrefs;
 import com.android.messaging.util.LogUtil;
 import com.android.messaging.util.PhoneUtils;
 
+import androidx.annotation.Nullable;
 import androidx.core.app.NavUtils;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.preference.Preference;
+import androidx.preference.PreferenceCategory;
+import androidx.preference.PreferenceFragmentCompat;
 
 public class PerSubscriptionSettingsActivity extends BugleActionBarActivity {
     @Override
@@ -58,7 +58,7 @@ public class PerSubscriptionSettingsActivity extends BugleActionBarActivity {
             // This will fall back to the default title, i.e. "Messaging settings," so No-op.
         }
 
-        final FragmentTransaction ft = getFragmentManager().beginTransaction();
+        final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         final PerSubscriptionSettingsFragment fragment = new PerSubscriptionSettingsFragment();
         ft.replace(android.R.id.content, fragment);
         ft.commit();
@@ -74,7 +74,7 @@ public class PerSubscriptionSettingsActivity extends BugleActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public static class PerSubscriptionSettingsFragment extends PreferenceFragment
+    public static class PerSubscriptionSettingsFragment extends PreferenceFragmentCompat
             implements OnSharedPreferenceChangeListener {
         private PhoneNumberPreference mPhoneNumberPreference;
         private Preference mGroupMmsPreference;
@@ -87,9 +87,7 @@ public class PerSubscriptionSettingsActivity extends BugleActionBarActivity {
         }
 
         @Override
-        public void onCreate(final Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-
+        public void onCreatePreferences(@Nullable Bundle savedInstanceState, @Nullable String rootKey) {
             // Get sub id from launch intent
             final Intent intent = getActivity().getIntent();
             Assert.notNull(intent);
@@ -102,10 +100,8 @@ public class PerSubscriptionSettingsActivity extends BugleActionBarActivity {
 
             mPhoneNumberKey = getString(R.string.mms_phone_number_pref_key);
             mPhoneNumberPreference = (PhoneNumberPreference) findPreference(mPhoneNumberKey);
-            final PreferenceCategory advancedCategory = (PreferenceCategory)
-                    findPreference(getString(R.string.advanced_category_pref_key));
-            final PreferenceCategory mmsCategory = (PreferenceCategory)
-                    findPreference(getString(R.string.mms_messaging_category_pref_key));
+            final PreferenceCategory advancedCategory = findPreference(getString(R.string.advanced_category_pref_key));
+            final PreferenceCategory mmsCategory = findPreference(getString(R.string.mms_messaging_category_pref_key));
 
             mPhoneNumberPreference.setDefaultPhoneNumber(
                     PhoneUtils.get(mSubId).getCanonicalForSelf(false/*allowOverride*/), mSubId);
@@ -119,12 +115,9 @@ public class PerSubscriptionSettingsActivity extends BugleActionBarActivity {
                 // is being sent, making sure we will have a self number for group mms.
                 mmsCategory.removePreference(mGroupMmsPreference);
             } else {
-                mGroupMmsPreference.setOnPreferenceClickListener(new OnPreferenceClickListener() {
-                    @Override
-                    public boolean onPreferenceClick(Preference pref) {
-                        GroupMmsSettingDialog.showDialog(getActivity(), mSubId);
-                        return true;
-                    }
+                mGroupMmsPreference.setOnPreferenceClickListener(pref -> {
+                    GroupMmsSettingDialog.showDialog(getActivity(), mSubId);
+                    return true;
                 });
                 updateGroupMmsPrefSummary();
             }

@@ -17,8 +17,9 @@
 package com.android.messaging.datamodel;
 
 import android.content.Context;
-import android.content.CursorLoader;
 import android.net.Uri;
+
+import androidx.loader.content.CursorLoader;
 
 /**
  * Extension to basic cursor loader that has an attached binding id
