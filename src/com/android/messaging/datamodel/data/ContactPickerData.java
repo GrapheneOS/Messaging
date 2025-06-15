@@ -38,8 +38,7 @@ import com.android.messaging.util.LogUtil;
  * The caller is responsible for ensuring that the app has READ_CONTACTS permission (see
  * {@link ContactUtil#hasReadContactsPermission()}) before instantiating this class.
  */
-public class ContactPickerData extends BindableData implements
-        LoaderManager.LoaderCallbacks<Cursor> {
+public class ContactPickerData extends BindableData {
     public interface ContactPickerDataListener {
         void onAllContactsCursorUpdated(Cursor data);
         void onFrequentContactsCursorUpdated(Cursor data);
@@ -62,95 +61,97 @@ public class ContactPickerData extends BindableData implements
     private static final int FREQUENT_CONTACTS_LOADER = 2;
     private static final int PARTICIPANT_LOADER = 3;
 
-    @Override
-    public Loader<Cursor> onCreateLoader(final int id, final Bundle args) {
-        final String bindingId = args.getString(BINDING_ID);
-        // Check if data still bound to the requesting ui element
-        if (isBound(bindingId)) {
-            switch (id) {
-                case ALL_CONTACTS_LOADER:
-                    return ContactUtil.getPhones(mContext)
-                            .createBoundCursorLoader(bindingId);
-                case FREQUENT_CONTACTS_LOADER:
-                    return ContactUtil.getFrequentContacts(mContext)
-                            .createBoundCursorLoader(bindingId);
-                case PARTICIPANT_LOADER:
-                    return new BoundCursorLoader(bindingId, mContext,
-                            MessagingContentProvider.PARTICIPANTS_URI,
-                            ParticipantData.ParticipantsQuery.PROJECTION, null, null, null);
-                default:
-                    Assert.fail("Unknown loader id for contact picker!");
-                    break;
-            }
-        } else {
-            LogUtil.w(LogUtil.BUGLE_TAG, "Loader created after unbinding the contacts list");
-        }
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void onLoadFinished(final Loader<Cursor> loader, final Cursor data) {
-        final BoundCursorLoader cursorLoader = (BoundCursorLoader) loader;
-        if (isBound(cursorLoader.getBindingId())) {
-            switch (loader.getId()) {
-                case ALL_CONTACTS_LOADER:
-                    mListener.onAllContactsCursorUpdated(data);
-                    mFrequentContactsCursorBuilder.setAllContacts(data);
-                    break;
-                case FREQUENT_CONTACTS_LOADER:
-                    mFrequentContactsCursorBuilder.setFrequents(data);
-                    break;
-                case PARTICIPANT_LOADER:
-                    mListener.onContactCustomColorLoaded(this);
-                    break;
-                default:
-                    Assert.fail("Unknown loader id for contact picker!");
-                    break;
-            }
-
-            if (loader.getId() != PARTICIPANT_LOADER) {
-                // The frequent contacts cursor to be used in the UI depends on results from both
-                // all contacts and frequent contacts loader, and we don't know which will finish
-                // first. Therefore, try to build the cursor and notify the listener if it's
-                // successfully built.
-                final Cursor frequentContactsCursor = mFrequentContactsCursorBuilder.build();
-                if (frequentContactsCursor != null) {
-                    mListener.onFrequentContactsCursorUpdated(frequentContactsCursor);
+    private class ContactPickerLoaderCallbacks extends CursorLoaderCallbacks {
+        @Override
+        public Loader<Cursor> onCreateLoader(final int id, final Bundle args) {
+            final String bindingId = args.getString(BINDING_ID);
+            // Check if data still bound to the requesting ui element
+            if (isBound(bindingId)) {
+                switch (id) {
+                    case ALL_CONTACTS_LOADER:
+                        return ContactUtil.getPhones(mContext)
+                                .createBoundCursorLoader(bindingId);
+                    case FREQUENT_CONTACTS_LOADER:
+                        return ContactUtil.getFrequentContacts(mContext)
+                                .createBoundCursorLoader(bindingId);
+                    case PARTICIPANT_LOADER:
+                        return new BoundCursorLoader(bindingId, mContext,
+                                MessagingContentProvider.PARTICIPANTS_URI,
+                                ParticipantData.ParticipantsQuery.PROJECTION, null, null, null);
+                    default:
+                        Assert.fail("Unknown loader id for contact picker!");
+                        break;
                 }
+            } else {
+                LogUtil.w(LogUtil.BUGLE_TAG, "Loader created after unbinding the contacts list");
             }
-        } else {
-            LogUtil.w(LogUtil.BUGLE_TAG, "Loader finished after unbinding the contacts list");
+            return null;
         }
-    }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void onLoaderReset(final Loader<Cursor> loader) {
-        final BoundCursorLoader cursorLoader = (BoundCursorLoader) loader;
-        if (isBound(cursorLoader.getBindingId())) {
-            switch (loader.getId()) {
-                case ALL_CONTACTS_LOADER:
-                    mListener.onAllContactsCursorUpdated(null);
-                    mFrequentContactsCursorBuilder.setAllContacts(null);
-                    break;
-                case FREQUENT_CONTACTS_LOADER:
-                    mListener.onFrequentContactsCursorUpdated(null);
-                    mFrequentContactsCursorBuilder.setFrequents(null);
-                    break;
-                case PARTICIPANT_LOADER:
-                    mListener.onContactCustomColorLoaded(this);
-                    break;
-                default:
-                    Assert.fail("Unknown loader id for contact picker!");
-                    break;
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void onLoadFinish(final Loader<Cursor> loader, final Cursor data) {
+            final BoundCursorLoader cursorLoader = (BoundCursorLoader) loader;
+            if (isBound(cursorLoader.getBindingId())) {
+                switch (loader.getId()) {
+                    case ALL_CONTACTS_LOADER:
+                        mListener.onAllContactsCursorUpdated(data);
+                        mFrequentContactsCursorBuilder.setAllContacts(data);
+                        break;
+                    case FREQUENT_CONTACTS_LOADER:
+                        mFrequentContactsCursorBuilder.setFrequents(data);
+                        break;
+                    case PARTICIPANT_LOADER:
+                        mListener.onContactCustomColorLoaded(ContactPickerData.this);
+                        break;
+                    default:
+                        Assert.fail("Unknown loader id for contact picker!");
+                        break;
+                }
+
+                if (loader.getId() != PARTICIPANT_LOADER) {
+                    // The frequent contacts cursor to be used in the UI depends on results from both
+                    // all contacts and frequent contacts loader, and we don't know which will finish
+                    // first. Therefore, try to build the cursor and notify the listener if it's
+                    // successfully built.
+                    final Cursor frequentContactsCursor = mFrequentContactsCursorBuilder.build();
+                    if (frequentContactsCursor != null) {
+                        mListener.onFrequentContactsCursorUpdated(frequentContactsCursor);
+                    }
+                }
+            } else {
+                LogUtil.w(LogUtil.BUGLE_TAG, "Loader finished after unbinding the contacts list");
             }
-        } else {
-            LogUtil.w(LogUtil.BUGLE_TAG, "Loader reset after unbinding the contacts list");
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void onLoaderReset(final Loader<Cursor> loader) {
+            final BoundCursorLoader cursorLoader = (BoundCursorLoader) loader;
+            if (isBound(cursorLoader.getBindingId())) {
+                switch (loader.getId()) {
+                    case ALL_CONTACTS_LOADER:
+                        mListener.onAllContactsCursorUpdated(null);
+                        mFrequentContactsCursorBuilder.setAllContacts(null);
+                        break;
+                    case FREQUENT_CONTACTS_LOADER:
+                        mListener.onFrequentContactsCursorUpdated(null);
+                        mFrequentContactsCursorBuilder.setFrequents(null);
+                        break;
+                    case PARTICIPANT_LOADER:
+                        mListener.onContactCustomColorLoaded(ContactPickerData.this);
+                        break;
+                    default:
+                        Assert.fail("Unknown loader id for contact picker!");
+                        break;
+                }
+            } else {
+                LogUtil.w(LogUtil.BUGLE_TAG, "Loader reset after unbinding the contacts list");
+            }
         }
     }
 
@@ -159,9 +160,10 @@ public class ContactPickerData extends BindableData implements
         final Bundle args = new Bundle();
         args.putString(BINDING_ID, binding.getBindingId());
         mLoaderManager = loaderManager;
-        mLoaderManager.initLoader(ALL_CONTACTS_LOADER, args, this);
-        mLoaderManager.initLoader(FREQUENT_CONTACTS_LOADER, args, this);
-        mLoaderManager.initLoader(PARTICIPANT_LOADER, args, this);
+        var loaderCallbacks = new ContactPickerLoaderCallbacks();
+        mLoaderManager.initLoader(ALL_CONTACTS_LOADER, args, loaderCallbacks);
+        mLoaderManager.initLoader(FREQUENT_CONTACTS_LOADER, args, loaderCallbacks);
+        mLoaderManager.initLoader(PARTICIPANT_LOADER, args, loaderCallbacks);
     }
 
     @Override

@@ -40,8 +40,7 @@ import java.util.List;
  * Services SettingsFragment's data needs for loading active self participants to display
  * the list of active subscriptions.
  */
-public class SettingsData extends BindableData implements
-        LoaderManager.LoaderCallbacks<Cursor> {
+public class SettingsData extends BindableData {
     public interface SettingsDataListener {
         void onSelfParticipantDataLoaded(SettingsData data);
     }
@@ -127,48 +126,50 @@ public class SettingsData extends BindableData implements
 
     private static final int SELF_PARTICIPANT_LOADER = 1;
 
-    @Override
-    public Loader<Cursor> onCreateLoader(final int id, final Bundle args) {
-        Assert.equals(SELF_PARTICIPANT_LOADER, id);
-        Loader<Cursor> loader = null;
+    private class SettingsDataCallback extends CursorLoaderCallbacks {
+        @Override
+        public Loader<Cursor> onCreateLoader(final int id, final Bundle args) {
+            Assert.equals(SELF_PARTICIPANT_LOADER, id);
+            Loader<Cursor> loader = null;
 
-        final String bindingId = args.getString(BINDING_ID);
-        // Check if data still bound to the requesting ui element
-        if (isBound(bindingId)) {
-            loader = new BoundCursorLoader(bindingId, mContext,
-                    MessagingContentProvider.PARTICIPANTS_URI,
-                    ParticipantData.ParticipantsQuery.PROJECTION,
-                    ParticipantColumns.SUB_ID + " <> ?",
-                    new String[] { String.valueOf(ParticipantData.OTHER_THAN_SELF_SUB_ID) },
-                    null);
-        } else {
-            LogUtil.w(LogUtil.BUGLE_TAG, "Creating self loader after unbinding");
+            final String bindingId = args.getString(BINDING_ID);
+            // Check if data still bound to the requesting ui element
+            if (isBound(bindingId)) {
+                loader = new BoundCursorLoader(bindingId, mContext,
+                        MessagingContentProvider.PARTICIPANTS_URI,
+                        ParticipantData.ParticipantsQuery.PROJECTION,
+                        ParticipantColumns.SUB_ID + " <> ?",
+                        new String[] { String.valueOf(ParticipantData.OTHER_THAN_SELF_SUB_ID) },
+                        null);
+            } else {
+                LogUtil.w(LogUtil.BUGLE_TAG, "Creating self loader after unbinding");
+            }
+            return loader;
         }
-        return loader;
-    }
 
-    @Override
-    public void onLoadFinished(final Loader<Cursor> generic, final Cursor data) {
-        final BoundCursorLoader loader = (BoundCursorLoader) generic;
+        @Override
+        public void onLoadFinish(final Loader<Cursor> generic, final Cursor data) {
+            final BoundCursorLoader loader = (BoundCursorLoader) generic;
 
-        // Check if data still bound to the requesting ui element
-        if (isBound(loader.getBindingId())) {
-            mSelfParticipantsData.bind(data);
-            mListener.onSelfParticipantDataLoaded(this);
-        } else {
-            LogUtil.w(LogUtil.BUGLE_TAG, "Self loader finished after unbinding");
+            // Check if data still bound to the requesting ui element
+            if (isBound(loader.getBindingId())) {
+                mSelfParticipantsData.bind(data);
+                mListener.onSelfParticipantDataLoaded(SettingsData.this);
+            } else {
+                LogUtil.w(LogUtil.BUGLE_TAG, "Self loader finished after unbinding");
+            }
         }
-    }
 
-    @Override
-    public void onLoaderReset(final Loader<Cursor> generic) {
-        final BoundCursorLoader loader = (BoundCursorLoader) generic;
+        @Override
+        public void onLoaderReset(final Loader<Cursor> generic) {
+            final BoundCursorLoader loader = (BoundCursorLoader) generic;
 
-        // Check if data still bound to the requesting ui element
-        if (isBound(loader.getBindingId())) {
-            mSelfParticipantsData.bind(null);
-        } else {
-            LogUtil.w(LogUtil.BUGLE_TAG, "Self loader reset after unbinding");
+            // Check if data still bound to the requesting ui element
+            if (isBound(loader.getBindingId())) {
+                mSelfParticipantsData.bind(null);
+            } else {
+                LogUtil.w(LogUtil.BUGLE_TAG, "Self loader reset after unbinding");
+            }
         }
     }
 
@@ -177,7 +178,7 @@ public class SettingsData extends BindableData implements
         final Bundle args = new Bundle();
         args.putString(BINDING_ID, binding.getBindingId());
         mLoaderManager = loaderManager;
-        mLoaderManager.initLoader(SELF_PARTICIPANT_LOADER, args, this);
+        mLoaderManager.initLoader(SELF_PARTICIPANT_LOADER, args, new SettingsDataCallback());
     }
 
     @Override

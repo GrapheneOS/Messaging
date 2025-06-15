@@ -56,7 +56,7 @@ public class MediaPickerData extends BindableData {
     /**
      * A trampoline class so that we can inherit from LoaderManager.LoaderCallbacks multiple times.
      */
-    private class GalleryLoaderCallbacks implements LoaderManager.LoaderCallbacks<Cursor> {
+    private class GalleryLoaderCallbacks extends CursorLoaderCallbacks {
         @Override
         public Loader<Cursor> onCreateLoader(final int id, final Bundle args) {
             final String bindingId = args.getString(BINDING_ID);
@@ -80,7 +80,7 @@ public class MediaPickerData extends BindableData {
          * {@inheritDoc}
          */
         @Override
-        public void onLoadFinished(final Loader<Cursor> loader, final Cursor data) {
+        public void onLoadFinish(final Loader<Cursor> loader, final Cursor data) {
             final BoundCursorLoader cursorLoader = (BoundCursorLoader) loader;
             if (isBound(cursorLoader.getBindingId())) {
                 switch (loader.getId()) {

@@ -38,8 +38,7 @@ import com.android.messaging.util.LogUtil;
 
 import java.util.HashSet;
 
-public class ConversationListData extends BindableData
-        implements LoaderManager.LoaderCallbacks<Cursor> {
+public class ConversationListData extends BindableData {
 
     private static final String TAG = LogUtil.BUGLE_DATAMODEL_TAG;
     private static final String BINDING_ID = "bindingId";
@@ -81,86 +80,88 @@ public class ConversationListData extends BindableData
     // all blocked participants
     private final HashSet<String> mBlockedParticipants = new HashSet<String>();
 
-    @Override
-    public Loader<Cursor> onCreateLoader(final int id, final Bundle args) {
-        final String bindingId = args.getString(BINDING_ID);
-        Loader<Cursor> loader = null;
-        // Check if data still bound to the requesting ui element
-        if (isBound(bindingId)) {
-            switch (id) {
-                case BLOCKED_PARTICIPANTS_AVAILABLE_LOADER:
-                    loader = new BoundCursorLoader(bindingId, mContext,
-                            MessagingContentProvider.PARTICIPANTS_URI,
-                            BLOCKED_PARTICIPANTS_PROJECTION,
-                            ParticipantColumns.BLOCKED + "=1", null, null);
-                    break;
-                case CONVERSATION_LIST_LOADER:
-                    loader = new BoundCursorLoader(bindingId, mContext,
-                            MessagingContentProvider.CONVERSATIONS_URI,
-                            ConversationListItemData.PROJECTION,
-                            mArchivedMode ? WHERE_ARCHIVED : WHERE_NOT_ARCHIVED,
-                            null,       // selection args
-                            SORT_ORDER);
-                    break;
-                default:
-                    Assert.fail("Unknown loader id");
-                    break;
+    private class ConversationListLoaderCallbacks extends CursorLoaderCallbacks {
+        @Override
+        public Loader<Cursor> onCreateLoader(final int id, final Bundle args) {
+            final String bindingId = args.getString(BINDING_ID);
+            Loader<Cursor> loader = null;
+            // Check if data still bound to the requesting ui element
+            if (isBound(bindingId)) {
+                switch (id) {
+                    case BLOCKED_PARTICIPANTS_AVAILABLE_LOADER:
+                        loader = new BoundCursorLoader(bindingId, mContext,
+                                MessagingContentProvider.PARTICIPANTS_URI,
+                                BLOCKED_PARTICIPANTS_PROJECTION,
+                                ParticipantColumns.BLOCKED + "=1", null, null);
+                        break;
+                    case CONVERSATION_LIST_LOADER:
+                        loader = new BoundCursorLoader(bindingId, mContext,
+                                MessagingContentProvider.CONVERSATIONS_URI,
+                                ConversationListItemData.PROJECTION,
+                                mArchivedMode ? WHERE_ARCHIVED : WHERE_NOT_ARCHIVED,
+                                null,       // selection args
+                                SORT_ORDER);
+                        break;
+                    default:
+                        Assert.fail("Unknown loader id");
+                        break;
+                }
+            } else {
+                LogUtil.w(TAG, "Creating loader after unbinding list");
             }
-        } else {
-            LogUtil.w(TAG, "Creating loader after unbinding list");
+            return loader;
         }
-        return loader;
-    }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void onLoadFinished(final Loader<Cursor> generic, final Cursor data) {
-        final BoundCursorLoader loader = (BoundCursorLoader) generic;
-        if (isBound(loader.getBindingId())) {
-            switch (loader.getId()) {
-                case BLOCKED_PARTICIPANTS_AVAILABLE_LOADER:
-                    mBlockedParticipants.clear();
-                    for (int i = 0; i < data.getCount(); i++) {
-                        data.moveToPosition(i);
-                        mBlockedParticipants.add(data.getString(
-                                INDEX_BLOCKED_PARTICIPANTS_NORMALIZED_DESTINATION));
-                    }
-                    mListener.setBlockedParticipantsAvailable(data != null && data.getCount() > 0);
-                    break;
-                case CONVERSATION_LIST_LOADER:
-                    mListener.onConversationListCursorUpdated(this, data);
-                    break;
-                default:
-                    Assert.fail("Unknown loader id");
-                    break;
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void onLoadFinish(final Loader<Cursor> generic, final Cursor data) {
+            final BoundCursorLoader loader = (BoundCursorLoader) generic;
+            if (isBound(loader.getBindingId())) {
+                switch (loader.getId()) {
+                    case BLOCKED_PARTICIPANTS_AVAILABLE_LOADER:
+                        mBlockedParticipants.clear();
+                        for (int i = 0; i < data.getCount(); i++) {
+                            data.moveToPosition(i);
+                            mBlockedParticipants.add(data.getString(
+                                    INDEX_BLOCKED_PARTICIPANTS_NORMALIZED_DESTINATION));
+                        }
+                        mListener.setBlockedParticipantsAvailable(data != null && data.getCount() > 0);
+                        break;
+                    case CONVERSATION_LIST_LOADER:
+                        mListener.onConversationListCursorUpdated(ConversationListData.this, data);
+                        break;
+                    default:
+                        Assert.fail("Unknown loader id");
+                        break;
+                }
+            } else {
+                LogUtil.w(TAG, "Loader finished after unbinding list");
             }
-        } else {
-            LogUtil.w(TAG, "Loader finished after unbinding list");
         }
-    }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void onLoaderReset(final Loader<Cursor> generic) {
-        final BoundCursorLoader loader = (BoundCursorLoader) generic;
-        if (isBound(loader.getBindingId())) {
-            switch (loader.getId()) {
-                case BLOCKED_PARTICIPANTS_AVAILABLE_LOADER:
-                    mListener.setBlockedParticipantsAvailable(false);
-                    break;
-                case CONVERSATION_LIST_LOADER:
-                    mListener.onConversationListCursorUpdated(this, null);
-                    break;
-                default:
-                    Assert.fail("Unknown loader id");
-                    break;
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void onLoaderReset(final Loader<Cursor> generic) {
+            final BoundCursorLoader loader = (BoundCursorLoader) generic;
+            if (isBound(loader.getBindingId())) {
+                switch (loader.getId()) {
+                    case BLOCKED_PARTICIPANTS_AVAILABLE_LOADER:
+                        mListener.setBlockedParticipantsAvailable(false);
+                        break;
+                    case CONVERSATION_LIST_LOADER:
+                        mListener.onConversationListCursorUpdated(ConversationListData.this, null);
+                        break;
+                    default:
+                        Assert.fail("Unknown loader id");
+                        break;
+                }
+            } else {
+                LogUtil.w(TAG, "Loader reset after unbinding list");
             }
-        } else {
-            LogUtil.w(TAG, "Loader reset after unbinding list");
         }
     }
 
@@ -171,8 +172,9 @@ public class ConversationListData extends BindableData
         mArgs = new Bundle();
         mArgs.putString(BINDING_ID, binding.getBindingId());
         mLoaderManager = loaderManager;
-        mLoaderManager.initLoader(CONVERSATION_LIST_LOADER, mArgs, this);
-        mLoaderManager.initLoader(BLOCKED_PARTICIPANTS_AVAILABLE_LOADER, mArgs, this);
+        var loaderCallbacks = new ConversationListLoaderCallbacks();
+        mLoaderManager.initLoader(CONVERSATION_LIST_LOADER, mArgs, loaderCallbacks);
+        mLoaderManager.initLoader(BLOCKED_PARTICIPANTS_AVAILABLE_LOADER, mArgs, loaderCallbacks);
     }
 
     public void handleSecondaryUserMessagesSeen() {

@@ -38,8 +38,7 @@ import java.util.List;
 /**
  * Services data needs for PeopleAndOptionsFragment.
  */
-public class PeopleAndOptionsData extends BindableData implements
-        LoaderManager.LoaderCallbacks<Cursor> {
+public class PeopleAndOptionsData extends BindableData {
     public interface PeopleAndOptionsDataListener {
         void onOptionsCursorUpdated(PeopleAndOptionsData data, Cursor cursor);
         void onParticipantsListLoaded(PeopleAndOptionsData data,
@@ -64,87 +63,90 @@ public class PeopleAndOptionsData extends BindableData implements
     private static final int CONVERSATION_OPTIONS_LOADER = 1;
     private static final int PARTICIPANT_LOADER = 2;
 
-    @Override
-    public Loader<Cursor> onCreateLoader(final int id, final Bundle args) {
-        final String bindingId = args.getString(BINDING_ID);
-        // Check if data still bound to the requesting ui element
-        if (isBound(bindingId)) {
-            switch (id) {
-                case CONVERSATION_OPTIONS_LOADER: {
-                    final Uri uri =
-                            MessagingContentProvider.buildConversationMetadataUri(mConversationId);
-                    return new BoundCursorLoader(bindingId, mContext, uri,
-                            PeopleOptionsItemData.PROJECTION, null, null, null);
+    private class PeopleAndOptionsLoaderCallbacks extends CursorLoaderCallbacks {
+        @Override
+        public Loader<Cursor> onCreateLoader(final int id, final Bundle args) {
+            final String bindingId = args.getString(BINDING_ID);
+            // Check if data still bound to the requesting ui element
+            if (isBound(bindingId)) {
+                switch (id) {
+                    case CONVERSATION_OPTIONS_LOADER: {
+                        final Uri uri =
+                                MessagingContentProvider.buildConversationMetadataUri(mConversationId);
+                        return new BoundCursorLoader(bindingId, mContext, uri,
+                                PeopleOptionsItemData.PROJECTION, null, null, null);
+                    }
+
+                    case PARTICIPANT_LOADER: {
+                        final Uri uri =
+                                MessagingContentProvider
+                                        .buildConversationParticipantsUri(mConversationId);
+                        return new BoundCursorLoader(bindingId, mContext, uri,
+                                ParticipantData.ParticipantsQuery.PROJECTION, null, null, null);
+                    }
+
+                    default:
+                        Assert.fail("Unknown loader id for PeopleAndOptionsFragment!");
+                        break;
                 }
+            } else {
+                LogUtil.w(LogUtil.BUGLE_TAG, "Loader created after unbinding PeopleAndOptionsFragment");
+            }
+            return null;
+        }
 
-                case PARTICIPANT_LOADER: {
-                    final Uri uri =
-                            MessagingContentProvider
-                                    .buildConversationParticipantsUri(mConversationId);
-                    return new BoundCursorLoader(bindingId, mContext, uri,
-                            ParticipantData.ParticipantsQuery.PROJECTION, null, null, null);
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void onLoadFinish(final Loader<Cursor> loader, final Cursor data) {
+            final BoundCursorLoader cursorLoader = (BoundCursorLoader) loader;
+            if (isBound(cursorLoader.getBindingId())) {
+                // data.moveToPosition(-1);
+                switch (loader.getId()) {
+                    case CONVERSATION_OPTIONS_LOADER:
+                        mListener.onOptionsCursorUpdated(PeopleAndOptionsData.this, data);
+                        break;
+
+                    case PARTICIPANT_LOADER:
+                        mParticipantData.bind(data);
+                        mListener.onParticipantsListLoaded(PeopleAndOptionsData.this,
+                                mParticipantData.getParticipantListExcludingSelf());
+                        break;
+
+                    default:
+                        Assert.fail("Unknown loader id for PeopleAndOptionsFragment!");
+                        break;
                 }
-
-                default:
-                    Assert.fail("Unknown loader id for PeopleAndOptionsFragment!");
-                    break;
+            } else {
+                LogUtil.w(LogUtil.BUGLE_TAG,
+                        "Loader finished after unbinding PeopleAndOptionsFragment");
             }
-        } else {
-            LogUtil.w(LogUtil.BUGLE_TAG, "Loader created after unbinding PeopleAndOptionsFragment");
         }
-        return null;
-    }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void onLoadFinished(final Loader<Cursor> loader, final Cursor data) {
-        final BoundCursorLoader cursorLoader = (BoundCursorLoader) loader;
-        if (isBound(cursorLoader.getBindingId())) {
-            switch (loader.getId()) {
-                case CONVERSATION_OPTIONS_LOADER:
-                    mListener.onOptionsCursorUpdated(this, data);
-                    break;
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void onLoaderReset(final Loader<Cursor> loader) {
+            final BoundCursorLoader cursorLoader = (BoundCursorLoader) loader;
+            if (isBound(cursorLoader.getBindingId())) {
+                switch (loader.getId()) {
+                    case CONVERSATION_OPTIONS_LOADER:
+                        mListener.onOptionsCursorUpdated(PeopleAndOptionsData.this, null);
+                        break;
 
-                case PARTICIPANT_LOADER:
-                    mParticipantData.bind(data);
-                    mListener.onParticipantsListLoaded(this,
-                            mParticipantData.getParticipantListExcludingSelf());
-                    break;
+                    case PARTICIPANT_LOADER:
+                        mParticipantData.bind(null);
+                        break;
 
-                default:
-                    Assert.fail("Unknown loader id for PeopleAndOptionsFragment!");
-                    break;
+                    default:
+                        Assert.fail("Unknown loader id for PeopleAndOptionsFragment!");
+                        break;
+                }
+            } else {
+                LogUtil.w(LogUtil.BUGLE_TAG, "Loader reset after unbinding PeopleAndOptionsFragment");
             }
-        } else {
-            LogUtil.w(LogUtil.BUGLE_TAG,
-                    "Loader finished after unbinding PeopleAndOptionsFragment");
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void onLoaderReset(final Loader<Cursor> loader) {
-        final BoundCursorLoader cursorLoader = (BoundCursorLoader) loader;
-        if (isBound(cursorLoader.getBindingId())) {
-            switch (loader.getId()) {
-                case CONVERSATION_OPTIONS_LOADER:
-                    mListener.onOptionsCursorUpdated(this, null);
-                    break;
-
-                case PARTICIPANT_LOADER:
-                    mParticipantData.bind(null);
-                    break;
-
-                default:
-                    Assert.fail("Unknown loader id for PeopleAndOptionsFragment!");
-                    break;
-            }
-        } else {
-            LogUtil.w(LogUtil.BUGLE_TAG, "Loader reset after unbinding PeopleAndOptionsFragment");
         }
     }
 
@@ -153,8 +155,9 @@ public class PeopleAndOptionsData extends BindableData implements
         final Bundle args = new Bundle();
         args.putString(BINDING_ID, binding.getBindingId());
         mLoaderManager = loaderManager;
-        mLoaderManager.initLoader(CONVERSATION_OPTIONS_LOADER, args, this);
-        mLoaderManager.initLoader(PARTICIPANT_LOADER, args, this);
+        var loaderCallbacks = new PeopleAndOptionsLoaderCallbacks();
+        mLoaderManager.initLoader(CONVERSATION_OPTIONS_LOADER, args, loaderCallbacks);
+        mLoaderManager.initLoader(PARTICIPANT_LOADER, args, loaderCallbacks);
     }
 
     @Override

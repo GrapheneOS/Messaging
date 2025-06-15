@@ -175,7 +175,7 @@ public class ConversationData extends BindableData {
     /**
      * A trampoline class so that we can inherit from LoaderManager.LoaderCallbacks multiple times.
      */
-    private class MetadataLoaderCallbacks implements LoaderManager.LoaderCallbacks<Cursor> {
+    private class MetadataLoaderCallbacks extends CursorLoaderCallbacks {
         @Override
         public Loader<Cursor> onCreateLoader(final int id, final Bundle args) {
             Assert.equals(CONVERSATION_META_DATA_LOADER, id);
@@ -196,7 +196,7 @@ public class ConversationData extends BindableData {
         }
 
         @Override
-        public void onLoadFinished(final Loader<Cursor> generic, final Cursor data) {
+        public void onLoadFinish(final Loader<Cursor> generic, final Cursor data) {
             final BoundCursorLoader loader = (BoundCursorLoader) generic;
 
             // Check if data still bound to the requesting ui element
@@ -241,7 +241,7 @@ public class ConversationData extends BindableData {
     /**
      * A trampoline class so that we can inherit from LoaderManager.LoaderCallbacks multiple times.
      */
-    private class MessagesLoaderCallbacks implements LoaderManager.LoaderCallbacks<Cursor> {
+    private class MessagesLoaderCallbacks extends CursorLoaderCallbacks {
         @Override
         public Loader<Cursor> onCreateLoader(final int id, final Bundle args) {
             Assert.equals(CONVERSATION_MESSAGES_LOADER, id);
@@ -264,7 +264,7 @@ public class ConversationData extends BindableData {
         }
 
         @Override
-        public void onLoadFinished(final Loader<Cursor> generic, final Cursor rawData) {
+        public void onLoadFinish(final Loader<Cursor> generic, final Cursor rawData) {
             final BoundCursorLoader loader = (BoundCursorLoader) generic;
 
             // Check if data still bound to the requesting ui element
@@ -344,7 +344,7 @@ public class ConversationData extends BindableData {
     /**
      * A trampoline class so that we can inherit from LoaderManager.LoaderCallbacks multiple times.
      */
-    private class ParticipantLoaderCallbacks implements LoaderManager.LoaderCallbacks<Cursor> {
+    private class ParticipantLoaderCallbacks extends CursorLoaderCallbacks {
         @Override
         public Loader<Cursor> onCreateLoader(final int id, final Bundle args) {
             Assert.equals(PARTICIPANT_LOADER, id);
@@ -365,7 +365,7 @@ public class ConversationData extends BindableData {
         }
 
         @Override
-        public void onLoadFinished(final Loader<Cursor> generic, final Cursor data) {
+        public void onLoadFinish(final Loader<Cursor> generic, final Cursor data) {
             final BoundCursorLoader loader = (BoundCursorLoader) generic;
 
             // Check if data still bound to the requesting ui element
@@ -395,7 +395,7 @@ public class ConversationData extends BindableData {
     /**
      * A trampoline class so that we can inherit from LoaderManager.LoaderCallbacks multiple times.
      */
-    private class SelfParticipantLoaderCallbacks implements LoaderManager.LoaderCallbacks<Cursor> {
+    private class SelfParticipantLoaderCallbacks extends CursorLoaderCallbacks {
         @Override
         public Loader<Cursor> onCreateLoader(final int id, final Bundle args) {
             Assert.equals(SELF_PARTICIPANT_LOADER, id);
@@ -418,7 +418,7 @@ public class ConversationData extends BindableData {
         }
 
         @Override
-        public void onLoadFinished(final Loader<Cursor> generic, final Cursor data) {
+        public void onLoadFinish(final Loader<Cursor> generic, final Cursor data) {
             final BoundCursorLoader loader = (BoundCursorLoader) generic;
 
             // Check if data still bound to the requesting ui element

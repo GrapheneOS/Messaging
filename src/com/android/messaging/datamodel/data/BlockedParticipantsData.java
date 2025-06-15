@@ -34,8 +34,7 @@ import com.android.messaging.util.Assert;
 /**
  * Services data needs for BlockedParticipantsFragment
  */
-public class BlockedParticipantsData extends BindableData implements
-        LoaderManager.LoaderCallbacks<Cursor> {
+public class BlockedParticipantsData extends BindableData {
     public interface BlockedParticipantsDataListener {
         public void onBlockedParticipantsCursorUpdated(final Cursor cursor);
     }
@@ -51,34 +50,36 @@ public class BlockedParticipantsData extends BindableData implements
         mListener = listener;
     }
 
-    @Override
-    public Loader<Cursor> onCreateLoader(final int id, final Bundle args) {
-        Assert.isTrue(id == BLOCKED_PARTICIPANTS_LOADER);
-        final String bindingId = args.getString(BINDING_ID);
-        // Check if data still bound to the requesting ui element
-        if (isBound(bindingId)) {
-            final Uri uri = MessagingContentProvider.PARTICIPANTS_URI;
-            return new BoundCursorLoader(bindingId, mContext, uri,
-                    ParticipantData.ParticipantsQuery.PROJECTION,
-                    ParticipantColumns.BLOCKED + "=1", null, null);
+    private class BlockedParticipantsLoaderCallbacks extends CursorLoaderCallbacks {
+        @Override
+        public Loader<Cursor> onCreateLoader(final int id, final Bundle args) {
+            Assert.isTrue(id == BLOCKED_PARTICIPANTS_LOADER);
+            final String bindingId = args.getString(BINDING_ID);
+            // Check if data still bound to the requesting ui element
+            if (isBound(bindingId)) {
+                final Uri uri = MessagingContentProvider.PARTICIPANTS_URI;
+                return new BoundCursorLoader(bindingId, mContext, uri,
+                        ParticipantData.ParticipantsQuery.PROJECTION,
+                        ParticipantColumns.BLOCKED + "=1", null, null);
+            }
+            return null;
         }
-        return null;
-    }
 
-    @Override
-    public void onLoadFinished(final Loader<Cursor> loader, final Cursor cursor) {
-        Assert.isTrue(loader.getId() == BLOCKED_PARTICIPANTS_LOADER);
-        final BoundCursorLoader cursorLoader = (BoundCursorLoader) loader;
-        Assert.isTrue(isBound(cursorLoader.getBindingId()));
-        mListener.onBlockedParticipantsCursorUpdated(cursor);
-    }
+        @Override
+        public void onLoadFinish(final Loader<Cursor> loader, final Cursor cursor) {
+            Assert.isTrue(loader.getId() == BLOCKED_PARTICIPANTS_LOADER);
+            final BoundCursorLoader cursorLoader = (BoundCursorLoader) loader;
+            Assert.isTrue(isBound(cursorLoader.getBindingId()));
+            mListener.onBlockedParticipantsCursorUpdated(cursor);
+        }
 
-    @Override
-    public void onLoaderReset(final Loader<Cursor> loader) {
-        Assert.isTrue(loader.getId() == BLOCKED_PARTICIPANTS_LOADER);
-        final BoundCursorLoader cursorLoader = (BoundCursorLoader) loader;
-        Assert.isTrue(isBound(cursorLoader.getBindingId()));
-        mListener.onBlockedParticipantsCursorUpdated(null);
+        @Override
+        public void onLoaderReset(final Loader<Cursor> loader) {
+            Assert.isTrue(loader.getId() == BLOCKED_PARTICIPANTS_LOADER);
+            final BoundCursorLoader cursorLoader = (BoundCursorLoader) loader;
+            Assert.isTrue(isBound(cursorLoader.getBindingId()));
+            mListener.onBlockedParticipantsCursorUpdated(null);
+        }
     }
 
     public void init(final LoaderManager loaderManager,
@@ -86,7 +87,7 @@ public class BlockedParticipantsData extends BindableData implements
         final Bundle args = new Bundle();
         args.putString(BINDING_ID, binding.getBindingId());
         mLoaderManager = loaderManager;
-        mLoaderManager.initLoader(BLOCKED_PARTICIPANTS_LOADER, args, this);
+        mLoaderManager.initLoader(BLOCKED_PARTICIPANTS_LOADER, args, new BlockedParticipantsLoaderCallbacks());
     }
 
     @Override
