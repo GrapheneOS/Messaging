@@ -81,7 +81,14 @@ public abstract class BaseWidgetProvider extends AppWidgetProvider {
     @Override
     public void onEnabled(Context context) {
         super.onEnabled(context);
-        context.getApplicationContext().registerReceiver(this, new IntentFilter(getAction()));
+        IntentFilter filter = new IntentFilter(getAction());
+        context.getApplicationContext().registerReceiver(
+                this,
+                filter,
+                null,
+                null,
+                Context.RECEIVER_NOT_EXPORTED
+        );
     }
 
     protected abstract String getAction();
