@@ -462,7 +462,7 @@
 
         <!-- Widget that displays the conversation list -->
         <receiver android:name=".widget.BugleWidgetProvider"
-                android:exported="true"
+                android:exported="false"
                 android:label="@string/widget_conversation_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -473,7 +473,7 @@
 
         <!-- Widget that displays the messages of a single conversation -->
         <receiver android:name=".widget.WidgetConversationProvider"
-                android:exported="true"
+                android:exported="false"
                 android:label="@string/widget_conversation_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
