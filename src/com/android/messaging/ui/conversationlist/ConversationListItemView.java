@@ -38,8 +38,8 @@ import com.android.messaging.Factory;
 import com.android.messaging.R;
 import com.android.messaging.annotation.VisibleForAnimation;
 import com.android.messaging.datamodel.MessagingContentProvider;
-import com.android.messaging.datamodel.action.DeleteConversationAction;
 import com.android.messaging.datamodel.action.UpdateConversationArchiveStatusAction;
+import com.android.messaging.datamodel.action.UpdateConversationDeletedStatusAction;
 import com.android.messaging.datamodel.data.ConversationListItemData;
 import com.android.messaging.datamodel.data.MessageData;
 import com.android.messaging.datamodel.media.UriImageRequestDescriptor;
@@ -605,11 +605,21 @@ public class ConversationListItemView extends FrameLayout implements OnClickList
         
         if (swipeDirection == SWIPE_DIRECTION_RIGHT) {
             if (mSwipeRightToDeleteEnabled) {
-                // Delete conversation
-                DeleteConversationAction.deleteConversation(conversationId, Long.MAX_VALUE);
+                // Soft delete the conversation
+                UpdateConversationDeletedStatusAction.deleteConversation(conversationId);
+                
+                // Add undo capability
+                final Runnable undoRunnable = new Runnable() {
+                    @Override
+                    public void run() {
+                        UpdateConversationDeletedStatusAction.undeleteConversation(conversationId);
+                    }
+                };
+                
+                // Show snackbar with undo button
                 final String message = getResources().getString(R.string.deleted_toast_message, 1);
-                UiUtils.showSnackBar(getContext(), getRootView(), message, null,
-                        -1,
+                UiUtils.showSnackBar(getContext(), getRootView(), message, undoRunnable,
+                        SnackBar.Action.SNACK_BAR_UNDO,
                         mHostInterface.getSnackBarInteractions());
             } else {
                 // Archive conversation (default behavior)

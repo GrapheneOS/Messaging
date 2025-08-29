@@ -570,10 +570,12 @@ public class BugleDatabaseOperations {
             values.put(ConversationColumns.SMS_SERVICE_CENTER, smsServiceCenter);
         }
 
-        // When the conversation gets updated with new messages, unarchive the conversation unless
-        // the sender is blocked, or we have been told to keep it archived.
+        // When the conversation gets updated with new messages, unarchive and undelete
+        // the conversation unless the sender is blocked or we need to keep it archived.
         if (!keepArchived) {
             values.put(ConversationColumns.ARCHIVE_STATUS, 0);
+            values.put(ConversationColumns.DELETED_STATUS, 0);
+            values.put(ConversationColumns.DELETED_TIMESTAMP, 0);
         }
 
         final MessageData message = readMessage(dbWrapper, messageId);

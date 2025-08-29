@@ -301,11 +301,6 @@ public class ConversationListItemData {
         final int defaultDays = context.getResources().getInteger(R.integer.auto_delete_days_default);
         final int retentionDays = prefs.getInt(autoDeleteDaysKey, defaultDays);
         
-        // If retention is negative, auto-delete is disabled
-        if (retentionDays < 0) {
-            return -1;
-        }
-        
         // Calculate days since deletion
         final long currentTime = System.currentTimeMillis();
         final long millisSinceDeleted = currentTime - mDeletedTimestamp;

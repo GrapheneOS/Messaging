@@ -50,12 +50,6 @@ public class AutoDeleteOldConversationsAction extends Action implements Parcelab
         // Now stored as integer in preferences
         final int retentionDays = prefs.getInt(autoDeleteDaysKey, defaultDays);
         
-        // If retention is negative, disable auto-delete
-        if (retentionDays < 0) {
-            LogUtil.i(TAG, "Auto-delete disabled (retention days < 0)");
-            return null;
-        }
-        
         final DatabaseWrapper db = DataModel.get().getDatabase();
         final List<String> conversationsToDelete = new ArrayList<>();
         
