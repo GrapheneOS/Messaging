@@ -94,7 +94,7 @@ dependencies {
     implementation("androidx.preference:preference:1.2.1")
     implementation("androidx.palette:palette:1.0.0")
     implementation("androidx.recyclerview:recyclerview:1.4.0")
-    implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation("com.github.bumptech.glide:glide:5.0.4")
     implementation("com.google.guava:guava:33.4.8-android")
     implementation("com.googlecode.libphonenumber:libphonenumber:8.13.52")
     implementation("com.google.code.findbugs:jsr305:3.0.2")
