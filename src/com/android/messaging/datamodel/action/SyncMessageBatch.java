@@ -343,9 +343,12 @@ class SyncMessageBatch {
             }
 
             final boolean archived = mCache.isArchived(conversationId);
+            final boolean deleted = mCache.isDeleted(conversationId);
             // Always attempt to auto-switch conversation self id for sync/import case.
+            // Keep the conversation archived or deleted if it was in either state
             BugleDatabaseOperations.maybeRefreshConversationMetadataInTransaction(db,
-                    conversationId, true /*shouldAutoSwitchSelfId*/, archived /*keepArchived*/);
+                    conversationId, true /*shouldAutoSwitchSelfId*/,
+                    archived || deleted /*preserveSpecialStatus*/);
         }
     }
 

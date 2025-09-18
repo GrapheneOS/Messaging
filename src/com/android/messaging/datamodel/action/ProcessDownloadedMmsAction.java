@@ -503,12 +503,12 @@ public class ProcessDownloadedMmsAction extends Action {
                             db, notificationConversationId)) {
                         BugleDatabaseOperations.maybeRefreshConversationMetadataInTransaction(
                                 db, notificationConversationId, messageId,
-                                true /*shouldAutoSwitchSelfId*/, blockedSender /*keepArchived*/);
+                                true /*shouldAutoSwitchSelfId*/, blockedSender /*preserveSpecialStatus*/);
                     }
                 }
 
                 BugleDatabaseOperations.refreshConversationMetadataInTransaction(db, conversationId,
-                        true /*shouldAutoSwitchSelfId*/, blockedSender /*keepArchived*/);
+                        true /*shouldAutoSwitchSelfId*/, blockedSender /*preserveSpecialStatus*/);
             } else {
                 messageInFocusedConversation =
                         DataModel.get().isFocusedConversation(notificationConversationId);
@@ -530,7 +530,7 @@ public class ProcessDownloadedMmsAction extends Action {
                 // Just in case this was the latest message update the summary data
                 BugleDatabaseOperations.refreshConversationMetadataInTransaction(db,
                         notificationConversationId, true /*shouldAutoSwitchSelfId*/,
-                        false /*keepArchived*/);
+                        false /*preserveSpecialStatus*/);
             }
 
             db.setTransactionSuccessful();

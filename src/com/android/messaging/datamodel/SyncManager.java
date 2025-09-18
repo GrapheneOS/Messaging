@@ -396,6 +396,9 @@ public class SyncManager {
         // Remember the conversation ids that need to be archived
         private final HashSet<String> mArchivedConversations = new HashSet<>();
 
+        // Remember the conversation ids that are deleted
+        private final HashSet<String> mDeletedConversations = new HashSet<>();
+
         public synchronized void clear() {
             if (LogUtil.isLoggable(TAG, LogUtil.DEBUG)) {
                 LogUtil.d(TAG, "SyncManager: Cleared ThreadInfoCache");
@@ -403,10 +406,15 @@ public class SyncManager {
             mThreadToConversationId.clear();
             mThreadToRecipients.clear();
             mArchivedConversations.clear();
+            mDeletedConversations.clear();
         }
 
         public synchronized boolean isArchived(final String conversationId) {
             return mArchivedConversations.contains(conversationId);
+        }
+
+        public synchronized boolean isDeleted(final String conversationId) {
+            return mDeletedConversations.contains(conversationId);
         }
 
         /**
@@ -449,6 +457,10 @@ public class SyncManager {
 
             if (conversationId != null) {
                 mThreadToConversationId.put(threadId, conversationId);
+                // Check if the conversation is deleted and cache that status
+                if (BugleDatabaseOperations.isConversationDeleted(db, conversationId)) {
+                    mDeletedConversations.add(conversationId);
+                }
                 return conversationId;
             }
 
