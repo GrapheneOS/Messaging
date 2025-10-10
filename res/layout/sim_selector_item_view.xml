@@ -60,6 +60,6 @@
         android:importantForAccessibility="no"
         android:layout_gravity="center_vertical"
         android:elevation="3dp"
-        app:iconSize="normal" />
+        app:iconSize="@dimen/icon_normal_size" />
 
 </com.android.messaging.ui.conversation.SimSelectorItemView>

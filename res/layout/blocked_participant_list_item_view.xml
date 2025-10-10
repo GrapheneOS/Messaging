@@ -26,7 +26,7 @@
         android:layout_width="@dimen/contact_list_icon_size"
         android:layout_height="@dimen/contact_list_icon_size"
         android:importantForAccessibility="no"
-        app:iconSize="normal"
+        app:iconSize="@dimen/icon_normal_size"
         android:layout_gravity="center_vertical"/>
     <TextView
         android:id="@+id/name"

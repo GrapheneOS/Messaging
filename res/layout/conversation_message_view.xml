@@ -25,7 +25,7 @@
         android:id="@+id/conversation_icon"
         android:layout_width="@dimen/conversation_message_contact_icon_size"
         android:layout_height="@dimen/conversation_message_contact_icon_size"
-        app:iconSize="normal"
+        app:iconSize="@dimen/icon_normal_size"
         android:clickable="true"
         android:layout_gravity="center_vertical"
         android:importantForAccessibility="no" />

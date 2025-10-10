@@ -57,7 +57,7 @@ public class ContactIconView extends AsyncImageView {
         final Resources resources = context.getResources();
         final TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.ContactIconView);
 
-        final int iconSizeId = a.getInt(R.styleable.ContactIconView_iconSize, 0);
+        final int iconSizeId = a.getInt(R.styleable.ContactIconView_contactIconSize, 0);
         switch (iconSizeId) {
             case NORMAL_ICON_SIZE_ID:
                 mIconSize = (int) resources.getDimension(
