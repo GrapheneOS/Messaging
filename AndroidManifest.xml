@@ -241,7 +241,7 @@
                 android:value="com.android.messaging.ui.conversation.ConversationActivity" />
         </activity>
 
-         <!-- License -->
+        <!-- License -->
         <activity android:name=".ui.LicenseActivity"
             android:exported="true"
             android:theme="@android:style/Theme.Holo.Light.Dialog"

@@ -16,6 +16,9 @@
 -->
 <resources>
 
+    <dimen name="icon_normal_size">42dp</dimen>
+    <dimen name="icon_large_size">56dp</dimen>
+    <dimen name="icon_small_size">12dp</dimen>
     <dimen name="action_bar_height">56dp</dimen>
     <dimen name="action_bar_elevation">8dp</dimen>
     <dimen name="action_bar_text_size">20sp</dimen>

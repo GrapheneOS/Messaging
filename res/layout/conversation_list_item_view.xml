@@ -81,7 +81,7 @@
                     android:layout_height="@dimen/conversation_list_contact_icon_size"
                     android:importantForAccessibility="no"
                     android:contentDescription="@null"
-                    app:iconSize="large"
+                    app:iconSize="@dimen/icon_large_size"
                     android:clickable="true"
                     android:background="@android:color/transparent" />
                 <ImageView
@@ -119,10 +119,10 @@
                     android:layout_height="wrap_content"
                     android:background="@android:color/transparent">
                     <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:background="@android:color/transparent">
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@android:color/transparent">
                         <ImageView
                             android:id="@+id/conversation_notification_bell"
                             style="@style/ConversationListNotificationBellPaddingStyle"
@@ -144,14 +144,14 @@
                             android:paddingBottom="2dp" />
                     </LinearLayout>
                     <ImageView
-                            android:id="@+id/work_profile_icon"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="right"
-                            android:background="@android:color/transparent"
-                            android:scaleType="center"
-                            android:src="@drawable/ic_work_profile"
-                            android:visibility="gone"/>
+                        android:id="@+id/work_profile_icon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="right"
+                        android:background="@android:color/transparent"
+                        android:scaleType="center"
+                        android:src="@drawable/ic_work_profile"
+                        android:visibility="gone"/>
                 </LinearLayout>
                 <TextView
                     android:id="@+id/conversation_subject"

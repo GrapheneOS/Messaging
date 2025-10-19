@@ -26,6 +26,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.telephony.CarrierConfigManager;
 
+import com.google.android.material.color.DynamicColors;
 import com.android.messaging.datamodel.DataModel;
 import com.android.messaging.receiver.SmsReceiver;
 import com.android.messaging.sms.BugleUserAgentInfoLoader;
@@ -71,6 +72,7 @@ public class BugleApplication extends Application implements UncaughtExceptionHa
     @Override
     public void onCreate() {
         Trace.beginSection("app.onCreate");
+        DynamicColors.applyToActivitiesIfAvailable(this);
         super.onCreate();
 
         // Note onCreate is called in both test and real application environments
@@ -195,14 +197,14 @@ public class BugleApplication extends Application implements UncaughtExceptionHa
             if (file != null) {
                 android.os.Debug.startMethodTracing(file.getAbsolutePath(), 160 * 1024 * 1024);
                 new Handler(Looper.getMainLooper()).postDelayed(
-                       new Runnable() {
+                        new Runnable() {
                             @Override
                             public void run() {
                                 android.os.Debug.stopMethodTracing();
                                 // Allow world to see trace file
                                 DebugUtils.ensureReadable(file);
                                 LogUtil.d(LogUtil.PROFILE_TAG, "Tracing complete - "
-                                     + file.getAbsolutePath());
+                                    + file.getAbsolutePath());
                             }
                         }, 30000);
             }
