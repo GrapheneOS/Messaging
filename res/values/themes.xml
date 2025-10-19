@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <style name="BugleThemeMaterial3" parent="Theme.Material3.DayNight">
-        <item name="colorPrimary">@color/material_dynamic_primary0</item>
-        <item name="colorOnPrimary">@color/material_dynamic_primary10</item>
-        <item name="colorSecondary">@color/material_dynamic_secondary60</item>
-    </style>
-</resources>

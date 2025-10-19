@@ -20,17 +20,17 @@
     <color name="background_color">@color/material_dynamic_neutral40</color>
     <color name="tertiary_color">@color/material_dynamic_tertiary40</color>
 
-    <color name="primary_color_dark">@color/material_dynamic_primary50</color>
-    <color name="secondary_color_dark">@color/material_dynamic_secondary50</color>
-    <color name="background_color_dark">@color/material_dynamic_neutral20</color>
-    <color name="tertiary_color_dark">@color/material_dynamic_tertiary50</color>
+    <color name="primary_color_dark">@color/material_dynamic_primary30</color>
+    <color name="secondary_color_dark">@color/material_dynamic_secondary30</color>
+    <color name="background_color_dark">@color/material_dynamic_neutral30</color>
+    <color name="tertiary_color_dark">@color/material_dynamic_tertiary30</color>
 
     <color name="permission_check_activity_background">@color/background_color_dark</color>
 
     <!--  Action bar -->
     <color name="action_bar_title_text_color">#ffffff</color>
     <color name="action_bar_background_color">@color/primary_color</color>
-    <color name="action_bar_background_color_dark">@color/primary_color_dark</color>
+    <color name="action_bar_background_color_dark">@color/primary_color</color>
     <color name="contextual_action_bar_background_color">#ffffff</color>
     <color name="archived_conversation_action_bar_background_color">@color/background_color</color>
     <color name="archived_conversation_action_bar_background_color_dark">@color/background_color_dark</color>
@@ -76,8 +76,8 @@
     <color name="message_bubble_color_outgoing">#ffffffff</color>
     <color name="message_error_bubble_color_incoming">#e2e2e2</color>
     <color name="message_audio_button_color_incoming">#ffffffff</color>
-    <color name="message_bubble_color_selected">#8BC34A</color>
-    <color name="message_image_selected_tint">#80689F38</color>
+    <color name="message_bubble_color_selected">@color/primary_color_dark</color>
+    <color name="message_image_selected_tint">@color/primary_color_dark</color>
     <color name="generic_video_icon">#ff808080</color>
 
     <!-- Base color used for color filtering. -->
@@ -135,15 +135,15 @@
     <color name="people_and_options_header_text">#6d6d6d</color>
     <color name="people_and_options_list_divider">#cccccc</color>
 
-    <color name="fab_color">@color/primary_color</color>
-    <color name="fab_pressed_color">#3ea4dc</color>
-    <color name="fab_ripple">#40ffffff</color>
+    <color name="fab_color">@color/tertiary_color</color>
+    <color name="fab_pressed_color">@color/tertiary_color_dark</color>
+    <color name="fab_ripple">@color/background_color</color>
 
     <color name="message_body_size_text_color">#555555</color>
-    <color name="mms_indicator_color">#8BC34A</color>
+    <color name="mms_indicator_color">@color/tertiary_color</color>
     <color name="list_empty_text">#6d6d6d</color>
     <color name="low_storage_action_item_color">#ff000000</color>
-    <color name="unblock_item_text_color">@color/primary_color</color>
+    <color name="unblock_item_text_color">@color/tertiary_color</color>
     <color name="open_conversation_animation_background_shadow">#40000000</color>
     <color name="compose_notification_bar_background">@color/primary_color</color>
 
@@ -154,7 +154,7 @@
     <color name="sim_indicator_color_light">#ffffff</color>
     <color name="sim_indicator_color_dark">#323232</color>
 
-    <color name="text_highlight_color">#80689F38</color>
+    <color name="text_highlight_color">@color/tertiary_color_dark</color>
     <color name="search_view_text_cursor">#b0dddddd</color>
 
     <color name="button_bar_action_button_text_color">#03a9f4</color>
