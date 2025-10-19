@@ -25,7 +25,7 @@
     <color name="background_color_dark">@color/material_dynamic_neutral30</color>
     <color name="tertiary_color_dark">@color/material_dynamic_tertiary30</color>
 
-    <color name="permission_check_activity_background">@color/background_color_dark</color>
+    <color name="permission_check_activity_background">@color/primary_color</color>
 
     <!--  Action bar -->
     <color name="action_bar_title_text_color">#ffffff</color>
