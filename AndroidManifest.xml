@@ -159,7 +159,7 @@
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:screenOrientation="user"
             android:theme="@style/BuglePhotoViewTheme"
-            />
+        />
 
         <!-- Settings -->
         <activity
@@ -313,19 +313,19 @@
         </activity>
 
         <provider android:name=".datamodel.MessagingContentProvider" android:label="@string/app_name"
-            android:authorities="${applicationId}.datamodel.MessagingContentProvider"
-            android:exported="false" >
+                  android:authorities="${applicationId}.datamodel.MessagingContentProvider"
+                  android:exported="false" >
         </provider>
 
         <provider android:name=".datamodel.MmsFileProvider"
-            android:authorities="${applicationId}.datamodel.MmsFileProvider"
-            android:grantUriPermissions="true"
-            android:exported="false" />
+                  android:authorities="${applicationId}.datamodel.MmsFileProvider"
+                  android:grantUriPermissions="true"
+                  android:exported="false" />
 
         <provider android:name=".datamodel.MediaScratchFileProvider"
-            android:authorities="${applicationId}.datamodel.MediaScratchFileProvider"
-            android:grantUriPermissions="true"
-            android:exported="false" />
+                  android:authorities="${applicationId}.datamodel.MediaScratchFileProvider"
+                  android:grantUriPermissions="true"
+                  android:exported="false" />
 
         <provider android:name=".datamodel.SharedMemoryImageProvider"
             android:authorities="${applicationId}.datamodel.SharedMemoryImageProvider"
@@ -334,20 +334,20 @@
 
         <!-- Action Services -->
         <service android:name=".datamodel.action.ActionServiceImpl"
-            android:permission="android.permission.BIND_JOB_SERVICE"
-            android:exported="true"/>
+                 android:permission="android.permission.BIND_JOB_SERVICE"
+                 android:exported="true"/>
         <service android:name=".datamodel.action.BackgroundWorkerService"
-            android:permission="android.permission.BIND_JOB_SERVICE"
-            android:exported="true"/>
+                 android:permission="android.permission.BIND_JOB_SERVICE"
+                 android:exported="true"/>
 
         <!-- Sms and Mms related items -->
 
         <!-- Intents for Notification and Delivery -->
         <!-- Registered with the highest possible priority (max_int) -->
         <receiver android:name=".receiver.SmsReceiver"
-            android:enabled="false"
-            android:exported="true"
-            android:permission="android.permission.BROADCAST_SMS">
+                  android:enabled="false"
+                  android:exported="true"
+                  android:permission="android.permission.BROADCAST_SMS">
             <intent-filter android:priority="2147483647">
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />
             </intent-filter>
@@ -356,23 +356,23 @@
             </intent-filter>
         </receiver>
         <receiver android:name=".receiver.MmsWapPushDeliverReceiver"
-            android:exported="true"
-            android:permission="android.permission.BROADCAST_WAP_PUSH">
+                  android:exported="true"
+                  android:permission="android.permission.BROADCAST_WAP_PUSH">
             <intent-filter>
                 <action android:name="android.provider.Telephony.WAP_PUSH_DELIVER" />
                 <data android:mimeType="application/vnd.wap.mms-message" />
             </intent-filter>
         </receiver>
         <receiver android:name=".receiver.SmsDeliverReceiver"
-            android:exported="true"
-            android:permission="android.permission.BROADCAST_SMS">
+                  android:exported="true"
+                  android:permission="android.permission.BROADCAST_SMS">
             <intent-filter>
                 <action android:name="android.provider.Telephony.SMS_DELIVER" />
             </intent-filter>
         </receiver>
 
         <receiver android:name=".receiver.SendStatusReceiver"
-            android:exported="false">
+                android:exported="false">
             <intent-filter>
                 <action android:name="com.android.messaging.receiver.SendStatusReceiver.MESSAGE_SENT" />
                 <data android:scheme="content" />
@@ -391,8 +391,8 @@
         </receiver>
 
         <service android:name=".datamodel.NoConfirmationSmsSendService"
-            android:permission="android.permission.SEND_RESPOND_VIA_MESSAGE"
-            android:exported="true" >
+                 android:permission="android.permission.SEND_RESPOND_VIA_MESSAGE"
+                 android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.RESPOND_VIA_MESSAGE" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -404,17 +404,17 @@
         </service>
 
         <activity android:name=".ui.ClassZeroActivity"
-            android:configChanges="orientation|screenSize|keyboardHidden"
-            android:screenOrientation="user"
-            android:label="@string/class_0_message_activity"
-            android:theme="@style/BugleTheme.DialogActivity"
-            android:launchMode="singleTask"
-            android:excludeFromRecents="true">
+                  android:configChanges="orientation|screenSize|keyboardHidden"
+                  android:screenOrientation="user"
+                  android:label="@string/class_0_message_activity"
+                  android:theme="@style/BugleTheme.DialogActivity"
+                  android:launchMode="singleTask"
+                  android:excludeFromRecents="true">
         </activity>
 
         <activity android:name=".ui.SmsStorageLowWarningActivity"
-            android:theme="@style/Translucent"
-            android:configChanges="orientation|screenSize|keyboardHidden" />
+                  android:theme="@style/Translucent"
+                  android:configChanges="orientation|screenSize|keyboardHidden" />
 
         <receiver android:name=".receiver.StorageStatusReceiver"
             android:exported="true">
@@ -462,33 +462,33 @@
 
         <!-- Widget that displays the conversation list -->
         <receiver android:name=".widget.BugleWidgetProvider"
-            android:exported="false"
-            android:label="@string/widget_conversation_name">
+                android:exported="false"
+                android:label="@string/widget_conversation_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data android:name="android.appwidget.provider"
-                android:resource="@xml/widget_conversation_list" />
+                       android:resource="@xml/widget_conversation_list" />
         </receiver>
 
         <!-- Widget that displays the messages of a single conversation -->
         <receiver android:name=".widget.WidgetConversationProvider"
-            android:exported="false"
-            android:label="@string/widget_conversation_name">
+                android:exported="false"
+                android:label="@string/widget_conversation_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data android:name="android.appwidget.provider"
-                android:resource="@xml/widget_conversation" />
+                       android:resource="@xml/widget_conversation" />
         </receiver>
 
         <service android:name=".widget.WidgetConversationListService"
-            android:permission="android.permission.BIND_REMOTEVIEWS"
-            android:exported="false" />
+                 android:permission="android.permission.BIND_REMOTEVIEWS"
+                 android:exported="false" />
 
         <service android:name=".widget.WidgetConversationService"
-            android:permission="android.permission.BIND_REMOTEVIEWS"
-            android:exported="false" />
+                 android:permission="android.permission.BIND_REMOTEVIEWS"
+                 android:exported="false" />
 
         <activity android:name=".ui.WidgetPickConversationActivity"
             android:theme="@style/BugleTheme"
@@ -500,3 +500,4 @@
     </application>
 
 </manifest>
+
