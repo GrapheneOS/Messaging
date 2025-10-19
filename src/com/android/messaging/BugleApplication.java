@@ -126,17 +126,17 @@ public class BugleApplication extends Application implements UncaughtExceptionHa
 
     private static void registerCarrierConfigChangeReceiver(final Context context) {
         context.registerReceiver(new BroadcastReceiver() {
-                                     @Override
-                                     public void onReceive(Context context, Intent intent) {
-                                         LogUtil.i(TAG, "Carrier config changed. Reloading MMS config.");
-                                         MmsConfig.loadAsync();
-                                     }
-                                 }, new IntentFilter(CarrierConfigManager.ACTION_CARRIER_CONFIG_CHANGED),
-                Context.RECEIVER_EXPORTED/*UNAUDITED*/);
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                LogUtil.i(TAG, "Carrier config changed. Reloading MMS config.");
+                MmsConfig.loadAsync();
+            }
+        }, new IntentFilter(CarrierConfigManager.ACTION_CARRIER_CONFIG_CHANGED),
+        Context.RECEIVER_EXPORTED/*UNAUDITED*/);
     }
 
     private static void initMmsLib(final Context context, final BugleGservices bugleGservices,
-                                   final CarrierConfigValuesLoader carrierConfigValuesLoader) {
+            final CarrierConfigValuesLoader carrierConfigValuesLoader) {
         MmsManager.setCarrierConfigValuesLoader(carrierConfigValuesLoader);
         MmsManager.setUserAgentInfoLoader(new BugleUserAgentInfoLoader(context));
     }
@@ -204,7 +204,7 @@ public class BugleApplication extends Application implements UncaughtExceptionHa
                                 // Allow world to see trace file
                                 DebugUtils.ensureReadable(file);
                                 LogUtil.d(LogUtil.PROFILE_TAG, "Tracing complete - "
-                                        + file.getAbsolutePath());
+                                    + file.getAbsolutePath());
                             }
                         }, 30000);
             }
