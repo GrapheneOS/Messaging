@@ -21,8 +21,8 @@ android {
     defaultConfig {
         versionCode = 20000000 + 13
         versionName = "13"
-        minSdk = 35
-        targetSdk = 35
+        minSdk = 36
+        targetSdk = 36
 
         ndk {
             abiFilters.clear()
