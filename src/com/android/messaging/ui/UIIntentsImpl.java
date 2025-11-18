@@ -137,6 +137,14 @@ public class UIIntentsImpl extends UIIntents {
     @Override
     public void launchPermissionCheckActivity(final Context context) {
         final Intent intent = new Intent(context, PermissionCheckActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        context.startActivity(intent);
+    }
+
+    @Override
+    public void launchWelcomeSMSWarningActivity(final Context context) {
+        final Intent intent = new Intent(context, WelcomeSMSWarningActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         context.startActivity(intent);
     }
 
