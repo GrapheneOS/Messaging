@@ -35,6 +35,9 @@
     <string name="exit">Exit</string>
     <string name="settings_with_arrow">Settings &gt;</string>
     <string name="settings">Settings</string>
+    <!-- Warn user that sms/mms is insecure and shouldn't be used. -->
+    <string name="welcome_sms_warning_title">Welcome to the latest version of the Graphene OS Messaging App!</string>
+    <string name="welcome_sms_warning_description">Please note that <xliff:g id="sms_mms">SMS/MMS</xliff:g> are a non-private and insecure form of communication. We highly recommend using a more secure and private service, such as <xliff:g id="app">Molly/Signal</xliff:g>.</string>
     <!-- Inform user of the names of permissions that are required to use the app -->
     <string name="required_permissions_promo">Messaging needs permission to SMS, Phone and Contacts.</string>
     <string name="enable_permission_procedure">You can change permissions in Settings > Apps > Messaging > Permissions.</string>

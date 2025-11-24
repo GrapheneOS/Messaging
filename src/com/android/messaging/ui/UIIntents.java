@@ -115,6 +115,12 @@ public abstract class UIIntents {
      */
     public abstract void launchPermissionCheckActivity(final Context context);
 
+    /**
+     * Launch the welcome and warning activity
+     */
+
+    public abstract void launchWelcomeSMSWarningActivity(final Context context);
+
     public abstract void launchConversationListActivity(final Context context);
 
     /**

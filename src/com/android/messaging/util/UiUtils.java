@@ -16,6 +16,9 @@
 
 package com.android.messaging.util;
 
+import static com.android.messaging.util.BuglePrefs.KEY_LAST_VERSION;
+import static com.android.messaging.util.BuglePrefs.NO_SHARED_PREFERENCES_VERSION;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.ContextWrapper;
@@ -40,6 +43,7 @@ import android.view.animation.ScaleAnimation;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
+import com.android.messaging.BuildConfig;
 import com.android.messaging.Factory;
 import com.android.messaging.R;
 import com.android.messaging.ui.SnackBar;
@@ -303,6 +307,23 @@ public class UiUtils {
     }
 
     /**
+     * Check if app has just been updated, so we can show the launchWelcomeSMSWarningActivity
+     */
+
+    public static boolean isFirstRunAfterUpdate(final Activity activity) {
+        final BuglePrefs prefs = BuglePrefs.getApplicationPrefs();
+
+        final int savedVersion = prefs.getInt(KEY_LAST_VERSION, NO_SHARED_PREFERENCES_VERSION);
+        final int currentVersion = BuildConfig.VERSION_CODE;
+
+        if (currentVersion != savedVersion) {
+            UIIntents.get().launchWelcomeSMSWarningActivity(activity);
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Check if the activity needs to be redirected to permission check
      * @return true if {@link Activity#finish()} was called because redirection was performed
      */
@@ -317,6 +338,19 @@ public class UiUtils {
         // Redirect performed
         activity.finish();
         return true;
+    }
+
+    /**
+     * Checks whether or not to show the welcome/warning activity,
+     * and then checks whether or not to show the permission activity
+     * @param activity The current activity context
+     * @return true if either the welcome screen or permission check screen is shown
+     */
+    public static boolean checkToShowWelcomeAndPermissionScreens (Activity activity) {
+        if (UiUtils.isFirstRunAfterUpdate(activity)) {
+            return true;
+        }
+        return UiUtils.redirectToPermissionCheckIfNeeded(activity);
     }
 
     /**
