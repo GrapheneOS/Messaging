@@ -487,10 +487,9 @@ public class MessageNotificationState {
                     // Prepare the message line
                     if (conversation.mIsGroup) {
                         if (authorFirstName == null) {
-                            // authorFullName might be null as well. In that case, we won't
-                            // show an author. That is better than showing all the group
-                            // names again on the 2nd line.
-                            authorFirstName = authorFullName;
+                            authorFirstName = authorFullName != null
+                                    ? authorFullName
+                                    : convMessageData.getSenderDisplayDestination();
                         }
                     } else {
                         // don't recompute this if we don't need to
