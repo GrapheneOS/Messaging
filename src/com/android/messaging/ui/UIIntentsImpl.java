@@ -483,8 +483,10 @@ public class UIIntentsImpl extends UIIntents {
         taskStackBuilder.addNextIntentWithParentStack(
                 getSmsStorageLowWarningActivityIntent(context));
 
+        // Use FLAG_IMMUTABLE since this PendingIntent launches a fixed activity
+        // and doesn't require modification by external apps.
         return taskStackBuilder.getPendingIntent(
-                0, PendingIntent.FLAG_UPDATE_CURRENT);
+                0, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
     @Override
