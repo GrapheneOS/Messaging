@@ -3,7 +3,6 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
-    kotlin("android")
 }
 
 java {
@@ -39,12 +38,14 @@ android {
 
     buildFeatures {
         buildConfig = true
+        resValues = true
     }
 
     sourceSets.getByName("main") {
         assets.srcDir("../assets")
         manifest.srcFile("../AndroidManifest.xml")
         java.srcDirs("../src")
+        kotlin.srcDirs("../src")
         res.srcDir("../res")
     }
 
@@ -71,7 +72,7 @@ android {
         getByName("release") {
             isMinifyEnabled = true
             isShrinkResources = true
-            proguardFiles(getDefaultProguardFile("proguard-android.txt"),
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"),
                     "../proguard.flags", "../proguard-release.flags")
             if (useKeystoreProperties) {
                 signingConfig = signingConfigs.getByName("release")
