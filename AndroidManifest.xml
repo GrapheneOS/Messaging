@@ -90,6 +90,11 @@
             android:screenOrientation="portrait"
             android:configChanges="orientation|screenSize|keyboardHidden" />
 
+        <activity
+            android:name=".ui.WelcomeSMSWarningActivity"
+            android:screenOrientation="portrait"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
+
         <!-- Launches a conversation (ensures correct app name shown in recents) -->
         <activity
             android:name=".ui.conversation.LaunchConversationActivity"
