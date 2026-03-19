@@ -3,6 +3,7 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 java {
@@ -39,6 +40,7 @@ android {
     buildFeatures {
         buildConfig = true
         resValues = true
+        compose = true
     }
 
     sourceSets.getByName("main") {
@@ -92,15 +94,43 @@ android {
 
 dependencies {
     implementation("androidx.appcompat:appcompat:1.7.1")
-    implementation("androidx.preference:preference:1.2.1")
     implementation("androidx.palette:palette:1.0.0")
+    implementation("androidx.preference:preference:1.2.1")
     implementation("androidx.recyclerview:recyclerview:1.4.0")
+
+    val composeBom = platform("androidx.compose:compose-bom:2026.03.00")
+    implementation(composeBom)
+
+    implementation("androidx.activity:activity-compose:1.13.0")
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.foundation:foundation-layout")
+    implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.10.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.10.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0")
+
+    implementation("io.coil-kt.coil3:coil-compose:3.4.0")
     implementation("com.github.bumptech.glide:glide:5.0.5")
+
     implementation("com.google.guava:guava:33.5.0-android")
-    implementation("com.googlecode.libphonenumber:libphonenumber:9.0.26")
     implementation("com.google.code.findbugs:jsr305:3.0.2")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+
+    implementation("com.googlecode.libphonenumber:libphonenumber:9.0.26")
 
     implementation(project(":lib:platform_frameworks_opt_chips"))
     implementation(project(":lib:platform_frameworks_opt_photoviewer"))
     implementation(project(":lib:platform_frameworks_opt_vcard"))
+
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    debugImplementation("androidx.compose.ui:ui-tooling")
+
+    androidTestImplementation(composeBom)
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 }
