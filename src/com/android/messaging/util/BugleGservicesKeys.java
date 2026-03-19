@@ -17,6 +17,8 @@
 package com.android.messaging.util;
 
 
+import com.android.messaging.BuildConfig;
+
 /**
  * List of gservices keys and default values which are in use.
  */
@@ -30,7 +32,7 @@ public final class BugleGservicesKeys {
     public static final String ENABLE_DEBUGGING_FEATURES
             = "bugle_debugging";
     public static final boolean ENABLE_DEBUGGING_FEATURES_DEFAULT
-            = false;
+            = BuildConfig.DEBUG;
 
     /**
      * Whether to enable saving extra logs. Default is {@value #ENABLE_LOG_SAVER_DEFAULT}.

@@ -27,6 +27,7 @@ import android.os.Environment;
 import android.telephony.SmsMessage;
 import android.text.TextUtils;
 import android.widget.ArrayAdapter;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -38,6 +39,7 @@ import com.android.messaging.R;
 import com.android.messaging.datamodel.SyncManager;
 import com.android.messaging.datamodel.action.DumpDatabaseAction;
 import com.android.messaging.datamodel.action.LogTelephonyDatabaseAction;
+import com.android.messaging.debug.TestDataSeeder;
 import com.android.messaging.sms.MmsUtils;
 import com.android.messaging.ui.UIIntents;
 import com.android.messaging.ui.debug.DebugSmsMmsFromDumpFileDialogFragment;
@@ -188,6 +190,30 @@ public class DebugUtils {
             @Override
             public void run() {
                 shareFileUri();
+            }
+        });
+
+        arrayAdapter.add(new DebugAction("Seed test data") {
+            @Override
+            public void run() {
+                SafeAsyncTask.executeOnThreadPool(() -> {
+                    TestDataSeeder.seedTestData(host);
+                    ThreadUtil.getMainThreadHandler().post(() ->
+                            Toast.makeText(host, "Test data seeded", Toast.LENGTH_SHORT).show()
+                    );
+                });
+            }
+        });
+
+        arrayAdapter.add(new DebugAction("Clear seeded test data") {
+            @Override
+            public void run() {
+                SafeAsyncTask.executeOnThreadPool(() -> {
+                    TestDataSeeder.clearSeededTestData(host);
+                    ThreadUtil.getMainThreadHandler().post(() ->
+                            Toast.makeText(host, "Seeded test data cleared", Toast.LENGTH_SHORT).show()
+                    );
+                });
             }
         });
 
