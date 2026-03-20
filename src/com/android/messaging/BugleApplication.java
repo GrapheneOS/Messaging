@@ -47,9 +47,12 @@ import java.lang.Thread.UncaughtExceptionHandler;
 import androidx.appcompat.mms.CarrierConfigValuesLoader;
 import androidx.appcompat.mms.MmsManager;
 
+import dagger.hilt.android.HiltAndroidApp;
+
 /**
  * The application object
  */
+@HiltAndroidApp
 public class BugleApplication extends Application implements UncaughtExceptionHandler {
     private static final String TAG = LogUtil.BUGLE_TAG;
 

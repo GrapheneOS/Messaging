@@ -3,7 +3,9 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.hilt)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
 }
 
 java {
@@ -93,6 +95,8 @@ android {
 }
 
 dependencies {
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.palette)
     implementation(libs.androidx.preference)
@@ -115,11 +119,13 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.glide)
 
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+
     implementation(libs.guava)
     implementation(libs.jsr305)
 
     implementation(libs.kotlinx.coroutines.android)
-
     implementation(libs.libphonenumber)
 
     implementation(project(":lib:platform_frameworks_opt_chips"))
@@ -131,4 +137,7 @@ dependencies {
 
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+
+    androidTestImplementation(libs.hilt.android.testing)
+    kspAndroidTest(libs.hilt.compiler)
 }
