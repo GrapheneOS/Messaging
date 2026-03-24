@@ -23,6 +23,7 @@
         <item name="android:forceDarkAllowed">true</item>
     </style>
 
+    <style name="Theme.Compose" parent="android:Theme.Material.Light.NoActionBar" />
 
     <!-- Application theme. -->
     <style name="BugleTheme" parent="BugleBaseTheme">
