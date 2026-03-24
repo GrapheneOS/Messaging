@@ -95,8 +95,6 @@ android {
 }
 
 dependencies {
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.palette)
     implementation(libs.androidx.preference)
@@ -126,6 +124,7 @@ dependencies {
     implementation(libs.jsr305)
 
     implementation(libs.kotlinx.coroutines.android)
+
     implementation(libs.libphonenumber)
 
     implementation(project(":lib:platform_frameworks_opt_chips"))
@@ -135,9 +134,22 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
+    testImplementation(libs.junit4)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockk)
+    testImplementation(libs.mockk.agent)
+    testImplementation(libs.mockk.android)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.turbine)
+
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
 
     androidTestImplementation(libs.hilt.android.testing)
     kspAndroidTest(libs.hilt.compiler)
+
+    androidTestImplementation(libs.mockk)
+    androidTestImplementation(libs.mockk.agent)
+    androidTestImplementation(libs.mockk.android)
+    androidTestImplementation(libs.turbine)
 }
