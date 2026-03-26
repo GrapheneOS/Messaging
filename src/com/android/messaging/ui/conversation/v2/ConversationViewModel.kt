@@ -1,15 +1,14 @@
-package com.android.messaging.ui.conversation.v2
+package com.android.messaging.ui.conversation.v2.screen
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.di.core.DefaultDispatcher
-import com.android.messaging.ui.conversation.v2.mapper.ConversationMessageUiModelMapper
-import com.android.messaging.ui.conversation.v2.mapper.ConversationMetadataUiStateMapper
-import com.android.messaging.ui.conversation.v2.model.ConversationMessagesUiState
-import com.android.messaging.ui.conversation.v2.model.ConversationMetadataUiState
-import com.android.messaging.ui.conversation.v2.model.ConversationUiState
+import com.android.messaging.ui.conversation.v2.messages.mapper.ConversationMessageUiModelMapper
+import com.android.messaging.ui.conversation.v2.messages.model.ConversationMessagesUiState
+import com.android.messaging.ui.conversation.v2.metadata.mapper.ConversationMetadataUiStateMapper
+import com.android.messaging.ui.conversation.v2.metadata.model.ConversationMetadataUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi

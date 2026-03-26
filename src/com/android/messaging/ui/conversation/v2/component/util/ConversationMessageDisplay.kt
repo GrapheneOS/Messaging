@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversation.v2.component.util
+package com.android.messaging.ui.conversation.v2.messages.ui
 
 import java.time.Instant
 import java.time.LocalDate

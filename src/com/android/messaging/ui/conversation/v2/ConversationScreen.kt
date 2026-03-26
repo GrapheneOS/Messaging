@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversation.v2
+package com.android.messaging.ui.conversation.v2.screen
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,11 +14,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.android.messaging.ui.conversation.v2.component.ConversationComposeBar
-import com.android.messaging.ui.conversation.v2.component.ConversationMessages
-import com.android.messaging.ui.conversation.v2.component.ConversationTopAppBar
-import com.android.messaging.ui.conversation.v2.model.ConversationMessagesUiState
-import com.android.messaging.ui.conversation.v2.model.ConversationUiState
+import com.android.messaging.ui.conversation.v2.composer.ui.ConversationComposeBar
+import com.android.messaging.ui.conversation.v2.messages.model.ConversationMessagesUiState
+import com.android.messaging.ui.conversation.v2.messages.ui.ConversationMessages
+import com.android.messaging.ui.conversation.v2.metadata.ui.ConversationTopAppBar
 
 @Composable
 internal fun ConversationScreen(

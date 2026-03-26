@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversation.v2.component
+package com.android.messaging.ui.conversation.v2.metadata.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,7 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
-import com.android.messaging.ui.conversation.v2.model.ConversationMetadataUiState
+import com.android.messaging.ui.conversation.v2.metadata.model.ConversationMetadataUiState
 
 private val CONVERSATION_TOP_APP_BAR_TITLE_SPACING = 12.dp
 private val CONVERSATION_TOP_APP_BAR_AVATAR_SIZE = 36.dp

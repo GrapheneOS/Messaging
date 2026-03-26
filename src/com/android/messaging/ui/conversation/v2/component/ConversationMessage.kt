@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversation.v2.component
+package com.android.messaging.ui.conversation.v2.messages.ui
 
 import android.content.Context
 import android.text.format.DateUtils
@@ -27,7 +27,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
-import com.android.messaging.ui.conversation.v2.model.ConversationMessageUiModel
+import com.android.messaging.ui.conversation.v2.messages.model.ConversationMessageUiModel
 
 private const val MESSAGE_BUBBLE_MAX_WIDTH_DP = 360
 private const val MESSAGE_BUBBLE_WIDTH_FRACTION = 0.8f

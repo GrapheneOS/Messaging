@@ -1,7 +1,7 @@
-package com.android.messaging.ui.conversation.v2.mapper
+package com.android.messaging.ui.conversation.v2.metadata.mapper
 
 import com.android.messaging.data.conversation.repository.ConversationMetadata
-import com.android.messaging.ui.conversation.v2.model.ConversationMetadataUiState
+import com.android.messaging.ui.conversation.v2.metadata.model.ConversationMetadataUiState
 import javax.inject.Inject
 
 internal interface ConversationMetadataUiStateMapper {
