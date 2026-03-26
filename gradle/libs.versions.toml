@@ -2,6 +2,8 @@
 agp = "9.1.0"
 kotlin = "2.3.20"
 ksp = "2.3.6"
+ktlint = "1.8.0"
+ktlint-gradle = "14.2.0"
 
 hilt = "2.59.2"
 
@@ -83,3 +85,4 @@ hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint-gradle" }
