@@ -53,7 +53,7 @@ object NotificationChannelUtil {
         conversationTitle: String,
         legacyNotificationsEnabled: Boolean = true,
         legacyRingtoneString: String? = null,
-        legacyVibrationEnabled: Boolean = false
+        legacyVibrationEnabled: Boolean = false,
     ): NotificationChannel {
         val notificationManager = getNotificationManager()
         val defaultNotificationChannel =
