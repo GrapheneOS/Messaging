@@ -1,16 +1,16 @@
 [versions]
 agp = "9.1.0"
+detekt = "2.0.0-alpha.2"
+hilt = "2.59.2"
 kotlin = "2.3.20"
 ksp = "2.3.6"
 ktlint = "1.8.0"
 ktlint-gradle = "14.2.0"
 
-hilt = "2.59.2"
-
 activity-compose = "1.13.0"
 appcompat = "1.7.1"
 coil = "3.4.0"
-compose-bom = "2026.03.00"
+compose-bom = "2026.03.01"
 coroutines = "1.10.2"
 glide = "5.0.5"
 guava = "33.5.0-android"
@@ -24,7 +24,7 @@ recyclerview = "1.4.0"
 
 junit4 = "4.13.2"
 mockk = "1.14.9"
-robolectric = "4.16"
+robolectric = "4.16.1"
 turbine = "1.2.1"
 
 [libraries]
@@ -81,6 +81,7 @@ ksp-gradle-plugin = { module = "com.google.devtools.ksp:symbol-processing-gradle
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 
+detekt = { id = "dev.detekt", version.ref = "detekt" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

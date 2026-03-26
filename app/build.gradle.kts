@@ -1,8 +1,10 @@
+import dev.detekt.gradle.Detekt
 import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.detekt)
     alias(libs.plugins.hilt)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
@@ -12,6 +14,24 @@ java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
+}
+
+detekt {
+    basePath.set(rootDir)
+    buildUponDefaultConfig = true
+    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+    ignoredBuildTypes = listOf("release")
+    parallel = true
+    source.setFrom(files("../src"))
+}
+
+tasks.withType<Detekt>().configureEach {
+    setSource(files("../src"))
+    include("**/*.kt")
+    include("**/*.kts")
+    exclude("**/build/**")
+    exclude("**/com/android/messaging/datamodel/**")
+    exclude("**/com/android/messaging/debug/**")
 }
 
 android {
