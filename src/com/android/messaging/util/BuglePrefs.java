@@ -41,6 +41,8 @@ public abstract class BuglePrefs {
      */
     public static final int NO_SHARED_PREFERENCES_VERSION = -1;
 
+    public static final String KEY_LAST_VERSION = "last_version";
+
     /**
      * Returns the shared preferences file name to use.
      * Subclasses should override and return the shared preferences file.

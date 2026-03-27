@@ -61,7 +61,7 @@ public class BugleActionBarActivity extends AppCompatActivity implements ImeUtil
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (UiUtils.redirectToPermissionCheckIfNeeded(this)) {
+        if (UiUtils.checkToShowWelcomeAndPermissionScreens(this)) {
             return;
         }
 
