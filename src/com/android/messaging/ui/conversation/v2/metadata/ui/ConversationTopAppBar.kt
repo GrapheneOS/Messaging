@@ -195,6 +195,7 @@ private fun conversationTitle(
 ): String {
     return when (metadata) {
         ConversationMetadataUiState.Loading -> stringResource(id = R.string.app_name)
+        ConversationMetadataUiState.Unavailable -> stringResource(id = R.string.app_name)
 
         is ConversationMetadataUiState.Present -> {
             metadata
@@ -210,6 +211,7 @@ private fun conversationIsGroup(
 ): Boolean {
     return when (metadata) {
         ConversationMetadataUiState.Loading -> false
+        ConversationMetadataUiState.Unavailable -> false
         is ConversationMetadataUiState.Present -> metadata.isGroupConversation
     }
 }
@@ -220,6 +222,7 @@ private fun conversationSubtitle(
 ): String? {
     return when (metadata) {
         ConversationMetadataUiState.Loading -> stringResource(id = R.string.loading_messages)
+        ConversationMetadataUiState.Unavailable -> null
 
         is ConversationMetadataUiState.Present -> {
             when {

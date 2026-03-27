@@ -1,6 +1,6 @@
 package com.android.messaging.ui.conversation.v2.metadata.mapper
 
-import com.android.messaging.data.conversation.repository.ConversationMetadata
+import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
 import com.android.messaging.ui.conversation.v2.metadata.model.ConversationMetadataUiState
 import javax.inject.Inject
 
@@ -16,6 +16,7 @@ internal class ConversationMetadataUiStateMapperImpl @Inject constructor() : Con
             selfParticipantId = metadata.selfParticipantId,
             isGroupConversation = metadata.isGroupConversation,
             participantCount = metadata.participantCount,
+            composerAvailability = metadata.composerAvailability,
         )
     }
 }

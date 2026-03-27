@@ -39,9 +39,12 @@ private val CONVERSATION_COMPOSE_BAR_PREVIEW_PADDING_VERTICAL = 24.dp
 @Composable
 internal fun ConversationComposeBar(
     modifier: Modifier = Modifier,
-    value: String,
-    enabled: Boolean,
-    onValueChange: (String) -> Unit,
+    messageText: String,
+    isMessageFieldEnabled: Boolean,
+    isAttachmentActionEnabled: Boolean,
+    isSendActionEnabled: Boolean,
+    onAttachmentClick: () -> Unit,
+    onMessageTextChange: (String) -> Unit,
     onSendClick: () -> Unit,
 ) {
     val presentation = rememberConversationComposeBarPresentation()
@@ -50,10 +53,13 @@ internal fun ConversationComposeBar(
         modifier = modifier,
     ) {
         ConversationComposeTextField(
-            value = value,
-            enabled = enabled,
+            messageText = messageText,
+            isMessageFieldEnabled = isMessageFieldEnabled,
+            isAttachmentActionEnabled = isAttachmentActionEnabled,
+            isSendActionEnabled = isSendActionEnabled,
             presentation = presentation,
-            onValueChange = onValueChange,
+            onAttachmentClick = onAttachmentClick,
+            onMessageTextChange = onMessageTextChange,
             onSendClick = onSendClick,
         )
     }
@@ -117,11 +123,14 @@ private fun ConversationComposeBarContainer(
 
 @Composable
 private fun ConversationComposeTextField(
-    value: String,
-    enabled: Boolean,
+    messageText: String,
+    isMessageFieldEnabled: Boolean,
+    isAttachmentActionEnabled: Boolean,
+    isSendActionEnabled: Boolean,
     presentation: ConversationComposeBarPresentation,
-    onValueChange: (String) -> Unit,
-    onSendClick: () -> Unit,
+    onAttachmentClick: (() -> Unit)?,
+    onMessageTextChange: (String) -> Unit,
+    onSendClick: (() -> Unit)?,
 ) {
     TextField(
         modifier = Modifier
@@ -130,9 +139,9 @@ private fun ConversationComposeTextField(
                 horizontal = CONVERSATION_COMPOSE_BAR_TEXT_FIELD_PADDING_HORIZONTAL,
                 vertical = CONVERSATION_COMPOSE_BAR_TEXT_FIELD_PADDING_VERTICAL,
             ),
-        value = value,
-        onValueChange = onValueChange,
-        enabled = enabled,
+        value = messageText,
+        onValueChange = onMessageTextChange,
+        enabled = isMessageFieldEnabled,
         shape = presentation.fieldShape,
         colors = presentation.fieldColors,
         placeholder = {
@@ -140,13 +149,15 @@ private fun ConversationComposeTextField(
         },
         leadingIcon = {
             ConversationComposeLeadingAction(
-                enabled = enabled,
-                onClick = onSendClick,
+                enabled = isAttachmentActionEnabled && onAttachmentClick != null,
+                onClick = onAttachmentClick,
             )
         },
         trailingIcon = {
             ConversationComposeTrailingActions(
-                enabled = enabled,
+                isAttachmentActionEnabled = isAttachmentActionEnabled,
+                isSendActionEnabled = isSendActionEnabled,
+                onAttachmentClick = onAttachmentClick,
                 onSendClick = onSendClick,
             )
         },
@@ -165,10 +176,12 @@ private fun ConversationComposePlaceholder() {
 @Composable
 private fun ConversationComposeLeadingAction(
     enabled: Boolean,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)?,
 ) {
     IconButton(
-        onClick = onClick,
+        onClick = {
+            onClick?.invoke()
+        },
         enabled = enabled,
     ) {
         Icon(
@@ -180,20 +193,22 @@ private fun ConversationComposeLeadingAction(
 
 @Composable
 private fun ConversationComposeTrailingActions(
-    enabled: Boolean,
-    onSendClick: () -> Unit,
+    isAttachmentActionEnabled: Boolean,
+    isSendActionEnabled: Boolean,
+    onAttachmentClick: (() -> Unit)?,
+    onSendClick: (() -> Unit)?,
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(space = CONVERSATION_COMPOSE_BAR_TRAILING_ACTION_SPACING),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         ConversationComposeImageAction(
-            enabled = enabled,
-            onClick = onSendClick,
+            enabled = isAttachmentActionEnabled && onAttachmentClick != null,
+            onClick = onAttachmentClick,
         )
 
         ConversationComposeSendAction(
-            enabled = enabled,
+            enabled = isSendActionEnabled && onSendClick != null,
             onClick = onSendClick,
         )
     }
@@ -202,10 +217,12 @@ private fun ConversationComposeTrailingActions(
 @Composable
 private fun ConversationComposeImageAction(
     enabled: Boolean,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)?,
 ) {
     IconButton(
-        onClick = onClick,
+        onClick = {
+            onClick?.invoke()
+        },
         enabled = enabled,
     ) {
         Icon(
@@ -218,10 +235,12 @@ private fun ConversationComposeImageAction(
 @Composable
 private fun ConversationComposeSendAction(
     enabled: Boolean,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)?,
 ) {
     IconButton(
-        onClick = onClick,
+        onClick = {
+            onClick?.invoke()
+        },
         enabled = enabled,
     ) {
         Icon(
