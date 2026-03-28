@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversation.v2.screen
+package com.android.messaging.ui.conversation.v2.screen.model
 
 import androidx.compose.runtime.Immutable
 import com.android.messaging.ui.conversation.v2.composer.model.ConversationComposerUiState

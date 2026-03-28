@@ -3,15 +3,23 @@ package com.android.messaging.ui.conversation.v2.screen
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.ui.conversation.v2.composer.delegate.ConversationDraftDelegate
+import com.android.messaging.ui.conversation.v2.composer.delegate.ConversationDraftEffect
 import com.android.messaging.ui.conversation.v2.composer.mapper.ConversationComposerUiStateMapper
 import com.android.messaging.ui.conversation.v2.messages.delegate.ConversationMessagesDelegate
 import com.android.messaging.ui.conversation.v2.metadata.delegate.ConversationMetadataDelegate
+import com.android.messaging.ui.conversation.v2.screen.model.ConversationScreenEffect
+import com.android.messaging.ui.conversation.v2.screen.model.ConversationUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -20,6 +28,8 @@ internal class ConversationViewModel @Inject constructor(
     private val conversationMessagesDelegate: ConversationMessagesDelegate,
     private val conversationMetadataDelegate: ConversationMetadataDelegate,
     private val conversationComposerUiStateMapper: ConversationComposerUiStateMapper,
+    @param:DefaultDispatcher
+    private val defaultDispatcher: CoroutineDispatcher,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -27,6 +37,11 @@ internal class ConversationViewModel @Inject constructor(
         key = CONVERSATION_ID_KEY,
         initialValue = null,
     )
+    private val _effects = MutableSharedFlow<ConversationScreenEffect>(
+        extraBufferCapacity = 1,
+    )
+
+    val effects = _effects.asSharedFlow()
 
     val uiState: StateFlow<ConversationUiState> = combine(
         conversationMetadataDelegate.state,
@@ -51,6 +66,7 @@ internal class ConversationViewModel @Inject constructor(
 
     init {
         initializeDelegates()
+        bindDelegateEffects()
     }
 
     private fun initializeDelegates() {
@@ -79,11 +95,11 @@ internal class ConversationViewModel @Inject constructor(
     }
 
     fun onAttachmentClick() {
-        // TODO
+        conversationDraftDelegate.onAttachmentClick()
     }
 
     fun onSendClick() {
-        // TODO
+        conversationDraftDelegate.onSendClick()
     }
 
     fun persistDraft() {
@@ -94,6 +110,22 @@ internal class ConversationViewModel @Inject constructor(
         conversationDraftDelegate.flushDraft()
 
         super.onCleared()
+    }
+
+    private fun bindDelegateEffects() {
+        viewModelScope.launch(defaultDispatcher) {
+            conversationDraftDelegate.effects.collect { effect ->
+                when (effect) {
+                    is ConversationDraftEffect.LaunchAttachmentChooser -> {
+                        _effects.emit(
+                            ConversationScreenEffect.LaunchAttachmentChooser(
+                                conversationId = effect.conversationId,
+                            )
+                        )
+                    }
+                }
+            }
+        }
     }
 
     private companion object {

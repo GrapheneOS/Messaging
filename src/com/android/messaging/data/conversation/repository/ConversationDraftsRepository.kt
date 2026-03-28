@@ -3,26 +3,24 @@ package com.android.messaging.data.conversation.repository
 import android.content.ContentResolver
 import android.database.ContentObserver
 import android.net.Uri
-import androidx.core.net.toUri
+import com.android.messaging.data.conversation.mapper.ConversationDraftMessageDataMapper
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
-import com.android.messaging.datamodel.BugleDatabaseOperations
-import com.android.messaging.datamodel.DataModel
 import com.android.messaging.datamodel.MessagingContentProvider
-import com.android.messaging.datamodel.data.ConversationListItemData
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.datamodel.data.MessagePartData
 import com.android.messaging.di.core.IoDispatcher
 import com.android.messaging.util.LogUtil
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 internal interface ConversationDraftsRepository {
     fun observeConversationDraft(conversationId: String): Flow<ConversationDraft>
@@ -35,6 +33,9 @@ internal interface ConversationDraftsRepository {
 
 internal class ConversationDraftsRepositoryImpl @Inject constructor(
     private val contentResolver: ContentResolver,
+    private val conversationDraftMessageDataMapper: ConversationDraftMessageDataMapper,
+    private val conversationDraftStore: ConversationDraftStore,
+    private val conversationMetadataNotifier: ConversationMetadataNotifier,
     @param:IoDispatcher
     private val ioDispatcher: CoroutineDispatcher,
 ) : ConversationDraftsRepository {
@@ -45,6 +46,15 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
         return observeDraftChanges(uri = draftChangeUri)
             .conflate()
             .map { loadConversationDraft(conversationId = conversationId) }
+            .catch { e ->
+                LogUtil.e(
+                    TAG,
+                    "Failed to load draft for conversation $conversationId",
+                    e,
+                )
+
+                emit(ConversationDraft())
+            }
             .flowOn(ioDispatcher)
     }
 
@@ -53,7 +63,7 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
         draft: ConversationDraft,
     ) {
         withContext(context = ioDispatcher) {
-            val message = createDraftMessage(
+            val message = conversationDraftMessageDataMapper.map(
                 conversationId = conversationId,
                 draft = draft,
             )
@@ -62,14 +72,14 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
                 message = message,
             ) ?: return@withContext
 
-            BugleDatabaseOperations.updateDraftMessageData(
-                DataModel.get().database,
-                conversationId,
-                boundMessage,
-                BugleDatabaseOperations.UPDATE_MODE_ADD_DRAFT,
+            conversationDraftStore.updateDraftMessage(
+                conversationId = conversationId,
+                message = boundMessage,
             )
 
-            MessagingContentProvider.notifyConversationMetadataChanged(conversationId)
+            conversationMetadataNotifier.notifyConversationMetadataChanged(
+                conversationId = conversationId,
+            )
         }
     }
 
@@ -91,15 +101,13 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
     }
 
     private fun loadConversationDraft(conversationId: String): ConversationDraft {
-        val database = DataModel.get().database
-        val conversation = ConversationListItemData
-            .getExistingConversation(database, conversationId)
-            ?: return ConversationDraft()
+        val conversation = conversationDraftStore.getConversation(
+            conversationId = conversationId,
+        ) ?: return ConversationDraft()
 
-        val draftMessage = BugleDatabaseOperations.readDraftMessageData(
-            database,
-            conversationId,
-            conversation.selfId,
+        val draftMessage = conversationDraftStore.readDraftMessage(
+            conversationId = conversationId,
+            selfParticipantId = conversation.selfParticipantId,
         )
 
         return createConversationDraft(
@@ -109,7 +117,7 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
     }
 
     private fun createConversationDraft(
-        conversation: ConversationListItemData,
+        conversation: ConversationDraftConversation,
         draftMessage: MessageData?,
     ): ConversationDraft {
         val attachments = draftMessage
@@ -123,7 +131,7 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
         val selfParticipantId = draftMessage
             ?.selfId
             ?.takeIf { selfParticipantId -> selfParticipantId.isNotBlank() }
-            ?: conversation.selfId.orEmpty()
+            ?: conversation.selfParticipantId
 
         return ConversationDraft(
             messageText = draftMessage?.messageText.orEmpty(),
@@ -131,37 +139,6 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
             selfParticipantId = selfParticipantId,
             attachments = attachments,
         )
-    }
-
-    private fun createDraftMessage(
-        conversationId: String,
-        draft: ConversationDraft,
-    ): MessageData {
-        val selfParticipantId = draft.selfParticipantId.takeIf { selfParticipantId ->
-            selfParticipantId.isNotBlank()
-        }
-        val messageParts = draft.attachments.mapNotNull(::createMessagePartDataOrNull)
-
-        val isMms = draft.subjectText.isNotBlank() || messageParts.isNotEmpty()
-
-        val message = when {
-            isMms -> MessageData.createDraftMmsMessage(
-                conversationId,
-                selfParticipantId,
-                draft.messageText,
-                draft.subjectText,
-            )
-
-            else -> MessageData.createDraftSmsMessage(
-                conversationId,
-                selfParticipantId,
-                draft.messageText,
-            )
-        }
-
-        messageParts.forEach(message::addPart)
-
-        return message
     }
 
     private fun bindDraftParticipantsIfNeeded(
@@ -172,9 +149,8 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
             return message
         }
 
-        val conversation = ConversationListItemData.getExistingConversation(
-            DataModel.get().database,
-            conversationId,
+        val conversation = conversationDraftStore.getConversation(
+            conversationId = conversationId,
         ) ?: run {
             LogUtil.w(
                 TAG,
@@ -183,10 +159,11 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
             return null
         }
 
-        val selfParticipantId = conversation.selfId
+        val selfParticipantId = conversation.selfParticipantId
         if (message.selfId == null) {
             message.bindSelfId(selfParticipantId)
         }
+
         if (message.participantId == null) {
             message.bindParticipantId(selfParticipantId)
         }
@@ -195,74 +172,30 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
     }
 
     private fun createDraftAttachmentOrNull(part: MessagePartData): ConversationDraftAttachment? {
-        val contentType = part
-            .contentType
-            ?.takeIf { value -> value.isNotBlank() }
-            ?: run {
-                LogUtil.w(TAG, "Dropping draft attachment with blank contentType")
-                return null
+        val contentType = part.contentType?.takeIf { it.isNotBlank() }
+        val contentUri = part.contentUri?.toString()?.takeIf { it.isNotBlank() }
+
+        return when {
+            contentType != null && contentUri != null -> {
+                ConversationDraftAttachment(
+                    contentType = contentType,
+                    contentUri = contentUri,
+                    captionText = part.text.orEmpty(),
+                    width = normalizePartDimension(size = part.width),
+                    height = normalizePartDimension(size = part.height),
+                )
             }
 
-        val contentUri = part
-            .contentUri
-            ?.toString()
-            ?.takeIf { value -> value.isNotBlank() }
-            ?: run {
-                LogUtil.w(TAG, "Dropping draft attachment with blank contentUri")
-                return null
+            else -> {
+                LogUtil.w(TAG, "Dropping draft attachment with blank contentType or contentUri")
+
+                null
             }
-
-        return ConversationDraftAttachment(
-            contentType = contentType,
-            contentUri = contentUri,
-            captionText = part.text.orEmpty(),
-            width = normalizePartDimension(size = part.width),
-            height = normalizePartDimension(size = part.height),
-        )
-    }
-
-    private fun createMessagePartDataOrNull(
-        attachment: ConversationDraftAttachment,
-    ): MessagePartData? {
-        if (attachment.contentType.isBlank()) {
-            LogUtil.w(TAG, "Dropping draft attachment with blank contentType during save")
-            return null
         }
-
-        if (attachment.contentUri.isBlank()) {
-            LogUtil.w(TAG, "Dropping draft attachment with blank contentUri during save")
-            return null
-        }
-
-        val captionText = attachment.captionText.takeIf { value -> value.isNotBlank() }
-        val contentUri = attachment.contentUri.toUri()
-        val width = toLegacyPartDimension(size = attachment.width)
-        val height = toLegacyPartDimension(size = attachment.height)
-
-        captionText?.let { nonBlankCaptionText ->
-            return MessagePartData.createMediaMessagePart(
-                nonBlankCaptionText,
-                attachment.contentType,
-                contentUri,
-                width,
-                height,
-            )
-        }
-
-        return MessagePartData.createMediaMessagePart(
-            attachment.contentType,
-            contentUri,
-            width,
-            height,
-        )
     }
 
     private fun normalizePartDimension(size: Int): Int? {
         return size.takeIf { it != MessagePartData.UNSPECIFIED_SIZE }
-    }
-
-    private fun toLegacyPartDimension(size: Int?): Int {
-        return size ?: MessagePartData.UNSPECIFIED_SIZE
     }
 
     private companion object {

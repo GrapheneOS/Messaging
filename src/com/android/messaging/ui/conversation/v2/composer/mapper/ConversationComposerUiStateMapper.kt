@@ -21,6 +21,12 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
     ): ConversationComposerUiState {
         val hasWorkingDraft = draft.hasContent
 
+        val isAttachmentActionEnabled = composerAvailability.isAttachmentActionEnabled &&
+            !draft.isCheckingDraft &&
+            !draft.isSending
+
+        val isMessageFieldEnabled = composerAvailability.isMessageFieldEnabled
+
         val isSendEnabled = composerAvailability.isSendAvailable &&
             hasWorkingDraft &&
             !draft.isCheckingDraft &&
@@ -30,8 +36,8 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
             messageText = draft.messageText,
             subjectText = draft.subjectText,
             selfParticipantId = draft.selfParticipantId,
-            isMessageFieldEnabled = composerAvailability.isMessageFieldEnabled,
-            isAttachmentActionEnabled = composerAvailability.isAttachmentActionEnabled,
+            isMessageFieldEnabled = isMessageFieldEnabled,
+            isAttachmentActionEnabled = isAttachmentActionEnabled,
             isSendEnabled = isSendEnabled,
             hasWorkingDraft = hasWorkingDraft,
             isMms = draft.isMms,
