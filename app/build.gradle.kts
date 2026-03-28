@@ -46,6 +46,7 @@ android {
         versionName = "13"
         minSdk = 35
         targetSdk = 35
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         ndk {
             abiFilters.clear()

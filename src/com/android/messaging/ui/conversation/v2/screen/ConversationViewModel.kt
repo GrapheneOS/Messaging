@@ -12,7 +12,9 @@ import com.android.messaging.ui.conversation.v2.metadata.delegate.ConversationMe
 import com.android.messaging.ui.conversation.v2.screen.model.ConversationScreenEffect
 import com.android.messaging.ui.conversation.v2.screen.model.ConversationUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -20,7 +22,17 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+
+internal interface ConversationScreenModel {
+    val effects: Flow<ConversationScreenEffect>
+    val uiState: StateFlow<ConversationUiState>
+
+    fun onConversationChanged(conversationId: String?)
+    fun onMessageTextChanged(text: String)
+    fun onAttachmentClick()
+    fun onSendClick()
+    fun persistDraft()
+}
 
 @HiltViewModel
 internal class ConversationViewModel @Inject constructor(
@@ -31,7 +43,8 @@ internal class ConversationViewModel @Inject constructor(
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
     private val savedStateHandle: SavedStateHandle,
-) : ViewModel() {
+) : ViewModel(),
+    ConversationScreenModel {
 
     private val conversationIdFlow: StateFlow<String?> = savedStateHandle.getStateFlow(
         key = CONVERSATION_ID_KEY,
@@ -41,9 +54,9 @@ internal class ConversationViewModel @Inject constructor(
         extraBufferCapacity = 1,
     )
 
-    val effects = _effects.asSharedFlow()
+    override val effects = _effects.asSharedFlow()
 
-    val uiState: StateFlow<ConversationUiState> = combine(
+    override val uiState: StateFlow<ConversationUiState> = combine(
         conversationMetadataDelegate.state,
         conversationMessagesDelegate.state,
         conversationDraftDelegate.state,
@@ -84,25 +97,25 @@ internal class ConversationViewModel @Inject constructor(
         )
     }
 
-    fun onConversationChanged(conversationId: String?) {
+    override fun onConversationChanged(conversationId: String?) {
         if (conversationId != conversationIdFlow.value) {
             savedStateHandle[CONVERSATION_ID_KEY] = conversationId
         }
     }
 
-    fun onMessageTextChanged(text: String) {
+    override fun onMessageTextChanged(text: String) {
         conversationDraftDelegate.onMessageTextChanged(messageText = text)
     }
 
-    fun onAttachmentClick() {
+    override fun onAttachmentClick() {
         conversationDraftDelegate.onAttachmentClick()
     }
 
-    fun onSendClick() {
+    override fun onSendClick() {
         conversationDraftDelegate.onSendClick()
     }
 
-    fun persistDraft() {
+    override fun persistDraft() {
         conversationDraftDelegate.persistDraft()
     }
 
@@ -120,7 +133,7 @@ internal class ConversationViewModel @Inject constructor(
                         _effects.emit(
                             ConversationScreenEffect.LaunchAttachmentChooser(
                                 conversationId = effect.conversationId,
-                            )
+                            ),
                         )
                     }
                 }

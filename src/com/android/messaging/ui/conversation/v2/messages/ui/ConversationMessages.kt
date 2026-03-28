@@ -21,15 +21,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.android.messaging.ui.conversation.v2.CONVERSATION_MESSAGES_LIST_TEST_TAG
+import com.android.messaging.ui.conversation.v2.conversationMessageItemTestTag
 import com.android.messaging.ui.conversation.v2.messages.model.ConversationMessageUiModel
 import java.time.LocalDate
 import java.util.TimeZone
 
 private const val COMMON_DATE_SEPARATOR_FORMAT_FLAGS = DateUtils.FORMAT_SHOW_WEEKDAY or
-        DateUtils.FORMAT_SHOW_DATE or
-        DateUtils.FORMAT_ABBREV_MONTH
+    DateUtils.FORMAT_SHOW_DATE or
+    DateUtils.FORMAT_ABBREV_MONTH
 
 private val CONVERSATION_MESSAGES_CONTENT_PADDING = PaddingValues(
     start = 16.dp,
@@ -70,6 +73,7 @@ internal fun ConversationMessages(
         reverseLayout = true,
         modifier = modifier
             .fillMaxSize()
+            .testTag(CONVERSATION_MESSAGES_LIST_TEST_TAG)
             .background(color = MaterialTheme.colorScheme.background),
         contentPadding = CONVERSATION_MESSAGES_CONTENT_PADDING,
     ) {
@@ -144,7 +148,9 @@ private fun ConversationMessagesItem(
         dateSeparatorText = presentation.dateSeparatorText,
     ) {
         ConversationMessage(
-            modifier = Modifier.padding(top = presentation.topPadding),
+            modifier = Modifier
+                .testTag(conversationMessageItemTestTag(messageId = message.messageId))
+                .padding(top = presentation.topPadding),
             message = message,
         )
     }

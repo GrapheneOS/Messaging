@@ -5,16 +5,20 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Send
-import androidx.compose.material.icons.rounded.AddCircleOutline
 import androidx.compose.material.icons.rounded.Image
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -25,15 +29,28 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.ui.conversation.v2.CONVERSATION_COMPOSE_BAR_TEST_TAG
+import com.android.messaging.ui.conversation.v2.CONVERSATION_SEND_BUTTON_SHAPE_CIRCLE
+import com.android.messaging.ui.conversation.v2.CONVERSATION_SEND_BUTTON_TEST_TAG
+import com.android.messaging.ui.conversation.v2.CONVERSATION_TEXT_FIELD_TEST_TAG
+import com.android.messaging.ui.conversation.v2.conversationShape
 import com.android.messaging.ui.core.AppTheme
 
 private val CONVERSATION_COMPOSE_BAR_FIELD_CORNER_RADIUS = 28.dp
+private val CONVERSATION_COMPOSE_BAR_FIELD_SHAPE =
+    RoundedCornerShape(size = CONVERSATION_COMPOSE_BAR_FIELD_CORNER_RADIUS)
+private val CONVERSATION_COMPOSE_BAR_SINGLE_LINE_HEIGHT = 56.dp
+private val CONVERSATION_COMPOSE_BAR_SEND_BUTTON_SIZE = CONVERSATION_COMPOSE_BAR_SINGLE_LINE_HEIGHT
+private val CONVERSATION_COMPOSE_BAR_SEND_BUTTON_SPACING = 8.dp
 private val CONVERSATION_COMPOSE_BAR_TEXT_FIELD_PADDING_HORIZONTAL = 12.dp
 private val CONVERSATION_COMPOSE_BAR_TEXT_FIELD_PADDING_VERTICAL = 8.dp
-private val CONVERSATION_COMPOSE_BAR_TRAILING_ACTION_SPACING = 2.dp
 private val CONVERSATION_COMPOSE_BAR_PREVIEW_PADDING_VERTICAL = 24.dp
 
 @Composable
@@ -67,15 +84,11 @@ internal fun ConversationComposeBar(
 
 @Composable
 private fun rememberConversationComposeBarPresentation(): ConversationComposeBarPresentation {
-    val fieldShape = RoundedCornerShape(size = CONVERSATION_COMPOSE_BAR_FIELD_CORNER_RADIUS)
     val fieldColors = conversationComposeBarTextFieldColors()
 
-    return remember(
-        fieldShape,
-        fieldColors,
-    ) {
+    return remember(fieldColors) {
         ConversationComposeBarPresentation(
-            fieldShape = fieldShape,
+            fieldShape = CONVERSATION_COMPOSE_BAR_FIELD_SHAPE,
             fieldColors = fieldColors,
         )
     }
@@ -110,12 +123,12 @@ private fun ConversationComposeBarContainer(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    Row(
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .imePadding()
-            .navigationBarsPadding(),
-        horizontalArrangement = Arrangement.Center,
+            .navigationBarsPadding()
+            .testTag(CONVERSATION_COMPOSE_BAR_TEST_TAG),
     ) {
         content()
     }
@@ -128,41 +141,50 @@ private fun ConversationComposeTextField(
     isAttachmentActionEnabled: Boolean,
     isSendActionEnabled: Boolean,
     presentation: ConversationComposeBarPresentation,
-    onAttachmentClick: (() -> Unit)?,
+    onAttachmentClick: () -> Unit,
     onMessageTextChange: (String) -> Unit,
-    onSendClick: (() -> Unit)?,
+    onSendClick: () -> Unit,
 ) {
-    TextField(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
                 horizontal = CONVERSATION_COMPOSE_BAR_TEXT_FIELD_PADDING_HORIZONTAL,
                 vertical = CONVERSATION_COMPOSE_BAR_TEXT_FIELD_PADDING_VERTICAL,
             ),
-        value = messageText,
-        onValueChange = onMessageTextChange,
-        enabled = isMessageFieldEnabled,
-        shape = presentation.fieldShape,
-        colors = presentation.fieldColors,
-        placeholder = {
-            ConversationComposePlaceholder()
-        },
-        leadingIcon = {
-            ConversationComposeLeadingAction(
-                enabled = isAttachmentActionEnabled && onAttachmentClick != null,
-                onClick = onAttachmentClick,
-            )
-        },
-        trailingIcon = {
-            ConversationComposeTrailingActions(
-                isAttachmentActionEnabled = isAttachmentActionEnabled,
-                isSendActionEnabled = isSendActionEnabled,
-                onAttachmentClick = onAttachmentClick,
-                onSendClick = onSendClick,
-            )
-        },
-        maxLines = 4,
-    )
+        horizontalArrangement = Arrangement.spacedBy(
+            space = CONVERSATION_COMPOSE_BAR_SEND_BUTTON_SPACING
+        ),
+        verticalAlignment = Alignment.Bottom,
+    ) {
+        TextField(
+            modifier = Modifier
+                .weight(weight = 1f)
+                .testTag(CONVERSATION_TEXT_FIELD_TEST_TAG)
+                .heightIn(min = CONVERSATION_COMPOSE_BAR_SINGLE_LINE_HEIGHT),
+            value = messageText,
+            onValueChange = onMessageTextChange,
+            enabled = isMessageFieldEnabled,
+            shape = presentation.fieldShape,
+            colors = presentation.fieldColors,
+            placeholder = {
+                ConversationComposePlaceholder()
+            },
+            trailingIcon = {
+                ConversationComposeImageAction(
+                    enabled = isAttachmentActionEnabled,
+                    onClick = onAttachmentClick,
+                )
+            },
+            minLines = 1,
+            maxLines = 4,
+        )
+
+        ConversationComposeSendAction(
+            enabled = isSendActionEnabled,
+            onClick = onSendClick,
+        )
+    }
 }
 
 @Composable
@@ -174,54 +196,16 @@ private fun ConversationComposePlaceholder() {
 }
 
 @Composable
-private fun ConversationComposeLeadingAction(
-    enabled: Boolean,
-    onClick: (() -> Unit)?,
-) {
-    IconButton(
-        onClick = {
-            onClick?.invoke()
-        },
-        enabled = enabled,
-    ) {
-        Icon(
-            imageVector = Icons.Rounded.AddCircleOutline,
-            contentDescription = null,
-        )
-    }
-}
-
-@Composable
-private fun ConversationComposeTrailingActions(
-    isAttachmentActionEnabled: Boolean,
-    isSendActionEnabled: Boolean,
-    onAttachmentClick: (() -> Unit)?,
-    onSendClick: (() -> Unit)?,
-) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(space = CONVERSATION_COMPOSE_BAR_TRAILING_ACTION_SPACING),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        ConversationComposeImageAction(
-            enabled = isAttachmentActionEnabled && onAttachmentClick != null,
-            onClick = onAttachmentClick,
-        )
-
-        ConversationComposeSendAction(
-            enabled = isSendActionEnabled && onSendClick != null,
-            onClick = onSendClick,
-        )
-    }
-}
-
-@Composable
 private fun ConversationComposeImageAction(
     enabled: Boolean,
-    onClick: (() -> Unit)?,
+    onClick: () -> Unit,
 ) {
+    val hapticFeedback = LocalHapticFeedback.current
+
     IconButton(
         onClick = {
-            onClick?.invoke()
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.ContextClick)
+            onClick()
         },
         enabled = enabled,
     ) {
@@ -235,13 +219,29 @@ private fun ConversationComposeImageAction(
 @Composable
 private fun ConversationComposeSendAction(
     enabled: Boolean,
-    onClick: (() -> Unit)?,
+    onClick: () -> Unit,
 ) {
-    IconButton(
+    val hapticFeedback = LocalHapticFeedback.current
+
+    FilledIconButton(
+        modifier = Modifier
+            .testTag(CONVERSATION_SEND_BUTTON_TEST_TAG)
+            .semantics {
+                conversationShape = CONVERSATION_SEND_BUTTON_SHAPE_CIRCLE
+            }
+            .size(size = CONVERSATION_COMPOSE_BAR_SEND_BUTTON_SIZE),
         onClick = {
-            onClick?.invoke()
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.ContextClick)
+            onClick()
         },
         enabled = enabled,
+        shape = CircleShape,
+        colors = IconButtonDefaults.filledIconButtonColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        ),
     ) {
         Icon(
             imageVector = Icons.AutoMirrored.Rounded.Send,
