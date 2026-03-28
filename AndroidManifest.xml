@@ -204,6 +204,26 @@
             </intent-filter>
         </activity>
 
+        <!-- Settings Compose -->
+        <activity
+            android:name=".ui.appsettings.redesign.SettingsActivity"
+            android:allowEmbedded="true"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="true"
+            android:label="@string/settings_activity_title"
+            android:parentActivityName="com.android.messaging.ui.conversationlist.ConversationListActivity"
+            android:resizeableActivity="true"
+            android:screenOrientation="user"
+            android:theme="@style/Theme.Compose">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.android.messaging.ui.conversationlist.ConversationListActivity" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
         <!-- Handles sharing intent -->
         <activity
             android:name=".ui.conversationlist.ShareIntentActivity"
