@@ -18,7 +18,9 @@ class SettingsActivity : ComponentActivity() {
 
         setContent {
             AppTheme {
-                SettingsScreen()
+                SettingsScreen(
+                    onNavigateBack = ::finish,
+                )
             }
         }
     }
