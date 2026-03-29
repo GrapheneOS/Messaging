@@ -26,7 +26,7 @@ internal fun SettingsMainScreen(
     subscriptions: List<SubscriptionSettingsUiState>,
     onNavigateBack: (() -> Unit),
     onGeneralSettingsClick: (() -> Unit),
-    onSubscriptionClick: (() -> Unit),
+    onSubscriptionClick: ((subId: Int, title: String) -> Unit),
     modifier: Modifier = Modifier,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -65,7 +65,7 @@ internal fun SettingsMainScreen(
                 SettingsClickableItem(
                     title = subscription.displayName,
                     summary = subscription.displayDetail,
-                    onClick = onSubscriptionClick,
+                    onClick = { onSubscriptionClick(subscription.subId, subscription.displayName) },
                 )
             }
         }

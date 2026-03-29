@@ -2,11 +2,14 @@ package com.android.messaging.ui.appsettings.redesign.subscription.mapper
 
 import android.content.ContentResolver
 import android.content.Context
+import android.content.pm.PackageManager
 import com.android.messaging.Factory
 import com.android.messaging.R
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.data.ParticipantData
+import com.android.messaging.sms.MmsConfig
+import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.appsettings.redesign.subscription.model.SubscriptionSettingsUiState
 import com.android.messaging.util.PhoneUtils
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -74,6 +77,7 @@ internal class SubscriptionSettingsUiStateMapperImpl @Inject constructor(
     ): SubscriptionSettingsUiState {
         val subPrefs = Factory.get().getSubscriptionPrefs(subId)
         val phoneUtils = PhoneUtils.get(subId)
+        val mmsConfig = MmsConfig.get(subId)
 
         val phoneNumberKey = context.getString(R.string.mms_phone_number_pref_key)
         val savedPhoneNumber = subPrefs.getString(phoneNumberKey, "")
@@ -85,10 +89,39 @@ internal class SubscriptionSettingsUiStateMapperImpl @Inject constructor(
             else -> context.getString(R.string.unknown_phone_number_pref_display_value)
         }
 
+        val isDefaultSmsApp = PhoneUtils.getDefault().isDefaultSmsApp
+        val groupMmsPrefKey = context.getString(R.string.group_mms_pref_key)
+        val autoRetrieveKey = context.getString(R.string.auto_retrieve_mms_pref_key)
+        val autoRetrieveRoamingKey =
+            context.getString(R.string.auto_retrieve_mms_when_roaming_pref_key)
+        val deliveryReportsKey = context.getString(R.string.delivery_reports_pref_key)
+
         return SubscriptionSettingsUiState(
             subId = subId,
             displayName = displayName,
             displayDetail = displayPhoneNumber,
+            phoneNumber = savedPhoneNumber.orEmpty(),
+            defaultPhoneNumber = defaultPhoneNumber.orEmpty(),
+            isGroupMmsSupported = mmsConfig.groupMmsEnabled,
+            isGroupMmsEnabled = subPrefs.getBoolean(
+                groupMmsPrefKey,
+                context.resources.getBoolean(R.bool.group_mms_pref_default),
+            ),
+            autoRetrieveMms = subPrefs.getBoolean(
+                autoRetrieveKey,
+                context.resources.getBoolean(R.bool.auto_retrieve_mms_pref_default),
+            ),
+            autoRetrieveMmsWhenRoaming = subPrefs.getBoolean(
+                autoRetrieveRoamingKey,
+                context.resources.getBoolean(R.bool.auto_retrieve_mms_when_roaming_pref_default),
+            ),
+            isDeliveryReportsSupported = mmsConfig.smsDeliveryReportsEnabled,
+            deliveryReportsEnabled = subPrefs.getBoolean(
+                deliveryReportsKey,
+                context.resources.getBoolean(R.bool.delivery_reports_pref_default),
+            ),
+            isWirelessAlertsSupported = mmsConfig.showCellBroadcast && isCellBroadcastAppEnabled(),
+            isDefaultSmsApp = isDefaultSmsApp,
         )
     }
 
@@ -107,6 +140,15 @@ internal class SubscriptionSettingsUiStateMapperImpl @Inject constructor(
                     add(ParticipantData.getFromCursor(it))
                 }
             }
+        }
+    }
+
+    private fun isCellBroadcastAppEnabled(): Boolean {
+        return try {
+            context.packageManager
+                .getApplicationEnabledSetting(UIIntents.CMAS_COMPONENT) != PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+        } catch (_: IllegalArgumentException) {
+            false
         }
     }
 }

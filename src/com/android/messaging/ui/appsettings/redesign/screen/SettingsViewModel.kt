@@ -2,8 +2,6 @@ package com.android.messaging.ui.appsettings.redesign.screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.android.messaging.ui.appsettings.redesign.model.SettingsScreenEffect
-import com.android.messaging.ui.appsettings.redesign.model.SettingsUiState
 import com.android.messaging.ui.appsettings.redesign.subscription.delegate.SubscriptionSettingsDelegate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
@@ -13,13 +11,23 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.android.messaging.ui.appsettings.redesign.screen.model.SettingsScreenEffect as Effect
+import com.android.messaging.ui.appsettings.redesign.screen.model.SettingsUiState as State
 
 internal interface SettingsScreenModel {
-    val effects: Flow<SettingsScreenEffect>
-    val uiState: StateFlow<SettingsUiState>
+    val effects: Flow<Effect>
+    val uiState: StateFlow<State>
 
     fun refreshState()
+
+    fun onAutoRetrieveMmsChanged(subId: Int, enabled: Boolean)
+    fun onAutoRetrieveMmsWhenRoamingChanged(subId: Int, enabled: Boolean)
+    fun onDeliveryReportsChanged(subId: Int, enabled: Boolean)
+    fun onWirelessAlertsClick(subId: Int)
+    fun onGroupMmsChanged(subId: Int, enabled: Boolean)
+    fun onPhoneNumberChanged(subId: Int, phoneNumber: String)
 }
 
 @HiltViewModel
@@ -27,19 +35,19 @@ internal class SettingsViewModel @Inject constructor(
     private val subscriptionSettingsDelegate: SubscriptionSettingsDelegate,
 ) : ViewModel(), SettingsScreenModel {
 
-    private val _effects = MutableSharedFlow<SettingsScreenEffect>(extraBufferCapacity = 1)
-    override val effects = _effects.asSharedFlow()
+    private val _effects = MutableSharedFlow<Effect>(extraBufferCapacity = 1)
+    override val effects: Flow<Effect> = _effects.asSharedFlow()
 
-    override val uiState: StateFlow<SettingsUiState> = subscriptionSettingsDelegate.state
+    override val uiState: StateFlow<State> = subscriptionSettingsDelegate.state
         .map { subscriptionState ->
-            SettingsUiState(
+            State(
                 isMultiSim = subscriptionState.isMultiSim,
                 subscriptionSettings = subscriptionState.subscriptions,
             )
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STATEFLOW_STOP_TIMEOUT_MILLIS),
-            initialValue = SettingsUiState(),
+            initialValue = State(),
         )
 
     init {
@@ -52,6 +60,36 @@ internal class SettingsViewModel @Inject constructor(
 
     override fun refreshState() {
         subscriptionSettingsDelegate.refresh()
+    }
+
+    override fun onAutoRetrieveMmsChanged(subId: Int, enabled: Boolean) {
+        subscriptionSettingsDelegate.onAutoRetrieveMmsChanged(subId, enabled)
+    }
+
+    override fun onAutoRetrieveMmsWhenRoamingChanged(subId: Int, enabled: Boolean) {
+        subscriptionSettingsDelegate.onAutoRetrieveMmsWhenRoamingChanged(subId, enabled)
+    }
+
+    override fun onDeliveryReportsChanged(subId: Int, enabled: Boolean) {
+        subscriptionSettingsDelegate.onDeliveryReportsChanged(subId, enabled)
+    }
+
+    override fun onGroupMmsChanged(subId: Int, enabled: Boolean) {
+        subscriptionSettingsDelegate.onGroupMmsChanged(subId, enabled)
+    }
+
+    override fun onPhoneNumberChanged(subId: Int, phoneNumber: String) {
+        subscriptionSettingsDelegate.onPhoneNumberChanged(subId, phoneNumber)
+    }
+
+    override fun onWirelessAlertsClick(subId: Int) {
+        emitEffect(Effect.OpenWirelessAlerts(subId))
+    }
+
+    private fun emitEffect(effect: Effect) {
+        viewModelScope.launch {
+            _effects.emit(effect)
+        }
     }
 
     private companion object {

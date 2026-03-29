@@ -1,4 +1,4 @@
-package com.android.messaging.ui.appsettings.redesign.model
+package com.android.messaging.ui.appsettings.redesign.screen.model
 
 import androidx.compose.runtime.Immutable
 
@@ -6,5 +6,5 @@ import androidx.compose.runtime.Immutable
 internal sealed interface SettingsNavRoute {
     data object Main : SettingsNavRoute
     data object AppSettings : SettingsNavRoute
-    data object SubscriptionSettings : SettingsNavRoute
+    data class SubscriptionSettings(val subId: Int, val title: String) : SettingsNavRoute
 }
