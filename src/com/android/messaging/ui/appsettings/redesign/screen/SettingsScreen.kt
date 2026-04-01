@@ -7,6 +7,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -47,14 +49,14 @@ internal fun SettingsScreen(
     }
 
     // For single-SIM go directly to app settings
-    val effectiveRoute = if (!uiState.isMultiSim && currentRoute is SettingsNavRoute.Main) {
+    val effectiveRoute = if (uiState.isMultiSim == false && currentRoute is SettingsNavRoute.Main) {
         SettingsNavRoute.AppSettings
     } else {
         currentRoute
     }
 
     val isRootRoute = effectiveRoute is SettingsNavRoute.Main ||
-        (effectiveRoute is SettingsNavRoute.AppSettings && !uiState.isMultiSim)
+        (effectiveRoute is SettingsNavRoute.AppSettings && uiState.isMultiSim == false)
 
     val navigateUp: (() -> Unit) = {
         when {
@@ -65,7 +67,7 @@ internal fun SettingsScreen(
             }
 
             effectiveRoute is SettingsNavRoute.SubscriptionSettings -> {
-                currentRoute = if (uiState.isMultiSim) {
+                currentRoute = if (uiState.isMultiSim == true) {
                     SettingsNavRoute.Main
                 } else {
                     SettingsNavRoute.AppSettings
@@ -81,9 +83,9 @@ internal fun SettingsScreen(
 
     AnimatedContent(
         targetState = effectiveRoute,
-        modifier = modifier,
+        modifier = modifier.background(MaterialTheme.colorScheme.background),
         transitionSpec = {
-            val isForward = targetState != SettingsNavRoute.Main
+            val isForward = targetState.depth > initialState.depth
             if (isForward) {
                 (slideInHorizontally { it / 3 } + fadeIn()) togetherWith
                     (slideOutHorizontally { -it / 3 } + fadeOut())
@@ -109,13 +111,14 @@ internal fun SettingsScreen(
             }
 
             is SettingsNavRoute.AppSettings -> {
+                val isSingleSim = uiState.isMultiSim == false
                 AppSettingsScreen(
                     appSettings = uiState.appSettings,
                     screenModel = screenModel,
-                    isTopLevel = !uiState.isMultiSim,
+                    isTopLevel = isSingleSim,
                     onAdvancedClick = uiState.subscriptionSettings
                         .firstOrNull()
-                        ?.takeIf { !uiState.isMultiSim }
+                        ?.takeIf { isSingleSim }
                         ?.let { sub ->
                             {
                                 currentRoute = SettingsNavRoute.SubscriptionSettings(

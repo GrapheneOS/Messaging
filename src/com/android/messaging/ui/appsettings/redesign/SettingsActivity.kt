@@ -8,11 +8,16 @@ import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.appsettings.redesign.screen.model.SettingsNavRoute
 import com.android.messaging.ui.appsettings.redesign.screen.SettingsScreen
+import com.android.messaging.ui.appsettings.redesign.subscription.mapper.SubscriptionSettingsUiStateMapper
 import com.android.messaging.ui.core.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class SettingsActivity : ComponentActivity() {
+
+    @Inject
+    internal lateinit var subscriptionMapper: SubscriptionSettingsUiStateMapper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,7 +51,7 @@ class SettingsActivity : ComponentActivity() {
 
         return when {
             subTitle != null -> SettingsNavRoute.SubscriptionSettings(subId, subTitle)
-            isTopLevel -> SettingsNavRoute.AppSettings
+            isTopLevel || !subscriptionMapper.isMultiSim() -> SettingsNavRoute.AppSettings
             else -> SettingsNavRoute.Main
         }
     }
