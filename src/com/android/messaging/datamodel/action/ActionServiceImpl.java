@@ -201,8 +201,11 @@ public class ActionServiceImpl extends JobIntentService {
         if (launchesAnActivity) {
             intent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
         }
+        // Use FLAG_IMMUTABLE since this PendingIntent doesn't require modification.
+        // This prevents potential PendingIntent hijacking attacks.
+        // Reference: https://developer.android.com/reference/android/app/PendingIntent#FLAG_IMMUTABLE
         return PendingIntent.getBroadcast(context, requestCode, intent,
-                PendingIntent.FLAG_UPDATE_CURRENT);
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
     /**
