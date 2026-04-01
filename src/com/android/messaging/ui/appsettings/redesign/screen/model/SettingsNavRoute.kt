@@ -4,7 +4,18 @@ import androidx.compose.runtime.Immutable
 
 @Immutable
 internal sealed interface SettingsNavRoute {
-    data object Main : SettingsNavRoute
-    data object AppSettings : SettingsNavRoute
-    data class SubscriptionSettings(val subId: Int, val title: String) : SettingsNavRoute
+
+    val depth: Int
+
+    data object Main : SettingsNavRoute {
+        override val depth: Int = 0
+    }
+
+    data object AppSettings : SettingsNavRoute {
+        override val depth: Int = 1
+    }
+
+    data class SubscriptionSettings(val subId: Int, val title: String) : SettingsNavRoute {
+        override val depth: Int = 2
+    }
 }

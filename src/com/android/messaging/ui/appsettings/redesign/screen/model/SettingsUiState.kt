@@ -6,7 +6,7 @@ import com.android.messaging.ui.appsettings.redesign.subscription.model.Subscrip
 
 @Immutable
 internal data class SettingsUiState(
-    val isMultiSim: Boolean = false,
+    val isMultiSim: Boolean? = null,
     val subscriptionSettings: List<SubscriptionSettingsUiState> = emptyList(),
     val appSettings: AppSettingsUiState = AppSettingsUiState(),
 )
