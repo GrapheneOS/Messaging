@@ -19,6 +19,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.messaging.ui.appsettings.redesign.appsettings.ui.AppSettingsScreen
 import com.android.messaging.ui.appsettings.redesign.screen.model.SettingsNavRoute
 import com.android.messaging.ui.appsettings.redesign.subscription.ui.SubscriptionSettingsScreen
 
@@ -40,10 +41,9 @@ internal fun SettingsScreen(
         screenModel.refreshState()
     }
 
-    LaunchedEffect(screenModel, context) {
-        screenModel.effects.collect { effect ->
-            handleEffect(context, effect)
-        }
+    val effectHandler = remember(context) { SettingsEffectHandlerImpl(context) }
+    LaunchedEffect(screenModel, effectHandler) {
+        screenModel.effects.collect(effectHandler::handle)
     }
 
     // For single-SIM go directly to app settings
@@ -108,7 +108,25 @@ internal fun SettingsScreen(
                 )
             }
 
-            is SettingsNavRoute.AppSettings -> {}
+            is SettingsNavRoute.AppSettings -> {
+                AppSettingsScreen(
+                    appSettings = uiState.appSettings,
+                    screenModel = screenModel,
+                    isTopLevel = !uiState.isMultiSim,
+                    onAdvancedClick = uiState.subscriptionSettings
+                        .firstOrNull()
+                        ?.takeIf { !uiState.isMultiSim }
+                        ?.let { sub ->
+                            {
+                                currentRoute = SettingsNavRoute.SubscriptionSettings(
+                                    sub.subId,
+                                    sub.displayName,
+                                )
+                            }
+                        },
+                    onNavigateBack = navigateUp,
+                )
+            }
 
             is SettingsNavRoute.SubscriptionSettings -> {
                 val sub = uiState.subscriptionSettings.find { it.subId == route.subId }
