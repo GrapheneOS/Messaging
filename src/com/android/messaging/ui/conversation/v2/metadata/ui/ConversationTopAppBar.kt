@@ -108,7 +108,9 @@ private fun ConversationTopAppBarTitle(
     presentation: ConversationTopAppBarPresentation,
 ) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(space = CONVERSATION_TOP_APP_BAR_TITLE_SPACING),
+        horizontalArrangement = Arrangement.spacedBy(
+            space = CONVERSATION_TOP_APP_BAR_TITLE_SPACING
+        ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         ConversationAvatar(
@@ -195,6 +197,7 @@ private fun conversationTitle(
 ): String {
     return when (metadata) {
         ConversationMetadataUiState.Loading -> stringResource(id = R.string.app_name)
+
         ConversationMetadataUiState.Unavailable -> stringResource(id = R.string.app_name)
 
         is ConversationMetadataUiState.Present -> {
@@ -222,6 +225,7 @@ private fun conversationSubtitle(
 ): String? {
     return when (metadata) {
         ConversationMetadataUiState.Loading -> stringResource(id = R.string.loading_messages)
+
         ConversationMetadataUiState.Unavailable -> null
 
         is ConversationMetadataUiState.Present -> {

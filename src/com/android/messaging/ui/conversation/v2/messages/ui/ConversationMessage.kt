@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.conversation.v2.messages.model.ConversationMessageUiModel
+import com.android.messaging.ui.conversation.v2.messages.model.ConversationMessageUiModel.Status
 
 private const val MESSAGE_BUBBLE_MAX_WIDTH_DP = 360
 private const val MESSAGE_BUBBLE_WIDTH_FRACTION = 0.8f
@@ -117,8 +118,8 @@ private fun rememberConversationMessagePresentation(
         message.canClusterWithPrevious,
     ) {
         message.isIncoming &&
-                !message.senderDisplayName.isNullOrBlank() &&
-                !message.canClusterWithPrevious
+            !message.senderDisplayName.isNullOrBlank() &&
+            !message.canClusterWithPrevious
     }
 
     return remember(
@@ -136,7 +137,9 @@ private fun rememberConversationMessagePresentation(
     }
 }
 
-private fun messageHorizontalArrangement(message: ConversationMessageUiModel): Arrangement.Horizontal {
+private fun messageHorizontalArrangement(
+    message: ConversationMessageUiModel,
+): Arrangement.Horizontal {
     return when {
         message.isIncoming -> Arrangement.Start
         else -> Arrangement.End
@@ -357,49 +360,34 @@ private fun buildMessageMetadataText(
     return "$formattedTime \u2022 $statusText"
 }
 
-private fun messageStatusTextResourceId(status: ConversationMessageUiModel.Status): Int? {
+private fun messageStatusTextResourceId(status: Status): Int? {
     return when (status) {
-        ConversationMessageUiModel.Status.Unknown -> null
-        ConversationMessageUiModel.Status.Outgoing.Complete -> null
-        ConversationMessageUiModel.Status.Outgoing.Delivered -> R.string.delivered_status_content_description
-
-        ConversationMessageUiModel.Status.Outgoing.Draft -> null
-        ConversationMessageUiModel.Status.Outgoing.YetToSend -> null
-        ConversationMessageUiModel.Status.Outgoing.Sending -> R.string.message_status_sending
-
-        ConversationMessageUiModel.Status.Outgoing.Resending -> R.string.message_status_send_retrying
-
-        ConversationMessageUiModel.Status.Outgoing.AwaitingRetry -> R.string.message_status_failed
-
-        ConversationMessageUiModel.Status.Outgoing.Failed -> R.string.message_status_failed
-
-        ConversationMessageUiModel.Status.Outgoing.FailedEmergencyNumber -> R.string.message_status_failed
-
-        ConversationMessageUiModel.Status.Incoming.Complete -> null
-        ConversationMessageUiModel.Status.Incoming.YetToManualDownload -> R.string.message_status_download
-
-        ConversationMessageUiModel.Status.Incoming.RetryingManualDownload -> R.string.message_status_downloading
-
-        ConversationMessageUiModel.Status.Incoming.ManualDownloading -> R.string.message_status_downloading
-
-        ConversationMessageUiModel.Status.Incoming.RetryingAutoDownload -> R.string.message_status_downloading
-
-        ConversationMessageUiModel.Status.Incoming.AutoDownloading -> R.string.message_status_downloading
-
-        ConversationMessageUiModel.Status.Incoming.DownloadFailed -> R.string.message_status_download_failed
-
-        ConversationMessageUiModel.Status.Incoming.ExpiredOrNotAvailable -> R.string.message_status_download_error
+        Status.Outgoing.Delivered -> R.string.delivered_status_content_description
+        Status.Outgoing.Sending -> R.string.message_status_sending
+        Status.Outgoing.Resending -> R.string.message_status_send_retrying
+        Status.Outgoing.AwaitingRetry -> R.string.message_status_failed
+        Status.Outgoing.Failed -> R.string.message_status_failed
+        Status.Outgoing.FailedEmergencyNumber -> R.string.message_status_failed
+        Status.Incoming.YetToManualDownload -> R.string.message_status_download
+        Status.Incoming.RetryingManualDownload -> R.string.message_status_downloading
+        Status.Incoming.ManualDownloading -> R.string.message_status_downloading
+        Status.Incoming.RetryingAutoDownload -> R.string.message_status_downloading
+        Status.Incoming.AutoDownloading -> R.string.message_status_downloading
+        Status.Incoming.DownloadFailed -> R.string.message_status_download_failed
+        Status.Incoming.ExpiredOrNotAvailable -> R.string.message_status_download_error
+        else -> null
     }
 }
 
 @Composable
 private fun messageMetadataColor(message: ConversationMessageUiModel): Color {
     return when (message.status) {
-        ConversationMessageUiModel.Status.Outgoing.AwaitingRetry,
-        ConversationMessageUiModel.Status.Outgoing.Failed,
-        ConversationMessageUiModel.Status.Outgoing.FailedEmergencyNumber,
-        ConversationMessageUiModel.Status.Incoming.DownloadFailed,
-        ConversationMessageUiModel.Status.Incoming.ExpiredOrNotAvailable -> MaterialTheme.colorScheme.error
+        Status.Outgoing.AwaitingRetry,
+        Status.Outgoing.Failed,
+        Status.Outgoing.FailedEmergencyNumber,
+        Status.Incoming.DownloadFailed,
+        Status.Incoming.ExpiredOrNotAvailable,
+        -> MaterialTheme.colorScheme.error
 
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }

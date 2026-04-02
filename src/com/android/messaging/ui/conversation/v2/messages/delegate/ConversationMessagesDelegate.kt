@@ -5,6 +5,7 @@ import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.ui.conversation.v2.common.ConversationScreenDelegate
 import com.android.messaging.ui.conversation.v2.messages.mapper.ConversationMessageUiModelMapper
 import com.android.messaging.ui.conversation.v2.messages.model.ConversationMessagesUiState
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,7 +58,9 @@ internal class ConversationMessagesDelegateImpl @Inject constructor(
                     .map { messages ->
                         ConversationMessagesUiState.Present(
                             messages = messages
-                                .mapNotNull(conversationMessageUiModelMapper::map),
+                                .asSequence()
+                                .map(conversationMessageUiModelMapper::map)
+                                .toImmutableList(),
                         )
                     }
                     .flowOn(defaultDispatcher)

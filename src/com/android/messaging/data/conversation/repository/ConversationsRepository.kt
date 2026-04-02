@@ -9,9 +9,11 @@ import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.data.ConversationListItemData
 import com.android.messaging.datamodel.data.ConversationMessageData
-import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.di.core.IoDispatcher
 import com.android.messaging.util.db.ReversedCursor
+import com.android.messaging.util.db.ext.getInt
+import com.android.messaging.util.db.ext.getStringOrEmpty
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -19,7 +21,6 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
 
 internal interface ConversationsRepository {
     fun getConversationMetadata(conversationId: String): Flow<ConversationMetadata?>
@@ -28,8 +29,6 @@ internal interface ConversationsRepository {
 
 internal class ConversationsRepositoryImpl @Inject constructor(
     private val contentResolver: ContentResolver,
-    @param:DefaultDispatcher
-    private val defaultDispatcher: CoroutineDispatcher,
     @param:IoDispatcher
     private val ioDispatcher: CoroutineDispatcher,
 ) : ConversationsRepository {
@@ -38,19 +37,19 @@ internal class ConversationsRepositoryImpl @Inject constructor(
         val uri = MessagingContentProvider.buildConversationMetadataUri(conversationId)
 
         return observeUri(uri = uri)
-            .flowOn(defaultDispatcher)
             .map {
                 queryConversationMetadata(uri = uri)
             }
             .flowOn(ioDispatcher)
     }
 
-    override fun getConversationMessages(conversationId: String): Flow<List<ConversationMessageData>> {
+    override fun getConversationMessages(
+        conversationId: String,
+    ): Flow<List<ConversationMessageData>> {
         val uri = MessagingContentProvider.buildConversationMessagesUri(conversationId)
 
         return observeUri(uri = uri)
             .conflate()
-            .flowOn(defaultDispatcher)
             .map {
                 queryConversationMessages(uri = uri)
             }
@@ -89,18 +88,12 @@ internal class ConversationsRepositoryImpl @Inject constructor(
                 }
 
                 ConversationMetadata(
-                    conversationName = cursor.getString(
-                        cursor.getColumnIndexOrThrow(ConversationColumns.NAME),
-                    ).orEmpty(),
-                    selfParticipantId = cursor.getString(
-                        cursor.getColumnIndexOrThrow(ConversationColumns.CURRENT_SELF_ID),
-                    ).orEmpty(),
-                    isGroupConversation = cursor.getInt(
-                        cursor.getColumnIndexOrThrow(ConversationColumns.PARTICIPANT_COUNT),
-                    ) > 1,
-                    participantCount = cursor.getInt(
-                        cursor.getColumnIndexOrThrow(ConversationColumns.PARTICIPANT_COUNT),
+                    conversationName = cursor.getStringOrEmpty(ConversationColumns.NAME),
+                    selfParticipantId = cursor.getStringOrEmpty(
+                        ConversationColumns.CURRENT_SELF_ID
                     ),
+                    isGroupConversation = cursor.getInt(ConversationColumns.PARTICIPANT_COUNT) > 1,
+                    participantCount = cursor.getInt(ConversationColumns.PARTICIPANT_COUNT),
                     composerAvailability = ConversationComposerAvailability.editable(),
                 )
             }
@@ -111,12 +104,14 @@ internal class ConversationsRepositoryImpl @Inject constructor(
             .query(
                 uri,
                 ConversationMessageData.getProjection(),
-                null, null, null,
+                null,
+                null,
+                null,
             )
             ?.use { rawCursor ->
                 val reversedCursor = ReversedCursor(cursor = rawCursor)
 
-                buildList {
+                buildList(capacity = rawCursor.count) {
                     while (reversedCursor.moveToNext()) {
                         add(ConversationMessageData().apply { bind(reversedCursor) })
                     }

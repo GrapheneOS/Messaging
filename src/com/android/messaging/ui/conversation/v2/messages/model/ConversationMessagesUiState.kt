@@ -1,6 +1,8 @@
 package com.android.messaging.ui.conversation.v2.messages.model
 
 import androidx.compose.runtime.Immutable
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 @Immutable
 internal sealed interface ConversationMessagesUiState {
@@ -10,6 +12,6 @@ internal sealed interface ConversationMessagesUiState {
 
     @Immutable
     data class Present(
-        val messages: List<ConversationMessageUiModel> = emptyList(),
+        val messages: ImmutableList<ConversationMessageUiModel> = persistentListOf(),
     ) : ConversationMessagesUiState
 }

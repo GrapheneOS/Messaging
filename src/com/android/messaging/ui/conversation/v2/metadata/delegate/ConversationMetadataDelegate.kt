@@ -5,15 +5,16 @@ import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.ui.conversation.v2.common.ConversationScreenDelegate
 import com.android.messaging.ui.conversation.v2.metadata.mapper.ConversationMetadataUiStateMapper
 import com.android.messaging.ui.conversation.v2.metadata.model.ConversationMetadataUiState
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 internal interface ConversationMetadataDelegate :
     ConversationScreenDelegate<ConversationMetadataUiState>
@@ -53,12 +54,14 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
                 conversationsRepository
                     .getConversationMetadata(conversationId = conversationId)
                     .map { metadata ->
-                        if (metadata == null) {
-                            return@map ConversationMetadataUiState.Unavailable
+                        when {
+                            metadata != null -> {
+                                conversationMetadataUiStateMapper.map(metadata = metadata)
+                            }
+                            else -> ConversationMetadataUiState.Unavailable
                         }
-
-                        return@map conversationMetadataUiStateMapper.map(metadata = metadata)
                     }
+                    .flowOn(defaultDispatcher)
                     .collect { currentMetadataState ->
                         _state.value = currentMetadataState
                     }

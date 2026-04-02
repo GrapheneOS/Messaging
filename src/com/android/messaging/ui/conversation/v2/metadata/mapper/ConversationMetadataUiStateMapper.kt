@@ -8,7 +8,8 @@ internal interface ConversationMetadataUiStateMapper {
     fun map(metadata: ConversationMetadata): ConversationMetadataUiState
 }
 
-internal class ConversationMetadataUiStateMapperImpl @Inject constructor() : ConversationMetadataUiStateMapper {
+internal class ConversationMetadataUiStateMapperImpl @Inject constructor() :
+    ConversationMetadataUiStateMapper {
 
     override fun map(metadata: ConversationMetadata): ConversationMetadataUiState {
         return ConversationMetadataUiState.Present(
