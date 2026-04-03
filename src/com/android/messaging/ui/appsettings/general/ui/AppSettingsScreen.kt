@@ -2,6 +2,7 @@ package com.android.messaging.ui.appsettings.general.ui
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -23,6 +24,7 @@ import com.android.messaging.ui.appsettings.common.SettingsClickableItem
 import com.android.messaging.ui.appsettings.common.SettingsSwitchItem
 import com.android.messaging.ui.appsettings.general.model.AppSettingsUiState
 import com.android.messaging.ui.appsettings.screen.SettingsScreenModel
+import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,74 +64,105 @@ internal fun AppSettingsScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = contentPadding,
         ) {
-            item(key = "default_sms_app") {
-                SettingsClickableItem(
-                    title = stringResource(R.string.sms_disabled_pref_title),
-                    summary = appSettings.defaultSmsAppLabel,
-                    onClick = { screenModel.onDefaultSmsAppClick(appSettings.isDefaultSmsApp) },
-                )
-            }
-
-            item(key = "notifications") {
-                SettingsClickableItem(
-                    title = stringResource(R.string.notifications_enabled_conversation_pref_title),
-                    onClick = { screenModel.onNotificationsClick() },
-                )
-            }
-
-            item(key = "send_sound") {
-                SettingsSwitchItem(
-                    title = stringResource(R.string.send_sound_pref_title),
-                    checked = appSettings.sendSoundEnabled,
-                    onCheckedChange = screenModel::onSendSoundChanged,
-                )
-            }
-
+            coreSettingsItems(appSettings, screenModel)
             if (isTopLevel && onAdvancedClick != null) {
-                item(key = "advanced_settings") {
-                    SettingsClickableItem(
-                        title = stringResource(R.string.advanced_settings),
-                        onClick = onAdvancedClick,
-                    )
-                }
+                advancedSettingsItem(onAdvancedClick)
             }
-
-            if (appSettings.isDebugEnabled) {
-                item(key = "debug_divider") {
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                }
-                item(key = "debug_category_header") {
-                    SettingsCategoryHeader(
-                        title = stringResource(R.string.debug_category_pref_title),
-                    )
-                }
-                item(key = "dump_sms") {
-                    SettingsSwitchItem(
-                        title = stringResource(R.string.dump_sms_pref_title),
-                        summary = stringResource(R.string.dump_sms_pref_summary),
-                        checked = appSettings.dumpSmsEnabled,
-                        onCheckedChange = screenModel::onDumpSmsChanged,
-                    )
-                }
-                item(key = "dump_mms") {
-                    SettingsSwitchItem(
-                        title = stringResource(R.string.dump_mms_pref_title),
-                        summary = stringResource(R.string.dump_mms_pref_summary),
-                        checked = appSettings.dumpMmsEnabled,
-                        onCheckedChange = screenModel::onDumpMmsChanged,
-                    )
-                }
-            }
-
-            item(key = "licenses_divider") {
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            }
-            item(key = "licenses") {
-                SettingsClickableItem(
-                    title = stringResource(R.string.menu_license),
-                    onClick = { screenModel.onLicensesClick() },
-                )
-            }
+            debugSettingsItems(appSettings, screenModel)
+            licenseSettingsItems(screenModel)
         }
+    }
+}
+
+private fun LazyListScope.coreSettingsItems(
+    appSettings: AppSettingsUiState,
+    screenModel: SettingsScreenModel,
+) {
+    item(key = "default_sms_app") {
+        SettingsClickableItem(
+            title = stringResource(R.string.sms_disabled_pref_title),
+            summary = appSettings.defaultSmsAppLabel,
+            onClick = {
+                screenModel.onAction(Action.DefaultSmsAppClicked(appSettings.isDefaultSmsApp))
+            },
+        )
+    }
+
+    item(key = "notifications") {
+        SettingsClickableItem(
+            title = stringResource(R.string.notifications_enabled_conversation_pref_title),
+            onClick = {
+                screenModel.onAction(Action.NotificationsClicked)
+            },
+        )
+    }
+
+    item(key = "send_sound") {
+        SettingsSwitchItem(
+            title = stringResource(R.string.send_sound_pref_title),
+            checked = appSettings.sendSoundEnabled,
+            onCheckedChange = {
+                screenModel.onAction(Action.SendSoundChanged(it))
+            },
+        )
+    }
+}
+
+private fun LazyListScope.advancedSettingsItem(onAdvancedClick: () -> Unit) {
+    item(key = "advanced_settings") {
+        SettingsClickableItem(
+            title = stringResource(R.string.advanced_settings),
+            onClick = onAdvancedClick,
+        )
+    }
+}
+
+private fun LazyListScope.debugSettingsItems(
+    appSettings: AppSettingsUiState,
+    screenModel: SettingsScreenModel,
+) {
+    if (!appSettings.isDebugEnabled) return
+
+    item(key = "debug_divider") {
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+    }
+    item(key = "debug_category_header") {
+        SettingsCategoryHeader(
+            title = stringResource(R.string.debug_category_pref_title),
+        )
+    }
+    item(key = "dump_sms") {
+        SettingsSwitchItem(
+            title = stringResource(R.string.dump_sms_pref_title),
+            summary = stringResource(R.string.dump_sms_pref_summary),
+            checked = appSettings.dumpSmsEnabled,
+            onCheckedChange = {
+                screenModel.onAction(Action.DumpSmsChanged(it))
+            },
+        )
+    }
+    item(key = "dump_mms") {
+        SettingsSwitchItem(
+            title = stringResource(R.string.dump_mms_pref_title),
+            summary = stringResource(R.string.dump_mms_pref_summary),
+            checked = appSettings.dumpMmsEnabled,
+            onCheckedChange = {
+                screenModel.onAction(Action.DumpMmsChanged(it))
+            },
+        )
+    }
+}
+
+private fun LazyListScope.licenseSettingsItems(screenModel: SettingsScreenModel) {
+    item(key = "licenses_divider") {
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+    }
+    item(key = "licenses") {
+        SettingsClickableItem(
+            title = stringResource(R.string.menu_license),
+            onClick = {
+                screenModel.onAction(Action.LicensesClicked)
+            },
+        )
     }
 }

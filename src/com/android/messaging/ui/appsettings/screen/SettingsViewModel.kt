@@ -3,7 +3,8 @@ package com.android.messaging.ui.appsettings.screen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.messaging.ui.appsettings.general.delegate.AppSettingsDelegate
-import com.android.messaging.ui.appsettings.screen.model.SettingsScreenEffect
+import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
+import com.android.messaging.ui.appsettings.screen.model.SettingsScreenEffect as Effect
 import com.android.messaging.ui.appsettings.screen.model.SettingsUiState
 import com.android.messaging.ui.appsettings.subscription.delegate.SubscriptionSettingsDelegate
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,25 +19,11 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 internal interface SettingsScreenModel {
-    val effects: Flow<SettingsScreenEffect>
+    val effects: Flow<Effect>
     val uiState: StateFlow<SettingsUiState>
 
     fun refreshState()
-
-    fun onAutoRetrieveMmsChanged(subId: Int, enabled: Boolean)
-    fun onAutoRetrieveMmsWhenRoamingChanged(subId: Int, enabled: Boolean)
-    fun onDeliveryReportsChanged(subId: Int, enabled: Boolean)
-    fun onGroupMmsChanged(subId: Int, enabled: Boolean)
-    fun onPhoneNumberChanged(subId: Int, phoneNumber: String)
-    fun onWirelessAlertsClick(subId: Int)
-
-    fun onDumpMmsChanged(enabled: Boolean)
-    fun onDumpSmsChanged(enabled: Boolean)
-    fun onSendSoundChanged(enabled: Boolean)
-    fun onDefaultSmsAppClick(isCurrentlyDefault: Boolean)
-    fun onNotificationsClick()
-
-    fun onLicensesClick()
+    fun onAction(action: Action)
 }
 
 @HiltViewModel
@@ -46,8 +33,8 @@ internal class SettingsViewModel @Inject constructor(
 ) : ViewModel(),
     SettingsScreenModel {
 
-    private val _effects = MutableSharedFlow<SettingsScreenEffect>(extraBufferCapacity = 1)
-    override val effects: Flow<SettingsScreenEffect> = _effects.asSharedFlow()
+    private val _effects = MutableSharedFlow<Effect>(extraBufferCapacity = 1)
+    override val effects: Flow<Effect> = _effects.asSharedFlow()
 
     override val uiState: StateFlow<SettingsUiState> = combine(
         subscriptionSettingsDelegate.state,
@@ -78,60 +65,79 @@ internal class SettingsViewModel @Inject constructor(
         appSettingsDelegate.refresh()
     }
 
-    override fun onAutoRetrieveMmsChanged(subId: Int, enabled: Boolean) {
-        subscriptionSettingsDelegate.onAutoRetrieveMmsChanged(subId, enabled)
-    }
+    override fun onAction(action: Action) {
+        when (action) {
+            is Action.AutoRetrieveMmsChanged -> {
+                subscriptionSettingsDelegate.onAutoRetrieveMmsChanged(
+                    subId = action.subId,
+                    enabled = action.enabled,
+                )
+            }
 
-    override fun onAutoRetrieveMmsWhenRoamingChanged(subId: Int, enabled: Boolean) {
-        subscriptionSettingsDelegate.onAutoRetrieveMmsWhenRoamingChanged(subId, enabled)
-    }
+            is Action.AutoRetrieveMmsWhenRoamingChanged -> {
+                subscriptionSettingsDelegate.onAutoRetrieveMmsWhenRoamingChanged(
+                    subId = action.subId,
+                    enabled = action.enabled,
+                )
+            }
 
-    override fun onDeliveryReportsChanged(subId: Int, enabled: Boolean) {
-        subscriptionSettingsDelegate.onDeliveryReportsChanged(subId, enabled)
-    }
+            is Action.DeliveryReportsChanged -> {
+                subscriptionSettingsDelegate.onDeliveryReportsChanged(
+                    subId = action.subId,
+                    enabled = action.enabled,
+                )
+            }
 
-    override fun onGroupMmsChanged(subId: Int, enabled: Boolean) {
-        subscriptionSettingsDelegate.onGroupMmsChanged(subId, enabled)
-    }
+            is Action.GroupMmsChanged -> {
+                subscriptionSettingsDelegate.onGroupMmsChanged(
+                    subId = action.subId,
+                    enabled = action.enabled,
+                )
+            }
 
-    override fun onPhoneNumberChanged(subId: Int, phoneNumber: String) {
-        subscriptionSettingsDelegate.onPhoneNumberChanged(subId, phoneNumber)
-    }
+            is Action.PhoneNumberChanged -> {
+                subscriptionSettingsDelegate.onPhoneNumberChanged(
+                    subId = action.subId,
+                    phoneNumber = action.phoneNumber,
+                )
+            }
 
-    override fun onWirelessAlertsClick(subId: Int) {
-        emitEffect(SettingsScreenEffect.OpenWirelessAlerts(subId))
-    }
+            is Action.WirelessAlertsClicked -> {
+                emitEffect(Effect.OpenWirelessAlerts(action.subId))
+            }
 
-    override fun onDumpMmsChanged(enabled: Boolean) {
-        appSettingsDelegate.onDumpMmsChanged(enabled)
-    }
+            is Action.DumpMmsChanged -> {
+                appSettingsDelegate.onDumpMmsChanged(action.enabled)
+            }
 
-    override fun onDumpSmsChanged(enabled: Boolean) {
-        appSettingsDelegate.onDumpSmsChanged(enabled)
-    }
+            is Action.DumpSmsChanged -> {
+                appSettingsDelegate.onDumpSmsChanged(action.enabled)
+            }
 
-    override fun onSendSoundChanged(enabled: Boolean) {
-        appSettingsDelegate.onSendSoundChanged(enabled)
-    }
+            is Action.SendSoundChanged -> {
+                appSettingsDelegate.onSendSoundChanged(action.enabled)
+            }
 
-    override fun onDefaultSmsAppClick(isCurrentlyDefault: Boolean) {
-        val effect = if (isCurrentlyDefault) {
-            SettingsScreenEffect.OpenManageDefaultApps
-        } else {
-            SettingsScreenEffect.RequestDefaultSmsApp
+            is Action.DefaultSmsAppClicked -> {
+                val effect = if (action.isCurrentlyDefault) {
+                    Effect.OpenManageDefaultApps
+                } else {
+                    Effect.RequestDefaultSmsApp
+                }
+                emitEffect(effect)
+            }
+
+            is Action.NotificationsClicked -> {
+                emitEffect(Effect.OpenNotificationSettings)
+            }
+
+            is Action.LicensesClicked -> {
+                emitEffect(Effect.OpenLicenses)
+            }
         }
-        emitEffect(effect)
     }
 
-    override fun onNotificationsClick() {
-        emitEffect(SettingsScreenEffect.OpenNotificationSettings)
-    }
-
-    override fun onLicensesClick() {
-        emitEffect(SettingsScreenEffect.OpenLicenses)
-    }
-
-    private fun emitEffect(effect: SettingsScreenEffect) {
+    private fun emitEffect(effect: Effect) {
         viewModelScope.launch {
             _effects.emit(effect)
         }

@@ -23,7 +23,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.ui.appsettings.general.ui.AppSettingsScreen
 import com.android.messaging.ui.appsettings.screen.model.SettingsNavRoute
+import com.android.messaging.ui.appsettings.screen.model.SettingsUiState
 import com.android.messaging.ui.appsettings.subscription.ui.SubscriptionSettingsScreen
+
+private const val SLIDE_OFFSET_DIVISOR = 3
 
 @Composable
 internal fun SettingsScreen(
@@ -81,17 +84,38 @@ internal fun SettingsScreen(
         onBack = navigateUp,
     )
 
+    SettingsNavHost(
+        effectiveRoute = effectiveRoute,
+        uiState = uiState,
+        screenModel = screenModel,
+        onNavigateBack = onNavigateBack,
+        navigateUp = navigateUp,
+        onRouteChange = { currentRoute = it },
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun SettingsNavHost(
+    effectiveRoute: SettingsNavRoute,
+    uiState: SettingsUiState,
+    screenModel: SettingsScreenModel,
+    onNavigateBack: () -> Unit,
+    navigateUp: () -> Unit,
+    onRouteChange: (SettingsNavRoute) -> Unit,
+    modifier: Modifier,
+) {
     AnimatedContent(
         targetState = effectiveRoute,
         modifier = modifier.background(MaterialTheme.colorScheme.background),
         transitionSpec = {
             val isForward = targetState.depth > initialState.depth
             if (isForward) {
-                (slideInHorizontally { it / 3 } + fadeIn()) togetherWith
-                    (slideOutHorizontally { -it / 3 } + fadeOut())
+                (slideInHorizontally { it / SLIDE_OFFSET_DIVISOR } + fadeIn()) togetherWith
+                    (slideOutHorizontally { -it / SLIDE_OFFSET_DIVISOR } + fadeOut())
             } else {
-                (slideInHorizontally { -it / 3 } + fadeIn()) togetherWith
-                    (slideOutHorizontally { it / 3 } + fadeOut())
+                (slideInHorizontally { -it / SLIDE_OFFSET_DIVISOR } + fadeIn()) togetherWith
+                    (slideOutHorizontally { it / SLIDE_OFFSET_DIVISOR } + fadeOut())
             }
         },
         label = "settings_navigation",
@@ -102,10 +126,10 @@ internal fun SettingsScreen(
                     subscriptions = uiState.subscriptionSettings,
                     onNavigateBack = onNavigateBack,
                     onGeneralSettingsClick = {
-                        currentRoute = SettingsNavRoute.AppSettings
+                        onRouteChange(SettingsNavRoute.AppSettings)
                     },
                     onSubscriptionClick = { subId, title ->
-                        currentRoute = SettingsNavRoute.SubscriptionSettings(subId, title)
+                        onRouteChange(SettingsNavRoute.SubscriptionSettings(subId, title))
                     },
                 )
             }
@@ -116,17 +140,11 @@ internal fun SettingsScreen(
                     appSettings = uiState.appSettings,
                     screenModel = screenModel,
                     isTopLevel = isSingleSim,
-                    onAdvancedClick = uiState.subscriptionSettings
-                        .firstOrNull()
-                        ?.takeIf { isSingleSim }
-                        ?.let { sub ->
-                            {
-                                currentRoute = SettingsNavRoute.SubscriptionSettings(
-                                    sub.subId,
-                                    sub.displayName,
-                                )
-                            }
-                        },
+                    onAdvancedClick = advancedClickHandler(
+                        uiState = uiState,
+                        isSingleSim = isSingleSim,
+                        onRouteChange = onRouteChange,
+                    ),
                     onNavigateBack = navigateUp,
                 )
             }
@@ -144,4 +162,17 @@ internal fun SettingsScreen(
             }
         }
     }
+}
+
+private fun advancedClickHandler(
+    uiState: SettingsUiState,
+    isSingleSim: Boolean,
+    onRouteChange: (SettingsNavRoute) -> Unit,
+): (() -> Unit)? {
+    return uiState.subscriptionSettings
+        .firstOrNull()
+        ?.takeIf { isSingleSim }
+        ?.let { sub ->
+            { onRouteChange(SettingsNavRoute.SubscriptionSettings(sub.subId, sub.displayName)) }
+        }
 }

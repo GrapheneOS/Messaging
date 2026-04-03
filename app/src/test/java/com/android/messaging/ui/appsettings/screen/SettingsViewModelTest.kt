@@ -4,7 +4,7 @@ import app.cash.turbine.test
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.ui.appsettings.general.delegate.AppSettingsDelegate
 import com.android.messaging.ui.appsettings.general.model.AppSettingsUiState
-import com.android.messaging.ui.appsettings.screen.SettingsViewModel
+import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
 import com.android.messaging.ui.appsettings.screen.model.SettingsScreenEffect
 import com.android.messaging.ui.appsettings.screen.model.SettingsUiState
 import com.android.messaging.ui.appsettings.subscription.delegate.SubscriptionSettingsDelegate
@@ -106,7 +106,7 @@ class SettingsViewModelTest {
             val appDelegate = FakeAppSettingsDelegate()
             val viewModel = createViewModel(appSettingsDelegate = appDelegate)
 
-            viewModel.onSendSoundChanged(enabled = false)
+            viewModel.onAction(Action.SendSoundChanged(enabled = false))
 
             assertEquals(listOf(false), appDelegate.sendSoundChanges)
         }
@@ -118,7 +118,7 @@ class SettingsViewModelTest {
             val appDelegate = FakeAppSettingsDelegate()
             val viewModel = createViewModel(appSettingsDelegate = appDelegate)
 
-            viewModel.onDumpSmsChanged(enabled = true)
+            viewModel.onAction(Action.DumpSmsChanged(enabled = true))
 
             assertEquals(listOf(true), appDelegate.dumpSmsChanges)
         }
@@ -130,7 +130,7 @@ class SettingsViewModelTest {
             val appDelegate = FakeAppSettingsDelegate()
             val viewModel = createViewModel(appSettingsDelegate = appDelegate)
 
-            viewModel.onDumpMmsChanged(enabled = true)
+            viewModel.onAction(Action.DumpMmsChanged(enabled = true))
 
             assertEquals(listOf(true), appDelegate.dumpMmsChanges)
         }
@@ -142,7 +142,7 @@ class SettingsViewModelTest {
             val subDelegate = FakeSubscriptionSettingsDelegate()
             val viewModel = createViewModel(subscriptionSettingsDelegate = subDelegate)
 
-            viewModel.onGroupMmsChanged(subId = 1, enabled = false)
+            viewModel.onAction(Action.GroupMmsChanged(subId = 1, enabled = false))
 
             assertEquals(listOf(1 to false), subDelegate.groupMmsChanges)
         }
@@ -154,7 +154,7 @@ class SettingsViewModelTest {
             val subDelegate = FakeSubscriptionSettingsDelegate()
             val viewModel = createViewModel(subscriptionSettingsDelegate = subDelegate)
 
-            viewModel.onPhoneNumberChanged(subId = 1, phoneNumber = "+1555000111")
+            viewModel.onAction(Action.PhoneNumberChanged(subId = 1, phoneNumber = "+1555000111"))
 
             assertEquals(listOf(1 to "+1555000111"), subDelegate.phoneNumberChanges)
         }
@@ -166,7 +166,7 @@ class SettingsViewModelTest {
             val subDelegate = FakeSubscriptionSettingsDelegate()
             val viewModel = createViewModel(subscriptionSettingsDelegate = subDelegate)
 
-            viewModel.onAutoRetrieveMmsChanged(subId = 2, enabled = true)
+            viewModel.onAction(Action.AutoRetrieveMmsChanged(subId = 2, enabled = true))
 
             assertEquals(listOf(2 to true), subDelegate.autoRetrieveMmsChanges)
         }
@@ -178,7 +178,7 @@ class SettingsViewModelTest {
             val subDelegate = FakeSubscriptionSettingsDelegate()
             val viewModel = createViewModel(subscriptionSettingsDelegate = subDelegate)
 
-            viewModel.onAutoRetrieveMmsWhenRoamingChanged(subId = 1, enabled = true)
+            viewModel.onAction(Action.AutoRetrieveMmsWhenRoamingChanged(subId = 1, enabled = true))
 
             assertEquals(listOf(1 to true), subDelegate.autoRetrieveMmsWhenRoamingChanges)
         }
@@ -190,7 +190,7 @@ class SettingsViewModelTest {
             val subDelegate = FakeSubscriptionSettingsDelegate()
             val viewModel = createViewModel(subscriptionSettingsDelegate = subDelegate)
 
-            viewModel.onDeliveryReportsChanged(subId = 1, enabled = true)
+            viewModel.onAction(Action.DeliveryReportsChanged(subId = 1, enabled = true))
 
             assertEquals(listOf(1 to true), subDelegate.deliveryReportsChanges)
         }
@@ -203,7 +203,7 @@ class SettingsViewModelTest {
             advanceUntilIdle()
 
             viewModel.effects.test {
-                viewModel.onDefaultSmsAppClick(isCurrentlyDefault = true)
+                viewModel.onAction(Action.DefaultSmsAppClicked(isCurrentlyDefault = true))
 
                 assertEquals(SettingsScreenEffect.OpenManageDefaultApps, awaitItem())
                 cancelAndIgnoreRemainingEvents()
@@ -218,7 +218,7 @@ class SettingsViewModelTest {
             advanceUntilIdle()
 
             viewModel.effects.test {
-                viewModel.onDefaultSmsAppClick(isCurrentlyDefault = false)
+                viewModel.onAction(Action.DefaultSmsAppClicked(isCurrentlyDefault = false))
 
                 assertEquals(SettingsScreenEffect.RequestDefaultSmsApp, awaitItem())
                 cancelAndIgnoreRemainingEvents()
@@ -233,7 +233,7 @@ class SettingsViewModelTest {
             advanceUntilIdle()
 
             viewModel.effects.test {
-                viewModel.onNotificationsClick()
+                viewModel.onAction(Action.NotificationsClicked)
 
                 assertEquals(SettingsScreenEffect.OpenNotificationSettings, awaitItem())
                 cancelAndIgnoreRemainingEvents()
@@ -248,7 +248,7 @@ class SettingsViewModelTest {
             advanceUntilIdle()
 
             viewModel.effects.test {
-                viewModel.onWirelessAlertsClick(subId = 1)
+                viewModel.onAction(Action.WirelessAlertsClicked(subId = 1))
 
                 assertEquals(SettingsScreenEffect.OpenWirelessAlerts(subId = 1), awaitItem())
                 cancelAndIgnoreRemainingEvents()
@@ -263,7 +263,7 @@ class SettingsViewModelTest {
             advanceUntilIdle()
 
             viewModel.effects.test {
-                viewModel.onLicensesClick()
+                viewModel.onAction(Action.LicensesClicked)
 
                 assertEquals(SettingsScreenEffect.OpenLicenses, awaitItem())
                 cancelAndIgnoreRemainingEvents()
