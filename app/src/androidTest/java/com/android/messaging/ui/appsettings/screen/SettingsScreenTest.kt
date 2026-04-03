@@ -177,7 +177,9 @@ class SettingsScreenTest {
         )
     }
 
-    private class TestLifecycleOwner(initialState: Lifecycle.State) : LifecycleOwner {
+    private class TestLifecycleOwner(
+        initialState: Lifecycle.State,
+    ) : LifecycleOwner {
         private val lifecycleRegistry = LifecycleRegistry(this)
 
         init {

@@ -14,7 +14,9 @@ internal interface SettingsEffectHandler {
     fun handle(effect: SettingsScreenEffect)
 }
 
-internal class SettingsEffectHandlerImpl(private val context: Context) : SettingsEffectHandler {
+internal class SettingsEffectHandlerImpl(
+    private val context: Context,
+) : SettingsEffectHandler {
 
     override fun handle(effect: SettingsScreenEffect) {
         when (effect) {

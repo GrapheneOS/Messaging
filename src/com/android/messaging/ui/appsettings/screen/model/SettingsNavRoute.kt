@@ -15,7 +15,10 @@ internal sealed interface SettingsNavRoute {
         override val depth: Int = 1
     }
 
-    data class SubscriptionSettings(val subId: Int, val title: String) : SettingsNavRoute {
+    data class SubscriptionSettings(
+        val subId: Int,
+        val title: String,
+    ) : SettingsNavRoute {
         override val depth: Int = 2
     }
 }
