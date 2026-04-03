@@ -67,10 +67,6 @@
         <item name="colorPrimaryDark">@color/archived_conversation_action_bar_background_color_dark</item>
     </style>
 
-    <style name="BugleTheme.SettingsActivity" parent="BugleTheme">
-        <item name="android:textSize">@dimen/settings_list_text_size</item>
-    </style>
-
     <style name="Invisible" parent="BugleBaseTheme">
         <item name="android:windowBackground">@null</item>
         <item name="android:windowContentOverlay">@null</item>
@@ -473,29 +469,6 @@
 
     <style name="ColorAccentGrayOverrideStyle">
         <item name="colorAccent">@color/search_view_text_cursor</item>
-    </style>
-
-    <style name="SettingsListItem">
-        <item name="android:textSize">@dimen/settings_list_text_size</item>
-        <item name="android:textColor">@color/settings_list_text_primary</item>
-        <item name="android:background">@null</item>
-    </style>
-
-    <style name="SettingsListItemDetail">
-        <item name="android:textSize">@dimen/settings_list_detail_text_size</item>
-        <item name="android:textColor">@color/settings_list_text_secondary</item>
-        <item name="android:background">@null</item>
-    </style>
-
-    <style name="GroupMmsSettingItem">
-        <item name="android:textSize">@dimen/group_mms_setting_text_size</item>
-        <item name="android:textColor">@color/group_mms_setting_text_color</item>
-        <item name="android:layout_marginLeft">20dp</item>
-        <item name="android:layout_marginRight">20dp</item>
-        <item name="android:layout_marginTop">16dp</item>
-        <item name="android:paddingLeft">10dp</item>
-        <item name="android:paddingRight">10dp</item>
-        <item name="android:background">?android:attr/selectableItemBackground</item>
     </style>
 
     <style name="DebugMmsConfigItemStyle">

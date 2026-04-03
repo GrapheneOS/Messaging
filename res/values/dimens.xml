@@ -143,11 +143,6 @@
     <dimen name="copy_contact_dialog_right_padding">10dp</dimen>
     <dimen name="copy_contact_dialog_top_padding">5dp</dimen>
 
-    <dimen name="settings_list_text_size">16sp</dimen>
-    <dimen name="settings_list_detail_text_size">14sp</dimen>
-    <dimen name="settings_list_item_height">60dp</dimen>
-    <dimen name="group_mms_setting_text_size">14sp</dimen>
-
     <!-- Camera focus indicator values -->
     <dimen name="pie_radius_start">40dp</dimen>
     <dimen name="pie_radius_increment">30dp</dimen>

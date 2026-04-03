@@ -1,13 +1,13 @@
 package com.android.messaging.di.settings
 
-import com.android.messaging.ui.appsettings.redesign.appsettings.delegate.AppSettingsDelegate
-import com.android.messaging.ui.appsettings.redesign.appsettings.delegate.AppSettingsDelegateImpl
-import com.android.messaging.ui.appsettings.redesign.appsettings.mapper.AppSettingsUiStateMapper
-import com.android.messaging.ui.appsettings.redesign.appsettings.mapper.AppSettingsUiStateMapperImpl
-import com.android.messaging.ui.appsettings.redesign.subscription.delegate.SubscriptionSettingsDelegate
-import com.android.messaging.ui.appsettings.redesign.subscription.delegate.SubscriptionSettingsDelegateImpl
-import com.android.messaging.ui.appsettings.redesign.subscription.mapper.SubscriptionSettingsUiStateMapper
-import com.android.messaging.ui.appsettings.redesign.subscription.mapper.SubscriptionSettingsUiStateMapperImpl
+import com.android.messaging.ui.appsettings.general.delegate.AppSettingsDelegate
+import com.android.messaging.ui.appsettings.general.delegate.AppSettingsDelegateImpl
+import com.android.messaging.ui.appsettings.general.mapper.AppSettingsUiStateMapper
+import com.android.messaging.ui.appsettings.general.mapper.AppSettingsUiStateMapperImpl
+import com.android.messaging.ui.appsettings.subscription.delegate.SubscriptionSettingsDelegate
+import com.android.messaging.ui.appsettings.subscription.delegate.SubscriptionSettingsDelegateImpl
+import com.android.messaging.ui.appsettings.subscription.mapper.SubscriptionSettingsUiStateMapper
+import com.android.messaging.ui.appsettings.subscription.mapper.SubscriptionSettingsUiStateMapperImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Reusable
