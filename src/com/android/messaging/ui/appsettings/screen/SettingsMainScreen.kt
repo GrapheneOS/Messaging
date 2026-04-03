@@ -65,7 +65,9 @@ internal fun SettingsMainScreen(
                 SettingsClickableItem(
                     title = subscription.displayName,
                     summary = subscription.displayDetail,
-                    onClick = { onSubscriptionClick(subscription.subId, subscription.displayName) },
+                    onClick = {
+                        onSubscriptionClick(subscription.subId, subscription.displayName)
+                    },
                 )
             }
         }

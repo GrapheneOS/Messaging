@@ -8,6 +8,7 @@ import androidx.compose.ui.test.performClick
 import com.android.messaging.R
 import com.android.messaging.ui.appsettings.general.model.AppSettingsUiState
 import com.android.messaging.ui.appsettings.screen.SettingsScreenModel
+import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
 import com.android.messaging.ui.core.AppTheme
 import io.mockk.mockk
 import io.mockk.verify
@@ -53,7 +54,7 @@ class AppSettingsScreenTest {
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
-            screenModel.onDefaultSmsAppClick(true)
+            screenModel.onAction(Action.DefaultSmsAppClicked(true))
         }
     }
 
@@ -67,7 +68,7 @@ class AppSettingsScreenTest {
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
-            screenModel.onNotificationsClick()
+            screenModel.onAction(Action.NotificationsClicked)
         }
     }
 
@@ -81,7 +82,7 @@ class AppSettingsScreenTest {
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
-            screenModel.onSendSoundChanged(false)
+            screenModel.onAction(Action.SendSoundChanged(false))
         }
     }
 
@@ -131,7 +132,7 @@ class AppSettingsScreenTest {
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
-            screenModel.onDumpSmsChanged(true)
+            screenModel.onAction(Action.DumpSmsChanged(true))
         }
     }
 
@@ -148,7 +149,7 @@ class AppSettingsScreenTest {
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
-            screenModel.onDumpMmsChanged(true)
+            screenModel.onAction(Action.DumpMmsChanged(true))
         }
     }
 
@@ -160,7 +161,7 @@ class AppSettingsScreenTest {
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
-            screenModel.onLicensesClick()
+            screenModel.onAction(Action.LicensesClicked)
         }
     }
 

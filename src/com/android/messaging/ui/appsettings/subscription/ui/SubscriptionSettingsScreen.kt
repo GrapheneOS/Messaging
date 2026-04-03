@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.KeyboardOptions
@@ -44,6 +45,7 @@ import com.android.messaging.ui.appsettings.common.SettingsCategoryHeader
 import com.android.messaging.ui.appsettings.common.SettingsClickableItem
 import com.android.messaging.ui.appsettings.common.SettingsSwitchItem
 import com.android.messaging.ui.appsettings.screen.SettingsScreenModel
+import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionSettingsUiState
 import com.android.messaging.ui.core.AppTheme
 
@@ -81,111 +83,44 @@ internal fun SubscriptionSettingsScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = contentPadding,
         ) {
-            item(key = "mms_category_header") {
-                SettingsCategoryHeader(
-                    title = stringResource(R.string.mms_messaging_category_pref_title),
-                )
-            }
-
-            if (subscriptionSettings.isGroupMmsSupported) {
-                item(key = "group_mms") {
-                    SettingsClickableItem(
-                        title = stringResource(R.string.group_mms_pref_title),
-                        summary = if (subscriptionSettings.isGroupMmsEnabled) {
-                            stringResource(R.string.enable_group_mms)
-                        } else {
-                            stringResource(R.string.disable_group_mms)
-                        },
-                        enabled = subscriptionSettings.isDefaultSmsApp,
-                        onClick = { showGroupMmsDialog = true },
-                    )
-                }
-            }
-
-            item(key = "phone_number") {
-                SettingsClickableItem(
-                    title = stringResource(R.string.mms_phone_number_pref_title),
-                    summary = subscriptionSettings.displayDetail,
-                    onClick = { showPhoneNumberDialog = true },
-                )
-            }
-
-            item(key = "auto_retrieve_mms") {
-                SettingsSwitchItem(
-                    title = stringResource(R.string.auto_retrieve_mms_pref_title),
-                    summary = stringResource(R.string.auto_retrieve_mms_pref_summary),
-                    checked = subscriptionSettings.autoRetrieveMms,
-                    enabled = subscriptionSettings.isDefaultSmsApp,
-                    onCheckedChange = { enabled ->
-                        screenModel.onAutoRetrieveMmsChanged(subscriptionSettings.subId, enabled)
-                    },
-                )
-            }
-
-            item(key = "auto_retrieve_mms_roaming") {
-                SettingsSwitchItem(
-                    title = stringResource(R.string.auto_retrieve_mms_when_roaming_pref_title),
-                    summary = stringResource(R.string.auto_retrieve_mms_when_roaming_pref_summary),
-                    checked = subscriptionSettings.autoRetrieveMmsWhenRoaming,
-                    enabled = subscriptionSettings.isDefaultSmsApp &&
-                        subscriptionSettings.autoRetrieveMms,
-                    onCheckedChange = { enabled ->
-                        screenModel.onAutoRetrieveMmsWhenRoamingChanged(
-                            subscriptionSettings.subId,
-                            enabled,
-                        )
-                    },
-                )
-            }
-
-            val hasAdvanced = subscriptionSettings.isDeliveryReportsSupported ||
-                subscriptionSettings.isWirelessAlertsSupported
-            if (hasAdvanced) {
-                item(key = "advanced_divider") {
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                }
-                item(key = "advanced_category_header") {
-                    SettingsCategoryHeader(
-                        title = stringResource(R.string.advanced_category_pref_title),
-                    )
-                }
-            }
-
-            if (subscriptionSettings.isDeliveryReportsSupported) {
-                item(key = "delivery_reports") {
-                    SettingsSwitchItem(
-                        title = stringResource(R.string.delivery_reports_pref_title),
-                        summary = stringResource(R.string.delivery_reports_pref_summary),
-                        checked = subscriptionSettings.deliveryReportsEnabled,
-                        enabled = subscriptionSettings.isDefaultSmsApp,
-                        onCheckedChange = { enabled ->
-                            screenModel.onDeliveryReportsChanged(
-                                subscriptionSettings.subId,
-                                enabled,
-                            )
-                        },
-                    )
-                }
-            }
-
-            if (subscriptionSettings.isWirelessAlertsSupported) {
-                item(key = "wireless_alerts") {
-                    SettingsClickableItem(
-                        title = stringResource(R.string.wireless_alerts_title),
-                        onClick = { screenModel.onWirelessAlertsClick(subscriptionSettings.subId) },
-                    )
-                }
-            }
+            mmsSettingsItems(
+                subscriptionSettings = subscriptionSettings,
+                screenModel = screenModel,
+                onGroupMmsClick = { showGroupMmsDialog = true },
+                onPhoneNumberClick = { showPhoneNumberDialog = true },
+            )
+            advancedSettingsItems(subscriptionSettings, screenModel)
         }
     }
 
+    SubscriptionDialogs(
+        subscriptionSettings = subscriptionSettings,
+        screenModel = screenModel,
+        showGroupMmsDialog = showGroupMmsDialog,
+        onDismissGroupMms = { showGroupMmsDialog = false },
+        showPhoneNumberDialog = showPhoneNumberDialog,
+        onDismissPhoneNumber = { showPhoneNumberDialog = false },
+    )
+}
+
+@Composable
+private fun SubscriptionDialogs(
+    subscriptionSettings: SubscriptionSettingsUiState,
+    screenModel: SettingsScreenModel,
+    showGroupMmsDialog: Boolean,
+    onDismissGroupMms: () -> Unit,
+    showPhoneNumberDialog: Boolean,
+    onDismissPhoneNumber: () -> Unit,
+) {
     if (showGroupMmsDialog) {
         GroupMmsDialog(
             isEnabled = subscriptionSettings.isGroupMmsEnabled,
-            onDismiss = { showGroupMmsDialog = false },
+            onDismiss = onDismissGroupMms,
             onConfirm = { enabled ->
-                screenModel.onGroupMmsChanged(subscriptionSettings.subId, enabled)
-                showGroupMmsDialog = false
+                screenModel.onAction(
+                    Action.GroupMmsChanged(subscriptionSettings.subId, enabled),
+                )
+                onDismissGroupMms()
             },
         )
     }
@@ -195,12 +130,125 @@ internal fun SubscriptionSettingsScreen(
             currentNumber = subscriptionSettings.phoneNumber.ifEmpty {
                 subscriptionSettings.defaultPhoneNumber
             },
-            onDismiss = { showPhoneNumberDialog = false },
+            onDismiss = onDismissPhoneNumber,
             onConfirm = { phoneNumber ->
-                screenModel.onPhoneNumberChanged(subscriptionSettings.subId, phoneNumber)
-                showPhoneNumberDialog = false
+                screenModel.onAction(
+                    Action.PhoneNumberChanged(subscriptionSettings.subId, phoneNumber),
+                )
+                onDismissPhoneNumber()
             },
         )
+    }
+}
+
+private fun LazyListScope.mmsSettingsItems(
+    subscriptionSettings: SubscriptionSettingsUiState,
+    screenModel: SettingsScreenModel,
+    onGroupMmsClick: () -> Unit,
+    onPhoneNumberClick: () -> Unit,
+) {
+    item(key = "mms_category_header") {
+        SettingsCategoryHeader(
+            title = stringResource(R.string.mms_messaging_category_pref_title),
+        )
+    }
+
+    if (subscriptionSettings.isGroupMmsSupported) {
+        item(key = "group_mms") {
+            SettingsClickableItem(
+                title = stringResource(R.string.group_mms_pref_title),
+                summary = if (subscriptionSettings.isGroupMmsEnabled) {
+                    stringResource(R.string.enable_group_mms)
+                } else {
+                    stringResource(R.string.disable_group_mms)
+                },
+                enabled = subscriptionSettings.isDefaultSmsApp,
+                onClick = onGroupMmsClick,
+            )
+        }
+    }
+
+    item(key = "phone_number") {
+        SettingsClickableItem(
+            title = stringResource(R.string.mms_phone_number_pref_title),
+            summary = subscriptionSettings.displayDetail,
+            onClick = onPhoneNumberClick,
+        )
+    }
+
+    item(key = "auto_retrieve_mms") {
+        SettingsSwitchItem(
+            title = stringResource(R.string.auto_retrieve_mms_pref_title),
+            summary = stringResource(R.string.auto_retrieve_mms_pref_summary),
+            checked = subscriptionSettings.autoRetrieveMms,
+            enabled = subscriptionSettings.isDefaultSmsApp,
+            onCheckedChange = { enabled ->
+                screenModel.onAction(
+                    Action.AutoRetrieveMmsChanged(subscriptionSettings.subId, enabled),
+                )
+            },
+        )
+    }
+
+    item(key = "auto_retrieve_mms_roaming") {
+        SettingsSwitchItem(
+            title = stringResource(R.string.auto_retrieve_mms_when_roaming_pref_title),
+            summary = stringResource(R.string.auto_retrieve_mms_when_roaming_pref_summary),
+            checked = subscriptionSettings.autoRetrieveMmsWhenRoaming,
+            enabled = subscriptionSettings.isDefaultSmsApp && subscriptionSettings.autoRetrieveMms,
+            onCheckedChange = { enabled ->
+                screenModel.onAction(
+                    Action.AutoRetrieveMmsWhenRoamingChanged(subscriptionSettings.subId, enabled),
+                )
+            },
+        )
+    }
+}
+
+private fun LazyListScope.advancedSettingsItems(
+    subscriptionSettings: SubscriptionSettingsUiState,
+    screenModel: SettingsScreenModel,
+) {
+    val hasAdvanced = subscriptionSettings.isDeliveryReportsSupported ||
+        subscriptionSettings.isWirelessAlertsSupported
+    if (!hasAdvanced) return
+
+    item(key = "advanced_divider") {
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+    }
+    item(key = "advanced_category_header") {
+        SettingsCategoryHeader(
+            title = stringResource(R.string.advanced_category_pref_title),
+        )
+    }
+
+    if (subscriptionSettings.isDeliveryReportsSupported) {
+        item(key = "delivery_reports") {
+            SettingsSwitchItem(
+                title = stringResource(R.string.delivery_reports_pref_title),
+                summary = stringResource(R.string.delivery_reports_pref_summary),
+                checked = subscriptionSettings.deliveryReportsEnabled,
+                enabled = subscriptionSettings.isDefaultSmsApp,
+                onCheckedChange = { enabled ->
+                    screenModel.onAction(
+                        Action.DeliveryReportsChanged(subscriptionSettings.subId, enabled),
+                    )
+                },
+            )
+        }
+    }
+
+    if (subscriptionSettings.isWirelessAlertsSupported) {
+        item(key = "wireless_alerts") {
+            SettingsClickableItem(
+                title = stringResource(R.string.wireless_alerts_title),
+                onClick = {
+                    screenModel.onAction(
+                        Action.WirelessAlertsClicked(subscriptionSettings.subId),
+                    )
+                },
+            )
+        }
     }
 }
 
@@ -219,48 +267,16 @@ private fun GroupMmsDialog(
         },
         text = {
             Column(modifier = Modifier.selectableGroup()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .selectable(
-                            selected = selectedEnabled,
-                            onClick = { selectedEnabled = true },
-                            role = Role.RadioButton,
-                        )
-                        .padding(vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    RadioButton(
-                        selected = selectedEnabled,
-                        onClick = null,
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = stringResource(R.string.enable_group_mms),
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .selectable(
-                            selected = !selectedEnabled,
-                            onClick = { selectedEnabled = false },
-                            role = Role.RadioButton,
-                        )
-                        .padding(vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    RadioButton(
-                        selected = !selectedEnabled,
-                        onClick = null,
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = stringResource(R.string.disable_group_mms),
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                }
+                GroupMmsOption(
+                    text = stringResource(R.string.enable_group_mms),
+                    selected = selectedEnabled,
+                    onClick = { selectedEnabled = true },
+                )
+                GroupMmsOption(
+                    text = stringResource(R.string.disable_group_mms),
+                    selected = !selectedEnabled,
+                    onClick = { selectedEnabled = false },
+                )
             }
         },
         confirmButton = {
@@ -276,14 +292,31 @@ private fun GroupMmsDialog(
     )
 }
 
-@Preview
 @Composable
-private fun GroupMmsDialogPreview() {
-    AppTheme {
-        GroupMmsDialog(
-            isEnabled = true,
-            onDismiss = {},
-            onConfirm = {},
+private fun GroupMmsOption(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .selectable(
+                selected = selected,
+                onClick = onClick,
+                role = Role.RadioButton,
+            )
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RadioButton(
+            selected = selected,
+            onClick = null,
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyLarge,
         )
     }
 }
@@ -321,6 +354,18 @@ private fun PhoneNumberDialog(
             }
         },
     )
+}
+
+@Preview
+@Composable
+private fun GroupMmsDialogPreview() {
+    AppTheme {
+        GroupMmsDialog(
+            isEnabled = true,
+            onDismiss = {},
+            onConfirm = {},
+        )
+    }
 }
 
 @Preview

@@ -9,8 +9,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.android.messaging.R
 import com.android.messaging.ui.appsettings.screen.SettingsScreenModel
+import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionSettingsUiState
-import com.android.messaging.ui.appsettings.subscription.ui.SubscriptionSettingsScreen
 import com.android.messaging.ui.core.AppTheme
 import io.mockk.mockk
 import io.mockk.verify
@@ -113,7 +113,7 @@ class SubscriptionSettingsScreenTest {
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
-            screenModel.onAutoRetrieveMmsChanged(1, false)
+            screenModel.onAction(Action.AutoRetrieveMmsChanged(1, false))
         }
     }
 
@@ -176,7 +176,7 @@ class SubscriptionSettingsScreenTest {
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
-            screenModel.onDeliveryReportsChanged(1, true)
+            screenModel.onAction(Action.DeliveryReportsChanged(1, true))
         }
     }
 
@@ -207,7 +207,7 @@ class SubscriptionSettingsScreenTest {
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
-            screenModel.onWirelessAlertsClick(1)
+            screenModel.onAction(Action.WirelessAlertsClicked(1))
         }
     }
 
