@@ -42,12 +42,9 @@ import com.android.messaging.datamodel.MediaScratchFileProvider;
 import com.android.messaging.datamodel.MessagingContentProvider;
 import com.android.messaging.datamodel.data.MessageData;
 import com.android.messaging.datamodel.data.MessagePartData;
-import com.android.messaging.datamodel.data.ParticipantData;
 import com.android.messaging.receiver.ConversationReadReceiver;
 import com.android.messaging.receiver.NotificationReceiver;
 import com.android.messaging.sms.MmsSmsUtils;
-import com.android.messaging.ui.appsettings.ApplicationSettingsActivity;
-import com.android.messaging.ui.appsettings.PerSubscriptionSettingsActivity;
 import com.android.messaging.ui.appsettings.SettingsActivity;
 import com.android.messaging.ui.attachmentchooser.AttachmentChooserActivity;
 import com.android.messaging.ui.conversation.ConversationActivity;
@@ -65,7 +62,6 @@ import com.android.messaging.util.LogUtil;
 import com.android.messaging.util.UiUtils;
 import com.android.messaging.util.UriUtil;
 
-import androidx.annotation.Nullable;
 import androidx.core.app.TaskStackBuilder;
 import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -348,20 +344,6 @@ public class UIIntentsImpl extends UIIntents {
     }
 
     @Override
-    public void launchApplicationSettingsActivity(final Context context, final boolean topLevel) {
-        final Intent intent = new Intent(context, ApplicationSettingsActivity.class);
-        intent.putExtra(UI_INTENT_EXTRA_TOP_LEVEL_SETTINGS, topLevel);
-        context.startActivity(intent);
-    }
-
-    @Override
-    public void launchPerSubscriptionSettingsActivity(final Context context, final int subId,
-            final String settingTitle) {
-        final Intent intent = getPerSubscriptionSettingsIntent(context, subId, settingTitle);
-        context.startActivity(intent);
-    }
-
-    @Override
     public Intent getViewUrlIntent(final String url) {
         final Uri uri = Uri.parse(url);
         return new Intent(Intent.ACTION_VIEW, uri);
@@ -502,11 +484,6 @@ public class UIIntentsImpl extends UIIntents {
     }
 
     @Override
-    public Intent getAdvancedSettingsIntent(final Context context) {
-        return getPerSubscriptionSettingsIntent(context, ParticipantData.DEFAULT_SELF_SUB_ID, null);
-    }
-
-    @Override
     public Intent getChangeDefaultSmsAppIntent(final Activity activity) {
         final Intent intent = new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
         intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, activity.getPackageName());
@@ -529,13 +506,6 @@ public class UIIntentsImpl extends UIIntents {
             LogUtil.w(LogUtil.BUGLE_TAG, "Couldn't find activity:", ex);
             UiUtils.showToastAtBottom(R.string.activity_not_found_message);
         }
-    }
-
-    private Intent getPerSubscriptionSettingsIntent(final Context context, final int subId,
-            @Nullable final String settingTitle) {
-        return new Intent(context, PerSubscriptionSettingsActivity.class)
-            .putExtra(UI_INTENT_EXTRA_SUB_ID, subId)
-            .putExtra(UI_INTENT_EXTRA_PER_SUBSCRIPTION_SETTING_TITLE, settingTitle);
     }
 
     @Override

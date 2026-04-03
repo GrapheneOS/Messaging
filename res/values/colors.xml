@@ -151,11 +151,6 @@
     <color name="button_bar_action_button_text_color">#03a9f4</color>
     <color name="button_bar_cancel_button_text_color">#4d4d4d</color>
 
-    <color name="settings_list_text_primary">#4d4d4d</color>
-    <color name="settings_list_text_secondary">#6d6d6d</color>
-    <color name="group_mms_setting_text_color">#333333</color>
-    <color name="settings_item_title_text_primary">#000000</color>
-
     <color name="contact_picker_button_text_color">@color/primary_color</color>
 
     <color name="widget_text_color">#424242</color>
