@@ -244,21 +244,6 @@ public abstract class UIIntents {
             Rect initialPhotoBounds, Uri photosUri);
 
     /**
-     * Launch an activity to show general app settings
-     * @param topLevel indicates whether the app settings is launched as the top-level settings
-     *        activity (instead of SettingsActivity which shows a collapsed view of the app
-     *        settings + one settings item per subscription). This is true when there's only one
-     *        active SIM in the system so we can show this activity directly.
-     */
-    public abstract void launchApplicationSettingsActivity(Context context, boolean topLevel);
-
-    /**
-     * Launch an activity to show per-subscription settings
-     */
-    public abstract void launchPerSubscriptionSettingsActivity(Context context, int subId,
-            String settingTitle);
-
-    /**
      * Get a ACTION_VIEW intent
      * @param url display the data in the url to users
      */
@@ -349,11 +334,6 @@ public abstract class UIIntents {
      */
     public abstract PendingIntent getPendingIntentForSecondaryUserNewMessageNotification(
             final Context context);
-
-    /**
-     * Get an intent for showing advanced settings.
-     */
-    public abstract Intent getAdvancedSettingsIntent(final Context context);
 
     /**
      * Get an intent for the LaunchConversationActivity.

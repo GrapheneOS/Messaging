@@ -933,7 +933,11 @@ private fun seedScenarioI(
         sortTimestamp = baseTime
     )
 
-    data class ClusterTestMessage(val text: String, val senderId: String, val offsetMillis: Long)
+    data class ClusterTestMessage(
+        val text: String,
+        val senderId: String,
+        val offsetMillis: Long,
+    )
 
     val messages = listOf(
         ClusterTestMessage(

@@ -164,40 +164,17 @@
         <!-- Settings -->
         <activity
             android:name=".ui.appsettings.SettingsActivity"
-            android:label="@string/settings_activity_title"
-            android:theme="@style/BugleTheme.SettingsActivity"
+            android:allowEmbedded="true"
             android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="true"
+            android:label="@string/settings_activity_title"
+            android:parentActivityName="com.android.messaging.ui.conversationlist.ConversationListActivity"
+            android:resizeableActivity="true"
             android:screenOrientation="user"
-            android:parentActivityName="com.android.messaging.ui.conversationlist.ConversationListActivity">
+            android:theme="@style/Theme.Compose">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.android.messaging.ui.conversationlist.ConversationListActivity" />
-        </activity>
-
-        <activity
-            android:name=".ui.appsettings.PerSubscriptionSettingsActivity"
-            android:label="@string/advanced_settings_activity_title"
-            android:theme="@style/BugleTheme.SettingsActivity"
-            android:configChanges="orientation|screenSize|keyboardHidden"
-            android:screenOrientation="user"
-            android:parentActivityName="com.android.messaging.ui.appsettings.SettingsActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.android.messaging.ui.appsettings.SettingsActivity" />
-        </activity>
-
-        <activity
-            android:name=".ui.appsettings.ApplicationSettingsActivity"
-            android:exported="true"
-            android:label="@string/general_settings_activity_title"
-            android:theme="@style/BugleTheme.SettingsActivity"
-            android:configChanges="orientation|screenSize|keyboardHidden"
-            android:screenOrientation="user"
-            android:parentActivityName="com.android.messaging.ui.appsettings.SettingsActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:exported="true"
-                android:value="com.android.messaging.ui.appsettings.SettingsActivity" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
