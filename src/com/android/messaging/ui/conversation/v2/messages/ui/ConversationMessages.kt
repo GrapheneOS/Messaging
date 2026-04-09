@@ -1,7 +1,5 @@
 package com.android.messaging.ui.conversation.v2.messages.ui
 
-import android.content.Context
-import android.text.format.DateUtils
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,13 +24,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.messaging.ui.conversation.v2.CONVERSATION_MESSAGES_LIST_TEST_TAG
 import com.android.messaging.ui.conversation.v2.conversationMessageItemTestTag
-import com.android.messaging.ui.conversation.v2.messages.model.ConversationMessageUiModel
-import java.time.LocalDate
+import com.android.messaging.ui.conversation.v2.messages.model.message.ConversationMessageUiModel
+import com.android.messaging.ui.conversation.v2.messages.ui.message.ConversationMessage
+import com.android.messaging.ui.conversation.v2.messages.ui.message.conversationMessageDisplayEpochDay
+import com.android.messaging.ui.conversation.v2.messages.ui.message.formatDateSeparatorText
 import java.util.TimeZone
-
-private const val COMMON_DATE_SEPARATOR_FORMAT_FLAGS = DateUtils.FORMAT_SHOW_WEEKDAY or
-    DateUtils.FORMAT_SHOW_DATE or
-    DateUtils.FORMAT_ABBREV_MONTH
+import kotlinx.collections.immutable.ImmutableList
 
 private val CONVERSATION_MESSAGES_CONTENT_PADDING = PaddingValues(
     start = 16.dp,
@@ -57,8 +54,10 @@ private enum class ConversationMessagesItemContentType {
 @Composable
 internal fun ConversationMessages(
     modifier: Modifier = Modifier,
-    messages: List<ConversationMessageUiModel>,
+    messages: ImmutableList<ConversationMessageUiModel>,
     listState: LazyListState,
+    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onExternalUriClick: (String) -> Unit,
 ) {
     val configuration = LocalConfiguration.current
     val displayMessages = remember(messages) {
@@ -94,6 +93,8 @@ internal fun ConversationMessages(
                     messages = displayMessages,
                     index = index,
                 ),
+                onAttachmentClick = onAttachmentClick,
+                onExternalUriClick = onExternalUriClick,
             )
         }
     }
@@ -137,6 +138,8 @@ private fun messageAboveCurrent(
 private fun ConversationMessagesItem(
     message: ConversationMessageUiModel,
     messageAbove: ConversationMessageUiModel?,
+    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onExternalUriClick: (String) -> Unit,
 ) {
     val presentation = rememberConversationMessagesItemPresentation(
         message = message,
@@ -152,6 +155,8 @@ private fun ConversationMessagesItem(
                 .testTag(conversationMessageItemTestTag(messageId = message.messageId))
                 .padding(top = presentation.topPadding),
             message = message,
+            onAttachmentClick = onAttachmentClick,
+            onExternalUriClick = onExternalUriClick,
         )
     }
 }
@@ -286,36 +291,11 @@ private fun shouldShowDateSeparator(
         displayTimestamp = currentMessage.displayTimestamp,
         timeZone = timeZone,
     ) ?: return false
+
     val messageAboveEpochDay = conversationMessageDisplayEpochDay(
         displayTimestamp = messageAbove.displayTimestamp,
         timeZone = timeZone,
     )
 
     return messageAboveEpochDay != currentEpochDay
-}
-
-private fun formatDateSeparatorText(
-    context: Context,
-    message: ConversationMessageUiModel,
-): String? {
-    val timestamp = message.displayTimestamp
-
-    if (timestamp <= 0L) {
-        return null
-    }
-
-    val isSameYear = conversationMessageDisplayLocalDate(
-        displayTimestamp = timestamp,
-    )?.year == LocalDate.now().year
-
-    val dateTimeFormatFlags = when {
-        isSameYear -> COMMON_DATE_SEPARATOR_FORMAT_FLAGS or DateUtils.FORMAT_NO_YEAR
-        else -> COMMON_DATE_SEPARATOR_FORMAT_FLAGS or DateUtils.FORMAT_SHOW_YEAR
-    }
-
-    return DateUtils.formatDateTime(
-        context,
-        timestamp,
-        dateTimeFormatFlags,
-    )
 }

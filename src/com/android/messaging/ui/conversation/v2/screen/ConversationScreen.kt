@@ -28,8 +28,8 @@ import com.android.messaging.ui.conversation.v2.composer.model.ConversationCompo
 import com.android.messaging.ui.conversation.v2.composer.ui.ConversationComposerSection
 import com.android.messaging.ui.conversation.v2.mediapicker.ConversationMediaPickerOverlay
 import com.android.messaging.ui.conversation.v2.mediapicker.rememberConversationMediaPickerState
-import com.android.messaging.ui.conversation.v2.messages.model.ConversationMessageUiModel
-import com.android.messaging.ui.conversation.v2.messages.model.ConversationMessagesUiState
+import com.android.messaging.ui.conversation.v2.messages.model.message.ConversationMessageUiModel
+import com.android.messaging.ui.conversation.v2.messages.model.message.ConversationMessagesUiState
 import com.android.messaging.ui.conversation.v2.messages.ui.ConversationMessages
 import com.android.messaging.ui.conversation.v2.metadata.ui.ConversationTopAppBar
 import com.android.messaging.ui.conversation.v2.screen.model.ConversationScreenScaffoldUiState
@@ -79,6 +79,8 @@ internal fun ConversationScreen(
             onResolvedAttachmentClick = screenModel::onAttachmentClicked,
             onResolvedAttachmentRemove = screenModel::onRemoveResolvedAttachment,
             onSendClick = screenModel::onSendClick,
+            onAttachmentClick = screenModel::onMessageAttachmentClicked,
+            onExternalUriClick = screenModel::onExternalUriClicked,
         )
 
         ConversationMediaPickerOverlay(
@@ -115,6 +117,8 @@ private fun ConversationScreenScaffold(
     onResolvedAttachmentClick: (ConversationComposerAttachmentUiState.Resolved) -> Unit,
     onResolvedAttachmentRemove: (String) -> Unit,
     onSendClick: () -> Unit,
+    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onExternalUriClick: (String) -> Unit,
 ) {
     Scaffold(
         modifier = modifier,
@@ -148,6 +152,8 @@ private fun ConversationScreenScaffold(
             conversationId = conversationId,
             uiState = uiState,
             contentPadding = contentPadding,
+            onAttachmentClick = onAttachmentClick,
+            onExternalUriClick = onExternalUriClick,
         )
     }
 }
@@ -158,6 +164,8 @@ private fun ConversationScreenContent(
     conversationId: String?,
     uiState: ConversationScreenScaffoldUiState,
     contentPadding: PaddingValues,
+    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onExternalUriClick: (String) -> Unit,
 ) {
     when (val messagesState = uiState.messages) {
         is ConversationMessagesUiState.Loading -> {
@@ -188,6 +196,8 @@ private fun ConversationScreenContent(
                 modifier = modifier.padding(paddingValues = contentPadding),
                 messages = messagesState.messages,
                 listState = messagesListState,
+                onAttachmentClick = onAttachmentClick,
+                onExternalUriClick = onExternalUriClick,
             )
         }
     }

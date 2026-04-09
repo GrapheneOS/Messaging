@@ -4,7 +4,8 @@ import com.android.messaging.data.conversation.repository.ConversationsRepositor
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.ui.conversation.v2.common.ConversationScreenDelegate
 import com.android.messaging.ui.conversation.v2.messages.mapper.ConversationMessageUiModelMapper
-import com.android.messaging.ui.conversation.v2.messages.model.ConversationMessagesUiState
+import com.android.messaging.ui.conversation.v2.messages.model.message.ConversationMessagesUiState
+import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -15,7 +16,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 internal interface ConversationMessagesDelegate :
     ConversationScreenDelegate<ConversationMessagesUiState>

@@ -14,7 +14,9 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import com.android.messaging.data.media.model.ConversationMediaItem
+import com.android.messaging.ui.conversation.v2.CONVERSATION_MEDIA_PICKER_OVERLAY_TEST_TAG
 import com.android.messaging.ui.conversation.v2.composer.model.ConversationComposerAttachmentUiState
 import com.android.messaging.ui.conversation.v2.mediapicker.model.ConversationCapturedMedia
 import com.android.messaging.ui.conversation.v2.mediapicker.model.ConversationMediaPickerUiState
@@ -43,9 +45,7 @@ internal fun ConversationMediaPickerOverlay(
     val isImeVisible = WindowInsets.isImeVisible
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    val permissionState = rememberConversationMediaPickerPermissionState(
-        context = context,
-    )
+    val permissionState = rememberConversationMediaPickerPermissionState(context = context)
 
     val audioPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -95,7 +95,9 @@ internal fun ConversationMediaPickerOverlay(
     }
 
     ConversationMediaPicker(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .testTag(CONVERSATION_MEDIA_PICKER_OVERLAY_TEST_TAG),
         uiState = mediaPickerUiState,
         attachments = attachments,
         conversationTitle = conversationTitle,

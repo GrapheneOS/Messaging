@@ -2,7 +2,7 @@ package com.android.messaging.ui.conversation.v2.screen.model
 
 import androidx.compose.runtime.Immutable
 import com.android.messaging.ui.conversation.v2.composer.model.ConversationComposerUiState
-import com.android.messaging.ui.conversation.v2.messages.model.ConversationMessagesUiState
+import com.android.messaging.ui.conversation.v2.messages.model.message.ConversationMessagesUiState
 import com.android.messaging.ui.conversation.v2.metadata.model.ConversationMetadataUiState
 
 @Immutable

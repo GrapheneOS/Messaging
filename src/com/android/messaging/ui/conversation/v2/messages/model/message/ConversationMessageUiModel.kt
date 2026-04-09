@@ -1,9 +1,8 @@
-package com.android.messaging.ui.conversation.v2.messages.model
+package com.android.messaging.ui.conversation.v2.messages.model.message
 
 import android.net.Uri
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
-
 @Immutable
 internal data class ConversationMessageUiModel(
     val messageId: String,

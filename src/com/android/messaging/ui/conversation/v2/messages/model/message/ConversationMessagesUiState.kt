@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversation.v2.messages.model
+package com.android.messaging.ui.conversation.v2.messages.model.message
 
 import androidx.compose.runtime.Immutable
 import kotlinx.collections.immutable.ImmutableList

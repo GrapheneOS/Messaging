@@ -4,9 +4,9 @@ import com.android.messaging.data.conversation.model.metadata.ConversationCompos
 import com.android.messaging.ui.conversation.v2.composer.model.ConversationComposerAttachmentUiState
 import com.android.messaging.ui.conversation.v2.composer.model.ConversationComposerUiState
 import com.android.messaging.ui.conversation.v2.composer.model.ConversationDraftState
+import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import javax.inject.Inject
 
 internal interface ConversationComposerUiStateMapper {
     fun map(

@@ -3,9 +3,9 @@ package com.android.messaging.ui.conversation.v2.messages.mapper
 import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.datamodel.data.MessagePartData
-import com.android.messaging.ui.conversation.v2.messages.model.ConversationMessagePartUiModel
-import com.android.messaging.ui.conversation.v2.messages.model.ConversationMessageUiModel
-import com.android.messaging.ui.conversation.v2.messages.model.ConversationMessageUiModel.Status
+import com.android.messaging.ui.conversation.v2.messages.model.message.ConversationMessagePartUiModel
+import com.android.messaging.ui.conversation.v2.messages.model.message.ConversationMessageUiModel
+import com.android.messaging.ui.conversation.v2.messages.model.message.ConversationMessageUiModel.Status
 import com.android.messaging.util.LogUtil
 import javax.inject.Inject
 
@@ -112,11 +112,8 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor() :
             else -> sentTimestamp
         }
 
-        if (primaryTimestamp > 0L) {
-            return primaryTimestamp
-        }
-
         return when {
+            primaryTimestamp > 0L -> primaryTimestamp
             isIncoming -> sentTimestamp
             else -> receivedTimestamp
         }

@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.messaging.data.media.model.ConversationMediaItem
+import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.ui.conversation.v2.composer.delegate.ConversationDraftDelegate
 import com.android.messaging.ui.conversation.v2.composer.mapper.ConversationComposerUiStateMapper
@@ -37,6 +38,13 @@ internal interface ConversationScreenModel {
     fun onAttachmentClicked(
         attachment: ConversationComposerAttachmentUiState.Resolved,
     )
+
+    fun onMessageAttachmentClicked(
+        contentType: String,
+        contentUri: String,
+    )
+
+    fun onExternalUriClicked(uri: String)
 
     fun onGalleryMediaConfirmed(mediaItems: List<ConversationMediaItem>)
     fun onMessageTextChanged(text: String)
@@ -186,11 +194,49 @@ internal class ConversationViewModel @Inject constructor(
     override fun onAttachmentClicked(
         attachment: ConversationComposerAttachmentUiState.Resolved,
     ) {
+        val conversationId = conversationIdFlow.value
+
+        val imageCollectionUri = conversationId
+            ?.let(MessagingContentProvider::buildDraftImagesUri)
+            ?.toString()
+
         viewModelScope.launch(defaultDispatcher) {
             _effects.emit(
                 ConversationScreenEffect.OpenAttachmentPreview(
                     contentType = attachment.contentType,
                     contentUri = attachment.contentUri,
+                    imageCollectionUri = imageCollectionUri,
+                ),
+            )
+        }
+    }
+
+    override fun onMessageAttachmentClicked(
+        contentType: String,
+        contentUri: String,
+    ) {
+        val conversationId = conversationIdFlow.value
+
+        val imageCollectionUri = conversationId
+            ?.let(MessagingContentProvider::buildConversationImagesUri)
+            ?.toString()
+
+        viewModelScope.launch(defaultDispatcher) {
+            _effects.emit(
+                ConversationScreenEffect.OpenAttachmentPreview(
+                    contentType = contentType,
+                    contentUri = contentUri,
+                    imageCollectionUri = imageCollectionUri,
+                ),
+            )
+        }
+    }
+
+    override fun onExternalUriClicked(uri: String) {
+        viewModelScope.launch(defaultDispatcher) {
+            _effects.emit(
+                ConversationScreenEffect.OpenExternalUri(
+                    uri = uri,
                 ),
             )
         }
