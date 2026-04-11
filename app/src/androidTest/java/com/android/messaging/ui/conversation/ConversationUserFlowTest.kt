@@ -1,6 +1,5 @@
 package com.android.messaging.ui.conversation
 
-import android.os.ParcelFileDescriptor
 import android.widget.EditText
 import android.widget.ImageButton
 import androidx.recyclerview.widget.RecyclerView
@@ -13,31 +12,23 @@ import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
+import com.android.common.test.rules.AppTestRule
+import com.android.common.test.rules.MessagingTestRule
 import com.android.messaging.R
-import com.android.messaging.debug.seedTestData
 import com.android.messaging.ui.conversationlist.ConversationListActivity
 import org.hamcrest.Matchers.allOf
-import org.junit.Before
-import org.junit.BeforeClass
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class ConversationUserFlowTest {
 
-    @Before
-    fun setUpDefaultSmsApp() {
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        val packageName = instrumentation.targetContext.packageName
-        val command = "cmd role add-role-holder android.app.role.SMS $packageName"
-        val parcelFileDescriptor = instrumentation.uiAutomation.executeShellCommand(command)
+    @get:Rule
+    val appRule = AppTestRule()
 
-        ParcelFileDescriptor.AutoCloseInputStream(parcelFileDescriptor).use { inputStream ->
-            val result = String(inputStream.readBytes())
-            println("Role assignment result: $result")
-        }
-    }
+    @get:Rule
+    val messagingRule = MessagingTestRule()
 
     @Test
     fun conversationListToConversation_uiElementsArePresent() {
@@ -63,14 +54,5 @@ class ConversationUserFlowTest {
             .check(matches(isDisplayed()))
 
         scenario.close()
-    }
-
-    companion object {
-        @JvmStatic
-        @BeforeClass
-        fun seedOnce() {
-            val context = InstrumentationRegistry.getInstrumentation().targetContext
-            seedTestData(context)
-        }
     }
 }
