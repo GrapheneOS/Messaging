@@ -5,6 +5,7 @@ import com.android.messaging.data.conversation.model.draft.ConversationDraftAtta
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.datamodel.data.MessagePartData
 import com.android.messaging.util.LogUtil
+import kotlinx.collections.immutable.toImmutableList
 import javax.inject.Inject
 
 internal interface ConversationMessageDataDraftMapper {
@@ -32,7 +33,7 @@ internal class ConversationMessageDataDraftMapperImpl @Inject constructor() :
                 .asSequence()
                 .filter { it.isAttachment }
                 .mapNotNull(::createDraftAttachmentOrNull)
-                .toList(),
+                .toImmutableList(),
         )
     }
 

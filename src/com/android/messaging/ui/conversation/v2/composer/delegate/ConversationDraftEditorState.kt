@@ -4,6 +4,8 @@ import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.data.conversation.model.draft.ConversationDraftPendingAttachment
 import com.android.messaging.ui.conversation.v2.composer.model.ConversationDraftState
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 internal data class DraftEditorState(
     val conversationId: String? = null,
@@ -142,7 +144,7 @@ internal data class DraftEditorState(
 
         val updatedAttachments = effectiveDraft.attachments.toMutableList().apply {
             removeAt(attachmentIndex)
-        }
+        }.toImmutableList()
 
         return copyWithNormalizedLocalEdits(
             updatedLocalEdits = localEdits.copy(attachments = updatedAttachments),
@@ -172,7 +174,7 @@ internal data class DraftEditorState(
 
         val updatedAttachments = currentAttachments.toMutableList().apply {
             this[attachmentIndex] = currentAttachment.copy(captionText = captionText)
-        }
+        }.toImmutableList()
 
         return copyWithNormalizedLocalEdits(
             updatedLocalEdits = localEdits.copy(attachments = updatedAttachments),
@@ -362,7 +364,7 @@ internal data class ConversationDraftEdits(
     val messageText: String? = null,
     val subjectText: String? = null,
     val selfParticipantId: String? = null,
-    val attachments: List<ConversationDraftAttachment>? = null,
+    val attachments: ImmutableList<ConversationDraftAttachment>? = null,
 ) {
     val hasChanges: Boolean
         get() {
@@ -392,9 +394,9 @@ internal data class ConversationDraftEdits(
 }
 
 private fun mergeDraftAttachments(
-    baseAttachments: List<ConversationDraftAttachment>,
+    baseAttachments: ImmutableList<ConversationDraftAttachment>,
     attachmentsToAdd: Collection<ConversationDraftAttachment>,
-): List<ConversationDraftAttachment> {
+): ImmutableList<ConversationDraftAttachment> {
     if (attachmentsToAdd.isEmpty()) {
         return baseAttachments
     }
@@ -410,7 +412,7 @@ private fun mergeDraftAttachments(
 
     return when {
         attachmentsToAppend.isEmpty() -> baseAttachments
-        else -> baseAttachments + attachmentsToAppend
+        else -> (baseAttachments + attachmentsToAppend).toImmutableList()
     }
 }
 
