@@ -11,8 +11,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.ui.UIIntents
+import com.android.messaging.ui.conversation.v2.entry.model.ConversationEntryLaunchRequest
 import com.android.messaging.ui.conversation.v2.navigation.ConversationNavGraph
-import com.android.messaging.ui.conversation.v2.screen.model.ConversationLaunchRequest
 import com.android.messaging.ui.conversationlist.ConversationListActivity
 import com.android.messaging.ui.core.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -21,7 +21,7 @@ import dagger.hilt.android.AndroidEntryPoint
 internal class ConversationActivity : ComponentActivity() {
 
     private var launchGeneration = 0
-    private var launchRequest: ConversationLaunchRequest? by mutableStateOf(value = null)
+    private var launchRequest: ConversationEntryLaunchRequest? by mutableStateOf(value = null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,7 +73,7 @@ internal class ConversationActivity : ComponentActivity() {
             return true
         }
 
-        launchRequest = ConversationLaunchRequest(
+        launchRequest = ConversationEntryLaunchRequest(
             launchGeneration = launchGeneration,
             conversationId = intent
                 .getStringExtra(UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID),

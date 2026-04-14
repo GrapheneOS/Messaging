@@ -3,24 +3,23 @@ package com.android.messaging.ui.conversation.v2.screen
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.android.messaging.data.conversation.mapper.ConversationMessageDataDraftMapper
+import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.media.model.ConversationMediaItem
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.ui.conversation.v2.composer.delegate.ConversationDraftDelegate
 import com.android.messaging.ui.conversation.v2.composer.mapper.ConversationComposerUiStateMapper
 import com.android.messaging.ui.conversation.v2.composer.model.ConversationComposerAttachmentUiState
+import com.android.messaging.ui.conversation.v2.entry.model.ConversationEntryStartupAttachment
 import com.android.messaging.ui.conversation.v2.mediapicker.ConversationMediaPickerDelegate
 import com.android.messaging.ui.conversation.v2.mediapicker.model.ConversationCapturedMedia
 import com.android.messaging.ui.conversation.v2.messages.delegate.ConversationMessagesDelegate
 import com.android.messaging.ui.conversation.v2.metadata.delegate.ConversationMetadataDelegate
 import com.android.messaging.ui.conversation.v2.metadata.model.ConversationMetadataUiState
-import com.android.messaging.ui.conversation.v2.screen.model.ConversationLaunchRequest
 import com.android.messaging.ui.conversation.v2.screen.model.ConversationMediaPickerOverlayUiState
 import com.android.messaging.ui.conversation.v2.screen.model.ConversationScreenEffect
 import com.android.messaging.ui.conversation.v2.screen.model.ConversationScreenScaffoldUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -30,13 +29,24 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 internal interface ConversationScreenModel {
     val effects: Flow<ConversationScreenEffect>
     val mediaPickerOverlayUiState: StateFlow<ConversationMediaPickerOverlayUiState>
     val scaffoldUiState: StateFlow<ConversationScreenScaffoldUiState>
 
-    fun onLaunchRequest(launchRequest: ConversationLaunchRequest)
+    fun onConversationIdChanged(conversationId: String?)
+    fun onOpenStartupAttachment(
+        conversationId: String,
+        startupAttachment: ConversationEntryStartupAttachment,
+    )
+
+    fun onSeedDraft(
+        conversationId: String,
+        draft: ConversationDraft,
+    )
+
     fun onAttachmentClicked(
         attachment: ConversationComposerAttachmentUiState.Resolved,
     )
@@ -67,7 +77,6 @@ internal interface ConversationScreenModel {
 internal class ConversationViewModel @Inject constructor(
     private val conversationDraftDelegate: ConversationDraftDelegate,
     private val conversationMessagesDelegate: ConversationMessagesDelegate,
-    private val conversationMessageDataDraftMapper: ConversationMessageDataDraftMapper,
     private val conversationMediaPickerDelegate: ConversationMediaPickerDelegate,
     private val conversationMetadataDelegate: ConversationMetadataDelegate,
     private val conversationComposerUiStateMapper: ConversationComposerUiStateMapper,
@@ -188,20 +197,8 @@ internal class ConversationViewModel @Inject constructor(
         }
     }
 
-    override fun onLaunchRequest(launchRequest: ConversationLaunchRequest) {
-        updateConversationId(conversationId = launchRequest.conversationId)
-
-        val processedLaunchGeneration = savedStateHandle.get<Int>(
-            PROCESSED_LAUNCH_GENERATION_KEY,
-        )
-        if (processedLaunchGeneration == launchRequest.launchGeneration) {
-            return
-        }
-
-        seedDraftIfPresent(launchRequest = launchRequest)
-        openStartupAttachmentIfPresent(launchRequest = launchRequest)
-
-        savedStateHandle[PROCESSED_LAUNCH_GENERATION_KEY] = launchRequest.launchGeneration
+    override fun onConversationIdChanged(conversationId: String?) {
+        updateConversationId(conversationId = conversationId)
     }
 
     private fun updateConversationId(conversationId: String?) {
@@ -210,33 +207,29 @@ internal class ConversationViewModel @Inject constructor(
         }
     }
 
-    private fun seedDraftIfPresent(
-        launchRequest: ConversationLaunchRequest,
+    override fun onSeedDraft(
+        conversationId: String,
+        draft: ConversationDraft,
     ) {
-        val conversationId = launchRequest.conversationId ?: return
-        val draftData = launchRequest.draftData ?: return
-
         conversationDraftDelegate.seedDraft(
             conversationId = conversationId,
-            draft = conversationMessageDataDraftMapper.map(messageData = draftData),
+            draft = draft,
         )
     }
 
-    private fun openStartupAttachmentIfPresent(
-        launchRequest: ConversationLaunchRequest,
+    override fun onOpenStartupAttachment(
+        conversationId: String,
+        startupAttachment: ConversationEntryStartupAttachment,
     ) {
-        val contentUri = launchRequest.startupAttachmentUri ?: return
-        val contentType = launchRequest.startupAttachmentType ?: return
-
-        val imageCollectionUri = launchRequest.conversationId
-            ?.let(MessagingContentProvider::buildConversationImagesUri)
+        val imageCollectionUri = MessagingContentProvider
+            .buildConversationImagesUri(conversationId)
             ?.toString()
 
         viewModelScope.launch(defaultDispatcher) {
             _effects.emit(
                 ConversationScreenEffect.OpenAttachmentPreview(
-                    contentType = contentType,
-                    contentUri = contentUri,
+                    contentType = startupAttachment.contentType,
+                    contentUri = startupAttachment.contentUri,
                     imageCollectionUri = imageCollectionUri,
                 ),
             )
@@ -345,7 +338,6 @@ internal class ConversationViewModel @Inject constructor(
 
     private companion object {
         private const val CONVERSATION_ID_KEY = "conversation_id"
-        private const val PROCESSED_LAUNCH_GENERATION_KEY = "processed_launch_generation"
         private const val STATEFLOW_STOP_TIMEOUT_MILLIS = 5_000L
     }
 }

@@ -26,24 +26,30 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.conversation.v2.CONVERSATION_LOADING_INDICATOR_TEST_TAG
 import com.android.messaging.ui.conversation.v2.composer.model.ConversationComposerAttachmentUiState
 import com.android.messaging.ui.conversation.v2.composer.ui.ConversationComposerSection
+import com.android.messaging.ui.conversation.v2.entry.model.ConversationEntryStartupAttachment
 import com.android.messaging.ui.conversation.v2.mediapicker.ConversationMediaPickerOverlay
 import com.android.messaging.ui.conversation.v2.mediapicker.rememberConversationMediaPickerState
 import com.android.messaging.ui.conversation.v2.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.v2.messages.model.message.ConversationMessagesUiState
 import com.android.messaging.ui.conversation.v2.messages.ui.ConversationMessages
 import com.android.messaging.ui.conversation.v2.metadata.ui.ConversationTopAppBar
-import com.android.messaging.ui.conversation.v2.screen.model.ConversationLaunchRequest
 import com.android.messaging.ui.conversation.v2.screen.model.ConversationScreenScaffoldUiState
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
 internal fun ConversationScreen(
     modifier: Modifier = Modifier,
-    launchRequest: ConversationLaunchRequest? = null,
+    conversationId: String? = null,
+    launchGeneration: Int? = null,
     onNavigateBack: () -> Unit = {},
+    pendingDraft: ConversationDraft? = null,
+    pendingStartupAttachment: ConversationEntryStartupAttachment? = null,
+    onPendingDraftConsumed: () -> Unit = {},
+    onPendingStartupAttachmentConsumed: () -> Unit = {},
     screenModel: ConversationScreenModel = hiltViewModel<ConversationViewModel>(),
 ) {
     val messageFieldFocusRequester = remember {
@@ -59,10 +65,44 @@ internal fun ConversationScreen(
         mutableStateOf<ComposeRect?>(value = null)
     }
 
-    val conversationId = launchRequest?.conversationId
+    LaunchedEffect(conversationId) {
+        screenModel.onConversationIdChanged(conversationId = conversationId)
+    }
 
-    LaunchedEffect(launchRequest) {
-        launchRequest?.let(screenModel::onLaunchRequest)
+    LaunchedEffect(
+        conversationId,
+        launchGeneration,
+        pendingDraft,
+    ) {
+        if (
+            conversationId != null &&
+            launchGeneration != null &&
+            pendingDraft != null
+        ) {
+            screenModel.onSeedDraft(
+                conversationId = conversationId,
+                draft = pendingDraft,
+            )
+            onPendingDraftConsumed()
+        }
+    }
+
+    LaunchedEffect(
+        conversationId,
+        launchGeneration,
+        pendingStartupAttachment,
+    ) {
+        if (
+            conversationId != null &&
+            launchGeneration != null &&
+            pendingStartupAttachment != null
+        ) {
+            screenModel.onOpenStartupAttachment(
+                conversationId = conversationId,
+                startupAttachment = pendingStartupAttachment,
+            )
+            onPendingStartupAttachmentConsumed()
+        }
     }
 
     LifecycleEventEffect(event = Lifecycle.Event.ON_STOP) {

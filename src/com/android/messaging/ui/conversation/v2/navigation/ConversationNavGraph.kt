@@ -2,25 +2,37 @@ package com.android.messaging.ui.conversation.v2.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.android.messaging.data.conversation.model.draft.ConversationDraft
+import com.android.messaging.ui.conversation.v2.entry.ConversationEntryModel
+import com.android.messaging.ui.conversation.v2.entry.ConversationEntryViewModel
 import com.android.messaging.ui.conversation.v2.entry.NewChatScreen
+import com.android.messaging.ui.conversation.v2.entry.model.ConversationEntryEffect
+import com.android.messaging.ui.conversation.v2.entry.model.ConversationEntryLaunchRequest
+import com.android.messaging.ui.conversation.v2.entry.model.ConversationEntryStartupAttachment
+import com.android.messaging.ui.conversation.v2.entry.model.ConversationEntryUiState
 import com.android.messaging.ui.conversation.v2.recipientpicker.RecipientPickerScreen
 import com.android.messaging.ui.conversation.v2.screen.ConversationScreen
-import com.android.messaging.ui.conversation.v2.screen.model.ConversationLaunchRequest
+import com.android.messaging.util.UiUtils
 
 @Composable
 internal fun ConversationNavGraph(
-    launchRequest: ConversationLaunchRequest?,
+    launchRequest: ConversationEntryLaunchRequest?,
     modifier: Modifier = Modifier,
     onFinish: () -> Unit,
+    entryModel: ConversationEntryModel = hiltViewModel<ConversationEntryViewModel>(),
 ) {
+    val entryUiState by entryModel.uiState.collectAsStateWithLifecycle()
     val backStack = rememberNavBackStack(initialNavKey(launchRequest = launchRequest))
 
     val entryDecorators = listOf(
@@ -28,18 +40,37 @@ internal fun ConversationNavGraph(
         rememberViewModelStoreNavEntryDecorator<NavKey>(),
     )
 
-    val entryProvider = remember(launchRequest, onFinish) {
+    val entryProvider = remember(
+        entryUiState,
+        onFinish,
+    ) {
         entryProvider {
             entry<ConversationNavKey> { navKey ->
                 ConversationScreen(
-                    launchRequest = launchRequestForConversation(
-                        launchRequest = launchRequest,
-                        conversationId = navKey.conversationId,
-                    ),
+                    conversationId = navKey.conversationId,
+                    launchGeneration = entryUiState.launchGeneration,
                     onNavigateBack = {
                         popBackStackOrFinish(
                             backStack = backStack,
                             onFinish = onFinish,
+                        )
+                    },
+                    pendingDraft = pendingDraftForConversation(
+                        entryUiState = entryUiState,
+                        conversationId = navKey.conversationId,
+                    ),
+                    pendingStartupAttachment = pendingStartupAttachmentForConversation(
+                        entryUiState = entryUiState,
+                        conversationId = navKey.conversationId,
+                    ),
+                    onPendingDraftConsumed = {
+                        entryModel.onDraftPayloadConsumed(
+                            conversationId = navKey.conversationId,
+                        )
+                    },
+                    onPendingStartupAttachmentConsumed = {
+                        entryModel.onStartupAttachmentConsumed(
+                            conversationId = navKey.conversationId,
                         )
                     },
                 )
@@ -56,10 +87,21 @@ internal fun ConversationNavGraph(
     }
 
     LaunchedEffect(launchRequest) {
+        launchRequest?.let(entryModel::onLaunchRequest)
         updateBackStackForLaunch(
             backStack = backStack,
             launchRequest = launchRequest,
         )
+    }
+
+    LaunchedEffect(entryModel, onFinish) {
+        entryModel.effects.collect { effect ->
+            handleEntryEffect(
+                backStack = backStack,
+                effect = effect,
+                onFinish = onFinish,
+            )
+        }
     }
 
     NavDisplay(
@@ -76,23 +118,28 @@ internal fun ConversationNavGraph(
     )
 }
 
-private fun initialNavKey(launchRequest: ConversationLaunchRequest?): NavKey {
+private fun initialNavKey(launchRequest: ConversationEntryLaunchRequest?): NavKey {
     return launchRequest
         ?.conversationId
         ?.let(::ConversationNavKey)
         ?: NewChatNavKey
 }
 
-private fun launchRequestForConversation(
-    launchRequest: ConversationLaunchRequest?,
+private fun pendingDraftForConversation(
+    entryUiState: ConversationEntryUiState,
     conversationId: String,
-): ConversationLaunchRequest? {
-    return launchRequest?.copy(conversationId = conversationId)
+): ConversationDraft? {
+    return when {
+        entryUiState.conversationId == conversationId -> {
+            entryUiState.pendingDraft
+        }
+        else -> null
+    }
 }
 
 private fun updateBackStackForLaunch(
     backStack: MutableList<NavKey>,
-    launchRequest: ConversationLaunchRequest?,
+    launchRequest: ConversationEntryLaunchRequest?,
 ) {
     val destination = initialNavKey(launchRequest = launchRequest)
 
@@ -114,4 +161,51 @@ private fun popBackStackOrFinish(
     }
 
     onFinish()
+}
+
+private fun pendingStartupAttachmentForConversation(
+    entryUiState: ConversationEntryUiState,
+    conversationId: String,
+): ConversationEntryStartupAttachment? {
+    return when {
+        entryUiState.conversationId == conversationId -> {
+            entryUiState.pendingStartupAttachment
+        }
+        else -> null
+    }
+}
+
+private fun handleEntryEffect(
+    backStack: MutableList<NavKey>,
+    effect: ConversationEntryEffect,
+    onFinish: () -> Unit,
+) {
+    when (effect) {
+        is ConversationEntryEffect.NavigateBack -> {
+            popBackStackOrFinish(
+                backStack = backStack,
+                onFinish = onFinish,
+            )
+        }
+
+        is ConversationEntryEffect.NavigateToConversation -> {
+            navigateToConversation(
+                backStack = backStack,
+                conversationId = effect.conversationId,
+            )
+        }
+
+        is ConversationEntryEffect.ShowMessage -> {
+            UiUtils.showToastAtBottom(effect.messageResId)
+        }
+    }
+}
+
+private fun navigateToConversation(
+    backStack: MutableList<NavKey>,
+    conversationId: String,
+) {
+    ConversationNavKey(conversationId = conversationId)
+        .takeIf { it != backStack.lastOrNull() }
+        ?.let(backStack::add)
 }
