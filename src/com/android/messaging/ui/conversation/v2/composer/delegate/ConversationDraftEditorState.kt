@@ -66,6 +66,28 @@ internal data class DraftEditorState(
         }
     }
 
+    fun withSeededDraft(draft: ConversationDraft): DraftEditorState {
+        if (conversationId == null) {
+            return this
+        }
+
+        val normalizedDraft = draft.copy(
+            selfParticipantId = when {
+                draft.selfParticipantId.isBlank() -> persistedDraft.selfParticipantId
+                else -> draft.selfParticipantId
+            },
+        )
+
+        return copyWithNormalizedLocalEdits(
+            updatedLocalEdits = ConversationDraftEdits(
+                messageText = normalizedDraft.messageText,
+                subjectText = normalizedDraft.subjectText,
+                selfParticipantId = normalizedDraft.selfParticipantId,
+                attachments = normalizedDraft.attachments,
+            ),
+        )
+    }
+
     fun toSaveRequestOrNull(): DraftSaveRequest? {
         return when {
             conversationId == null -> null

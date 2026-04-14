@@ -3,12 +3,14 @@ package com.android.messaging.ui.conversation.v2.screen
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
+import android.graphics.Rect
 import android.net.Uri
-import android.view.View
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.geometry.Rect as ComposeRect
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.core.net.toUri
 import com.android.messaging.R
 import com.android.messaging.ui.UIIntents
@@ -16,26 +18,34 @@ import com.android.messaging.ui.conversation.v2.screen.model.ConversationScreenE
 import com.android.messaging.util.ContentType
 import com.android.messaging.util.UiUtils
 import com.android.messaging.util.UriUtil
+import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
 @Composable
 internal fun ConversationScreenEffects(
     screenModel: ConversationScreenModel,
+    hostBoundsState: State<ComposeRect?>,
 ) {
     val context = LocalContext.current
-    val hostView = LocalView.current
 
-    LaunchedEffect(screenModel, context, hostView) {
+    LaunchedEffect(screenModel, context, hostBoundsState) {
         screenModel.effects.collect { effect ->
             when (effect) {
                 is ConversationScreenEffect.OpenAttachmentPreview -> {
                     openAttachmentPreview(
                         context = context,
-                        hostView = hostView,
+                        hostBounds = hostBoundsState.value,
                         contentUri = effect.contentUri,
                         contentType = effect.contentType,
                         imageCollectionUri = effect.imageCollectionUri,
+                        awaitHostBounds = {
+                            snapshotFlow { hostBoundsState.value }
+                                .filterNotNull()
+                                .first()
+                        },
                     )
                 }
 
@@ -63,18 +73,20 @@ private fun openExternalUri(
 
 private suspend fun openAttachmentPreview(
     context: Context,
-    hostView: View,
+    hostBounds: ComposeRect?,
     contentUri: String,
     contentType: String,
     imageCollectionUri: String?,
+    awaitHostBounds: suspend () -> ComposeRect,
 ) {
     val attachmentUri = contentUri.toUri()
 
     when {
         ContentType.isImageType(contentType) -> {
+            val resolvedHostBounds = hostBounds ?: awaitHostBounds()
             val isOpenedInternally = openImageAttachmentPreview(
                 context = context,
-                hostView = hostView,
+                hostBounds = resolvedHostBounds,
                 attachmentUri = attachmentUri,
                 imageCollectionUri = imageCollectionUri,
             )
@@ -113,7 +125,7 @@ private suspend fun openAttachmentPreview(
 
 private fun openImageAttachmentPreview(
     context: Context,
-    hostView: View,
+    hostBounds: ComposeRect,
     attachmentUri: Uri,
     imageCollectionUri: String?,
 ): Boolean {
@@ -123,7 +135,7 @@ private fun openImageAttachmentPreview(
     UIIntents.get().launchFullScreenPhotoViewer(
         activity,
         attachmentUri,
-        UiUtils.getMeasuredBoundsOnScreen(hostView),
+        hostBounds.toAndroidRect(),
         imageCollection,
     )
 
@@ -159,4 +171,13 @@ private suspend fun normalizeAttachmentUriForIntent(
             }
         }
     }
+}
+
+private fun ComposeRect.toAndroidRect(): Rect {
+    return Rect(
+        left.roundToInt(),
+        top.roundToInt(),
+        right.roundToInt(),
+        bottom.roundToInt(),
+    )
 }

@@ -18,6 +18,9 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.geometry.Rect as ComposeRect
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -32,13 +35,14 @@ import com.android.messaging.ui.conversation.v2.messages.model.message.Conversat
 import com.android.messaging.ui.conversation.v2.messages.model.message.ConversationMessagesUiState
 import com.android.messaging.ui.conversation.v2.messages.ui.ConversationMessages
 import com.android.messaging.ui.conversation.v2.metadata.ui.ConversationTopAppBar
+import com.android.messaging.ui.conversation.v2.screen.model.ConversationLaunchRequest
 import com.android.messaging.ui.conversation.v2.screen.model.ConversationScreenScaffoldUiState
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
 internal fun ConversationScreen(
     modifier: Modifier = Modifier,
-    conversationId: String? = null,
+    launchRequest: ConversationLaunchRequest? = null,
     onNavigateBack: () -> Unit = {},
     screenModel: ConversationScreenModel = viewModel<ConversationViewModel>(),
 ) {
@@ -51,19 +55,31 @@ internal fun ConversationScreen(
         .mediaPickerOverlayUiState
         .collectAsStateWithLifecycle()
 
-    LaunchedEffect(conversationId) {
-        screenModel.onConversationChanged(conversationId = conversationId)
+    val hostBoundsState = remember {
+        mutableStateOf<ComposeRect?>(value = null)
+    }
+
+    val conversationId = launchRequest?.conversationId
+
+    LaunchedEffect(launchRequest) {
+        launchRequest?.let(screenModel::onLaunchRequest)
     }
 
     LifecycleEventEffect(event = Lifecycle.Event.ON_STOP) {
         screenModel.persistDraft()
     }
 
-    ConversationScreenEffects(screenModel = screenModel)
+    ConversationScreenEffects(
+        screenModel = screenModel,
+        hostBoundsState = hostBoundsState,
+    )
 
     Box(
         modifier = modifier
-            .fillMaxSize(),
+            .fillMaxSize()
+            .onGloballyPositioned { coordinates ->
+                hostBoundsState.value = coordinates.boundsInWindow()
+            },
     ) {
         ConversationScreenScaffold(
             modifier = Modifier

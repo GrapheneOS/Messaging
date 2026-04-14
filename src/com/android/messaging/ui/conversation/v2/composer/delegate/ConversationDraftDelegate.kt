@@ -41,6 +41,11 @@ import kotlinx.coroutines.withContext
 internal interface ConversationDraftDelegate : ConversationScreenDelegate<ConversationDraftState> {
     fun onMessageTextChanged(messageText: String)
 
+    fun seedDraft(
+        conversationId: String,
+        draft: ConversationDraft,
+    )
+
     fun addAttachments(attachments: Collection<ConversationDraftAttachment>)
 
     fun addPendingAttachment(pendingAttachment: ConversationDraftPendingAttachment)
@@ -83,6 +88,7 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
     private val draftSaveMutex = Mutex()
 
     private var boundScope: CoroutineScope? = null
+    private var pendingDraftSeed: PendingDraftSeed? = null
 
     override fun bind(
         scope: CoroutineScope,
@@ -105,6 +111,17 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
         updateDraftEditorState { currentDraftEditorState ->
             currentDraftEditorState.withMessageText(messageText)
         }
+    }
+
+    override fun seedDraft(
+        conversationId: String,
+        draft: ConversationDraft,
+    ) {
+        pendingDraftSeed = PendingDraftSeed(
+            conversationId = conversationId,
+            draft = draft,
+        )
+        applyPendingDraftSeedIfPossible()
     }
 
     override fun addAttachments(attachments: Collection<ConversationDraftAttachment>) {
@@ -246,6 +263,7 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
                             )
                         }
                     }
+                    applyPendingDraftSeedIfPossible()
                 }
         }
     }
@@ -270,6 +288,7 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
             previousDraftEditorState = currentDraftEditorState
             DraftEditorState(conversationId = conversationId)
         }
+        applyPendingDraftSeedIfPossible()
 
         previousDraftEditorState
             ?.toSaveRequestOrNull()
@@ -417,6 +436,19 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
         }
     }
 
+    private fun applyPendingDraftSeedIfPossible() {
+        val pendingDraftSeed = pendingDraftSeed ?: return
+
+        updateDraftEditorState { currentDraftEditorState ->
+            if (currentDraftEditorState.conversationId != pendingDraftSeed.conversationId) {
+                return@updateDraftEditorState currentDraftEditorState
+            }
+
+            this.pendingDraftSeed = null
+            currentDraftEditorState.withSeededDraft(draft = pendingDraftSeed.draft)
+        }
+    }
+
     private fun markConversationDraftAsIdle(conversationId: String) {
         updateDraftEditorState { currentDraftEditorState ->
             if (currentDraftEditorState.conversationId != conversationId) {
@@ -484,3 +516,8 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
         private const val DRAFT_AUTOSAVE_DELAY_MILLIS = 300L
     }
 }
+
+private data class PendingDraftSeed(
+    val conversationId: String,
+    val draft: ConversationDraft,
+)
