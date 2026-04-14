@@ -11,6 +11,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.net.Uri
 import androidx.core.graphics.createBitmap
+import androidx.core.net.toUri
 import com.android.messaging.datamodel.DataModel
 import com.android.messaging.datamodel.DatabaseHelper
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
@@ -19,6 +20,7 @@ import com.android.messaging.datamodel.DatabaseHelper.MessageColumns
 import com.android.messaging.datamodel.DatabaseHelper.PartColumns
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
 import com.android.messaging.datamodel.DatabaseWrapper
+import com.android.messaging.datamodel.MediaScratchFileProvider
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.datamodel.data.ParticipantData
@@ -30,12 +32,21 @@ import java.io.FileOutputStream
 
 private const val TAG = "TestDataSeeder"
 private const val TEST_PHONE_PREFIX = "+15550"
+private const val TEST_YOUTUBE_VIDEO_URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+private const val MEDIA_SCRATCH_FILE_EXTENSION_QUERY_PARAMETER = "ext"
+private const val SEED_IMAGE_1_FILE_ID = "800001"
+private const val SEED_IMAGE_2_FILE_ID = "800002"
+private const val SEED_IMAGE_3_FILE_ID = "800003"
+private const val SEED_VCARD_FILE_ID = "800004"
+private const val SEED_VIDEO_FILE_ID = "800005"
 
 private const val MINUTES = 60 * 1000L
 private const val HOURS = 60 * MINUTES
 private const val DAYS = 24 * HOURS
 
 fun seedTestData(context: Context) {
+    clearSeededTestData(context = context)
+
     val db = DataModel.get().getDatabase()
 
     val selfId = findSelfParticipantId(db) ?: run {
@@ -44,6 +55,8 @@ fun seedTestData(context: Context) {
     }
 
     val testImages = buildTestImages(context)
+    val testVideo = buildTestVideo(context)
+    val testVCard = buildTestVCard(context)
     val now = System.currentTimeMillis()
 
     db.withTransaction {
@@ -65,7 +78,7 @@ fun seedTestData(context: Context) {
         seedScenarioE(db, selfId, grace, now)
         seedScenarioF(db, selfId, henry, now)
         seedScenarioG(db, selfId, iris, testImages, now)
-        seedScenarioH(db, selfId, jack, carol, testImages, now)
+        seedScenarioH(db, selfId, jack, carol, testImages, testVideo, testVCard, now)
         seedScenarioI(db, selfId, carol, dave, eve, now)
     }
 
@@ -75,6 +88,7 @@ fun seedTestData(context: Context) {
 
 fun clearSeededTestData(context: Context) {
     val db = DataModel.get().getDatabase()
+    val seededAttachmentUris = mutableSetOf<String>()
 
     db.withTransaction {
         val participantIds = mutableListOf<String>()
@@ -85,7 +99,7 @@ fun clearSeededTestData(context: Context) {
             arrayOf("$TEST_PHONE_PREFIX%"),
             null,
             null,
-            null
+            null,
         )?.use { cursor ->
             while (cursor.moveToNext()) participantIds.add(cursor.getString(0))
         }
@@ -106,24 +120,42 @@ fun clearSeededTestData(context: Context) {
             pArgs,
             null,
             null,
-            null
+            null,
         )?.use { cursor ->
             while (cursor.moveToNext()) conversationIds.add(cursor.getString(0))
         }
 
         if (conversationIds.isNotEmpty()) {
+            val conversationIdArgs = conversationIds.toTypedArray()
+            db.query(
+                DatabaseHelper.PARTS_TABLE,
+                arrayOf(PartColumns.CONTENT_URI),
+                "${PartColumns.CONVERSATION_ID} IN (${conversationIds.joinToString(",") { "?" }})" +
+                    " AND ${PartColumns.CONTENT_URI} IS NOT NULL",
+                conversationIdArgs,
+                null,
+                null,
+                null,
+            )?.use { cursor ->
+                while (cursor.moveToNext()) {
+                    cursor.getString(0)?.let { attachmentUri ->
+                        seededAttachmentUris.add(attachmentUri)
+                    }
+                }
+            }
+
             // ON DELETE CASCADE handles messages and parts
             db.delete(
                 DatabaseHelper.CONVERSATIONS_TABLE,
                 "${ConversationColumns._ID} IN (${conversationIds.joinToString(",") { "?" }})",
-                conversationIds.toTypedArray()
+                conversationIdArgs,
             )
         }
 
         db.delete(
             DatabaseHelper.PARTICIPANTS_TABLE,
             "${ParticipantColumns._ID} IN ($pPlaceholders)",
-            pArgs
+            pArgs,
         )
     }
 
@@ -131,6 +163,19 @@ fun clearSeededTestData(context: Context) {
     for (i in 1..3) {
         File(context.cacheDir, "seed_img_$i.jpg").delete()
     }
+    File(context.cacheDir, "seed_video.mp4").delete()
+    File(context.cacheDir, "seed_contact.vcf").delete()
+    deleteSeedScratchFile(fileId = SEED_IMAGE_1_FILE_ID, fileExtension = "jpg")
+    deleteSeedScratchFile(fileId = SEED_IMAGE_2_FILE_ID, fileExtension = "jpg")
+    deleteSeedScratchFile(fileId = SEED_IMAGE_3_FILE_ID, fileExtension = "jpg")
+    deleteSeedScratchFile(fileId = SEED_VCARD_FILE_ID, fileExtension = "vcf")
+    deleteSeedScratchFile(fileId = SEED_VIDEO_FILE_ID, fileExtension = "mp4")
+    deleteSeedScratchFile(fileId = SEED_IMAGE_1_FILE_ID)
+    deleteSeedScratchFile(fileId = SEED_IMAGE_2_FILE_ID)
+    deleteSeedScratchFile(fileId = SEED_IMAGE_3_FILE_ID)
+    deleteSeedScratchFile(fileId = SEED_VCARD_FILE_ID)
+    deleteSeedScratchFile(fileId = SEED_VIDEO_FILE_ID)
+    deleteSeededAttachmentScratchFiles(attachmentUris = seededAttachmentUris)
 
     MessagingContentProvider.notifyConversationListChanged()
     LogUtil.d(TAG, "Seeded test data cleared")
@@ -138,30 +183,136 @@ fun clearSeededTestData(context: Context) {
 
 private fun buildTestImages(context: Context): List<String> {
     val specs = listOf(
-        Triple("seed_img_1.jpg", Color.rgb(100, 149, 237), "Photo 1"),
-        Triple("seed_img_2.jpg", Color.rgb(144, 238, 144), "Photo 2"),
-        Triple("seed_img_3.jpg", Color.rgb(255, 160, 122), "Photo 3")
+        SeedImageSpec(
+            fileId = SEED_IMAGE_1_FILE_ID,
+            fileExtension = "jpg",
+            backgroundColor = Color.rgb(100, 149, 237),
+            label = "Photo 1",
+        ),
+        SeedImageSpec(
+            fileId = SEED_IMAGE_2_FILE_ID,
+            fileExtension = "jpg",
+            backgroundColor = Color.rgb(144, 238, 144),
+            label = "Photo 2",
+        ),
+        SeedImageSpec(
+            fileId = SEED_IMAGE_3_FILE_ID,
+            fileExtension = "jpg",
+            backgroundColor = Color.rgb(255, 160, 122),
+            label = "Photo 3",
+        ),
     )
 
-    return specs.map { (filename, bgColor, label) ->
-        val file = File(context.cacheDir, filename)
-        if (!file.exists()) {
-            val bmp = createBitmap(400, 300)
-            val canvas = Canvas(bmp)
-            canvas.drawColor(bgColor)
-            val paint = Paint().apply {
-                color = Color.WHITE
-                textSize = 48f
-                isAntiAlias = true
-                isFakeBoldText = true
-            }
-            canvas.drawText(label, 130f, 165f, paint)
-            FileOutputStream(file).use { bmp.compress(Bitmap.CompressFormat.JPEG, 90, it) }
-            bmp.recycle()
+    return specs.map { spec ->
+        val imageUri = buildSeedScratchUri(
+            fileId = spec.fileId,
+            fileExtension = spec.fileExtension,
+        )
+        val file = MediaScratchFileProvider.getFileFromUri(imageUri)
+        val bmp = createBitmap(400, 300)
+        val canvas = Canvas(bmp)
+        canvas.drawColor(spec.backgroundColor)
+        val paint = Paint().apply {
+            color = Color.WHITE
+            textSize = 48f
+            isAntiAlias = true
+            isFakeBoldText = true
         }
-        Uri.fromFile(file).toString()
+        file.parentFile?.mkdirs()
+        canvas.drawText(spec.label, 130f, 165f, paint)
+        FileOutputStream(file).use { outputStream ->
+            bmp.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+        }
+        bmp.recycle()
+        imageUri.toString()
     }
 }
+
+private fun buildTestVCard(context: Context): String {
+    val vCardUri = buildSeedScratchUri(
+        fileId = SEED_VCARD_FILE_ID,
+        fileExtension = "vcf",
+    )
+    val file = MediaScratchFileProvider.getFileFromUri(vCardUri)
+    file.parentFile?.mkdirs()
+    file.writeText(
+        """
+        BEGIN:VCARD
+        VERSION:3.0
+        FN:Sam Rivera
+        N:Rivera;Sam;;;
+        TEL;TYPE=CELL:+15550001111
+        EMAIL:sam.rivera@example.com
+        END:VCARD
+        """.trimIndent(),
+    )
+
+    MediaScratchFileProvider.addUriToDisplayNameEntry(vCardUri, "Sam Rivera")
+    return vCardUri.toString()
+}
+
+private fun buildTestVideo(context: Context): String {
+    val videoUri = buildSeedScratchUri(
+        fileId = SEED_VIDEO_FILE_ID,
+        fileExtension = "mp4",
+    )
+    val file = MediaScratchFileProvider.getFileFromUri(videoUri)
+    file.parentFile?.mkdirs()
+    context.assets.open("seed_video.mp4").use { inputStream ->
+        FileOutputStream(file).use { outputStream ->
+            inputStream.copyTo(outputStream)
+        }
+    }
+
+    MediaScratchFileProvider.addUriToDisplayNameEntry(videoUri, "seed_video.mp4")
+    return videoUri.toString()
+}
+
+private fun buildSeedScratchUri(
+    fileId: String,
+    fileExtension: String? = null,
+): Uri {
+    val uriBuilder = MediaScratchFileProvider.getUriBuilder()
+        .appendPath(fileId)
+    if (!fileExtension.isNullOrBlank()) {
+        uriBuilder.appendQueryParameter(
+            MEDIA_SCRATCH_FILE_EXTENSION_QUERY_PARAMETER,
+            fileExtension,
+        )
+    }
+    return uriBuilder.build()
+}
+
+private fun deleteSeedScratchFile(
+    fileId: String,
+    fileExtension: String? = null,
+) {
+    val seedScratchUri = buildSeedScratchUri(
+        fileId = fileId,
+        fileExtension = fileExtension,
+    )
+    MediaScratchFileProvider.getFileFromUri(seedScratchUri).delete()
+}
+
+private fun deleteSeededAttachmentScratchFiles(
+    attachmentUris: Set<String>,
+) {
+    attachmentUris.forEach { attachmentUri ->
+        val uri = attachmentUri.toUri()
+        if (!MediaScratchFileProvider.isMediaScratchSpaceUri(uri)) {
+            return@forEach
+        }
+
+        MediaScratchFileProvider.getFileFromUri(uri).delete()
+    }
+}
+
+private data class SeedImageSpec(
+    val fileId: String,
+    val fileExtension: String,
+    val backgroundColor: Int,
+    val label: String,
+)
 
 private fun findSelfParticipantId(db: DatabaseWrapper): String? = db.query(
     DatabaseHelper.PARTICIPANTS_TABLE,
@@ -171,7 +322,7 @@ private fun findSelfParticipantId(db: DatabaseWrapper): String? = db.query(
     null,
     null,
     "${ParticipantColumns._ID} ASC",
-    "1"
+    "1",
 )?.use { cursor ->
     if (cursor.moveToFirst()) cursor.getString(0) else null
 }
@@ -193,7 +344,7 @@ private fun upsertParticipant(
             put(ParticipantColumns.FULL_NAME, fullName)
             put(ParticipantColumns.FIRST_NAME, firstName)
         },
-        SQLiteDatabase.CONFLICT_IGNORE
+        SQLiteDatabase.CONFLICT_IGNORE,
     )
 
     return db
@@ -204,7 +355,7 @@ private fun upsertParticipant(
             arrayOf(phone, ParticipantData.OTHER_THAN_SELF_SUB_ID.toString()),
             null,
             null,
-            null
+            null,
         )
         ?.use { cursor ->
             cursor.moveToFirst()
@@ -239,7 +390,7 @@ private fun createConversation(
             ) {
                 put(ConversationColumns.PREVIEW_CONTENT_TYPE, previewContentType)
             }
-        }
+        },
     )
     for (participantId in participantIds) {
         db.insert(
@@ -248,7 +399,7 @@ private fun createConversation(
             ContentValues().apply {
                 put(ConversationParticipantsColumns.CONVERSATION_ID, conversationId)
                 put(ConversationParticipantsColumns.PARTICIPANT_ID, participantId)
-            }
+            },
         )
     }
     return conversationId
@@ -269,7 +420,7 @@ private fun insertTextMessage(
 ): Long {
     val messageId = insertMessageRow(
         db, conversationId, senderId, selfId,
-        status, protocol, timestamp, seen, read, mmsSubject
+        status, protocol, timestamp, seen, read, mmsSubject,
     )
     db.insert(
         DatabaseHelper.PARTS_TABLE,
@@ -279,7 +430,7 @@ private fun insertTextMessage(
             put(PartColumns.CONVERSATION_ID, conversationId)
             put(PartColumns.TEXT, text)
             put(PartColumns.CONTENT_TYPE, ContentType.TEXT_PLAIN)
-        }
+        },
     )
     return messageId
 }
@@ -295,23 +446,20 @@ private fun insertImageMessage(
     seen: Boolean = true,
     read: Boolean = true,
 ): Long {
-    val messageId = insertMessageRow(
-        db, conversationId, senderId, selfId,
-        status, MessageData.PROTOCOL_MMS, timestamp, seen, read, mmsSubject = null
+    return insertAttachmentMessage(
+        db = db,
+        conversationId = conversationId,
+        senderId = senderId,
+        selfId = selfId,
+        contentType = ContentType.IMAGE_JPEG,
+        attachmentUri = imageUri,
+        status = status,
+        timestamp = timestamp,
+        width = 400,
+        height = 300,
+        seen = seen,
+        read = read,
     )
-    db.insert(
-        DatabaseHelper.PARTS_TABLE,
-        null,
-        ContentValues().apply {
-            put(PartColumns.MESSAGE_ID, messageId)
-            put(PartColumns.CONVERSATION_ID, conversationId)
-            put(PartColumns.CONTENT_TYPE, ContentType.IMAGE_JPEG)
-            put(PartColumns.CONTENT_URI, imageUri)
-            put(PartColumns.WIDTH, 400)
-            put(PartColumns.HEIGHT, 300)
-        }
-    )
-    return messageId
 }
 
 private fun insertMixedMessage(
@@ -326,21 +474,19 @@ private fun insertMixedMessage(
     seen: Boolean = true,
     read: Boolean = true,
 ): Long {
-    val messageId = insertMessageRow(
-        db, conversationId, senderId, selfId,
-        status, MessageData.PROTOCOL_MMS, timestamp, seen, read, mmsSubject = null
-    )
-    db.insert(
-        DatabaseHelper.PARTS_TABLE,
-        null,
-        ContentValues().apply {
-            put(PartColumns.MESSAGE_ID, messageId)
-            put(PartColumns.CONVERSATION_ID, conversationId)
-            put(PartColumns.CONTENT_TYPE, ContentType.IMAGE_JPEG)
-            put(PartColumns.CONTENT_URI, imageUri)
-            put(PartColumns.WIDTH, 400)
-            put(PartColumns.HEIGHT, 300)
-        }
+    val messageId = insertAttachmentMessage(
+        db = db,
+        conversationId = conversationId,
+        senderId = senderId,
+        selfId = selfId,
+        contentType = ContentType.IMAGE_JPEG,
+        attachmentUri = imageUri,
+        status = status,
+        timestamp = timestamp,
+        width = 400,
+        height = 300,
+        seen = seen,
+        read = read,
     )
     db.insert(
         DatabaseHelper.PARTS_TABLE,
@@ -350,9 +496,102 @@ private fun insertMixedMessage(
             put(PartColumns.CONVERSATION_ID, conversationId)
             put(PartColumns.TEXT, text)
             put(PartColumns.CONTENT_TYPE, ContentType.TEXT_PLAIN)
-        }
+        },
     )
     return messageId
+}
+
+private fun insertAttachmentMessage(
+    db: DatabaseWrapper,
+    conversationId: Long,
+    senderId: String,
+    selfId: String,
+    contentType: String,
+    attachmentUri: String,
+    status: Int,
+    timestamp: Long,
+    width: Int = 0,
+    height: Int = 0,
+    seen: Boolean = true,
+    read: Boolean = true,
+): Long {
+    val messageId = insertMessageRow(
+        db = db,
+        conversationId = conversationId,
+        senderId = senderId,
+        selfId = selfId,
+        status = status,
+        protocol = MessageData.PROTOCOL_MMS,
+        timestamp = timestamp,
+        seen = seen,
+        read = read,
+        mmsSubject = null,
+    )
+    db.insert(
+        DatabaseHelper.PARTS_TABLE,
+        null,
+        ContentValues().apply {
+            put(PartColumns.MESSAGE_ID, messageId)
+            put(PartColumns.CONVERSATION_ID, conversationId)
+            put(PartColumns.CONTENT_TYPE, contentType)
+            put(PartColumns.CONTENT_URI, attachmentUri)
+            put(PartColumns.WIDTH, width)
+            put(PartColumns.HEIGHT, height)
+        },
+    )
+    return messageId
+}
+
+private fun insertVCardMessage(
+    db: DatabaseWrapper,
+    conversationId: Long,
+    senderId: String,
+    selfId: String,
+    vCardUri: String,
+    status: Int,
+    timestamp: Long,
+    seen: Boolean = true,
+    read: Boolean = true,
+): Long {
+    return insertAttachmentMessage(
+        db = db,
+        conversationId = conversationId,
+        senderId = senderId,
+        selfId = selfId,
+        contentType = ContentType.TEXT_VCARD,
+        attachmentUri = vCardUri,
+        status = status,
+        timestamp = timestamp,
+        seen = seen,
+        read = read,
+    )
+}
+
+private fun insertVideoMessage(
+    db: DatabaseWrapper,
+    conversationId: Long,
+    senderId: String,
+    selfId: String,
+    videoUri: String,
+    status: Int,
+    timestamp: Long,
+    seen: Boolean = true,
+    read: Boolean = true,
+): Long {
+    return insertAttachmentMessage(
+        db = db,
+        conversationId = conversationId,
+        senderId = senderId,
+        selfId = selfId,
+        contentType = ContentType.VIDEO_MP4,
+        attachmentUri = videoUri,
+        status = status,
+        timestamp = timestamp,
+        width = 400,
+        height = 300,
+        seen = seen,
+        read = read,
+    )
 }
 
 private fun insertMessageRow(
@@ -380,7 +619,7 @@ private fun insertMessageRow(
         put(MessageColumns.SEEN, if (seen) 1 else 0)
         put(MessageColumns.READ, if (read) 1 else 0)
         if (mmsSubject != null) put(MessageColumns.MMS_SUBJECT, mmsSubject)
-    }
+    },
 )
 
 private fun finalizeConversation(
@@ -406,7 +645,7 @@ private fun finalizeConversation(
             }
         },
         "${ConversationColumns._ID} = ?",
-        arrayOf(conversationId.toString())
+        arrayOf(conversationId.toString()),
     )
 }
 
@@ -437,7 +676,7 @@ private fun seedScenarioA(db: DatabaseWrapper, selfId: String, aliceId: String, 
         "Will do",
         "See you Saturday!",
         "Looking forward to it",
-        "Don't forget to bring the book"
+        "Don't forget to bring the book",
     )
 
     var latestMsgId = 0L
@@ -462,7 +701,7 @@ private fun seedScenarioA(db: DatabaseWrapper, selfId: String, aliceId: String, 
             texts[i % texts.size],
             status,
             MessageData.PROTOCOL_SMS,
-            msgTime
+            msgTime,
         )
         latestTime = msgTime
     }
@@ -484,7 +723,7 @@ private fun seedScenarioB(db: DatabaseWrapper, selfId: String, bobId: String, no
         Triple(
             "Can you send the updated version?",
             false,
-            MessageData.BUGLE_STATUS_OUTGOING_COMPLETE
+            MessageData.BUGLE_STATUS_OUTGOING_COMPLETE,
         ),
         Triple("Sure, give me a minute", true, MessageData.BUGLE_STATUS_INCOMING_COMPLETE),
         Triple("Here you go", true, MessageData.BUGLE_STATUS_INCOMING_COMPLETE),
@@ -497,7 +736,7 @@ private fun seedScenarioB(db: DatabaseWrapper, selfId: String, bobId: String, no
         Triple("Great, see you then", true, MessageData.BUGLE_STATUS_INCOMING_COMPLETE),
         Triple("Perfect", false, MessageData.BUGLE_STATUS_OUTGOING_COMPLETE),
         Triple("Don't be late!", true, MessageData.BUGLE_STATUS_INCOMING_COMPLETE),
-        Triple("Never", false, MessageData.BUGLE_STATUS_OUTGOING_AWAITING_RETRY)
+        Triple("Never", false, MessageData.BUGLE_STATUS_OUTGOING_AWAITING_RETRY),
     )
 
     var latestMsgId = 0L
@@ -514,7 +753,7 @@ private fun seedScenarioB(db: DatabaseWrapper, selfId: String, bobId: String, no
             text,
             status,
             MessageData.PROTOCOL_SMS,
-            msgTime
+            msgTime,
         )
         latestTime = msgTime
     }
@@ -539,7 +778,7 @@ private fun seedScenarioC(
         "Team Chat",
         selfId,
         listOf(carolId, daveId, eveId),
-        baseTime
+        baseTime,
     )
 
     val senders = listOf(carolId, daveId, eveId, selfId)
@@ -551,7 +790,7 @@ private fun seedScenarioC(
         "Agreed", "Anyone need a ride?", "I'm good, thanks", "I could use one actually",
         "I got you Carol", "Thanks Dave!", "Ok see everyone at 3", "See you there!",
         "Don't forget it's at the usual place", "Got it", "See you all soon!",
-        "This is going to be fun", "Definitely", "On my way!"
+        "This is going to be fun", "Definitely", "On my way!",
     )
 
     var latestMsgId = 0L
@@ -572,7 +811,7 @@ private fun seedScenarioC(
             texts[i],
             status,
             MessageData.PROTOCOL_MMS,
-            msgTime
+            msgTime,
         )
         latestTime = msgTime
     }
@@ -597,7 +836,7 @@ private fun seedScenarioD(db: DatabaseWrapper, selfId: String, frankId: String, 
         Pair("Bring sunscreen, it'll be hot", false),
         Pair("Good call", true),
         Pair("See you Saturday!", false),
-        Pair("Can't wait!", true)
+        Pair("Can't wait!", true),
     )
 
     var latestMsgId = 0L
@@ -613,7 +852,7 @@ private fun seedScenarioD(db: DatabaseWrapper, selfId: String, frankId: String, 
         }
         latestMsgId = insertTextMessage(
             db, convId, senderId, selfId,
-            text, status, MessageData.PROTOCOL_MMS, msgTime, mmsSubject = "Weekend plans"
+            text, status, MessageData.PROTOCOL_MMS, msgTime, mmsSubject = "Weekend plans",
         )
         latestTime = msgTime
     }
@@ -646,7 +885,7 @@ private fun seedScenarioE(db: DatabaseWrapper, selfId: String, graceId: String, 
         latestMsgId = insertTextMessage(
             db, convId, senderId, selfId,
             latestText, status, MessageData.PROTOCOL_SMS, msgTime,
-            seen = !isUnread, read = !isUnread
+            seen = !isUnread, read = !isUnread,
         )
     }
 
@@ -655,7 +894,7 @@ private fun seedScenarioE(db: DatabaseWrapper, selfId: String, graceId: String, 
         convId,
         latestMsgId,
         baseTime + totalMessages * 2 * MINUTES,
-        latestText
+        latestText,
     )
 }
 
@@ -671,7 +910,7 @@ private fun seedScenarioF(db: DatabaseWrapper, selfId: String, henryId: String, 
         "I need to show you something",
         "It's important",
         "Please reply when you get a chance",
-        "I'll be online for the next hour"
+        "I'll be online for the next hour",
     )
 
     var latestMsgId = 0L
@@ -681,7 +920,7 @@ private fun seedScenarioF(db: DatabaseWrapper, selfId: String, henryId: String, 
         latestMsgId = insertTextMessage(
             db, convId, henryId, selfId, text,
             MessageData.BUGLE_STATUS_INCOMING_COMPLETE, MessageData.PROTOCOL_SMS, msgTime,
-            seen = false, read = false
+            seen = false, read = false,
         )
         latestTime = msgTime
     }
@@ -711,7 +950,7 @@ private fun seedScenarioG(
         listOf(irisId),
         baseTime,
         previewUri = img1,
-        previewContentType = ContentType.IMAGE_JPEG
+        previewContentType = ContentType.IMAGE_JPEG,
     )
 
     data class Msg(
@@ -731,7 +970,7 @@ private fun seedScenarioG(
             "mixed",
             text = "Here's another one from the same day",
             imageUri = img2,
-            isIncoming = true
+            isIncoming = true,
         ),
         Msg("text", text = "These are stunning", isIncoming = false),
         Msg("image", imageUri = img3, isIncoming = false),
@@ -745,8 +984,8 @@ private fun seedScenarioG(
             "mixed",
             text = "Shot this from my window this morning",
             imageUri = img1,
-            isIncoming = false
-        )
+            isIncoming = false,
+        ),
     )
 
     var latestMsgId = 0L
@@ -767,7 +1006,7 @@ private fun seedScenarioG(
                 selfId,
                 m.imageUri,
                 status,
-                msgTime
+                msgTime,
             )
 
             "mixed" -> insertMixedMessage(
@@ -778,7 +1017,7 @@ private fun seedScenarioG(
                 m.text,
                 m.imageUri,
                 status,
-                msgTime
+                msgTime,
             )
 
             else -> insertTextMessage(
@@ -789,7 +1028,7 @@ private fun seedScenarioG(
                 m.text,
                 status,
                 MessageData.PROTOCOL_MMS,
-                msgTime
+                msgTime,
             )
         }
         latestTime = msgTime
@@ -802,7 +1041,7 @@ private fun seedScenarioG(
         latestTime,
         "Shot this from my window this morning",
         previewUri = img1,
-        previewContentType = ContentType.IMAGE_JPEG
+        previewContentType = ContentType.IMAGE_JPEG,
     )
 }
 
@@ -815,6 +1054,8 @@ private fun seedScenarioH(
     jackId: String,
     carolId: String,
     images: List<String>,
+    videoUri: String,
+    vCardUri: String,
     now: Long,
 ) {
     val img1 = images[0]
@@ -829,32 +1070,42 @@ private fun seedScenarioH(
         listOf(jackId, carolId),
         baseTime,
         previewUri = img2,
-        previewContentType = ContentType.IMAGE_JPEG
+        previewContentType = ContentType.IMAGE_JPEG,
     )
 
     data class Msg(
         val type: String,
         val text: String = "",
-        val imageUri: String = "",
+        val attachmentUri: String = "",
         val senderId: String,
     )
 
     val messages = listOf(
         Msg("text", text = "Dropping some pics from last night", senderId = jackId),
-        Msg("image", imageUri = img1, senderId = jackId),
-        Msg("image", imageUri = img3, senderId = jackId),
+        Msg("image", attachmentUri = img1, senderId = jackId),
+        Msg("image", attachmentUri = img3, senderId = jackId),
         Msg("text", text = "The lighting was perfect", senderId = jackId),
         Msg("text", text = "These are great Jack!", senderId = carolId),
-        Msg("image", imageUri = img2, senderId = carolId),
+        Msg("image", attachmentUri = img2, senderId = carolId),
         Msg("text", text = "I got a few too", senderId = carolId),
         Msg("text", text = "Love that shot Carol", senderId = selfId),
-        Msg("mixed", text = "Here's mine from the same spot", imageUri = img3, senderId = selfId),
+        Msg(
+            "mixed",
+            text = "Here's mine from the same spot",
+            attachmentUri = img3,
+            senderId = selfId,
+        ),
         Msg("text", text = "We all had the same idea haha", senderId = jackId),
-        Msg("image", imageUri = img1, senderId = carolId),
+        Msg("image", attachmentUri = img1, senderId = carolId),
+        Msg("text", text = TEST_YOUTUBE_VIDEO_URL, senderId = carolId),
+        Msg("text", text = "The clip version is even better", senderId = jackId),
+        Msg("video", attachmentUri = videoUri, senderId = carolId),
+        Msg("text", text = "Send me the photographer contact too", senderId = selfId),
+        Msg("vcard", attachmentUri = vCardUri, senderId = carolId),
         Msg("text", text = "One more", senderId = carolId),
         Msg("text", text = "We need to do this again soon", senderId = selfId),
         Msg("text", text = "+1", senderId = jackId),
-        Msg("text", text = "Same time next week?", senderId = carolId)
+        Msg("text", text = "Same time next week?", senderId = carolId),
     )
 
     var latestMsgId = 0L
@@ -872,9 +1123,9 @@ private fun seedScenarioH(
                 convId,
                 m.senderId,
                 selfId,
-                m.imageUri,
+                m.attachmentUri,
                 status,
-                msgTime
+                msgTime,
             )
 
             "mixed" -> insertMixedMessage(
@@ -883,9 +1134,29 @@ private fun seedScenarioH(
                 m.senderId,
                 selfId,
                 m.text,
-                m.imageUri,
+                m.attachmentUri,
                 status,
-                msgTime
+                msgTime,
+            )
+
+            "vcard" -> insertVCardMessage(
+                db = db,
+                conversationId = convId,
+                senderId = m.senderId,
+                selfId = selfId,
+                vCardUri = m.attachmentUri,
+                status = status,
+                timestamp = msgTime,
+            )
+
+            "video" -> insertVideoMessage(
+                db = db,
+                conversationId = convId,
+                senderId = m.senderId,
+                selfId = selfId,
+                videoUri = m.attachmentUri,
+                status = status,
+                timestamp = msgTime,
             )
 
             else -> insertTextMessage(
@@ -896,7 +1167,7 @@ private fun seedScenarioH(
                 m.text,
                 status,
                 MessageData.PROTOCOL_MMS,
-                msgTime
+                msgTime,
             )
         }
         latestTime = msgTime
@@ -909,7 +1180,7 @@ private fun seedScenarioH(
         latestTime,
         "Same time next week?",
         previewUri = img2,
-        previewContentType = ContentType.IMAGE_JPEG
+        previewContentType = ContentType.IMAGE_JPEG,
     )
 }
 
@@ -930,7 +1201,7 @@ private fun seedScenarioI(
         name = "Clustering Test Cases",
         selfId = selfId,
         participantIds = listOf(carolId, daveId, eveId),
-        sortTimestamp = baseTime
+        sortTimestamp = baseTime,
     )
 
     data class ClusterTestMessage(
@@ -943,83 +1214,83 @@ private fun seedScenarioI(
         ClusterTestMessage(
             text = "Standalone incoming",
             senderId = carolId,
-            offsetMillis = 0L
+            offsetMillis = 0L,
         ),
         ClusterTestMessage(
             text = "Pair top",
             senderId = carolId,
-            offsetMillis = 2 * MINUTES
+            offsetMillis = 2 * MINUTES,
         ),
         ClusterTestMessage(
             text = "Pair bottom",
             senderId = carolId,
-            offsetMillis = 2 * MINUTES + 30_000L
+            offsetMillis = 2 * MINUTES + 30_000L,
         ),
         ClusterTestMessage(
             text = "Triplet top",
             senderId = daveId,
-            offsetMillis = 5 * MINUTES
+            offsetMillis = 5 * MINUTES,
         ),
         ClusterTestMessage(
             text = "Triplet middle",
             senderId = daveId,
-            offsetMillis = 5 * MINUTES + 20_000L
+            offsetMillis = 5 * MINUTES + 20_000L,
         ),
         ClusterTestMessage(
             text = "Triplet bottom",
             senderId = daveId,
-            offsetMillis = 5 * MINUTES + 40_000L
+            offsetMillis = 5 * MINUTES + 40_000L,
         ),
         ClusterTestMessage(
             text = "Quartet top",
             senderId = eveId,
-            offsetMillis = 8 * MINUTES
+            offsetMillis = 8 * MINUTES,
         ),
         ClusterTestMessage(
             text = "Quartet middle 1",
             senderId = eveId,
-            offsetMillis = 8 * MINUTES + 20_000L
+            offsetMillis = 8 * MINUTES + 20_000L,
         ),
         ClusterTestMessage(
             text = "Quartet middle 2",
             senderId = eveId,
-            offsetMillis = 8 * MINUTES + 40_000L
+            offsetMillis = 8 * MINUTES + 40_000L,
         ),
         ClusterTestMessage(
             text = "Quartet bottom",
             senderId = eveId,
-            offsetMillis = 9 * MINUTES
+            offsetMillis = 9 * MINUTES,
         ),
         ClusterTestMessage(
             text = "Same sender after gap",
             senderId = daveId,
-            offsetMillis = 12 * MINUTES
+            offsetMillis = 12 * MINUTES,
         ),
         ClusterTestMessage(
             text = "Gap break still standalone",
             senderId = daveId,
-            offsetMillis = 13 * MINUTES + 40_000L
+            offsetMillis = 13 * MINUTES + 40_000L,
         ),
         ClusterTestMessage(
             text = "Different sender break",
             senderId = carolId,
-            offsetMillis = 16 * MINUTES
+            offsetMillis = 16 * MINUTES,
         ),
         ClusterTestMessage(
             text = "Outgoing standalone",
             senderId = selfId,
-            offsetMillis = 16 * MINUTES + 20_000L
+            offsetMillis = 16 * MINUTES + 20_000L,
         ),
         ClusterTestMessage(
             text = "Outgoing pair top",
             senderId = selfId,
-            offsetMillis = 19 * MINUTES
+            offsetMillis = 19 * MINUTES,
         ),
         ClusterTestMessage(
             text = "Outgoing pair bottom",
             senderId = selfId,
-            offsetMillis = 19 * MINUTES + 20_000L
-        )
+            offsetMillis = 19 * MINUTES + 20_000L,
+        ),
     )
 
     var latestMessageId = 0L
@@ -1043,7 +1314,7 @@ private fun seedScenarioI(
             text = message.text,
             status = status,
             protocol = MessageData.PROTOCOL_MMS,
-            timestamp = timestamp
+            timestamp = timestamp,
         )
         latestTimestamp = timestamp
     }
@@ -1053,6 +1324,6 @@ private fun seedScenarioI(
         conversationId = conversationId,
         latestMessageId = latestMessageId,
         latestTimestamp = latestTimestamp,
-        snippetText = latestText
+        snippetText = latestText,
     )
 }
