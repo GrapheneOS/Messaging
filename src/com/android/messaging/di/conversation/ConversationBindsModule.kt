@@ -10,10 +10,16 @@ import com.android.messaging.data.conversation.repository.ConversationDraftsRepo
 import com.android.messaging.data.conversation.repository.ConversationDraftsRepositoryImpl
 import com.android.messaging.data.conversation.repository.ConversationMetadataNotifier
 import com.android.messaging.data.conversation.repository.ConversationMetadataNotifierImpl
+import com.android.messaging.data.conversation.repository.ConversationRecipientsRepository
+import com.android.messaging.data.conversation.repository.ConversationRecipientsRepositoryImpl
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.data.conversation.repository.ConversationsRepositoryImpl
 import com.android.messaging.data.media.repository.ConversationMediaRepository
 import com.android.messaging.data.media.repository.ConversationMediaRepositoryImpl
+import com.android.messaging.domain.contacts.usecase.IsReadContactsPermissionGranted
+import com.android.messaging.domain.contacts.usecase.IsReadContactsPermissionGrantedImpl
+import com.android.messaging.domain.conversation.usecase.ResolveConversationId
+import com.android.messaging.domain.conversation.usecase.ResolveConversationIdImpl
 import com.android.messaging.domain.conversation.usecase.SendConversationDraft
 import com.android.messaging.domain.conversation.usecase.SendConversationDraftImpl
 import com.android.messaging.ui.conversation.v2.composer.mapper.ConversationComposerUiStateMapper
@@ -63,6 +69,24 @@ internal abstract class ConversationBindsModule {
     abstract fun bindConversationDraftsRepository(
         impl: ConversationDraftsRepositoryImpl,
     ): ConversationDraftsRepository
+
+    @Binds
+    @Reusable
+    abstract fun bindConversationRecipientsRepository(
+        impl: ConversationRecipientsRepositoryImpl,
+    ): ConversationRecipientsRepository
+
+    @Binds
+    @Reusable
+    abstract fun bindIsReadContactsPermissionGranted(
+        impl: IsReadContactsPermissionGrantedImpl,
+    ): IsReadContactsPermissionGranted
+
+    @Binds
+    @Reusable
+    abstract fun bindResolveConversationId(
+        impl: ResolveConversationIdImpl,
+    ): ResolveConversationId
 
     @Binds
     @Reusable
