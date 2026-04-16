@@ -18,6 +18,8 @@ import com.android.messaging.data.media.repository.ConversationMediaRepository
 import com.android.messaging.data.media.repository.ConversationMediaRepositoryImpl
 import com.android.messaging.domain.contacts.usecase.IsReadContactsPermissionGranted
 import com.android.messaging.domain.contacts.usecase.IsReadContactsPermissionGrantedImpl
+import com.android.messaging.domain.conversation.usecase.IsConversationRecipientLimitExceeded
+import com.android.messaging.domain.conversation.usecase.IsConversationRecipientLimitExceededImpl
 import com.android.messaging.domain.conversation.usecase.ResolveConversationId
 import com.android.messaging.domain.conversation.usecase.ResolveConversationIdImpl
 import com.android.messaging.domain.conversation.usecase.SendConversationDraft
@@ -87,6 +89,12 @@ internal abstract class ConversationBindsModule {
     abstract fun bindResolveConversationId(
         impl: ResolveConversationIdImpl,
     ): ResolveConversationId
+
+    @Binds
+    @Reusable
+    abstract fun bindIsConversationRecipientLimitExceeded(
+        impl: IsConversationRecipientLimitExceededImpl,
+    ): IsConversationRecipientLimitExceeded
 
     @Binds
     @Reusable

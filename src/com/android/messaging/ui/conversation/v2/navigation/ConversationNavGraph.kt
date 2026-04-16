@@ -88,14 +88,27 @@ internal fun ConversationNavGraph(
                 val currentEntryModel = latestEntryModel.value
 
                 NewChatScreen(
+                    isCreatingGroup = currentEntryUiState.isCreatingGroup,
                     isResolvingConversation = currentEntryUiState.isResolvingConversation,
                     isResolvingConversationIndicatorVisible = currentEntryUiState
                         .isResolvingConversationIndicatorVisible,
                     onContactClick = currentEntryModel::onNewChatRecipientSelected,
+                    onContactLongClick = currentEntryModel::onNewChatRecipientLongPressed,
                     onCreateGroupClick = currentEntryModel::onCreateGroupRequested,
-                    onNavigateBack = currentEntryModel::navigateBack,
+                    onCreateGroupConfirmed = currentEntryModel::onCreateGroupConfirmed,
+                    onCreateGroupRecipientClick = currentEntryModel::onCreateGroupRecipientClicked,
+                    onNavigateBack = {
+                        handleNewChatBack(
+                            entryModel = currentEntryModel,
+                            entryUiState = currentEntryUiState,
+                            backStack = backStack,
+                            onFinish = latestOnFinish.value,
+                        )
+                    },
                     resolvingRecipientDestination = currentEntryUiState
                         .resolvingRecipientDestination,
+                    selectedGroupRecipientDestinations = currentEntryUiState
+                        .selectedGroupRecipientDestinations,
                 )
             }
 
@@ -127,9 +140,11 @@ internal fun ConversationNavGraph(
         backStack = backStack,
         modifier = modifier,
         onBack = {
-            popBackStackOrFinish(
+            handleNavBack(
                 backStack = backStack,
-                onFinish = onFinish,
+                entryModel = latestEntryModel.value,
+                entryUiState = latestEntryUiState.value,
+                onFinish = latestOnFinish.value,
             )
         },
         entryDecorators = entryDecorators,
@@ -180,6 +195,40 @@ private fun popBackStackOrFinish(
     }
 
     onFinish()
+}
+
+private fun handleNavBack(
+    backStack: MutableList<NavKey>,
+    entryModel: ConversationEntryModel,
+    entryUiState: ConversationEntryUiState,
+    onFinish: () -> Unit,
+) {
+    if (backStack.lastOrNull() == NewChatNavKey && entryUiState.isCreatingGroup) {
+        entryModel.onCreateGroupCanceled()
+        return
+    }
+
+    popBackStackOrFinish(
+        backStack = backStack,
+        onFinish = onFinish,
+    )
+}
+
+private fun handleNewChatBack(
+    entryModel: ConversationEntryModel,
+    entryUiState: ConversationEntryUiState,
+    backStack: MutableList<NavKey>,
+    onFinish: () -> Unit,
+) {
+    if (entryUiState.isCreatingGroup) {
+        entryModel.onCreateGroupCanceled()
+        return
+    }
+
+    popBackStackOrFinish(
+        backStack = backStack,
+        onFinish = onFinish,
+    )
 }
 
 private fun pendingStartupAttachmentForConversation(
