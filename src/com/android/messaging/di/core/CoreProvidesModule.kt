@@ -1,6 +1,7 @@
 package com.android.messaging.di.core
 
 import android.app.role.RoleManager
+import android.content.ClipboardManager
 import android.content.ContentResolver
 import android.content.Context
 import android.telephony.SubscriptionManager
@@ -62,11 +63,11 @@ internal class CoreProvidesModule {
 
     @Provides
     @Reusable
-    fun provideSubscriptionManager(
+    fun provideClipboardManager(
         @ApplicationContext
         context: Context,
-    ): SubscriptionManager {
-        return context.getSystemService(SubscriptionManager::class.java)
+    ): ClipboardManager {
+        return context.getSystemService(ClipboardManager::class.java)
     }
 
     @Provides
@@ -76,5 +77,14 @@ internal class CoreProvidesModule {
         context: Context,
     ): RoleManager {
         return context.getSystemService(RoleManager::class.java)
+    }
+
+    @Provides
+    @Reusable
+    fun provideSubscriptionManager(
+        @ApplicationContext
+        context: Context,
+    ): SubscriptionManager {
+        return context.getSystemService(SubscriptionManager::class.java)
     }
 }

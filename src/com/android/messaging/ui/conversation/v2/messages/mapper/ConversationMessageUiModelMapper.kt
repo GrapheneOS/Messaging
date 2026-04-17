@@ -36,6 +36,10 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor() :
             senderContactLookupKey = data.senderContactLookupKey,
             canClusterWithPrevious = data.canClusterWithPreviousMessage,
             canClusterWithNext = data.canClusterWithNextMessage,
+            canCopyMessageToClipboard = data.canCopyMessageToClipboard,
+            canDownloadMessage = data.showDownloadMessage,
+            canForwardMessage = data.canForwardMessage,
+            canResendMessage = data.showResendMessage,
             mmsSubject = data.mmsSubject,
             protocol = mapProtocol(data),
         )

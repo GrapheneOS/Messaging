@@ -22,6 +22,10 @@ import com.android.messaging.domain.contacts.usecase.IsReadContactsPermissionGra
 import com.android.messaging.domain.contacts.usecase.IsReadContactsPermissionGrantedImpl
 import com.android.messaging.domain.conversation.usecase.CanAddMoreConversationParticipants
 import com.android.messaging.domain.conversation.usecase.CanAddMoreConversationParticipantsImpl
+import com.android.messaging.domain.conversation.usecase.CreateForwardedMessage
+import com.android.messaging.domain.conversation.usecase.CreateForwardedMessageImpl
+import com.android.messaging.domain.conversation.usecase.ForwardedMessageSubjectFormatter
+import com.android.messaging.domain.conversation.usecase.ForwardedMessageSubjectFormatterImpl
 import com.android.messaging.domain.conversation.usecase.IsConversationRecipientLimitExceeded
 import com.android.messaging.domain.conversation.usecase.IsConversationRecipientLimitExceededImpl
 import com.android.messaging.domain.conversation.usecase.ResolveConversationId
@@ -96,9 +100,21 @@ internal abstract class ConversationBindsModule {
 
     @Binds
     @Reusable
+    abstract fun bindCreateForwardedMessage(
+        impl: CreateForwardedMessageImpl,
+    ): CreateForwardedMessage
+
+    @Binds
+    @Reusable
     abstract fun bindIsReadContactsPermissionGranted(
         impl: IsReadContactsPermissionGrantedImpl,
     ): IsReadContactsPermissionGranted
+
+    @Binds
+    @Reusable
+    abstract fun bindForwardedMessageSubjectFormatter(
+        impl: ForwardedMessageSubjectFormatterImpl,
+    ): ForwardedMessageSubjectFormatter
 
     @Binds
     @Reusable

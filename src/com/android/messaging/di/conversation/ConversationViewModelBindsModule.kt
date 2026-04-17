@@ -4,6 +4,8 @@ import com.android.messaging.ui.conversation.v2.composer.delegate.ConversationDr
 import com.android.messaging.ui.conversation.v2.composer.delegate.ConversationDraftDelegateImpl
 import com.android.messaging.ui.conversation.v2.mediapicker.ConversationMediaPickerDelegate
 import com.android.messaging.ui.conversation.v2.mediapicker.ConversationMediaPickerDelegateImpl
+import com.android.messaging.ui.conversation.v2.messages.delegate.ConversationMessageSelectionDelegate
+import com.android.messaging.ui.conversation.v2.messages.delegate.ConversationMessageSelectionDelegateImpl
 import com.android.messaging.ui.conversation.v2.messages.delegate.ConversationMessagesDelegate
 import com.android.messaging.ui.conversation.v2.messages.delegate.ConversationMessagesDelegateImpl
 import com.android.messaging.ui.conversation.v2.metadata.delegate.ConversationMetadataDelegate
@@ -31,6 +33,12 @@ internal abstract class ConversationViewModelBindsModule {
     abstract fun bindConversationMediaPickerDelegate(
         impl: ConversationMediaPickerDelegateImpl,
     ): ConversationMediaPickerDelegate
+
+    @Binds
+    @ViewModelScoped
+    abstract fun bindConversationMessageSelectionDelegate(
+        impl: ConversationMessageSelectionDelegateImpl,
+    ): ConversationMessageSelectionDelegate
 
     @Binds
     @ViewModelScoped

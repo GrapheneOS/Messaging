@@ -11,4 +11,5 @@ internal data class ConversationScreenScaffoldUiState(
     val metadata: ConversationMetadataUiState = ConversationMetadataUiState.Loading,
     val messages: ConversationMessagesUiState = ConversationMessagesUiState.Loading,
     val composer: ConversationComposerUiState = ConversationComposerUiState(),
+    val selection: ConversationMessageSelectionUiState = ConversationMessageSelectionUiState(),
 )

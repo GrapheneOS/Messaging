@@ -19,6 +19,10 @@ internal data class ConversationMessageUiModel(
     val senderContactLookupKey: String?,
     val canClusterWithPrevious: Boolean,
     val canClusterWithNext: Boolean,
+    val canCopyMessageToClipboard: Boolean,
+    val canDownloadMessage: Boolean,
+    val canForwardMessage: Boolean,
+    val canResendMessage: Boolean,
     val mmsSubject: String?,
     val protocol: Protocol,
 ) {

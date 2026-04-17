@@ -14,10 +14,12 @@ import com.android.messaging.ui.conversation.v2.composer.model.ConversationCompo
 import com.android.messaging.ui.conversation.v2.entry.model.ConversationEntryStartupAttachment
 import com.android.messaging.ui.conversation.v2.mediapicker.ConversationMediaPickerDelegate
 import com.android.messaging.ui.conversation.v2.mediapicker.model.ConversationCapturedMedia
+import com.android.messaging.ui.conversation.v2.messages.delegate.ConversationMessageSelectionDelegate
 import com.android.messaging.ui.conversation.v2.messages.delegate.ConversationMessagesDelegate
 import com.android.messaging.ui.conversation.v2.metadata.delegate.ConversationMetadataDelegate
 import com.android.messaging.ui.conversation.v2.metadata.model.ConversationMetadataUiState
 import com.android.messaging.ui.conversation.v2.screen.model.ConversationMediaPickerOverlayUiState
+import com.android.messaging.ui.conversation.v2.screen.model.ConversationMessageSelectionAction
 import com.android.messaging.ui.conversation.v2.screen.model.ConversationScreenEffect
 import com.android.messaging.ui.conversation.v2.screen.model.ConversationScreenScaffoldUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -57,6 +59,10 @@ internal interface ConversationScreenModel {
         contentUri: String,
     )
 
+    fun onMessageClick(messageId: String)
+    fun onMessageLongClick(messageId: String)
+    fun onMessageSelectionActionClick(action: ConversationMessageSelectionAction)
+
     fun onExternalUriClicked(uri: String)
 
     fun onGalleryMediaConfirmed(mediaItems: List<ConversationMediaItem>)
@@ -70,6 +76,9 @@ internal interface ConversationScreenModel {
         captionText: String,
     )
 
+    fun dismissDeleteMessageConfirmation()
+    fun dismissMessageSelection()
+    fun confirmDeleteSelectedMessages()
     fun onSendClick()
     fun persistDraft()
 }
@@ -78,6 +87,7 @@ internal interface ConversationScreenModel {
 internal class ConversationViewModel @Inject constructor(
     private val conversationDraftDelegate: ConversationDraftDelegate,
     private val conversationMessagesDelegate: ConversationMessagesDelegate,
+    private val conversationMessageSelectionDelegate: ConversationMessageSelectionDelegate,
     private val conversationMediaPickerDelegate: ConversationMediaPickerDelegate,
     private val conversationMetadataDelegate: ConversationMetadataDelegate,
     private val conversationComposerUiStateMapper: ConversationComposerUiStateMapper,
@@ -121,12 +131,14 @@ internal class ConversationViewModel @Inject constructor(
         conversationMetadataDelegate.state,
         conversationMessagesDelegate.state,
         composerUiState,
-    ) { metadataState, messagesUiState, composerUiState ->
+        conversationMessageSelectionDelegate.state,
+    ) { metadataState, messagesUiState, composerUiState, selectionUiState ->
         ConversationScreenScaffoldUiState(
             canAddPeople = canAddPeople(metadataState = metadataState),
             metadata = metadataState,
             messages = messagesUiState,
             composer = composerUiState,
+            selection = selectionUiState,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -140,6 +152,7 @@ internal class ConversationViewModel @Inject constructor(
             metadata = conversationMetadataDelegate.state.value,
             messages = conversationMessagesDelegate.state.value,
             composer = composerUiState.value,
+            selection = conversationMessageSelectionDelegate.state.value,
         ),
     )
 
@@ -190,6 +203,10 @@ internal class ConversationViewModel @Inject constructor(
             scope = viewModelScope,
             conversationIdFlow = conversationIdFlow,
         )
+        conversationMessageSelectionDelegate.bind(
+            scope = viewModelScope,
+            conversationIdFlow = conversationIdFlow,
+        )
         conversationMetadataDelegate.bind(
             scope = viewModelScope,
             conversationIdFlow = conversationIdFlow,
@@ -201,6 +218,9 @@ internal class ConversationViewModel @Inject constructor(
         viewModelScope.launch(defaultDispatcher) {
             conversationMediaPickerDelegate.effects.collect(_effects::emit)
         }
+        viewModelScope.launch(defaultDispatcher) {
+            conversationMessageSelectionDelegate.effects.collect(_effects::emit)
+        }
     }
 
     override fun onConversationIdChanged(conversationId: String?) {
@@ -209,6 +229,7 @@ internal class ConversationViewModel @Inject constructor(
 
     private fun updateConversationId(conversationId: String?) {
         if (conversationId != conversationIdFlow.value) {
+            conversationMessageSelectionDelegate.dismissMessageSelection()
             savedStateHandle[CONVERSATION_ID_KEY] = conversationId
         }
     }
@@ -296,6 +317,18 @@ internal class ConversationViewModel @Inject constructor(
         }
     }
 
+    override fun onMessageClick(messageId: String) {
+        conversationMessageSelectionDelegate.onMessageClick(messageId = messageId)
+    }
+
+    override fun onMessageLongClick(messageId: String) {
+        conversationMessageSelectionDelegate.onMessageLongClick(messageId = messageId)
+    }
+
+    override fun onMessageSelectionActionClick(action: ConversationMessageSelectionAction) {
+        conversationMessageSelectionDelegate.onMessageSelectionActionClick(action = action)
+    }
+
     override fun onExternalUriClicked(uri: String) {
         viewModelScope.launch(defaultDispatcher) {
             _effects.emit(
@@ -338,6 +371,18 @@ internal class ConversationViewModel @Inject constructor(
             contentUri = contentUri,
             captionText = captionText,
         )
+    }
+
+    override fun dismissDeleteMessageConfirmation() {
+        conversationMessageSelectionDelegate.dismissDeleteMessageConfirmation()
+    }
+
+    override fun dismissMessageSelection() {
+        conversationMessageSelectionDelegate.dismissMessageSelection()
+    }
+
+    override fun confirmDeleteSelectedMessages() {
+        conversationMessageSelectionDelegate.confirmDeleteSelectedMessages()
     }
 
     override fun onSendClick() {

@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
 import com.android.messaging.R
 import com.android.messaging.ui.UIIntents
+import com.android.messaging.ui.conversation.MessageDetailsDialog
 import com.android.messaging.ui.conversation.v2.screen.model.ConversationScreenEffect
 import com.android.messaging.util.ContentType
 import com.android.messaging.util.UiUtils
@@ -56,8 +57,33 @@ internal fun ConversationScreenEffects(
                     )
                 }
 
+                is ConversationScreenEffect.LaunchForwardMessage -> {
+                    UIIntents.get().launchForwardMessageActivity(
+                        context,
+                        effect.message,
+                    )
+                }
+
+                is ConversationScreenEffect.ShareMessage -> {
+                    openShareSheet(
+                        context = context,
+                        attachmentContentType = effect.attachmentContentType,
+                        attachmentContentUri = effect.attachmentContentUri,
+                        text = effect.text,
+                    )
+                }
+
                 is ConversationScreenEffect.ShowMessage -> {
                     UiUtils.showToastAtBottom(effect.messageResId)
+                }
+
+                is ConversationScreenEffect.ShowMessageDetails -> {
+                    MessageDetailsDialog.show(
+                        context,
+                        effect.message,
+                        effect.participants,
+                        effect.selfParticipant,
+                    )
                 }
             }
         }
@@ -69,6 +95,44 @@ private fun openExternalUri(
     uri: String,
 ) {
     UIIntents.get().launchBrowserForUrl(context, uri)
+}
+
+private suspend fun openShareSheet(
+    context: Context,
+    attachmentContentType: String?,
+    attachmentContentUri: String?,
+    text: String?,
+) {
+    val shareIntent = Intent(Intent.ACTION_SEND)
+
+    if (
+        !attachmentContentType.isNullOrBlank() &&
+        !attachmentContentUri.isNullOrBlank()
+    ) {
+        val normalizedAttachmentUri = normalizeAttachmentUriForIntent(
+            attachmentUri = attachmentContentUri.toUri(),
+        )
+
+        shareIntent.putExtra(
+            Intent.EXTRA_STREAM,
+            normalizedAttachmentUri,
+        )
+        shareIntent.setType(attachmentContentType)
+        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    } else {
+        shareIntent.putExtra(
+            Intent.EXTRA_TEXT,
+            text.orEmpty(),
+        )
+        shareIntent.setType("text/plain")
+    }
+
+    context.startActivity(
+        Intent.createChooser(
+            shareIntent,
+            context.getText(R.string.action_share),
+        ),
+    )
 }
 
 private suspend fun openAttachmentPreview(
