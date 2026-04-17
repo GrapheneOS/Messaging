@@ -1,7 +1,7 @@
 package com.android.messaging.ui.conversation.v2.messages.ui.attachment
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -51,6 +51,7 @@ internal fun ConversationGalleryVisualAttachments(
     hasTextBelowVisualAttachments: Boolean,
     onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
     onExternalUriClick: (String) -> Unit,
+    onMessageLongClick: () -> Unit,
 ) {
     when (attachments.size) {
         0 -> {}
@@ -67,6 +68,7 @@ internal fun ConversationGalleryVisualAttachments(
                 ),
                 onAttachmentClick = onAttachmentClick,
                 onExternalUriClick = onExternalUriClick,
+                onMessageLongClick = onMessageLongClick,
             )
         }
 
@@ -77,6 +79,7 @@ internal fun ConversationGalleryVisualAttachments(
                 hasTextBelowVisualAttachments = hasTextBelowVisualAttachments,
                 onAttachmentClick = onAttachmentClick,
                 onExternalUriClick = onExternalUriClick,
+                onMessageLongClick = onMessageLongClick,
             )
         }
     }
@@ -89,6 +92,7 @@ internal fun ConversationStandaloneVisualAttachment(
     hasTextBelowVisualAttachments: Boolean,
     onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
     onExternalUriClick: (String) -> Unit,
+    onMessageLongClick: () -> Unit,
 ) {
     ConversationVisualAttachmentCard(
         modifier = Modifier.fillMaxWidth(),
@@ -102,6 +106,7 @@ internal fun ConversationStandaloneVisualAttachment(
         ),
         onAttachmentClick = onAttachmentClick,
         onExternalUriClick = onExternalUriClick,
+        onMessageLongClick = onMessageLongClick,
     )
 }
 
@@ -112,6 +117,7 @@ private fun ConversationVisualAttachmentGrid(
     hasTextBelowVisualAttachments: Boolean,
     onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
     onExternalUriClick: (String) -> Unit,
+    onMessageLongClick: () -> Unit,
 ) {
     val attachmentRows = remember(attachments) {
         attachments.chunked(size = 2)
@@ -145,6 +151,7 @@ private fun ConversationVisualAttachmentGrid(
                             ),
                             onAttachmentClick = onAttachmentClick,
                             onExternalUriClick = onExternalUriClick,
+                            onMessageLongClick = onMessageLongClick,
                         )
                     }
                 }
@@ -167,6 +174,7 @@ private fun ConversationVisualAttachmentCard(
     attachmentShape: RoundedCornerShape,
     onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
     onExternalUriClick: (String) -> Unit,
+    onMessageLongClick: () -> Unit,
 ) {
     ConversationVisualAttachmentSurface(
         modifier = modifier.aspectRatio(ratio = aspectRatio),
@@ -175,6 +183,7 @@ private fun ConversationVisualAttachmentCard(
         contentScale = ContentScale.Crop,
         onAttachmentClick = onAttachmentClick,
         onExternalUriClick = onExternalUriClick,
+        onMessageLongClick = onMessageLongClick,
         overlay = {
             if (attachment.requiresPlaybackAffordance()) {
                 CenterPlayAffordance()
@@ -191,6 +200,7 @@ private fun ConversationVisualAttachmentSurface(
     contentScale: ContentScale,
     onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
     onExternalUriClick: (String) -> Unit,
+    onMessageLongClick: () -> Unit,
     overlay: @Composable BoxScope.() -> Unit,
 ) {
     val density = LocalDensity.current
@@ -201,8 +211,8 @@ private fun ConversationVisualAttachmentSurface(
     Surface(
         modifier = modifier
             .clip(shape = attachmentShape)
-            .clickable(
-                enabled = openAction != null,
+            .combinedClickable(
+                enabled = true,
                 onClick = {
                     openAction?.let { action ->
                         dispatchConversationAttachmentOpenAction(
@@ -212,6 +222,7 @@ private fun ConversationVisualAttachmentSurface(
                         )
                     }
                 },
+                onLongClick = onMessageLongClick,
             ),
         shape = attachmentShape,
         color = MaterialTheme.colorScheme.surfaceContainerHighest,

@@ -16,6 +16,7 @@ internal fun ConversationMessageAttachments(
     hasTextBelowVisualAttachments: Boolean,
     onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
     onExternalUriClick: (String) -> Unit,
+    onMessageLongClick: () -> Unit,
 ) {
     val hasGalleryVisualAttachments = attachmentSections.galleryVisualAttachments.isNotEmpty()
     val hasTrailingItems = attachmentSections.trailingItems.isNotEmpty()
@@ -35,6 +36,7 @@ internal fun ConversationMessageAttachments(
                 hasTextBelowVisualAttachments = hasTextBelowVisualAttachments,
                 onAttachmentClick = onAttachmentClick,
                 onExternalUriClick = onExternalUriClick,
+                onMessageLongClick = onMessageLongClick,
             )
         }
 
@@ -45,6 +47,7 @@ internal fun ConversationMessageAttachments(
                         attachment = trailingItem.attachment,
                         onAttachmentClick = onAttachmentClick,
                         onExternalUriClick = onExternalUriClick,
+                        onLongClick = onMessageLongClick,
                     )
                 }
 
@@ -55,6 +58,7 @@ internal fun ConversationMessageAttachments(
                         hasTextBelowVisualAttachments = hasTextBelowVisualAttachments,
                         onAttachmentClick = onAttachmentClick,
                         onExternalUriClick = onExternalUriClick,
+                        onMessageLongClick = onMessageLongClick,
                     )
                 }
             }

@@ -1,12 +1,16 @@
 package com.android.messaging.ui.conversation.v2.screen
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -22,10 +26,13 @@ import androidx.compose.ui.geometry.Rect as ComposeRect
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.android.messaging.R
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.conversation.v2.CONVERSATION_LOADING_INDICATOR_TEST_TAG
 import com.android.messaging.ui.conversation.v2.composer.model.ConversationComposerAttachmentUiState
@@ -37,6 +44,8 @@ import com.android.messaging.ui.conversation.v2.messages.model.message.Conversat
 import com.android.messaging.ui.conversation.v2.messages.model.message.ConversationMessagesUiState
 import com.android.messaging.ui.conversation.v2.messages.ui.ConversationMessages
 import com.android.messaging.ui.conversation.v2.metadata.ui.ConversationTopAppBar
+import com.android.messaging.ui.conversation.v2.screen.model.ConversationMessageDeleteConfirmationUiState
+import com.android.messaging.ui.conversation.v2.screen.model.ConversationMessageSelectionAction
 import com.android.messaging.ui.conversation.v2.screen.model.ConversationScreenScaffoldUiState
 import kotlinx.collections.immutable.ImmutableList
 
@@ -111,6 +120,10 @@ internal fun ConversationScreen(
         screenModel.persistDraft()
     }
 
+    BackHandler(enabled = scaffoldUiState.selection.isSelectionMode) {
+        screenModel.dismissMessageSelection()
+    }
+
     ConversationScreenEffects(
         screenModel = screenModel,
         hostBoundsState = hostBoundsState,
@@ -133,6 +146,12 @@ internal fun ConversationScreen(
             onAddPeopleClick = onAddPeopleClick,
             onConversationDetailsClick = onConversationDetailsClick,
             onNavigateBack = onNavigateBack,
+            onDeleteSelectedMessagesConfirmed = screenModel::confirmDeleteSelectedMessages,
+            onDeleteSelectedMessagesDismissed = screenModel::dismissDeleteMessageConfirmation,
+            onDismissMessageSelection = screenModel::dismissMessageSelection,
+            onMessageClick = screenModel::onMessageClick,
+            onMessageLongClick = screenModel::onMessageLongClick,
+            onMessageSelectionActionClick = screenModel::onMessageSelectionActionClick,
             onOpenMediaPicker = mediaPickerState::open,
             onMessageTextChange = screenModel::onMessageTextChanged,
             onPendingAttachmentRemove = screenModel::onRemovePendingAttachment,
@@ -172,6 +191,12 @@ private fun ConversationScreenScaffold(
     messageFieldFocusRequester: FocusRequester,
     onAddPeopleClick: () -> Unit,
     onConversationDetailsClick: () -> Unit,
+    onDeleteSelectedMessagesConfirmed: () -> Unit,
+    onDeleteSelectedMessagesDismissed: () -> Unit,
+    onDismissMessageSelection: () -> Unit,
+    onMessageClick: (String) -> Unit,
+    onMessageLongClick: (String) -> Unit,
+    onMessageSelectionActionClick: (ConversationMessageSelectionAction) -> Unit,
     onNavigateBack: () -> Unit,
     onOpenMediaPicker: () -> Unit,
     onMessageTextChange: (String) -> Unit,
@@ -185,13 +210,25 @@ private fun ConversationScreenScaffold(
     Scaffold(
         modifier = modifier,
         topBar = {
-            ConversationTopAppBar(
-                metadata = uiState.metadata,
-                isAddPeopleVisible = uiState.canAddPeople,
-                onAddPeopleClick = onAddPeopleClick,
-                onTitleClick = onConversationDetailsClick,
-                onNavigateBack = onNavigateBack,
-            )
+            when {
+                uiState.selection.isSelectionMode -> {
+                    ConversationSelectionTopAppBar(
+                        selection = uiState.selection,
+                        onActionClick = onMessageSelectionActionClick,
+                        onDismissSelection = onDismissMessageSelection,
+                    )
+                }
+
+                else -> {
+                    ConversationTopAppBar(
+                        metadata = uiState.metadata,
+                        isAddPeopleVisible = uiState.canAddPeople,
+                        onAddPeopleClick = onAddPeopleClick,
+                        onTitleClick = onConversationDetailsClick,
+                        onNavigateBack = onNavigateBack,
+                    )
+                }
+            }
         },
         bottomBar = {
             if (!isMediaPickerOpen) {
@@ -219,6 +256,16 @@ private fun ConversationScreenScaffold(
             contentPadding = contentPadding,
             onAttachmentClick = onAttachmentClick,
             onExternalUriClick = onExternalUriClick,
+            onMessageClick = onMessageClick,
+            onMessageLongClick = onMessageLongClick,
+        )
+    }
+
+    uiState.selection.deleteConfirmation?.let { deleteConfirmation ->
+        ConversationDeleteMessagesDialog(
+            deleteConfirmation = deleteConfirmation,
+            onConfirm = onDeleteSelectedMessagesConfirmed,
+            onDismiss = onDeleteSelectedMessagesDismissed,
         )
     }
 }
@@ -231,6 +278,8 @@ private fun ConversationScreenContent(
     contentPadding: PaddingValues,
     onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
     onExternalUriClick: (String) -> Unit,
+    onMessageClick: (String) -> Unit,
+    onMessageLongClick: (String) -> Unit,
 ) {
     when (val messagesState = uiState.messages) {
         is ConversationMessagesUiState.Loading -> {
@@ -261,11 +310,57 @@ private fun ConversationScreenContent(
                 modifier = modifier.padding(paddingValues = contentPadding),
                 messages = messagesState.messages,
                 listState = messagesListState,
+                selectedMessageIds = uiState.selection.selectedMessageIds,
                 onAttachmentClick = onAttachmentClick,
                 onExternalUriClick = onExternalUriClick,
+                onMessageClick = onMessageClick,
+                onMessageLongClick = onMessageLongClick,
             )
         }
     }
+}
+
+@Composable
+private fun ConversationDeleteMessagesDialog(
+    deleteConfirmation: ConversationMessageDeleteConfirmationUiState,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = pluralStringResource(
+                    id = R.plurals.delete_messages_confirmation_dialog_title,
+                    count = deleteConfirmation.messageIds.size,
+                    deleteConfirmation.messageIds.size,
+                ),
+            )
+        },
+        text = {
+            Text(
+                text = stringResource(R.string.delete_message_confirmation_dialog_text),
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+            ) {
+                Text(
+                    text = stringResource(R.string.delete_message_confirmation_button),
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+            ) {
+                Text(
+                    text = stringResource(android.R.string.cancel),
+                )
+            }
+        },
+    )
 }
 
 @Composable

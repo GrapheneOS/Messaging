@@ -1,6 +1,6 @@
 package com.android.messaging.ui.conversation.v2.messages.ui.attachment
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +32,7 @@ internal fun ConversationInlineAttachmentRow(
     attachment: ConversationInlineAttachment,
     onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
     onExternalUriClick: (String) -> Unit,
+    onLongClick: () -> Unit = {},
 ) {
     val title = attachment.titleText
         ?: attachment.titleTextResId?.let { stringResource(it) }.orEmpty()
@@ -54,11 +55,12 @@ internal fun ConversationInlineAttachmentRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape = shape)
-            .clickable(
-                enabled = onClick != null,
+            .combinedClickable(
+                enabled = true,
                 onClick = {
                     onClick?.invoke()
                 },
+                onLongClick = onLongClick,
             ),
         color = MaterialTheme.colorScheme.surfaceContainerHighest,
         shape = shape,

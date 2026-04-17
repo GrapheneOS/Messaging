@@ -58,6 +58,10 @@
     <string name="mediapicker_gallery_item_selected_content_description">The media is selected.</string>
     <string name="mediapicker_gallery_item_unselected_content_description">The media is unselected.</string>
     <string name="mediapicker_gallery_title_selection"><xliff:g id="count">%d</xliff:g> selected</string>
+    <plurals name="conversation_message_selection_title">
+        <item quantity="one">%d selected</item>
+        <item quantity="other">%d selected</item>
+    </plurals>
     <!-- example: "image January 17 2015 1 59 pm" -->
     <string name="mediapicker_gallery_image_item_description">image <xliff:g id="date">%1$tB %1$te %1$tY %1$tl %1$tM %1$tp</xliff:g></string>
     <string name="mediapicker_gallery_image_item_description_no_date">image</string>
@@ -264,6 +268,8 @@
 
     <!-- Content description text for Back button on the action bar -->
     <string name="back">Back</string>
+    <string name="close_selection">Close selection</string>
+    <string name="more_options">More options</string>
     <!-- Action menu title for showing archived conversations -->
     <string name="action_menu_show_archived">Archived</string>
     <!-- Action menu title for deleting selected conversations in conversation list -->
@@ -288,6 +294,10 @@
     <string name="delete_message_confirmation_dialog_title">Delete this message?</string>
     <string name="delete_message_confirmation_dialog_text">This action cannot be undone.</string>
     <string name="delete_message_confirmation_button">Delete</string>
+    <plurals name="delete_messages_confirmation_dialog_title">
+        <item quantity="one">Delete this message?</item>
+        <item quantity="other">Delete these %d messages?</item>
+    </plurals>
 
     <!-- Alert dialog title to accept or decline deleting conversation(s). -->
     <plurals name="delete_conversations_confirmation_dialog_title">

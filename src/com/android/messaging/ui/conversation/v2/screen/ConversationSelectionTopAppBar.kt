@@ -42,14 +42,17 @@ internal fun ConversationSelectionTopAppBar(
     var isOverflowExpanded by remember {
         mutableStateOf(value = false)
     }
+
     val overflowActions = remember(selection.availableActions) {
         buildList {
             if (selection.availableActions.contains(ConversationMessageSelectionAction.Share)) {
                 add(ConversationMessageSelectionAction.Share)
             }
+
             if (selection.availableActions.contains(ConversationMessageSelectionAction.Forward)) {
                 add(ConversationMessageSelectionAction.Forward)
             }
+
             if (selection.availableActions.contains(ConversationMessageSelectionAction.Details)) {
                 add(ConversationMessageSelectionAction.Details)
             }
@@ -198,25 +201,25 @@ private fun selectionActionLabel(
 ): String {
     return when (action) {
         ConversationMessageSelectionAction.Copy -> {
-            stringResource(id = R.string.message_context_menu_copy_text)
+            stringResource(R.string.message_context_menu_copy_text)
         }
         ConversationMessageSelectionAction.Delete -> {
-            stringResource(id = R.string.action_delete_message)
+            stringResource(R.string.action_delete_message)
         }
         ConversationMessageSelectionAction.Details -> {
-            stringResource(id = R.string.message_context_menu_view_details)
+            stringResource(R.string.message_context_menu_view_details)
         }
         ConversationMessageSelectionAction.Download -> {
-            stringResource(id = R.string.action_download)
+            stringResource(R.string.action_download)
         }
         ConversationMessageSelectionAction.Forward -> {
-            stringResource(id = R.string.message_context_menu_forward_message)
+            stringResource(R.string.message_context_menu_forward_message)
         }
         ConversationMessageSelectionAction.Resend -> {
-            stringResource(id = R.string.action_send)
+            stringResource(R.string.action_send)
         }
         ConversationMessageSelectionAction.Share -> {
-            stringResource(id = R.string.action_share)
+            stringResource(R.string.action_share)
         }
     }
 }

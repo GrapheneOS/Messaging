@@ -30,6 +30,8 @@ import com.android.messaging.ui.conversation.v2.messages.ui.message.conversation
 import com.android.messaging.ui.conversation.v2.messages.ui.message.formatDateSeparatorText
 import java.util.TimeZone
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.persistentSetOf
 
 private val CONVERSATION_MESSAGES_CONTENT_PADDING = PaddingValues(
     start = 16.dp,
@@ -56,8 +58,11 @@ internal fun ConversationMessages(
     modifier: Modifier = Modifier,
     messages: ImmutableList<ConversationMessageUiModel>,
     listState: LazyListState,
+    selectedMessageIds: ImmutableSet<String> = persistentSetOf(),
     onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
     onExternalUriClick: (String) -> Unit,
+    onMessageClick: (String) -> Unit,
+    onMessageLongClick: (String) -> Unit,
 ) {
     val configuration = LocalConfiguration.current
     val displayMessages = remember(messages) {
@@ -93,8 +98,12 @@ internal fun ConversationMessages(
                     messages = displayMessages,
                     index = index,
                 ),
+                isSelectionMode = selectedMessageIds.isNotEmpty(),
+                isSelected = selectedMessageIds.contains(message.messageId),
                 onAttachmentClick = onAttachmentClick,
                 onExternalUriClick = onExternalUriClick,
+                onMessageClick = onMessageClick,
+                onMessageLongClick = onMessageLongClick,
             )
         }
     }
@@ -138,8 +147,12 @@ private fun messageAboveCurrent(
 private fun ConversationMessagesItem(
     message: ConversationMessageUiModel,
     messageAbove: ConversationMessageUiModel?,
+    isSelectionMode: Boolean,
+    isSelected: Boolean,
     onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
     onExternalUriClick: (String) -> Unit,
+    onMessageClick: (String) -> Unit,
+    onMessageLongClick: (String) -> Unit,
 ) {
     val presentation = rememberConversationMessagesItemPresentation(
         message = message,
@@ -154,9 +167,17 @@ private fun ConversationMessagesItem(
             modifier = Modifier
                 .testTag(conversationMessageItemTestTag(messageId = message.messageId))
                 .padding(top = presentation.topPadding),
+            isSelected = isSelected,
+            isSelectionMode = isSelectionMode,
             message = message,
             onAttachmentClick = onAttachmentClick,
             onExternalUriClick = onExternalUriClick,
+            onMessageClick = {
+                onMessageClick(message.messageId)
+            },
+            onMessageLongClick = {
+                onMessageLongClick(message.messageId)
+            },
         )
     }
 }
