@@ -39,6 +39,8 @@ import com.android.messaging.R;
 import com.android.messaging.datamodel.SyncManager;
 import com.android.messaging.datamodel.action.DumpDatabaseAction;
 import com.android.messaging.datamodel.action.LogTelephonyDatabaseAction;
+import com.android.messaging.debug.DebugSimEmulationMode;
+import com.android.messaging.debug.DebugSimEmulationStore;
 import com.android.messaging.debug.TestDataSeeder;
 import com.android.messaging.sms.MmsUtils;
 import com.android.messaging.ui.UIIntents;
@@ -217,6 +219,13 @@ public class DebugUtils {
             }
         });
 
+        arrayAdapter.add(new DebugAction("SIM emulation mode...") {
+            @Override
+            public void run() {
+                showSimEmulationModeDialog(host);
+            }
+        });
+
         builder.setAdapter(arrayAdapter,
                 new android.content.DialogInterface.OnClickListener() {
             @Override
@@ -226,6 +235,45 @@ public class DebugUtils {
         });
 
         builder.create().show();
+    }
+
+    private static void showSimEmulationModeDialog(final AppCompatActivity host) {
+        final DebugSimEmulationMode[] modes = DebugSimEmulationMode.values();
+        final String[] labels = new String[modes.length];
+        int checkedIndex = 0;
+        final DebugSimEmulationMode currentMode = DebugSimEmulationStore.getCurrentMode();
+        for (int i = 0; i < modes.length; i++) {
+            labels[i] = describeSimEmulationMode(modes[i]);
+            if (modes[i] == currentMode) {
+                checkedIndex = i;
+            }
+        }
+        final int[] selectedIndex = new int[] { checkedIndex };
+        new AlertDialog.Builder(host)
+                .setTitle("SIM emulation mode")
+                .setSingleChoiceItems(labels, checkedIndex,
+                        (dialog, which) -> selectedIndex[0] = which)
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                    final DebugSimEmulationMode newMode = modes[selectedIndex[0]];
+                    DebugSimEmulationStore.setMode(newMode);
+                    Toast.makeText(host,
+                            "SIM emulation: " + labels[selectedIndex[0]],
+                            Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+    private static String describeSimEmulationMode(final DebugSimEmulationMode mode) {
+        switch (mode) {
+            case SINGLE:
+                return "Single SIM (emulate 1 if none present)";
+            case DUAL:
+                return "Dual SIM (emulate up to 2 if fewer present)";
+            case DEFAULT:
+            default:
+                return "Default (use real SIMs)";
+        }
     }
 
     /**

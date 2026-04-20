@@ -14,6 +14,8 @@ import com.android.messaging.data.conversation.repository.ConversationParticipan
 import com.android.messaging.data.conversation.repository.ConversationParticipantsRepositoryImpl
 import com.android.messaging.data.conversation.repository.ConversationRecipientsRepository
 import com.android.messaging.data.conversation.repository.ConversationRecipientsRepositoryImpl
+import com.android.messaging.data.conversation.repository.ConversationSubscriptionsRepository
+import com.android.messaging.data.conversation.repository.ConversationSubscriptionsRepositoryImpl
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.data.conversation.repository.ConversationsRepositoryImpl
 import com.android.messaging.data.media.repository.ConversationMediaRepository
@@ -141,6 +143,12 @@ internal abstract class ConversationBindsModule {
     abstract fun bindConversationsRepository(
         impl: ConversationsRepositoryImpl,
     ): ConversationsRepository
+
+    @Binds
+    @Reusable
+    abstract fun bindConversationSubscriptionsRepository(
+        impl: ConversationSubscriptionsRepositoryImpl,
+    ): ConversationSubscriptionsRepository
 
     @Binds
     abstract fun bindConversationAttachmentBridge(
