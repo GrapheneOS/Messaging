@@ -13,4 +13,6 @@ keystore.properties
 local.properties
 /lib/build
 
+.kotlin
+
 *.log
