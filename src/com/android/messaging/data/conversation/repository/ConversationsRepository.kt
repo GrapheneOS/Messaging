@@ -219,10 +219,17 @@ internal class ConversationsRepositoryImpl @Inject constructor(
 
                 val participantCount = cursor.getInt(ConversationColumns.PARTICIPANT_COUNT)
 
-                val otherParticipantPhotoUri = when {
-                    participantCount == 1 -> queryConversationParticipantPhotoUri(uri = uri)
+                val otherParticipant = when {
+                    participantCount == 1 -> queryConversationOtherParticipant(uri = uri)
                     else -> null
                 }
+
+                val otherParticipantContactLookupKey = otherParticipant
+                    ?.lookupKey
+                    ?.takeIf { it.isNotBlank() }
+                    ?: cursor
+                        .getStringOrEmpty(ConversationColumns.PARTICIPANT_LOOKUP_KEY)
+                        .takeIf { it.isNotBlank() }
 
                 ConversationMetadata(
                     conversationName = cursor.getStringOrEmpty(ConversationColumns.NAME),
@@ -231,32 +238,31 @@ internal class ConversationsRepositoryImpl @Inject constructor(
                     ),
                     isGroupConversation = participantCount > 1,
                     participantCount = participantCount,
+                    otherParticipantDisplayDestination = otherParticipant
+                        ?.displayDestination
+                        ?.takeIf { it.isNotBlank() },
                     otherParticipantNormalizedDestination = cursor
                         .getStringOrEmpty(
                             ConversationColumns.OTHER_PARTICIPANT_NORMALIZED_DESTINATION,
                         )
                         .takeIf { it.isNotBlank() },
-                    otherParticipantContactLookupKey = cursor
-                        .getStringOrEmpty(ConversationColumns.PARTICIPANT_LOOKUP_KEY)
-                        .takeIf { it.isNotBlank() },
-                    otherParticipantPhotoUri = otherParticipantPhotoUri,
+                    otherParticipantContactLookupKey = otherParticipantContactLookupKey,
+                    otherParticipantPhotoUri = otherParticipant
+                        ?.profilePhotoUri
+                        ?.takeIf { it.isNotBlank() },
                     isArchived = cursor.getInt(ConversationColumns.ARCHIVE_STATUS) == 1,
                     composerAvailability = ConversationComposerAvailability.editable(),
                 )
             }
     }
 
-    private fun queryConversationParticipantPhotoUri(uri: Uri): String? {
+    private fun queryConversationOtherParticipant(uri: Uri): ParticipantData? {
         val conversationId = uri.lastPathSegment
             ?.takeIf { it.isNotBlank() }
             ?: return null
 
         val participants = queryConversationParticipants(conversationId = conversationId)
-        val otherParticipant = participants.getOtherParticipant()
-
-        return otherParticipant
-            ?.profilePhotoUri
-            ?.takeIf { it.isNotBlank() }
+        return participants.getOtherParticipant()
     }
 
     private fun queryConversationParticipants(

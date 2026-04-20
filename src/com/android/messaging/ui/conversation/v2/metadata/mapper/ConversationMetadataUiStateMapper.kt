@@ -28,6 +28,7 @@ internal class ConversationMetadataUiStateMapperImpl @Inject constructor() :
             selfParticipantId = metadata.selfParticipantId,
             avatar = avatar,
             participantCount = metadata.participantCount,
+            otherParticipantDisplayDestination = metadata.otherParticipantDisplayDestination,
             otherParticipantPhoneNumber = metadata
                 .otherParticipantNormalizedDestination
                 ?.takeIf(MmsSmsUtils::isPhoneNumber),

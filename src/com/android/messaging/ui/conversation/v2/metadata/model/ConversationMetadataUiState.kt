@@ -32,6 +32,7 @@ internal sealed interface ConversationMetadataUiState {
         val selfParticipantId: String,
         val avatar: Avatar,
         val participantCount: Int,
+        val otherParticipantDisplayDestination: String?,
         val otherParticipantPhoneNumber: String?,
         val otherParticipantContactLookupKey: String?,
         val isArchived: Boolean,
