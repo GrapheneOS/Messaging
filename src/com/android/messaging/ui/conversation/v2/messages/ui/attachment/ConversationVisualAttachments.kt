@@ -36,7 +36,7 @@ import com.android.messaging.ui.conversation.v2.messages.model.message.Conversat
 import com.android.messaging.util.ContentType
 import kotlinx.collections.immutable.ImmutableList
 
-internal val MESSAGE_ATTACHMENT_CORNER_RADIUS = 18.dp
+internal val MESSAGE_ATTACHMENT_CORNER_RADIUS = 0.dp
 internal val MESSAGE_ATTACHMENT_GRID_SPACING = 6.dp
 private const val MESSAGE_ATTACHMENT_DEFAULT_IMAGE_ASPECT_RATIO = 4f / 3f
 private const val MESSAGE_ATTACHMENT_DEFAULT_VIDEO_ASPECT_RATIO = 16f / 9f

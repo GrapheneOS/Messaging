@@ -14,6 +14,9 @@ internal fun ConversationMessageAttachments(
     attachmentSections: ConversationAttachmentSections,
     hasTextAboveVisualAttachments: Boolean,
     hasTextBelowVisualAttachments: Boolean,
+    isIncoming: Boolean,
+    isSelectionMode: Boolean,
+    useStandaloneAudioAttachmentBg: Boolean,
     onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
@@ -45,6 +48,9 @@ internal fun ConversationMessageAttachments(
                 is ConversationAttachmentItem.Inline -> {
                     ConversationInlineAttachmentRow(
                         attachment = trailingItem.attachment,
+                        isIncoming = isIncoming,
+                        isSelectionMode = isSelectionMode,
+                        useStandaloneAudioAttachmentBackground = useStandaloneAudioAttachmentBg,
                         onAttachmentClick = onAttachmentClick,
                         onExternalUriClick = onExternalUriClick,
                         onLongClick = onMessageLongClick,

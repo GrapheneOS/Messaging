@@ -27,8 +27,13 @@ import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.util.ContentType
 import com.android.messaging.util.LogUtil
 import com.android.messaging.util.db.ext.withTransaction
+import java.io.BufferedOutputStream
+import java.io.ByteArrayOutputStream
+import java.io.DataOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import kotlin.math.PI
+import kotlin.math.sin
 
 private const val TAG = "TestDataSeeder"
 private const val TEST_PHONE_PREFIX = "+15550"
@@ -39,6 +44,10 @@ private const val SEED_IMAGE_2_FILE_ID = "800002"
 private const val SEED_IMAGE_3_FILE_ID = "800003"
 private const val SEED_VCARD_FILE_ID = "800004"
 private const val SEED_VIDEO_FILE_ID = "800005"
+private const val SEED_AUDIO_FILE_ID = "800006"
+private const val SEED_AUDIO_DURATION_SECONDS = 2
+private const val SEED_AUDIO_SAMPLE_RATE_HZ = 16_000
+private const val SEED_AUDIO_FREQUENCY_HZ = 440.0
 
 private const val MINUTES = 60 * 1000L
 private const val HOURS = 60 * MINUTES
@@ -55,6 +64,7 @@ fun seedTestData(context: Context) {
     }
 
     val testImages = buildTestImages(context)
+    val testAudio = buildTestAudio()
     val testVideo = buildTestVideo(context)
     val testVCard = buildTestVCard(context)
     val now = System.currentTimeMillis()
@@ -78,7 +88,7 @@ fun seedTestData(context: Context) {
         seedScenarioE(db, selfId, grace, now)
         seedScenarioF(db, selfId, henry, now)
         seedScenarioG(db, selfId, iris, testImages, now)
-        seedScenarioH(db, selfId, jack, carol, testImages, testVideo, testVCard, now)
+        seedScenarioH(db, selfId, jack, carol, testImages, testAudio, testVideo, testVCard, now)
         seedScenarioI(db, selfId, carol, dave, eve, now)
     }
 
@@ -165,6 +175,7 @@ fun clearSeededTestData(context: Context) {
     }
     File(context.cacheDir, "seed_video.mp4").delete()
     File(context.cacheDir, "seed_contact.vcf").delete()
+    deleteSeedScratchFile(fileId = SEED_AUDIO_FILE_ID, fileExtension = "wav")
     deleteSeedScratchFile(fileId = SEED_IMAGE_1_FILE_ID, fileExtension = "jpg")
     deleteSeedScratchFile(fileId = SEED_IMAGE_2_FILE_ID, fileExtension = "jpg")
     deleteSeedScratchFile(fileId = SEED_IMAGE_3_FILE_ID, fileExtension = "jpg")
@@ -175,6 +186,7 @@ fun clearSeededTestData(context: Context) {
     deleteSeedScratchFile(fileId = SEED_IMAGE_3_FILE_ID)
     deleteSeedScratchFile(fileId = SEED_VCARD_FILE_ID)
     deleteSeedScratchFile(fileId = SEED_VIDEO_FILE_ID)
+    deleteSeedScratchFile(fileId = SEED_AUDIO_FILE_ID)
     deleteSeededAttachmentScratchFiles(attachmentUris = seededAttachmentUris)
 
     MessagingContentProvider.notifyConversationListChanged()
@@ -251,6 +263,22 @@ private fun buildTestVCard(context: Context): String {
     return vCardUri.toString()
 }
 
+private fun buildTestAudio(): String {
+    val audioUri = buildSeedScratchUri(
+        fileId = SEED_AUDIO_FILE_ID,
+        fileExtension = "wav",
+    )
+    val file = MediaScratchFileProvider.getFileFromUri(audioUri)
+    file.parentFile?.mkdirs()
+
+    BufferedOutputStream(FileOutputStream(file)).use { outputStream ->
+        writeSeedWaveFile(outputStream = outputStream)
+    }
+
+    MediaScratchFileProvider.addUriToDisplayNameEntry(audioUri, "seed_audio.wav")
+    return audioUri.toString()
+}
+
 private fun buildTestVideo(context: Context): String {
     val videoUri = buildSeedScratchUri(
         fileId = SEED_VIDEO_FILE_ID,
@@ -305,6 +333,54 @@ private fun deleteSeededAttachmentScratchFiles(
 
         MediaScratchFileProvider.getFileFromUri(uri).delete()
     }
+}
+
+private fun writeSeedWaveFile(
+    outputStream: BufferedOutputStream,
+) {
+    val pcmBytes = buildSeedAudioPcmData()
+    val channels = 1
+    val bitsPerSample = 16
+    val byteRate = SEED_AUDIO_SAMPLE_RATE_HZ * channels * bitsPerSample / 8
+    val blockAlign = channels * bitsPerSample / 8
+    val dataSize = pcmBytes.size
+    val riffChunkSize = 36 + dataSize
+
+    DataOutputStream(outputStream).use { dataOutputStream ->
+        dataOutputStream.writeBytes("RIFF")
+        dataOutputStream.writeInt(Integer.reverseBytes(riffChunkSize))
+        dataOutputStream.writeBytes("WAVE")
+        dataOutputStream.writeBytes("fmt ")
+        dataOutputStream.writeInt(Integer.reverseBytes(16))
+        dataOutputStream.writeShort(java.lang.Short.reverseBytes(1.toShort()).toInt())
+        dataOutputStream.writeShort(java.lang.Short.reverseBytes(channels.toShort()).toInt())
+        dataOutputStream.writeInt(Integer.reverseBytes(SEED_AUDIO_SAMPLE_RATE_HZ))
+        dataOutputStream.writeInt(Integer.reverseBytes(byteRate))
+        dataOutputStream.writeShort(java.lang.Short.reverseBytes(blockAlign.toShort()).toInt())
+        dataOutputStream.writeShort(java.lang.Short.reverseBytes(bitsPerSample.toShort()).toInt())
+        dataOutputStream.writeBytes("data")
+        dataOutputStream.writeInt(Integer.reverseBytes(dataSize))
+        dataOutputStream.write(pcmBytes)
+    }
+}
+
+private fun buildSeedAudioPcmData(): ByteArray {
+    val totalSamples = SEED_AUDIO_SAMPLE_RATE_HZ * SEED_AUDIO_DURATION_SECONDS
+    val byteArrayOutputStream = ByteArrayOutputStream(totalSamples * 2)
+    val sampleAmplitude = Short.MAX_VALUE * 0.35
+
+    DataOutputStream(byteArrayOutputStream).use { dataOutputStream ->
+        repeat(totalSamples) { sampleIndex ->
+            val timeSeconds = sampleIndex.toDouble() / SEED_AUDIO_SAMPLE_RATE_HZ.toDouble()
+            val sampleValue = (
+                sin(2.0 * PI * SEED_AUDIO_FREQUENCY_HZ * timeSeconds) * sampleAmplitude
+                ).toInt()
+                .toShort()
+            dataOutputStream.writeShort(java.lang.Short.reverseBytes(sampleValue).toInt())
+        }
+    }
+
+    return byteArrayOutputStream.toByteArray()
 }
 
 private data class SeedImageSpec(
@@ -589,6 +665,31 @@ private fun insertVideoMessage(
         timestamp = timestamp,
         width = 400,
         height = 300,
+        seen = seen,
+        read = read,
+    )
+}
+
+private fun insertAudioMessage(
+    db: DatabaseWrapper,
+    conversationId: Long,
+    senderId: String,
+    selfId: String,
+    audioUri: String,
+    status: Int,
+    timestamp: Long,
+    seen: Boolean = true,
+    read: Boolean = true,
+): Long {
+    return insertAttachmentMessage(
+        db = db,
+        conversationId = conversationId,
+        senderId = senderId,
+        selfId = selfId,
+        contentType = ContentType.AUDIO_X_WAV,
+        attachmentUri = audioUri,
+        status = status,
+        timestamp = timestamp,
         seen = seen,
         read = read,
     )
@@ -1054,6 +1155,7 @@ private fun seedScenarioH(
     jackId: String,
     carolId: String,
     images: List<String>,
+    audioUri: String,
     videoUri: String,
     vCardUri: String,
     now: Long,
@@ -1100,6 +1202,8 @@ private fun seedScenarioH(
         Msg("text", text = TEST_YOUTUBE_VIDEO_URL, senderId = carolId),
         Msg("text", text = "The clip version is even better", senderId = jackId),
         Msg("video", attachmentUri = videoUri, senderId = carolId),
+        Msg("text", text = "And here's the ambient audio from the room", senderId = jackId),
+        Msg("audio", attachmentUri = audioUri, senderId = jackId),
         Msg("text", text = "Send me the photographer contact too", senderId = selfId),
         Msg("vcard", attachmentUri = vCardUri, senderId = carolId),
         Msg("text", text = "One more", senderId = carolId),
@@ -1155,6 +1259,16 @@ private fun seedScenarioH(
                 senderId = m.senderId,
                 selfId = selfId,
                 videoUri = m.attachmentUri,
+                status = status,
+                timestamp = msgTime,
+            )
+
+            "audio" -> insertAudioMessage(
+                db = db,
+                conversationId = convId,
+                senderId = m.senderId,
+                selfId = selfId,
+                audioUri = m.attachmentUri,
                 status = status,
                 timestamp = msgTime,
             )

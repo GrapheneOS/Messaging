@@ -18,6 +18,10 @@ internal const val CONVERSATION_DELETE_CONVERSATION_BUTTON_TEST_TAG =
 internal const val CONVERSATION_LOADING_INDICATOR_TEST_TAG = "conversation_loading_indicator"
 internal const val CONVERSATION_MESSAGES_LIST_TEST_TAG = "conversation_messages_list"
 internal const val CONVERSATION_MEDIA_PICKER_OVERLAY_TEST_TAG = "conversation_media_picker_overlay"
+internal const val CONVERSATION_INLINE_AUDIO_ATTACHMENT_PLAY_BUTTON_TEST_TAG =
+    "conversation_inline_audio_attachment_play_button"
+internal const val CONVERSATION_INLINE_AUDIO_ATTACHMENT_PROGRESS_TEST_TAG =
+    "conversation_inline_audio_attachment_progress"
 internal const val ADD_PARTICIPANTS_CONFIRM_BUTTON_TEST_TAG =
     "add_participants_confirm_button"
 internal const val NEW_CHAT_CREATE_GROUP_NEXT_BUTTON_TEST_TAG =

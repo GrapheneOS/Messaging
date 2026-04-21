@@ -118,6 +118,7 @@ private fun toMediaInlineAttachment(
         attachment.part.isAudioAttachment -> {
             createAudioInlineAttachment(
                 key = attachment.key,
+                contentUri = attachment.part.contentUri.toString(),
                 openAction = attachment.toConversationAttachmentOpenActionOrNull(),
             )
         }
@@ -143,10 +144,12 @@ private fun toMediaInlineAttachment(
 
 private fun createAudioInlineAttachment(
     key: String,
+    contentUri: String,
     openAction: ConversationAttachmentOpenAction?,
 ): ConversationInlineAttachment {
     return ConversationInlineAttachment(
         key = key,
+        contentUri = contentUri,
         kind = ConversationInlineAttachmentKind.AUDIO,
         openAction = openAction,
         subtitleTextResId = null,
@@ -161,6 +164,7 @@ private fun createVCardInlineAttachment(
 ): ConversationInlineAttachment {
     return ConversationInlineAttachment(
         key = key,
+        contentUri = null,
         kind = ConversationInlineAttachmentKind.VCARD,
         openAction = openAction,
         subtitleTextResId = R.string.vcard_tap_hint,
@@ -176,6 +180,7 @@ private fun createFileInlineAttachment(
 ): ConversationInlineAttachment {
     return ConversationInlineAttachment(
         key = key,
+        contentUri = null,
         kind = ConversationInlineAttachmentKind.FILE,
         openAction = openAction,
         subtitleTextResId = null,

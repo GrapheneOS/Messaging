@@ -5,6 +5,7 @@ import androidx.compose.runtime.Immutable
 @Immutable
 internal data class ConversationInlineAttachment(
     val key: String,
+    val contentUri: String?,
     val kind: ConversationInlineAttachmentKind,
     val openAction: ConversationAttachmentOpenAction?,
     val subtitleTextResId: Int?,

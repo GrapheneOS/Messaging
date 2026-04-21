@@ -129,10 +129,6 @@ private fun buildConversationMessageBodyText(
 
     return when {
         captionText != null -> captionText
-        attachments.isNotEmpty() -> {
-            message.parts.firstOrNull()?.contentType?.takeIf { it.isNotBlank() }
-        }
-
         else -> null
     }
 }
