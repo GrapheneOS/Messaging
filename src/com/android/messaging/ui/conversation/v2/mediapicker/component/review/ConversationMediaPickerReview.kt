@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.conversation.v2.composer.model.ComposerAttachmentUiModel
 import com.android.messaging.ui.conversation.v2.composer.ui.ConversationSendActionButton
+import com.android.messaging.ui.conversation.v2.composer.ui.ConversationSendActionButtonMode
 import com.android.messaging.ui.conversation.v2.mediapicker.component.PickerOverlayIconButton
 import kotlinx.collections.immutable.ImmutableList
 
@@ -349,7 +350,12 @@ private fun ConversationMediaReviewBottomBar(
 
         ConversationSendActionButton(
             enabled = isSendActionEnabled,
+            mode = ConversationSendActionButtonMode.Send,
+            isRecordingActive = false,
             onClick = onSendClick,
+            onRecordGestureStart = {},
+            onRecordGestureMove = {},
+            onRecordGestureFinish = {},
         )
     }
 }

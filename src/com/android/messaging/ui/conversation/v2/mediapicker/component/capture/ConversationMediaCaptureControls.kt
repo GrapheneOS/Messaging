@@ -27,10 +27,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.ui.conversation.v2.audio.formatConversationAudioDuration
 import com.android.messaging.ui.conversation.v2.mediapicker.ConversationCaptureMode
 import com.android.messaging.ui.conversation.v2.mediapicker.camera.ConversationPhotoFlashMode
 import com.android.messaging.ui.conversation.v2.mediapicker.component.PickerOverlayIconButton
-import java.util.Locale
 
 @Composable
 internal fun ConversationMediaCaptureTopBar(
@@ -221,17 +221,9 @@ private fun ConversationMediaRecordingTimerPill(
         Text(
             modifier = Modifier
                 .padding(horizontal = 14.dp, vertical = 8.dp),
-            text = formatRecordingDuration(durationMillis = durationMillis),
+            text = formatConversationAudioDuration(durationMillis = durationMillis),
             color = MaterialTheme.colorScheme.onErrorContainer,
             style = MaterialTheme.typography.labelLarge,
         )
     }
-}
-
-private fun formatRecordingDuration(durationMillis: Long): String {
-    val totalSeconds = durationMillis / 1_000L
-    val minutes = totalSeconds / 60L
-    val seconds = totalSeconds % 60L
-
-    return String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
 }

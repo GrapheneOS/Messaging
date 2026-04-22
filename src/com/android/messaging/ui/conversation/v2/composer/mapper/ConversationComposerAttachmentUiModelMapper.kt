@@ -51,6 +51,7 @@ internal class ConversationComposerAttachmentUiModelMapperImpl @Inject construct
                     key = attachment.contentUri,
                     contentType = attachment.contentType,
                     contentUri = attachment.contentUri,
+                    durationMillis = attachment.durationMillis ?: 0L,
                 )
             }
 

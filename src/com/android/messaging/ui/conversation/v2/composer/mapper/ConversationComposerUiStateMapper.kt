@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.v2.composer.mapper
 
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscription
+import com.android.messaging.ui.conversation.v2.audio.model.ConversationAudioRecordingUiState
 import com.android.messaging.ui.conversation.v2.composer.model.ComposerAttachmentUiModel
 import com.android.messaging.ui.conversation.v2.composer.model.ConversationComposerUiState
 import com.android.messaging.ui.conversation.v2.composer.model.ConversationDraftState
@@ -11,6 +12,7 @@ import kotlinx.collections.immutable.ImmutableList
 
 internal interface ConversationComposerUiStateMapper {
     fun map(
+        audioRecording: ConversationAudioRecordingUiState,
         draftState: ConversationDraftState,
         attachments: ImmutableList<ComposerAttachmentUiModel>,
         composerAvailability: ConversationComposerAvailability,
@@ -22,6 +24,7 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
     ConversationComposerUiStateMapper {
 
     override fun map(
+        audioRecording: ConversationAudioRecordingUiState,
         draftState: ConversationDraftState,
         attachments: ImmutableList<ComposerAttachmentUiModel>,
         composerAvailability: ConversationComposerAvailability,
@@ -35,6 +38,11 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
             !draft.isSending
 
         val isMessageFieldEnabled = composerAvailability.isMessageFieldEnabled
+        val shouldShowRecordAction = !hasWorkingDraft && !audioRecording.isRecording
+        val isRecordActionEnabled = composerAvailability.isSendAvailable &&
+            !draft.isCheckingDraft &&
+            !draft.isSending &&
+            draftState.pendingAttachments.isEmpty()
 
         val isSendEnabled = composerAvailability.isSendAvailable &&
             hasWorkingDraft &&
@@ -43,6 +51,7 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
             draftState.pendingAttachments.isEmpty()
 
         return ConversationComposerUiState(
+            audioRecording = audioRecording,
             attachments = attachments,
             messageText = draft.messageText,
             subjectText = draft.subjectText,
@@ -53,7 +62,9 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
             ),
             isMessageFieldEnabled = isMessageFieldEnabled,
             isAttachmentActionEnabled = isAttachmentActionEnabled,
+            isRecordActionEnabled = isRecordActionEnabled,
             isSendEnabled = isSendEnabled,
+            shouldShowRecordAction = shouldShowRecordAction,
             hasWorkingDraft = hasWorkingDraft,
             isMms = draft.isMms,
             attachmentCount = draft.attachments.size,

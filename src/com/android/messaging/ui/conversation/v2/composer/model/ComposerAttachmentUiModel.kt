@@ -52,6 +52,7 @@ internal sealed interface ComposerAttachmentUiModel {
             override val key: String,
             override val contentType: String,
             override val contentUri: String,
+            val durationMillis: Long,
         ) : Resolved
 
         @Immutable

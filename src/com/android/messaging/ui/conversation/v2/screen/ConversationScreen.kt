@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.v2.screen
 
+import android.Manifest
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -27,6 +28,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.geometry.Rect as ComposeRect
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -42,6 +44,8 @@ import com.android.messaging.ui.conversation.v2.composer.ui.ConversationComposer
 import com.android.messaging.ui.conversation.v2.composer.ui.ConversationSimSelectorSheet
 import com.android.messaging.ui.conversation.v2.entry.model.ConversationEntryStartupAttachment
 import com.android.messaging.ui.conversation.v2.mediapicker.ConversationMediaPickerOverlay
+import com.android.messaging.ui.conversation.v2.mediapicker.RefreshConversationMediaPickerPermissionsEffect
+import com.android.messaging.ui.conversation.v2.mediapicker.rememberConversationMediaPickerPermissionState
 import com.android.messaging.ui.conversation.v2.mediapicker.rememberConversationMediaPickerState
 import com.android.messaging.ui.conversation.v2.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.v2.messages.model.message.ConversationMessagesUiState
@@ -75,13 +79,35 @@ internal fun ConversationScreen(
         .mediaPickerOverlayUiState
         .collectAsStateWithLifecycle()
 
+    val context = LocalContext.current
+    val permissionState = rememberConversationMediaPickerPermissionState(context = context)
+
     val hostBoundsState = remember {
         mutableStateOf<ComposeRect?>(value = null)
     }
+
+    var shouldStartAudioRecordingAfterPermissionGrant by rememberSaveable {
+        mutableStateOf(value = false)
+    }
+
     val contactPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickContact(),
     ) { contactUri ->
         screenModel.onContactCardPicked(contactUri = contactUri?.toString())
+    }
+
+    val audioPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { isGranted ->
+        permissionState.audioPermissionGranted = isGranted
+
+        if (!isGranted || !shouldStartAudioRecordingAfterPermissionGrant) {
+            shouldStartAudioRecordingAfterPermissionGrant = false
+            return@rememberLauncherForActivityResult
+        }
+
+        shouldStartAudioRecordingAfterPermissionGrant = false
+        screenModel.onAudioRecordingStart()
     }
 
     LaunchedEffect(conversationId) {
@@ -124,7 +150,15 @@ internal fun ConversationScreen(
         }
     }
 
+    RefreshConversationMediaPickerPermissionsEffect(
+        context = context,
+        permissionState = permissionState,
+    )
+
     LifecycleEventEffect(event = Lifecycle.Event.ON_STOP) {
+        if (scaffoldUiState.composer.audioRecording.isRecording) {
+            screenModel.onAudioRecordingCancel()
+        }
         screenModel.persistDraft()
     }
 
@@ -176,6 +210,16 @@ internal fun ConversationScreen(
             onPendingAttachmentRemove = screenModel::onRemovePendingAttachment,
             onResolvedAttachmentClick = screenModel::onAttachmentClicked,
             onResolvedAttachmentRemove = screenModel::onRemoveResolvedAttachment,
+            onAudioRecordingStartRequest = {
+                if (permissionState.audioPermissionGranted) {
+                    screenModel.onAudioRecordingStart()
+                } else {
+                    shouldStartAudioRecordingAfterPermissionGrant = true
+                    audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                }
+            },
+            onAudioRecordingFinish = screenModel::onAudioRecordingFinish,
+            onAudioRecordingCancel = screenModel::onAudioRecordingCancel,
             onSendClick = screenModel::onSendClick,
             onSimSelected = screenModel::onSimSelected,
             onAttachmentClick = screenModel::onMessageAttachmentClicked,
@@ -233,6 +277,9 @@ private fun ConversationScreenScaffold(
     onPendingAttachmentRemove: (String) -> Unit,
     onResolvedAttachmentClick: (ComposerAttachmentUiModel.Resolved) -> Unit,
     onResolvedAttachmentRemove: (String) -> Unit,
+    onAudioRecordingStartRequest: () -> Unit,
+    onAudioRecordingFinish: () -> Unit,
+    onAudioRecordingCancel: () -> Unit,
     onSendClick: () -> Unit,
     onSimSelected: (String) -> Unit,
     onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
@@ -285,11 +332,14 @@ private fun ConversationScreenScaffold(
         bottomBar = {
             if (!isMediaPickerOpen) {
                 ConversationComposerSection(
+                    audioRecording = uiState.composer.audioRecording,
                     attachments = uiState.composer.attachments,
                     messageText = uiState.composer.messageText,
                     isMessageFieldEnabled = uiState.composer.isMessageFieldEnabled,
                     isAttachmentActionEnabled = uiState.composer.isAttachmentActionEnabled,
+                    isRecordActionEnabled = uiState.composer.isRecordActionEnabled,
                     isSendActionEnabled = uiState.composer.isSendEnabled,
+                    shouldShowRecordAction = uiState.composer.shouldShowRecordAction,
                     messageFieldFocusRequester = messageFieldFocusRequester,
                     onContactAttachClick = onOpenContactPicker,
                     onMediaPickerClick = onOpenMediaPicker,
@@ -297,6 +347,9 @@ private fun ConversationScreenScaffold(
                     onPendingAttachmentRemove = onPendingAttachmentRemove,
                     onResolvedAttachmentClick = onResolvedAttachmentClick,
                     onResolvedAttachmentRemove = onResolvedAttachmentRemove,
+                    onAudioRecordingStartRequest = onAudioRecordingStartRequest,
+                    onAudioRecordingFinish = onAudioRecordingFinish,
+                    onAudioRecordingCancel = onAudioRecordingCancel,
                     onSendClick = onSendClick,
                 )
             }

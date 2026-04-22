@@ -602,6 +602,7 @@
         <item quantity="one">Send photo</item>
         <item quantity="other">Send photos</item>
     </plurals>
+    <string name="conversation_audio_recording_slide_to_cancel">Slide to cancel</string>
     <!-- The hint text shown in the message compose input box when audio recording(s) is attached -->
     <plurals name="compose_message_view_hint_text_audio">
         <item quantity="one">Send audio</item>

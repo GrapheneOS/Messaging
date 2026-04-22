@@ -6,10 +6,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,6 +27,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,6 +38,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.conversation.v2.CONVERSATION_ATTACHMENT_PREVIEW_LIST_TEST_TAG
+import com.android.messaging.ui.conversation.v2.audio.formatConversationAudioDuration
 import com.android.messaging.ui.conversation.v2.composer.model.ComposerAttachmentUiModel
 import com.android.messaging.ui.conversation.v2.conversationAttachmentPreviewItemTestTag
 import com.android.messaging.ui.conversation.v2.conversationAttachmentPreviewRemoveButtonTestTag
@@ -44,6 +50,8 @@ import kotlinx.collections.immutable.ImmutableList
 private val ATTACHMENT_PREVIEW_CORNER_RADIUS = 20.dp
 private val ATTACHMENT_PREVIEW_CARD_HEIGHT = 88.dp
 private val ATTACHMENT_PREVIEW_CARD_WIDTH = 220.dp
+private val ATTACHMENT_PREVIEW_AUDIO_REMOVE_BUTTON_MARGIN = 4.dp
+private val ATTACHMENT_PREVIEW_AUDIO_REMOVE_BUTTON_SIZE = 24.dp
 private const val ATTACHMENT_PREVIEW_SIZE_PX = 256
 
 @Composable
@@ -151,7 +159,15 @@ private fun ResolvedAttachmentPreviewItem(
             )
         }
 
-        is ComposerAttachmentUiModel.Resolved.Audio,
+        is ComposerAttachmentUiModel.Resolved.Audio -> {
+            ConversationAudioAttachmentPreviewItem(
+                attachmentKey = attachmentKey,
+                durationMillis = attachment.durationMillis,
+                onAttachmentClick = onAttachmentClick,
+                onRemoveClick = onRemoveClick,
+            )
+        }
+
         is ComposerAttachmentUiModel.Resolved.File,
         is ComposerAttachmentUiModel.Resolved.VisualMedia.Image,
         is ComposerAttachmentUiModel.Resolved.VisualMedia.Video,
@@ -213,6 +229,65 @@ private fun VideoAttachmentOverlay() {
             modifier = Modifier.size(28.dp),
             tint = MaterialTheme.colorScheme.onPrimary,
         )
+    }
+}
+
+@Composable
+private fun ConversationAudioAttachmentPreviewItem(
+    attachmentKey: String,
+    durationMillis: Long,
+    onAttachmentClick: () -> Unit,
+    onRemoveClick: () -> Unit,
+) {
+    AttachmentPreviewItemContainer(
+        modifier = Modifier
+            .height(height = ATTACHMENT_PREVIEW_CARD_HEIGHT)
+            .wrapContentWidth(),
+        attachmentKey = attachmentKey,
+        onClick = onAttachmentClick,
+    ) {
+        Row(
+            modifier = Modifier
+                .wrapContentWidth()
+                .height(height = ATTACHMENT_PREVIEW_CARD_HEIGHT)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.PlayArrow,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(shape = RoundedCornerShape(size = 20.dp))
+                    .background(color = MaterialTheme.colorScheme.primary)
+                    .padding(8.dp),
+                tint = MaterialTheme.colorScheme.onPrimary,
+            )
+
+            Text(
+                modifier = Modifier.wrapContentWidth(),
+                text = formatConversationAudioDuration(durationMillis = durationMillis),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+            )
+
+            Box(
+                modifier = Modifier
+                    .width(
+                        width = ATTACHMENT_PREVIEW_AUDIO_REMOVE_BUTTON_SIZE +
+                            ATTACHMENT_PREVIEW_AUDIO_REMOVE_BUTTON_MARGIN,
+                    )
+                    .fillMaxSize(),
+                contentAlignment = Alignment.TopCenter,
+            ) {
+                InlineAudioRemoveAttachmentButton(
+                    attachmentKey = attachmentKey,
+                    onClick = onRemoveClick,
+                )
+            }
+        }
     }
 }
 
@@ -289,6 +364,35 @@ private fun BoxScope.RemoveAttachmentButton(
             .align(Alignment.TopEnd)
             .padding(6.dp)
             .size(28.dp)
+            .testTag(
+                conversationAttachmentPreviewRemoveButtonTestTag(
+                    attachmentKey = attachmentKey,
+                ),
+            ),
+        onClick = onClick,
+        colors = IconButtonDefaults.filledIconButtonColors(
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+            contentColor = MaterialTheme.colorScheme.onSurface,
+        ),
+    ) {
+        Icon(
+            imageVector = Icons.Rounded.Close,
+            contentDescription = pluralStringResource(
+                id = R.plurals.attachment_preview_close_content_description,
+                count = 1,
+            ),
+        )
+    }
+}
+
+@Composable
+private fun InlineAudioRemoveAttachmentButton(
+    attachmentKey: String,
+    onClick: () -> Unit,
+) {
+    FilledIconButton(
+        modifier = Modifier
+            .size(size = ATTACHMENT_PREVIEW_AUDIO_REMOVE_BUTTON_SIZE)
             .testTag(
                 conversationAttachmentPreviewRemoveButtonTestTag(
                     attachmentKey = attachmentKey,

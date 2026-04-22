@@ -26,6 +26,9 @@ internal const val CONVERSATION_INLINE_AUDIO_ATTACHMENT_PLAY_BUTTON_TEST_TAG =
     "conversation_inline_audio_attachment_play_button"
 internal const val CONVERSATION_INLINE_AUDIO_ATTACHMENT_PROGRESS_TEST_TAG =
     "conversation_inline_audio_attachment_progress"
+internal const val CONVERSATION_AUDIO_RECORDING_BAR_TEST_TAG = "conversation_audio_recording_bar"
+internal const val CONVERSATION_AUDIO_RECORDING_CANCEL_BUTTON_TEST_TAG =
+    "conversation_audio_recording_cancel_button"
 internal const val ADD_PARTICIPANTS_CONFIRM_BUTTON_TEST_TAG =
     "add_participants_confirm_button"
 internal const val NEW_CHAT_CREATE_GROUP_NEXT_BUTTON_TEST_TAG =

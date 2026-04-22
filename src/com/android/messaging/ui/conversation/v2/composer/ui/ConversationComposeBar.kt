@@ -1,5 +1,13 @@
 package com.android.messaging.ui.conversation.v2.composer.ui
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,7 +32,9 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -35,6 +45,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -49,23 +60,42 @@ import com.android.messaging.ui.conversation.v2.CONVERSATION_COMPOSE_BAR_TEST_TA
 import com.android.messaging.ui.conversation.v2.CONVERSATION_SEND_BUTTON_SHAPE_CIRCLE
 import com.android.messaging.ui.conversation.v2.CONVERSATION_SEND_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.v2.CONVERSATION_TEXT_FIELD_TEST_TAG
+import com.android.messaging.ui.conversation.v2.audio.model.ConversationAudioRecordingUiState
 import com.android.messaging.ui.conversation.v2.conversationShape
 import com.android.messaging.ui.core.AppTheme
+
+private val AUDIO_RECORD_CANCEL_THRESHOLD = 96.dp
 
 @Composable
 internal fun ConversationComposeBar(
     modifier: Modifier = Modifier,
+    audioRecording: ConversationAudioRecordingUiState,
     messageText: String,
     isMessageFieldEnabled: Boolean,
     isAttachmentActionEnabled: Boolean,
+    isRecordActionEnabled: Boolean,
     isSendActionEnabled: Boolean,
+    shouldShowRecordAction: Boolean,
     messageFieldFocusRequester: FocusRequester? = null,
     onContactAttachClick: () -> Unit,
     onMediaPickerClick: () -> Unit,
     onMessageTextChange: (String) -> Unit,
+    onAudioRecordingStartRequest: () -> Unit,
+    onAudioRecordingFinish: () -> Unit,
+    onAudioRecordingCancel: () -> Unit,
     onSendClick: () -> Unit,
 ) {
     val presentation = rememberConversationComposeBarPresentation()
+
+    var recordingDragDistancePx by remember {
+        mutableFloatStateOf(value = 0f)
+    }
+
+    LaunchedEffect(audioRecording.isRecording) {
+        if (!audioRecording.isRecording) {
+            recordingDragDistancePx = 0f
+        }
+    }
 
     Box(
         modifier = modifier
@@ -74,16 +104,34 @@ internal fun ConversationComposeBar(
             .navigationBarsPadding()
             .testTag(CONVERSATION_COMPOSE_BAR_TEST_TAG),
     ) {
-        ConversationComposeTextField(
+        ConversationComposeInputContent(
+            audioRecording = audioRecording,
             messageText = messageText,
             isMessageFieldEnabled = isMessageFieldEnabled,
             isAttachmentActionEnabled = isAttachmentActionEnabled,
+            isRecordActionEnabled = isRecordActionEnabled,
             isSendActionEnabled = isSendActionEnabled,
+            shouldShowRecordAction = shouldShowRecordAction,
+            recordingDragDistancePx = recordingDragDistancePx,
             messageFieldFocusRequester = messageFieldFocusRequester,
             presentation = presentation,
             onContactAttachClick = onContactAttachClick,
             onMediaPickerClick = onMediaPickerClick,
             onMessageTextChange = onMessageTextChange,
+            onAudioRecordingStartRequest = {
+                recordingDragDistancePx = 0f
+                onAudioRecordingStartRequest()
+            },
+            onAudioRecordingDrag = { dragDistancePx ->
+                recordingDragDistancePx = dragDistancePx
+            },
+            onAudioRecordingFinish = { shouldCancelRecording ->
+                recordingDragDistancePx = 0f
+                when {
+                    shouldCancelRecording -> onAudioRecordingCancel()
+                    else -> onAudioRecordingFinish()
+                }
+            },
             onSendClick = onSendClick,
         )
     }
@@ -126,18 +174,34 @@ private fun conversationComposeBarTextFieldColors(): TextFieldColors {
 }
 
 @Composable
-private fun ConversationComposeTextField(
+private fun ConversationComposeInputContent(
+    audioRecording: ConversationAudioRecordingUiState,
     messageText: String,
     isMessageFieldEnabled: Boolean,
     isAttachmentActionEnabled: Boolean,
+    isRecordActionEnabled: Boolean,
     isSendActionEnabled: Boolean,
+    shouldShowRecordAction: Boolean,
+    recordingDragDistancePx: Float,
     messageFieldFocusRequester: FocusRequester?,
     presentation: ConversationComposeBarPresentation,
     onContactAttachClick: () -> Unit,
     onMediaPickerClick: () -> Unit,
     onMessageTextChange: (String) -> Unit,
+    onAudioRecordingStartRequest: () -> Unit,
+    onAudioRecordingDrag: (Float) -> Unit,
+    onAudioRecordingFinish: (Boolean) -> Unit,
     onSendClick: () -> Unit,
 ) {
+    val cancelThresholdPx = with(LocalDensity.current) {
+        AUDIO_RECORD_CANCEL_THRESHOLD.toPx()
+    }
+    val cancelProgress = (recordingDragDistancePx / cancelThresholdPx)
+        .coerceIn(minimumValue = 0f, maximumValue = 1f)
+
+    val isCancellationArmed = cancelProgress >= 1f
+    val isRecordMode = shouldShowRecordAction || audioRecording.isRecording
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -150,36 +214,39 @@ private fun ConversationComposeTextField(
         ),
         verticalAlignment = Alignment.Bottom,
     ) {
-        TextField(
+        AnimatedContent(
             modifier = Modifier
-                .weight(weight = 1f)
-                .then(
-                    when (messageFieldFocusRequester) {
-                        null -> Modifier
-                        else -> Modifier.focusRequester(messageFieldFocusRequester)
-                    },
-                )
-                .testTag(CONVERSATION_TEXT_FIELD_TEST_TAG)
-                .heightIn(min = 56.dp),
-            value = messageText,
-            onValueChange = onMessageTextChange,
-            enabled = isMessageFieldEnabled,
-            shape = presentation.fieldShape,
-            colors = presentation.fieldColors,
-            placeholder = {
-                ConversationComposePlaceholder()
+                .weight(weight = 1f),
+            targetState = audioRecording.isRecording,
+            transitionSpec = {
+                contentSwapTransition()
             },
-            leadingIcon = {
-                ConversationComposeAttachmentMenu(
-                    modifier = Modifier.testTag(CONVERSATION_ATTACHMENT_BUTTON_TEST_TAG),
-                    enabled = isAttachmentActionEnabled,
-                    onContactAttachClick = onContactAttachClick,
-                    onMediaPickerClick = onMediaPickerClick,
-                )
-            },
-            minLines = 1,
-            maxLines = 4,
-        )
+            label = "conversation_compose_content",
+        ) { isRecording ->
+            when {
+                isRecording -> {
+                    ConversationAudioRecordingBar(
+                        durationMillis = audioRecording.durationMillis,
+                        cancelProgress = cancelProgress,
+                        isCancellationArmed = isCancellationArmed,
+                    )
+                }
+
+                else -> {
+                    ConversationComposeMessageField(
+                        modifier = Modifier,
+                        value = messageText,
+                        onValueChange = onMessageTextChange,
+                        enabled = isMessageFieldEnabled,
+                        messageFieldFocusRequester = messageFieldFocusRequester,
+                        presentation = presentation,
+                        isAttachmentActionEnabled = isAttachmentActionEnabled,
+                        onContactAttachClick = onContactAttachClick,
+                        onMediaPickerClick = onMediaPickerClick,
+                    )
+                }
+            }
+        }
 
         ConversationComposeSendAction(
             modifier = Modifier
@@ -187,10 +254,62 @@ private fun ConversationComposeTextField(
                 .semantics {
                     conversationShape = CONVERSATION_SEND_BUTTON_SHAPE_CIRCLE
                 },
-            enabled = isSendActionEnabled,
+            enabled = when {
+                isRecordMode -> isRecordActionEnabled
+                else -> isSendActionEnabled
+            },
+            mode = when {
+                isRecordMode -> ConversationSendActionButtonMode.Record
+                else -> ConversationSendActionButtonMode.Send
+            },
+            isRecordingActive = audioRecording.isRecording,
             onClick = onSendClick,
+            onRecordGestureStart = onAudioRecordingStartRequest,
+            onRecordGestureMove = onAudioRecordingDrag,
+            onRecordGestureFinish = onAudioRecordingFinish,
         )
     }
+}
+
+@Composable
+private fun ConversationComposeMessageField(
+    modifier: Modifier = Modifier,
+    value: String,
+    enabled: Boolean,
+    messageFieldFocusRequester: FocusRequester?,
+    presentation: ConversationComposeBarPresentation,
+    isAttachmentActionEnabled: Boolean,
+    onValueChange: (String) -> Unit,
+    onContactAttachClick: () -> Unit,
+    onMediaPickerClick: () -> Unit,
+) {
+    val focusRequesterModifier = messageFieldFocusRequester
+        ?.let(Modifier::focusRequester)
+        ?: Modifier
+
+    TextField(
+        modifier = modifier
+            .then(focusRequesterModifier)
+            .testTag(CONVERSATION_TEXT_FIELD_TEST_TAG)
+            .heightIn(min = 56.dp),
+        value = value,
+        onValueChange = onValueChange,
+        enabled = enabled,
+        shape = presentation.fieldShape,
+        colors = presentation.fieldColors,
+        placeholder = ::ConversationComposePlaceholder,
+        leadingIcon = {
+            ConversationComposeAttachmentMenu(
+                modifier = Modifier
+                    .testTag(CONVERSATION_ATTACHMENT_BUTTON_TEST_TAG),
+                enabled = isAttachmentActionEnabled,
+                onContactAttachClick = onContactAttachClick,
+                onMediaPickerClick = onMediaPickerClick,
+            )
+        },
+        minLines = 1,
+        maxLines = 4,
+    )
 }
 
 @Composable
@@ -198,6 +317,26 @@ private fun ConversationComposePlaceholder() {
     Text(
         text = stringResource(id = R.string.compose_message_view_hint_text),
         style = MaterialTheme.typography.bodyLarge,
+    )
+}
+
+private fun contentSwapTransition(): ContentTransform {
+    return (
+        fadeIn(animationSpec = tween(durationMillis = 160)) +
+            slideInHorizontally(
+                animationSpec = tween(durationMillis = 220),
+                initialOffsetX = { fullWidth ->
+                    fullWidth / 10
+                },
+            )
+        ).togetherWith(
+        fadeOut(animationSpec = tween(durationMillis = 120)) +
+            slideOutHorizontally(
+                animationSpec = tween(durationMillis = 180),
+                targetOffsetX = { fullWidth ->
+                    -(fullWidth / 12)
+                },
+            ),
     )
 }
 
@@ -226,7 +365,7 @@ private fun ConversationComposeAttachmentMenu(
             Icon(
                 imageVector = Icons.Rounded.AddCircleOutline,
                 contentDescription = stringResource(
-                    id = R.string.attachMediaButtonContentDescription
+                    id = R.string.attachMediaButtonContentDescription,
                 ),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -282,12 +421,22 @@ private fun ConversationComposeAttachmentMenu(
 private fun ConversationComposeSendAction(
     modifier: Modifier = Modifier,
     enabled: Boolean,
+    mode: ConversationSendActionButtonMode,
+    isRecordingActive: Boolean,
     onClick: () -> Unit,
+    onRecordGestureStart: () -> Unit,
+    onRecordGestureMove: (Float) -> Unit,
+    onRecordGestureFinish: (Boolean) -> Unit,
 ) {
     ConversationSendActionButton(
         modifier = modifier,
         enabled = enabled,
+        mode = mode,
+        isRecordingActive = isRecordingActive,
         onClick = onClick,
+        onRecordGestureStart = onRecordGestureStart,
+        onRecordGestureMove = onRecordGestureMove,
+        onRecordGestureFinish = onRecordGestureFinish,
     )
 }
 

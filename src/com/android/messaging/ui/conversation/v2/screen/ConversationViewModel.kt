@@ -10,6 +10,7 @@ import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.domain.conversation.usecase.CanAddMoreConversationParticipants
 import com.android.messaging.domain.conversation.usecase.IsDeviceVoiceCapable
+import com.android.messaging.ui.conversation.v2.audio.delegate.ConversationAudioRecordingDelegate
 import com.android.messaging.ui.conversation.v2.composer.delegate.ConversationComposerAttachmentsDelegate
 import com.android.messaging.ui.conversation.v2.composer.delegate.ConversationDraftDelegate
 import com.android.messaging.ui.conversation.v2.composer.mapper.ConversationComposerUiStateMapper
@@ -79,6 +80,9 @@ internal interface ConversationScreenModel {
     fun onGalleryMediaConfirmed(mediaItems: List<ConversationMediaItem>)
     fun onContactCardPicked(contactUri: String?)
     fun onMessageTextChanged(text: String)
+    fun onAudioRecordingStart()
+    fun onAudioRecordingFinish()
+    fun onAudioRecordingCancel()
     fun onGalleryVisibilityChanged(isVisible: Boolean)
     fun onCapturedMediaReady(capturedMedia: ConversationCapturedMedia)
     fun onRemovePendingAttachment(pendingAttachmentId: String)
@@ -104,6 +108,7 @@ internal interface ConversationScreenModel {
 
 @HiltViewModel
 internal class ConversationViewModel @Inject constructor(
+    private val conversationAudioRecordingDelegate: ConversationAudioRecordingDelegate,
     private val conversationComposerAttachmentsDelegate: ConversationComposerAttachmentsDelegate,
     private val conversationDraftDelegate: ConversationDraftDelegate,
     private val conversationMessagesDelegate: ConversationMessagesDelegate,
@@ -145,12 +150,14 @@ internal class ConversationViewModel @Inject constructor(
     }
 
     private val composerUiState = combine(
+        conversationAudioRecordingDelegate.state,
         conversationMetadataDelegate.state,
         conversationDraftDelegate.state,
         conversationComposerAttachmentsDelegate.state,
         subscriptionsFlow,
-    ) { metadataState, draftState, attachments, subscriptions ->
+    ) { audioRecordingState, metadataState, draftState, attachments, subscriptions ->
         conversationComposerUiStateMapper.map(
+            audioRecording = audioRecordingState,
             draftState = draftState,
             attachments = attachments,
             composerAvailability = metadataState.composerAvailability,
@@ -162,6 +169,7 @@ internal class ConversationViewModel @Inject constructor(
             stopTimeoutMillis = STATEFLOW_STOP_TIMEOUT_MILLIS,
         ),
         initialValue = conversationComposerUiStateMapper.map(
+            audioRecording = conversationAudioRecordingDelegate.state.value,
             draftState = conversationDraftDelegate.state.value,
             attachments = conversationComposerAttachmentsDelegate.state.value,
             composerAvailability = conversationMetadataDelegate.state.value.composerAvailability,
@@ -253,6 +261,10 @@ internal class ConversationViewModel @Inject constructor(
     )
 
     private fun initializeDelegates() {
+        conversationAudioRecordingDelegate.bind(
+            scope = viewModelScope,
+            conversationIdFlow = conversationIdFlow,
+        )
         conversationDraftDelegate.bind(
             scope = viewModelScope,
             conversationIdFlow = conversationIdFlow,
@@ -464,6 +476,26 @@ internal class ConversationViewModel @Inject constructor(
         conversationDraftDelegate.onMessageTextChanged(messageText = text)
     }
 
+    override fun onAudioRecordingStart() {
+        val effectiveSelfParticipantId = composerUiState.value
+            .simSelector
+            .selectedSubscription
+            ?.selfParticipantId
+            ?: conversationDraftDelegate.state.value.draft.selfParticipantId
+
+        conversationAudioRecordingDelegate.startRecording(
+            selfParticipantId = effectiveSelfParticipantId,
+        )
+    }
+
+    override fun onAudioRecordingFinish() {
+        conversationAudioRecordingDelegate.finishRecording()
+    }
+
+    override fun onAudioRecordingCancel() {
+        conversationAudioRecordingDelegate.cancelRecording()
+    }
+
     override fun onGalleryVisibilityChanged(isVisible: Boolean) {
         conversationMediaPickerDelegate.onGalleryVisibilityChanged(isVisible = isVisible)
     }
@@ -535,6 +567,7 @@ internal class ConversationViewModel @Inject constructor(
     }
 
     override fun onCleared() {
+        conversationAudioRecordingDelegate.onScreenCleared()
         conversationMediaPickerDelegate.onScreenCleared()
         conversationDraftDelegate.flushDraft()
 

@@ -11,14 +11,19 @@ import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.debug.DebugSimEmulationMode
 import com.android.messaging.debug.DebugSimEmulationSource
 import com.android.messaging.di.core.IoDispatcher
+import com.android.messaging.sms.MmsConfig
+import com.android.messaging.util.LogUtil
+import com.android.messaging.util.core.extension.typedFlow
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.flowOn
@@ -26,6 +31,8 @@ import kotlinx.coroutines.flow.map
 
 internal interface ConversationSubscriptionsRepository {
     fun observeActiveSubscriptions(): Flow<ImmutableList<ConversationSubscription>>
+
+    fun resolveMaxMessageSize(selfParticipantId: String): Flow<Int>
 }
 
 internal class ConversationSubscriptionsRepositoryImpl @Inject constructor(
@@ -54,6 +61,19 @@ internal class ConversationSubscriptionsRepositoryImpl @Inject constructor(
                 mode = emulationMode,
             )
         }
+    }
+
+    override fun resolveMaxMessageSize(selfParticipantId: String): Flow<Int> {
+        return typedFlow {
+            queryMaxMessageSize(selfParticipantId = selfParticipantId)
+        }.catch { throwable ->
+            if (throwable is CancellationException) {
+                throw throwable
+            }
+
+            LogUtil.w(TAG, "Failed to resolve max message size", throwable)
+            emit(MmsConfig.getMaxMaxMessageSize())
+        }.flowOn(ioDispatcher)
     }
 
     private fun applyDebugEmulation(
@@ -177,7 +197,35 @@ internal class ConversationSubscriptionsRepositoryImpl @Inject constructor(
             ?: persistentListOf()
     }
 
+    private fun queryMaxMessageSize(
+        selfParticipantId: String,
+    ): Int {
+        if (selfParticipantId.isBlank()) {
+            return MmsConfig.getMaxMaxMessageSize()
+        }
+
+        val resolvedSubId = contentResolver.query(
+            MessagingContentProvider.PARTICIPANTS_URI,
+            ParticipantData.ParticipantsQuery.PROJECTION,
+            "${ParticipantColumns._ID} = ?",
+            arrayOf(selfParticipantId),
+            null,
+        )?.use { cursor ->
+            when {
+                cursor.moveToFirst() -> ParticipantData.getFromCursor(cursor).subId
+                else -> null
+            }
+        } ?: return MmsConfig.getMaxMaxMessageSize()
+
+        if (resolvedSubId <= ParticipantData.DEFAULT_SELF_SUB_ID) {
+            return MmsConfig.getMaxMaxMessageSize()
+        }
+
+        return MmsConfig.get(resolvedSubId).maxMessageSize
+    }
+
     private companion object {
+        private const val TAG = "ConversationSubscriptionsRepo"
         private const val FAKE_SIM_ID_PREFIX = "debug_sim_emulated_"
         private val FAKE_SIM_COLORS = intArrayOf(
             0xFF5E9BE8.toInt(),

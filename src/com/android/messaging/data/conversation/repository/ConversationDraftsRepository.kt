@@ -2,15 +2,20 @@ package com.android.messaging.data.conversation.repository
 
 import android.content.ContentResolver
 import android.database.ContentObserver
+import android.media.MediaMetadataRetriever
 import android.net.Uri
+import androidx.core.net.toUri
 import com.android.messaging.data.conversation.mapper.ConversationDraftMessageDataMapper
 import com.android.messaging.data.conversation.mapper.ConversationMessageDataDraftMapper
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.di.core.IoDispatcher
+import com.android.messaging.util.ContentType
 import com.android.messaging.util.LogUtil
+import com.android.messaging.util.MediaMetadataRetrieverWrapper
 import javax.inject.Inject
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -128,11 +133,77 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
             }
 
             else -> {
-                conversationMessageDataDraftMapper.map(
-                    messageData = draftMessage,
-                    fallbackSelfParticipantId = conversation.selfParticipantId,
+                resolveDraftAttachmentMetadata(
+                    draft = conversationMessageDataDraftMapper.map(
+                        messageData = draftMessage,
+                        fallbackSelfParticipantId = conversation.selfParticipantId,
+                    ),
                 )
             }
+        }
+    }
+
+    private fun resolveDraftAttachmentMetadata(draft: ConversationDraft): ConversationDraft {
+        val hasAudioAttachments = draft.attachments.any { attachment ->
+            ContentType.isAudioType(attachment.contentType)
+        }
+
+        return when {
+            hasAudioAttachments -> resolveDraftAudioMetadata(draft = draft)
+            else -> draft
+        }
+    }
+
+    private fun resolveDraftAudioMetadata(draft: ConversationDraft): ConversationDraft {
+        var hasChanges = false
+
+        val resolvedAttachments = draft
+            .attachments
+            .map { attachment ->
+                val isAudio = ContentType.isAudioType(attachment.contentType)
+
+                if (!isAudio || attachment.durationMillis != null) {
+                    return@map attachment
+                }
+
+                hasChanges = true
+                attachment.copy(
+                    durationMillis = resolveAudioDurationMillis(
+                        contentUri = attachment.contentUri,
+                    ),
+                )
+            }
+
+        return when {
+            hasChanges -> {
+                draft.copy(
+                    attachments = resolvedAttachments.toImmutableList(),
+                )
+            }
+            else -> draft
+        }
+    }
+
+    private fun resolveAudioDurationMillis(contentUri: String): Long {
+        val mediaMetadataRetrieverWrapper = MediaMetadataRetrieverWrapper()
+
+        return try {
+            mediaMetadataRetrieverWrapper.setDataSource(contentUri.toUri())
+            mediaMetadataRetrieverWrapper
+                .extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                ?.toLongOrNull()
+                ?.coerceAtLeast(minimumValue = 0L)
+                ?: 0L
+        } catch (throwable: Throwable) {
+            LogUtil.w(
+                TAG,
+                "Failed to resolve draft audio duration for $contentUri",
+                throwable,
+            )
+
+            0L
+        } finally {
+            mediaMetadataRetrieverWrapper.release()
         }
     }
 

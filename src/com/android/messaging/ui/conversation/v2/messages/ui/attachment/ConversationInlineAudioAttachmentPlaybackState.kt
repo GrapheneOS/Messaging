@@ -13,8 +13,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.net.toUri
 import com.android.messaging.R
+import com.android.messaging.ui.conversation.v2.audio.formatConversationAudioDuration
 import com.android.messaging.util.UiUtils
-import java.util.Locale
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 
@@ -207,9 +207,6 @@ private fun formatAudioDuration(
         positionMillis > 0L -> positionMillis
         else -> durationMillis
     }
-    val totalSeconds = displayedMillis / 1_000L
-    val minutes = totalSeconds / 60L
-    val seconds = totalSeconds % 60L
 
-    return String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
+    return formatConversationAudioDuration(durationMillis = displayedMillis)
 }
