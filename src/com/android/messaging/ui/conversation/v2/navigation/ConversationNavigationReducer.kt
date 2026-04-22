@@ -46,9 +46,15 @@ internal class ConversationNavigationReducerImpl : ConversationNavigationReducer
         backStack: MutableList<NavKey>,
         conversationId: String,
     ) {
-        ConversationNavKey(conversationId = conversationId)
-            .takeIf { it != backStack.lastOrNull() }
-            ?.let(backStack::add)
+        removeTrailingConversationEntryDestinations(backStack = backStack)
+
+        val destination = ConversationNavKey(conversationId = conversationId)
+
+        if (destination == backStack.lastOrNull()) {
+            return
+        }
+
+        backStack.add(destination)
     }
 
     override fun navigateToRecipientPicker(
@@ -100,5 +106,19 @@ internal class ConversationNavigationReducerImpl : ConversationNavigationReducer
 
         backStack.clear()
         backStack.add(destination)
+    }
+
+    private fun removeTrailingConversationEntryDestinations(backStack: MutableList<NavKey>) {
+        while (backStack.lastOrNull().isConversationEntryDestination()) {
+            backStack.removeAt(backStack.lastIndex)
+        }
+    }
+
+    private fun NavKey?.isConversationEntryDestination(): Boolean {
+        return when (this) {
+            NewChatNavKey -> true
+            is RecipientPickerNavKey -> true
+            else -> false
+        }
     }
 }
