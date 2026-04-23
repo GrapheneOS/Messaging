@@ -80,7 +80,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.android.messaging.R
-import com.android.messaging.data.conversation.model.recipient.ConversationRecipient
+import com.android.messaging.ui.conversation.v2.recipientpicker.model.RecipientPickerListItem
 
 private val contactCornerRadius = 18.dp
 private val contactMiddleCornerRadius = 2.dp
@@ -108,12 +108,12 @@ internal fun RecipientSelectionContent(
     uiState: RecipientSelectionContentUiState,
     strings: RecipientSelectionStrings,
     rowDecorators: RecipientSelectionRowDecorators,
-    onRecipientClick: (ConversationRecipient) -> Unit,
+    onRecipientClick: (RecipientPickerListItem) -> Unit,
     modifier: Modifier = Modifier,
     onLoadMore: () -> Unit = {},
     onPrimaryActionClick: () -> Unit = {},
     onQueryChanged: (String) -> Unit = {},
-    onRecipientLongClick: ((ConversationRecipient) -> Unit)? = null,
+    onRecipientLongClick: ((RecipientPickerListItem) -> Unit)? = null,
     topListContent: (@Composable () -> Unit)? = null,
 ) {
     Surface(
@@ -202,14 +202,14 @@ private fun RecipientSelectionContactsContent(
     rowDecorators: RecipientSelectionRowDecorators,
     onLoadMore: () -> Unit,
     onPrimaryActionClick: () -> Unit,
-    onRecipientClick: (ConversationRecipient) -> Unit,
-    onRecipientLongClick: ((ConversationRecipient) -> Unit)?,
+    onRecipientClick: (RecipientPickerListItem) -> Unit,
+    onRecipientLongClick: ((RecipientPickerListItem) -> Unit)?,
     modifier: Modifier = Modifier,
     topListContent: (@Composable () -> Unit)? = null,
 ) {
     val pickerUiState = uiState.picker
     val primaryAction = uiState.primaryAction
-    val lastContactIndex = pickerUiState.contacts.lastIndex
+    val lastContactIndex = pickerUiState.items.lastIndex
     val listState = rememberLazyListState()
 
     val animatedListBottomPadding by animateDpAsState(
@@ -226,7 +226,7 @@ private fun RecipientSelectionContactsContent(
         pickerUiState.canLoadMore,
         pickerUiState.isLoading,
         pickerUiState.isLoadingMore,
-        pickerUiState.contacts.size,
+        pickerUiState.items.size,
     ) {
         snapshotFlow {
             val lastVisibleIndex = listState
@@ -268,7 +268,7 @@ private fun RecipientSelectionContactsContent(
                     }
                 }
 
-                pickerUiState.contacts.isEmpty() || !pickerUiState.hasContactsPermission -> {
+                pickerUiState.items.isEmpty() -> {
                     item {
                         RecipientSelectionEmptyState()
                     }
@@ -276,10 +276,10 @@ private fun RecipientSelectionContactsContent(
 
                 else -> {
                     itemsIndexed(
-                        items = pickerUiState.contacts,
-                        key = { _, contact -> contact.id },
+                        items = pickerUiState.items,
+                        key = { _, item -> item.id },
                         contentType = { _, _ -> RECIPIENT_CONTACT_CONTENT_TYPE },
-                    ) { index, contact ->
+                    ) { index, item ->
                         val bottomPadding = when {
                             index == lastContactIndex -> 0.dp
                             else -> 2.dp
@@ -287,27 +287,27 @@ private fun RecipientSelectionContactsContent(
 
                         RecipientSelectionContactRow(
                             modifier = Modifier.padding(bottom = bottomPadding),
-                            contact = contact,
+                            item = item,
                             enabled = primaryAction?.isLoading != true,
                             isSelected = uiState.selectedRecipientDestinations.contains(
-                                contact.destination,
+                                item.destination,
                             ),
                             onClick = {
-                                onRecipientClick(contact)
+                                onRecipientClick(item)
                             },
                             onLongClick = onRecipientLongClick?.let { callback ->
                                 {
-                                    callback(contact)
+                                    callback(item)
                                 }
                             },
-                            rowTestTag = rowDecorators.recipientRowTestTag(contact),
+                            rowTestTag = rowDecorators.recipientRowTestTag(item),
                             shape = recipientSelectionContactRowShape(
                                 index = index,
-                                totalCount = pickerUiState.contacts.size,
+                                totalCount = pickerUiState.items.size,
                             ),
                             showTrailingIndicator = rowDecorators
                                 .showRecipientTrailingIndicator(
-                                    contact,
+                                    item,
                                 ),
                             trailingIndicatorTestTag = rowDecorators.trailingIndicatorTestTag,
                         )
@@ -442,7 +442,7 @@ private fun RecipientSelectionPrimaryActionButton(
 
 @Composable
 private fun RecipientSelectionContactRow(
-    contact: ConversationRecipient,
+    item: RecipientPickerListItem,
     enabled: Boolean,
     isSelected: Boolean,
     onClick: () -> Unit,
@@ -492,7 +492,7 @@ private fun RecipientSelectionContactRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         RecipientSelectionContactAvatar(
-            contact = contact,
+            item = item,
             isSelected = isSelected,
         )
 
@@ -503,14 +503,14 @@ private fun RecipientSelectionContactRow(
             verticalArrangement = Arrangement.spacedBy(space = 2.dp),
         ) {
             Text(
-                text = contact.displayName,
+                text = recipientSelectionItemDisplayName(item = item),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodyLarge,
                 color = primaryTextColor,
             )
 
-            contact.secondaryText?.let { secondaryText ->
+            item.secondaryText?.let { secondaryText ->
                 Text(
                     text = secondaryText,
                     maxLines = 1,
@@ -559,7 +559,7 @@ private fun recipientSelectionContactRowShape(
 
 @Composable
 private fun RecipientSelectionContactAvatar(
-    contact: ConversationRecipient,
+    item: RecipientPickerListItem,
     isSelected: Boolean,
 ) {
     val avatarScale by rememberRecipientSelectionContactAvatarScale(
@@ -584,17 +584,17 @@ private fun RecipientSelectionContactAvatar(
                     RecipientSelectionSelectedAvatar()
                 }
 
-                contact.photoUri == null -> {
-                    RecipientSelectionTextAvatar(contact = contact)
+                recipientSelectionPhotoUri(item) == null -> {
+                    RecipientSelectionTextAvatar(item)
                 }
 
                 else -> {
                     AsyncImage(
-                        model = contact.photoUri,
-                        contentDescription = contact.displayName,
                         modifier = Modifier
                             .size(size = 40.dp)
                             .clip(shape = CircleShape),
+                        model = recipientSelectionPhotoUri(item),
+                        contentDescription = recipientSelectionItemDisplayName(item),
                     )
                 }
             }
@@ -625,11 +625,15 @@ private fun RecipientSelectionSelectedAvatar(
 
 @Composable
 private fun RecipientSelectionTextAvatar(
-    contact: ConversationRecipient,
+    item: RecipientPickerListItem,
     modifier: Modifier = Modifier,
 ) {
-    val label = remember(contact.displayName, contact.destination) {
-        recipientSelectionAvatarLabel(contact = contact)
+    val displayName = recipientSelectionItemDisplayName(item = item)
+    val label = remember(displayName, item.destination) {
+        recipientSelectionAvatarLabel(
+            displayName = displayName,
+            destination = item.destination,
+        )
     }
 
     Box(
@@ -649,10 +653,33 @@ private fun RecipientSelectionTextAvatar(
     }
 }
 
-private fun recipientSelectionAvatarLabel(
-    contact: ConversationRecipient,
+@Composable
+private fun recipientSelectionItemDisplayName(
+    item: RecipientPickerListItem,
 ): String {
-    val labelSource = contact.displayName.ifBlank { contact.destination }
+    return when (item) {
+        is RecipientPickerListItem.Contact -> item.recipient.displayName
+        is RecipientPickerListItem.SyntheticPhone -> {
+            stringResource(
+                id = R.string.contact_list_send_to_text,
+                item.rawQuery,
+            )
+        }
+    }
+}
+
+private fun recipientSelectionPhotoUri(item: RecipientPickerListItem): String? {
+    return when (item) {
+        is RecipientPickerListItem.Contact -> item.recipient.photoUri
+        is RecipientPickerListItem.SyntheticPhone -> null
+    }
+}
+
+private fun recipientSelectionAvatarLabel(
+    displayName: String,
+    destination: String,
+): String {
+    val labelSource = displayName.ifBlank { destination }
     val firstCharacter = labelSource.firstOrNull() ?: '?'
 
     return firstCharacter.uppercaseChar().toString()
@@ -687,20 +714,8 @@ private fun recipientSelectionPrimaryActionExitTransition(): ExitTransition {
 }
 
 private fun recipientSelectionPrimaryActionContentTransform(): ContentTransform {
-    return (
-        fadeIn(
-            animationSpec = recipientSelectionDefaultEffectsAnimationSpec(),
-        ) + scaleIn(
-            animationSpec = recipientSelectionSpatialAnimationSpec(),
-            initialScale = 0.9f,
-        )
-        ).togetherWith(
-        fadeOut(
-            animationSpec = recipientSelectionFastEffectsAnimationSpec(),
-        ) + scaleOut(
-            animationSpec = recipientSelectionSpatialAnimationSpec(),
-            targetScale = 0.9f,
-        ),
+    return recipientSelectionFadeAndScaleContentTransform(
+        scale = 0.9f,
     )
 }
 
@@ -723,21 +738,26 @@ private fun recipientSelectionTrailingIndicatorExitTransition(): ExitTransition 
 }
 
 private fun recipientSelectionAvatarContentTransform(): ContentTransform {
-    return (
-        fadeIn(
-            animationSpec = recipientSelectionDefaultEffectsAnimationSpec(),
-        ) + scaleIn(
-            animationSpec = recipientSelectionSpatialAnimationSpec(),
-            initialScale = 0.8f,
-        )
-        ).togetherWith(
-        fadeOut(
-            animationSpec = recipientSelectionFastEffectsAnimationSpec(),
-        ) + scaleOut(
-            animationSpec = recipientSelectionSpatialAnimationSpec(),
-            targetScale = 0.8f,
-        ),
+    return recipientSelectionFadeAndScaleContentTransform(
+        scale = 0.8f,
     )
+}
+
+private fun recipientSelectionFadeAndScaleContentTransform(scale: Float): ContentTransform {
+    val enterTransition = fadeIn(
+        animationSpec = recipientSelectionDefaultEffectsAnimationSpec(),
+    ) + scaleIn(
+        animationSpec = recipientSelectionSpatialAnimationSpec(),
+        initialScale = scale,
+    )
+    val exitTransition = fadeOut(
+        animationSpec = recipientSelectionFastEffectsAnimationSpec(),
+    ) + scaleOut(
+        animationSpec = recipientSelectionSpatialAnimationSpec(),
+        targetScale = scale,
+    )
+
+    return enterTransition.togetherWith(exitTransition)
 }
 
 @Composable
