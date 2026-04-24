@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.v2.composer.ui
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.tween
@@ -18,10 +19,12 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AddCircleOutline
 import androidx.compose.material.icons.rounded.Image
+import androidx.compose.material.icons.rounded.Mic
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -44,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -53,6 +57,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.ui.conversation.v2.CONVERSATION_ATTACHMENT_AUDIO_MENU_ITEM_TEST_TAG
 import com.android.messaging.ui.conversation.v2.CONVERSATION_ATTACHMENT_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.v2.CONVERSATION_ATTACHMENT_CONTACT_MENU_ITEM_TEST_TAG
 import com.android.messaging.ui.conversation.v2.CONVERSATION_ATTACHMENT_MEDIA_MENU_ITEM_TEST_TAG
@@ -81,6 +86,7 @@ internal fun ConversationComposeBar(
     messageFieldFocusRequester: FocusRequester? = null,
     onContactAttachClick: () -> Unit,
     onMediaPickerClick: () -> Unit,
+    onLockedAudioRecordingStartRequest: () -> Unit,
     onMessageTextChange: (String) -> Unit,
     onAudioRecordingStartRequest: () -> Unit,
     onAudioRecordingFinish: () -> Unit,
@@ -121,6 +127,7 @@ internal fun ConversationComposeBar(
             presentation = presentation,
             onContactAttachClick = onContactAttachClick,
             onMediaPickerClick = onMediaPickerClick,
+            onLockedAudioRecordingStartRequest = onLockedAudioRecordingStartRequest,
             onMessageTextChange = onMessageTextChange,
             onAudioRecordingStartRequest = {
                 recordingGestureState = ConversationSendActionButtonGestureState()
@@ -203,6 +210,7 @@ private fun ConversationComposeInputContent(
     presentation: ConversationComposeBarPresentation,
     onContactAttachClick: () -> Unit,
     onMediaPickerClick: () -> Unit,
+    onLockedAudioRecordingStartRequest: () -> Unit,
     onMessageTextChange: (String) -> Unit,
     onAudioRecordingStartRequest: () -> Unit,
     onAudioRecordingDrag: (ConversationSendActionButtonGestureState) -> Unit,
@@ -275,8 +283,10 @@ private fun ConversationComposeInputContent(
                         messageFieldFocusRequester = messageFieldFocusRequester,
                         presentation = presentation,
                         isAttachmentActionEnabled = isAttachmentActionEnabled,
+                        isAudioRecordActionEnabled = isRecordActionEnabled,
                         onContactAttachClick = onContactAttachClick,
                         onMediaPickerClick = onMediaPickerClick,
+                        onAudioAttachClick = onLockedAudioRecordingStartRequest,
                     )
                 }
             }
@@ -318,9 +328,11 @@ private fun ConversationComposeMessageField(
     messageFieldFocusRequester: FocusRequester?,
     presentation: ConversationComposeBarPresentation,
     isAttachmentActionEnabled: Boolean,
+    isAudioRecordActionEnabled: Boolean,
     onValueChange: (String) -> Unit,
     onContactAttachClick: () -> Unit,
     onMediaPickerClick: () -> Unit,
+    onAudioAttachClick: () -> Unit,
 ) {
     val focusRequesterModifier = messageFieldFocusRequester
         ?.let(Modifier::focusRequester)
@@ -341,8 +353,10 @@ private fun ConversationComposeMessageField(
             ConversationComposeAttachmentMenu(
                 modifier = Modifier.testTag(CONVERSATION_ATTACHMENT_BUTTON_TEST_TAG),
                 enabled = isAttachmentActionEnabled,
+                isAudioRecordActionEnabled = isAudioRecordActionEnabled,
                 onContactAttachClick = onContactAttachClick,
                 onMediaPickerClick = onMediaPickerClick,
+                onAudioAttachClick = onAudioAttachClick,
             )
         },
         minLines = 1,
@@ -382,12 +396,19 @@ private fun contentSwapTransition(): ContentTransform {
 private fun ConversationComposeAttachmentMenu(
     modifier: Modifier = Modifier,
     enabled: Boolean,
+    isAudioRecordActionEnabled: Boolean,
     onContactAttachClick: () -> Unit,
     onMediaPickerClick: () -> Unit,
+    onAudioAttachClick: () -> Unit,
 ) {
     val hapticFeedback = LocalHapticFeedback.current
     var isExpanded by rememberSaveable {
         mutableStateOf(value = false)
+    }
+
+    fun closeMenuAndRun(action: () -> Unit) {
+        isExpanded = false
+        action()
     }
 
     Box(
@@ -414,45 +435,69 @@ private fun ConversationComposeAttachmentMenu(
             onDismissRequest = {
                 isExpanded = false
             },
+            shape = RoundedCornerShape(size = 24.dp),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            tonalElevation = 3.dp,
+            shadowElevation = 6.dp,
             offset = DpOffset(
                 x = 0.dp,
                 y = (-8).dp,
             ),
         ) {
-            DropdownMenuItem(
+            ConversationComposeAttachmentMenuItem(
                 modifier = Modifier.testTag(CONVERSATION_ATTACHMENT_MEDIA_MENU_ITEM_TEST_TAG),
-                text = {
-                    Text(text = stringResource(id = R.string.mediapicker_gallery_title))
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Rounded.Image,
-                        contentDescription = null,
-                    )
-                },
+                imageVector = Icons.Rounded.Image,
+                textResId = R.string.mediapicker_gallery_title,
                 onClick = {
-                    isExpanded = false
-                    onMediaPickerClick()
+                    closeMenuAndRun(action = onMediaPickerClick)
                 },
             )
-            DropdownMenuItem(
-                modifier = Modifier.testTag(CONVERSATION_ATTACHMENT_CONTACT_MENU_ITEM_TEST_TAG),
-                text = {
-                    Text(text = stringResource(id = R.string.mediapicker_contact_title))
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Rounded.Person,
-                        contentDescription = null,
-                    )
-                },
+            ConversationComposeAttachmentMenuItem(
+                modifier = Modifier.testTag(CONVERSATION_ATTACHMENT_AUDIO_MENU_ITEM_TEST_TAG),
+                imageVector = Icons.Rounded.Mic,
+                textResId = R.string.mediapicker_audio_title,
+                enabled = isAudioRecordActionEnabled,
                 onClick = {
-                    isExpanded = false
-                    onContactAttachClick()
+                    closeMenuAndRun(action = onAudioAttachClick)
+                },
+            )
+
+            ConversationComposeAttachmentMenuItem(
+                modifier = Modifier.testTag(CONVERSATION_ATTACHMENT_CONTACT_MENU_ITEM_TEST_TAG),
+                imageVector = Icons.Rounded.Person,
+                textResId = R.string.mediapicker_contact_title,
+                onClick = {
+                    closeMenuAndRun(action = onContactAttachClick)
                 },
             )
         }
     }
+}
+
+@Composable
+private fun ConversationComposeAttachmentMenuItem(
+    modifier: Modifier = Modifier,
+    imageVector: ImageVector,
+    @StringRes textResId: Int,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+) {
+    DropdownMenuItem(
+        modifier = modifier,
+        text = {
+            Text(text = stringResource(id = textResId))
+        },
+        leadingIcon = {
+            Icon(
+                imageVector = imageVector,
+                contentDescription = null,
+                modifier = Modifier.size(size = 24.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        },
+        enabled = enabled,
+        onClick = onClick,
+    )
 }
 
 @Composable

@@ -15,6 +15,9 @@ import com.android.messaging.ui.conversation.v2.mediapicker.repository.Conversat
 import com.android.messaging.ui.mediapicker.LevelTrackingMediaRecorder
 import com.android.messaging.util.ContentType
 import com.android.messaging.util.LogUtil
+import java.util.UUID
+import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -29,14 +32,13 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.util.UUID
-import javax.inject.Inject
-import kotlin.time.Duration.Companion.milliseconds
 
 internal interface ConversationAudioRecordingDelegate :
     ConversationScreenDelegate<ConversationAudioRecordingUiState> {
 
     fun startRecording(selfParticipantId: String)
+
+    fun startLockedRecording(selfParticipantId: String)
 
     fun lockRecording(): Boolean
 
@@ -80,6 +82,23 @@ internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
     }
 
     override fun startRecording(selfParticipantId: String) {
+        startRecording(
+            selfParticipantId = selfParticipantId,
+            queuedStartIntent = QueuedStartIntent.None,
+        )
+    }
+
+    override fun startLockedRecording(selfParticipantId: String) {
+        startRecording(
+            selfParticipantId = selfParticipantId,
+            queuedStartIntent = QueuedStartIntent.Lock,
+        )
+    }
+
+    private fun startRecording(
+        selfParticipantId: String,
+        queuedStartIntent: QueuedStartIntent,
+    ) {
         val scope = boundScope ?: return
         val startJob = scope.launch(
             context = defaultDispatcher,
@@ -89,13 +108,12 @@ internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
         }
 
         val shouldStartJob = withSessionStateLock {
-            tryStartRecordingLocked()
+            tryStartRecordingLocked(queuedStartIntent = queuedStartIntent)
         }
 
         when {
             shouldStartJob -> startJob.start()
             else -> startJob.cancel()
-
         }
     }
 
@@ -155,13 +173,15 @@ internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
         }
     }
 
-    private fun tryStartRecordingLocked(): Boolean {
+    private fun tryStartRecordingLocked(queuedStartIntent: QueuedStartIntent): Boolean {
         if (sessionState !is AudioRecordingSessionState.Idle) {
             return false
         }
 
-        sessionState = AudioRecordingSessionState.Starting()
+        sessionState = AudioRecordingSessionState.Starting(queuedStartIntent)
+
         publishUiStateLocked()
+
         return true
     }
 

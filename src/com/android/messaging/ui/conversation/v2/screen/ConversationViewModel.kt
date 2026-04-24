@@ -81,6 +81,7 @@ internal interface ConversationScreenModel {
     fun onContactCardPicked(contactUri: String?)
     fun onMessageTextChanged(text: String)
     fun onAudioRecordingStart()
+    fun onLockedAudioRecordingStart()
     fun onAudioRecordingLock(): Boolean
     fun onAudioRecordingFinish()
     fun onAudioRecordingCancel()
@@ -478,15 +479,33 @@ internal class ConversationViewModel @Inject constructor(
     }
 
     override fun onAudioRecordingStart() {
+        startAudioRecording(isLocked = false)
+    }
+
+    override fun onLockedAudioRecordingStart() {
+        startAudioRecording(isLocked = true)
+    }
+
+    private fun startAudioRecording(isLocked: Boolean) {
         val effectiveSelfParticipantId = composerUiState.value
             .simSelector
             .selectedSubscription
             ?.selfParticipantId
             ?: conversationDraftDelegate.state.value.draft.selfParticipantId
 
-        conversationAudioRecordingDelegate.startRecording(
-            selfParticipantId = effectiveSelfParticipantId,
-        )
+        when {
+            isLocked -> {
+                conversationAudioRecordingDelegate.startLockedRecording(
+                    selfParticipantId = effectiveSelfParticipantId,
+                )
+            }
+
+            else -> {
+                conversationAudioRecordingDelegate.startRecording(
+                    selfParticipantId = effectiveSelfParticipantId,
+                )
+            }
+        }
     }
 
     override fun onAudioRecordingLock(): Boolean {

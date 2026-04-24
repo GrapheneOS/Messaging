@@ -7,6 +7,8 @@ internal const val CONVERSATION_COMPOSE_BAR_TEST_TAG = "conversation_compose_bar
 internal const val CONVERSATION_ATTACHMENT_BUTTON_TEST_TAG = "conversation_attachment_button"
 internal const val CONVERSATION_ATTACHMENT_CONTACT_MENU_ITEM_TEST_TAG =
     "conversation_attachment_contact_menu_item"
+internal const val CONVERSATION_ATTACHMENT_AUDIO_MENU_ITEM_TEST_TAG =
+    "conversation_attachment_audio_menu_item"
 internal const val CONVERSATION_ATTACHMENT_MEDIA_MENU_ITEM_TEST_TAG =
     "conversation_attachment_media_menu_item"
 internal const val CONVERSATION_ATTACHMENT_PREVIEW_LIST_TEST_TAG =

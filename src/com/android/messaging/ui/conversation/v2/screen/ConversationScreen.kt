@@ -25,6 +25,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.geometry.Rect as ComposeRect
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
@@ -55,7 +56,12 @@ import com.android.messaging.ui.conversation.v2.screen.model.ConversationMessage
 import com.android.messaging.ui.conversation.v2.screen.model.ConversationMessageSelectionAction
 import com.android.messaging.ui.conversation.v2.screen.model.ConversationScreenScaffoldUiState
 import kotlinx.collections.immutable.ImmutableList
-import androidx.compose.ui.geometry.Rect as ComposeRect
+
+private enum class PendingAudioRecordingStartMode {
+    None,
+    Unlocked,
+    Locked,
+}
 
 @Composable
 internal fun ConversationScreen(
@@ -87,8 +93,8 @@ internal fun ConversationScreen(
         mutableStateOf<ComposeRect?>(value = null)
     }
 
-    var shouldStartAudioRecordingAfterPermissionGrant by rememberSaveable {
-        mutableStateOf(value = false)
+    var pendingAudioRecordingStartMode by rememberSaveable {
+        mutableStateOf(value = PendingAudioRecordingStartMode.None)
     }
 
     val contactPickerLauncher = rememberLauncherForActivityResult(
@@ -102,13 +108,29 @@ internal fun ConversationScreen(
     ) { isGranted ->
         permissionState.audioPermissionGranted = isGranted
 
-        if (!isGranted || !shouldStartAudioRecordingAfterPermissionGrant) {
-            shouldStartAudioRecordingAfterPermissionGrant = false
+        val startMode = pendingAudioRecordingStartMode
+        pendingAudioRecordingStartMode = PendingAudioRecordingStartMode.None
+
+        if (!isGranted) {
             return@rememberLauncherForActivityResult
         }
 
-        shouldStartAudioRecordingAfterPermissionGrant = false
-        screenModel.onAudioRecordingStart()
+        startAudioRecording(
+            screenModel = screenModel,
+            startMode = startMode,
+        )
+    }
+
+    val requestAudioRecordingStart = { startMode: PendingAudioRecordingStartMode ->
+        if (permissionState.audioPermissionGranted) {
+            startAudioRecording(
+                screenModel = screenModel,
+                startMode = startMode,
+            )
+        } else {
+            pendingAudioRecordingStartMode = startMode
+            audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+        }
     }
 
     LaunchedEffect(conversationId) {
@@ -215,12 +237,10 @@ internal fun ConversationScreen(
             onResolvedAttachmentClick = screenModel::onAttachmentClicked,
             onResolvedAttachmentRemove = screenModel::onRemoveResolvedAttachment,
             onAudioRecordingStartRequest = {
-                if (permissionState.audioPermissionGranted) {
-                    screenModel.onAudioRecordingStart()
-                } else {
-                    shouldStartAudioRecordingAfterPermissionGrant = true
-                    audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                }
+                requestAudioRecordingStart(PendingAudioRecordingStartMode.Unlocked)
+            },
+            onLockedAudioRecordingStartRequest = {
+                requestAudioRecordingStart(PendingAudioRecordingStartMode.Locked)
             },
             onAudioRecordingFinish = screenModel::onAudioRecordingFinish,
             onAudioRecordingLock = screenModel::onAudioRecordingLock,
@@ -250,6 +270,17 @@ internal fun ConversationScreen(
             onCapturedMediaReady = screenModel::onCapturedMediaReady,
             onSendClick = screenModel::onSendClick,
         )
+    }
+}
+
+private fun startAudioRecording(
+    screenModel: ConversationScreenModel,
+    startMode: PendingAudioRecordingStartMode,
+) {
+    when (startMode) {
+        PendingAudioRecordingStartMode.None -> Unit
+        PendingAudioRecordingStartMode.Unlocked -> screenModel.onAudioRecordingStart()
+        PendingAudioRecordingStartMode.Locked -> screenModel.onLockedAudioRecordingStart()
     }
 }
 
@@ -283,6 +314,7 @@ private fun ConversationScreenScaffold(
     onResolvedAttachmentClick: (ComposerAttachmentUiModel.Resolved) -> Unit,
     onResolvedAttachmentRemove: (String) -> Unit,
     onAudioRecordingStartRequest: () -> Unit,
+    onLockedAudioRecordingStartRequest: () -> Unit,
     onAudioRecordingFinish: () -> Unit,
     onAudioRecordingLock: () -> Boolean,
     onAudioRecordingCancel: () -> Unit,
@@ -354,6 +386,7 @@ private fun ConversationScreenScaffold(
                     onResolvedAttachmentClick = onResolvedAttachmentClick,
                     onResolvedAttachmentRemove = onResolvedAttachmentRemove,
                     onAudioRecordingStartRequest = onAudioRecordingStartRequest,
+                    onLockedAudioRecordingStartRequest = onLockedAudioRecordingStartRequest,
                     onAudioRecordingFinish = onAudioRecordingFinish,
                     onAudioRecordingLock = onAudioRecordingLock,
                     onAudioRecordingCancel = onAudioRecordingCancel,
