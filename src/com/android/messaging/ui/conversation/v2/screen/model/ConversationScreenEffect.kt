@@ -30,6 +30,13 @@ internal sealed interface ConversationScreenEffect {
         val phoneNumber: String,
     ) : ConversationScreenEffect
 
+    data class ShowSaveAttachmentsResult(
+        val imageCount: Int,
+        val videoCount: Int,
+        val otherCount: Int,
+        val failCount: Int,
+    ) : ConversationScreenEffect
+
     data class ShareMessage(
         val attachmentContentType: String?,
         val attachmentContentUri: String?,

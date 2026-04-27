@@ -6,6 +6,7 @@ import com.android.messaging.data.conversation.repository.ConversationsRepositor
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.domain.conversation.usecase.CreateForwardedMessage
 import com.android.messaging.ui.conversation.v2.common.ConversationScreenDelegate
+import com.android.messaging.ui.conversation.v2.mediapicker.repository.ConversationAttachmentRepository
 import com.android.messaging.ui.conversation.v2.messages.model.message.ConversationMessagePartUiModel
 import com.android.messaging.ui.conversation.v2.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.v2.messages.model.message.ConversationMessagesUiState
@@ -48,6 +49,7 @@ internal interface ConversationMessageSelectionDelegate :
 
 internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
     private val clipboardManager: ClipboardManager,
+    private val conversationAttachmentRepository: ConversationAttachmentRepository,
     private val conversationMessagesDelegate: ConversationMessagesDelegate,
     private val createForwardedMessage: CreateForwardedMessage,
     private val conversationsRepository: ConversationsRepository,
@@ -119,6 +121,10 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
 
             ConversationMessageSelectionAction.Resend -> {
                 resendSelectedMessage()
+            }
+
+            ConversationMessageSelectionAction.SaveAttachment -> {
+                saveSelectedMessageAttachments()
             }
 
             ConversationMessageSelectionAction.Share -> {
@@ -290,6 +296,49 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
         }
     }
 
+    private fun saveSelectedMessageAttachments() {
+        val selectedMessage = singleSelectedMessageOrNull() ?: return
+
+        val attachments = selectedMessage.parts
+            .asSequence()
+            .filterIsInstance<ConversationMessagePartUiModel.Attachment>()
+            .filterNot { it.contentType.isBlank() }
+            .mapNotNull { attachment ->
+                when (val contentUri = attachment.contentUri) {
+                    null -> null
+
+                    else -> {
+                        ConversationAttachmentRepository.AttachmentToSave(
+                            contentType = attachment.contentType,
+                            contentUri = contentUri.toString(),
+                        )
+                    }
+                }
+            }
+            .toList()
+
+        clearMessageSelection()
+
+        if (attachments.isEmpty()) {
+            return
+        }
+
+        boundScope?.launch(defaultDispatcher) {
+            conversationAttachmentRepository
+                .saveAttachmentsToMediaStore(attachments = attachments)
+                .collect { result ->
+                    _effects.emit(
+                        ConversationScreenEffect.ShowSaveAttachmentsResult(
+                            imageCount = result.imageCount,
+                            videoCount = result.videoCount,
+                            otherCount = result.otherCount,
+                            failCount = result.failCount,
+                        ),
+                    )
+                }
+        }
+    }
+
     private fun shareSelectedMessage() {
         val selectedMessage = singleSelectedMessageOrNull() ?: return
         val messageText = selectedMessage.text?.takeIf(String::isNotBlank)
@@ -420,6 +469,10 @@ private fun availableSelectionActions(
     if (selectedMessage.canForwardMessage) {
         actions += ConversationMessageSelectionAction.Share
         actions += ConversationMessageSelectionAction.Forward
+    }
+
+    if (selectedMessage.canSaveAttachments) {
+        actions += ConversationMessageSelectionAction.SaveAttachment
     }
 
     if (selectedMessage.canCopyMessageToClipboard) {

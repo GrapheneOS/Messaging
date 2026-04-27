@@ -9,6 +9,7 @@ import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.FileDownload
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.Save
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -51,6 +52,14 @@ internal fun ConversationSelectionTopAppBar(
 
             if (selection.availableActions.contains(ConversationMessageSelectionAction.Forward)) {
                 add(ConversationMessageSelectionAction.Forward)
+            }
+
+            val hasSaveAttachmentAction = selection.availableActions.contains(
+                ConversationMessageSelectionAction.SaveAttachment,
+            )
+
+            if (hasSaveAttachmentAction) {
+                add(ConversationMessageSelectionAction.SaveAttachment)
             }
 
             if (selection.availableActions.contains(ConversationMessageSelectionAction.Details)) {
@@ -191,6 +200,7 @@ private fun selectionActionIcon(
         ConversationMessageSelectionAction.Download -> Icons.Rounded.FileDownload
         ConversationMessageSelectionAction.Forward -> Icons.AutoMirrored.Rounded.Forward
         ConversationMessageSelectionAction.Resend -> Icons.AutoMirrored.Rounded.Send
+        ConversationMessageSelectionAction.SaveAttachment -> Icons.Rounded.Save
         ConversationMessageSelectionAction.Share -> Icons.Rounded.Share
     }
 }
@@ -217,6 +227,9 @@ private fun selectionActionLabel(
         }
         ConversationMessageSelectionAction.Resend -> {
             stringResource(R.string.action_send)
+        }
+        ConversationMessageSelectionAction.SaveAttachment -> {
+            stringResource(R.string.action_save_attachment)
         }
         ConversationMessageSelectionAction.Share -> {
             stringResource(R.string.action_share)

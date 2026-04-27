@@ -42,9 +42,24 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor(
             canDownloadMessage = data.showDownloadMessage,
             canForwardMessage = data.canForwardMessage,
             canResendMessage = data.showResendMessage,
+            canSaveAttachments = canSaveAttachments(data),
             mmsSubject = data.mmsSubject,
             protocol = mapProtocol(data),
         )
+    }
+
+    private fun canSaveAttachments(data: ConversationMessageData): Boolean {
+        return when (val parts = data.parts) {
+            null -> false
+
+            else -> {
+                parts.any { part ->
+                    !part.contentType.isNullOrBlank() &&
+                        part.contentUri != null &&
+                        !ContentType.isTextType(part.contentType)
+                }
+            }
+        }
     }
 
     private fun mapPart(part: MessagePartData): ConversationMessagePartUiModel {

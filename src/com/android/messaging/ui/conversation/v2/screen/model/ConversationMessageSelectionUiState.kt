@@ -32,5 +32,6 @@ internal enum class ConversationMessageSelectionAction {
     Download,
     Forward,
     Resend,
+    SaveAttachment,
     Share,
 }

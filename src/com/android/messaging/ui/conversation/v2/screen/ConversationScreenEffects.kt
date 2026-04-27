@@ -77,6 +77,13 @@ internal fun ConversationScreenEffects(
                     )
                 }
 
+                is ConversationScreenEffect.ShowSaveAttachmentsResult -> {
+                    showSaveAttachmentsResultToast(
+                        context = context,
+                        effect = effect,
+                    )
+                }
+
                 is ConversationScreenEffect.LaunchForwardMessage -> {
                     UIIntents.get().launchForwardMessageActivity(
                         context,
@@ -125,6 +132,43 @@ private fun placePhoneCall(
         context,
         phoneNumber,
         Point(0, 0),
+    )
+}
+
+private fun showSaveAttachmentsResultToast(
+    context: Context,
+    effect: ConversationScreenEffect.ShowSaveAttachmentsResult,
+) {
+    if (effect.failCount > 0) {
+        UiUtils.showToastAtBottom(
+            context.resources.getQuantityString(
+                R.plurals.attachment_save_error,
+                effect.failCount,
+                effect.failCount,
+            ),
+        )
+
+        return
+    }
+
+    val total = effect.imageCount + effect.videoCount + effect.otherCount
+    if (total == 0) {
+        return
+    }
+
+    val pluralResId = when {
+        effect.otherCount > 0 && effect.imageCount + effect.videoCount == 0 -> {
+            R.plurals.attachments_saved_to_downloads
+        }
+
+        effect.otherCount > 0 -> R.plurals.attachments_saved
+        effect.videoCount == 0 -> R.plurals.photos_saved
+        effect.imageCount == 0 -> R.plurals.videos_saved
+        else -> R.plurals.attachments_saved
+    }
+
+    UiUtils.showToastAtBottom(
+        context.resources.getQuantityString(pluralResId, total, total),
     )
 }
 

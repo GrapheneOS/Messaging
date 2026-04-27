@@ -86,6 +86,7 @@
     <string name="contact_picker_hint_text">Click to open contacts list on this device</string>
 
     <string name="action_share">Share</string>
+    <string name="action_save_attachment">Save attachment</string>
 
     <string name="posted_just_now">"Just now"</string>
     <string name="posted_now">"Now"</string>
@@ -451,6 +452,14 @@
     <plurals name="attachments_saved_to_downloads">
         <item quantity="one"><xliff:g id="quantity">%d</xliff:g> attachment saved to \"Downloads\"</item>
         <item quantity="other"><xliff:g id="quantity">%d</xliff:g> attachments saved to \"Downloads\"</item>
+    </plurals>
+    <plurals name="photos_saved">
+        <item quantity="one"><xliff:g id="quantity">%d</xliff:g> photo saved</item>
+        <item quantity="other"><xliff:g id="quantity">%d</xliff:g> photos saved</item>
+    </plurals>
+    <plurals name="videos_saved">
+        <item quantity="one"><xliff:g id="quantity">%d</xliff:g> video saved</item>
+        <item quantity="other"><xliff:g id="quantity">%d</xliff:g> videos saved</item>
     </plurals>
     <plurals name="attachments_saved">
         <item quantity="one"><xliff:g id="quantity">%d</xliff:g> attachment saved</item>
