@@ -6,6 +6,7 @@ import android.net.Uri
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetailsData
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
+import com.android.messaging.data.conversation.model.send.ConversationSendData
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
 import com.android.messaging.datamodel.MessagingContentProvider
@@ -34,6 +35,11 @@ import kotlinx.coroutines.flow.map
 internal interface ConversationsRepository {
     fun getConversationMetadata(conversationId: String): Flow<ConversationMetadata?>
     fun getConversationMessages(conversationId: String): Flow<List<ConversationMessageData>>
+    fun getConversationSendData(
+        conversationId: String,
+        requestedSelfParticipantId: String,
+    ): ConversationSendData?
+
     fun getConversationMessage(
         conversationId: String,
         messageId: String,
@@ -84,6 +90,27 @@ internal class ConversationsRepositoryImpl @Inject constructor(
                 queryConversationMessages(uri = uri)
             }
             .flowOn(ioDispatcher)
+    }
+
+    override fun getConversationSendData(
+        conversationId: String,
+        requestedSelfParticipantId: String,
+    ): ConversationSendData? {
+        if (conversationId.isBlank()) {
+            return null
+        }
+
+        val uri = MessagingContentProvider.buildConversationMetadataUri(conversationId)
+        val metadata = queryConversationMetadata(uri = uri) ?: return null
+        val resolvedSelfParticipantId = requestedSelfParticipantId
+            .takeIf { it.isNotBlank() }
+            ?: metadata.selfParticipantId
+
+        return ConversationSendData(
+            metadata = metadata,
+            participants = queryConversationParticipants(conversationId = conversationId),
+            selfParticipant = queryParticipant(participantId = resolvedSelfParticipantId),
+        )
     }
 
     override fun getConversationMessage(

@@ -12,6 +12,7 @@ internal interface ConversationDraftMessageDataMapper {
     fun map(
         conversationId: String,
         draft: ConversationDraft,
+        forceMms: Boolean = false,
     ): MessageData
 }
 
@@ -21,10 +22,11 @@ internal class ConversationDraftMessageDataMapperImpl @Inject constructor() :
     override fun map(
         conversationId: String,
         draft: ConversationDraft,
+        forceMms: Boolean,
     ): MessageData {
         val selfParticipantId = draft.selfParticipantId.takeIf { it.isNotBlank() }
         val messageParts = draft.attachments.mapNotNull(::createMessagePartDataOrNull)
-        val isMms = draft.subjectText.isNotBlank() || messageParts.isNotEmpty()
+        val isMms = forceMms || draft.subjectText.isNotBlank() || messageParts.isNotEmpty()
 
         val message = when {
             isMms -> MessageData.createDraftMmsMessage(
