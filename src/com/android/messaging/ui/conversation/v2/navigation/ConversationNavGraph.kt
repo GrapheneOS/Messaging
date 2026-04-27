@@ -85,12 +85,21 @@ internal fun ConversationNavGraph(
                         entryUiState = currentEntryUiState,
                         conversationId = navKey.conversationId,
                     ),
+                    pendingScrollPosition = pendingScrollPositionForConversation(
+                        entryUiState = currentEntryUiState,
+                        conversationId = navKey.conversationId,
+                    ),
                     pendingStartupAttachment = pendingStartupAttachmentForConversation(
                         entryUiState = currentEntryUiState,
                         conversationId = navKey.conversationId,
                     ),
                     onPendingDraftConsumed = {
                         currentEntryModel.onDraftPayloadConsumed(
+                            conversationId = navKey.conversationId,
+                        )
+                    },
+                    onPendingScrollPositionConsumed = {
+                        currentEntryModel.onScrollPositionConsumed(
                             conversationId = navKey.conversationId,
                         )
                     },
@@ -273,6 +282,16 @@ private fun handleNewChatBack(
         navigationReducer = navigationReducer,
         onFinish = onFinish,
     )
+}
+
+private fun pendingScrollPositionForConversation(
+    entryUiState: ConversationEntryUiState,
+    conversationId: String,
+): Int? {
+    return when {
+        entryUiState.conversationId == conversationId -> entryUiState.pendingScrollPosition
+        else -> null
+    }
 }
 
 private fun pendingStartupAttachmentForConversation(

@@ -88,10 +88,14 @@ internal class ConversationActivity : ComponentActivity() {
             startupAttachmentType = intent
                 .getStringExtra(UIIntents.UI_INTENT_EXTRA_ATTACHMENT_TYPE)
                 ?.takeUnless(TextUtils::isEmpty),
+            messagePosition = intent
+                .getIntExtra(UIIntents.UI_INTENT_EXTRA_MESSAGE_POSITION, -1)
+                .takeIf { position -> position >= 0 },
             isLaunchedFromBubble = isLaunchedFromBubble,
         )
 
         intent.removeExtra(UIIntents.UI_INTENT_EXTRA_DRAFT_DATA)
+        intent.removeExtra(UIIntents.UI_INTENT_EXTRA_MESSAGE_POSITION)
 
         return false
     }

@@ -13,6 +13,7 @@ internal data class ConversationEntryUiState(
     val isResolvingConversation: Boolean = false,
     val isResolvingConversationIndicatorVisible: Boolean = false,
     val pendingDraft: ConversationDraft? = null,
+    val pendingScrollPosition: Int? = null,
     val pendingStartupAttachment: ConversationEntryStartupAttachment? = null,
     val resolvingRecipientDestination: String? = null,
     val selectedGroupRecipientDestinations: ImmutableList<String> = persistentListOf(),

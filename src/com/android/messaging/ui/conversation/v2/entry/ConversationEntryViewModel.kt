@@ -46,6 +46,8 @@ internal interface ConversationEntryModel {
 
     fun onDraftPayloadConsumed(conversationId: String)
 
+    fun onScrollPositionConsumed(conversationId: String)
+
     fun onStartupAttachmentConsumed(conversationId: String)
 
     fun navigateBack()
@@ -203,6 +205,7 @@ internal class ConversationEntryViewModel @Inject constructor(
                 pendingDraft = launchRequest.draftData?.let { messageData ->
                     conversationMessageDataDraftMapper.map(messageData = messageData)
                 },
+                pendingScrollPosition = launchRequest.messagePosition,
                 pendingStartupAttachment = buildStartupAttachmentOrNull(
                     contentUri = launchRequest.startupAttachmentUri,
                     contentType = launchRequest.startupAttachmentType,
@@ -210,6 +213,7 @@ internal class ConversationEntryViewModel @Inject constructor(
             ),
         )
         savedStateHandle[PENDING_DRAFT_DATA_KEY] = launchRequest.draftData
+        savedStateHandle[PENDING_SCROLL_POSITION_KEY] = launchRequest.messagePosition
         savedStateHandle[PROCESSED_LAUNCH_GENERATION_KEY] = launchRequest.launchGeneration
     }
 
@@ -241,12 +245,27 @@ internal class ConversationEntryViewModel @Inject constructor(
         }
     }
 
+    override fun onScrollPositionConsumed(conversationId: String) {
+        val currentUiState = _uiState.value
+
+        val hasPendingScrollPosition = currentUiState.pendingScrollPosition != null
+
+        if (currentUiState.conversationId == conversationId && hasPendingScrollPosition) {
+            updateUiState(
+                currentUiState.copy(
+                    pendingScrollPosition = null,
+                ),
+            )
+            savedStateHandle[PENDING_SCROLL_POSITION_KEY] = null
+        }
+    }
+
     override fun onStartupAttachmentConsumed(conversationId: String) {
         val currentUiState = _uiState.value
 
-        if (currentUiState.conversationId == conversationId &&
-            currentUiState.pendingStartupAttachment != null
-        ) {
+        val hasPendingStartupAttachment = currentUiState.pendingStartupAttachment != null
+
+        if (currentUiState.conversationId == conversationId && hasPendingStartupAttachment) {
             updateUiState(
                 currentUiState.copy(
                     pendingStartupAttachment = null,
@@ -307,6 +326,7 @@ internal class ConversationEntryViewModel @Inject constructor(
             pendingDraft = pendingDraftData?.let { messageData ->
                 conversationMessageDataDraftMapper.map(messageData = messageData)
             },
+            pendingScrollPosition = savedStateHandle[PENDING_SCROLL_POSITION_KEY],
             pendingStartupAttachment = buildStartupAttachmentOrNull(
                 contentUri = startupAttachmentUri,
                 contentType = startupAttachmentType,
@@ -465,6 +485,7 @@ internal class ConversationEntryViewModel @Inject constructor(
         private const val IS_CREATING_GROUP_KEY = "is_creating_group"
         private const val LAUNCH_GENERATION_KEY = "launch_generation"
         private const val PENDING_DRAFT_DATA_KEY = "pending_draft_data"
+        private const val PENDING_SCROLL_POSITION_KEY = "pending_scroll_position"
         private const val PENDING_STARTUP_ATTACHMENT_TYPE_KEY = "pending_startup_attachment_type"
         private const val PENDING_STARTUP_ATTACHMENT_URI_KEY = "pending_startup_attachment_uri"
 

@@ -57,6 +57,8 @@ import com.android.messaging.ui.conversation.v2.screen.model.ConversationMessage
 import com.android.messaging.ui.conversation.v2.screen.model.ConversationScreenScaffoldUiState
 import kotlinx.collections.immutable.ImmutableList
 
+private const val SMOOTH_SCROLL_JUMP_THRESHOLD = 15
+
 private enum class PendingAudioRecordingStartMode {
     None,
     Unlocked,
@@ -73,8 +75,10 @@ internal fun ConversationScreen(
     onConversationDetailsClick: () -> Unit,
     onNavigateBack: () -> Unit,
     pendingDraft: ConversationDraft? = null,
+    pendingScrollPosition: Int? = null,
     pendingStartupAttachment: ConversationEntryStartupAttachment? = null,
     onPendingDraftConsumed: () -> Unit = {},
+    onPendingScrollPositionConsumed: () -> Unit = {},
     onPendingStartupAttachmentConsumed: () -> Unit = {},
     screenModel: ConversationScreenModel = hiltViewModel<ConversationViewModel>(),
 ) {
@@ -221,6 +225,8 @@ internal fun ConversationScreen(
             uiState = scaffoldUiState,
             isMediaPickerOpen = mediaPickerState.isOpen,
             messageFieldFocusRequester = messageFieldFocusRequester,
+            pendingScrollPosition = pendingScrollPosition,
+            onPendingScrollPositionConsumed = onPendingScrollPositionConsumed,
             onAddPeopleClick = onAddPeopleClick,
             onCallClick = screenModel::onCallClick,
             onConversationDetailsClick = onConversationDetailsClick,
@@ -300,6 +306,8 @@ private fun ConversationScreenScaffold(
     uiState: ConversationScreenScaffoldUiState,
     isMediaPickerOpen: Boolean,
     messageFieldFocusRequester: FocusRequester,
+    pendingScrollPosition: Int?,
+    onPendingScrollPositionConsumed: () -> Unit,
     onAddPeopleClick: () -> Unit,
     onCallClick: () -> Unit,
     onConversationDetailsClick: () -> Unit,
@@ -409,6 +417,8 @@ private fun ConversationScreenScaffold(
             conversationId = conversationId,
             uiState = uiState,
             contentPadding = contentPadding,
+            pendingScrollPosition = pendingScrollPosition,
+            onPendingScrollPositionConsumed = onPendingScrollPositionConsumed,
             onAttachmentClick = onAttachmentClick,
             onExternalUriClick = onExternalUriClick,
             onMessageClick = onMessageClick,
@@ -480,6 +490,8 @@ private fun ConversationScreenContent(
     conversationId: String?,
     uiState: ConversationScreenScaffoldUiState,
     contentPadding: PaddingValues,
+    pendingScrollPosition: Int?,
+    onPendingScrollPositionConsumed: () -> Unit,
     onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
     onExternalUriClick: (String) -> Unit,
     onMessageClick: (String) -> Unit,
@@ -508,6 +520,14 @@ private fun ConversationScreenContent(
                 conversationId = conversationId,
                 messages = messagesState.messages,
                 listState = messagesListState,
+            )
+
+            ScrollToTargetMessage(
+                conversationId = conversationId,
+                pendingScrollPosition = pendingScrollPosition,
+                messages = messagesState.messages,
+                listState = messagesListState,
+                onConsumed = onPendingScrollPositionConsumed,
             )
 
             ConversationMessages(
@@ -626,6 +646,57 @@ private fun AutoScrollToLatestMessage(
 private fun isScrolledToLatestMessage(listState: LazyListState): Boolean {
     return listState.firstVisibleItemIndex == 0 &&
         listState.firstVisibleItemScrollOffset == 0
+}
+
+@Composable
+private fun ScrollToTargetMessage(
+    conversationId: String?,
+    pendingScrollPosition: Int?,
+    messages: ImmutableList<ConversationMessageUiModel>,
+    listState: LazyListState,
+    onConsumed: () -> Unit,
+) {
+    LaunchedEffect(
+        conversationId,
+        pendingScrollPosition,
+        messages.size,
+    ) {
+        if (pendingScrollPosition == null || messages.isEmpty()) {
+            return@LaunchedEffect
+        }
+
+        val displayIndex = messagePositionToDisplayIndex(
+            position = pendingScrollPosition,
+            size = messages.size,
+        )
+
+        val firstVisible = listState.firstVisibleItemIndex
+        val delta = displayIndex - firstVisible
+
+        val intermediateIndex = when {
+            delta > SMOOTH_SCROLL_JUMP_THRESHOLD -> displayIndex - SMOOTH_SCROLL_JUMP_THRESHOLD
+            delta < -SMOOTH_SCROLL_JUMP_THRESHOLD -> displayIndex + SMOOTH_SCROLL_JUMP_THRESHOLD
+            else -> -1
+        }
+
+        if (intermediateIndex != -1) {
+            listState.scrollToItem(index = intermediateIndex.coerceIn(0, messages.size - 1))
+        }
+
+        listState.animateScrollToItem(index = displayIndex)
+        onConsumed()
+    }
+}
+
+internal fun messagePositionToDisplayIndex(position: Int, size: Int): Int {
+    return when {
+        size <= 0 -> 0
+
+        else -> {
+            val lastIndex = size - 1
+            (lastIndex - position).coerceIn(0, lastIndex)
+        }
+    }
 }
 
 @Composable
