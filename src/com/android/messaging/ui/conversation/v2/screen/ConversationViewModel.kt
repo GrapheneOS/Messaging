@@ -1,14 +1,17 @@
 package com.android.messaging.ui.conversation.v2.screen
 
+import android.app.Activity
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.messaging.R
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.repository.ConversationSubscriptionsRepository
 import com.android.messaging.data.media.model.ConversationMediaItem
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.domain.conversation.usecase.CanAddMoreConversationParticipants
+import com.android.messaging.domain.conversation.usecase.CreateDefaultSmsRoleRequest
 import com.android.messaging.domain.conversation.usecase.IsDeviceVoiceCapable
 import com.android.messaging.domain.conversation.usecase.IsEmergencyPhoneNumber
 import com.android.messaging.ui.conversation.v2.audio.delegate.ConversationAudioRecordingDelegate
@@ -100,6 +103,9 @@ internal interface ConversationScreenModel {
     fun dismissMessageSelection()
     fun confirmDeleteSelectedMessages()
     fun onSendClick()
+    fun onDefaultSmsRolePromptActionClick()
+    fun onDefaultSmsRoleRequestResult(resultCode: Int)
+    fun onDefaultSmsRoleRequestLaunchFailed()
     fun persistDraft()
 
     fun onArchiveConversationClick()
@@ -126,6 +132,7 @@ internal class ConversationViewModel @Inject constructor(
     private val conversationComposerUiStateMapper: ConversationComposerUiStateMapper,
     private val conversationSubscriptionsRepository: ConversationSubscriptionsRepository,
     private val canAddMoreConversationParticipants: CanAddMoreConversationParticipants,
+    private val createDefaultSmsRoleRequest: CreateDefaultSmsRoleRequest,
     private val isDeviceVoiceCapable: IsDeviceVoiceCapable,
     private val isEmergencyPhoneNumber: IsEmergencyPhoneNumber,
     @param:DefaultDispatcher
@@ -306,6 +313,9 @@ internal class ConversationViewModel @Inject constructor(
     }
 
     private fun bindDelegateEffects() {
+        viewModelScope.launch(defaultDispatcher) {
+            conversationDraftDelegate.effects.collect(_effects::emit)
+        }
         viewModelScope.launch(defaultDispatcher) {
             conversationMediaPickerDelegate.effects.collect(_effects::emit)
         }
@@ -577,6 +587,70 @@ internal class ConversationViewModel @Inject constructor(
 
     override fun onSendClick() {
         conversationDraftDelegate.onSendClick()
+    }
+
+    override fun onDefaultSmsRolePromptActionClick() {
+        viewModelScope.launch(defaultDispatcher) {
+            when (val requestIntent = createDefaultSmsRoleRequest()) {
+                null -> {
+                    _effects.emit(
+                        ConversationScreenEffect.ShowMessage(
+                            messageResId = R.string.activity_not_found_message,
+                        ),
+                    )
+                }
+
+                else -> {
+                    _effects.emit(
+                        ConversationScreenEffect.LaunchDefaultSmsRoleRequest(
+                            intent = requestIntent,
+                        ),
+                    )
+                }
+            }
+        }
+    }
+
+    override fun onDefaultSmsRoleRequestResult(resultCode: Int) {
+        if (handlePendingDefaultSmsRoleRequestResult(resultCode = resultCode)) {
+            return
+        }
+
+        if (resultCode != Activity.RESULT_OK) {
+            return
+        }
+
+        viewModelScope.launch(defaultDispatcher) {
+            _effects.emit(
+                ConversationScreenEffect.ShowMessage(
+                    messageResId = R.string.toast_after_setting_default_sms_app,
+                ),
+            )
+        }
+    }
+
+    private fun handlePendingDefaultSmsRoleRequestResult(resultCode: Int): Boolean {
+        val didHandleDraftSend = conversationDraftDelegate.onDefaultSmsRoleRequestResult(
+            resultCode = resultCode,
+        )
+
+        if (didHandleDraftSend) {
+            return true
+        }
+
+        return conversationMessageSelectionDelegate.onDefaultSmsRoleRequestResult(
+            resultCode = resultCode,
+        )
+    }
+
+    override fun onDefaultSmsRoleRequestLaunchFailed() {
+        viewModelScope.launch(defaultDispatcher) {
+            _effects.emit(
+                ConversationScreenEffect.ShowMessage(
+                    messageResId = R.string.activity_not_found_message,
+                ),
+            )
+        }
     }
 
     override fun persistDraft() {

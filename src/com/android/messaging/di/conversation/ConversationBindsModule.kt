@@ -24,6 +24,10 @@ import com.android.messaging.domain.contacts.usecase.IsReadContactsPermissionGra
 import com.android.messaging.domain.contacts.usecase.IsReadContactsPermissionGrantedImpl
 import com.android.messaging.domain.conversation.usecase.CanAddMoreConversationParticipants
 import com.android.messaging.domain.conversation.usecase.CanAddMoreConversationParticipantsImpl
+import com.android.messaging.domain.conversation.usecase.CheckConversationActionRequirements
+import com.android.messaging.domain.conversation.usecase.CheckConversationActionRequirementsImpl
+import com.android.messaging.domain.conversation.usecase.CreateDefaultSmsRoleRequest
+import com.android.messaging.domain.conversation.usecase.CreateDefaultSmsRoleRequestImpl
 import com.android.messaging.domain.conversation.usecase.CreateForwardedMessage
 import com.android.messaging.domain.conversation.usecase.CreateForwardedMessageImpl
 import com.android.messaging.domain.conversation.usecase.ForwardedMessageSubjectFormatter
@@ -113,6 +117,18 @@ internal abstract class ConversationBindsModule {
     abstract fun bindCanAddMoreConversationParticipants(
         impl: CanAddMoreConversationParticipantsImpl,
     ): CanAddMoreConversationParticipants
+
+    @Binds
+    @Reusable
+    abstract fun bindCheckConversationActionRequirements(
+        impl: CheckConversationActionRequirementsImpl,
+    ): CheckConversationActionRequirements
+
+    @Binds
+    @Reusable
+    abstract fun bindCreateDefaultSmsRoleRequest(
+        impl: CreateDefaultSmsRoleRequestImpl,
+    ): CreateDefaultSmsRoleRequest
 
     @Binds
     @Reusable

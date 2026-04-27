@@ -1,11 +1,17 @@
 package com.android.messaging.ui.conversation.v2.screen
 
+import android.content.ActivityNotFoundException
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.graphics.Point
 import android.graphics.Rect
 import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
@@ -18,6 +24,7 @@ import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversation.MessageDetailsDialog
 import com.android.messaging.ui.conversation.v2.screen.model.ConversationScreenEffect
 import com.android.messaging.util.ContentType
+import com.android.messaging.util.LogUtil
 import com.android.messaging.util.UiUtils
 import com.android.messaging.util.UriUtil
 import kotlin.math.roundToInt
@@ -26,19 +33,36 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
+private const val LOG_TAG = "ConversationScreenEffects"
+
 @Composable
 internal fun ConversationScreenEffects(
     screenModel: ConversationScreenModel,
+    snackbarHostState: SnackbarHostState,
     hostBoundsState: State<ComposeRect?>,
     onNavigateBack: () -> Unit,
 ) {
     val context = LocalContext.current
+    val defaultSmsRoleLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+    ) { result ->
+        screenModel.onDefaultSmsRoleRequestResult(resultCode = result.resultCode)
+    }
 
-    LaunchedEffect(screenModel, context, hostBoundsState, onNavigateBack) {
+    LaunchedEffect(screenModel, context, snackbarHostState, hostBoundsState, onNavigateBack) {
         screenModel.effects.collect { effect ->
             when (effect) {
                 ConversationScreenEffect.CloseConversation -> {
                     onNavigateBack()
+                }
+
+                is ConversationScreenEffect.RequestDefaultSmsRole -> {
+                    requestDefaultSmsRole(
+                        context = context,
+                        snackbarHostState = snackbarHostState,
+                        effect = effect,
+                        onActionClick = screenModel::onDefaultSmsRolePromptActionClick,
+                    )
                 }
 
                 is ConversationScreenEffect.LaunchAddContactFlow -> {
@@ -84,6 +108,16 @@ internal fun ConversationScreenEffects(
                     )
                 }
 
+                is ConversationScreenEffect.LaunchDefaultSmsRoleRequest -> {
+                    launchDefaultSmsRoleRequest(
+                        effect = effect,
+                        launchRoleRequest = { intent ->
+                            defaultSmsRoleLauncher.launch(intent)
+                        },
+                        onLaunchFailed = screenModel::onDefaultSmsRoleRequestLaunchFailed,
+                    )
+                }
+
                 is ConversationScreenEffect.LaunchForwardMessage -> {
                     UIIntents.get().launchForwardMessageActivity(
                         context,
@@ -114,6 +148,43 @@ internal fun ConversationScreenEffects(
                 }
             }
         }
+    }
+}
+
+private suspend fun requestDefaultSmsRole(
+    context: Context,
+    snackbarHostState: SnackbarHostState,
+    effect: ConversationScreenEffect.RequestDefaultSmsRole,
+    onActionClick: () -> Unit,
+) {
+    snackbarHostState.currentSnackbarData?.dismiss()
+
+    val messageResId = when {
+        effect.isSending -> R.string.requires_default_sms_app_to_send
+        else -> R.string.requires_default_sms_app
+    }
+
+    val snackbarResult = snackbarHostState.showSnackbar(
+        message = context.getString(messageResId),
+        actionLabel = context.getString(R.string.requires_default_sms_change_button),
+        duration = SnackbarDuration.Indefinite,
+    )
+
+    if (snackbarResult == SnackbarResult.ActionPerformed) {
+        onActionClick()
+    }
+}
+
+private fun launchDefaultSmsRoleRequest(
+    effect: ConversationScreenEffect.LaunchDefaultSmsRoleRequest,
+    launchRoleRequest: (Intent) -> Unit,
+    onLaunchFailed: () -> Unit,
+) {
+    try {
+        launchRoleRequest(effect.intent)
+    } catch (exception: ActivityNotFoundException) {
+        LogUtil.w(LOG_TAG, "Couldn't find activity", exception)
+        onLaunchFailed()
     }
 }
 

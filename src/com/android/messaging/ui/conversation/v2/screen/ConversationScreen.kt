@@ -101,6 +101,9 @@ internal fun ConversationScreen(
     val hostBoundsState = remember {
         mutableStateOf<ComposeRect?>(value = null)
     }
+    val snackbarHostState = remember {
+        SnackbarHostState()
+    }
 
     var pendingAudioRecordingStartMode by rememberSaveable {
         mutableStateOf(value = PendingAudioRecordingStartMode.None)
@@ -211,6 +214,7 @@ internal fun ConversationScreen(
 
     ConversationScreenEffects(
         screenModel = screenModel,
+        snackbarHostState = snackbarHostState,
         hostBoundsState = hostBoundsState,
         onNavigateBack = onNavigateBack,
     )
@@ -227,6 +231,7 @@ internal fun ConversationScreen(
                 .fillMaxSize(),
             conversationId = conversationId,
             uiState = scaffoldUiState,
+            snackbarHostState = snackbarHostState,
             isMediaPickerOpen = mediaPickerState.isOpen,
             messageFieldFocusRequester = messageFieldFocusRequester,
             pendingScrollPosition = pendingScrollPosition,
@@ -308,6 +313,7 @@ private fun ConversationScreenScaffold(
     modifier: Modifier = Modifier,
     conversationId: String?,
     uiState: ConversationScreenScaffoldUiState,
+    snackbarHostState: SnackbarHostState,
     isMediaPickerOpen: Boolean,
     messageFieldFocusRequester: FocusRequester,
     pendingScrollPosition: Int?,
@@ -345,9 +351,6 @@ private fun ConversationScreenScaffold(
     onExternalUriClick: (String) -> Unit,
 ) {
     var isSimSheetVisible by rememberSaveable { mutableStateOf(value = false) }
-    val snackbarHostState = remember {
-        SnackbarHostState()
-    }
 
     val hasSimSelector = uiState.composer.simSelector.isAvailable
     LaunchedEffect(hasSimSelector) {

@@ -1,9 +1,13 @@
 package com.android.messaging.ui.conversation.v2.messages.delegate
 
+import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
+import com.android.messaging.R
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.di.core.DefaultDispatcher
+import com.android.messaging.domain.conversation.usecase.CheckConversationActionRequirements
+import com.android.messaging.domain.conversation.usecase.ConversationActionRequirementsResult
 import com.android.messaging.domain.conversation.usecase.CreateForwardedMessage
 import com.android.messaging.ui.conversation.v2.common.ConversationScreenDelegate
 import com.android.messaging.ui.conversation.v2.mediapicker.repository.ConversationAttachmentRepository
@@ -45,9 +49,12 @@ internal interface ConversationMessageSelectionDelegate :
     fun dismissMessageSelection()
 
     fun confirmDeleteSelectedMessages()
+
+    fun onDefaultSmsRoleRequestResult(resultCode: Int): Boolean
 }
 
 internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
+    private val checkConversationActionRequirements: CheckConversationActionRequirements,
     private val clipboardManager: ClipboardManager,
     private val conversationAttachmentRepository: ConversationAttachmentRepository,
     private val conversationMessagesDelegate: ConversationMessagesDelegate,
@@ -69,6 +76,7 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
     override val state = _state.asStateFlow()
 
     private var boundScope: CoroutineScope? = null
+    private var pendingDefaultSmsRoleResendMessageId: String? = null
 
     override fun bind(
         scope: CoroutineScope,
@@ -152,6 +160,18 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
         conversationsRepository.deleteMessages(
             messageIds = deleteConfirmation.messageIds,
         )
+    }
+
+    override fun onDefaultSmsRoleRequestResult(resultCode: Int): Boolean {
+        val messageId = pendingDefaultSmsRoleResendMessageId ?: return false
+        pendingDefaultSmsRoleResendMessageId = null
+
+        if (resultCode != Activity.RESULT_OK) {
+            return true
+        }
+
+        resendMessageWhenActionRequirementsSatisfied(messageId = messageId)
+        return true
     }
 
     private fun bindSelectionUiState(scope: CoroutineScope) {
@@ -272,9 +292,43 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
 
         clearMessageSelection()
 
-        conversationsRepository.resendMessage(
-            messageId = selectedMessage.messageId,
-        )
+        resendMessageWhenActionRequirementsSatisfied(messageId = selectedMessage.messageId)
+    }
+
+    private fun resendMessageWhenActionRequirementsSatisfied(messageId: String) {
+        when (checkConversationActionRequirements()) {
+            ConversationActionRequirementsResult.Ready -> {
+                conversationsRepository.resendMessage(
+                    messageId = messageId,
+                )
+            }
+
+            ConversationActionRequirementsResult.SmsNotCapable -> {
+                emitEffect(
+                    effect = ConversationScreenEffect.ShowMessage(
+                        messageResId = R.string.sms_disabled,
+                    ),
+                )
+            }
+
+            ConversationActionRequirementsResult.NoPreferredSmsSim -> {
+                emitEffect(
+                    effect = ConversationScreenEffect.ShowMessage(
+                        messageResId = R.string.no_preferred_sim_selected,
+                    ),
+                )
+            }
+
+            ConversationActionRequirementsResult.MissingDefaultSmsRole -> {
+                pendingDefaultSmsRoleResendMessageId = messageId
+
+                emitEffect(
+                    effect = ConversationScreenEffect.RequestDefaultSmsRole(
+                        isSending = true,
+                    ),
+                )
+            }
+        }
     }
 
     private fun singleSelectedMessageOrNull(): ConversationMessageUiModel? {

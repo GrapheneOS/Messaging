@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.v2.screen.model
 
+import android.content.Intent
 import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.datamodel.data.ConversationParticipantsData
 import com.android.messaging.datamodel.data.MessageData
@@ -8,8 +9,16 @@ import com.android.messaging.datamodel.data.ParticipantData
 internal sealed interface ConversationScreenEffect {
     data object CloseConversation : ConversationScreenEffect
 
+    data class RequestDefaultSmsRole(
+        val isSending: Boolean,
+    ) : ConversationScreenEffect
+
     data class LaunchAddContactFlow(
         val destination: String,
+    ) : ConversationScreenEffect
+
+    data class LaunchDefaultSmsRoleRequest(
+        val intent: Intent,
     ) : ConversationScreenEffect
 
     data class LaunchForwardMessage(

@@ -1,14 +1,19 @@
 package com.android.messaging.ui.conversation.v2.composer.delegate
 
+import android.app.Activity
+import com.android.messaging.R
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.data.conversation.model.draft.ConversationDraftPendingAttachment
 import com.android.messaging.data.conversation.repository.ConversationDraftsRepository
 import com.android.messaging.di.core.ApplicationCoroutineScope
 import com.android.messaging.di.core.DefaultDispatcher
+import com.android.messaging.domain.conversation.usecase.CheckConversationActionRequirements
+import com.android.messaging.domain.conversation.usecase.ConversationActionRequirementsResult
 import com.android.messaging.domain.conversation.usecase.SendConversationDraft
 import com.android.messaging.ui.conversation.v2.common.ConversationScreenDelegate
 import com.android.messaging.ui.conversation.v2.composer.model.ConversationDraftState
+import com.android.messaging.ui.conversation.v2.screen.model.ConversationScreenEffect
 import com.android.messaging.util.LogUtil
 import com.android.messaging.util.core.extension.unitFlow
 import javax.inject.Inject
@@ -18,8 +23,10 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
@@ -39,6 +46,8 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 internal interface ConversationDraftDelegate : ConversationScreenDelegate<ConversationDraftState> {
+    val effects: Flow<ConversationScreenEffect>
+
     fun onMessageTextChanged(messageText: String)
 
     fun onSelfParticipantIdChanged(selfParticipantId: String)
@@ -68,6 +77,8 @@ internal interface ConversationDraftDelegate : ConversationScreenDelegate<Conver
 
     fun onSendClick()
 
+    fun onDefaultSmsRoleRequestResult(resultCode: Int): Boolean
+
     fun persistDraft()
 
     fun flushDraft()
@@ -77,13 +88,18 @@ internal interface ConversationDraftDelegate : ConversationScreenDelegate<Conver
 internal class ConversationDraftDelegateImpl @Inject constructor(
     @param:ApplicationCoroutineScope
     private val applicationScope: CoroutineScope,
+    private val checkConversationActionRequirements: CheckConversationActionRequirements,
     private val conversationDraftsRepository: ConversationDraftsRepository,
     private val sendConversationDraft: SendConversationDraft,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
 ) : ConversationDraftDelegate {
 
+    private val _effects = MutableSharedFlow<ConversationScreenEffect>(
+        extraBufferCapacity = 1,
+    )
     private val _state = MutableStateFlow(ConversationDraftState())
+    override val effects = _effects.asSharedFlow()
     override val state = _state.asStateFlow()
 
     private val draftEditorState = MutableStateFlow(DraftEditorState())
@@ -91,6 +107,7 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
 
     private var boundScope: CoroutineScope? = null
     private var pendingDraftSeed: PendingDraftSeed? = null
+    private var pendingDefaultSmsRoleSendRequest: DraftSendRequest? = null
 
     override fun bind(
         scope: CoroutineScope,
@@ -185,11 +202,22 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
     }
 
     override fun onSendClick() {
-        val scope = boundScope ?: return
-        val sendRequest = markSendingAndCreateSendRequestOrNull() ?: return
+        createSendRequestOrNull()
+            ?.let(::sendDraftWhenActionRequirementsSatisfied)
+    }
 
-        launchDraftOperation(scope = scope) {
-            createSendDraftFlow(sendRequest)
+    override fun onDefaultSmsRoleRequestResult(resultCode: Int): Boolean {
+        val sendRequest = pendingDefaultSmsRoleSendRequest ?: return false
+
+        pendingDefaultSmsRoleSendRequest = null
+
+        return when (resultCode) {
+            Activity.RESULT_OK -> {
+                sendDraftWhenActionRequirementsSatisfied(sendRequest = sendRequest)
+                true
+            }
+
+            else -> false
         }
     }
 
@@ -317,6 +345,55 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
     ) {
         scope.launch(defaultDispatcher) {
             createOperationFlow().collect()
+        }
+    }
+
+    private fun sendDraftWhenActionRequirementsSatisfied(sendRequest: DraftSendRequest) {
+        when (checkConversationActionRequirements()) {
+            ConversationActionRequirementsResult.Ready -> {
+                sendDraft(sendRequest = sendRequest)
+            }
+
+            ConversationActionRequirementsResult.SmsNotCapable -> {
+                emitEffect(
+                    effect = ConversationScreenEffect.ShowMessage(
+                        messageResId = R.string.sms_disabled,
+                    ),
+                )
+            }
+
+            ConversationActionRequirementsResult.NoPreferredSmsSim -> {
+                emitEffect(
+                    effect = ConversationScreenEffect.ShowMessage(
+                        messageResId = R.string.no_preferred_sim_selected,
+                    ),
+                )
+            }
+
+            ConversationActionRequirementsResult.MissingDefaultSmsRole -> {
+                pendingDefaultSmsRoleSendRequest = sendRequest
+                emitEffect(
+                    effect = ConversationScreenEffect.RequestDefaultSmsRole(
+                        isSending = true,
+                    ),
+                )
+            }
+        }
+    }
+
+    private fun sendDraft(sendRequest: DraftSendRequest) {
+        val scope = boundScope ?: return
+
+        if (markSendingForSendRequest(sendRequest = sendRequest)) {
+            launchDraftOperation(scope = scope) {
+                createSendDraftFlow(sendRequest)
+            }
+        }
+    }
+
+    private fun emitEffect(effect: ConversationScreenEffect) {
+        boundScope?.launch(defaultDispatcher) {
+            _effects.emit(effect)
         }
     }
 
@@ -479,27 +556,40 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
         }
     }
 
-    private fun markSendingAndCreateSendRequestOrNull(): DraftSendRequest? {
-        var sendRequest: DraftSendRequest? = null
+    private fun createSendRequestOrNull(): DraftSendRequest? {
+        val currentDraftEditorState = draftEditorState.value
+        val conversationId = currentDraftEditorState.conversationId
 
-        updateDraftEditorState { currentDraftEditorState ->
-            if (!currentDraftEditorState.canSendDraft()) {
-                return@updateDraftEditorState currentDraftEditorState
+        return when {
+            !currentDraftEditorState.canSendDraft() -> null
+            conversationId == null -> null
+
+            else -> {
+                DraftSendRequest(
+                    conversationId = conversationId,
+                    draft = currentDraftEditorState.effectiveDraft,
+                )
+            }
+        }
+    }
+
+    private fun markSendingForSendRequest(sendRequest: DraftSendRequest): Boolean {
+        var didMarkSending = false
+
+        updateDraftEditorState { state ->
+            val isSameConversation = state.conversationId == sendRequest.conversationId
+
+            val canMarkSending = isSameConversation && !state.isSending
+
+            if (!canMarkSending) {
+                return@updateDraftEditorState state
             }
 
-            val conversationId = currentDraftEditorState
-                .conversationId
-                ?: return@updateDraftEditorState currentDraftEditorState
-
-            sendRequest = DraftSendRequest(
-                conversationId = conversationId,
-                draft = currentDraftEditorState.effectiveDraft,
-            )
-
-            currentDraftEditorState.markSending()
+            didMarkSending = true
+            state.markSending()
         }
 
-        return sendRequest
+        return didMarkSending
     }
 
     private fun <T> runDraftOperationBoundary(
