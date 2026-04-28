@@ -63,6 +63,7 @@ internal fun ConversationMessages(
     onExternalUriClick: (String) -> Unit,
     onMessageClick: (String) -> Unit,
     onMessageLongClick: (String) -> Unit,
+    onMessageResendClick: (String) -> Unit,
 ) {
     val configuration = LocalConfiguration.current
     val displayMessages = remember(messages) {
@@ -104,6 +105,7 @@ internal fun ConversationMessages(
                 onExternalUriClick = onExternalUriClick,
                 onMessageClick = onMessageClick,
                 onMessageLongClick = onMessageLongClick,
+                onMessageResendClick = onMessageResendClick,
             )
         }
     }
@@ -153,6 +155,7 @@ private fun ConversationMessagesItem(
     onExternalUriClick: (String) -> Unit,
     onMessageClick: (String) -> Unit,
     onMessageLongClick: (String) -> Unit,
+    onMessageResendClick: (String) -> Unit,
 ) {
     val presentation = rememberConversationMessagesItemPresentation(
         message = message,
@@ -177,6 +180,9 @@ private fun ConversationMessagesItem(
             },
             onMessageLongClick = {
                 onMessageLongClick(message.messageId)
+            },
+            onMessageResendClick = {
+                onMessageResendClick(message.messageId)
             },
         )
     }

@@ -251,6 +251,7 @@ internal fun ConversationScreen(
             onDismissMessageSelection = screenModel::dismissMessageSelection,
             onMessageClick = screenModel::onMessageClick,
             onMessageLongClick = screenModel::onMessageLongClick,
+            onMessageResendClick = screenModel::onMessageResendClick,
             onMessageSelectionActionClick = screenModel::onMessageSelectionActionClick,
             onOpenContactPicker = {
                 contactPickerLauncher.launch(input = null)
@@ -332,6 +333,7 @@ private fun ConversationScreenScaffold(
     onDismissMessageSelection: () -> Unit,
     onMessageClick: (String) -> Unit,
     onMessageLongClick: (String) -> Unit,
+    onMessageResendClick: (String) -> Unit,
     onMessageSelectionActionClick: (ConversationMessageSelectionAction) -> Unit,
     onNavigateBack: () -> Unit,
     onOpenContactPicker: () -> Unit,
@@ -437,6 +439,7 @@ private fun ConversationScreenScaffold(
             onExternalUriClick = onExternalUriClick,
             onMessageClick = onMessageClick,
             onMessageLongClick = onMessageLongClick,
+            onMessageResendClick = onMessageResendClick,
         )
     }
 
@@ -511,6 +514,7 @@ private fun ConversationScreenContent(
     onExternalUriClick: (String) -> Unit,
     onMessageClick: (String) -> Unit,
     onMessageLongClick: (String) -> Unit,
+    onMessageResendClick: (String) -> Unit,
 ) {
     when (val messagesState = uiState.messages) {
         is ConversationMessagesUiState.Loading -> {
@@ -555,6 +559,7 @@ private fun ConversationScreenContent(
                 onExternalUriClick = onExternalUriClick,
                 onMessageClick = onMessageClick,
                 onMessageLongClick = onMessageLongClick,
+                onMessageResendClick = onMessageResendClick,
             )
         }
     }

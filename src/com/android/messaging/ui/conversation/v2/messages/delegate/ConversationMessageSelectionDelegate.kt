@@ -42,6 +42,8 @@ internal interface ConversationMessageSelectionDelegate :
 
     fun onMessageLongClick(messageId: String)
 
+    fun onMessageResendClick(messageId: String)
+
     fun onMessageSelectionActionClick(action: ConversationMessageSelectionAction)
 
     fun dismissDeleteMessageConfirmation()
@@ -103,6 +105,10 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
 
     override fun onMessageLongClick(messageId: String) {
         toggleMessageSelection(messageId = messageId)
+    }
+
+    override fun onMessageResendClick(messageId: String) {
+        resendMessageWhenActionRequirementsSatisfied(messageId = messageId)
     }
 
     override fun onMessageSelectionActionClick(action: ConversationMessageSelectionAction) {
