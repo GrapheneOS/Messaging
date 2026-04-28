@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.v2.composer.model
 
 import androidx.compose.runtime.Immutable
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerDisabledReason
+import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
 import com.android.messaging.ui.conversation.v2.audio.model.ConversationAudioRecordingUiState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -20,7 +21,7 @@ internal data class ConversationComposerUiState(
     val isSendEnabled: Boolean = false,
     val shouldShowRecordAction: Boolean = false,
     val hasWorkingDraft: Boolean = false,
-    val isMms: Boolean = false,
+    val sendProtocol: ConversationDraftSendProtocol = ConversationDraftSendProtocol.SMS,
     val attachmentCount: Int = 0,
     val pendingAttachmentCount: Int = 0,
     val messageCount: Int = 1,

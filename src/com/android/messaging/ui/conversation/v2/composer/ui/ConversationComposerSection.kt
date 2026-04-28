@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
 import com.android.messaging.ui.conversation.v2.audio.model.ConversationAudioRecordingUiState
 import com.android.messaging.ui.conversation.v2.composer.model.ComposerAttachmentUiModel
 import kotlinx.collections.immutable.ImmutableList
@@ -14,6 +15,7 @@ internal fun ConversationComposerSection(
     audioRecording: ConversationAudioRecordingUiState,
     attachments: ImmutableList<ComposerAttachmentUiModel>,
     messageText: String,
+    sendProtocol: ConversationDraftSendProtocol,
     isMessageFieldEnabled: Boolean,
     isAttachmentActionEnabled: Boolean,
     isRecordActionEnabled: Boolean,
@@ -46,6 +48,7 @@ internal fun ConversationComposerSection(
         ConversationComposeBar(
             audioRecording = audioRecording,
             messageText = messageText,
+            sendProtocol = sendProtocol,
             isMessageFieldEnabled = isMessageFieldEnabled,
             isAttachmentActionEnabled = isAttachmentActionEnabled,
             isRecordActionEnabled = isRecordActionEnabled,

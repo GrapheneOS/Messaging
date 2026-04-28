@@ -6,15 +6,19 @@ import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.data.conversation.model.draft.ConversationDraftPendingAttachment
 import com.android.messaging.data.conversation.repository.ConversationDraftsRepository
+import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.di.core.ApplicationCoroutineScope
 import com.android.messaging.di.core.DefaultDispatcher
+import com.android.messaging.di.core.IoDispatcher
 import com.android.messaging.domain.conversation.usecase.action.CheckConversationActionRequirements
 import com.android.messaging.domain.conversation.usecase.action.ConversationActionRequirementsResult
+import com.android.messaging.domain.conversation.usecase.draft.GetConversationDraftSendProtocol
 import com.android.messaging.domain.conversation.usecase.draft.SendConversationDraft
 import com.android.messaging.domain.conversation.usecase.draft.exception.ConversationSimNotReadyException
 import com.android.messaging.domain.conversation.usecase.draft.exception.SendConversationDraftException
 import com.android.messaging.domain.conversation.usecase.draft.exception.TooManyVideoAttachmentsException
 import com.android.messaging.domain.conversation.usecase.draft.exception.UnknownConversationRecipientException
+import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
 import com.android.messaging.ui.conversation.v2.common.ConversationScreenDelegate
 import com.android.messaging.ui.conversation.v2.composer.model.ConversationDraftState
 import com.android.messaging.ui.conversation.v2.screen.model.ConversationScreenEffect
@@ -41,6 +45,7 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.transformLatest
@@ -95,9 +100,13 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
     private val applicationScope: CoroutineScope,
     private val checkConversationActionRequirements: CheckConversationActionRequirements,
     private val conversationDraftsRepository: ConversationDraftsRepository,
+    private val conversationsRepository: ConversationsRepository,
+    private val getConversationDraftSendProtocol: GetConversationDraftSendProtocol,
     private val sendConversationDraft: SendConversationDraft,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
+    @param:IoDispatcher
+    private val ioDispatcher: CoroutineDispatcher,
 ) : ConversationDraftDelegate {
 
     private val _effects = MutableSharedFlow<ConversationScreenEffect>(
@@ -129,6 +138,7 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
             conversationIdFlow = conversationIdFlow,
         )
         bindDraftAutosave(scope = scope)
+        bindDraftSendProtocol(scope = scope)
     }
 
     override fun onMessageTextChanged(messageText: String) {
@@ -318,6 +328,21 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
                     shouldMarkCurrentDraftAsPersisted = true,
                     shouldSkipIfRequestIsStale = true,
                 ).collect()
+            }
+        }
+    }
+
+    private fun bindDraftSendProtocol(scope: CoroutineScope) {
+        scope.launch(defaultDispatcher) {
+            observeDraftSendProtocol().collect { sendProtocol ->
+                _state.update { currentState ->
+                    currentState.copy(
+                        sendProtocol = when {
+                            currentState.draft.hasContent -> sendProtocol
+                            else -> ConversationDraftSendProtocol.SMS
+                        },
+                    )
+                }
             }
         }
     }
@@ -544,10 +569,84 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
         }
     }
 
+    private fun observeDraftSendProtocol(): Flow<ConversationDraftSendProtocol> {
+        return draftEditorState
+            .map { currentDraftEditorState ->
+                currentDraftEditorState.conversationId to currentDraftEditorState.effectiveDraft
+            }
+            .distinctUntilChanged()
+            .debounce(timeoutMillis = DRAFT_SEND_PROTOCOL_DEBOUNCE_MILLIS)
+            .mapLatest { (conversationId, draft) ->
+                resolveDraftSendProtocol(
+                    conversationId = conversationId,
+                    draft = draft,
+                )
+            }
+            .distinctUntilChanged()
+    }
+
+    private suspend fun resolveDraftSendProtocol(
+        conversationId: String?,
+        draft: ConversationDraft,
+    ): ConversationDraftSendProtocol {
+        return try {
+            val resolvedConversationId = conversationId?.takeIf { it.isNotBlank() }
+            val sendData = when {
+                draft.hasContent && resolvedConversationId != null -> {
+                    withContext(ioDispatcher) {
+                        conversationsRepository.getConversationSendData(
+                            conversationId = resolvedConversationId,
+                            requestedSelfParticipantId = draft.selfParticipantId,
+                        )
+                    }
+                }
+
+                else -> null
+            }
+
+            when (sendData) {
+                null -> fallbackDraftSendProtocol(draft = draft)
+                else -> {
+                    getConversationDraftSendProtocol(
+                        draft = draft,
+                        sendData = sendData,
+                    )
+                }
+            }
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Throwable) {
+            LogUtil.e(
+                TAG,
+                "Failed to resolve draft send protocol for conversation $conversationId",
+                exception,
+            )
+
+            fallbackDraftSendProtocol(draft = draft)
+        }
+    }
+
+    private fun fallbackDraftSendProtocol(
+        draft: ConversationDraft,
+    ): ConversationDraftSendProtocol {
+        return when {
+            draft.isMms -> ConversationDraftSendProtocol.MMS
+            else -> ConversationDraftSendProtocol.SMS
+        }
+    }
+
     private fun updateDraftEditorState(transform: (DraftEditorState) -> DraftEditorState) {
         draftEditorState.update { currentDraftEditorState ->
             val updatedDraftEditorState = transform(currentDraftEditorState)
-            _state.value = updatedDraftEditorState.visibleState
+            val visibleState = updatedDraftEditorState.visibleState
+            val visibleSendProtocol = when {
+                visibleState.draft.hasContent -> _state.value.sendProtocol
+                else -> ConversationDraftSendProtocol.SMS
+            }
+
+            _state.value = visibleState.copy(
+                sendProtocol = visibleSendProtocol,
+            )
 
             updatedDraftEditorState
         }
@@ -646,6 +745,7 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
         private const val TAG = "ConversationDraftDelegate"
 
         private const val DRAFT_AUTOSAVE_DELAY_MILLIS = 300L
+        private const val DRAFT_SEND_PROTOCOL_DEBOUNCE_MILLIS = 250L
     }
 }
 

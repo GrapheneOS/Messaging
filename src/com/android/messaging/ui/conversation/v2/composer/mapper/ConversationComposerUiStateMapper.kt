@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.v2.composer.mapper
 
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscription
+import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
 import com.android.messaging.ui.conversation.v2.audio.model.ConversationAudioRecordingPhase
 import com.android.messaging.ui.conversation.v2.audio.model.ConversationAudioRecordingUiState
 import com.android.messaging.ui.conversation.v2.composer.model.ComposerAttachmentUiModel
@@ -33,6 +34,10 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
     ): ConversationComposerUiState {
         val draft = draftState.draft
         val hasWorkingDraft = draft.hasContent
+        val visibleSendProtocol = when {
+            hasWorkingDraft -> draftState.sendProtocol
+            else -> ConversationDraftSendProtocol.SMS
+        }
 
         val isAttachmentActionEnabled = composerAvailability.isAttachmentActionEnabled &&
             !draft.isCheckingDraft &&
@@ -69,7 +74,7 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
             isSendEnabled = isSendEnabled,
             shouldShowRecordAction = shouldShowRecordAction,
             hasWorkingDraft = hasWorkingDraft,
-            isMms = draft.isMms,
+            sendProtocol = visibleSendProtocol,
             attachmentCount = draft.attachments.size,
             pendingAttachmentCount = draftState.pendingAttachments.size,
             messageCount = draft.messageCount,

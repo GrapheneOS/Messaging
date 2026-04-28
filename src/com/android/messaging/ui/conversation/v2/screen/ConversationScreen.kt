@@ -405,6 +405,7 @@ private fun ConversationScreenScaffold(
                     audioRecording = uiState.composer.audioRecording,
                     attachments = uiState.composer.attachments,
                     messageText = uiState.composer.messageText,
+                    sendProtocol = uiState.composer.sendProtocol,
                     isMessageFieldEnabled = uiState.composer.isMessageFieldEnabled,
                     isAttachmentActionEnabled = uiState.composer.isAttachmentActionEnabled,
                     isRecordActionEnabled = uiState.composer.isRecordActionEnabled,
