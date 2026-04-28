@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.v2.composer.ui
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
@@ -26,6 +27,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Send
+import androidx.compose.material.icons.rounded.Mic
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
@@ -71,6 +73,39 @@ private data class ConversationSendActionButtonVisualState(
     val buttonScale: Float,
     val containerColor: Color,
     val contentColor: Color,
+)
+
+private val SEND_ACTION_BUTTON_PULSE_SCALE_ANIMATION_SPEC = infiniteRepeatable<Float>(
+    animation = tween(
+        durationMillis = 1000,
+        easing = FastOutSlowInEasing,
+    ),
+    repeatMode = RepeatMode.Reverse,
+)
+
+private val SEND_ACTION_BUTTON_BASE_SCALE_ANIMATION_SPEC = tween<Float>(durationMillis = 180)
+private val SEND_ACTION_BUTTON_COLOR_ANIMATION_SPEC = tween<Color>(durationMillis = 220)
+private val SEND_ACTION_BUTTON_ICON_ENTER_ANIMATION_SPEC = tween<Float>(durationMillis = 150)
+private val SEND_ACTION_BUTTON_ICON_EXIT_ANIMATION_SPEC = tween<Float>(durationMillis = 120)
+
+private val SEND_ACTION_BUTTON_BACKDROP_PULSE_ANIMATION_SPEC = infiniteRepeatable<Float>(
+    animation = tween(
+        durationMillis = 2100,
+        easing = FastOutSlowInEasing,
+    ),
+    repeatMode = RepeatMode.Restart,
+)
+
+private val SEND_ACTION_BUTTON_BACKDROP_DELAYED_PULSE_ANIMATION_SPEC = infiniteRepeatable<Float>(
+    animation = tween(
+        durationMillis = 2100,
+        easing = FastOutSlowInEasing,
+    ),
+    repeatMode = RepeatMode.Restart,
+    initialStartOffset = StartOffset(
+        offsetMillis = 1050,
+        offsetType = StartOffsetType.FastForward,
+    ),
 )
 
 @Composable
@@ -144,13 +179,7 @@ private fun animateConversationSendActionButtonVisualState(
     val pulseScale by pulseAnimation.animateFloat(
         initialValue = 1f,
         targetValue = 1.1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(
-                durationMillis = 1000,
-                easing = FastOutSlowInEasing,
-            ),
-            repeatMode = RepeatMode.Reverse,
-        ),
+        animationSpec = SEND_ACTION_BUTTON_PULSE_SCALE_ANIMATION_SPEC,
         label = "conversation_send_action_pulse_scale",
     )
 
@@ -160,7 +189,7 @@ private fun animateConversationSendActionButtonVisualState(
             isRecordGestureActive -> 0.95f
             else -> 1f
         },
-        animationSpec = tween(durationMillis = 180),
+        animationSpec = SEND_ACTION_BUTTON_BASE_SCALE_ANIMATION_SPEC,
         label = "conversation_send_action_base_scale",
     )
 
@@ -174,7 +203,7 @@ private fun animateConversationSendActionButtonVisualState(
             isRecordingActive -> MaterialTheme.colorScheme.error
             else -> MaterialTheme.colorScheme.primary
         },
-        animationSpec = tween(durationMillis = 220),
+        animationSpec = SEND_ACTION_BUTTON_COLOR_ANIMATION_SPEC,
         label = "conversation_send_action_container_color",
     )
 
@@ -183,7 +212,7 @@ private fun animateConversationSendActionButtonVisualState(
             isRecordingActive -> MaterialTheme.colorScheme.onError
             else -> MaterialTheme.colorScheme.onPrimary
         },
-        animationSpec = tween(durationMillis = 220),
+        animationSpec = SEND_ACTION_BUTTON_COLOR_ANIMATION_SPEC,
         label = "conversation_send_action_content_color",
     )
 
@@ -509,19 +538,7 @@ private fun ConversationSendActionButtonIcon(mode: ConversationSendActionButtonM
     AnimatedContent(
         targetState = mode,
         transitionSpec = {
-            (
-                fadeIn(animationSpec = tween(durationMillis = 150)) +
-                    scaleIn(
-                        animationSpec = tween(durationMillis = 150),
-                        initialScale = 0.88f,
-                    )
-                ).togetherWith(
-                fadeOut(animationSpec = tween(durationMillis = 120)) +
-                    scaleOut(
-                        animationSpec = tween(durationMillis = 120),
-                        targetScale = 1.08f,
-                    ),
-            )
+            conversationSendActionButtonIconContentTransform()
         },
         label = "conversation_send_action_icon",
     ) { currentMode ->
@@ -537,7 +554,7 @@ private fun ConversationSendActionButtonIcon(mode: ConversationSendActionButtonM
 
             ConversationSendActionButtonMode.Record -> {
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_mp_audio_mic),
+                    imageVector = Icons.Rounded.Mic,
                     contentDescription = stringResource(
                         id = R.string.audio_record_view_content_description,
                     ),
@@ -556,6 +573,28 @@ private fun ConversationSendActionButtonIcon(mode: ConversationSendActionButtonM
     }
 }
 
+private fun conversationSendActionButtonIconContentTransform(): ContentTransform {
+    val fadeInTransition = fadeIn(
+        animationSpec = SEND_ACTION_BUTTON_ICON_ENTER_ANIMATION_SPEC,
+    )
+    val scaleInTransition = scaleIn(
+        animationSpec = SEND_ACTION_BUTTON_ICON_ENTER_ANIMATION_SPEC,
+        initialScale = 0.9f,
+    )
+    val enterTransition = fadeInTransition + scaleInTransition
+
+    val fadeOutTransition = fadeOut(
+        animationSpec = SEND_ACTION_BUTTON_ICON_EXIT_ANIMATION_SPEC,
+    )
+    val scaleOutTransition = scaleOut(
+        animationSpec = SEND_ACTION_BUTTON_ICON_EXIT_ANIMATION_SPEC,
+        targetScale = 1.1f,
+    )
+    val exitTransition = fadeOutTransition + scaleOutTransition
+
+    return enterTransition.togetherWith(exitTransition)
+}
+
 @Composable
 private fun ConversationSendActionButtonPulseBackdrop(
     isVisible: Boolean,
@@ -571,60 +610,28 @@ private fun ConversationSendActionButtonPulseBackdrop(
     val outerPulseScale by pulseTransition.animateFloat(
         initialValue = 1f,
         targetValue = 2.9f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(
-                durationMillis = 2100,
-                easing = FastOutSlowInEasing,
-            ),
-            repeatMode = RepeatMode.Restart,
-        ),
+        animationSpec = SEND_ACTION_BUTTON_BACKDROP_PULSE_ANIMATION_SPEC,
         label = "conversation_send_action_outer_pulse_scale",
     )
 
     val outerPulseAlpha by pulseTransition.animateFloat(
         initialValue = 0.2f,
         targetValue = 0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(
-                durationMillis = 2100,
-                easing = FastOutSlowInEasing,
-            ),
-            repeatMode = RepeatMode.Restart,
-        ),
+        animationSpec = SEND_ACTION_BUTTON_BACKDROP_PULSE_ANIMATION_SPEC,
         label = "conversation_send_action_outer_pulse_alpha",
     )
 
     val innerPulseScale by pulseTransition.animateFloat(
         initialValue = 1f,
         targetValue = 2.5f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(
-                durationMillis = 2100,
-                easing = FastOutSlowInEasing,
-            ),
-            repeatMode = RepeatMode.Restart,
-            initialStartOffset = StartOffset(
-                offsetMillis = 1050,
-                offsetType = StartOffsetType.FastForward,
-            ),
-        ),
+        animationSpec = SEND_ACTION_BUTTON_BACKDROP_DELAYED_PULSE_ANIMATION_SPEC,
         label = "conversation_send_action_inner_pulse_scale",
     )
 
     val innerPulseAlpha by pulseTransition.animateFloat(
         initialValue = 0.15f,
         targetValue = 0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(
-                durationMillis = 2100,
-                easing = FastOutSlowInEasing,
-            ),
-            repeatMode = RepeatMode.Restart,
-            initialStartOffset = StartOffset(
-                offsetMillis = 1050,
-                offsetType = StartOffsetType.FastForward,
-            ),
-        ),
+        animationSpec = SEND_ACTION_BUTTON_BACKDROP_DELAYED_PULSE_ANIMATION_SPEC,
         label = "conversation_send_action_inner_pulse_alpha",
     )
 
