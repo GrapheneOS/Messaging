@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,9 +33,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -290,16 +294,40 @@ private fun rememberLargestReviewPreviewSize(
 @Composable
 private fun ReviewCaptionTextField(
     modifier: Modifier = Modifier,
+    attachmentContentUri: String,
     captionText: String,
     onCaptionChange: (String) -> Unit,
 ) {
     val containerColor = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.95f)
+    var isFocused by remember {
+        mutableStateOf(value = false)
+    }
+    var fieldValue by remember(attachmentContentUri) {
+        mutableStateOf(
+            value = captionText.toCaptionTextFieldValue(),
+        )
+    }
+
+    LaunchedEffect(attachmentContentUri, captionText) {
+        if (!isFocused && fieldValue.text != captionText) {
+            fieldValue = captionText.toCaptionTextFieldValue()
+        }
+    }
 
     TextField(
         modifier = modifier
-            .fillMaxWidth(),
-        value = captionText,
-        onValueChange = onCaptionChange,
+            .fillMaxWidth()
+            .onFocusChanged { focusState ->
+                isFocused = focusState.isFocused
+            },
+        value = fieldValue,
+        onValueChange = { updatedFieldValue ->
+            val previousText = fieldValue.text
+            fieldValue = updatedFieldValue
+            if (updatedFieldValue.text != previousText) {
+                onCaptionChange(updatedFieldValue.text)
+            }
+        },
         shape = RoundedCornerShape(28.dp),
         colors = TextFieldDefaults.colors(
             focusedContainerColor = containerColor,
@@ -329,6 +357,13 @@ private fun ReviewCaptionTextField(
     )
 }
 
+private fun String.toCaptionTextFieldValue(): TextFieldValue {
+    return TextFieldValue(
+        text = this,
+        selection = TextRange(index = length),
+    )
+}
+
 @Composable
 private fun ConversationMediaReviewBottomBar(
     attachment: ComposerAttachmentUiModel.Resolved.VisualMedia,
@@ -345,6 +380,7 @@ private fun ConversationMediaReviewBottomBar(
     ) {
         ReviewCaptionTextField(
             modifier = Modifier.weight(weight = 1f),
+            attachmentContentUri = attachment.contentUri,
             captionText = attachment.captionText,
             onCaptionChange = { captionText ->
                 onCaptionChange(
