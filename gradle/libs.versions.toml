@@ -24,6 +24,7 @@ lifecycle = "2.10.0"
 navigation3 = "1.1.0"
 paging = "3.4.2"
 palette = "1.0.0"
+photo-picker = "1.0.0-alpha01"
 preference = "1.2.1"
 recyclerview = "1.4.0"
 
@@ -70,6 +71,7 @@ androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", vers
 androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "paging" }
 androidx-paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "paging" }
 androidx-palette = { module = "androidx.palette:palette", version.ref = "palette" }
+androidx-photo-picker = { module = "androidx.photopicker:photopicker-compose", version.ref = "photo-picker" }
 androidx-preference = { module = "androidx.preference:preference", version.ref = "preference" }
 androidx-recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "recyclerview" }
 

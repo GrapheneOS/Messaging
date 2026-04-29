@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.repository.ConversationSubscriptionsRepository
-import com.android.messaging.data.media.model.ConversationMediaItem
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.domain.conversation.usecase.action.CreateDefaultSmsRoleRequest
@@ -35,7 +34,6 @@ import com.android.messaging.ui.conversation.v2.screen.model.ConversationMessage
 import com.android.messaging.ui.conversation.v2.screen.model.ConversationScreenEffect
 import com.android.messaging.ui.conversation.v2.screen.model.ConversationScreenScaffoldUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
@@ -46,6 +44,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 internal interface ConversationScreenModel {
     val effects: Flow<ConversationScreenEffect>
@@ -83,7 +82,8 @@ internal interface ConversationScreenModel {
 
     fun onExternalUriClicked(uri: String)
 
-    fun onGalleryMediaConfirmed(mediaItems: List<ConversationMediaItem>)
+    fun onPhotoPickerMediaSelected(contentUris: List<String>)
+    fun onPhotoPickerMediaDeselected(contentUris: List<String>)
     fun onContactCardPicked(contactUri: String?)
     fun onMessageTextChanged(text: String)
     fun onAudioRecordingStart()
@@ -91,7 +91,6 @@ internal interface ConversationScreenModel {
     fun onAudioRecordingLock(): Boolean
     fun onAudioRecordingFinish()
     fun onAudioRecordingCancel()
-    fun onGalleryVisibilityChanged(isVisible: Boolean)
     fun onCapturedMediaReady(capturedMedia: ConversationCapturedMedia)
     fun onRemovePendingAttachment(pendingAttachmentId: String)
     fun onRemoveResolvedAttachment(contentUri: String)
@@ -250,19 +249,20 @@ internal class ConversationViewModel @Inject constructor(
 
     override val mediaPickerOverlayUiState = combine(
         conversationMetadataDelegate.state,
-        conversationMediaPickerDelegate.state,
         composerUiState,
-    ) { metadataState, mediaPickerUiState, composerUiState ->
+        conversationMediaPickerDelegate.photoPickerSourceContentUriByAttachmentContentUri,
+    ) { metadataState, composerUiState, photoPickerSourceContentUriByAttachmentContentUri ->
         val conversationTitle = when (metadataState) {
             is ConversationMetadataUiState.Present -> metadataState.title
             else -> null
         }
 
         ConversationMediaPickerOverlayUiState(
-            mediaPicker = mediaPickerUiState,
             attachments = composerUiState.attachments,
             conversationTitle = conversationTitle,
             isSendActionEnabled = composerUiState.isSendEnabled,
+            photoPickerSourceContentUriByAttachmentContentUri =
+                photoPickerSourceContentUriByAttachmentContentUri,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -270,10 +270,11 @@ internal class ConversationViewModel @Inject constructor(
             stopTimeoutMillis = STATEFLOW_STOP_TIMEOUT_MILLIS,
         ),
         initialValue = ConversationMediaPickerOverlayUiState(
-            mediaPicker = conversationMediaPickerDelegate.state.value,
             attachments = composerUiState.value.attachments,
             conversationTitle = null,
             isSendActionEnabled = composerUiState.value.isSendEnabled,
+            photoPickerSourceContentUriByAttachmentContentUri = conversationMediaPickerDelegate
+                .photoPickerSourceContentUriByAttachmentContentUri.value,
         ),
     )
 
@@ -498,8 +499,12 @@ internal class ConversationViewModel @Inject constructor(
         }
     }
 
-    override fun onGalleryMediaConfirmed(mediaItems: List<ConversationMediaItem>) {
-        conversationMediaPickerDelegate.onGalleryMediaConfirmed(mediaItems = mediaItems)
+    override fun onPhotoPickerMediaSelected(contentUris: List<String>) {
+        conversationMediaPickerDelegate.onPhotoPickerMediaSelected(contentUris = contentUris)
+    }
+
+    override fun onPhotoPickerMediaDeselected(contentUris: List<String>) {
+        conversationMediaPickerDelegate.onPhotoPickerMediaDeselected(contentUris = contentUris)
     }
 
     override fun onContactCardPicked(contactUri: String?) {
@@ -550,10 +555,6 @@ internal class ConversationViewModel @Inject constructor(
 
     override fun onAudioRecordingCancel() {
         conversationAudioRecordingDelegate.cancelRecording()
-    }
-
-    override fun onGalleryVisibilityChanged(isVisible: Boolean) {
-        conversationMediaPickerDelegate.onGalleryVisibilityChanged(isVisible = isVisible)
     }
 
     override fun onCapturedMediaReady(capturedMedia: ConversationCapturedMedia) {

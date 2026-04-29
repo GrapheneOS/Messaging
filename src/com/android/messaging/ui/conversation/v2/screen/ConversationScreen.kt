@@ -280,7 +280,6 @@ internal fun ConversationScreen(
             modifier = Modifier
                 .fillMaxSize(),
             state = mediaPickerState,
-            mediaPickerUiState = mediaPickerOverlayUiState.mediaPicker,
             attachments = mediaPickerOverlayUiState.attachments,
             conversationTitle = mediaPickerOverlayUiState.conversationTitle,
             isSendActionEnabled = mediaPickerOverlayUiState.isSendActionEnabled,
@@ -290,8 +289,10 @@ internal fun ConversationScreen(
             },
             onAttachmentCaptionChange = screenModel::onUpdateAttachmentCaption,
             onAttachmentRemove = screenModel::onRemoveResolvedAttachment,
-            onGalleryMediaConfirmed = screenModel::onGalleryMediaConfirmed,
-            onGalleryVisibilityChanged = screenModel::onGalleryVisibilityChanged,
+            photoPickerSourceContentUriByAttachmentContentUri =
+                mediaPickerOverlayUiState.photoPickerSourceContentUriByAttachmentContentUri,
+            onPhotoPickerMediaSelected = screenModel::onPhotoPickerMediaSelected,
+            onPhotoPickerMediaDeselected = screenModel::onPhotoPickerMediaDeselected,
             onCapturedMediaReady = screenModel::onCapturedMediaReady,
             onSendClick = screenModel::onSendClick,
         )

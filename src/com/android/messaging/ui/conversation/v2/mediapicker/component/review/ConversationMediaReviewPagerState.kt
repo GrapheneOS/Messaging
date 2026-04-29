@@ -8,6 +8,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import com.android.messaging.ui.conversation.v2.composer.model.ComposerAttachmentUiModel
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.toImmutableList
 
 internal data class ConversationMediaReviewPagerState(
@@ -22,6 +23,7 @@ internal fun rememberConversationMediaReviewPagerState(
     attachments: ImmutableList<ComposerAttachmentUiModel.Resolved.VisualMedia>,
     initiallyReviewedContentUri: String?,
     reviewRequestSequence: Int,
+    photoPickerSourceContentUriByAttachmentContentUri: ImmutableMap<String, String>,
 ): ConversationMediaReviewPagerState {
     val attachmentContentUris = remember(attachments) {
         attachments
@@ -33,6 +35,8 @@ internal fun rememberConversationMediaReviewPagerState(
     val initiallyReviewedPage = resolveInitialReviewPage(
         attachments = attachments,
         initiallyReviewedContentUri = initiallyReviewedContentUri,
+        photoPickerSourceContentUriByAttachmentContentUri =
+            photoPickerSourceContentUriByAttachmentContentUri,
     )
 
     val pagerState = rememberPagerState(
@@ -53,6 +57,7 @@ internal fun rememberConversationMediaReviewPagerState(
     LaunchedEffect(
         attachmentContentUris,
         initiallyReviewedContentUri,
+        photoPickerSourceContentUriByAttachmentContentUri,
         reviewRequestSequence,
         settledReviewPage,
     ) {
@@ -61,6 +66,8 @@ internal fun rememberConversationMediaReviewPagerState(
             attachments = attachments,
             initiallyReviewedContentUri = initiallyReviewedContentUri,
             reviewRequestSequence = reviewRequestSequence,
+            photoPickerSourceContentUriByAttachmentContentUri =
+                photoPickerSourceContentUriByAttachmentContentUri,
             pagerState = pagerState,
         )
     }
@@ -88,6 +95,7 @@ private class ConversationMediaReviewPagerCoordinator(
         attachments: List<ComposerAttachmentUiModel.Resolved.VisualMedia>,
         initiallyReviewedContentUri: String?,
         reviewRequestSequence: Int,
+        photoPickerSourceContentUriByAttachmentContentUri: Map<String, String>,
         pagerState: PagerState,
     ) {
         if (reviewRequestSequence != latestReviewRequestSequence) {
@@ -97,7 +105,10 @@ private class ConversationMediaReviewPagerCoordinator(
 
         val requestedAttachmentPage = resolveReviewedAttachmentPage(
             attachmentContentUris = attachmentContentUris,
+            attachments = attachments,
             requestedReviewContentUri = pendingRequestedReviewContentUri,
+            photoPickerSourceContentUriByAttachmentContentUri =
+                photoPickerSourceContentUriByAttachmentContentUri,
         )
 
         val targetPage = requestedAttachmentPage ?: clampAttachmentPage(
@@ -127,20 +138,39 @@ private class ConversationMediaReviewPagerCoordinator(
 
     private fun resolveReviewedAttachmentPage(
         attachmentContentUris: List<String>,
+        attachments: List<ComposerAttachmentUiModel.Resolved.VisualMedia>,
         requestedReviewContentUri: String?,
+        photoPickerSourceContentUriByAttachmentContentUri: Map<String, String>,
     ): Int? {
-        return requestedReviewContentUri
-            ?.let(attachmentContentUris::indexOf)
-            ?.takeIf { it >= 0 }
+        if (requestedReviewContentUri == null) {
+            return null
+        }
+
+        return attachmentContentUris
+            .indexOf(element = requestedReviewContentUri)
+            .takeIf { it >= 0 }
+            ?: attachments.indexOfFirst { attachment ->
+                photoPickerSourceContentUriByAttachmentContentUri[attachment.contentUri] ==
+                    requestedReviewContentUri
+            }.takeIf { it >= 0 }
     }
 }
 
 private fun resolveInitialReviewPage(
     attachments: List<ComposerAttachmentUiModel.Resolved.VisualMedia>,
     initiallyReviewedContentUri: String?,
+    photoPickerSourceContentUriByAttachmentContentUri: Map<String, String>,
 ): Int {
+    if (initiallyReviewedContentUri == null) {
+        return attachments.lastIndex
+    }
+
     return attachments
-        .indexOfFirst { it.contentUri == initiallyReviewedContentUri }
+        .indexOfFirst { attachment ->
+            attachment.contentUri == initiallyReviewedContentUri ||
+                photoPickerSourceContentUriByAttachmentContentUri[attachment.contentUri] ==
+                    initiallyReviewedContentUri
+        }
         .takeIf { it >= 0 }
         ?: attachments.lastIndex
 }

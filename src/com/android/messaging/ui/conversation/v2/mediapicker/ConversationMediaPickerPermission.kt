@@ -3,7 +3,6 @@ package com.android.messaging.ui.conversation.v2.mediapicker
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -24,12 +23,10 @@ internal class ConversationMediaPickerPermissionState(
 ) {
     var audioPermissionGranted by mutableStateOf(value = hasAudioPermission(context = context))
     var cameraPermissionGranted by mutableStateOf(value = hasCameraPermission(context = context))
-    var galleryPermissionGranted by mutableStateOf(value = hasGalleryPermissions(context = context))
 
     fun refresh(context: Context) {
         audioPermissionGranted = hasAudioPermission(context = context)
         cameraPermissionGranted = hasCameraPermission(context = context)
-        galleryPermissionGranted = hasGalleryPermissions(context = context)
     }
 }
 
@@ -51,20 +48,6 @@ internal fun RefreshConversationMediaPickerPermissionsEffect(
 ) {
     LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
         permissionState.refresh(context = context)
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-internal fun HandleConversationMediaPickerGalleryVisibilityEffect(
-    state: ConversationMediaPickerState,
-    galleryPermissionGranted: Boolean,
-    onGalleryVisibilityChanged: (Boolean) -> Unit,
-) {
-    LaunchedEffect(state.isOpen, galleryPermissionGranted) {
-        if (state.isOpen && galleryPermissionGranted) {
-            onGalleryVisibilityChanged(true)
-        }
     }
 }
 
@@ -106,20 +89,6 @@ private fun hasAudioPermission(context: Context): Boolean {
         context = context,
         permission = Manifest.permission.RECORD_AUDIO,
     )
-}
-
-private fun hasGalleryPermissions(context: Context): Boolean {
-    val hasImagesPermission = isPermissionGranted(
-        context = context,
-        permission = Manifest.permission.READ_MEDIA_IMAGES,
-    )
-
-    val hasVideoPermission = isPermissionGranted(
-        context = context,
-        permission = Manifest.permission.READ_MEDIA_VIDEO,
-    )
-
-    return hasImagesPermission && hasVideoPermission
 }
 
 private fun isPermissionGranted(
