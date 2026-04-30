@@ -529,7 +529,8 @@ private class ConversationCameraControllerImpl(
     }
 
     private fun handleVideoRecordingStatus(event: VideoRecordEvent.Status) {
-        _recordingDurationMillis.value = event.recordingStats.recordedDurationNanos / 1_000_000L
+        _recordingDurationMillis.value =
+            event.recordingStats.recordedDurationNanos / NANOS_PER_MILLISECOND
     }
 
     private fun handleVideoRecordingFinalized(
@@ -760,6 +761,10 @@ private class ConversationCameraControllerImpl(
         val mimeTypeExtension = ContentType.getExtensionFromMimeType(contentType)
 
         return mimeTypeExtension ?: ContentType.getExtension(contentType)
+    }
+
+    private companion object {
+        private const val NANOS_PER_MILLISECOND = 1_000_000L
     }
 }
 
