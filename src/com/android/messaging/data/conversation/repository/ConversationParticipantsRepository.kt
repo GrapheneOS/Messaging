@@ -77,38 +77,42 @@ internal class ConversationParticipantsRepositoryImpl @Inject constructor(
 
                 while (cursor.moveToNext()) {
                     val participant = ParticipantData.getFromCursor(cursor)
+                    val recipient = mapParticipant(participant = participant)
 
-                    if (participant.isSelf) {
-                        continue
+                    if (recipient != null && seenDestinations.add(recipient.destination)) {
+                        participants.add(recipient)
                     }
-
-                    val destination = participant.sendDestination
-                        ?.trim()
-                        .orEmpty()
-
-                    if (destination.isBlank()) {
-                        continue
-                    }
-
-                    if (!seenDestinations.add(destination)) {
-                        continue
-                    }
-
-                    participants.add(
-                        ConversationRecipient(
-                            id = participant.id,
-                            displayName = participant.getDisplayName(true),
-                            destination = destination,
-                            photoUri = participant.profilePhotoUri,
-                            secondaryText = participant.displayDestination
-                                ?.takeIf { it.isNotBlank() }
-                                ?.takeIf { it != participant.getDisplayName(true) },
-                        ),
-                    )
                 }
 
                 participants.build()
             }
             ?: persistentListOf()
+    }
+
+    private fun mapParticipant(participant: ParticipantData): ConversationRecipient? {
+        val destination = participantDestination(participant = participant) ?: return null
+        val displayName = participant.getDisplayName(true)
+
+        return ConversationRecipient(
+            id = participant.id,
+            displayName = displayName,
+            destination = destination,
+            photoUri = participant.profilePhotoUri,
+            secondaryText = participant.displayDestination
+                ?.takeIf { it.isNotBlank() }
+                ?.takeIf { it != displayName },
+        )
+    }
+
+    private fun participantDestination(participant: ParticipantData): String? {
+        return when {
+            participant.isSelf -> null
+
+            else -> {
+                participant.sendDestination
+                    ?.trim()
+                    ?.takeIf { it.isNotBlank() }
+            }
+        }
     }
 }

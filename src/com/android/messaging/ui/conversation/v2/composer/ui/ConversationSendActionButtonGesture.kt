@@ -38,43 +38,36 @@ internal fun Modifier.conversationSendActionButtonGesture(
     val currentOnRecordGestureFinish by rememberUpdatedState(newValue = onRecordGestureFinish)
     val currentOnLockedStopClick by rememberUpdatedState(newValue = onLockedStopClick)
 
-    return when {
-        mode != ConversationSendActionButtonMode.Send && enabled -> {
-            pointerInput(
-                mode,
-                enabled,
-                cancelThresholdPx,
-                lockThresholdPx,
-            ) {
-                awaitEachGesture {
-                    when {
-                        currentIsRecordingActive && currentIsRecordingLocked -> {
-                            handleLockedRecordGesture(
-                                cancelThresholdPx = cancelThresholdPx,
-                                onGestureActiveChange = currentOnGestureActiveChange,
-                                onRecordGestureMove = currentOnRecordGestureMove,
-                                onRecordGestureFinish = currentOnRecordGestureFinish,
-                                onLockedStopClick = currentOnLockedStopClick,
-                            )
-                        }
+    if (mode == ConversationSendActionButtonMode.Send || !enabled) {
+        return this
+    }
 
-                        else -> {
-                            handleRecordGesture(
-                                cancelThresholdPx = cancelThresholdPx,
-                                lockThresholdPx = lockThresholdPx,
-                                onGestureActiveChange = currentOnGestureActiveChange,
-                                onRecordGestureStart = currentOnRecordGestureStart,
-                                onRecordGestureMove = currentOnRecordGestureMove,
-                                onRecordGestureLock = currentOnRecordGestureLock,
-                                onRecordGestureFinish = currentOnRecordGestureFinish,
-                            )
-                        }
-                    }
-                }
+    return pointerInput(
+        mode,
+        cancelThresholdPx,
+        lockThresholdPx,
+    ) {
+        awaitEachGesture {
+            if (currentIsRecordingActive && currentIsRecordingLocked) {
+                handleLockedRecordGesture(
+                    cancelThresholdPx = cancelThresholdPx,
+                    onGestureActiveChange = currentOnGestureActiveChange,
+                    onRecordGestureMove = currentOnRecordGestureMove,
+                    onRecordGestureFinish = currentOnRecordGestureFinish,
+                    onLockedStopClick = currentOnLockedStopClick,
+                )
+            } else {
+                handleRecordGesture(
+                    cancelThresholdPx = cancelThresholdPx,
+                    lockThresholdPx = lockThresholdPx,
+                    onGestureActiveChange = currentOnGestureActiveChange,
+                    onRecordGestureStart = currentOnRecordGestureStart,
+                    onRecordGestureMove = currentOnRecordGestureMove,
+                    onRecordGestureLock = currentOnRecordGestureLock,
+                    onRecordGestureFinish = currentOnRecordGestureFinish,
+                )
             }
         }
-
-        else -> this
     }
 }
 
@@ -121,47 +114,48 @@ private suspend fun AwaitPointerEventScope.trackRecordGestureDrag(
 
     longPressChange.consume()
 
-    while (true) {
-        val pointerChange = awaitRecordGestureChange(pointerId = initialDown.id) ?: break
-        val gestureState = calculateRecordGestureState(
-            initialDown = initialDown,
-            pointerChange = pointerChange,
-        )
-
-        if (!isRecordingLocked) {
-            onRecordGestureMove(gestureState)
-
-            if (gestureState.lockDragDistancePx >= lockThresholdPx) {
-                isRecordingLocked = onRecordGestureLock()
-
-                if (isRecordingLocked) {
-                    onRecordGestureMove(ConversationSendActionButtonGestureState())
-                }
-            }
-        }
-
-        pointerChange.consume()
-
-        if (pointerChange.pressed) {
-            continue
-        }
-
-        resetRecordGestureDragUi(
-            onGestureActiveChange = onGestureActiveChange,
+    val releaseGestureState = awaitRecordGestureRelease(initialDown = initialDown) { gestureState ->
+        isRecordingLocked = updateRecordGestureLockState(
+            gestureState = gestureState,
+            isRecordingLocked = isRecordingLocked,
+            lockThresholdPx = lockThresholdPx,
             onRecordGestureMove = onRecordGestureMove,
+            onRecordGestureLock = onRecordGestureLock,
         )
-
-        if (!isRecordingLocked) {
-            onRecordGestureFinish(gestureState.cancelDragDistancePx >= cancelThresholdPx)
-        }
-
-        return
     }
 
     resetRecordGestureDragUi(
         onGestureActiveChange = onGestureActiveChange,
         onRecordGestureMove = onRecordGestureMove,
     )
+
+    if (releaseGestureState != null && !isRecordingLocked) {
+        onRecordGestureFinish(releaseGestureState.cancelDragDistancePx >= cancelThresholdPx)
+    }
+}
+
+private fun updateRecordGestureLockState(
+    gestureState: ConversationSendActionButtonGestureState,
+    isRecordingLocked: Boolean,
+    lockThresholdPx: Float,
+    onRecordGestureMove: (ConversationSendActionButtonGestureState) -> Unit,
+    onRecordGestureLock: () -> Boolean,
+): Boolean {
+    var updatedIsRecordingLocked = isRecordingLocked
+
+    if (!updatedIsRecordingLocked) {
+        onRecordGestureMove(gestureState)
+
+        if (gestureState.lockDragDistancePx >= lockThresholdPx) {
+            updatedIsRecordingLocked = onRecordGestureLock()
+
+            if (updatedIsRecordingLocked) {
+                onRecordGestureMove(ConversationSendActionButtonGestureState())
+            }
+        }
+    }
+
+    return updatedIsRecordingLocked
 }
 
 private suspend fun AwaitPointerEventScope.handleLockedRecordGesture(
@@ -176,42 +170,44 @@ private suspend fun AwaitPointerEventScope.handleLockedRecordGesture(
     onGestureActiveChange(true)
     initialDown.consume()
 
-    while (true) {
-        val pointerChange = awaitRecordGestureChange(pointerId = initialDown.id) ?: break
-        val gestureState = calculateRecordGestureState(
-            initialDown = initialDown,
-            pointerChange = pointerChange,
-        )
-
+    val releaseGestureState = awaitRecordGestureRelease(initialDown = initialDown) { gestureState ->
         onRecordGestureMove(
             ConversationSendActionButtonGestureState(
                 cancelDragDistancePx = gestureState.cancelDragDistancePx,
             ),
         )
-        pointerChange.consume()
-
-        if (!pointerChange.pressed) {
-            resetRecordGestureDragUi(
-                onGestureActiveChange = onGestureActiveChange,
-                onRecordGestureMove = onRecordGestureMove,
-            )
-            when {
-                gestureState.cancelDragDistancePx >= cancelThresholdPx -> {
-                    onRecordGestureFinish(true)
-                }
-
-                else -> {
-                    onLockedStopClick()
-                }
-            }
-            return
-        }
     }
 
     resetRecordGestureDragUi(
         onGestureActiveChange = onGestureActiveChange,
         onRecordGestureMove = onRecordGestureMove,
     )
+
+    if (releaseGestureState != null) {
+        handleLockedRecordGestureRelease(
+            gestureState = releaseGestureState,
+            cancelThresholdPx = cancelThresholdPx,
+            onRecordGestureFinish = onRecordGestureFinish,
+            onLockedStopClick = onLockedStopClick,
+        )
+    }
+}
+
+private fun handleLockedRecordGestureRelease(
+    gestureState: ConversationSendActionButtonGestureState,
+    cancelThresholdPx: Float,
+    onRecordGestureFinish: (Boolean) -> Unit,
+    onLockedStopClick: () -> Unit,
+) {
+    when {
+        gestureState.cancelDragDistancePx >= cancelThresholdPx -> {
+            onRecordGestureFinish(true)
+        }
+
+        else -> {
+            onLockedStopClick()
+        }
+    }
 }
 
 private fun resetRecordGestureDragUi(
@@ -220,6 +216,37 @@ private fun resetRecordGestureDragUi(
 ) {
     onGestureActiveChange(false)
     onRecordGestureMove(ConversationSendActionButtonGestureState())
+}
+
+private suspend fun AwaitPointerEventScope.awaitRecordGestureRelease(
+    initialDown: PointerInputChange,
+    onGestureChange: (ConversationSendActionButtonGestureState) -> Unit,
+): ConversationSendActionButtonGestureState? {
+    var releaseGestureState: ConversationSendActionButtonGestureState? = null
+    var isTrackingGesture = true
+
+    while (isTrackingGesture) {
+        val pointerChange = awaitRecordGestureChange(pointerId = initialDown.id)
+
+        if (pointerChange == null) {
+            isTrackingGesture = false
+        } else {
+            val gestureState = calculateRecordGestureState(
+                initialDown = initialDown,
+                pointerChange = pointerChange,
+            )
+
+            onGestureChange(gestureState)
+            pointerChange.consume()
+
+            if (!pointerChange.pressed) {
+                releaseGestureState = gestureState
+                isTrackingGesture = false
+            }
+        }
+    }
+
+    return releaseGestureState
 }
 
 private suspend fun AwaitPointerEventScope.awaitRecordGestureChange(
@@ -236,10 +263,14 @@ private fun calculateRecordGestureState(
     initialDown: PointerInputChange,
     pointerChange: PointerInputChange,
 ): ConversationSendActionButtonGestureState {
+    val cancelDragDistancePx = (initialDown.position.x - pointerChange.position.x)
+        .coerceAtLeast(minimumValue = 0f)
+
+    val lockDragDistancePx = (initialDown.position.y - pointerChange.position.y)
+        .coerceAtLeast(minimumValue = 0f)
+
     return ConversationSendActionButtonGestureState(
-        cancelDragDistancePx = (initialDown.position.x - pointerChange.position.x)
-            .coerceAtLeast(minimumValue = 0f),
-        lockDragDistancePx = (initialDown.position.y - pointerChange.position.y)
-            .coerceAtLeast(minimumValue = 0f),
+        cancelDragDistancePx = cancelDragDistancePx,
+        lockDragDistancePx = lockDragDistancePx,
     )
 }

@@ -188,9 +188,9 @@ internal class ConversationRecipientsRepositoryImpl @Inject constructor(
             val recipientEntry = mapRecipientEntry(
                 cursor = cursor,
                 recipientCursorColumns = recipientCursorColumns,
-            ) ?: continue
+            )
 
-            if (!matchesRecipient(recipientEntry.recipient)) {
+            if (recipientEntry == null || !matchesRecipient(recipientEntry.recipient)) {
                 continue
             }
 
