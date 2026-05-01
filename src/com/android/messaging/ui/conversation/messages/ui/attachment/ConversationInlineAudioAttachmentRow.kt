@@ -252,7 +252,6 @@ internal fun rememberConversationInlineAudioAttachmentColors(
     )
 }
 
-
 @Composable
 private fun getAudioAttachmentContainerColor(
     isIncoming: Boolean,
