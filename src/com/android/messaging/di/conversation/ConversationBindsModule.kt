@@ -20,8 +20,8 @@ import com.android.messaging.data.conversation.repository.ConversationsRepositor
 import com.android.messaging.data.conversation.repository.ConversationsRepositoryImpl
 import com.android.messaging.data.conversation.store.ConversationDraftStore
 import com.android.messaging.data.conversation.store.ConversationDraftStoreImpl
-import com.android.messaging.data.media.repository.ConversationAttachmentRepository
-import com.android.messaging.data.media.repository.ConversationAttachmentRepositoryImpl
+import com.android.messaging.data.media.repository.ConversationAttachmentsRepository
+import com.android.messaging.data.media.repository.ConversationAttachmentsRepositoryImpl
 import com.android.messaging.data.media.repository.ConversationMediaRepository
 import com.android.messaging.data.media.repository.ConversationMediaRepositoryImpl
 import com.android.messaging.domain.contacts.usecase.IsReadContactsPermissionGranted
@@ -48,18 +48,18 @@ import com.android.messaging.domain.conversation.usecase.telephony.IsDeviceVoice
 import com.android.messaging.domain.conversation.usecase.telephony.IsDeviceVoiceCapableImpl
 import com.android.messaging.domain.conversation.usecase.telephony.IsEmergencyPhoneNumber
 import com.android.messaging.domain.conversation.usecase.telephony.IsEmergencyPhoneNumberImpl
-import com.android.messaging.ui.conversation.v2.attachment.mapper.ConversationVCardAttachmentUiModelMapper
-import com.android.messaging.ui.conversation.v2.attachment.mapper.ConversationVCardAttachmentUiModelMapperImpl
-import com.android.messaging.ui.conversation.v2.composer.mapper.ConversationComposerAttachmentUiModelMapper
-import com.android.messaging.ui.conversation.v2.composer.mapper.ConversationComposerAttachmentUiModelMapperImpl
-import com.android.messaging.ui.conversation.v2.composer.mapper.ConversationComposerUiStateMapper
-import com.android.messaging.ui.conversation.v2.composer.mapper.ConversationComposerUiStateMapperImpl
-import com.android.messaging.ui.conversation.v2.mediapicker.mapper.ConversationDraftAttachmentMapper
-import com.android.messaging.ui.conversation.v2.mediapicker.mapper.ConversationDraftAttachmentMapperImpl
-import com.android.messaging.ui.conversation.v2.messages.mapper.ConversationMessageUiModelMapper
-import com.android.messaging.ui.conversation.v2.messages.mapper.ConversationMessageUiModelMapperImpl
-import com.android.messaging.ui.conversation.v2.metadata.mapper.ConversationMetadataUiStateMapper
-import com.android.messaging.ui.conversation.v2.metadata.mapper.ConversationMetadataUiStateMapperImpl
+import com.android.messaging.ui.conversation.attachment.mapper.ConversationVCardAttachmentUiModelMapper
+import com.android.messaging.ui.conversation.attachment.mapper.ConversationVCardAttachmentUiModelMapperImpl
+import com.android.messaging.ui.conversation.composer.mapper.ConversationComposerAttachmentUiModelMapper
+import com.android.messaging.ui.conversation.composer.mapper.ConversationComposerAttachmentUiModelMapperImpl
+import com.android.messaging.ui.conversation.composer.mapper.ConversationComposerUiStateMapper
+import com.android.messaging.ui.conversation.composer.mapper.ConversationComposerUiStateMapperImpl
+import com.android.messaging.ui.conversation.mediapicker.mapper.ConversationDraftAttachmentMapper
+import com.android.messaging.ui.conversation.mediapicker.mapper.ConversationDraftAttachmentMapperImpl
+import com.android.messaging.ui.conversation.messages.mapper.ConversationMessageUiModelMapper
+import com.android.messaging.ui.conversation.messages.mapper.ConversationMessageUiModelMapperImpl
+import com.android.messaging.ui.conversation.metadata.mapper.ConversationMetadataUiStateMapper
+import com.android.messaging.ui.conversation.metadata.mapper.ConversationMetadataUiStateMapperImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Reusable
@@ -187,8 +187,8 @@ internal abstract class ConversationBindsModule {
     @Binds
     @Reusable
     abstract fun bindConversationAttachmentRepository(
-        impl: ConversationAttachmentRepositoryImpl,
-    ): ConversationAttachmentRepository
+        impl: ConversationAttachmentsRepositoryImpl,
+    ): ConversationAttachmentsRepository
 
     @Binds
     @Reusable

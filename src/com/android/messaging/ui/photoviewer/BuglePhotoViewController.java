@@ -37,7 +37,7 @@ import com.android.ex.photo.loaders.PhotoBitmapLoaderInterface.BitmapResult;
 import com.android.messaging.R;
 import com.android.messaging.datamodel.ConversationImagePartsView.PhotoViewQuery;
 import com.android.messaging.datamodel.MediaScratchFileProvider;
-import com.android.messaging.ui.conversation.ConversationFragment;
+import com.android.messaging.ui.AttachmentSaveTask;
 import com.android.messaging.util.Dates;
 import com.android.messaging.util.LogUtil;
 
@@ -148,7 +148,7 @@ public class BuglePhotoViewController extends PhotoViewController {
                 return true;
             }
             final String photoUri = adapter.getPhotoUri(cursor);
-            new ConversationFragment.SaveAttachmentTask(((Activity) getActivity()),
+            new AttachmentSaveTask(((Activity) getActivity()),
                     Uri.parse(photoUri), adapter.getContentType(cursor)).executeOnThreadPool();
             return true;
         } else if (itemId == R.id.action_share) {

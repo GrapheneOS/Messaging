@@ -203,12 +203,7 @@ public class MediaPickerPanel extends ViewGroup {
             if (isAttachedToWindow()) {
                 // When we're attached to the window, we can get an accurate height, not necessary
                 // on older API level devices because they don't include the action bar height
-                View composeContainer =
-                        getRootView().findViewById(R.id.conversation_and_compose_container);
-                if (composeContainer != null) {
-                    // protect against composeContainer having been unloaded already
-                    fullHeight -= UiUtils.getMeasuredBoundsOnScreen(composeContainer).top;
-                }
+                fullHeight -= UiUtils.getMeasuredBoundsOnScreen(getRootView()).top;
             }
             if (mMediaPicker.getChooserShowsActionBarInFullScreen()) {
                 return fullHeight - mActionBarHeight;
@@ -558,4 +553,3 @@ public class MediaPickerPanel extends ViewGroup {
         }
     }
 }
-

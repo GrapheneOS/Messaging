@@ -132,20 +132,6 @@
             android:allowEmbedded="true"
             android:resizeableActivity="true"
             android:windowSoftInputMode="stateHidden|adjustResize"
-            android:theme="@style/BugleTheme.ConversationActivity"
-            android:parentActivityName="com.android.messaging.ui.conversationlist.ConversationListActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.android.messaging.ui.conversationlist.ConversationListActivity" />
-        </activity>
-
-        <activity
-            android:name=".ui.conversation.v2.ConversationActivity"
-            android:configChanges="orientation|screenSize|keyboardHidden"
-            android:screenOrientation="user"
-            android:allowEmbedded="true"
-            android:resizeableActivity="true"
-            android:windowSoftInputMode="stateHidden|adjustResize"
             android:theme="@style/Theme.Compose"
             android:parentActivityName="com.android.messaging.ui.conversationlist.ConversationListActivity">
             <meta-data
