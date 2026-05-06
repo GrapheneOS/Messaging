@@ -568,9 +568,13 @@ private fun shouldShowOneOnOneSubtitle(
 ): Boolean {
     val displayDestination = metadata.otherParticipantDisplayDestination
         ?.takeIf { it.isNotBlank() }
-        ?: return false
 
-    return !displayDestination.equals(other = metadata.title, ignoreCase = false)
+    return when {
+        displayDestination == null -> false
+        !metadata.otherParticipantContactLookupKey.isNullOrBlank() -> false
+        displayDestination.equals(other = metadata.title, ignoreCase = false) -> false
+        else -> true
+    }
 }
 
 @Immutable
