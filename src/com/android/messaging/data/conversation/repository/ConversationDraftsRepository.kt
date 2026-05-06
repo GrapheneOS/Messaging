@@ -238,6 +238,10 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
         message: MessageData,
         selfParticipantId: String,
     ): MessageData {
+        if (selfParticipantId.isBlank()) {
+            return message
+        }
+
         if (message.selfId == null) {
             message.bindSelfId(selfParticipantId)
         }

@@ -28,7 +28,7 @@ internal class ConversationDraftStoreImpl @Inject constructor() : ConversationDr
             conversationId,
         ) ?: return null
 
-        return conversation.selfId.orEmpty()
+        return conversation.selfId?.takeIf { it.isNotBlank() }
     }
 
     override fun readDraftMessage(
