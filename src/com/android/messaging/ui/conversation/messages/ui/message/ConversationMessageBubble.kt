@@ -193,11 +193,6 @@ private fun ConversationMessageBubbleSurface(
         isSelected = isSelected,
     )
 
-    val linkColor = when {
-        isSelected -> contentColor
-        else -> MaterialTheme.colorScheme.primary
-    }
-
     Surface(
         color = messageBubbleColor(
             message = message,
@@ -208,7 +203,7 @@ private fun ConversationMessageBubbleSurface(
         modifier = modifier,
     ) {
         CompositionLocalProvider(
-            LocalConversationMessageLinkColor provides linkColor,
+            LocalConversationMessageLinkColor provides contentColor,
         ) {
             bubbleContent()
         }
