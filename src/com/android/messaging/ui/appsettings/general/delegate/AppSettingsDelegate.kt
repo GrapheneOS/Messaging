@@ -11,9 +11,14 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 internal interface AppSettingsDelegate : SettingsScreenDelegate<AppSettingsUiState> {
@@ -31,21 +36,25 @@ internal class AppSettingsDelegateImpl @Inject constructor(
     private val _state = MutableStateFlow(AppSettingsUiState())
     override val state: StateFlow<AppSettingsUiState> = _state.asStateFlow()
 
-    private var boundScope: CoroutineScope? = null
+    private val refreshTriggers: Channel<Unit> = Channel(Channel.CONFLATED)
+
     private var isBound = false
 
     override fun bind(scope: CoroutineScope) {
         if (isBound) return
         isBound = true
-        boundScope = scope
-        refresh()
+
+        scope.launch {
+            refreshTriggers.receiveAsFlow()
+                .onStart { emit(Unit) }
+                .map { mapper.map() }
+                .flowOn(defaultDispatcher)
+                .collect { _state.value = it }
+        }
     }
 
     override fun refresh() {
-        val scope = boundScope ?: return
-        scope.launch(defaultDispatcher) {
-            _state.value = mapper.map()
-        }
+        refreshTriggers.trySend(Unit)
     }
 
     override fun onSendSoundChanged(enabled: Boolean) {

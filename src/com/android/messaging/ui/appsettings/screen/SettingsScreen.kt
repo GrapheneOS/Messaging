@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,9 +22,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.ui.appsettings.general.ui.AppSettingsScreen
 import com.android.messaging.ui.appsettings.screen.model.SettingsNavRoute
 import com.android.messaging.ui.appsettings.screen.model.SettingsUiState
+import com.android.messaging.ui.appsettings.subscription.model.SubscriptionSettingsUiState
 import com.android.messaging.ui.appsettings.subscription.ui.SubscriptionSettingsScreen
 
 private const val SLIDE_OFFSET_DIVISOR = 3
@@ -32,14 +35,23 @@ private const val SLIDE_OFFSET_DIVISOR = 3
 internal fun SettingsScreen(
     onNavigateBack: (() -> Unit),
     modifier: Modifier = Modifier,
-    initialRoute: SettingsNavRoute = SettingsNavRoute.Main,
+    intentSubId: Int = ParticipantData.DEFAULT_SELF_SUB_ID,
+    intentSubTitle: String? = null,
+    isTopLevelIntent: Boolean = false,
     screenModel: SettingsScreenModel = viewModel<SettingsViewModel>(),
 ) {
     val context = LocalContext.current
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
 
     var currentRoute by remember {
-        mutableStateOf(initialRoute)
+        mutableStateOf(
+            resolveInitialRoute(
+                intentSubId = intentSubId,
+                intentSubTitle = intentSubTitle,
+                isTopLevelIntent = isTopLevelIntent,
+                isMultiSim = screenModel.uiState.value.isMultiSim,
+            ),
+        )
     }
 
     LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
@@ -61,23 +73,19 @@ internal fun SettingsScreen(
     val isRootRoute = effectiveRoute is SettingsNavRoute.Main ||
         (effectiveRoute is SettingsNavRoute.AppSettings && uiState.isMultiSim == false)
 
-    val navigateUp: (() -> Unit) = {
-        when {
-            isRootRoute -> onNavigateBack()
+    val navigateUp: (() -> Unit) = buildNavigateUp(
+        isRootRoute = isRootRoute,
+        effectiveRoute = effectiveRoute,
+        isMultiSim = uiState.isMultiSim,
+        onNavigateBack = onNavigateBack,
+        onRouteChange = { currentRoute = it },
+    )
 
-            effectiveRoute is SettingsNavRoute.AppSettings -> {
-                currentRoute = SettingsNavRoute.Main
-            }
-
-            effectiveRoute is SettingsNavRoute.SubscriptionSettings -> {
-                currentRoute = if (uiState.isMultiSim == true) {
-                    SettingsNavRoute.Main
-                } else {
-                    SettingsNavRoute.AppSettings
-                }
-            }
-        }
-    }
+    LeaveOpenedSubscriptionIfRemoved(
+        effectiveRoute = effectiveRoute,
+        uiState = uiState,
+        navigateUp = navigateUp,
+    )
 
     BackHandler(
         enabled = !isRootRoute,
@@ -150,8 +158,7 @@ private fun SettingsNavHost(
             }
 
             is SettingsNavRoute.SubscriptionSettings -> {
-                val sub = uiState.subscriptionSettings.find { it.subId == route.subId }
-                if (sub != null) {
+                rememberDisplayedSubscription(route, uiState.subscriptionSettings)?.let { sub ->
                     SubscriptionSettingsScreen(
                         subscriptionSettings = sub,
                         title = route.title,
@@ -162,6 +169,76 @@ private fun SettingsNavHost(
             }
         }
     }
+}
+
+@Composable
+private fun LeaveOpenedSubscriptionIfRemoved(
+    effectiveRoute: SettingsNavRoute,
+    uiState: SettingsUiState,
+    navigateUp: () -> Unit,
+) {
+    val openedSubId = (effectiveRoute as? SettingsNavRoute.SubscriptionSettings)?.subId
+    val isOpenedSubMissing = openedSubId != null &&
+        uiState.areSubscriptionsLoaded &&
+        uiState.subscriptionSettings.none { it.subId == openedSubId }
+
+    LaunchedEffect(isOpenedSubMissing) {
+        if (isOpenedSubMissing) {
+            navigateUp()
+        }
+    }
+}
+
+@Composable
+private fun rememberDisplayedSubscription(
+    route: SettingsNavRoute.SubscriptionSettings,
+    subscriptions: List<SubscriptionSettingsUiState>,
+): SubscriptionSettingsUiState? {
+    val current = subscriptions.find { it.subId == route.subId }
+    var cached by remember(route.subId) { mutableStateOf(current) }
+    SideEffect {
+        if (current != null && cached != current) {
+            cached = current
+        }
+    }
+    return current ?: cached
+}
+
+private fun buildNavigateUp(
+    isRootRoute: Boolean,
+    effectiveRoute: SettingsNavRoute,
+    isMultiSim: Boolean?,
+    onNavigateBack: () -> Unit,
+    onRouteChange: (SettingsNavRoute) -> Unit,
+): () -> Unit = {
+    when {
+        isRootRoute -> onNavigateBack()
+
+        effectiveRoute is SettingsNavRoute.AppSettings -> {
+            onRouteChange(SettingsNavRoute.Main)
+        }
+
+        effectiveRoute is SettingsNavRoute.SubscriptionSettings -> {
+            onRouteChange(
+                if (isMultiSim == true) {
+                    SettingsNavRoute.Main
+                } else {
+                    SettingsNavRoute.AppSettings
+                },
+            )
+        }
+    }
+}
+
+private fun resolveInitialRoute(
+    intentSubId: Int,
+    intentSubTitle: String?,
+    isTopLevelIntent: Boolean,
+    isMultiSim: Boolean?,
+): SettingsNavRoute = when {
+    intentSubTitle != null -> SettingsNavRoute.SubscriptionSettings(intentSubId, intentSubTitle)
+    isTopLevelIntent || isMultiSim == false -> SettingsNavRoute.AppSettings
+    else -> SettingsNavRoute.Main
 }
 
 private fun advancedClickHandler(

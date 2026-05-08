@@ -42,13 +42,17 @@ internal class SettingsViewModel @Inject constructor(
     ) { subscriptionState, appSettings ->
         SettingsUiState(
             isMultiSim = subscriptionState.isMultiSim,
+            areSubscriptionsLoaded = subscriptionState.isLoaded,
             subscriptionSettings = subscriptionState.subscriptions,
             appSettings = appSettings,
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(STATEFLOW_STOP_TIMEOUT_MILLIS),
-        initialValue = SettingsUiState(),
+        initialValue = SettingsUiState(
+            isMultiSim = subscriptionSettingsDelegate.state.value.isMultiSim,
+            areSubscriptionsLoaded = subscriptionSettingsDelegate.state.value.isLoaded,
+        ),
     )
 
     init {

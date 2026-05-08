@@ -12,9 +12,6 @@ import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.android.messaging.R
 import com.android.messaging.ui.appsettings.general.model.AppSettingsUiState
-import com.android.messaging.ui.appsettings.screen.SettingsScreen
-import com.android.messaging.ui.appsettings.screen.SettingsScreenModel
-import com.android.messaging.ui.appsettings.screen.model.SettingsNavRoute
 import com.android.messaging.ui.appsettings.screen.model.SettingsUiState
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionSettingsUiState
 import com.android.messaging.ui.core.AppTheme
@@ -122,14 +119,156 @@ class SettingsScreenTest {
         composeTestRule.onNodeWithText(advancedTitle).assertIsDisplayed()
     }
 
+    @Test
+    fun singleSim_disablingLastSubscription_hidesAdvancedSettings() {
+        fakeUiStateFlow.value = createSingleSimState()
+
+        setScreenContent()
+
+        val advancedTitle = composeTestRule.activity.getString(R.string.advanced_settings)
+        composeTestRule.onNodeWithText(advancedTitle).assertIsDisplayed()
+
+        fakeUiStateFlow.value = createSingleSimState().copy(subscriptionSettings = emptyList())
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText(advancedTitle).assertDoesNotExist()
+    }
+
+    @Test
+    fun noActiveSubscriptions_hidesAdvancedSettings() {
+        fakeUiStateFlow.value = createSingleSimState().copy(subscriptionSettings = emptyList())
+
+        setScreenContent()
+
+        val sendSoundTitle = composeTestRule.activity.getString(R.string.send_sound_pref_title)
+        composeTestRule.onNodeWithText(sendSoundTitle).assertIsDisplayed()
+
+        val advancedTitle = composeTestRule.activity.getString(R.string.advanced_settings)
+        composeTestRule.onNodeWithText(advancedTitle).assertDoesNotExist()
+    }
+
+    @Test
+    fun multiSim_topLevelIntent_showsAppSettingsDirectly() {
+        fakeUiStateFlow.value = createMultiSimState()
+
+        setScreenContent(isTopLevelIntent = true)
+
+        val sendSoundTitle = composeTestRule.activity.getString(R.string.send_sound_pref_title)
+        composeTestRule.onNodeWithText(sendSoundTitle).assertIsDisplayed()
+
+        composeTestRule.onNodeWithText("SIM 1").assertDoesNotExist()
+        composeTestRule.onNodeWithText("SIM 2").assertDoesNotExist()
+    }
+
+    @Test
+    fun multiSim_disablingOpenedSubscription_navigatesBackToMain() {
+        fakeUiStateFlow.value = createMultiSimState()
+
+        setScreenContent(
+            intentSubId = 2,
+            intentSubTitle = "SIM 2",
+        )
+
+        val phoneNumberTitle = composeTestRule.activity.getString(
+            R.string.mms_phone_number_pref_title,
+        )
+        composeTestRule.onNodeWithText(phoneNumberTitle).assertIsDisplayed()
+
+        fakeUiStateFlow.value = createMultiSimState().copy(
+            subscriptionSettings = createMultiSimState().subscriptionSettings
+                .filter { it.subId == 1 },
+        )
+        composeTestRule.waitForIdle()
+
+        val mainTitle = composeTestRule.activity.getString(R.string.settings_activity_title)
+        composeTestRule.onNodeWithText(mainTitle).assertIsDisplayed()
+        composeTestRule.onNodeWithText("SIM 1").assertIsDisplayed()
+        composeTestRule.onNodeWithText("SIM 2").assertDoesNotExist()
+    }
+
+    @Test
+    fun singleSim_disablingOpenedSubscription_navigatesBackToAppSettings() {
+        fakeUiStateFlow.value = createSingleSimState()
+
+        setScreenContent(
+            intentSubId = 1,
+            intentSubTitle = "Advanced Settings",
+        )
+
+        val phoneNumberTitle = composeTestRule.activity.getString(
+            R.string.mms_phone_number_pref_title,
+        )
+        composeTestRule.onNodeWithText(phoneNumberTitle).assertIsDisplayed()
+
+        fakeUiStateFlow.value = createSingleSimState().copy(subscriptionSettings = emptyList())
+        composeTestRule.waitForIdle()
+
+        val sendSoundTitle = composeTestRule.activity.getString(R.string.send_sound_pref_title)
+        composeTestRule.onNodeWithText(sendSoundTitle).assertIsDisplayed()
+        composeTestRule.onNodeWithText(phoneNumberTitle).assertDoesNotExist()
+    }
+
+    @Test
+    fun multiSim_disablingAllSubscriptions_navigatesToAppSettings() {
+        fakeUiStateFlow.value = createMultiSimState()
+
+        setScreenContent(
+            intentSubId = 2,
+            intentSubTitle = "SIM 2",
+        )
+
+        val phoneNumberTitle = composeTestRule.activity.getString(
+            R.string.mms_phone_number_pref_title,
+        )
+        composeTestRule.onNodeWithText(phoneNumberTitle).assertIsDisplayed()
+
+        fakeUiStateFlow.value = createMultiSimState().copy(
+            isMultiSim = false,
+            subscriptionSettings = emptyList(),
+        )
+        composeTestRule.waitForIdle()
+
+        val sendSoundTitle = composeTestRule.activity.getString(R.string.send_sound_pref_title)
+        composeTestRule.onNodeWithText(sendSoundTitle).assertIsDisplayed()
+        composeTestRule.onNodeWithText(phoneNumberTitle).assertDoesNotExist()
+    }
+
+    @Test
+    fun multiSim_disablingOtherSubscription_keepsCurrentSubscriptionScreen() {
+        fakeUiStateFlow.value = createMultiSimState()
+
+        setScreenContent(
+            intentSubId = 1,
+            intentSubTitle = "SIM 1",
+        )
+
+        val phoneNumberTitle = composeTestRule.activity.getString(
+            R.string.mms_phone_number_pref_title,
+        )
+        composeTestRule.onNodeWithText(phoneNumberTitle).assertIsDisplayed()
+
+        fakeUiStateFlow.value = createMultiSimState().copy(
+            subscriptionSettings = createMultiSimState().subscriptionSettings
+                .filter { it.subId == 1 },
+        )
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText(phoneNumberTitle).assertIsDisplayed()
+        composeTestRule.onNodeWithText("SIM 1").assertIsDisplayed()
+    }
+
     private fun setScreenContent(
-        initialRoute: SettingsNavRoute = SettingsNavRoute.Main,
+        intentSubId: Int = 0,
+        intentSubTitle: String? = null,
+        isTopLevelIntent: Boolean = false,
     ) {
         composeTestRule.setContent {
             AppTheme {
                 SettingsScreen(
                     onNavigateBack = {},
-                    initialRoute = initialRoute,
+                    intentSubId = intentSubId,
+                    intentSubTitle = intentSubTitle,
+                    isTopLevelIntent = isTopLevelIntent,
                     screenModel = screenModel,
                 )
             }
@@ -151,6 +290,7 @@ class SettingsScreenTest {
                 ),
             ),
             isMultiSim = false,
+            areSubscriptionsLoaded = true,
         )
     }
 
@@ -174,6 +314,7 @@ class SettingsScreenTest {
                 ),
             ),
             isMultiSim = true,
+            areSubscriptionsLoaded = true,
         )
     }
 

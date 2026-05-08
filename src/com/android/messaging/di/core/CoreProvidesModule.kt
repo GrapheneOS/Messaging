@@ -2,6 +2,7 @@ package com.android.messaging.di.core
 
 import android.content.ContentResolver
 import android.content.Context
+import android.telephony.SubscriptionManager
 import dagger.Module
 import dagger.Provides
 import dagger.Reusable
@@ -43,5 +44,14 @@ internal class CoreProvidesModule {
         context: Context,
     ): ContentResolver {
         return context.contentResolver
+    }
+
+    @Provides
+    @Reusable
+    fun provideSubscriptionManager(
+        @ApplicationContext
+        context: Context,
+    ): SubscriptionManager {
+        return context.getSystemService(SubscriptionManager::class.java)
     }
 }

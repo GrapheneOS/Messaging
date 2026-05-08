@@ -32,17 +32,22 @@ internal class SubscriptionSettingsUiStateMapperImpl @Inject constructor(
     }
 
     override fun mapSubscriptions(): List<SubscriptionSettingsUiState> {
-        if (!isMultiSim()) {
-            return listOf(
+        return when (PhoneUtils.getDefault().activeSubscriptionCount) {
+            0 -> emptyList()
+
+            1 -> listOf(
                 mapSingleSubscription(
                     subId = ParticipantData.DEFAULT_SELF_SUB_ID,
                     displayName = context.getString(R.string.advanced_settings),
                 ),
             )
-        }
 
-        val selfParticipants = querySelfParticipants()
-        val nonDefaultSelfs = selfParticipants.filter {
+            else -> mapMultiSimSubscriptions()
+        }
+    }
+
+    private fun mapMultiSimSubscriptions(): List<SubscriptionSettingsUiState> {
+        val nonDefaultSelfs = querySelfParticipants().filter {
             !it.isDefaultSelf && it.isActiveSubscription
         }
 
