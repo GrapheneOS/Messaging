@@ -181,6 +181,11 @@
             </intent-filter>
         </activity>
 
+        <activity-alias
+            android:name=".ui.appsettings.ApplicationSettingsActivity"
+            android:exported="true"
+            android:targetActivity=".ui.appsettings.SettingsActivity" />
+
         <!-- Handles sharing intent -->
         <activity
             android:name=".ui.conversationlist.ShareIntentActivity"

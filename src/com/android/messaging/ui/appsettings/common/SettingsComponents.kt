@@ -112,6 +112,7 @@ internal fun SettingsSwitchItem(
             Switch(
                 checked = checked,
                 onCheckedChange = null,
+                enabled = enabled,
             )
         },
     )

@@ -2,13 +2,15 @@ package com.android.messaging.ui.appsettings.screen
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -54,14 +56,20 @@ internal fun SettingsMainScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = contentPadding,
         ) {
-            item {
+            item(key = "general_settings") {
                 SettingsClickableItem(
                     title = stringResource(R.string.general_settings),
                     onClick = onGeneralSettingsClick,
                 )
             }
 
-            items(subscriptions) { subscription ->
+            if (subscriptions.isNotEmpty()) {
+                item(key = "subscriptions_divider") {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                }
+            }
+
+            itemsIndexed(subscriptions, key = { _, item -> item.subId }) { index, subscription ->
                 SettingsClickableItem(
                     title = subscription.displayName,
                     summary = subscription.displayDetail,
@@ -69,6 +77,10 @@ internal fun SettingsMainScreen(
                         onSubscriptionClick(subscription.subId, subscription.displayName)
                     },
                 )
+
+                if (index < subscriptions.lastIndex) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                }
             }
         }
     }

@@ -3,6 +3,8 @@ package com.android.messaging.ui.appsettings.subscription.mapper
 import android.content.ContentResolver
 import android.content.Context
 import android.content.pm.PackageManager
+import androidx.core.text.BidiFormatter
+import androidx.core.text.TextDirectionHeuristicsCompat
 import com.android.messaging.Factory
 import com.android.messaging.R
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
@@ -83,11 +85,13 @@ internal class SubscriptionSettingsUiStateMapperImpl @Inject constructor(
         val savedPhoneNumber = subPrefs.getString(phoneNumberKey, "")
         val defaultPhoneNumber = phoneUtils.getCanonicalForSelf(false)
 
-        val displayPhoneNumber = when {
+        val formattedNumber = when {
             !savedPhoneNumber.isNullOrEmpty() -> phoneUtils.formatForDisplay(savedPhoneNumber)
             !defaultPhoneNumber.isNullOrEmpty() -> phoneUtils.formatForDisplay(defaultPhoneNumber)
             else -> context.getString(R.string.unknown_phone_number_pref_display_value)
         }
+        val displayPhoneNumber = BidiFormatter.getInstance()
+            .unicodeWrap(formattedNumber, TextDirectionHeuristicsCompat.LTR)
 
         val isDefaultSmsApp = PhoneUtils.getDefault().isDefaultSmsApp
         val groupMmsPrefKey = context.getString(R.string.group_mms_pref_key)
