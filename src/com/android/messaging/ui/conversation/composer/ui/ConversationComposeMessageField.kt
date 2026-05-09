@@ -67,9 +67,9 @@ internal fun rememberConversationComposeBarPresentation(): ConversationComposeBa
 @Composable
 private fun conversationComposeBarTextFieldColors(): TextFieldColors {
     return TextFieldDefaults.colors(
-        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        focusedContainerColor = Color.Transparent,
+        unfocusedContainerColor = Color.Transparent,
+        disabledContainerColor = Color.Transparent,
         focusedIndicatorColor = Color.Transparent,
         unfocusedIndicatorColor = Color.Transparent,
         disabledIndicatorColor = Color.Transparent,

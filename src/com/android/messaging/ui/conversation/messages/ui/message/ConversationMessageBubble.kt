@@ -322,6 +322,7 @@ private fun ConversationMessageAttachmentBubbleContent(
             Text(
                 modifier = Modifier.padding(
                     start = MESSAGE_BUBBLE_MEDIA_TEXT_PADDING,
+                    top = conversationMessageSubjectTopPadding(showSender = layout.showSender),
                     end = MESSAGE_BUBBLE_MEDIA_TEXT_PADDING,
                     bottom = MESSAGE_BUBBLE_MEDIA_SECTION_SPACING,
                 ),
@@ -365,6 +366,13 @@ private fun conversationMessageSenderBottomPadding(
     return when {
         content.subjectText.isNullOrBlank() -> 6.dp
         else -> MESSAGE_BUBBLE_MEDIA_SECTION_SPACING
+    }
+}
+
+private fun conversationMessageSubjectTopPadding(showSender: Boolean): Dp {
+    return when {
+        showSender -> 0.dp
+        else -> MESSAGE_BUBBLE_MEDIA_TEXT_PADDING
     }
 }
 

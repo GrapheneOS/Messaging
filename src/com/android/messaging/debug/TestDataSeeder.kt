@@ -87,6 +87,10 @@ fun seedTestData(context: Context) {
         val henry = upsertParticipant(db, "${TEST_PHONE_PREFIX}008901", "Henry Hall", "Henry")
         val iris = upsertParticipant(db, "${TEST_PHONE_PREFIX}009012", "Iris Ingram", "Iris")
         val jack = upsertParticipant(db, "${TEST_PHONE_PREFIX}010123", "Jack Johnson", "Jack")
+        val kim = upsertParticipant(db, "${TEST_PHONE_PREFIX}011234", "Kim Kelly", "Kim")
+        val liam = upsertParticipant(db, "${TEST_PHONE_PREFIX}012345", "Liam Lewis", "Liam")
+        val mia = upsertParticipant(db, "${TEST_PHONE_PREFIX}013456", "Mia Miller", "Mia")
+        val noah = upsertParticipant(db, "${TEST_PHONE_PREFIX}014567", "Noah Nguyen", "Noah")
 
         seedScenarioA(db, selfId, alice, now)
         seedScenarioB(db, selfId, bob, now)
@@ -107,6 +111,8 @@ fun seedTestData(context: Context) {
             now = now,
         )
         seedScenarioI(db, selfId, carol, dave, eve, now)
+        seedScenarioJ(db, selfId, kim, testImages, now)
+        seedScenarioK(db, selfId, liam, mia, noah, testImages, now)
     }
 
     MessagingContentProvider.notifyConversationListChanged()
@@ -562,6 +568,7 @@ private fun insertImageMessage(
     timestamp: Long,
     seen: Boolean = true,
     read: Boolean = true,
+    mmsSubject: String? = null,
 ): Long {
     return insertAttachmentMessage(
         db = db,
@@ -576,6 +583,7 @@ private fun insertImageMessage(
         height = 300,
         seen = seen,
         read = read,
+        mmsSubject = mmsSubject,
     )
 }
 
@@ -590,6 +598,7 @@ private fun insertMixedMessage(
     timestamp: Long,
     seen: Boolean = true,
     read: Boolean = true,
+    mmsSubject: String? = null,
 ): Long {
     val messageId = insertAttachmentMessage(
         db = db,
@@ -604,6 +613,7 @@ private fun insertMixedMessage(
         height = 300,
         seen = seen,
         read = read,
+        mmsSubject = mmsSubject,
     )
     db.insert(
         DatabaseHelper.PARTS_TABLE,
@@ -631,6 +641,7 @@ private fun insertAttachmentMessage(
     height: Int = 0,
     seen: Boolean = true,
     read: Boolean = true,
+    mmsSubject: String? = null,
 ): Long {
     val messageId = insertMessageRow(
         db = db,
@@ -642,7 +653,7 @@ private fun insertAttachmentMessage(
         timestamp = timestamp,
         seen = seen,
         read = read,
-        mmsSubject = null,
+        mmsSubject = mmsSubject,
     )
     db.insert(
         DatabaseHelper.PARTS_TABLE,
@@ -1485,4 +1496,221 @@ private fun seedScenarioI(
         latestTimestamp = latestTimestamp,
         snippetText = latestText,
     )
+}
+
+/**
+ * 1:1 MMS thread with Kim covering subject across direction and attachment variants.
+ *
+ * Sender row never shows in 1:1 chats, so this scenario isolates direction × content type:
+ * outgoing text, incoming text, incoming image-only, outgoing image+body — each with subject.
+ */
+private fun seedScenarioJ(
+    db: DatabaseWrapper,
+    selfId: String,
+    kimId: String,
+    images: List<String>,
+    now: Long,
+) {
+    val baseTime = now - 4 * HOURS
+    val convId = createConversation(db, "Kim Kelly", selfId, listOf(kimId), baseTime)
+    val img = images[0]
+
+    data class SubjectMsg(
+        val type: String,
+        val text: String = "",
+        val imageUri: String = "",
+        val isIncoming: Boolean,
+        val subject: String,
+    )
+
+    val messages = listOf(
+        SubjectMsg(
+            type = "text",
+            text = "Did you check the report?",
+            isIncoming = false,
+            subject = "Q1 review",
+        ),
+        SubjectMsg(
+            type = "text",
+            text = "Yes, looks great. A couple of comments on slide 4.",
+            isIncoming = true,
+            subject = "Q1 review",
+        ),
+        SubjectMsg(
+            type = "image",
+            imageUri = img,
+            isIncoming = true,
+            subject = "Updated chart",
+        ),
+        SubjectMsg(
+            type = "mixed",
+            text = "Much clearer now, thanks!",
+            imageUri = img,
+            isIncoming = false,
+            subject = "Updated chart",
+        ),
+    )
+
+    var latestMsgId = 0L
+    var latestTime = baseTime
+    var latestText = ""
+    for ((idx, m) in messages.withIndex()) {
+        val msgTime = baseTime + idx * 6 * MINUTES
+        val senderId = if (m.isIncoming) kimId else selfId
+        val status = if (m.isIncoming) {
+            MessageData.BUGLE_STATUS_INCOMING_COMPLETE
+        } else {
+            MessageData.BUGLE_STATUS_OUTGOING_COMPLETE
+        }
+        latestText = m.text.ifBlank { m.subject }
+        latestMsgId = when (m.type) {
+            "image" -> insertImageMessage(
+                db = db,
+                conversationId = convId,
+                senderId = senderId,
+                selfId = selfId,
+                imageUri = m.imageUri,
+                status = status,
+                timestamp = msgTime,
+                mmsSubject = m.subject,
+            )
+
+            "mixed" -> insertMixedMessage(
+                db = db,
+                conversationId = convId,
+                senderId = senderId,
+                selfId = selfId,
+                text = m.text,
+                imageUri = m.imageUri,
+                status = status,
+                timestamp = msgTime,
+                mmsSubject = m.subject,
+            )
+
+            else -> insertTextMessage(
+                db = db,
+                conversationId = convId,
+                senderId = senderId,
+                selfId = selfId,
+                text = m.text,
+                status = status,
+                protocol = MessageData.PROTOCOL_MMS,
+                timestamp = msgTime,
+                mmsSubject = m.subject,
+            )
+        }
+        latestTime = msgTime
+    }
+
+    finalizeConversation(db, convId, latestMsgId, latestTime, latestText)
+}
+
+/**
+ * Group MMS thread covering subject combined with sender-display variations.
+ *
+ * Sender label is shown only on the first message of an incoming cluster, so this scenario
+ * mixes a same-sender cluster (label shown then hidden), a sender change (label shown again),
+ * an outgoing message (no label), and an attachment-with-subject from a fresh sender.
+ */
+private fun seedScenarioK(
+    db: DatabaseWrapper,
+    selfId: String,
+    liamId: String,
+    miaId: String,
+    noahId: String,
+    images: List<String>,
+    now: Long,
+) {
+    val baseTime = now - 2 * HOURS
+    val convId = createConversation(
+        db,
+        "Subject Group",
+        selfId,
+        listOf(liamId, miaId, noahId),
+        baseTime,
+    )
+    val img = images[1]
+
+    data class GroupSubjectMsg(
+        val type: String,
+        val text: String = "",
+        val imageUri: String = "",
+        val senderId: String,
+        val subject: String,
+    )
+
+    val messages = listOf(
+        GroupSubjectMsg(
+            type = "text",
+            text = "Anyone free to review?",
+            senderId = liamId,
+            subject = "Design review",
+        ),
+        GroupSubjectMsg(
+            type = "text",
+            text = "I just added the new mock to the doc",
+            senderId = liamId,
+            subject = "Design review",
+        ),
+        GroupSubjectMsg(
+            type = "text",
+            text = "Looks good — what about the dark mode?",
+            senderId = miaId,
+            subject = "Design review",
+        ),
+        GroupSubjectMsg(
+            type = "text",
+            text = "I'll send screenshots in a minute",
+            senderId = selfId,
+            subject = "Design review",
+        ),
+        GroupSubjectMsg(
+            type = "mixed",
+            text = "Here's the dark version",
+            imageUri = img,
+            senderId = noahId,
+            subject = "Design review",
+        ),
+    )
+
+    var latestMsgId = 0L
+    var latestTime = baseTime
+    var latestText = ""
+    for ((idx, m) in messages.withIndex()) {
+        val msgTime = baseTime + idx * 6 * MINUTES
+        val status = if (m.senderId == selfId) {
+            MessageData.BUGLE_STATUS_OUTGOING_COMPLETE
+        } else {
+            MessageData.BUGLE_STATUS_INCOMING_COMPLETE
+        }
+        latestText = m.text
+        latestMsgId = when (m.type) {
+            "mixed" -> insertMixedMessage(
+                db = db,
+                conversationId = convId,
+                senderId = m.senderId,
+                selfId = selfId,
+                text = m.text,
+                imageUri = m.imageUri,
+                status = status,
+                timestamp = msgTime,
+                mmsSubject = m.subject,
+            )
+
+            else -> insertTextMessage(
+                db = db,
+                conversationId = convId,
+                senderId = m.senderId,
+                selfId = selfId,
+                text = m.text,
+                status = status,
+                protocol = MessageData.PROTOCOL_MMS,
+                timestamp = msgTime,
+                mmsSubject = m.subject,
+            )
+        }
+        latestTime = msgTime
+    }
+
+    finalizeConversation(db, convId, latestMsgId, latestTime, latestText)
 }

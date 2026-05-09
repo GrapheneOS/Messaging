@@ -119,6 +119,11 @@ internal interface ConversationScreenModel {
     fun confirmDeleteConversation()
     fun dismissDeleteConversationConfirmation()
 
+    fun onShowSubjectFieldClick()
+    fun onSubjectChipClear()
+    fun onSubjectDialogConfirm(subjectText: String)
+    fun onSubjectDialogDismiss()
+
     fun onScreenForegrounded(cancelNotification: Boolean)
     fun onScreenBackgrounded()
 }
@@ -200,10 +205,12 @@ internal class ConversationViewModel @Inject constructor(
     private val dialogUiState = combine(
         conversationDraftDelegate.attachmentLimitWarning,
         conversationMetadataDelegate.isDeleteConversationConfirmationVisible,
-    ) { attachmentLimitWarning, isDeleteConversationConfirmationVisible ->
+        conversationDraftDelegate.isSubjectDialogVisible,
+    ) { attachmentLimitWarning, isDeleteConversationConfirmationVisible, isSubjectDialogVisible ->
         ConversationScreenDialogUiState(
             attachmentLimitWarning = attachmentLimitWarning,
             isDeleteConversationConfirmationVisible = isDeleteConversationConfirmationVisible,
+            isSubjectDialogVisible = isSubjectDialogVisible,
         )
     }
 
@@ -222,6 +229,7 @@ internal class ConversationViewModel @Inject constructor(
             attachmentLimitWarning = dialogUiState.attachmentLimitWarning,
             isDeleteConversationConfirmationVisible = dialogUiState
                 .isDeleteConversationConfirmationVisible,
+            isSubjectDialogVisible = dialogUiState.isSubjectDialogVisible,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -236,6 +244,7 @@ internal class ConversationViewModel @Inject constructor(
             attachmentLimitWarning = conversationDraftDelegate.attachmentLimitWarning.value,
             isDeleteConversationConfirmationVisible =
                 conversationMetadataDelegate.isDeleteConversationConfirmationVisible.value,
+            isSubjectDialogVisible = conversationDraftDelegate.isSubjectDialogVisible.value,
         ),
     )
 
@@ -246,6 +255,7 @@ internal class ConversationViewModel @Inject constructor(
         selectionUiState: ConversationMessageSelectionUiState,
         attachmentLimitWarning: ConversationAttachmentLimitWarning?,
         isDeleteConversationConfirmationVisible: Boolean,
+        isSubjectDialogVisible: Boolean,
     ): ConversationScreenScaffoldUiState {
         val isPresent = metadataState is ConversationMetadataUiState.Present
         val presentMetadata = metadataState as? ConversationMetadataUiState.Present
@@ -257,8 +267,10 @@ internal class ConversationViewModel @Inject constructor(
             canUnarchive = isPresent && presentMetadata?.isArchived == true,
             canAddContact = canAddContact(metadataState = metadataState),
             canDeleteConversation = isPresent,
+            canEditSubject = isPresent,
             attachmentLimitWarning = attachmentLimitWarning,
             isDeleteConversationConfirmationVisible = isDeleteConversationConfirmationVisible,
+            isSubjectDialogVisible = isSubjectDialogVisible,
             metadata = metadataState,
             messages = messagesUiState,
             composer = composerUiState,
@@ -714,6 +726,22 @@ internal class ConversationViewModel @Inject constructor(
         conversationMetadataDelegate.dismissDeleteConversationConfirmation()
     }
 
+    override fun onShowSubjectFieldClick() {
+        conversationDraftDelegate.showSubjectDialog()
+    }
+
+    override fun onSubjectChipClear() {
+        conversationDraftDelegate.onSubjectTextChanged(subjectText = "")
+    }
+
+    override fun onSubjectDialogConfirm(subjectText: String) {
+        conversationDraftDelegate.confirmSubjectDialog(subjectText = subjectText)
+    }
+
+    override fun onSubjectDialogDismiss() {
+        conversationDraftDelegate.dismissSubjectDialog()
+    }
+
     override fun onScreenForegrounded(cancelNotification: Boolean) {
         conversationFocusDelegate.setScreenFocused(
             focused = true,
@@ -743,4 +771,5 @@ internal class ConversationViewModel @Inject constructor(
 private data class ConversationScreenDialogUiState(
     val attachmentLimitWarning: ConversationAttachmentLimitWarning?,
     val isDeleteConversationConfirmationVisible: Boolean,
+    val isSubjectDialogVisible: Boolean,
 )

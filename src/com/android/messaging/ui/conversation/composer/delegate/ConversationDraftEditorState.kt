@@ -68,6 +68,19 @@ internal data class DraftEditorState(
         }
     }
 
+    fun withSubjectText(subjectText: String): DraftEditorState {
+        return when {
+            conversationId == null -> this
+            effectiveDraft.subjectText == subjectText -> this
+
+            else -> {
+                copyWithNormalizedLocalEdits(
+                    updatedLocalEdits = localEdits.copy(subjectText = subjectText),
+                )
+            }
+        }
+    }
+
     fun withSelfParticipantId(selfParticipantId: String): DraftEditorState {
         return when {
             conversationId == null -> this

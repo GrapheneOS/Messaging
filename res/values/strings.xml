@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
     Copyright (C) 2015 The Android Open Source Project
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -663,6 +662,10 @@
     <string name="add_contact_confirmation">Add Contact</string>
     <!-- The text shown as a label before the message subject input box -->
     <string name="compose_message_view_subject_hint_text">Subject</string>
+    <!-- Title of the subject editor dialog. -->
+    <string name="subject_dialog_title">Subject</string>
+    <!-- Conversation overflow menu entry that opens the subject editor dialog. -->
+    <string name="conversation_show_subject_field">Show subject field</string>
     <!-- The text shown as a label before the message subject input box -->
     <string name="conversation_message_view_subject_text">Subject:\u0020</string>
     <!-- When there's a subject in an mms, the subject + message are shown in a notification -->

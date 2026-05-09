@@ -229,6 +229,7 @@ private fun ConversationScreenTopBar(
                 isUnarchiveVisible = uiState.canUnarchive,
                 isAddContactVisible = uiState.canAddContact,
                 isDeleteConversationVisible = uiState.canDeleteConversation,
+                isShowSubjectFieldVisible = uiState.canEditSubject,
                 simSelector = uiState.composer.simSelector,
                 onAddPeopleClick = onAddPeopleClick,
                 onCallClick = screenModel::onCallClick,
@@ -236,6 +237,7 @@ private fun ConversationScreenTopBar(
                 onUnarchiveClick = screenModel::onUnarchiveConversationClick,
                 onAddContactClick = screenModel::onAddContactClick,
                 onDeleteConversationClick = screenModel::onDeleteConversationClick,
+                onShowSubjectFieldClick = screenModel::onShowSubjectFieldClick,
                 onSimSelectorClick = onSimSelectorClick,
                 onTitleClick = onConversationDetailsClick,
                 onNavigateBack = onNavigateBack,
@@ -263,6 +265,7 @@ private fun ConversationScreenBottomBar(
         audioRecording = uiState.composer.audioRecording,
         attachments = uiState.composer.attachments,
         messageText = uiState.composer.messageText,
+        subjectText = uiState.composer.subjectText,
         sendProtocol = uiState.composer.sendProtocol,
         isMessageFieldEnabled = uiState.composer.isMessageFieldEnabled,
         isAttachmentActionEnabled = uiState.composer.isAttachmentActionEnabled,
@@ -282,6 +285,8 @@ private fun ConversationScreenBottomBar(
         onAudioRecordingLock = screenModel::onAudioRecordingLock,
         onAudioRecordingCancel = screenModel::onAudioRecordingCancel,
         onSendClick = screenModel::onSendClick,
+        onSubjectChipClick = screenModel::onShowSubjectFieldClick,
+        onSubjectChipClear = screenModel::onSubjectChipClear,
     )
 }
 

@@ -44,6 +44,16 @@ internal const val CONVERSATION_TEXT_FIELD_TEST_TAG = "conversation_text_field"
 internal const val CONVERSATION_SIM_SELECTOR_MENU_ITEM_TEST_TAG =
     "conversation_sim_selector_menu_item"
 internal const val CONVERSATION_SIM_SELECTOR_SHEET_TEST_TAG = "conversation_sim_selector_sheet"
+internal const val CONVERSATION_SHOW_SUBJECT_FIELD_MENU_ITEM_TEST_TAG =
+    "conversation_show_subject_field_menu_item"
+internal const val CONVERSATION_SUBJECT_CHIP_TEST_TAG = "conversation_subject_chip"
+internal const val CONVERSATION_SUBJECT_CHIP_CLEAR_BUTTON_TEST_TAG =
+    "conversation_subject_chip_clear_button"
+internal const val CONVERSATION_SUBJECT_DIALOG_TEST_TAG = "conversation_subject_dialog"
+internal const val CONVERSATION_SUBJECT_DIALOG_TEXT_FIELD_TEST_TAG =
+    "conversation_subject_dialog_text_field"
+internal const val CONVERSATION_SUBJECT_DIALOG_CLEAR_BUTTON_TEST_TAG =
+    "conversation_subject_dialog_clear_button"
 
 internal fun conversationSimSelectorItemTestTag(selfParticipantId: String): String {
     return "conversation_sim_selector_item_$selfParticipantId"

@@ -15,6 +15,7 @@ internal fun ConversationComposerSection(
     audioRecording: ConversationAudioRecordingUiState,
     attachments: ImmutableList<ComposerAttachmentUiModel>,
     messageText: String,
+    subjectText: String,
     sendProtocol: ConversationDraftSendProtocol,
     isMessageFieldEnabled: Boolean,
     isAttachmentActionEnabled: Boolean,
@@ -34,6 +35,8 @@ internal fun ConversationComposerSection(
     onAudioRecordingLock: () -> Boolean,
     onAudioRecordingCancel: () -> Unit,
     onSendClick: () -> Unit,
+    onSubjectChipClick: () -> Unit,
+    onSubjectChipClear: () -> Unit,
 ) {
     Column(
         modifier = modifier,
@@ -48,6 +51,7 @@ internal fun ConversationComposerSection(
         ConversationComposeBar(
             audioRecording = audioRecording,
             messageText = messageText,
+            subjectText = subjectText,
             sendProtocol = sendProtocol,
             isMessageFieldEnabled = isMessageFieldEnabled,
             isAttachmentActionEnabled = isAttachmentActionEnabled,
@@ -64,6 +68,8 @@ internal fun ConversationComposerSection(
             onAudioRecordingLock = onAudioRecordingLock,
             onAudioRecordingCancel = onAudioRecordingCancel,
             onSendClick = onSendClick,
+            onSubjectChipClick = onSubjectChipClick,
+            onSubjectChipClear = onSubjectChipClear,
         )
     }
 }

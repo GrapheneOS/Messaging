@@ -30,6 +30,8 @@ internal interface ConversationDraftEditorDelegate {
 
     fun onMessageTextChanged(messageText: String)
 
+    fun onSubjectTextChanged(subjectText: String)
+
     fun onSelfParticipantIdChanged(selfParticipantId: String)
 
     fun seedDraft(
@@ -119,6 +121,12 @@ internal class ConversationDraftEditorDelegateImpl @Inject constructor(
     override fun onMessageTextChanged(messageText: String) {
         updateDraftEditorState { currentDraftEditorState ->
             currentDraftEditorState.withMessageText(messageText)
+        }
+    }
+
+    override fun onSubjectTextChanged(subjectText: String) {
+        updateDraftEditorState { currentDraftEditorState ->
+            currentDraftEditorState.withSubjectText(subjectText)
         }
     }
 

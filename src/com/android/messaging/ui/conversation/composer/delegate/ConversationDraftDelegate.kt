@@ -54,8 +54,17 @@ import kotlinx.coroutines.withContext
 internal interface ConversationDraftDelegate : ConversationScreenDelegate<ConversationDraftState> {
     val effects: Flow<ConversationScreenEffect>
     val attachmentLimitWarning: StateFlow<ConversationAttachmentLimitWarning?>
+    val isSubjectDialogVisible: StateFlow<Boolean>
 
     fun onMessageTextChanged(messageText: String)
+
+    fun onSubjectTextChanged(subjectText: String)
+
+    fun showSubjectDialog()
+
+    fun dismissSubjectDialog()
+
+    fun confirmSubjectDialog(subjectText: String)
 
     fun onSelfParticipantIdChanged(selfParticipantId: String)
 
@@ -117,9 +126,11 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
     private val _attachmentLimitWarning = MutableStateFlow<ConversationAttachmentLimitWarning?>(
         value = null,
     )
+    private val _isSubjectDialogVisible = MutableStateFlow(value = false)
 
     override val effects = _effects.asSharedFlow()
     override val attachmentLimitWarning = _attachmentLimitWarning.asStateFlow()
+    override val isSubjectDialogVisible = _isSubjectDialogVisible.asStateFlow()
     override val state: StateFlow<ConversationDraftState> = conversationDraftEditorDelegate.state
 
     private val draftSaveMutex = Mutex()
@@ -148,6 +159,23 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
 
     override fun onMessageTextChanged(messageText: String) {
         conversationDraftEditorDelegate.onMessageTextChanged(messageText = messageText)
+    }
+
+    override fun onSubjectTextChanged(subjectText: String) {
+        conversationDraftEditorDelegate.onSubjectTextChanged(subjectText = subjectText)
+    }
+
+    override fun showSubjectDialog() {
+        _isSubjectDialogVisible.value = true
+    }
+
+    override fun dismissSubjectDialog() {
+        _isSubjectDialogVisible.value = false
+    }
+
+    override fun confirmSubjectDialog(subjectText: String) {
+        conversationDraftEditorDelegate.onSubjectTextChanged(subjectText = subjectText)
+        _isSubjectDialogVisible.value = false
     }
 
     override fun onSelfParticipantIdChanged(selfParticipantId: String) {
@@ -365,6 +393,7 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
     private suspend fun resetDraftEditorState(conversationId: String?) {
         pendingMessageLimitSendRequest = null
         _attachmentLimitWarning.value = null
+        _isSubjectDialogVisible.value = false
 
         val previousSaveRequest = conversationDraftEditorDelegate.reset(
             conversationId = conversationId,

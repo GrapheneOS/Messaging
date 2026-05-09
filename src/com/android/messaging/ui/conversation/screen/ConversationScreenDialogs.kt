@@ -1,12 +1,34 @@
 package com.android.messaging.ui.conversation.screen
 
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Cancel
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.TextFieldValue
 import com.android.messaging.R
+import com.android.messaging.ui.conversation.CONVERSATION_SUBJECT_DIALOG_CLEAR_BUTTON_TEST_TAG
+import com.android.messaging.ui.conversation.CONVERSATION_SUBJECT_DIALOG_TEST_TAG
+import com.android.messaging.ui.conversation.CONVERSATION_SUBJECT_DIALOG_TEXT_FIELD_TEST_TAG
 import com.android.messaging.ui.conversation.screen.model.ConversationAttachmentLimitWarning
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageDeleteConfirmationUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaffoldUiState
@@ -36,6 +58,14 @@ internal fun ConversationScreenDialogs(
         ConversationDeleteConversationDialog(
             onConfirm = screenModel::confirmDeleteConversation,
             onDismiss = screenModel::dismissDeleteConversationConfirmation,
+        )
+    }
+
+    if (uiState.isSubjectDialogVisible) {
+        ConversationSubjectFieldDialog(
+            initialSubjectText = uiState.composer.subjectText,
+            onConfirm = screenModel::onSubjectDialogConfirm,
+            onDismiss = screenModel::onSubjectDialogDismiss,
         )
     }
 }
@@ -121,6 +151,94 @@ private fun ConversationDeleteConversationDialog(
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text(text = stringResource(R.string.delete_conversation_decline_button))
+            }
+        },
+    )
+}
+
+@Composable
+private fun ConversationSubjectFieldDialog(
+    initialSubjectText: String,
+    onConfirm: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var fieldText by remember(initialSubjectText) {
+        mutableStateOf(
+            value = TextFieldValue(
+                text = initialSubjectText,
+                selection = TextRange(index = initialSubjectText.length),
+            ),
+        )
+    }
+
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
+    AlertDialog(
+        modifier = Modifier.testTag(tag = CONVERSATION_SUBJECT_DIALOG_TEST_TAG),
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = stringResource(R.string.subject_dialog_title))
+        },
+        text = {
+            ConversationSubjectFieldInput(
+                value = fieldText,
+                onValueChange = { newValue -> fieldText = newValue },
+                focusRequester = focusRequester,
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(fieldText.text) }) {
+                Text(text = stringResource(android.R.string.ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(android.R.string.cancel))
+            }
+        },
+    )
+}
+
+@Composable
+private fun ConversationSubjectFieldInput(
+    value: TextFieldValue,
+    onValueChange: (TextFieldValue) -> Unit,
+    focusRequester: FocusRequester,
+) {
+    OutlinedTextField(
+        modifier = Modifier
+            .fillMaxWidth()
+            .focusRequester(focusRequester = focusRequester)
+            .testTag(CONVERSATION_SUBJECT_DIALOG_TEXT_FIELD_TEST_TAG),
+        value = value,
+        onValueChange = onValueChange,
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(
+            capitalization = KeyboardCapitalization.Sentences,
+        ),
+        placeholder = {
+            Text(
+                text = stringResource(R.string.compose_message_view_subject_hint_text),
+            )
+        },
+        trailingIcon = {
+            if (value.text.isNotEmpty()) {
+                IconButton(
+                    modifier = Modifier
+                        .testTag(CONVERSATION_SUBJECT_DIALOG_CLEAR_BUTTON_TEST_TAG),
+                    onClick = { onValueChange(TextFieldValue(text = "")) },
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Cancel,
+                        contentDescription = stringResource(
+                            id = R.string.delete_subject_content_description,
+                        ),
+                    )
+                }
             }
         },
     )
