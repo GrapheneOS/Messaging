@@ -35,6 +35,7 @@ internal fun ConversationComposerSection(
     onAudioRecordingLock: () -> Boolean,
     onAudioRecordingCancel: () -> Unit,
     onSendClick: () -> Unit,
+    onSendActionLongClick: () -> Unit,
     onSubjectChipClick: () -> Unit,
     onSubjectChipClear: () -> Unit,
 ) {
@@ -68,6 +69,7 @@ internal fun ConversationComposerSection(
             onAudioRecordingLock = onAudioRecordingLock,
             onAudioRecordingCancel = onAudioRecordingCancel,
             onSendClick = onSendClick,
+            onSendActionLongClick = onSendActionLongClick,
             onSubjectChipClick = onSubjectChipClick,
             onSubjectChipClear = onSubjectChipClear,
         )

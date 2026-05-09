@@ -7,10 +7,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.AwaitPointerEventScope
 import androidx.compose.ui.input.pointer.PointerId
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
 import com.android.messaging.ui.conversation.composer.model.ConversationSendActionButtonGestureState
 import com.android.messaging.ui.conversation.composer.model.ConversationSendActionButtonMode
 
@@ -28,6 +31,7 @@ internal fun Modifier.conversationSendActionButtonGesture(
     onRecordGestureLock: () -> Boolean,
     onRecordGestureFinish: (Boolean) -> Unit,
     onLockedStopClick: () -> Unit,
+    onSendActionLongClick: () -> Unit,
 ): Modifier {
     val currentIsRecordingActive by rememberUpdatedState(newValue = isRecordingActive)
     val currentIsRecordingLocked by rememberUpdatedState(newValue = isRecordingLocked)
@@ -37,8 +41,10 @@ internal fun Modifier.conversationSendActionButtonGesture(
     val currentOnRecordGestureLock by rememberUpdatedState(newValue = onRecordGestureLock)
     val currentOnRecordGestureFinish by rememberUpdatedState(newValue = onRecordGestureFinish)
     val currentOnLockedStopClick by rememberUpdatedState(newValue = onLockedStopClick)
+    val currentOnSendActionLongClick by rememberUpdatedState(newValue = onSendActionLongClick)
+    val hapticFeedback = LocalHapticFeedback.current
 
-    if (mode == ConversationSendActionButtonMode.Send || !enabled) {
+    if (mode != ConversationSendActionButtonMode.Send && !enabled) {
         return this
     }
 
@@ -48,27 +54,54 @@ internal fun Modifier.conversationSendActionButtonGesture(
         lockThresholdPx,
     ) {
         awaitEachGesture {
-            if (currentIsRecordingActive && currentIsRecordingLocked) {
-                handleLockedRecordGesture(
-                    cancelThresholdPx = cancelThresholdPx,
-                    onGestureActiveChange = currentOnGestureActiveChange,
-                    onRecordGestureMove = currentOnRecordGestureMove,
-                    onRecordGestureFinish = currentOnRecordGestureFinish,
-                    onLockedStopClick = currentOnLockedStopClick,
-                )
-            } else {
-                handleRecordGesture(
-                    cancelThresholdPx = cancelThresholdPx,
-                    lockThresholdPx = lockThresholdPx,
-                    onGestureActiveChange = currentOnGestureActiveChange,
-                    onRecordGestureStart = currentOnRecordGestureStart,
-                    onRecordGestureMove = currentOnRecordGestureMove,
-                    onRecordGestureLock = currentOnRecordGestureLock,
-                    onRecordGestureFinish = currentOnRecordGestureFinish,
-                )
+            val isLockedRecording = currentIsRecordingActive && currentIsRecordingLocked
+
+            when {
+                mode == ConversationSendActionButtonMode.Send -> {
+                    handleSendModeLongPress(
+                        hapticFeedback = hapticFeedback,
+                        onSendActionLongClick = currentOnSendActionLongClick,
+                    )
+                }
+
+                isLockedRecording -> {
+                    handleLockedRecordGesture(
+                        cancelThresholdPx = cancelThresholdPx,
+                        onGestureActiveChange = currentOnGestureActiveChange,
+                        onRecordGestureMove = currentOnRecordGestureMove,
+                        onRecordGestureFinish = currentOnRecordGestureFinish,
+                        onLockedStopClick = currentOnLockedStopClick,
+                    )
+                }
+
+                else -> {
+                    handleRecordGesture(
+                        cancelThresholdPx = cancelThresholdPx,
+                        lockThresholdPx = lockThresholdPx,
+                        onGestureActiveChange = currentOnGestureActiveChange,
+                        onRecordGestureStart = currentOnRecordGestureStart,
+                        onRecordGestureMove = currentOnRecordGestureMove,
+                        onRecordGestureLock = currentOnRecordGestureLock,
+                        onRecordGestureFinish = currentOnRecordGestureFinish,
+                    )
+                }
             }
         }
     }
+}
+
+private suspend fun AwaitPointerEventScope.handleSendModeLongPress(
+    hapticFeedback: HapticFeedback,
+    onSendActionLongClick: () -> Unit,
+) {
+    val initialDown = awaitFirstDown(requireUnconsumed = false)
+
+    val longPressChange = awaitLongPressOrCancellation(pointerId = initialDown.id)
+        ?: return
+
+    longPressChange.consume()
+    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+    onSendActionLongClick()
 }
 
 private suspend fun AwaitPointerEventScope.handleRecordGesture(

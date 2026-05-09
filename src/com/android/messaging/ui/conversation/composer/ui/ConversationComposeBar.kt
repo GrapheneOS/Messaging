@@ -78,6 +78,7 @@ internal fun ConversationComposeBar(
     onAudioRecordingLock: () -> Boolean,
     onAudioRecordingCancel: () -> Unit,
     onSendClick: () -> Unit,
+    onSendActionLongClick: () -> Unit,
     onSubjectChipClick: () -> Unit,
     onSubjectChipClear: () -> Unit,
 ) {
@@ -119,6 +120,7 @@ internal fun ConversationComposeBar(
             onAudioRecordingLock = recordingGestureController.onAudioRecordingLock,
             onAudioRecordingFinish = recordingGestureController.onAudioRecordingFinish,
             onSendClick = onSendClick,
+            onSendActionLongClick = onSendActionLongClick,
             onSubjectChipClick = onSubjectChipClick,
             onSubjectChipClear = onSubjectChipClear,
         )
@@ -201,6 +203,7 @@ internal fun ConversationComposeInputContent(
     onAudioRecordingLock: () -> Boolean,
     onAudioRecordingFinish: (Boolean) -> Unit,
     onSendClick: () -> Unit,
+    onSendActionLongClick: () -> Unit,
     onSubjectChipClick: () -> Unit,
     onSubjectChipClear: () -> Unit,
 ) {
@@ -248,6 +251,7 @@ internal fun ConversationComposeInputContent(
             audioRecording = audioRecording,
             inputState = inputState,
             onSendClick = onSendClick,
+            onSendActionLongClick = onSendActionLongClick,
             onAudioRecordingStartRequest = onAudioRecordingStartRequest,
             onAudioRecordingDrag = onAudioRecordingDrag,
             onAudioRecordingLock = onAudioRecordingLock,
@@ -262,6 +266,7 @@ private fun ConversationComposeInputSendAction(
     audioRecording: ConversationAudioRecordingUiState,
     inputState: ConversationComposeInputState,
     onSendClick: () -> Unit,
+    onSendActionLongClick: () -> Unit,
     onAudioRecordingStartRequest: () -> Unit,
     onAudioRecordingDrag: (ConversationSendActionButtonGestureState) -> Unit,
     onAudioRecordingLock: () -> Boolean,
@@ -290,6 +295,7 @@ private fun ConversationComposeInputSendAction(
         onRecordGestureMove = onAudioRecordingDrag,
         onRecordGestureLock = onAudioRecordingLock,
         onRecordGestureFinish = onAudioRecordingFinish,
+        onSendActionLongClick = onSendActionLongClick,
     )
 }
 
@@ -489,6 +495,7 @@ private fun ConversationComposeSendAction(
     onRecordGestureMove: (ConversationSendActionButtonGestureState) -> Unit,
     onRecordGestureLock: () -> Boolean,
     onRecordGestureFinish: (Boolean) -> Unit,
+    onSendActionLongClick: () -> Unit,
 ) {
     Box(
         modifier = Modifier.heightIn(
@@ -508,6 +515,7 @@ private fun ConversationComposeSendAction(
             onRecordGestureMove = onRecordGestureMove,
             onRecordGestureLock = onRecordGestureLock,
             onRecordGestureFinish = onRecordGestureFinish,
+            onSendActionLongClick = onSendActionLongClick,
         )
 
         if (shouldShowLockAffordance) {

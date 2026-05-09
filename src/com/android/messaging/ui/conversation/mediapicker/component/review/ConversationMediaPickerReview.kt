@@ -483,6 +483,7 @@ private fun ConversationMediaReviewBottomBar(
             onRecordGestureMove = { _ -> },
             onRecordGestureLock = { false },
             onRecordGestureFinish = {},
+            onSendActionLongClick = {},
         )
     }
 }

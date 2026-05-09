@@ -141,14 +141,9 @@ internal fun ConversationScreenScaffold(
     onLockedAudioRecordingStartRequest: () -> Unit,
     screenModel: ConversationScreenModel,
 ) {
-    var isSimSheetVisible by rememberSaveable { mutableStateOf(value = false) }
-
-    val hasSimSelector = uiState.composer.simSelector.isAvailable
-    LaunchedEffect(hasSimSelector) {
-        if (!hasSimSelector) {
-            isSimSheetVisible = false
-        }
-    }
+    val simSheetState = rememberConversationSimSheetState(
+        isAvailable = uiState.composer.simSelector.isAvailable,
+    )
 
     Scaffold(
         modifier = modifier,
@@ -159,7 +154,7 @@ internal fun ConversationScreenScaffold(
                 onAddPeopleClick = onAddPeopleClick,
                 onConversationDetailsClick = onConversationDetailsClick,
                 onNavigateBack = onNavigateBack,
-                onSimSelectorClick = { isSimSheetVisible = true },
+                onSimSelectorClick = simSheetState::show,
                 screenModel = screenModel,
             )
         },
@@ -172,6 +167,7 @@ internal fun ConversationScreenScaffold(
                 onOpenMediaPicker = onOpenMediaPicker,
                 onAudioRecordingStartRequest = onAudioRecordingStartRequest,
                 onLockedAudioRecordingStartRequest = onLockedAudioRecordingStartRequest,
+                onSendActionLongClick = simSheetState::show,
                 screenModel = screenModel,
             )
         },
@@ -195,10 +191,9 @@ internal fun ConversationScreenScaffold(
     ConversationScreenDialogs(uiState = uiState, screenModel = screenModel)
 
     ConversationScreenSimSelectorSheet(
-        isVisible = isSimSheetVisible,
+        simSheetState = simSheetState,
         uiState = uiState,
         onSimSelected = screenModel::onSimSelected,
-        onDismissRequest = { isSimSheetVisible = false },
     )
 }
 
@@ -255,6 +250,7 @@ private fun ConversationScreenBottomBar(
     onOpenMediaPicker: () -> Unit,
     onAudioRecordingStartRequest: () -> Unit,
     onLockedAudioRecordingStartRequest: () -> Unit,
+    onSendActionLongClick: () -> Unit,
     screenModel: ConversationScreenModel,
 ) {
     if (isMediaPickerOpen) {
@@ -285,6 +281,7 @@ private fun ConversationScreenBottomBar(
         onAudioRecordingLock = screenModel::onAudioRecordingLock,
         onAudioRecordingCancel = screenModel::onAudioRecordingCancel,
         onSendClick = screenModel::onSendClick,
+        onSendActionLongClick = onSendActionLongClick,
         onSubjectChipClick = screenModel::onShowSubjectFieldClick,
         onSubjectChipClear = screenModel::onSubjectChipClear,
     )
@@ -292,12 +289,11 @@ private fun ConversationScreenBottomBar(
 
 @Composable
 private fun ConversationScreenSimSelectorSheet(
-    isVisible: Boolean,
+    simSheetState: ConversationSimSheetState,
     uiState: ConversationScreenScaffoldUiState,
     onSimSelected: (String) -> Unit,
-    onDismissRequest: () -> Unit,
 ) {
-    if (!isVisible || !uiState.composer.simSelector.isAvailable) {
+    if (!simSheetState.isVisible || !uiState.composer.simSelector.isAvailable) {
         return
     }
 
@@ -305,9 +301,9 @@ private fun ConversationScreenSimSelectorSheet(
         uiState = uiState.composer.simSelector,
         onSimSelected = { selfParticipantId ->
             onSimSelected(selfParticipantId)
-            onDismissRequest()
+            simSheetState.dismiss()
         },
-        onDismissRequest = onDismissRequest,
+        onDismissRequest = simSheetState::dismiss,
     )
 }
 

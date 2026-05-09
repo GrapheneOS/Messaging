@@ -102,6 +102,7 @@ internal fun ConversationSendActionButton(
     onRecordGestureMove: (ConversationSendActionButtonGestureState) -> Unit,
     onRecordGestureLock: () -> Boolean,
     onRecordGestureFinish: (Boolean) -> Unit,
+    onSendActionLongClick: () -> Unit,
 ) {
     var isRecordGestureActive by remember(mode, enabled) {
         mutableStateOf(value = false)
@@ -134,6 +135,7 @@ internal fun ConversationSendActionButton(
         onRecordGestureLock = onRecordGestureLock,
         onRecordGestureFinish = onRecordGestureFinish,
         onLockedStopClick = onLockedStopClick,
+        onSendActionLongClick = onSendActionLongClick,
     )
 
     ConversationSendActionButtonLayout(
