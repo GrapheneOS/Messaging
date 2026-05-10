@@ -15,6 +15,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
@@ -43,7 +44,7 @@ internal fun SettingsScreen(
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
 
-    var currentRoute by remember {
+    var currentRoute by rememberSaveable(stateSaver = SettingsNavRouteSavedState.Saver) {
         mutableStateOf(
             resolveInitialRoute(
                 intentSubId = intentSubId,
