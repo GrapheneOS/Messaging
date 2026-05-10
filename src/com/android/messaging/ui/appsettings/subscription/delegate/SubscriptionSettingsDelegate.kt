@@ -12,6 +12,8 @@ import com.android.messaging.util.BuglePrefs
 import com.android.messaging.util.PhoneUtils
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
@@ -32,7 +34,7 @@ import kotlinx.coroutines.launch
 internal data class SubscriptionSettingsState(
     val isMultiSim: Boolean? = null,
     val isLoaded: Boolean = false,
-    val subscriptions: List<SubscriptionSettingsUiState> = emptyList(),
+    val subscriptions: ImmutableList<SubscriptionSettingsUiState> = persistentListOf(),
 )
 
 internal interface SubscriptionSettingsDelegate :

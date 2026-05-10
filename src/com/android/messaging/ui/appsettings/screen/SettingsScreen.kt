@@ -28,6 +28,7 @@ import com.android.messaging.ui.appsettings.screen.model.SettingsNavRoute
 import com.android.messaging.ui.appsettings.screen.model.SettingsUiState
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionSettingsUiState
 import com.android.messaging.ui.appsettings.subscription.ui.SubscriptionSettingsScreen
+import kotlinx.collections.immutable.ImmutableList
 
 private const val SLIDE_OFFSET_DIVISOR = 3
 
@@ -192,7 +193,7 @@ private fun LeaveOpenedSubscriptionIfRemoved(
 @Composable
 private fun rememberDisplayedSubscription(
     route: SettingsNavRoute.SubscriptionSettings,
-    subscriptions: List<SubscriptionSettingsUiState>,
+    subscriptions: ImmutableList<SubscriptionSettingsUiState>,
 ): SubscriptionSettingsUiState? {
     val current = subscriptions.find { it.subId == route.subId }
     var cached by remember(route.subId) { mutableStateOf(current) }

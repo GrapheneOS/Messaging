@@ -147,6 +147,7 @@ dependencies {
     implementation(libs.guava)
     implementation(libs.jsr305)
 
+    implementation(libs.kotlinx.collections.immutable)
     implementation(libs.kotlinx.coroutines.android)
 
     implementation(libs.libphonenumber)

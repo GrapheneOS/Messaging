@@ -18,6 +18,8 @@ import com.android.messaging.ui.core.AppTheme
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
 import org.junit.Rule
@@ -128,7 +130,9 @@ class SettingsScreenTest {
         val advancedTitle = composeTestRule.activity.getString(R.string.advanced_settings)
         composeTestRule.onNodeWithText(advancedTitle).assertIsDisplayed()
 
-        fakeUiStateFlow.value = createSingleSimState().copy(subscriptionSettings = emptyList())
+        fakeUiStateFlow.value = createSingleSimState().copy(
+            subscriptionSettings = persistentListOf(),
+        )
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText(advancedTitle).assertDoesNotExist()
@@ -136,7 +140,9 @@ class SettingsScreenTest {
 
     @Test
     fun noActiveSubscriptions_hidesAdvancedSettings() {
-        fakeUiStateFlow.value = createSingleSimState().copy(subscriptionSettings = emptyList())
+        fakeUiStateFlow.value = createSingleSimState().copy(
+            subscriptionSettings = persistentListOf(),
+        )
 
         setScreenContent()
 
@@ -176,7 +182,8 @@ class SettingsScreenTest {
 
         fakeUiStateFlow.value = createMultiSimState().copy(
             subscriptionSettings = createMultiSimState().subscriptionSettings
-                .filter { it.subId == 1 },
+                .filter { it.subId == 1 }
+                .toImmutableList(),
         )
         composeTestRule.waitForIdle()
 
@@ -200,7 +207,9 @@ class SettingsScreenTest {
         )
         composeTestRule.onNodeWithText(phoneNumberTitle).assertIsDisplayed()
 
-        fakeUiStateFlow.value = createSingleSimState().copy(subscriptionSettings = emptyList())
+        fakeUiStateFlow.value = createSingleSimState().copy(
+            subscriptionSettings = persistentListOf(),
+        )
         composeTestRule.waitForIdle()
 
         val sendSoundTitle = composeTestRule.activity.getString(R.string.send_sound_pref_title)
@@ -224,7 +233,7 @@ class SettingsScreenTest {
 
         fakeUiStateFlow.value = createMultiSimState().copy(
             isMultiSim = false,
-            subscriptionSettings = emptyList(),
+            subscriptionSettings = persistentListOf(),
         )
         composeTestRule.waitForIdle()
 
@@ -249,7 +258,8 @@ class SettingsScreenTest {
 
         fakeUiStateFlow.value = createMultiSimState().copy(
             subscriptionSettings = createMultiSimState().subscriptionSettings
-                .filter { it.subId == 1 },
+                .filter { it.subId == 1 }
+                .toImmutableList(),
         )
         composeTestRule.waitForIdle()
 
@@ -282,7 +292,7 @@ class SettingsScreenTest {
                 defaultSmsAppLabel = "Messaging",
                 sendSoundEnabled = true,
             ),
-            subscriptionSettings = listOf(
+            subscriptionSettings = persistentListOf(
                 SubscriptionSettingsUiState(
                     subId = 1,
                     displayName = "Advanced Settings",
@@ -301,7 +311,7 @@ class SettingsScreenTest {
                 defaultSmsAppLabel = "Messaging",
                 sendSoundEnabled = true,
             ),
-            subscriptionSettings = listOf(
+            subscriptionSettings = persistentListOf(
                 SubscriptionSettingsUiState(
                     subId = 1,
                     displayName = "SIM 1",

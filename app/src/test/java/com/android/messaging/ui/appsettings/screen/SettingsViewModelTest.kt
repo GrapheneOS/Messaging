@@ -10,6 +10,7 @@ import com.android.messaging.ui.appsettings.screen.model.SettingsUiState
 import com.android.messaging.ui.appsettings.subscription.delegate.SubscriptionSettingsDelegate
 import com.android.messaging.ui.appsettings.subscription.delegate.SubscriptionSettingsState
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionSettingsUiState
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -67,7 +68,7 @@ class SettingsViewModelTest {
             )
             appDelegate.stateFlow.value = appState
             subDelegate.stateFlow.value = SubscriptionSettingsState(
-                subscriptions = listOf(subscription),
+                subscriptions = persistentListOf(subscription),
                 isMultiSim = false,
             )
 
@@ -76,7 +77,7 @@ class SettingsViewModelTest {
 
                 val mappedState = awaitItem()
                 assertEquals(appState, mappedState.appSettings)
-                assertEquals(listOf(subscription), mappedState.subscriptionSettings)
+                assertEquals(persistentListOf(subscription), mappedState.subscriptionSettings)
                 assertEquals(false, mappedState.isMultiSim)
                 cancelAndIgnoreRemainingEvents()
             }

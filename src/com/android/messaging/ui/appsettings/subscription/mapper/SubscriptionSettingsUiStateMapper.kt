@@ -16,10 +16,13 @@ import com.android.messaging.ui.appsettings.subscription.model.SubscriptionSetti
 import com.android.messaging.util.PhoneUtils
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 internal interface SubscriptionSettingsUiStateMapper {
     fun isMultiSim(): Boolean
-    fun mapSubscriptions(): List<SubscriptionSettingsUiState>
+    fun mapSubscriptions(): ImmutableList<SubscriptionSettingsUiState>
 }
 
 internal class SubscriptionSettingsUiStateMapperImpl @Inject constructor(
@@ -31,11 +34,11 @@ internal class SubscriptionSettingsUiStateMapperImpl @Inject constructor(
         return PhoneUtils.getDefault().activeSubscriptionCount > 1
     }
 
-    override fun mapSubscriptions(): List<SubscriptionSettingsUiState> {
+    override fun mapSubscriptions(): ImmutableList<SubscriptionSettingsUiState> {
         return when (PhoneUtils.getDefault().activeSubscriptionCount) {
-            0 -> emptyList()
+            0 -> persistentListOf()
 
-            1 -> listOf(
+            1 -> persistentListOf(
                 mapSingleSubscription(
                     subId = ParticipantData.DEFAULT_SELF_SUB_ID,
                     displayName = context.getString(R.string.advanced_settings),
@@ -46,7 +49,7 @@ internal class SubscriptionSettingsUiStateMapperImpl @Inject constructor(
         }
     }
 
-    private fun mapMultiSimSubscriptions(): List<SubscriptionSettingsUiState> {
+    private fun mapMultiSimSubscriptions(): ImmutableList<SubscriptionSettingsUiState> {
         val nonDefaultSelfs = querySelfParticipants().filter {
             !it.isDefaultSelf && it.isActiveSubscription
         }
@@ -60,16 +63,16 @@ internal class SubscriptionSettingsUiStateMapperImpl @Inject constructor(
                         self.subscriptionName,
                     ),
                 )
-            }
+            }.toImmutableList()
 
-            nonDefaultSelfs.size == 1 -> listOf(
+            nonDefaultSelfs.size == 1 -> persistentListOf(
                 mapSingleSubscription(
                     subId = nonDefaultSelfs.first().subId,
                     displayName = context.getString(R.string.advanced_settings),
                 ),
             )
 
-            else -> listOf(
+            else -> persistentListOf(
                 mapSingleSubscription(
                     subId = ParticipantData.DEFAULT_SELF_SUB_ID,
                     displayName = context.getString(R.string.advanced_settings),
