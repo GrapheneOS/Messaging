@@ -97,9 +97,6 @@
     <color name="notification_subject_color">#DE000000</color>
 
     <color name="participant_list_text_primary">#4d4d4d</color>
-    <color name="participant_list_text_secondary">#6d6d6d</color>
-    <color name="people_and_options_header_text">#6d6d6d</color>
-    <color name="people_and_options_list_divider">#cccccc</color>
 
     <color name="fab_color">@color/primary_color</color>
     <color name="fab_pressed_color">#3ea4dc</color>
