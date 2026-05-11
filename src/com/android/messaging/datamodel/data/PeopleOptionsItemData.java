@@ -35,9 +35,9 @@ public class PeopleOptionsItemData {
     // Column index for query projection.
     public static final int INDEX_CONVERSATION_ID = 0;
     public static final int INDEX_CONVERSATION_NAME = 1;
-    private static final int INDEX_NOTIFICATION_ENABLED = 2;
-    private static final int INDEX_NOTIFICATION_SOUND_URI = 3;
-    private static final int INDEX_NOTIFICATION_VIBRATION = 4;
+    public static final int INDEX_NOTIFICATION_ENABLED = 2;
+    public static final int INDEX_NOTIFICATION_SOUND_URI = 3;
+    public static final int INDEX_NOTIFICATION_VIBRATION = 4;
 
     // Identification for each setting that's surfaced to the UI layer.
     public static final int SETTING_NOTIFICATIONS = 0;
