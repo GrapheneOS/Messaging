@@ -50,7 +50,7 @@ import com.android.messaging.ui.conversation.LaunchConversationActivity;
 import com.android.messaging.ui.conversationlist.ArchivedConversationListActivity;
 import com.android.messaging.ui.conversationlist.ConversationListActivity;
 import com.android.messaging.ui.conversationlist.ForwardMessageActivity;
-import com.android.messaging.ui.conversationsettings.PeopleAndOptionsActivity;
+import com.android.messaging.ui.conversationsettings.ConversationSettingsActivity;
 import com.android.messaging.ui.debug.DebugMmsConfigActivity;
 import com.android.messaging.ui.photoviewer.BuglePhotoViewActivity;
 import com.android.messaging.util.Assert;
@@ -227,9 +227,11 @@ public class UIIntentsImpl extends UIIntents {
     }
 
     @Override
-    public void launchPeopleAndOptionsActivity(final Activity activity,
-            final String conversationId) {
-        final Intent intent = new Intent(activity, PeopleAndOptionsActivity.class);
+    public void launchPeopleAndOptionsActivity(
+            final Activity activity,
+            final String conversationId
+    ) {
+        final Intent intent = new Intent(activity, ConversationSettingsActivity.class);
         intent.putExtra(UI_INTENT_EXTRA_CONVERSATION_ID, conversationId);
         activity.startActivityForResult(intent, 0);
     }

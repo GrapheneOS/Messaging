@@ -212,16 +212,23 @@
 
         <!-- People & Options -->
         <activity
-            android:name=".ui.conversationsettings.PeopleAndOptionsActivity"
+            android:name=".ui.conversationsettings.ConversationSettingsActivity"
+            android:allowEmbedded="true"
             android:configChanges="orientation|screenSize|keyboardHidden"
-            android:screenOrientation="user"
             android:label="@string/people_and_options_activity_title"
-            android:theme="@style/BugleTheme"
-            android:parentActivityName="com.android.messaging.ui.conversation.ConversationActivity">
+            android:parentActivityName="com.android.messaging.ui.conversation.ConversationActivity"
+            android:resizeableActivity="true"
+            android:screenOrientation="user"
+            android:theme="@style/Theme.Compose">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.android.messaging.ui.conversation.ConversationActivity" />
         </activity>
+
+        <activity-alias
+            android:name=".ui.conversationsettings.PeopleAndOptionsActivity"
+            android:exported="true"
+            android:targetActivity=".ui.conversationsettings.ConversationSettingsActivity" />
 
          <!-- License -->
         <activity android:name=".ui.LicenseActivity"
