@@ -41,10 +41,6 @@ import com.android.messaging.datamodel.data.LaunchConversationData.LaunchConvers
 import com.android.messaging.datamodel.data.MediaPickerData;
 import com.android.messaging.datamodel.data.MessagePartData;
 import com.android.messaging.datamodel.data.ParticipantData;
-import com.android.messaging.datamodel.data.ParticipantListItemData;
-import com.android.messaging.datamodel.data.PeopleAndOptionsData;
-import com.android.messaging.datamodel.data.PeopleAndOptionsData.PeopleAndOptionsDataListener;
-import com.android.messaging.datamodel.data.PeopleOptionsItemData;
 import com.android.messaging.datamodel.data.VCardContactItemData;
 import com.android.messaging.sms.MmsConfig;
 import com.android.messaging.util.Assert;
@@ -121,17 +117,6 @@ public class DataModelImpl extends DataModel {
     }
 
     @Override
-    public PeopleOptionsItemData createPeopleOptionsItemData(final Context context) {
-        return new PeopleOptionsItemData(context);
-    }
-
-    @Override
-    public PeopleAndOptionsData createPeopleAndOptionsData(final String conversationId,
-            final Context context, final PeopleAndOptionsDataListener listener) {
-        return new PeopleAndOptionsData(conversationId, context, listener);
-    }
-
-    @Override
     public VCardContactItemData createVCardContactItemData(final Context context,
             final MessagePartData data) {
         return new VCardContactItemData(context, data);
@@ -141,12 +126,6 @@ public class DataModelImpl extends DataModel {
     public VCardContactItemData createVCardContactItemData(final Context context,
             final Uri vCardUri) {
         return new VCardContactItemData(context, vCardUri);
-    }
-
-    @Override
-    public ParticipantListItemData createParticipantListItemData(
-            final ParticipantData participant) {
-        return new ParticipantListItemData(participant);
     }
 
     @Override
