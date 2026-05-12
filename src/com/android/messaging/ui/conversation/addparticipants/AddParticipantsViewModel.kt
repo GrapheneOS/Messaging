@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.messaging.R
+import com.android.messaging.data.contact.formatter.ContactDestinationFormatter
 import com.android.messaging.data.conversation.model.recipient.ConversationRecipient
 import com.android.messaging.data.conversation.repository.ConversationParticipantsRepository
 import com.android.messaging.di.core.MainDispatcher
@@ -16,9 +17,12 @@ import com.android.messaging.ui.conversation.recipientpicker.delegate.RecipientP
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -44,6 +48,7 @@ internal interface AddParticipantsModel {
 
 @HiltViewModel
 internal class AddParticipantsViewModel @Inject constructor(
+    private val contactDestinationFormatter: ContactDestinationFormatter,
     private val conversationParticipantsRepository: ConversationParticipantsRepository,
     private val isConversationRecipientLimitExceeded: IsConversationRecipientLimitExceeded,
     private val recipientPickerDelegate: RecipientPickerDelegate,
@@ -105,6 +110,7 @@ internal class AddParticipantsViewModel @Inject constructor(
                 updateLocalUiState(
                     localUiState.value.copy(
                         existingParticipants = persistentEmptyParticipants(),
+                        existingParticipantCanonicalDestinations = persistentSetOf(),
                         isLoadingConversationParticipants = conversationId != null,
                         isResolvingConversation = false,
                         selectedRecipientDestinations = persistentEmptyDestinations(),
@@ -121,22 +127,30 @@ internal class AddParticipantsViewModel @Inject constructor(
                 conversationParticipantsRepository
                     .getParticipants(conversationId = conversationId)
                     .collect { participants ->
+                        val canonicalDestinations = participants
+                            .map { participant ->
+                                contactDestinationFormatter.canonicalize(
+                                    value = participant.destination,
+                                )
+                            }
+                            .toImmutableSet()
+
                         val selectedDestinations = localUiState.value
                             .selectedRecipientDestinations
                             .filterNot { selectedDestination ->
-                                participants.any { participant ->
-                                    participant.destination == selectedDestination
-                                }
+                                selectedDestination in canonicalDestinations
                             }
                             .toImmutableList()
 
                         updateLocalUiState(
                             localUiState.value.copy(
                                 existingParticipants = participants,
+                                existingParticipantCanonicalDestinations = canonicalDestinations,
                                 isLoadingConversationParticipants = false,
                                 selectedRecipientDestinations = selectedDestinations,
                             ),
                         )
+
                         recipientPickerDelegate.onExcludedDestinationsChanged(
                             destinations = participants
                                 .map { participant ->
@@ -170,9 +184,7 @@ internal class AddParticipantsViewModel @Inject constructor(
         val shouldIgnoreRecipientClick = trimmedDestination.isEmpty() ||
             currentUiState.isLoadingConversationParticipants ||
             currentUiState.isResolvingConversation ||
-            currentUiState.existingParticipants.any { participant ->
-                participant.destination == trimmedDestination
-            }
+            trimmedDestination in currentUiState.existingParticipantCanonicalDestinations
 
         if (shouldIgnoreRecipientClick) {
             return
@@ -275,6 +287,7 @@ internal class AddParticipantsViewModel @Inject constructor(
 
     private data class LocalAddParticipantsUiState(
         val existingParticipants: ImmutableList<ConversationRecipient> = persistentListOf(),
+        val existingParticipantCanonicalDestinations: ImmutableSet<String> = persistentSetOf(),
         val isLoadingConversationParticipants: Boolean = true,
         val isResolvingConversation: Boolean = false,
         val selectedRecipientDestinations: ImmutableList<String> = persistentListOf(),

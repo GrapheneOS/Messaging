@@ -126,10 +126,11 @@ private fun RecipientSelectionTextAvatar(
     modifier: Modifier = Modifier,
 ) {
     val displayName = recipientSelectionItemDisplayName(item = item)
-    val label = remember(displayName, item.destination) {
+    val avatarSourceText = recipientSelectionAvatarSourceText(item = item)
+    val label = remember(displayName, avatarSourceText) {
         recipientSelectionAvatarLabel(
             displayName = displayName,
-            destination = item.destination,
+            destination = avatarSourceText,
         )
     }
 
@@ -155,7 +156,7 @@ internal fun recipientSelectionItemDisplayName(
     item: RecipientPickerListItem,
 ): String {
     return when (item) {
-        is RecipientPickerListItem.Contact -> item.recipient.displayName
+        is RecipientPickerListItem.Contact -> item.contact.displayName
         is RecipientPickerListItem.SyntheticPhone -> {
             stringResource(
                 id = R.string.contact_list_send_to_text,
@@ -167,8 +168,18 @@ internal fun recipientSelectionItemDisplayName(
 
 private fun recipientSelectionPhotoUri(item: RecipientPickerListItem): String? {
     return when (item) {
-        is RecipientPickerListItem.Contact -> item.recipient.photoUri
+        is RecipientPickerListItem.Contact -> item.contact.photoUri
         is RecipientPickerListItem.SyntheticPhone -> null
+    }
+}
+
+private fun recipientSelectionAvatarSourceText(item: RecipientPickerListItem): String {
+    return when (item) {
+        is RecipientPickerListItem.Contact -> {
+            item.contact.destinations.firstOrNull()?.value.orEmpty()
+        }
+
+        is RecipientPickerListItem.SyntheticPhone -> item.destination
     }
 }
 

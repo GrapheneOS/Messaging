@@ -21,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.android.messaging.ui.conversation.recipientpicker.model.RecipientPickerListItem
 
 private val searchFieldShape = RoundedCornerShape(size = 22.dp)
 
@@ -30,12 +29,12 @@ internal fun RecipientSelectionContent(
     uiState: RecipientSelectionContentUiState,
     strings: RecipientSelectionStrings,
     rowDecorators: RecipientSelectionRowDecorators,
-    onRecipientClick: (RecipientPickerListItem) -> Unit,
+    onRecipientDestinationClick: OnRecipientDestinationAction,
     modifier: Modifier = Modifier,
     onLoadMore: () -> Unit = {},
     onPrimaryActionClick: () -> Unit = {},
     onQueryChanged: (String) -> Unit = {},
-    onRecipientLongClick: ((RecipientPickerListItem) -> Unit)? = null,
+    onRecipientDestinationLongClick: OnRecipientDestinationAction? = null,
     topListContent: (@Composable () -> Unit)? = null,
 ) {
     Surface(
@@ -65,8 +64,8 @@ internal fun RecipientSelectionContent(
                 rowDecorators = rowDecorators,
                 onLoadMore = onLoadMore,
                 onPrimaryActionClick = onPrimaryActionClick,
-                onRecipientClick = onRecipientClick,
-                onRecipientLongClick = onRecipientLongClick,
+                onRecipientDestinationClick = onRecipientDestinationClick,
+                onRecipientDestinationLongClick = onRecipientDestinationLongClick,
                 topListContent = topListContent,
             )
         }

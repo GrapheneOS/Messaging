@@ -49,8 +49,8 @@ internal fun RecipientSelectionContactsContent(
     rowDecorators: RecipientSelectionRowDecorators,
     onLoadMore: () -> Unit,
     onPrimaryActionClick: () -> Unit,
-    onRecipientClick: (RecipientPickerListItem) -> Unit,
-    onRecipientLongClick: ((RecipientPickerListItem) -> Unit)?,
+    onRecipientDestinationClick: OnRecipientDestinationAction,
+    onRecipientDestinationLongClick: OnRecipientDestinationAction?,
     modifier: Modifier = Modifier,
     topListContent: (@Composable () -> Unit)? = null,
 ) {
@@ -61,8 +61,8 @@ internal fun RecipientSelectionContactsContent(
             uiState = uiState,
             rowDecorators = rowDecorators,
             onLoadMore = onLoadMore,
-            onRecipientClick = onRecipientClick,
-            onRecipientLongClick = onRecipientLongClick,
+            onRecipientDestinationClick = onRecipientDestinationClick,
+            onRecipientDestinationLongClick = onRecipientDestinationLongClick,
             topListContent = topListContent,
         )
 
@@ -91,8 +91,8 @@ private fun RecipientSelectionContactsList(
     uiState: RecipientSelectionContentUiState,
     rowDecorators: RecipientSelectionRowDecorators,
     onLoadMore: () -> Unit,
-    onRecipientClick: (RecipientPickerListItem) -> Unit,
-    onRecipientLongClick: ((RecipientPickerListItem) -> Unit)?,
+    onRecipientDestinationClick: OnRecipientDestinationAction,
+    onRecipientDestinationLongClick: OnRecipientDestinationAction?,
     topListContent: (@Composable () -> Unit)?,
 ) {
     val pickerUiState = uiState.picker
@@ -129,8 +129,8 @@ private fun RecipientSelectionContactsList(
         recipientSelectionContactItems(
             uiState = uiState,
             rowDecorators = rowDecorators,
-            onRecipientClick = onRecipientClick,
-            onRecipientLongClick = onRecipientLongClick,
+            onRecipientDestinationClick = onRecipientDestinationClick,
+            onRecipientDestinationLongClick = onRecipientDestinationLongClick,
         )
     }
 }
@@ -138,8 +138,8 @@ private fun RecipientSelectionContactsList(
 private fun LazyListScope.recipientSelectionContactItems(
     uiState: RecipientSelectionContentUiState,
     rowDecorators: RecipientSelectionRowDecorators,
-    onRecipientClick: (RecipientPickerListItem) -> Unit,
-    onRecipientLongClick: ((RecipientPickerListItem) -> Unit)?,
+    onRecipientDestinationClick: OnRecipientDestinationAction,
+    onRecipientDestinationLongClick: OnRecipientDestinationAction?,
 ) {
     val pickerUiState = uiState.picker
 
@@ -167,8 +167,8 @@ private fun LazyListScope.recipientSelectionContactItems(
                     index = index,
                     uiState = uiState,
                     rowDecorators = rowDecorators,
-                    onRecipientClick = onRecipientClick,
-                    onRecipientLongClick = onRecipientLongClick,
+                    onRecipientDestinationClick = onRecipientDestinationClick,
+                    onRecipientDestinationLongClick = onRecipientDestinationLongClick,
                 )
             }
         }
@@ -187,8 +187,8 @@ private fun RecipientSelectionContactItem(
     index: Int,
     uiState: RecipientSelectionContentUiState,
     rowDecorators: RecipientSelectionRowDecorators,
-    onRecipientClick: (RecipientPickerListItem) -> Unit,
-    onRecipientLongClick: ((RecipientPickerListItem) -> Unit)?,
+    onRecipientDestinationClick: OnRecipientDestinationAction,
+    onRecipientDestinationLongClick: OnRecipientDestinationAction?,
 ) {
     val lastContactIndex = uiState.picker.items.lastIndex
     val bottomPadding = when {
@@ -200,22 +200,20 @@ private fun RecipientSelectionContactItem(
         modifier = Modifier.padding(bottom = bottomPadding),
         item = item,
         enabled = uiState.primaryAction?.isLoading != true,
-        isSelected = uiState.selectedRecipientDestinations.contains(item.destination),
-        onClick = {
-            onRecipientClick(item)
+        selectedDestinations = uiState.selectedRecipientDestinations,
+        onDestinationClick = { destination ->
+            onRecipientDestinationClick(item, destination)
         },
-        onLongClick = onRecipientLongClick?.let { callback ->
-            {
-                callback(item)
+        onDestinationLongClick = onRecipientDestinationLongClick?.let { callback ->
+            { destination ->
+                callback(item, destination)
             }
         },
-        rowTestTag = rowDecorators.recipientRowTestTag(item),
+        rowDecorators = rowDecorators,
         shape = recipientSelectionContactRowShape(
             index = index,
             totalCount = uiState.picker.items.size,
         ),
-        showTrailingIndicator = rowDecorators.showRecipientTrailingIndicator(item),
-        trailingIndicatorTestTag = rowDecorators.trailingIndicatorTestTag,
     )
 }
 

@@ -1,19 +1,22 @@
 package com.android.messaging.ui.conversation.recipientpicker.delegate
 
 import androidx.lifecycle.SavedStateHandle
-import com.android.messaging.data.conversation.model.recipient.ConversationRecipient
-import com.android.messaging.data.conversation.model.recipient.ConversationRecipientsPage
-import com.android.messaging.data.conversation.repository.ConversationRecipientsRepository
+import com.android.messaging.data.contact.formatter.ContactDestinationFormatter
+import com.android.messaging.data.contact.model.Contact
+import com.android.messaging.data.contact.model.ContactDestination
+import com.android.messaging.data.contact.model.ContactsPage
+import com.android.messaging.data.contact.repository.ContactsRepository
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.domain.contacts.usecase.IsReadContactsPermissionGranted
-import com.android.messaging.sms.MmsSmsUtils
 import com.android.messaging.ui.conversation.recipientpicker.model.RecipientPickerListItem
 import com.android.messaging.ui.conversation.recipientpicker.model.RecipientPickerUiState
 import com.android.messaging.util.PhoneUtils
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -41,7 +44,8 @@ internal interface RecipientPickerDelegate {
 }
 
 internal class RecipientPickerDelegateImpl @Inject constructor(
-    private val conversationRecipientsRepository: ConversationRecipientsRepository,
+    private val contactDestinationFormatter: ContactDestinationFormatter,
+    private val contactsRepository: ContactsRepository,
     private val isReadContactsPermissionGranted: IsReadContactsPermissionGranted,
     private val savedStateHandle: SavedStateHandle,
     @param:DefaultDispatcher
@@ -66,9 +70,7 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
 
     private var boundScope: CoroutineScope? = null
 
-    private val phoneUtils by lazy { PhoneUtils.getDefault() }
-
-    private var searchSession = RecipientSearchSession(
+    private var searchSession = ContactSearchSession(
         effectiveQuery = queryFlow.value,
         hasCompletedInitialLoad = false,
         nextPageOffset = null,
@@ -106,13 +108,13 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
     }
 
     override fun onExcludedDestinationsChanged(destinations: Set<String>) {
-        val normalizedDestinations = destinations
+        val canonicalDestinations = destinations
             .asSequence()
-            .map { it.trim() }
+            .map { contactDestinationFormatter.canonicalize(value = it) }
             .filter { it.isNotEmpty() }
             .toSet()
 
-        excludedDestinationsFlow.value = normalizedDestinations
+        excludedDestinationsFlow.value = canonicalDestinations
     }
 
     override fun onQueryChanged(query: String) {
@@ -133,23 +135,21 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
         startSearch(searchInputs = searchInputs)
     }
 
-    private fun mergeRecipients(
-        existingRecipients: List<ConversationRecipient>,
-        additionalRecipients: List<ConversationRecipient>,
-    ): ImmutableList<ConversationRecipient> {
-        val seenDestinations = LinkedHashSet<String>()
+    private fun mergeContacts(
+        existingContacts: List<Contact>,
+        additionalContacts: List<Contact>,
+    ): ImmutableList<Contact> {
+        val seenContactIds = LinkedHashSet<Long>()
 
-        return (existingRecipients + additionalRecipients)
+        return (existingContacts + additionalContacts)
             .asSequence()
-            .filter { recipient ->
-                seenDestinations.add(recipient.destination)
-            }
+            .filter { contact -> seenContactIds.add(contact.id) }
             .toImmutableList()
     }
 
     private suspend fun startSearch(searchInputs: SearchInputs) {
         applySearchStartedState()
-        delay(timeMillis = SEARCH_DEBOUNCE_MILLIS)
+        delay(searchDebounce)
 
         val initialSearchResult = resolveInitialSearch(searchInputs = searchInputs)
         updateSearchSession { currentSearchSession ->
@@ -164,9 +164,9 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
     }
 
     private suspend fun applyPermissionDeniedState(query: String) {
-        val visibleRecipients = buildVisibleRecipients(
+        val visibleItems = buildVisibleItems(
             query = query,
-            recipients = persistentListOf(),
+            contacts = persistentListOf(),
             excludedDestinations = excludedDestinationsFlow.value,
         )
 
@@ -180,7 +180,7 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
         _state.update { currentState ->
             currentState.copy(
                 canLoadMore = false,
-                items = visibleRecipients,
+                items = visibleItems,
                 hasContactsPermission = false,
                 isLoading = false,
                 isLoadingMore = false,
@@ -206,7 +206,7 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
     private suspend fun resolveInitialSearch(
         searchInputs: SearchInputs,
     ): InitialSearchResult {
-        val requestedPage = loadRecipientsPage(
+        val requestedPage = loadContactsPage(
             query = searchInputs.query,
             offset = 0,
             excludedDestinations = searchInputs.excludedDestinations,
@@ -219,7 +219,7 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
             )
         }
 
-        val defaultPage = loadRecipientsPage(
+        val defaultPage = loadContactsPage(
             query = "",
             offset = 0,
             excludedDestinations = searchInputs.excludedDestinations,
@@ -233,36 +233,41 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
 
     private fun shouldUseRequestedPage(
         query: String,
-        page: ConversationRecipientsPage,
+        page: ContactsPage,
     ): Boolean {
-        return query.isBlank() || page.recipients.isNotEmpty()
+        return query.isBlank() || page.contacts.isNotEmpty()
     }
 
-    private suspend fun loadRecipientsPage(
+    private suspend fun loadContactsPage(
         query: String,
         offset: Int,
         excludedDestinations: Set<String>,
-    ): ConversationRecipientsPage {
+    ): ContactsPage {
         var nextOffset: Int? = offset
-        val visibleRecipients = mutableListOf<ConversationRecipient>()
+        val visibleContacts = mutableListOf<Contact>()
 
         while (nextOffset != null) {
-            val rawPage = conversationRecipientsRepository
-                .searchRecipients(
+            val rawPage = contactsRepository
+                .searchContacts(
                     query = query,
                     offset = nextOffset,
                 )
                 .first()
 
-            visibleRecipients.addAll(
-                rawPage.recipients.filterNot { recipient ->
-                    recipient.destination in excludedDestinations
-                },
-            )
+            rawPage.contacts.forEach { contact ->
+                val filtered = filterExcludedDestinations(
+                    contact = contact,
+                    excludedDestinations = excludedDestinations,
+                )
 
-            if (visibleRecipients.isNotEmpty() || rawPage.nextOffset == null) {
-                return ConversationRecipientsPage(
-                    recipients = visibleRecipients.toImmutableList(),
+                if (filtered != null) {
+                    visibleContacts.add(filtered)
+                }
+            }
+
+            if (visibleContacts.isNotEmpty() || rawPage.nextOffset == null) {
+                return ContactsPage(
+                    contacts = visibleContacts.toImmutableList(),
                     nextOffset = rawPage.nextOffset,
                 )
             }
@@ -270,18 +275,39 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
             nextOffset = rawPage.nextOffset
         }
 
-        return ConversationRecipientsPage(
-            recipients = persistentListOf(),
+        return ContactsPage(
+            contacts = persistentListOf(),
             nextOffset = null,
         )
+    }
+
+    private fun filterExcludedDestinations(
+        contact: Contact,
+        excludedDestinations: Set<String>,
+    ): Contact? {
+        if (excludedDestinations.isEmpty()) {
+            return contact
+        }
+
+        val remainingDestinations = contact.destinations
+            .filterNot { destination -> destination.normalizedValue in excludedDestinations }
+            .toPersistentList()
+
+        return when {
+            remainingDestinations.isEmpty() -> null
+            remainingDestinations.size == contact.destinations.size -> contact
+            else -> {
+                contact.copy(destinations = remainingDestinations)
+            }
+        }
     }
 
     private fun applyInitialSearchResult(result: InitialSearchResult) {
         _state.update { currentState ->
             currentState.copy(
-                items = buildVisibleRecipients(
+                items = buildVisibleItems(
                     query = currentState.query,
-                    recipients = result.page.recipients,
+                    contacts = result.page.contacts,
                     excludedDestinations = excludedDestinationsFlow.value,
                 ),
                 canLoadMore = result.page.nextOffset != null,
@@ -317,7 +343,7 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
     private suspend fun loadMore(request: LoadMoreRequest) {
         applyLoadMoreStartedState()
 
-        val nextPage = loadRecipientsPage(
+        val nextPage = loadContactsPage(
             query = request.effectiveQuery,
             offset = request.offset,
             excludedDestinations = request.excludedDestinations,
@@ -362,26 +388,26 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
         }
     }
 
-    private fun applyLoadMoreResult(page: ConversationRecipientsPage) {
+    private fun applyLoadMoreResult(page: ContactsPage) {
         _state.update { currentState ->
-            val mergedRecipients = mergeRecipients(
-                existingRecipients = currentState.items.mapNotNull { item ->
+            val mergedContacts = mergeContacts(
+                existingContacts = currentState.items.mapNotNull { item ->
                     when (item) {
-                        is RecipientPickerListItem.Contact -> item.recipient
+                        is RecipientPickerListItem.Contact -> item.contact
                         is RecipientPickerListItem.SyntheticPhone -> null
                     }
                 },
-                additionalRecipients = page.recipients,
+                additionalContacts = page.contacts,
             )
 
-            val visibleRecipients = buildVisibleRecipients(
+            val visibleItems = buildVisibleItems(
                 query = currentState.query,
-                recipients = mergedRecipients,
+                contacts = mergedContacts,
                 excludedDestinations = excludedDestinationsFlow.value,
             )
 
             currentState.copy(
-                items = visibleRecipients,
+                items = visibleItems,
                 canLoadMore = page.nextOffset != null,
                 isLoadingMore = false,
             )
@@ -397,60 +423,67 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
     }
 
     private suspend fun updateSearchSession(
-        transform: (RecipientSearchSession) -> RecipientSearchSession,
+        transform: (ContactSearchSession) -> ContactSearchSession,
     ) {
         searchSessionMutex.withLock {
             searchSession = transform(searchSession)
         }
     }
 
-    private fun buildVisibleRecipients(
+    private fun buildVisibleItems(
         query: String,
-        recipients: List<ConversationRecipient>,
+        contacts: List<Contact>,
         excludedDestinations: Set<String>,
     ): ImmutableList<RecipientPickerListItem> {
-        val syntheticRecipient = createSyntheticRecipientOrNull(
+        val syntheticItem = createSyntheticItemOrNull(
             query = query,
-            recipients = recipients,
+            contacts = contacts,
             excludedDestinations = excludedDestinations,
         )
 
-        val contactItems = recipients
+        val contactItems = contacts
             .map(RecipientPickerListItem::Contact)
             .toImmutableList()
 
-        if (syntheticRecipient == null) {
-            return contactItems
+        return when {
+            syntheticItem == null -> contactItems
+            else -> {
+                persistentListOf<RecipientPickerListItem>(syntheticItem)
+                    .addAll(contactItems)
+            }
         }
-
-        return persistentListOf<RecipientPickerListItem>(syntheticRecipient)
-            .addAll(contactItems)
     }
 
-    private fun createSyntheticRecipientOrNull(
+    private fun createSyntheticItemOrNull(
         query: String,
-        recipients: List<ConversationRecipient>,
+        contacts: List<Contact>,
         excludedDestinations: Set<String>,
     ): RecipientPickerListItem.SyntheticPhone? {
-        val candidate = createSyntheticRecipientCandidateOrNull(query = query) ?: return null
+        val candidate = createSyntheticCandidateOrNull(query = query) ?: return null
+
+        val isAlreadyAContactDestination = contacts.any { contact ->
+            contact.destinations.any { destination ->
+                candidate.matchesDestination(destination = destination)
+            }
+        }
 
         return when {
             candidate.isExcludedBy(excludedDestinations) -> null
-            recipients.any { recipient -> candidate.matches(recipient) } -> null
+            isAlreadyAContactDestination -> null
             else -> candidate.toListItem()
         }
     }
 
-    private fun createSyntheticRecipientCandidateOrNull(
+    private fun createSyntheticCandidateOrNull(
         query: String,
-    ): SyntheticRecipientCandidate? {
+    ): SyntheticCandidate? {
         val trimmedQuery = query.trim()
 
         return when {
             trimmedQuery.isEmpty() -> null
             !PhoneUtils.isValidSmsMmsDestination(trimmedQuery) -> null
             else -> {
-                SyntheticRecipientCandidate(
+                SyntheticCandidate(
                     rawQuery = trimmedQuery,
                     destinationIdentity = createDestinationIdentity(
                         rawDestination = trimmedQuery,
@@ -469,25 +502,21 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
         )
     }
 
-    private fun SyntheticRecipientCandidate.matches(recipient: ConversationRecipient): Boolean {
+    private fun SyntheticCandidate.matchesDestination(
+        destination: ContactDestination,
+    ): Boolean {
         return destinationIdentity.matches(
-            other = createDestinationIdentity(rawDestination = recipient.destination),
+            other = createDestinationIdentity(rawDestination = destination.value),
         )
     }
 
     private fun normalizeDestination(rawDestination: String): String {
-        val trimmedDestination = rawDestination.trim()
-
-        return when {
-            trimmedDestination.isEmpty() -> trimmedDestination
-            MmsSmsUtils.isEmailAddress(trimmedDestination) -> trimmedDestination
-            else -> phoneUtils.getCanonicalForEnteredPhoneNumber(trimmedDestination)
-        }
+        return contactDestinationFormatter.canonicalize(value = rawDestination)
     }
 
     private data class InitialSearchResult(
         val effectiveQuery: String,
-        val page: ConversationRecipientsPage,
+        val page: ContactsPage,
     )
 
     private data class LoadMoreRequest(
@@ -497,7 +526,7 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
         val offset: Int,
     )
 
-    private data class RecipientSearchSession(
+    private data class ContactSearchSession(
         val effectiveQuery: String,
         val hasCompletedInitialLoad: Boolean,
         val nextPageOffset: Int?,
@@ -528,7 +557,7 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
         }
     }
 
-    private data class SyntheticRecipientCandidate(
+    private data class SyntheticCandidate(
         val rawQuery: String,
         val destinationIdentity: DestinationIdentity,
     ) {
@@ -547,7 +576,7 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
     }
 
     private companion object {
-        private const val SEARCH_DEBOUNCE_MILLIS = 150L
+        private val searchDebounce = 150L.milliseconds
         private const val SEARCH_QUERY_KEY = "search_query"
         private const val SYNTHETIC_RECIPIENT_ID_PREFIX = "synthetic:"
     }

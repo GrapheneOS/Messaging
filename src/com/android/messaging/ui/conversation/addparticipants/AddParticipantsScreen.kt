@@ -25,6 +25,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.R
 import com.android.messaging.ui.conversation.ADD_PARTICIPANTS_CONFIRM_BUTTON_TEST_TAG
+import com.android.messaging.ui.conversation.addParticipantsContactDestinationRowTestTag
 import com.android.messaging.ui.conversation.addParticipantsContactRowTestTag
 import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsEffect
 import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsUiState
@@ -143,12 +144,18 @@ private fun AddParticipantsRecipientSelectionContent(
             queryPlaceholderText = stringResource(id = R.string.new_chat_query_hint),
         ),
         rowDecorators = RecipientSelectionRowDecorators(
-            recipientRowTestTag = { contact ->
-                addParticipantsContactRowTestTag(contactId = contact.id)
+            recipientRowTestTag = { item ->
+                addParticipantsContactRowTestTag(contactId = item.id)
+            },
+            destinationRowTestTag = { item, destination ->
+                addParticipantsContactDestinationRowTestTag(
+                    contactId = item.id,
+                    destination = destination,
+                )
             },
         ),
-        onRecipientClick = { contact ->
-            onRecipientClick(contact.destination)
+        onRecipientDestinationClick = { _, destination ->
+            onRecipientClick(destination)
         },
         modifier = modifier,
         onLoadMore = onLoadMore,

@@ -1,5 +1,9 @@
 package com.android.messaging.di.conversation
 
+import com.android.messaging.data.contact.formatter.ContactDestinationFormatter
+import com.android.messaging.data.contact.formatter.ContactDestinationFormatterImpl
+import com.android.messaging.data.contact.repository.ContactsRepository
+import com.android.messaging.data.contact.repository.ContactsRepositoryImpl
 import com.android.messaging.data.conversation.mapper.ConversationDraftMessageDataMapper
 import com.android.messaging.data.conversation.mapper.ConversationDraftMessageDataMapperImpl
 import com.android.messaging.data.conversation.mapper.ConversationMessageDataDraftMapper
@@ -10,8 +14,6 @@ import com.android.messaging.data.conversation.repository.ConversationDraftsRepo
 import com.android.messaging.data.conversation.repository.ConversationDraftsRepositoryImpl
 import com.android.messaging.data.conversation.repository.ConversationParticipantsRepository
 import com.android.messaging.data.conversation.repository.ConversationParticipantsRepositoryImpl
-import com.android.messaging.data.conversation.repository.ConversationRecipientsRepository
-import com.android.messaging.data.conversation.repository.ConversationRecipientsRepositoryImpl
 import com.android.messaging.data.conversation.repository.ConversationSubscriptionsRepository
 import com.android.messaging.data.conversation.repository.ConversationSubscriptionsRepositoryImpl
 import com.android.messaging.data.conversation.repository.ConversationVCardMetadataRepository
@@ -102,15 +104,21 @@ internal abstract class ConversationBindsModule {
 
     @Binds
     @Reusable
-    abstract fun bindConversationRecipientsRepository(
-        impl: ConversationRecipientsRepositoryImpl,
-    ): ConversationRecipientsRepository
+    abstract fun bindConversationContactsRepository(
+        impl: ContactsRepositoryImpl,
+    ): ContactsRepository
 
     @Binds
     @Reusable
     abstract fun bindCanAddMoreConversationParticipants(
         impl: CanAddMoreConversationParticipantsImpl,
     ): CanAddMoreConversationParticipants
+
+    @Binds
+    @Reusable
+    abstract fun bindContactDestinationFormatter(
+        impl: ContactDestinationFormatterImpl,
+    ): ContactDestinationFormatter
 
     @Binds
     @Reusable

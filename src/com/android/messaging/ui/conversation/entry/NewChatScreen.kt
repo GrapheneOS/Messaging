@@ -50,6 +50,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.R
 import com.android.messaging.ui.conversation.NEW_CHAT_CONTACT_RESOLVING_INDICATOR_TEST_TAG
 import com.android.messaging.ui.conversation.NEW_CHAT_CREATE_GROUP_NEXT_BUTTON_TEST_TAG
+import com.android.messaging.ui.conversation.newChatContactDestinationRowTestTag
 import com.android.messaging.ui.conversation.newChatContactRowTestTag
 import com.android.messaging.ui.conversation.recipientpicker.RecipientPickerModel
 import com.android.messaging.ui.conversation.recipientpicker.RecipientPickerViewModel
@@ -161,40 +162,36 @@ private fun NewChatRecipientSelectionContent(
             queryPlaceholderText = stringResource(id = R.string.new_chat_query_hint),
         ),
         rowDecorators = RecipientSelectionRowDecorators(
-            recipientRowTestTag = { contact ->
-                newChatContactRowTestTag(contactId = contact.id)
+            recipientRowTestTag = { item ->
+                newChatContactRowTestTag(contactId = item.id)
             },
-            showRecipientTrailingIndicator = { contact ->
+            destinationRowTestTag = { item, destination ->
+                newChatContactDestinationRowTestTag(
+                    contactId = item.id,
+                    destination = destination,
+                )
+            },
+            showRecipientTrailingIndicator = { _, destination ->
                 !isCreatingGroup &&
                     isResolvingConversationIndicatorVisible &&
-                    resolvingRecipientDestination == contact.destination
+                    resolvingRecipientDestination == destination
             },
             trailingIndicatorTestTag = NEW_CHAT_CONTACT_RESOLVING_INDICATOR_TEST_TAG,
         ),
-        onRecipientClick = { contact ->
+        onRecipientDestinationClick = { _, destination ->
             when {
-                isCreatingGroup -> {
-                    onCreateGroupRecipientClick(contact.destination)
-                }
-
-                else -> {
-                    onContactClick(contact.destination)
-                }
+                isCreatingGroup -> onCreateGroupRecipientClick(destination)
+                else -> onContactClick(destination)
             }
         },
         modifier = modifier,
         onLoadMore = onLoadMore,
         onPrimaryActionClick = onCreateGroupConfirmed,
         onQueryChanged = onQueryChanged,
-        onRecipientLongClick = { contact ->
+        onRecipientDestinationLongClick = { _, destination ->
             when {
-                isCreatingGroup -> {
-                    onCreateGroupRecipientClick(contact.destination)
-                }
-
-                else -> {
-                    onContactLongClick(contact.destination)
-                }
+                isCreatingGroup -> onCreateGroupRecipientClick(destination)
+                else -> onContactLongClick(destination)
             }
         },
         topListContent = {

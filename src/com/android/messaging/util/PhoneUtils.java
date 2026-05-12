@@ -39,7 +39,6 @@ import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
-import com.google.common.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -560,14 +559,56 @@ public class PhoneUtils {
         }
 
         if (phoneText.charAt(0) == '+') {
-            final String canonicalNumber = getValidE164Number(phoneText, null);
-            return canonicalNumber != null ? canonicalNumber : phoneText;
+            return canonicalizeE164(phoneText);
         }
 
         return getCanonicalByCountryCandidates(
                 phoneText,
                 getCountryCandidatesForEnteredPhoneNumber()
         );
+    }
+
+    /**
+     * Same as {@link #getCanonicalForEnteredPhoneNumber(String)} but reuses a precomputed list of country candidates.
+     * Bulk callers (e.g. canonicalizing every row in a contacts page) should compute the candidate list once and
+     * pass it here to avoid re-running the telephony IPC required to assemble it on every call.
+     */
+    public String getCanonicalForEnteredPhoneNumber(
+            @NonNull final String phoneText,
+            @NonNull final List<String> countryCandidates
+    ) {
+        if (phoneText.isEmpty()) {
+            return phoneText;
+        }
+
+        if (phoneText.charAt(0) == '+') {
+            return canonicalizeE164(phoneText);
+        }
+
+        return getCanonicalByCountryCandidates(phoneText, countryCandidates);
+    }
+
+    private String canonicalizeE164(@NonNull final String phoneText) {
+        final String cachedCanonicalNumber = getCanonicalFromCache(phoneText, null);
+        if (cachedCanonicalNumber != null) {
+            return cachedCanonicalNumber;
+        }
+
+        final String canonicalNumber = getValidE164Number(phoneText, null);
+        final String resolvedCanonicalNumber = canonicalNumber != null
+                ? canonicalNumber : phoneText;
+
+        putCanonicalToCache(phoneText, null, resolvedCanonicalNumber);
+
+        return resolvedCanonicalNumber;
+    }
+
+    /**
+     * Trigger libphonenumber metadata initialization eagerly so the first canonicalization call doesn't pay it.
+     * Cheap on later invocations — libphonenumber's singleton initializes only once per process.
+     */
+    public void warmUp() {
+        PhoneNumberUtil.getInstance();
     }
 
     @NonNull
@@ -607,8 +648,7 @@ public class PhoneUtils {
         return getCanonicalByCountry(phoneText, getSimOrDefaultLocaleCountry());
     }
 
-    @VisibleForTesting
-    List<String> getCountryCandidatesForEnteredPhoneNumber() {
+    public List<String> getCountryCandidatesForEnteredPhoneNumber() {
         final LinkedHashSet<String> uniqueCountries = new LinkedHashSet<>();
         String normalizedCountryCode = normalizeCountryCode(getNetworkCountry());
         if (normalizedCountryCode != null) {

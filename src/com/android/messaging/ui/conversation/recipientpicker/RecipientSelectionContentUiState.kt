@@ -6,6 +6,18 @@ import com.android.messaging.ui.conversation.recipientpicker.model.RecipientPick
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentSetOf
 
+internal typealias OnRecipientDestinationAction =
+    (item: RecipientPickerListItem, destination: String) -> Unit
+
+internal typealias RecipientRowTestTagProvider =
+    (item: RecipientPickerListItem) -> String
+
+internal typealias RecipientDestinationTestTagProvider =
+    (item: RecipientPickerListItem, destination: String) -> String
+
+internal typealias ShouldShowRecipientTrailingIndicator =
+    (item: RecipientPickerListItem, destination: String) -> Boolean
+
 @Immutable
 internal data class RecipientSelectionContentUiState(
     val picker: RecipientPickerUiState = RecipientPickerUiState(),
@@ -29,7 +41,9 @@ internal data class RecipientSelectionStrings(
 )
 
 internal data class RecipientSelectionRowDecorators(
-    val recipientRowTestTag: (RecipientPickerListItem) -> String,
-    val showRecipientTrailingIndicator: (RecipientPickerListItem) -> Boolean = { false },
+    val recipientRowTestTag: RecipientRowTestTagProvider,
+    val destinationRowTestTag: RecipientDestinationTestTagProvider =
+        { item, _ -> recipientRowTestTag(item) },
+    val showRecipientTrailingIndicator: ShouldShowRecipientTrailingIndicator = { _, _ -> false },
     val trailingIndicatorTestTag: String? = null,
 )

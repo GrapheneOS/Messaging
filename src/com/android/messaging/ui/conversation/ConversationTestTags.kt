@@ -78,8 +78,22 @@ internal fun newChatContactRowTestTag(contactId: String): String {
     return "new_chat_contact_row_$contactId"
 }
 
+internal fun newChatContactDestinationRowTestTag(
+    contactId: String,
+    destination: String,
+): String {
+    return "new_chat_contact_destination_row_${contactId}_$destination"
+}
+
 internal fun addParticipantsContactRowTestTag(contactId: String): String {
     return "add_participants_contact_row_$contactId"
+}
+
+internal fun addParticipantsContactDestinationRowTestTag(
+    contactId: String,
+    destination: String,
+): String {
+    return "add_participants_contact_destination_row_${contactId}_$destination"
 }
 
 internal val conversationShapeSemanticsKey = SemanticsPropertyKey<String>(
