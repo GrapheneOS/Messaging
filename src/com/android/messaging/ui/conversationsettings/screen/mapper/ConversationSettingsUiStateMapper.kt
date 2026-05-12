@@ -7,8 +7,8 @@ import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.datamodel.data.PeopleOptionsItemData
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState
 import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
-import kotlinx.collections.immutable.toImmutableList
 import javax.inject.Inject
+import kotlinx.collections.immutable.toImmutableList
 
 internal interface ConversationSettingsUiStateMapper {
     fun map(conversationId: String): ConversationSettingsUiState
@@ -46,7 +46,7 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
                     conversationId = conversationId,
                     participants = participantsExcludingSelf.map(::toParticipantUiState)
                         .toImmutableList(),
-                    otherParticipant = otherParticipant,
+                    otherParticipant = otherParticipant?.let(::toParticipantUiState),
                 )
             } else {
                 // TODO: Get rid of legacy parameters
@@ -64,7 +64,7 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
                     legacyVibrationEnabled = cursor.getInt(
                         PeopleOptionsItemData.INDEX_NOTIFICATION_VIBRATION,
                     ) == 1,
-                    otherParticipant = otherParticipant,
+                    otherParticipant = otherParticipant?.let(::toParticipantUiState),
                     participants = participantsExcludingSelf.map(::toParticipantUiState)
                         .toImmutableList(),
                 )
@@ -91,6 +91,8 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
             contactId = participant.contactId,
             lookupKey = participant.lookupKey,
             normalizedDestination = participant.normalizedDestination,
+            isBlocked = participant.isBlocked,
+            displayDestination = participant.displayDestination,
         )
     }
 }

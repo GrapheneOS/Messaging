@@ -1,7 +1,6 @@
 package com.android.messaging.ui.conversationsettings.screen.model
 
 import androidx.compose.runtime.Immutable
-import com.android.messaging.datamodel.data.ParticipantData
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -12,7 +11,7 @@ internal data class ConversationSettingsUiState(
     val legacyNotificationEnabled: Boolean = false,
     val legacyRingtoneString: String? = null,
     val legacyVibrationEnabled: Boolean = false,
-    val otherParticipant: ParticipantData? = null,
+    val otherParticipant: ParticipantUiState? = null,
     val participants: ImmutableList<ParticipantUiState> = persistentListOf(),
 )
 
@@ -25,4 +24,6 @@ internal data class ParticipantUiState(
     val contactId: Long,
     val lookupKey: String?,
     val normalizedDestination: String?,
+    val isBlocked: Boolean,
+    val displayDestination: String?,
 )

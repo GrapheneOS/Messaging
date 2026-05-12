@@ -11,6 +11,7 @@ import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.ui.conversationsettings.common.ConversationSettingsScreenDelegate
 import com.android.messaging.ui.conversationsettings.screen.mapper.ConversationSettingsUiStateMapper
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState
+import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
@@ -77,7 +78,7 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
     }
 
     override fun setDestinationBlocked(blocked: Boolean) {
-        val participant: ParticipantData = _state.value.otherParticipant ?: return
+        val participant: ParticipantUiState = _state.value.otherParticipant ?: return
 
         UpdateDestinationBlockedAction.updateDestinationBlocked(
             participant.normalizedDestination,

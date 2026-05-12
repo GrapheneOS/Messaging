@@ -5,7 +5,9 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
 import android.provider.Settings
+import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversation.ConversationActivity
+import com.android.messaging.ui.conversationsettings.ConversationSettingsActivity
 import com.android.messaging.util.NotificationChannelUtil
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsScreenEffect as Effect
 
@@ -40,8 +42,24 @@ internal class ConversationSettingsEffectHandlerImpl(
                 activity.finish()
             }
 
+            is Effect.OpenParticipantChat -> {
+                val intent = UIIntents.get().getIntentForConversationActivity(
+                    activity,
+                    effect.conversationId,
+                    null,
+                )
+                activity.startActivity(intent)
+            }
+
             is Effect.CopyToClipboard -> {
                 clipboardManager.setPrimaryClip(ClipData.newPlainText(null, effect.text))
+            }
+
+            is Effect.OpenParticipantInfo -> {
+                // TODO: Move away from using Intent
+                val intent = Intent(activity, ConversationSettingsActivity::class.java)
+                intent.putExtra(UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID, effect.conversationId)
+                activity.startActivityForResult(intent, 0)
             }
         }
     }
