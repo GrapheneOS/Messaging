@@ -491,6 +491,7 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
                     sendRequest = sendRequest,
                 )
                 didClearDraftAfterSend = true
+                _effects.emit(ConversationScreenEffect.NotifyDraftSent)
             }.onCompletion { throwable ->
                 if (throwable != null || !didClearDraftAfterSend) {
                     conversationDraftEditorDelegate.markConversationDraftAsIdle(

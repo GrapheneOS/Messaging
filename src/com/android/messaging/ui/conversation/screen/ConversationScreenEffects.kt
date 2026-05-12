@@ -1,37 +1,39 @@
 package com.android.messaging.ui.conversation.screen
 
 import android.content.ActivityNotFoundException
-import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.graphics.Point
-import android.graphics.Rect
-import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
-import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect as ComposeRect
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.net.toUri
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversation.MessageDetailsDialog
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
-import com.android.messaging.util.ContentType
+import com.android.messaging.util.BuglePrefs
 import com.android.messaging.util.LogUtil
+import com.android.messaging.util.MediaUtil
 import com.android.messaging.util.UiUtils
-import com.android.messaging.util.UriUtil
-import kotlin.math.roundToInt
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.withContext
 
 private const val LOG_TAG = "ConversationScreenEffects"
 
@@ -48,6 +50,7 @@ internal fun ConversationScreenEffects(
     ) { result ->
         screenModel.onDefaultSmsRoleRequestResult(resultCode = result.resultCode)
     }
+    val draftSentTick = remember { mutableIntStateOf(0) }
 
     LaunchedEffect(screenModel, context, snackbarHostState, hostBoundsState, onNavigateBack) {
         screenModel.effects.collect { effect ->
@@ -58,9 +61,12 @@ internal fun ConversationScreenEffects(
                 effect = effect,
                 launchRoleRequest = defaultSmsRoleLauncher::launch,
                 onNavigateBack = onNavigateBack,
+                onDraftSent = { draftSentTick.intValue++ },
             )
         }
     }
+
+    SendingMessageAnnouncement(triggerKey = draftSentTick.intValue)
 }
 
 private suspend fun ConversationScreenModel.handleConversationScreenEffect(
@@ -70,6 +76,7 @@ private suspend fun ConversationScreenModel.handleConversationScreenEffect(
     effect: ConversationScreenEffect,
     launchRoleRequest: (Intent) -> Unit,
     onNavigateBack: () -> Unit,
+    onDraftSent: () -> Unit,
 ) {
     when (effect) {
         ConversationScreenEffect.CloseConversation -> onNavigateBack()
@@ -109,6 +116,7 @@ private suspend fun ConversationScreenModel.handleConversationScreenEffect(
 
         is ConversationScreenEffect.LaunchAddContactFlow,
         is ConversationScreenEffect.LaunchForwardMessage,
+        ConversationScreenEffect.NotifyDraftSent,
         is ConversationScreenEffect.OpenExternalUri,
         is ConversationScreenEffect.PlacePhoneCall,
         is ConversationScreenEffect.ShowMessage,
@@ -118,33 +126,16 @@ private suspend fun ConversationScreenModel.handleConversationScreenEffect(
             handleImmediateConversationScreenEffect(
                 context = context,
                 effect = effect,
+                onDraftSent = onDraftSent,
             )
         }
     }
 }
 
-private suspend fun openAttachmentPreviewEffect(
-    context: Context,
-    hostBoundsState: State<ComposeRect?>,
-    effect: ConversationScreenEffect.OpenAttachmentPreview,
-) {
-    openAttachmentPreview(
-        context = context,
-        hostBounds = hostBoundsState.value,
-        contentUri = effect.contentUri,
-        contentType = effect.contentType,
-        imageCollectionUri = effect.imageCollectionUri,
-        awaitHostBounds = {
-            snapshotFlow { hostBoundsState.value }
-                .filterNotNull()
-                .first()
-        },
-    )
-}
-
 private fun handleImmediateConversationScreenEffect(
     context: Context,
     effect: ConversationScreenEffect,
+    onDraftSent: () -> Unit,
 ) {
     when (effect) {
         is ConversationScreenEffect.LaunchAddContactFlow -> {
@@ -159,6 +150,11 @@ private fun handleImmediateConversationScreenEffect(
                 context,
                 effect.message,
             )
+        }
+
+        ConversationScreenEffect.NotifyDraftSent -> {
+            playDraftSentSound(context = context)
+            onDraftSent()
         }
 
         is ConversationScreenEffect.OpenExternalUri -> {
@@ -291,155 +287,34 @@ private fun showSaveAttachmentsResultToast(
     )
 }
 
-private suspend fun openShareSheet(
-    context: Context,
-    attachmentContentType: String?,
-    attachmentContentUri: String?,
-    text: String?,
+@Composable
+private fun SendingMessageAnnouncement(
+    triggerKey: Int,
 ) {
-    val shareIntent = Intent(Intent.ACTION_SEND)
+    if (triggerKey == 0) {
+        return
+    }
 
-    if (
-        !attachmentContentType.isNullOrBlank() &&
-        !attachmentContentUri.isNullOrBlank()
-    ) {
-        val normalizedAttachmentUri = normalizeAttachmentUriForIntent(
-            attachmentUri = attachmentContentUri.toUri(),
+    val text = stringResource(R.string.sending_message)
+
+    key(triggerKey) {
+        Box(
+            modifier = Modifier
+                .size(0.dp)
+                .clearAndSetSemantics {
+                    liveRegion = LiveRegionMode.Polite
+                    contentDescription = text
+                },
         )
-
-        shareIntent.putExtra(
-            Intent.EXTRA_STREAM,
-            normalizedAttachmentUri,
-        )
-        shareIntent.setType(attachmentContentType)
-        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-    } else {
-        shareIntent.putExtra(
-            Intent.EXTRA_TEXT,
-            text.orEmpty(),
-        )
-        shareIntent.setType("text/plain")
-    }
-
-    context.startActivity(
-        Intent.createChooser(
-            shareIntent,
-            context.getText(R.string.action_share),
-        ),
-    )
-}
-
-private suspend fun openAttachmentPreview(
-    context: Context,
-    hostBounds: ComposeRect?,
-    contentUri: String,
-    contentType: String,
-    imageCollectionUri: String?,
-    awaitHostBounds: suspend () -> ComposeRect,
-) {
-    val attachmentUri = contentUri.toUri()
-
-    when {
-        ContentType.isImageType(contentType) -> {
-            val resolvedHostBounds = hostBounds ?: awaitHostBounds()
-            val isOpenedInternally = openImageAttachmentPreview(
-                context = context,
-                hostBounds = resolvedHostBounds,
-                attachmentUri = attachmentUri,
-                imageCollectionUri = imageCollectionUri,
-            )
-            if (!isOpenedInternally) {
-                openGenericAttachmentPreview(
-                    context = context,
-                    attachmentUri = attachmentUri,
-                    contentType = contentType,
-                )
-            }
-        }
-
-        ContentType.isVCardType(contentType) -> {
-            UIIntents.get().launchVCardDetailActivity(
-                context,
-                normalizeAttachmentUriForIntent(attachmentUri = attachmentUri),
-            )
-        }
-
-        ContentType.isVideoType(contentType) -> {
-            UIIntents.get().launchFullScreenVideoViewer(
-                context,
-                normalizeAttachmentUriForIntent(attachmentUri = attachmentUri),
-            )
-        }
-
-        else -> {
-            openGenericAttachmentPreview(
-                context = context,
-                attachmentUri = normalizeAttachmentUriForIntent(attachmentUri = attachmentUri),
-                contentType = contentType,
-            )
-        }
     }
 }
 
-private fun openImageAttachmentPreview(
-    context: Context,
-    hostBounds: ComposeRect,
-    attachmentUri: Uri,
-    imageCollectionUri: String?,
-): Boolean {
-    val activity = UiUtils.getActivity(context)
-    val imageCollection = imageCollectionUri?.toUri()
+private fun playDraftSentSound(context: Context) {
+    val prefs = BuglePrefs.getApplicationPrefs()
+    val prefKey = context.getString(R.string.send_sound_pref_key)
+    val default = context.resources.getBoolean(R.bool.send_sound_pref_default)
 
-    if (activity == null || imageCollection == null) {
-        return false
+    if (prefs.getBoolean(prefKey, default)) {
+        MediaUtil.get().playSound(context, R.raw.message_sent, null)
     }
-
-    UIIntents.get().launchFullScreenPhotoViewer(
-        activity,
-        attachmentUri,
-        hostBounds.toAndroidRect(),
-        imageCollection,
-    )
-
-    return true
-}
-
-private fun openGenericAttachmentPreview(
-    context: Context,
-    attachmentUri: Uri,
-    contentType: String,
-) {
-    runCatching {
-        Intent(Intent.ACTION_VIEW)
-            .apply {
-                setDataAndType(attachmentUri, contentType)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-            .let(context::startActivity)
-    }.onFailure {
-        UiUtils.showToastAtBottom(R.string.activity_not_found_message)
-    }
-}
-
-private suspend fun normalizeAttachmentUriForIntent(
-    attachmentUri: Uri,
-): Uri {
-    return when {
-        attachmentUri.scheme != ContentResolver.SCHEME_FILE -> attachmentUri
-
-        else -> {
-            withContext(context = Dispatchers.IO) {
-                UriUtil.persistContentToScratchSpace(attachmentUri) ?: attachmentUri
-            }
-        }
-    }
-}
-
-private fun ComposeRect.toAndroidRect(): Rect {
-    return Rect(
-        left.roundToInt(),
-        top.roundToInt(),
-        right.roundToInt(),
-        bottom.roundToInt(),
-    )
 }

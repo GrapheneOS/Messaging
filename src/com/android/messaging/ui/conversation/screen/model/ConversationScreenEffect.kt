@@ -25,6 +25,8 @@ internal sealed interface ConversationScreenEffect {
         val message: MessageData,
     ) : ConversationScreenEffect
 
+    data object NotifyDraftSent : ConversationScreenEffect
+
     data class OpenAttachmentPreview(
         val contentType: String,
         val contentUri: String,
