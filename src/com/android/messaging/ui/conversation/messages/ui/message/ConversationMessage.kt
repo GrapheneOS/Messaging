@@ -366,6 +366,7 @@ private fun buildTimestampMetadataText(
 private fun messageStatusTextResourceId(status: Status): Int? {
     return when (status) {
         Status.Outgoing.Delivered -> R.string.delivered_status_content_description
+        Status.Outgoing.YetToSend -> R.string.message_status_sending
         Status.Outgoing.Sending -> R.string.message_status_sending
         Status.Outgoing.Resending -> R.string.message_status_send_retrying
         Status.Outgoing.AwaitingRetry -> R.string.message_status_failed
