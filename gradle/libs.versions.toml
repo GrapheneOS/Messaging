@@ -1,28 +1,30 @@
 [versions]
-agp = "9.2.0"
+agp = "9.2.1"
 detekt = "2.0.0-alpha.3"
 hilt = "2.59.2"
 kotlin = "2.3.21"
 kotlinx-serialization = "1.11.0"
 ksp = "2.3.6"
+
+#noinspection UnusedVersionCatalogEntry
 ktlint = "1.8.0"
 ktlint-gradle = "14.2.0"
 
 activity-compose = "1.13.0"
 appcompat = "1.7.1"
 androidx-hilt = "1.3.0"
-camerax = "1.6.0"
+camerax = "1.6.1"
 coil = "3.4.0"
-compose-bom = "2026.04.01"
-coroutines = "1.10.2"
+compose-bom = "2026.05.00"
+coroutines = "1.11.0"
 glide = "5.0.7"
 guava = "33.6.0-android"
 jsr305 = "3.0.2"
 kotlinx-collections-immutable = "0.4.0"
-libphonenumber = "9.0.29"
+libphonenumber = "9.0.30"
 lifecycle = "2.10.0"
 navigation3 = "1.1.1"
-paging = "3.4.2"
+paging = "3.5.0"
 palette = "1.0.0"
 photo-picker = "1.0.0-alpha01"
 preference = "1.2.1"
@@ -112,7 +114,6 @@ androidx-test-runner = { module = "androidx.test:runner", version.ref = "android
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-android-library = { id = "com.android.library", version.ref = "agp" }
 
 detekt = { id = "dev.detekt", version.ref = "detekt" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
