@@ -8,7 +8,12 @@ import com.android.messaging.domain.conversation.usecase.participant.ResolveConv
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveConversationIdResult
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversationsettings.screen.delegate.ConversationSettingsDelegate
+import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsAction as Action
+import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsNavEvent as NavEvent
+import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsScreenEffect as Effect
+import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState as State
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
@@ -16,17 +21,17 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsAction as Action
-import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsScreenEffect as Effect
-import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState as State
 
 internal interface ConversationSettingsScreenModel {
     val effects: Flow<Effect>
+    val navigationEvents: Flow<NavEvent>
     val uiState: StateFlow<State>
+    val rootConversationId: String
 
     fun refreshState()
     fun onAction(action: Action)
+
+    fun setConversationId(conversationId: String)
 }
 
 @HiltViewModel
@@ -42,15 +47,20 @@ internal class ConversationSettingsViewModel @Inject constructor(
     private val _effects = MutableSharedFlow<Effect>(extraBufferCapacity = 1)
     override val effects: Flow<Effect> = _effects.asSharedFlow()
 
+    private val _navigationEvents = MutableSharedFlow<NavEvent>(extraBufferCapacity = 1)
+    override val navigationEvents: Flow<NavEvent> = _navigationEvents.asSharedFlow()
+
     override val uiState: StateFlow<State> = delegate.state
 
+    override val rootConversationId: String = requireNotNull(
+        savedStateHandle[UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID],
+    ) { "conversationId is required" }
+
     private var resolveConversationJob: Job? = null
+    private var currentConversationId: String = ""
 
     init {
-        val conversationId: String = requireNotNull(
-            savedStateHandle[UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID],
-        ) { "conversationId is required" }
-        delegate.setConversationId(conversationId)
+        setConversationId(rootConversationId)
         delegate.bind(scope = viewModelScope)
     }
 
@@ -102,10 +112,19 @@ internal class ConversationSettingsViewModel @Inject constructor(
         }
     }
 
+    override fun setConversationId(conversationId: String) {
+        if (conversationId == currentConversationId) return
+
+        currentConversationId = conversationId
+        delegate.setConversationId(conversationId)
+        delegate.refresh()
+    }
+
     private fun resolveConversation(
         destination: String,
         shouldOpenChat: Boolean,
     ) {
+        resolveConversationJob?.cancel()
         resolveConversationJob = viewModelScope.launch(mainDispatcher) {
             try {
                 val result = resolveConversationId.invoke(listOf(destination))
@@ -122,15 +141,16 @@ internal class ConversationSettingsViewModel @Inject constructor(
     ) {
         when (result) {
             is ResolveConversationIdResult.Resolved -> {
-                when {
-                    shouldOpenChat -> emitEffect(Effect.OpenParticipantChat(result.conversationId))
-                    else -> emitEffect(Effect.OpenParticipantInfo(result.conversationId))
+                if (shouldOpenChat) {
+                    emitEffect(Effect.OpenParticipantChat(result.conversationId))
+                } else {
+                    emitNavigationEvent(NavEvent.OpenParticipantInfo(result.conversationId))
                 }
             }
 
             ResolveConversationIdResult.EmptyDestinations,
             ResolveConversationIdResult.NotResolved,
-                -> {
+            -> {
                 // TODO: Consider how to handle these states
             }
         }
@@ -139,6 +159,12 @@ internal class ConversationSettingsViewModel @Inject constructor(
     private fun emitEffect(effect: Effect) {
         viewModelScope.launch {
             _effects.emit(effect)
+        }
+    }
+
+    private fun emitNavigationEvent(event: NavEvent) {
+        viewModelScope.launch {
+            _navigationEvents.emit(event)
         }
     }
 }
