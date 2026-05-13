@@ -10,8 +10,6 @@ internal sealed interface ConversationSettingsScreenEffect {
         val legacyVibrationEnabled: Boolean,
     ) : ConversationSettingsScreenEffect
 
-    data object FinishAfterBlock : ConversationSettingsScreenEffect
-
     data class OpenParticipantChat(
         val conversationId: String,
     ) : ConversationSettingsScreenEffect

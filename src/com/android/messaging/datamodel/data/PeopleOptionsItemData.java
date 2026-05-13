@@ -24,6 +24,7 @@ public class PeopleOptionsItemData {
         ConversationListViewColumns.NOTIFICATION_ENABLED,
         ConversationListViewColumns.NOTIFICATION_SOUND_URI,
         ConversationListViewColumns.NOTIFICATION_VIBRATION,
+        ConversationListViewColumns.ARCHIVE_STATUS,
     };
 
     // Column index for query projection.
@@ -32,4 +33,5 @@ public class PeopleOptionsItemData {
     public static final int INDEX_NOTIFICATION_ENABLED = 2;
     public static final int INDEX_NOTIFICATION_SOUND_URI = 3;
     public static final int INDEX_NOTIFICATION_VIBRATION = 4;
+    public static final int INDEX_ARCHIVE_STATUS = 5;
 }

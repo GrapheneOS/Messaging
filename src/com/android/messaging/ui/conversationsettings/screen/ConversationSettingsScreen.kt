@@ -18,8 +18,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -43,6 +45,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
+import com.android.messaging.ui.conversation.ConversationActivity
 import com.android.messaging.ui.conversationsettings.common.ConversationHeader
 import com.android.messaging.ui.conversationsettings.common.ConversationSettingsItem
 import com.android.messaging.ui.conversationsettings.common.ConversationSettingsTopAppBar
@@ -62,7 +65,7 @@ private const val SLIDE_OFFSET_DIVISOR = 3
 @Composable
 internal fun ConversationSettingsScreen(
     effectHandler: ConversationSettingsEffectHandler,
-    onNavigateBack: () -> Unit,
+    onNavigateBack: (Int?) -> Unit,
     modifier: Modifier = Modifier,
     screenModel: ConversationSettingsScreenModel = viewModel<ConversationSettingsViewModel>(),
 ) {
@@ -76,6 +79,8 @@ internal fun ConversationSettingsScreen(
     }
     val targetConversationId = currentRoute.targetConversationId(rootConversationId)
 
+    fun isRootRoute() = currentRoute is NavRoute.Conversation
+
     LaunchedEffect(targetConversationId) {
         screenModel.setConversationId(targetConversationId)
     }
@@ -88,6 +93,15 @@ internal fun ConversationSettingsScreen(
         screenModel.effects.collect(effectHandler::handle)
     }
 
+    var resultCode by remember { mutableStateOf<Int?>(null) }
+    val navigateUp: () -> Unit = {
+        if (isRootRoute()) {
+            onNavigateBack(resultCode)
+        } else {
+            currentRoute = NavRoute.Conversation
+        }
+    }
+
     LaunchedEffect(screenModel) {
         screenModel.navigationEvents.collect { event ->
             when (event) {
@@ -96,21 +110,21 @@ internal fun ConversationSettingsScreen(
                         conversationId = event.conversationId,
                     )
                 }
+
+                NavEvent.CloseAfterBlock,
+                NavEvent.CloseAfterArchive,
+                -> {
+                    if (isRootRoute()) {
+                        resultCode = ConversationActivity.FINISH_RESULT_CODE
+                    }
+                    navigateUp()
+                }
             }
         }
     }
 
-    val isRootRoute = currentRoute is NavRoute.Conversation
-    val navigateUp: () -> Unit = {
-        if (isRootRoute) {
-            onNavigateBack()
-        } else {
-            currentRoute = NavRoute.Conversation
-        }
-    }
-
     BackHandler(
-        enabled = !isRootRoute,
+        enabled = !isRootRoute(),
         onBack = navigateUp,
     )
 
@@ -255,6 +269,26 @@ private fun LazyListScope.generalSettingsItems(
             icon = Icons.Default.Notifications,
             title = stringResource(R.string.notifications_enabled_conversation_pref_title),
             onClick = { onAction(Action.NotificationsClicked) },
+        )
+    }
+
+    item(key = "archive") {
+        val (icon, titleRes) = if (uiState.isArchived) {
+            Icons.Default.Unarchive to R.string.action_unarchive
+        } else {
+            Icons.Default.Archive to R.string.action_archive
+        }
+
+        ConversationSettingsItem(
+            icon = icon,
+            title = stringResource(titleRes),
+            onClick = {
+                if (uiState.isArchived) {
+                    onAction(Action.UnarchiveClicked)
+                } else {
+                    onAction(Action.ArchiveClicked)
+                }
+            },
         )
     }
 

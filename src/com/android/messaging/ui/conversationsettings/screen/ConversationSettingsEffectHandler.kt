@@ -37,11 +37,6 @@ internal class ConversationSettingsEffectHandlerImpl(
                 activity.startActivity(intent)
             }
 
-            is Effect.FinishAfterBlock -> {
-                activity.setResult(ConversationActivity.FINISH_RESULT_CODE)
-                activity.finish()
-            }
-
             is Effect.OpenParticipantChat -> {
                 val intent = UIIntents.get().getIntentForConversationActivity(
                     activity,
