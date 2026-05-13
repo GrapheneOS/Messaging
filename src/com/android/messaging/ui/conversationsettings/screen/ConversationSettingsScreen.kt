@@ -1,5 +1,13 @@
 package com.android.messaging.ui.conversationsettings.screen
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,7 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -21,9 +28,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -38,11 +47,17 @@ import com.android.messaging.ui.conversationsettings.common.ConversationHeader
 import com.android.messaging.ui.conversationsettings.common.ConversationSettingsItem
 import com.android.messaging.ui.conversationsettings.common.ConversationSettingsTopAppBar
 import com.android.messaging.ui.conversationsettings.common.ParticipantItem
-import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState
+import com.android.messaging.ui.conversationsettings.screen.ConversationSettingsNavRouteSavedState as NavRouteSavedState
+import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsAction as Action
+import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsNavEvent as NavEvent
+import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsNavRoute as NavRoute
+import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState as State
 import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
 import com.android.messaging.ui.core.AppTheme
 import kotlinx.collections.immutable.ImmutableList
-import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsAction as Action
+import kotlinx.collections.immutable.persistentListOf
+
+private const val SLIDE_OFFSET_DIVISOR = 3
 
 @Composable
 internal fun ConversationSettingsScreen(
@@ -52,27 +67,127 @@ internal fun ConversationSettingsScreen(
     screenModel: ConversationSettingsScreenModel = viewModel<ConversationSettingsViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
+    val rootConversationId = screenModel.rootConversationId
 
-    LaunchedEffect(screenModel, effectHandler) {
-        screenModel.effects.collect(effectHandler::handle)
+    var currentRoute by rememberSaveable(
+        stateSaver = NavRouteSavedState.Saver,
+    ) {
+        mutableStateOf(NavRoute.Conversation)
+    }
+    val targetConversationId = currentRoute.targetConversationId(rootConversationId)
+
+    LaunchedEffect(targetConversationId) {
+        screenModel.setConversationId(targetConversationId)
     }
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         screenModel.refreshState()
     }
 
-    ConversationSettingsContent(
+    LaunchedEffect(screenModel, effectHandler) {
+        screenModel.effects.collect(effectHandler::handle)
+    }
+
+    LaunchedEffect(screenModel) {
+        screenModel.navigationEvents.collect { event ->
+            when (event) {
+                is NavEvent.OpenParticipantInfo -> {
+                    currentRoute = NavRoute.ParticipantInfo(
+                        conversationId = event.conversationId,
+                    )
+                }
+            }
+        }
+    }
+
+    val isRootRoute = currentRoute is NavRoute.Conversation
+    val navigateUp: () -> Unit = {
+        if (isRootRoute) {
+            onNavigateBack()
+        } else {
+            currentRoute = NavRoute.Conversation
+        }
+    }
+
+    BackHandler(
+        enabled = !isRootRoute,
+        onBack = navigateUp,
+    )
+
+    ConversationSettingsNavHost(
+        route = currentRoute,
+        rootConversationId = rootConversationId,
         uiState = uiState,
         onAction = screenModel::onAction,
-        onNavigateBack = onNavigateBack,
+        onNavigateBack = navigateUp,
         modifier = modifier,
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ConversationSettingsNavHost(
+    route: NavRoute,
+    rootConversationId: String,
+    uiState: State,
+    onAction: (Action) -> Unit,
+    onNavigateBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    AnimatedContent(
+        targetState = route,
+        modifier = modifier.background(MaterialTheme.colorScheme.background),
+        transitionSpec = {
+            val isForward = targetState.depth > initialState.depth
+            if (isForward) {
+                (slideInHorizontally { it / SLIDE_OFFSET_DIVISOR } + fadeIn()) togetherWith
+                    (slideOutHorizontally { -it / SLIDE_OFFSET_DIVISOR } + fadeOut())
+            } else {
+                (slideInHorizontally { -it / SLIDE_OFFSET_DIVISOR } + fadeIn()) togetherWith
+                    (slideOutHorizontally { it / SLIDE_OFFSET_DIVISOR } + fadeOut())
+            }
+        },
+        label = "conversation_settings_navigation",
+    ) { animatedRoute ->
+        val displayed = rememberDisplayedConversation(
+            targetConversationId = animatedRoute.targetConversationId(rootConversationId),
+            uiState = uiState,
+        )
+
+        ConversationSettingsContent(
+            uiState = displayed,
+            onAction = onAction,
+            onNavigateBack = onNavigateBack,
+        )
+    }
+}
+
+private fun NavRoute.targetConversationId(
+    rootConversationId: String,
+): String {
+    return when (this) {
+        NavRoute.Conversation -> rootConversationId
+        is NavRoute.ParticipantInfo -> conversationId
+    }
+}
+
+@Composable
+private fun rememberDisplayedConversation(
+    targetConversationId: String,
+    uiState: State,
+): State {
+    val current = uiState.takeIf { it.conversationId == targetConversationId }
+    var cached by remember(targetConversationId) { mutableStateOf(current) }
+    SideEffect {
+        if (current != null && cached != current) {
+            cached = current
+        }
+    }
+    return current ?: cached ?: uiState
+}
+
 @Composable
 private fun ConversationSettingsContent(
-    uiState: ConversationSettingsUiState,
+    uiState: State,
     onAction: (Action) -> Unit,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
@@ -110,7 +225,7 @@ private fun ConversationSettingsContent(
             )
 
             participantsItems(
-                participants = uiState.participants,
+                uiState = uiState,
                 onAction = onAction,
             )
         }
@@ -131,7 +246,7 @@ private fun ConversationSettingsContent(
 }
 
 private fun LazyListScope.generalSettingsItems(
-    uiState: ConversationSettingsUiState,
+    uiState: State,
     onAction: (Action) -> Unit,
     onRequestBlockConfirmation: () -> Unit,
 ) {
@@ -169,14 +284,18 @@ private fun LazyListScope.generalSettingsItems(
 }
 
 private fun LazyListScope.participantsItems(
-    participants: ImmutableList<ParticipantUiState>,
+    uiState: State,
     onAction: (Action) -> Unit,
 ) {
+    val participants = uiState.participants
     if (participants.isEmpty()) return
+
+    val showParticipantActions = uiState.otherParticipant == null && participants.size > 1
 
     item(key = "participants_group") {
         ParticipantsCard(
             participants = participants,
+            showParticipantActions = showParticipantActions,
             onParticipantClick = { participant ->
                 val destination = participant.normalizedDestination ?: return@ParticipantsCard
                 onAction(Action.ParticipantPressed(destination))
@@ -197,6 +316,7 @@ private fun LazyListScope.participantsItems(
 @Composable
 private fun ParticipantsCard(
     participants: ImmutableList<ParticipantUiState>,
+    showParticipantActions: Boolean,
     onParticipantClick: (ParticipantUiState) -> Unit,
     onParticipantLongClick: (ParticipantUiState) -> Unit,
     onParticipantActionClick: (ParticipantUiState) -> Unit,
@@ -218,11 +338,15 @@ private fun ParticipantsCard(
                 ),
             )
             participants.forEach { participant ->
+                val hasInfoAction =
+                    showParticipantActions && participant.normalizedDestination != null
+
                 ParticipantItem(
                     participant = participant,
                     onClick = { onParticipantClick(participant) },
                     onLongClick = { onParticipantLongClick(participant) },
-                    onAction = { onParticipantActionClick(participant) },
+                    onAction = { onParticipantActionClick(participant) }
+                        .takeIf { hasInfoAction },
                 )
             }
         }
@@ -254,6 +378,56 @@ private fun BlockConfirmationDialog(
             }
         },
     )
+}
+
+@Preview
+@Composable
+private fun ConversationSettingsContentPreview() {
+    AppTheme {
+        ConversationSettingsContent(
+            uiState = State(
+                conversationId = "1",
+                conversationTitle = "Family",
+                otherParticipant = ParticipantUiState(
+                    participantId = "+31612345678",
+                    avatarUri = null,
+                    displayName = "Mother",
+                    details = "+31 6 1234 5678",
+                    contactId = 1L,
+                    lookupKey = null,
+                    normalizedDestination = "+31612345678",
+                    isBlocked = false,
+                    displayDestination = "+31 6 1234 5678",
+                ),
+                participants = persistentListOf(
+                    ParticipantUiState(
+                        participantId = "+31612345678",
+                        avatarUri = null,
+                        displayName = "Mother",
+                        details = "+31 6 1234 5678",
+                        contactId = 1L,
+                        lookupKey = null,
+                        normalizedDestination = "+31612345678",
+                        isBlocked = false,
+                        displayDestination = "+31 6 1234 5678",
+                    ),
+                    ParticipantUiState(
+                        participantId = "+31687654321",
+                        avatarUri = null,
+                        displayName = "Father",
+                        details = "+31 6 8765 4321",
+                        contactId = 2L,
+                        lookupKey = null,
+                        normalizedDestination = "+31687654321",
+                        isBlocked = false,
+                        displayDestination = "+31 6 8765 4321",
+                    ),
+                ),
+            ),
+            onAction = {},
+            onNavigateBack = {},
+        )
+    }
 }
 
 @Preview

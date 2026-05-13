@@ -6,7 +6,6 @@ import android.database.ContentObserver
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.action.BugleActionToasts
 import com.android.messaging.datamodel.action.UpdateDestinationBlockedAction
-import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.ui.conversationsettings.common.ConversationSettingsScreenDelegate
 import com.android.messaging.ui.conversationsettings.screen.mapper.ConversationSettingsUiStateMapper
@@ -16,6 +15,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
@@ -38,7 +39,7 @@ internal interface ConversationSettingsDelegate :
 }
 
 internal class ConversationSettingsDelegateImpl @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
     private val contentResolver: ContentResolver,
     private val mapper: ConversationSettingsUiStateMapper,
     @param:DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
@@ -49,25 +50,26 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
 
     private val refreshTriggers: Channel<Unit> = Channel(Channel.CONFLATED)
 
-    private var conversationId: String = ""
+    private val conversationId = MutableStateFlow("")
     private var isBound = false
 
     override fun setConversationId(conversationId: String) {
-        this.conversationId = conversationId
+        this.conversationId.value = conversationId
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun bind(scope: CoroutineScope) {
         if (isBound) return
         isBound = true
 
         scope.launch {
             merge(
-                conversationChangesFlow(),
+                conversationId.flatMapLatest(::conversationChangesFlow),
                 refreshTriggers.receiveAsFlow(),
             )
                 .onStart { emit(Unit) }
                 .conflate()
-                .map { mapper.map(conversationId) }
+                .map { mapper.map(conversationId.value) }
                 .flowOn(defaultDispatcher)
                 .collect { _state.value = it }
         }
@@ -83,12 +85,12 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
         UpdateDestinationBlockedAction.updateDestinationBlocked(
             participant.normalizedDestination,
             blocked,
-            conversationId,
+            conversationId.value,
             BugleActionToasts.makeUpdateDestinationBlockedActionListener(context),
         )
     }
 
-    private fun conversationChangesFlow(): Flow<Unit> {
+    private fun conversationChangesFlow(conversationId: String): Flow<Unit> {
         return callbackFlow {
             val observer = object : ContentObserver(null) {
                 override fun onChange(selfChange: Boolean) {
@@ -96,10 +98,10 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
                 }
             }
             val metadataUri = MessagingContentProvider.buildConversationMetadataUri(
-                conversationId
+                conversationId,
             )
             val participantsUri = MessagingContentProvider.buildConversationParticipantsUri(
-                conversationId
+                conversationId,
             )
             contentResolver.registerContentObserver(metadataUri, false, observer)
             contentResolver.registerContentObserver(participantsUri, false, observer)
