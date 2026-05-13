@@ -1,9 +1,11 @@
 package com.android.messaging.ui.conversation.screen
 
 import android.Manifest
+import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresExtension
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.SnackbarHostState
@@ -286,6 +288,8 @@ internal fun ConversationScreenSurface(
             screenModel = screenModel,
         )
 
+        // "Call requires version 15 of the U Extensions SDK" is OK in this case: all GrapheneOS
+        // users will have this version
         ConversationMediaPickerOverlayHost(
             modifier = Modifier.fillMaxSize(),
             uiState = mediaPickerOverlayUiState,
@@ -296,6 +300,7 @@ internal fun ConversationScreenSurface(
     }
 }
 
+@RequiresExtension(extension = Build.VERSION_CODES.UPSIDE_DOWN_CAKE, version = 15)
 @Composable
 private fun ConversationMediaPickerOverlayHost(
     modifier: Modifier,

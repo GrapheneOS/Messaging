@@ -1,9 +1,11 @@
 package com.android.messaging.ui.conversation.mediapicker
 
 import android.Manifest
+import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresExtension
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +22,7 @@ import com.android.messaging.ui.conversation.composer.model.ComposerAttachmentUi
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 
+@RequiresExtension(extension = Build.VERSION_CODES.UPSIDE_DOWN_CAKE, version = 15)
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun ConversationMediaPickerOverlay(
@@ -89,7 +92,7 @@ internal fun ConversationMediaPickerOverlay(
             onAttachmentCaptionChange = onAttachmentCaptionChange,
             onAttachmentRemove = onAttachmentRemove,
             photoPickerSourceContentUriByAttachmentContentUri =
-            photoPickerSourceContentUriByAttachmentContentUri,
+                photoPickerSourceContentUriByAttachmentContentUri,
             onPhotoPickerMediaSelected = onPhotoPickerMediaSelected,
             onPhotoPickerMediaDeselected = onPhotoPickerMediaDeselected,
             onAttachmentStartRequest = onAttachmentStartRequest,

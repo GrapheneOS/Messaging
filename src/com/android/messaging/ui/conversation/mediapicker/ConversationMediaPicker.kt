@@ -44,6 +44,7 @@ import kotlinx.coroutines.launch
 
 private const val TAG = "ConversationMediaPicker"
 
+@RequiresExtension(extension = Build.VERSION_CODES.UPSIDE_DOWN_CAKE, version = 15)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPhotoPickerComposeApi::class)
 @Composable
 internal fun ConversationMediaPicker(
@@ -134,6 +135,7 @@ private fun rememberConversationEmbeddedPhotoPickerFeatureInfo(): EmbeddedPhotoP
     }
 }
 
+@RequiresExtension(extension = Build.VERSION_CODES.UPSIDE_DOWN_CAKE, version = 15)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPhotoPickerComposeApi::class)
 @Composable
 private fun rememberConversationEmbeddedPhotoPickerState(
@@ -215,6 +217,7 @@ private fun rememberPickerBackedAttachmentRemoveCallback(
     }
 }
 
+@RequiresExtension(extension = Build.VERSION_CODES.UPSIDE_DOWN_CAKE, version = 15)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPhotoPickerComposeApi::class)
 @Composable
 private fun ConversationMediaPickerContent(
