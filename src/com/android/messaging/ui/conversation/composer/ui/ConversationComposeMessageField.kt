@@ -241,6 +241,7 @@ private fun ConversationComposeAttachmentMenu(
             ),
             properties = PopupProperties(
                 focusable = false,
+                clippingEnabled = false,
             ),
         ) {
             ConversationComposeAttachmentMenuContent(
