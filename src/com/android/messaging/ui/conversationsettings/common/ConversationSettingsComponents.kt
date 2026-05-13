@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,10 +32,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
+import com.android.messaging.ui.core.AppTheme
 
 @Composable
 internal fun ConversationHeader(
@@ -51,7 +54,10 @@ internal fun ConversationHeader(
         ParticipantAvatar(
             avatarUri = participant?.avatarUri,
             modifier = Modifier.size(112.dp),
-            fallbackIcon = Icons.Default.Group,
+            fallbackIcon = when {
+                participant == null -> Icons.Default.Group
+                else -> Icons.Default.Person
+            },
             fallbackIconSize = 64.dp,
         )
 
@@ -112,11 +118,9 @@ internal fun ParticipantItem(
     participant: ParticipantUiState,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
-    onAction: () -> Unit,
+    onAction: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
-    val hasActions = !participant.normalizedDestination.isNullOrEmpty()
-
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -155,7 +159,7 @@ internal fun ParticipantItem(
             }
         }
 
-        if (hasActions) {
+        if (onAction != null) {
             IconButton(onClick = onAction) {
                 Icon(
                     imageVector = Icons.Default.Info,
@@ -202,4 +206,58 @@ private fun ParticipantAvatar(
     }
 }
 
-// TODO: Add previews
+@Preview
+@Composable
+private fun ConversationHeaderPreview() {
+    AppTheme {
+        ConversationHeader(
+            title = "Mother",
+            participant = ParticipantUiState(
+                participantId = "1",
+                avatarUri = null,
+                displayName = "Mother",
+                details = "+31 6 1234 5678",
+                contactId = 1L,
+                lookupKey = null,
+                normalizedDestination = "+31612345678",
+                isBlocked = false,
+                displayDestination = "+31 6 1234 5678",
+            ),
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun ConversationSettingsItemPreview() {
+    AppTheme {
+        ConversationSettingsItem(
+            icon = Icons.Default.Notifications,
+            title = "Notifications",
+            onClick = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun ParticipantItemPreview() {
+    AppTheme {
+        ParticipantItem(
+            participant = ParticipantUiState(
+                participantId = "1",
+                avatarUri = null,
+                displayName = "Mother",
+                details = "+31 6 1234 5678",
+                contactId = 1L,
+                lookupKey = null,
+                normalizedDestination = "+31612345678",
+                isBlocked = false,
+                displayDestination = "+31 6 1234 5678",
+            ),
+            onClick = {},
+            onLongClick = {},
+            onAction = {},
+        )
+    }
+}

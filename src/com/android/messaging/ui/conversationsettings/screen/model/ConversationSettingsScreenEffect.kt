@@ -12,9 +12,11 @@ internal sealed interface ConversationSettingsScreenEffect {
 
     data object FinishAfterBlock : ConversationSettingsScreenEffect
 
-    data class OpenParticipantChat(val conversationId: String) : ConversationSettingsScreenEffect
+    data class OpenParticipantChat(
+        val conversationId: String,
+    ) : ConversationSettingsScreenEffect
 
-    data class CopyToClipboard(val text: String) : ConversationSettingsScreenEffect
-
-    data class OpenParticipantInfo(val conversationId: String) : ConversationSettingsScreenEffect
+    data class CopyToClipboard(
+        val text: String,
+    ) : ConversationSettingsScreenEffect
 }
