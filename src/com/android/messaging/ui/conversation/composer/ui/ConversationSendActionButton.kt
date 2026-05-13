@@ -18,6 +18,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -25,16 +26,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.rounded.Mic
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
@@ -42,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -135,7 +137,6 @@ internal fun ConversationSendActionButton(
         onRecordGestureLock = onRecordGestureLock,
         onRecordGestureFinish = onRecordGestureFinish,
         onLockedStopClick = onLockedStopClick,
-        onSendActionLongClick = onSendActionLongClick,
     )
 
     ConversationSendActionButtonLayout(
@@ -146,6 +147,7 @@ internal fun ConversationSendActionButton(
         mode = mode,
         onClick = onClick,
         onLockedStopClick = onLockedStopClick,
+        onSendActionLongClick = onSendActionLongClick,
         visualState = visualState,
     )
 }
@@ -215,6 +217,7 @@ private fun ConversationSendActionButtonLayout(
     mode: ConversationSendActionButtonMode,
     onClick: () -> Unit,
     onLockedStopClick: () -> Unit,
+    onSendActionLongClick: () -> Unit,
     visualState: ConversationSendActionButtonVisualState,
 ) {
     Box(
@@ -230,6 +233,7 @@ private fun ConversationSendActionButtonLayout(
             mode = mode,
             onClick = onClick,
             onLockedStopClick = onLockedStopClick,
+            onSendActionLongClick = onSendActionLongClick,
             visualState = visualState,
         )
     }
@@ -242,14 +246,62 @@ private fun ConversationSendActionButtonContent(
     mode: ConversationSendActionButtonMode,
     onClick: () -> Unit,
     onLockedStopClick: () -> Unit,
+    onSendActionLongClick: () -> Unit,
     visualState: ConversationSendActionButtonVisualState,
 ) {
+    val containerColor = when {
+        enabled -> visualState.containerColor
+        else -> MaterialTheme.colorScheme.surfaceContainerHighest
+    }
+
+    val contentColor = when {
+        enabled -> visualState.contentColor
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    Surface(
+        modifier = Modifier
+            .fillMaxSize()
+            .scale(scale = visualState.buttonScale)
+            .stopSemanticsModifier(
+                mode = mode,
+                onLockedStopClick = onLockedStopClick,
+            )
+            .then(modifier),
+        shape = CircleShape,
+        color = containerColor,
+        contentColor = contentColor,
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .sendClickModifier(
+                    mode = mode,
+                    enabled = enabled,
+                    onClick = onClick,
+                    onSendActionLongClick = onSendActionLongClick,
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            ConversationSendActionButtonIcon(
+                mode = mode,
+            )
+        }
+    }
+}
+
+@Composable
+private fun Modifier.stopSemanticsModifier(
+    mode: ConversationSendActionButtonMode,
+    onLockedStopClick: () -> Unit,
+): Modifier {
     val stopContentDescription = stringResource(
         id = R.string.audio_record_stop_content_description,
     )
-    val stopSemanticsModifier = when (mode) {
+
+    return when (mode) {
         ConversationSendActionButtonMode.Stop -> {
-            Modifier.semantics {
+            semantics {
                 onClick(label = stopContentDescription) {
                     onLockedStopClick()
                     true
@@ -257,37 +309,39 @@ private fun ConversationSendActionButtonContent(
             }
         }
 
-        else -> Modifier
-    }
-
-    FilledIconButton(
-        modifier = Modifier
-            .fillMaxSize()
-            .scale(scale = visualState.buttonScale)
-            .then(stopSemanticsModifier)
-            .then(modifier),
-        onClick = {
-            if (mode == ConversationSendActionButtonMode.Send) {
-                onClick()
-            }
-        },
-        enabled = enabled,
-        shape = CircleShape,
-        colors = IconButtonDefaults.filledIconButtonColors(
-            containerColor = visualState.containerColor,
-            contentColor = visualState.contentColor,
-            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-        ),
-    ) {
-        ConversationSendActionButtonIcon(
-            mode = mode,
-        )
+        else -> this
     }
 }
 
 @Composable
-private fun ConversationSendActionButtonIcon(mode: ConversationSendActionButtonMode) {
+private fun Modifier.sendClickModifier(
+    mode: ConversationSendActionButtonMode,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    onSendActionLongClick: () -> Unit,
+): Modifier {
+    return when (mode) {
+        ConversationSendActionButtonMode.Send -> {
+            combinedClickable(
+                enabled = enabled,
+                role = Role.Button,
+                onClickLabel = stringResource(R.string.sendButtonContentDescription),
+                onLongClickLabel = stringResource(
+                    id = R.string.sim_selector_button_content_description,
+                ),
+                onClick = onClick,
+                onLongClick = onSendActionLongClick,
+            )
+        }
+
+        else -> this
+    }
+}
+
+@Composable
+private fun ConversationSendActionButtonIcon(
+    mode: ConversationSendActionButtonMode,
+) {
     AnimatedContent(
         targetState = mode,
         transitionSpec = {
