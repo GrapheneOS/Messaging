@@ -18,7 +18,6 @@ import io.mockk.unmockkAll
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -323,13 +322,45 @@ internal class RecipientPickerDelegateImplTest {
     ): RecipientPickerDelegateImpl {
         return RecipientPickerDelegateImpl(
             contactDestinationFormatter = ContactDestinationFormatterImpl(),
-            contactsRepository = FakeRepository(pages = pages),
-            isReadContactsPermissionGranted = FakePermission(granted = isPermissionGranted),
+            contactsRepository = mockContactsRepository(pages = pages),
+            isReadContactsPermissionGranted = mockIsReadContactsPermissionGranted(
+                isPermissionGranted = isPermissionGranted,
+            ),
             savedStateHandle = SavedStateHandle(
                 initialState = mapOf("search_query" to initialQuery),
             ),
             defaultDispatcher = UnconfinedTestDispatcher(scheduler = testScheduler),
         )
+    }
+
+    private fun mockContactsRepository(
+        pages: Map<SearchKey, ContactsPage>,
+    ): ContactsRepository {
+        val contactsRepository = mockk<ContactsRepository>()
+        every {
+            contactsRepository.searchContacts(
+                query = any(),
+                offset = any(),
+            )
+        } answers {
+            val key = searchKey(
+                query = firstArg(),
+                offset = secondArg(),
+            )
+            val page = pages[key] ?: emptyPage()
+            flowOf(page)
+        }
+
+        return contactsRepository
+    }
+
+    private fun mockIsReadContactsPermissionGranted(
+        isPermissionGranted: Boolean,
+    ): IsReadContactsPermissionGranted {
+        val isReadContactsPermissionGranted = mockk<IsReadContactsPermissionGranted>()
+        every { isReadContactsPermissionGranted() } returns isPermissionGranted
+
+        return isReadContactsPermissionGranted
     }
 
     private fun searchKey(query: String, offset: Int): SearchKey {
@@ -392,27 +423,4 @@ internal class RecipientPickerDelegateImplTest {
         val query: String,
         val offset: Int,
     )
-
-    private class FakeRepository(
-        private val pages: Map<SearchKey, ContactsPage>,
-    ) : ContactsRepository {
-
-        override fun searchContacts(
-            query: String,
-            offset: Int,
-        ): Flow<ContactsPage> {
-            val key = SearchKey(query = query, offset = offset)
-            val page = pages[key] ?: ContactsPage(
-                contacts = persistentListOf(),
-                nextOffset = null,
-            )
-            return flowOf(page)
-        }
-    }
-
-    private class FakePermission(
-        private val granted: Boolean,
-    ) : IsReadContactsPermissionGranted {
-        override fun invoke(): Boolean = granted
-    }
 }
