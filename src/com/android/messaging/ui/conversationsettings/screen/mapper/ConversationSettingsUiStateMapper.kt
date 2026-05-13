@@ -64,6 +64,9 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
                     legacyVibrationEnabled = cursor.getInt(
                         PeopleOptionsItemData.INDEX_NOTIFICATION_VIBRATION,
                     ) == 1,
+                    isArchived = cursor.getInt(
+                        PeopleOptionsItemData.INDEX_ARCHIVE_STATUS,
+                    ) == 1,
                     otherParticipant = otherParticipant?.let(::toParticipantUiState),
                     participants = participantsExcludingSelf.map(::toParticipantUiState)
                         .toImmutableList(),

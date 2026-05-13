@@ -5,4 +5,8 @@ internal sealed interface ConversationSettingsNavEvent {
     data class OpenParticipantInfo(
         val conversationId: String,
     ) : ConversationSettingsNavEvent
+
+    data object CloseAfterArchive : ConversationSettingsNavEvent
+
+    data object CloseAfterBlock : ConversationSettingsNavEvent
 }

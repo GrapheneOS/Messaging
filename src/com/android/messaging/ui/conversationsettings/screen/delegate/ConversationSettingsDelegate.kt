@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversationsettings.screen.delegate
 import android.content.ContentResolver
 import android.content.Context
 import android.database.ContentObserver
+import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.action.BugleActionToasts
 import com.android.messaging.datamodel.action.UpdateDestinationBlockedAction
@@ -36,12 +37,14 @@ internal interface ConversationSettingsDelegate :
     ConversationSettingsScreenDelegate<ConversationSettingsUiState> {
     fun setConversationId(conversationId: String)
     fun setDestinationBlocked(blocked: Boolean)
+    fun setArchived(archived: Boolean)
 }
 
 internal class ConversationSettingsDelegateImpl @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val contentResolver: ContentResolver,
     private val mapper: ConversationSettingsUiStateMapper,
+    private val conversationsRepository: ConversationsRepository,
     @param:DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
 ) : ConversationSettingsDelegate {
 
@@ -88,6 +91,18 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
             conversationId.value,
             BugleActionToasts.makeUpdateDestinationBlockedActionListener(context),
         )
+    }
+
+    override fun setArchived(archived: Boolean) {
+        val conversationId = this@ConversationSettingsDelegateImpl.conversationId.value.takeIf {
+            it.isNotEmpty()
+        } ?: return
+
+        if (archived) {
+            conversationsRepository.archiveConversation(conversationId)
+        } else {
+            conversationsRepository.unarchiveConversation(conversationId)
+        }
     }
 
     private fun conversationChangesFlow(conversationId: String): Flow<Unit> {

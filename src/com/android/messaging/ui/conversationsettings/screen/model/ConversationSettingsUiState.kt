@@ -11,6 +11,7 @@ internal data class ConversationSettingsUiState(
     val legacyNotificationEnabled: Boolean = false,
     val legacyRingtoneString: String? = null,
     val legacyVibrationEnabled: Boolean = false,
+    val isArchived: Boolean = false,
     val otherParticipant: ParticipantUiState? = null,
     val participants: ImmutableList<ParticipantUiState> = persistentListOf(),
 )

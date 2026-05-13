@@ -84,13 +84,22 @@ internal class ConversationSettingsViewModel @Inject constructor(
                 )
             }
 
+            is Action.UnarchiveClicked -> {
+                delegate.setArchived(false)
+            }
+
+            is Action.ArchiveClicked -> {
+                delegate.setArchived(true)
+                emitNavigationEvent(NavEvent.CloseAfterArchive)
+            }
+
             is Action.UnblockClicked -> {
                 delegate.setDestinationBlocked(false)
             }
 
             is Action.BlockConfirmed -> {
                 delegate.setDestinationBlocked(true)
-                emitEffect(Effect.FinishAfterBlock)
+                emitNavigationEvent(NavEvent.CloseAfterBlock)
             }
 
             is Action.ParticipantPressed -> {

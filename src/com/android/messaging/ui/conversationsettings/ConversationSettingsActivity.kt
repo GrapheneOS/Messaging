@@ -31,7 +31,10 @@ class ConversationSettingsActivity : ComponentActivity() {
             AppTheme {
                 ConversationSettingsScreen(
                     effectHandler = effectHandler,
-                    onNavigateBack = ::finish,
+                    onNavigateBack = { code ->
+                        code?.let(::setResult)
+                        finish()
+                    },
                 )
             }
         }
