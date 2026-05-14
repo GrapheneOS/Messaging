@@ -39,6 +39,7 @@ internal class ConversationVCardAttachmentUiModelMapperImpl @Inject constructor(
         return when (metadata) {
             ConversationVCardAttachmentMetadata.Failed -> {
                 createConversationContactUiModel(
+                    avatarUri = null,
                     titleText = null,
                     titleTextResId = defaultTitleTextResId,
                     subtitleText = null,
@@ -48,6 +49,7 @@ internal class ConversationVCardAttachmentUiModelMapperImpl @Inject constructor(
 
             ConversationVCardAttachmentMetadata.Loading -> {
                 createConversationContactUiModel(
+                    avatarUri = null,
                     titleText = null,
                     titleTextResId = defaultTitleTextResId,
                     subtitleText = null,
@@ -59,6 +61,7 @@ internal class ConversationVCardAttachmentUiModelMapperImpl @Inject constructor(
             null,
             -> {
                 createConversationContactUiModel(
+                    avatarUri = null,
                     titleText = null,
                     titleTextResId = defaultTitleTextResId,
                     subtitleText = null,
@@ -86,6 +89,7 @@ internal class ConversationVCardAttachmentUiModelMapperImpl @Inject constructor(
         return when (metadata.type) {
             ConversationVCardAttachmentType.CONTACT -> {
                 createConversationContactUiModel(
+                    avatarUri = metadata.avatarUri,
                     titleText = metadata.displayName,
                     titleTextResId = if (metadata.displayName == null) {
                         defaultTitleTextResId
@@ -104,6 +108,7 @@ internal class ConversationVCardAttachmentUiModelMapperImpl @Inject constructor(
             ConversationVCardAttachmentType.LOCATION -> {
                 ConversationVCardAttachmentUiModel(
                     type = ConversationVCardAttachmentType.LOCATION,
+                    avatarUri = metadata.avatarUri,
                     titleText = metadata.displayName,
                     titleTextResId = if (metadata.displayName == null) {
                         locationTitleTextResId
@@ -118,6 +123,7 @@ internal class ConversationVCardAttachmentUiModelMapperImpl @Inject constructor(
     }
 
     private fun createConversationContactUiModel(
+        avatarUri: String?,
         titleText: String?,
         titleTextResId: Int?,
         subtitleText: String?,
@@ -125,6 +131,7 @@ internal class ConversationVCardAttachmentUiModelMapperImpl @Inject constructor(
     ): ConversationVCardAttachmentUiModel {
         return ConversationVCardAttachmentUiModel(
             type = ConversationVCardAttachmentType.CONTACT,
+            avatarUri = avatarUri,
             titleText = titleText,
             titleTextResId = titleTextResId,
             subtitleText = subtitleText,

@@ -6,6 +6,7 @@ import com.android.messaging.data.conversation.model.attachment.ConversationVCar
 @Immutable
 internal data class ConversationVCardAttachmentUiModel(
     val type: ConversationVCardAttachmentType,
+    val avatarUri: String? = null,
     val titleText: String? = null,
     val titleTextResId: Int? = null,
     val subtitleText: String? = null,

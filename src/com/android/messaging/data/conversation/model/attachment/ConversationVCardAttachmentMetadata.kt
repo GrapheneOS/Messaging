@@ -17,6 +17,7 @@ internal sealed interface ConversationVCardAttachmentMetadata {
     @Immutable
     data class Loaded(
         val type: ConversationVCardAttachmentType,
+        val avatarUri: String?,
         val displayName: String?,
         val details: String?,
         val locationAddress: String?,

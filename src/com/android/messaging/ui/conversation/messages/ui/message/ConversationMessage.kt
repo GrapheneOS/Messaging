@@ -199,6 +199,7 @@ private fun rememberConversationMessageContent(
     }
 
     return remember(
+        message.canResendMessage,
         message.text,
         message.mmsSubject,
         message.parts,

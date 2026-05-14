@@ -33,6 +33,10 @@ internal class ConversationVCardMetadataMapperImpl @Inject constructor() :
                 isLocation -> ConversationVCardAttachmentType.LOCATION
                 else -> ConversationVCardAttachmentType.CONTACT
             },
+            avatarUri = vCardContactItemData
+                .avatarUri
+                ?.toString()
+                ?.takeIf { avatarUri -> avatarUri.isNotBlank() },
             displayName = vCardContactItemData
                 .displayName
                 ?.takeIf { title -> title.isNotBlank() },

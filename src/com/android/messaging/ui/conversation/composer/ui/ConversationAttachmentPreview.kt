@@ -369,6 +369,7 @@ private fun ConversationVCardAttachmentPreviewItem(
                     .align(alignment = Alignment.CenterStart)
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 type = uiModel.type,
+                avatarUri = uiModel.avatarUri,
                 titleText = uiModel.titleText,
                 titleTextResId = uiModel.titleTextResId,
                 subtitleText = uiModel.subtitleText,

@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.messages.ui.message
 import android.net.Uri
 import android.util.Patterns
 import android.webkit.URLUtil
+import com.android.messaging.R
 import com.android.messaging.ui.conversation.messages.model.attachment.ConversationMessageAttachment
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageContent
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
@@ -17,7 +18,10 @@ internal fun buildConversationMessageContent(
     subjectText: String?,
 ): ConversationMessageContent {
     val attachments = buildConversationMessageAttachments(message = message)
-    val attachmentSections = buildConversationAttachmentSections(attachments = attachments)
+    val attachmentSections = buildConversationAttachmentSections(
+        attachments = attachments,
+        vCardSubtitleTextResIdOverride = vCardSubtitleTextResIdOverride(message),
+    )
 
     val bodyText = buildConversationMessageBodyText(
         message = message,
@@ -34,6 +38,13 @@ internal fun buildConversationMessageContent(
         attachmentSections = attachmentSections,
         isAttachmentOnly = isAttachmentOnly,
     )
+}
+
+private fun vCardSubtitleTextResIdOverride(message: ConversationMessageUiModel): Int? {
+    return when {
+        message.canResendMessage -> R.string.message_status_send_failed
+        else -> null
+    }
 }
 
 private fun buildConversationMessageAttachments(

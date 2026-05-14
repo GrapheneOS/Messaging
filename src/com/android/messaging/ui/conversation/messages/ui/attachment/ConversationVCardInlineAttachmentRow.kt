@@ -69,6 +69,7 @@ internal fun ConversationVCardInlineAttachmentRowContent(
                 .fillMaxWidth()
                 .padding(horizontal = 14.dp, vertical = 12.dp),
             type = attachment.type,
+            avatarUri = attachment.avatarUri,
             titleText = attachment.titleText,
             titleTextResId = attachment.titleTextResId,
             subtitleText = attachment.subtitleText,

@@ -13,6 +13,7 @@ import kotlinx.collections.immutable.toImmutableList
 
 internal fun buildConversationAttachmentSections(
     attachments: ImmutableList<ConversationMessageAttachment>,
+    vCardSubtitleTextResIdOverride: Int? = null,
 ): ConversationAttachmentSections {
     val galleryVisualAttachments = attachments
         .asSequence()
@@ -22,7 +23,12 @@ internal fun buildConversationAttachmentSections(
     val trailingItems = attachments
         .asSequence()
         .filterNot(::isGalleryVisualAttachment)
-        .mapNotNull(::toConversationAttachmentItem)
+        .mapNotNull { attachment ->
+            toConversationAttachmentItem(
+                attachment = attachment,
+                vCardSubtitleTextResIdOverride = vCardSubtitleTextResIdOverride,
+            )
+        }
         .toImmutableList()
 
     return ConversationAttachmentSections(
@@ -35,8 +41,10 @@ private fun isGalleryVisualAttachment(
     attachment: ConversationMessageAttachment,
 ): Boolean {
     return when (attachment) {
-        is ConversationMessageAttachment.Media ->
+        is ConversationMessageAttachment.Media -> {
             attachment.part is ConversationMessagePartUiModel.Attachment.Image
+        }
+
         is ConversationMessageAttachment.YouTubePreview -> true
         is ConversationMessageAttachment.Unsupported -> false
     }
@@ -57,6 +65,7 @@ private fun isStandaloneVisualAttachment(
 
 private fun toConversationAttachmentItem(
     attachment: ConversationMessageAttachment,
+    vCardSubtitleTextResIdOverride: Int?,
 ): ConversationAttachmentItem? {
     return when {
         isStandaloneVisualAttachment(attachment = attachment) -> {
@@ -67,13 +76,15 @@ private fun toConversationAttachmentItem(
         }
 
         isInlineAttachment(attachment = attachment) -> {
-            toInlineAttachment(attachment = attachment)
-                ?.let { inlineAttachment ->
-                    ConversationAttachmentItem.Inline(
-                        key = inlineAttachment.key,
-                        attachment = inlineAttachment,
-                    )
-                }
+            toInlineAttachment(
+                attachment = attachment,
+                vCardSubtitleTextResIdOverride = vCardSubtitleTextResIdOverride,
+            )?.let { inlineAttachment ->
+                ConversationAttachmentItem.Inline(
+                    key = inlineAttachment.key,
+                    attachment = inlineAttachment,
+                )
+            }
         }
 
         else -> null
@@ -94,11 +105,13 @@ private fun isInlineAttachment(
 
 private fun toInlineAttachment(
     attachment: ConversationMessageAttachment,
+    vCardSubtitleTextResIdOverride: Int?,
 ): ConversationInlineAttachment? {
     return when (attachment) {
         is ConversationMessageAttachment.Media -> {
             toMediaInlineAttachment(
                 attachment = attachment,
+                vCardSubtitleTextResIdOverride = vCardSubtitleTextResIdOverride,
             )
         }
 
@@ -116,6 +129,7 @@ private fun toInlineAttachment(
 
 private fun toMediaInlineAttachment(
     attachment: ConversationMessageAttachment.Media,
+    vCardSubtitleTextResIdOverride: Int?,
 ): ConversationInlineAttachment? {
     return when (val part = attachment.part) {
         is ConversationMessagePartUiModel.Attachment.Audio -> {
@@ -132,6 +146,7 @@ private fun toMediaInlineAttachment(
                 contentUri = part.contentUri.toString(),
                 openAction = attachment.toConversationAttachmentOpenActionOrNull(),
                 vCardUiModel = part.vCardUiModel,
+                subtitleTextResIdOverride = vCardSubtitleTextResIdOverride,
             )
         }
 
@@ -168,16 +183,21 @@ private fun createVCardInlineAttachment(
     contentUri: String,
     openAction: ConversationAttachmentOpenAction?,
     vCardUiModel: ConversationVCardAttachmentUiModel,
+    subtitleTextResIdOverride: Int?,
 ): ConversationInlineAttachment {
     return ConversationInlineAttachment.VCard(
         key = key,
         contentUri = contentUri,
         openAction = openAction,
         type = vCardUiModel.type,
+        avatarUri = vCardUiModel.avatarUri,
         titleText = vCardUiModel.titleText,
         titleTextResId = vCardUiModel.titleTextResId,
-        subtitleText = vCardUiModel.subtitleText,
-        subtitleTextResId = vCardUiModel.subtitleTextResId,
+        subtitleText = when {
+            subtitleTextResIdOverride == null -> vCardUiModel.subtitleText
+            else -> null
+        },
+        subtitleTextResId = subtitleTextResIdOverride ?: vCardUiModel.subtitleTextResId,
     )
 }
 
