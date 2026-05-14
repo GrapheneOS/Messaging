@@ -63,15 +63,15 @@ import com.android.messaging.ui.conversationsettings.common.ConversationHeader
 import com.android.messaging.ui.conversationsettings.common.ConversationSettingsItem
 import com.android.messaging.ui.conversationsettings.common.ConversationSettingsTopAppBar
 import com.android.messaging.ui.conversationsettings.common.ParticipantItem
-import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
-import com.android.messaging.ui.core.AppTheme
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 import com.android.messaging.ui.conversationsettings.screen.ConversationSettingsNavRouteSavedState as NavRouteSavedState
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsAction as Action
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsNavEvent as NavEvent
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsNavRoute as NavRoute
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState as State
+import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
+import com.android.messaging.ui.core.AppTheme
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 private const val SLIDE_OFFSET_DIVISOR = 3
 
@@ -126,7 +126,7 @@ internal fun ConversationSettingsScreen(
 
                 NavEvent.CloseAfterBlock,
                 NavEvent.CloseAfterArchive,
-                    -> {
+                -> {
                     if (isRootRoute()) {
                         resultCode = ConversationActivity.FINISH_RESULT_CODE
                     }

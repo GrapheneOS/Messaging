@@ -17,7 +17,6 @@
 package com.android.messaging.datamodel;
 
 import android.app.Notification;
-import android.app.NotificationChannel;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -39,6 +38,7 @@ import androidx.core.graphics.drawable.IconCompat;
 
 import com.android.messaging.Factory;
 import com.android.messaging.R;
+import com.android.messaging.data.conversation.notification.ConversationSnoozeChecker;
 import com.android.messaging.datamodel.MessageNotificationState.Conversation;
 import com.android.messaging.datamodel.action.MarkAsReadAction;
 import com.android.messaging.datamodel.action.MarkAsSeenAction;
@@ -63,6 +63,8 @@ import com.android.messaging.util.PhoneUtils;
 import com.android.messaging.util.RingtoneUtil;
 import com.android.messaging.util.ThreadUtil;
 import com.android.messaging.util.UriUtil;
+
+import dagger.hilt.android.EntryPointAccessors;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -134,7 +136,7 @@ public class BugleNotifications {
         }
     Assert.isNotMainThread();
 
-        if (!shouldNotify()) {
+        if (!shouldNotify(conversationId)) {
             cancel(PendingIntentConstants.SMS_NOTIFICATION_ID);
             return;
         }
@@ -202,14 +204,28 @@ public class BugleNotifications {
     }
 
     /**
-     * Returns {@code true} if incoming notifications should display a
-     * notification, {@code false} otherwise.
-     *
-     * @return true if the notification should occur
+     * Returns {@code true} if a notification should be posted. Suppressed when Bugle is
+     * not the default SMS app, or when the target conversation is snoozed. The reason is
+     * logged at DEBUG. {@code conversationId} may be {@code null} for global events.
      */
-    private static boolean shouldNotify() {
-        // If we're not the default sms app, don't put up any notifications.
-        return PhoneUtils.getDefault().isDefaultSmsApp();
+    private static boolean shouldNotify(final String conversationId) {
+        if (!PhoneUtils.getDefault().isDefaultSmsApp()) {
+            LogUtil.d(TAG, "Skipping notification: not the default SMS app");
+            return false;
+        }
+        if (conversationId != null && isConversationSnoozed(conversationId)) {
+            LogUtil.d(TAG, "Skipping notification: conversation snoozed, id=" + conversationId);
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean isConversationSnoozed(final String conversationId) {
+        final Context context = Factory.get().getApplicationContext();
+        final ConversationSnoozeChecker checker = EntryPointAccessors
+                .fromApplication(context, ConversationSnoozeChecker.Provider.class)
+                .conversationSnoozeChecker();
+        return checker.isSnoozed(conversationId);
     }
 
     private static Uri getNotificationRingtoneUriForConversationId(final String conversationId) {
