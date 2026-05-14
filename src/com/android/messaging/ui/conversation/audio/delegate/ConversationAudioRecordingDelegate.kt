@@ -104,7 +104,10 @@ internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
             context = defaultDispatcher,
             start = CoroutineStart.LAZY,
         ) {
-            startRecordingInBackground(selfParticipantId = selfParticipantId)
+            startRecordingInBackground(
+                scope = scope,
+                selfParticipantId = selfParticipantId,
+            )
         }
 
         val shouldStartJob = withSessionStateLock {
@@ -360,7 +363,10 @@ internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
         }
     }
 
-    private suspend fun startRecordingInBackground(selfParticipantId: String) {
+    private suspend fun startRecordingInBackground(
+        scope: CoroutineScope,
+        selfParticipantId: String,
+    ) {
         val resolvedMediaRecorder = LevelTrackingMediaRecorder()
         val maxMessageSize = subscriptionsRepository
             .resolveMaxMessageSize(selfParticipantId = selfParticipantId)
@@ -381,7 +387,10 @@ internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
         }
 
         val startedAtMillis = SystemClock.elapsedRealtime()
-        val durationJob = boundScope?.launch(defaultDispatcher) {
+        val durationJob = scope.launch(
+            context = defaultDispatcher,
+            start = CoroutineStart.LAZY,
+        ) {
             bindDurationTicker(startedAtMillis = startedAtMillis)
         }
 
@@ -394,11 +403,13 @@ internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
         }
 
         runAudioRecordingEffect(
-            scope = requireNotNull(boundScope) {
-                "Bound scope must be available while recording starts"
-            },
+            scope = scope,
             effect = effect,
         )
+
+        if (effect == AudioRecordingEffect.None) {
+            durationJob.start()
+        }
     }
 
     private fun clearStartingSessionLocked() {
@@ -411,7 +422,7 @@ internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
     private fun completeRecorderStartLocked(
         mediaRecorder: LevelTrackingMediaRecorder,
         startedAtMillis: Long,
-        durationJob: Job?,
+        durationJob: Job,
     ): AudioRecordingEffect {
         val currentSessionState = sessionState as? AudioRecordingSessionState.Starting
 
@@ -439,9 +450,7 @@ internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
                     startedAtMillis = startedAtMillis,
                     durationMillis = 0L,
                     isLocked = currentSessionState.queuedIntent == QueuedStartIntent.Lock,
-                    durationJob = requireNotNull(durationJob) {
-                        "Duration job must be available for active recording"
-                    },
+                    durationJob = durationJob,
                 )
 
                 publishUiStateLocked()

@@ -117,10 +117,10 @@ internal fun ConversationScreen(
         },
         onOpenContactPicker = onOpenContactPicker,
         onAudioRecordingStartRequest = {
-            requestAudioRecordingStart(PendingAudioRecordingStartMode.Unlocked)
+            requestAudioRecordingStart(AudioRecordingStartMode.Unlocked)
         },
         onLockedAudioRecordingStartRequest = {
-            requestAudioRecordingStart(PendingAudioRecordingStartMode.Locked)
+            requestAudioRecordingStart(AudioRecordingStartMode.Locked)
         },
         screenModel = screenModel,
     )

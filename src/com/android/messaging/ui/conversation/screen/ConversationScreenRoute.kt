@@ -12,11 +12,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.geometry.Rect as ComposeRect
@@ -57,27 +53,11 @@ internal fun rememberOpenContactPickerCallback(
 internal fun rememberAudioRecordingStartRequest(
     screenModel: ConversationScreenModel,
     permissionState: ConversationMediaPickerPermissionState,
-): (PendingAudioRecordingStartMode) -> Unit {
-    var pendingAudioRecordingStartMode by rememberSaveable {
-        mutableStateOf(value = PendingAudioRecordingStartMode.None)
-    }
-
+): (AudioRecordingStartMode) -> Unit {
     val audioPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
     ) { isGranted ->
         permissionState.audioPermissionGranted = isGranted
-
-        val startMode = pendingAudioRecordingStartMode
-        pendingAudioRecordingStartMode = PendingAudioRecordingStartMode.None
-
-        when {
-            isGranted -> {
-                startAudioRecording(
-                    screenModel = screenModel,
-                    startMode = startMode,
-                )
-            }
-        }
     }
 
     return remember(screenModel, permissionState, audioPermissionLauncher) {
@@ -95,7 +75,6 @@ internal fun rememberAudioRecordingStartRequest(
                 }
 
                 else -> {
-                    pendingAudioRecordingStartMode = startMode
                     audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                 }
             }
@@ -333,16 +312,14 @@ private fun ConversationMediaPickerOverlayHost(
 
 private fun startAudioRecording(
     screenModel: ConversationScreenModel,
-    startMode: PendingAudioRecordingStartMode,
+    startMode: AudioRecordingStartMode,
 ) {
     when (startMode) {
-        PendingAudioRecordingStartMode.None -> {}
-
-        PendingAudioRecordingStartMode.Unlocked -> {
+        AudioRecordingStartMode.Unlocked -> {
             screenModel.onAudioRecordingStart()
         }
 
-        PendingAudioRecordingStartMode.Locked -> {
+        AudioRecordingStartMode.Locked -> {
             screenModel.onLockedAudioRecordingStart()
         }
     }

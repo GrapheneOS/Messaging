@@ -27,11 +27,11 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.messaging.ui.conversation.mediapicker.ConversationCaptureMode
-import com.android.messaging.ui.conversation.mediapicker.component.pickerOverlayContainerColor
-import com.android.messaging.ui.conversation.mediapicker.component.pickerOverlayContentColor
 import com.android.messaging.ui.conversation.mediapicker.component.capture.ConversationMediaCaptureShutterPhase.Photo
 import com.android.messaging.ui.conversation.mediapicker.component.capture.ConversationMediaCaptureShutterPhase.VideoIdle
 import com.android.messaging.ui.conversation.mediapicker.component.capture.ConversationMediaCaptureShutterPhase.VideoRecording
+import com.android.messaging.ui.conversation.mediapicker.component.pickerOverlayContainerColor
+import com.android.messaging.ui.conversation.mediapicker.component.pickerOverlayContentColor
 
 private val PICKER_SHUTTER_BORDER_WIDTH = 3.dp
 private val PICKER_SHUTTER_OUTER_SIZE = 78.dp
