@@ -2,16 +2,27 @@ package com.android.messaging.data.conversation.repository
 
 import android.content.ContentResolver
 import com.android.messaging.data.conversation.model.notification.LegacyConversationNotificationPrefs
+import com.android.messaging.data.conversation.model.notification.SnoozeOption
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.data.PeopleOptionsItemData
+import com.android.messaging.util.BuglePrefs
 import javax.inject.Inject
 
 internal interface ConversationNotificationRepository {
     fun getLegacyNotificationPrefs(conversationId: String): LegacyConversationNotificationPrefs
+
+    fun getSnoozeUntilMillis(conversationId: String): Long
+
+    fun isSnoozed(conversationId: String): Boolean
+
+    fun snooze(conversationId: String, option: SnoozeOption)
+
+    fun clearSnooze(conversationId: String)
 }
 
 internal class ConversationNotificationRepositoryImpl @Inject constructor(
     private val contentResolver: ContentResolver,
+    private val prefs: BuglePrefs,
 ) : ConversationNotificationRepository {
 
     override fun getLegacyNotificationPrefs(
@@ -42,5 +53,48 @@ internal class ConversationNotificationRepositoryImpl @Inject constructor(
                 )
             }
         }
+    }
+
+    override fun getSnoozeUntilMillis(conversationId: String): Long {
+        return prefs.getLong(snoozeKey(conversationId), SNOOZE_NOT_SET)
+    }
+
+    override fun isSnoozed(conversationId: String): Boolean {
+        val until = getSnoozeUntilMillis(conversationId)
+        return until == Long.MAX_VALUE || until > System.currentTimeMillis()
+    }
+
+    override fun snooze(conversationId: String, option: SnoozeOption) {
+        val untilMillis = when (option) {
+            SnoozeOption.Always -> Long.MAX_VALUE
+            else -> addSafely(System.currentTimeMillis(), option.durationMillis)
+        }
+        prefs.putLong(snoozeKey(conversationId), untilMillis)
+    }
+
+    override fun clearSnooze(conversationId: String) {
+        prefs.remove(snoozeKey(conversationId))
+    }
+
+    private fun snoozeKey(conversationId: String): String {
+        return "$SNOOZE_KEY_PREFIX$conversationId"
+    }
+
+    private fun addSafely(
+        base: Long,
+        delta: Long,
+    ): Long {
+        val result = base + delta
+
+        return if (result < base) {
+            Long.MAX_VALUE
+        } else {
+            result
+        }
+    }
+
+    private companion object {
+        const val SNOOZE_KEY_PREFIX = "conversation_snooze_until_"
+        const val SNOOZE_NOT_SET = 0L
     }
 }

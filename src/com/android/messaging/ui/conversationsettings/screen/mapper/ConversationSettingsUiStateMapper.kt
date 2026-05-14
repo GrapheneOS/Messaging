@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationsettings.screen.mapper
 
 import android.content.ContentResolver
+import com.android.messaging.data.conversation.repository.ConversationNotificationRepository
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.data.ConversationParticipantsData
 import com.android.messaging.datamodel.data.ParticipantData
@@ -16,9 +17,11 @@ internal interface ConversationSettingsUiStateMapper {
 
 internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
     private val contentResolver: ContentResolver,
+    private val notificationRepository: ConversationNotificationRepository,
 ) : ConversationSettingsUiStateMapper {
 
     override fun map(conversationId: String): ConversationSettingsUiState {
+        val isSnoozed = notificationRepository.isSnoozed(conversationId)
         val participantsData = ConversationParticipantsData().apply {
             contentResolver.query(
                 MessagingContentProvider.buildConversationParticipantsUri(conversationId),
@@ -46,6 +49,7 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
             if (cursor == null || !cursor.moveToFirst()) {
                 ConversationSettingsUiState(
                     conversationId = conversationId,
+                    isSnoozed = isSnoozed,
                     participants = participants,
                 )
             } else {
@@ -57,6 +61,7 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
                     isArchived = cursor.getInt(
                         PeopleOptionsItemData.INDEX_ARCHIVE_STATUS,
                     ) == 1,
+                    isSnoozed = isSnoozed,
                     participants = participants,
                 )
             }

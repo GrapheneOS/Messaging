@@ -9,6 +9,7 @@ internal data class ConversationSettingsUiState(
     val conversationId: String = "",
     val conversationTitle: String = "",
     val isArchived: Boolean = false,
+    val isSnoozed: Boolean = false,
     val participants: ImmutableList<ParticipantUiState> = persistentListOf(),
 ) {
     val otherParticipant: ParticipantUiState?

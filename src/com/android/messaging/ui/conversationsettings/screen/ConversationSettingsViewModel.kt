@@ -88,6 +88,19 @@ internal class ConversationSettingsViewModel @Inject constructor(
                 )
             }
 
+            is Action.SnoozeOptionSelected -> {
+                notificationRepository.snooze(
+                    conversationId = uiState.value.conversationId,
+                    option = action.option,
+                )
+                delegate.refresh()
+            }
+
+            is Action.UnsnoozeClicked -> {
+                notificationRepository.clearSnooze(uiState.value.conversationId)
+                delegate.refresh()
+            }
+
             is Action.UnarchiveClicked -> {
                 delegate.setArchived(false)
             }

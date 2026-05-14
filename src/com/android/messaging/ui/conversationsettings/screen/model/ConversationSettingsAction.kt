@@ -1,8 +1,16 @@
 package com.android.messaging.ui.conversationsettings.screen.model
 
+import com.android.messaging.data.conversation.model.notification.SnoozeOption
+
 internal sealed interface ConversationSettingsAction {
 
     data object NotificationsClicked : ConversationSettingsAction
+
+    data class SnoozeOptionSelected(
+        val option: SnoozeOption,
+    ) : ConversationSettingsAction
+
+    data object UnsnoozeClicked : ConversationSettingsAction
 
     data object UnarchiveClicked : ConversationSettingsAction
 
