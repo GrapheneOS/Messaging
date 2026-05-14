@@ -15,7 +15,7 @@ import javax.inject.Inject
 class ConversationSettingsActivity : ComponentActivity() {
 
     @Inject
-    lateinit var clipboardManager: ClipboardManager
+    internal lateinit var clipboardManager: ClipboardManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

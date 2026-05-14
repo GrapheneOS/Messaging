@@ -422,17 +422,6 @@ private fun ConversationSettingsContentPreview() {
             uiState = State(
                 conversationId = "1",
                 conversationTitle = "Family",
-                otherParticipant = ParticipantUiState(
-                    participantId = "+31612345678",
-                    avatarUri = null,
-                    displayName = "Mother",
-                    details = "+31 6 1234 5678",
-                    contactId = 1L,
-                    lookupKey = null,
-                    normalizedDestination = "+31612345678",
-                    isBlocked = false,
-                    displayDestination = "+31 6 1234 5678",
-                ),
                 participants = persistentListOf(
                     ParticipantUiState(
                         participantId = "+31612345678",

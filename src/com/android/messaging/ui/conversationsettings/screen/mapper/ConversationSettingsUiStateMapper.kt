@@ -29,8 +29,10 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
             )?.use { bind(it) }
         }
 
-        val participantsExcludingSelf = participantsData.filter { !it.isSelf }
-        val otherParticipant = participantsData.otherParticipant
+        val participants = participantsData
+            .filter { !it.isSelf }
+            .map(::toParticipantUiState)
+            .toImmutableList()
 
         val metadataCursor = contentResolver.query(
             MessagingContentProvider.buildConversationMetadataUri(conversationId),
@@ -44,32 +46,18 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
             if (cursor == null || !cursor.moveToFirst()) {
                 ConversationSettingsUiState(
                     conversationId = conversationId,
-                    participants = participantsExcludingSelf.map(::toParticipantUiState)
-                        .toImmutableList(),
-                    otherParticipant = otherParticipant?.let(::toParticipantUiState),
+                    participants = participants,
                 )
             } else {
-                // TODO: Get rid of legacy parameters
                 ConversationSettingsUiState(
                     conversationId = conversationId,
                     conversationTitle = cursor.getString(
                         PeopleOptionsItemData.INDEX_CONVERSATION_NAME,
                     ).orEmpty(),
-                    legacyNotificationEnabled = cursor.getInt(
-                        PeopleOptionsItemData.INDEX_NOTIFICATION_ENABLED,
-                    ) == 1,
-                    legacyRingtoneString = cursor.getString(
-                        PeopleOptionsItemData.INDEX_NOTIFICATION_SOUND_URI,
-                    ),
-                    legacyVibrationEnabled = cursor.getInt(
-                        PeopleOptionsItemData.INDEX_NOTIFICATION_VIBRATION,
-                    ) == 1,
                     isArchived = cursor.getInt(
                         PeopleOptionsItemData.INDEX_ARCHIVE_STATUS,
                     ) == 1,
-                    otherParticipant = otherParticipant?.let(::toParticipantUiState),
-                    participants = participantsExcludingSelf.map(::toParticipantUiState)
-                        .toImmutableList(),
+                    participants = participants,
                 )
             }
         }

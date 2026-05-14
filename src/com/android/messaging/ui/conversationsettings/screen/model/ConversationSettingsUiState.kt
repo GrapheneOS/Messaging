@@ -8,13 +8,12 @@ import kotlinx.collections.immutable.persistentListOf
 internal data class ConversationSettingsUiState(
     val conversationId: String = "",
     val conversationTitle: String = "",
-    val legacyNotificationEnabled: Boolean = false,
-    val legacyRingtoneString: String? = null,
-    val legacyVibrationEnabled: Boolean = false,
     val isArchived: Boolean = false,
-    val otherParticipant: ParticipantUiState? = null,
     val participants: ImmutableList<ParticipantUiState> = persistentListOf(),
-)
+) {
+    val otherParticipant: ParticipantUiState?
+        get() = participants.singleOrNull()
+}
 
 @Immutable
 internal data class ParticipantUiState(

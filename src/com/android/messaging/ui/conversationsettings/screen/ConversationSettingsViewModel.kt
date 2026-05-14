@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.messaging.R
+import com.android.messaging.data.conversation.repository.ConversationNotificationRepository
 import com.android.messaging.di.core.MainDispatcher
 import com.android.messaging.domain.conversation.usecase.participant.ResolveConversationId
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveConversationIdResult
@@ -40,6 +41,7 @@ internal class ConversationSettingsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val delegate: ConversationSettingsDelegate,
     private val resolveConversationId: ResolveConversationId,
+    private val notificationRepository: ConversationNotificationRepository,
     @param:MainDispatcher
     private val mainDispatcher: CoroutineDispatcher,
 ) : ViewModel(),
@@ -73,13 +75,15 @@ internal class ConversationSettingsViewModel @Inject constructor(
         when (action) {
             is Action.NotificationsClicked -> {
                 val state = uiState.value
+                val legacyPrefs = notificationRepository.getLegacyNotificationPrefs(
+                    conversationId = state.conversationId,
+                )
+
                 emitEffect(
                     Effect.OpenNotificationChannelSettings(
                         conversationId = state.conversationId,
                         conversationTitle = state.conversationTitle,
-                        legacyNotificationEnabled = state.legacyNotificationEnabled,
-                        legacyRingtoneString = state.legacyRingtoneString,
-                        legacyVibrationEnabled = state.legacyVibrationEnabled,
+                        legacyPrefs = legacyPrefs,
                     ),
                 )
             }

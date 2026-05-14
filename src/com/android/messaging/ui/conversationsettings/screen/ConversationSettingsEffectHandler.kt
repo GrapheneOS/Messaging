@@ -6,7 +6,6 @@ import android.content.ClipboardManager
 import android.content.Intent
 import android.provider.Settings
 import com.android.messaging.ui.UIIntents
-import com.android.messaging.ui.conversation.ConversationActivity
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsScreenEffect as Effect
 import com.android.messaging.util.NotificationChannelUtil
 import com.android.messaging.util.UiUtils
@@ -23,17 +22,19 @@ internal class ConversationSettingsEffectHandlerImpl(
     override fun handle(effect: Effect) {
         when (effect) {
             is Effect.OpenNotificationChannelSettings -> {
-                NotificationChannelUtil.createConversationChannel(
-                    effect.conversationId,
-                    effect.conversationTitle,
-                    effect.legacyNotificationEnabled,
-                    effect.legacyRingtoneString,
-                    effect.legacyVibrationEnabled,
-                )
                 val intent = Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
                     .putExtra(Settings.EXTRA_APP_PACKAGE, activity.packageName)
                     .putExtra(Settings.EXTRA_CHANNEL_ID, effect.conversationId)
                     .putExtra(Settings.EXTRA_CONVERSATION_ID, effect.conversationId)
+
+                NotificationChannelUtil.createConversationChannel(
+                    conversationId = effect.conversationId,
+                    conversationTitle = effect.conversationTitle,
+                    legacyNotificationsEnabled = effect.legacyPrefs.notificationsEnabled,
+                    legacyRingtoneString = effect.legacyPrefs.ringtoneString,
+                    legacyVibrationEnabled = effect.legacyPrefs.vibrationEnabled,
+                )
+
                 activity.startActivity(intent)
             }
 
