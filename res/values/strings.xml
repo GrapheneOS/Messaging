@@ -789,6 +789,27 @@
     <!-- Label of unblock contact item in People & Options for 1:1 conversation -->
     <string name="unblock_contact_title">Unblock <xliff:g id="destination">%s</xliff:g></string>
 
+    <!-- Title of the snooze chat dialog opened from conversation settings -->
+    <string name="snooze_chat_dialog_title">Snooze chat</string>
+
+    <!-- Description shown inside the snooze chat dialog -->
+    <string name="snooze_chat_dialog_message">You won\'t get notifications from this chat for the selected period.</string>
+
+    <!-- Confirm button label for the snooze chat dialog -->
+    <string name="snooze_chat_dialog_confirm">Snooze</string>
+
+    <!-- Snooze duration options shown in the snooze chat dialog -->
+    <string name="snooze_chat_option_one_hour">1 hour</string>
+    <string name="snooze_chat_option_eight_hours">8 hours</string>
+    <string name="snooze_chat_option_twenty_four_hours">24 hours</string>
+    <string name="snooze_chat_option_always">Always</string>
+
+    <!-- Conversation settings entry that opens the snooze chat dialog -->
+    <string name="snooze_chat_setting_title">Snooze chat</string>
+
+    <!-- Conversation settings entry shown when the chat is already snoozed -->
+    <string name="unsnooze_chat_setting_title">Unsnooze chat</string>
+
     <!-- Title of block confirmation dialog -->
     <string name="block_confirmation_title">Block <xliff:g id="destination">%s</xliff:g>?</string>
 

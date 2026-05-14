@@ -11,19 +11,28 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Snooze
 import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -36,8 +45,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -45,20 +57,21 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.notification.SnoozeOption
 import com.android.messaging.ui.conversation.ConversationActivity
 import com.android.messaging.ui.conversationsettings.common.ConversationHeader
 import com.android.messaging.ui.conversationsettings.common.ConversationSettingsItem
 import com.android.messaging.ui.conversationsettings.common.ConversationSettingsTopAppBar
 import com.android.messaging.ui.conversationsettings.common.ParticipantItem
+import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
+import com.android.messaging.ui.core.AppTheme
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import com.android.messaging.ui.conversationsettings.screen.ConversationSettingsNavRouteSavedState as NavRouteSavedState
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsAction as Action
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsNavEvent as NavEvent
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsNavRoute as NavRoute
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState as State
-import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
-import com.android.messaging.ui.core.AppTheme
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 
 private const val SLIDE_OFFSET_DIVISOR = 3
 
@@ -113,7 +126,7 @@ internal fun ConversationSettingsScreen(
 
                 NavEvent.CloseAfterBlock,
                 NavEvent.CloseAfterArchive,
-                -> {
+                    -> {
                     if (isRootRoute()) {
                         resultCode = ConversationActivity.FINISH_RESULT_CODE
                     }
@@ -207,6 +220,7 @@ private fun ConversationSettingsContent(
     modifier: Modifier = Modifier,
 ) {
     var pendingBlockConfirmation by remember { mutableStateOf(false) }
+    var showSnoozeChatDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier,
@@ -236,6 +250,7 @@ private fun ConversationSettingsContent(
                 uiState = uiState,
                 onAction = onAction,
                 onRequestBlockConfirmation = { pendingBlockConfirmation = true },
+                onRequestSnoozeChooser = { showSnoozeChatDialog = true },
             )
 
             participantsItems(
@@ -245,25 +260,42 @@ private fun ConversationSettingsContent(
         }
     }
 
-    if (pendingBlockConfirmation) {
-        val displayName = uiState.otherParticipant?.displayDestination.orEmpty()
-
-        BlockConfirmationDialog(
-            displayName = displayName,
-            onDismiss = { pendingBlockConfirmation = false },
-            onConfirm = {
-                pendingBlockConfirmation = false
-                onAction(Action.BlockConfirmed)
-            },
-        )
-    }
+    ConversationSettingsDialogs(
+        uiState = uiState,
+        onAction = onAction,
+        pendingBlockConfirmation = pendingBlockConfirmation,
+        showSnoozeChatDialog = showSnoozeChatDialog,
+        onDismissBlockConfirmation = { pendingBlockConfirmation = false },
+        onDismissSnoozeChat = { showSnoozeChatDialog = false },
+    )
 }
 
 private fun LazyListScope.generalSettingsItems(
     uiState: State,
     onAction: (Action) -> Unit,
     onRequestBlockConfirmation: () -> Unit,
+    onRequestSnoozeChooser: () -> Unit,
 ) {
+    item(key = "snooze") {
+        val titleRes = if (uiState.isSnoozed) {
+            R.string.unsnooze_chat_setting_title
+        } else {
+            R.string.snooze_chat_setting_title
+        }
+
+        ConversationSettingsItem(
+            icon = Icons.Default.Snooze,
+            title = stringResource(titleRes),
+            onClick = {
+                if (uiState.isSnoozed) {
+                    onAction(Action.UnsnoozeClicked)
+                } else {
+                    onRequestSnoozeChooser()
+                }
+            },
+        )
+    }
+
     item(key = "notifications") {
         ConversationSettingsItem(
             icon = Icons.Default.Notifications,
@@ -388,6 +420,39 @@ private fun ParticipantsCard(
 }
 
 @Composable
+private fun ConversationSettingsDialogs(
+    uiState: State,
+    onAction: (Action) -> Unit,
+    pendingBlockConfirmation: Boolean,
+    showSnoozeChatDialog: Boolean,
+    onDismissBlockConfirmation: () -> Unit,
+    onDismissSnoozeChat: () -> Unit,
+) {
+    if (pendingBlockConfirmation) {
+        val displayName = uiState.otherParticipant?.displayDestination.orEmpty()
+
+        BlockConfirmationDialog(
+            displayName = displayName,
+            onDismiss = onDismissBlockConfirmation,
+            onConfirm = {
+                onAction(Action.BlockConfirmed)
+                onDismissBlockConfirmation()
+            },
+        )
+    }
+
+    if (showSnoozeChatDialog) {
+        SnoozeChatDialog(
+            onDismiss = onDismissSnoozeChat,
+            onConfirm = { option ->
+                onAction(Action.SnoozeOptionSelected(option))
+                onDismissSnoozeChat()
+            },
+        )
+    }
+}
+
+@Composable
 private fun BlockConfirmationDialog(
     displayName: String,
     onDismiss: () -> Unit,
@@ -412,6 +477,110 @@ private fun BlockConfirmationDialog(
             }
         },
     )
+}
+
+@Composable
+private fun SnoozeChatDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (SnoozeOption) -> Unit,
+) {
+    var selectedOption by rememberSaveable { mutableStateOf(SnoozeOption.OneHour) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                imageVector = Icons.Default.Snooze,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        },
+        title = {
+            Text(
+                text = stringResource(R.string.snooze_chat_dialog_title),
+                textAlign = TextAlign.Center,
+            )
+        },
+        text = {
+            Column(modifier = Modifier.selectableGroup()) {
+                Text(
+                    text = stringResource(R.string.snooze_chat_dialog_message),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                SnoozeOption.entries.forEach { option ->
+                    SnoozeOptionRow(
+                        text = stringResource(option.labelRes),
+                        selected = option == selectedOption,
+                        onClick = { selectedOption = option },
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(selectedOption) }) {
+                Text(text = stringResource(R.string.snooze_chat_dialog_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(android.R.string.cancel))
+            }
+        },
+    )
+}
+
+private val SnoozeOption.labelRes: Int
+    get() = when (this) {
+        SnoozeOption.OneHour -> R.string.snooze_chat_option_one_hour
+        SnoozeOption.EightHours -> R.string.snooze_chat_option_eight_hours
+        SnoozeOption.TwentyFourHours -> R.string.snooze_chat_option_twenty_four_hours
+        SnoozeOption.Always -> R.string.snooze_chat_option_always
+    }
+
+@Composable
+private fun SnoozeOptionRow(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .selectable(
+                selected = selected,
+                onClick = onClick,
+                role = Role.RadioButton,
+            )
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RadioButton(
+            selected = selected,
+            onClick = null,
+        )
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyLarge,
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun SnoozeChatDialogPreview() {
+    AppTheme {
+        SnoozeChatDialog(
+            onDismiss = {},
+            onConfirm = {},
+        )
+    }
 }
 
 @Preview
