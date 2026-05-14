@@ -37,15 +37,7 @@
     <string name="contact_picker_frequents_tab_title" msgid="7157326165824706883">"ញឹកញាប់"</string>
     <string name="contact_picker_all_contacts_tab_title" msgid="1424746082040243161">"ទំនាក់ទំនងទាំងអស់"</string>
     <string name="contact_list_send_to_text" msgid="3167455944684758290">"ផ្ញើ​ទៅ <xliff:g id="DESTINATION">%s</xliff:g>"</string>
-    <string name="mediapicker_cameraChooserDescription" msgid="8498255650058981250">"ថត​រូបភាព ឬ​វីដេអូ"</string>
-    <string name="mediapicker_galleryChooserDescription" msgid="1227741581156455777">"ជ្រើស​រូបភាព​ពី​ឧបករណ៍​នេះ"</string>
-    <string name="mediapicker_audioChooserDescription" msgid="3660616501040372452">"ថត​សំឡេង"</string>
     <string name="mediapicker_gallery_title" msgid="3169528536727885763">"ជ្រើស​រូបថត"</string>
-    <string name="mediapicker_gallery_item_selected_content_description" msgid="2569545441879514283">"បានជ្រើសឯកសារកំសាន្ត។"</string>
-    <string name="mediapicker_gallery_item_unselected_content_description" msgid="40021674722525910">"បានលុបការជ្រើសឯកសារកំសាន្ត។"</string>
-    <string name="mediapicker_gallery_title_selection" msgid="3621616141966436510">"បាន​ជ្រើស <xliff:g id="COUNT">%d</xliff:g>"</string>
-    <string name="mediapicker_gallery_image_item_description" msgid="8812237405495409901">"រូបភាព <xliff:g id="DATE">%1$tB %1$te %1$tY %1$tl %1$tM %1$tp</xliff:g>"</string>
-    <string name="mediapicker_gallery_image_item_description_no_date" msgid="8142175029053370662">"រូបភាព"</string>
     <string name="mediapicker_audio_title" msgid="5455016591560739789">"ថត​សំឡេង"</string>
     <string name="action_share" msgid="2143483844803153871">"ចែករំលែក​"</string>
     <string name="posted_just_now" msgid="6632467048088811568">"ថ្មីៗ​នេះ"</string>
@@ -138,9 +130,6 @@
     </plurals>
     <string name="start_conversation" msgid="7984539515326392793">"ចាប់ផ្ដើម"</string>
     <string name="camera_error_opening" msgid="2739332294400420426">"មិន​អាច​ប្រើ​ម៉ាស៊ីន​ថត​បាន"</string>
-    <string name="camera_error_unknown" msgid="4283956364220459608">"មិន​អាច​ប្រើ​ម៉ាស៊ីន​ថត​បាន"</string>
-    <string name="camera_error_video_init_fail" msgid="994632067015578879">"មិន​អាច​ថត​វីដេអូ​បាន"</string>
-    <string name="camera_error_storage_fail" msgid="5536300789483863989">"មិន​អាច​រក្សាទុក​​មេឌៀ"</string>
     <string name="camera_error_failure_taking_picture" msgid="4894133709734862250">"មិនអាចថតរូបភាព"</string>
     <string name="back" msgid="1477626055115561645">"ថយក្រោយ"</string>
     <string name="action_menu_show_archived" msgid="1628518043533374868">"ទុក​ក្នុង​ប័ណ្ណសារ"</string>
@@ -163,13 +152,10 @@
     <string name="delete_conversation_confirmation_button" msgid="744574085809600863">"លុប"</string>
     <string name="delete_conversation_decline_button" msgid="5470021965641900456">"បោះបង់"</string>
     <string name="recipient_hint" msgid="1819710673158265515">"ជូន​ចំពោះ"</string>
-    <string name="action_multiselect" msgid="1219683118692013380">"ជ្រើស​រូបភាព​ច្រើន"</string>
-    <string name="action_confirm_multiselect" msgid="8283370294120913166">"បញ្ជាក់​​ការ​ជ្រើស"</string>
     <string name="attachment_more_items" msgid="2861573099241369958">"+<xliff:g id="COUNT">%d</xliff:g>"</string>
     <string name="audio_recording_start_failed" msgid="4442450764642560851">"មិន​អាច​ថត​សំឡេង។ ព្យាយាម​ម្ដង​ទៀត។"</string>
     <string name="audio_recording_replay_failed" msgid="3585760856463273828">"មិន​អាច​ចាក់​សំឡេង។ ព្យាយាម​ម្ដងទៀត។"</string>
     <string name="audio_recording_error" msgid="7762310055059024872">"មិន​អាច​រក្សាទុក​សំឡេង។ ព្យាយាម​ម្ដងទៀត។"</string>
-    <string name="audio_picker_hint_text" msgid="6986250080467111491">"ប៉ះ &amp; សង្កត់"</string>
     <string name="enumeration_comma" msgid="7032804261692931808">", "</string>
     <string name="notification_separator" msgid="3472521786709813414">"  "</string>
     <string name="notification_ticker_separator" msgid="2027929074008933906">": "</string>
@@ -218,14 +204,7 @@
     <string name="failed_message_content_description" msgid="7047161648867054936">"សារបរាជ័យ។ ប៉ះដើម្បីព្យាយាមម្តងទៀត។"</string>
     <string name="group_conversation_description" msgid="2339270924401184182">"ការសន្ទនាជាមួយ <xliff:g id="PARTICIPANTS">%s</xliff:g>"</string>
     <string name="delete_subject_content_description" msgid="8910749398836396698">"លុប​ប្រធានបទ"</string>
-    <string name="camera_switch_to_video_mode" msgid="2926868205952641428">"ថត​វីដេអូ"</string>
-    <string name="camera_switch_to_still_mode" msgid="4419617715199157958">"ថត​រូបភាព​ថេរ"</string>
-    <string name="camera_take_picture" msgid="2573317952200799489">"ថតរូប"</string>
-    <string name="camera_start_recording" msgid="1736478301191221786">"ចាប់ផ្ដើម​ថត​វីដេអូ"</string>
-    <string name="camera_switch_full_screen" msgid="6156039742035097276">"ប្ដូរ​ទៅ​ម៉ាស៊ីន​ថត​ពេញ​អេក្រង់"</string>
     <string name="camera_switch_camera_facing" msgid="1566112129296559159">"ប្ដូរ​រវាង​ម៉ាស៊ីន​ថត​មុន និង​ក្រោយ"</string>
-    <string name="camera_stop_recording" msgid="5331592576107271152">"បញ្ឈប់​ការ​ថត និង​ភ្ជាប់​វីដេអូ"</string>
-    <string name="camera_cancel_recording" msgid="6431544304743145818">"បញ្ឈប់​ការ​ថត​វីដេអូ"</string>
     <string name="photo_view_activity_title" msgid="6556006393051918135">"រូបភាពសារ"</string>
     <plurals name="photos_saved_to_album" formatted="false" msgid="7529478299745446838">
       <item quantity="other">បានរក្សាទុករូបថត <xliff:g id="QUANTITY_2">%d</xliff:g> ទៅក្នុងអាល់ប៊ុម \"<xliff:g id="ALBUMNAME_3">%s</xliff:g>\"</item>
@@ -410,7 +389,6 @@
     <string name="blocked_contacts_title" msgid="7709164518967312281">"បាន​ទប់ស្កាត់​ទំនាក់ទំនង"</string>
     <string name="tap_to_unblock_message" msgid="1284284144816901647">"មិន​ទប់ស្កាត់"</string>
     <string name="view_blocked_contacts_title" msgid="7417596291306885403">"បាន​ទប់ស្កាត់​ទំនាក់ទំនង​"</string>
-    <string name="pick_image_from_document_library_content_description" msgid="132845956503874378">"ជ្រើស​រូបភាព​ពី​បណ្ណាល័យ​ឯកសារ"</string>
     <string name="sending_message" msgid="6363584950085384929">"កំពុងផ្ញើសារ"</string>
     <string name="send_message_success" msgid="4088006261869323324">"បានផ្ញើសារ"</string>
     <string name="send_message_failure_no_data" msgid="7404080465234559802">"ទិន្នន័យ​ចល័ត​ត្រូវ​បាន​បិទ។ ពិនិត្យ​ការ​កំណត់​របស់​អ្នក។"</string>

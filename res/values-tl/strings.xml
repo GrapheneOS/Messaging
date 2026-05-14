@@ -37,15 +37,7 @@
     <string name="contact_picker_frequents_tab_title" msgid="7157326165824706883">"Mga madalas makaugnayan"</string>
     <string name="contact_picker_all_contacts_tab_title" msgid="1424746082040243161">"Lahat ng contact"</string>
     <string name="contact_list_send_to_text" msgid="3167455944684758290">"Ipadala sa <xliff:g id="DESTINATION">%s</xliff:g>"</string>
-    <string name="mediapicker_cameraChooserDescription" msgid="8498255650058981250">"Kumuha ng mga larawan o video"</string>
-    <string name="mediapicker_galleryChooserDescription" msgid="1227741581156455777">"Pumili ng mga larawan mula sa device na ito"</string>
-    <string name="mediapicker_audioChooserDescription" msgid="3660616501040372452">"I-record ang audio"</string>
     <string name="mediapicker_gallery_title" msgid="3169528536727885763">"Pumili ng larawan"</string>
-    <string name="mediapicker_gallery_item_selected_content_description" msgid="2569545441879514283">"Napili ang media."</string>
-    <string name="mediapicker_gallery_item_unselected_content_description" msgid="40021674722525910">"Inalis sa pagkakapili ang media."</string>
-    <string name="mediapicker_gallery_title_selection" msgid="3621616141966436510">"<xliff:g id="COUNT">%d</xliff:g> ang pinili"</string>
-    <string name="mediapicker_gallery_image_item_description" msgid="8812237405495409901">"larawan <xliff:g id="DATE">%1$tB %1$te %1$tY %1$tl %1$tM %1$tp</xliff:g>"</string>
-    <string name="mediapicker_gallery_image_item_description_no_date" msgid="8142175029053370662">"larawan"</string>
     <string name="mediapicker_audio_title" msgid="5455016591560739789">"I-record ang audio"</string>
     <string name="action_share" msgid="2143483844803153871">"Ibahagi"</string>
     <string name="posted_just_now" msgid="6632467048088811568">"Ngayon lang"</string>
@@ -138,9 +130,6 @@
     </plurals>
     <string name="start_conversation" msgid="7984539515326392793">"Magsimula"</string>
     <string name="camera_error_opening" msgid="2739332294400420426">"Hindi available ang camera"</string>
-    <string name="camera_error_unknown" msgid="4283956364220459608">"Hindi available ang camera"</string>
-    <string name="camera_error_video_init_fail" msgid="994632067015578879">"Hindi available ang pagkuha ng video"</string>
-    <string name="camera_error_storage_fail" msgid="5536300789483863989">"Hindi mai-save ang media"</string>
     <string name="camera_error_failure_taking_picture" msgid="4894133709734862250">"Hindi makakakuha ng larawan"</string>
     <string name="back" msgid="1477626055115561645">"Bumalik"</string>
     <string name="action_menu_show_archived" msgid="1628518043533374868">"Naka-archive"</string>
@@ -163,13 +152,10 @@
     <string name="delete_conversation_confirmation_button" msgid="744574085809600863">"Tanggalin"</string>
     <string name="delete_conversation_decline_button" msgid="5470021965641900456">"Kanselahin"</string>
     <string name="recipient_hint" msgid="1819710673158265515">"Para kay"</string>
-    <string name="action_multiselect" msgid="1219683118692013380">"Pumili ng maramihang larawan"</string>
-    <string name="action_confirm_multiselect" msgid="8283370294120913166">"Kumpirmahin ang pinili"</string>
     <string name="attachment_more_items" msgid="2861573099241369958">"+<xliff:g id="COUNT">%d</xliff:g>"</string>
     <string name="audio_recording_start_failed" msgid="4442450764642560851">"Hindi mai-record ang audio. Subukang muli."</string>
     <string name="audio_recording_replay_failed" msgid="3585760856463273828">"Hindi mai-play ang audio. Subukang muli."</string>
     <string name="audio_recording_error" msgid="7762310055059024872">"Hindi mai-save ang audio. Subukang muli."</string>
-    <string name="audio_picker_hint_text" msgid="6986250080467111491">"Pindutin nang matagal"</string>
     <string name="enumeration_comma" msgid="7032804261692931808">", "</string>
     <string name="notification_separator" msgid="3472521786709813414">"  "</string>
     <string name="notification_ticker_separator" msgid="2027929074008933906">": "</string>
@@ -218,14 +204,7 @@
     <string name="failed_message_content_description" msgid="7047161648867054936">"Hindi naipadalang mensahe. Pindutin upang subukang muli."</string>
     <string name="group_conversation_description" msgid="2339270924401184182">"Pag-uusap kasama sina <xliff:g id="PARTICIPANTS">%s</xliff:g>"</string>
     <string name="delete_subject_content_description" msgid="8910749398836396698">"I-delete ang paksa"</string>
-    <string name="camera_switch_to_video_mode" msgid="2926868205952641428">"Kumuha ng video"</string>
-    <string name="camera_switch_to_still_mode" msgid="4419617715199157958">"Kumuha ng still na larawan"</string>
-    <string name="camera_take_picture" msgid="2573317952200799489">"Kumuha ng larawan"</string>
-    <string name="camera_start_recording" msgid="1736478301191221786">"Simulan ang pag-record ng video"</string>
-    <string name="camera_switch_full_screen" msgid="6156039742035097276">"Lumipat sa camera na full screen"</string>
     <string name="camera_switch_camera_facing" msgid="1566112129296559159">"Lumipat sa pagitan ng camera sa harap at likod"</string>
-    <string name="camera_stop_recording" msgid="5331592576107271152">"Ihinto ang pagre-record at i-attach ang video"</string>
-    <string name="camera_cancel_recording" msgid="6431544304743145818">"Itigil ang pagre-record ng video"</string>
     <string name="photo_view_activity_title" msgid="6556006393051918135">"Mga larawan sa pagmemensahe"</string>
     <plurals name="photos_saved_to_album" formatted="false" msgid="7529478299745446838">
       <item quantity="one"><xliff:g id="QUANTITY_2">%d</xliff:g> larawan ang naka-save sa album na \"<xliff:g id="ALBUMNAME_3">%s</xliff:g>\"</item>
@@ -410,7 +389,6 @@
     <string name="blocked_contacts_title" msgid="7709164518967312281">"Mga na-block na contact"</string>
     <string name="tap_to_unblock_message" msgid="1284284144816901647">"ALISIN SA PAGKAKA-BLOCK"</string>
     <string name="view_blocked_contacts_title" msgid="7417596291306885403">"Mga na-block na contact"</string>
-    <string name="pick_image_from_document_library_content_description" msgid="132845956503874378">"Pumili ng larawan mula sa library ng dokumento"</string>
     <string name="sending_message" msgid="6363584950085384929">"Ipinapadala ang mensahe"</string>
     <string name="send_message_success" msgid="4088006261869323324">"Naipadala na ang mensahe"</string>
     <string name="send_message_failure_no_data" msgid="7404080465234559802">"Naka-off ang cellular data. Suriin ang iyong mga setting."</string>

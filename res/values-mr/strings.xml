@@ -37,15 +37,7 @@
     <string name="contact_picker_frequents_tab_title" msgid="7157326165824706883">"वारंवार"</string>
     <string name="contact_picker_all_contacts_tab_title" msgid="1424746082040243161">"सर्व संपर्क"</string>
     <string name="contact_list_send_to_text" msgid="3167455944684758290">"<xliff:g id="DESTINATION">%s</xliff:g> वर पाठवा"</string>
-    <string name="mediapicker_cameraChooserDescription" msgid="8498255650058981250">"चित्रे किंवा व्हिडिओ कॅप्चर करा"</string>
-    <string name="mediapicker_galleryChooserDescription" msgid="1227741581156455777">"या डिव्हाइसवरून प्रतिमा निवडा"</string>
-    <string name="mediapicker_audioChooserDescription" msgid="3660616501040372452">"ऑडिओ रेकॉर्ड करा"</string>
     <string name="mediapicker_gallery_title" msgid="3169528536727885763">"फोटो निवडा"</string>
-    <string name="mediapicker_gallery_item_selected_content_description" msgid="2569545441879514283">"मीडिया निवडण्यात आला आहे."</string>
-    <string name="mediapicker_gallery_item_unselected_content_description" msgid="40021674722525910">"मीडियाची निवड रद्द करण्यात आली आहे."</string>
-    <string name="mediapicker_gallery_title_selection" msgid="3621616141966436510">"<xliff:g id="COUNT">%d</xliff:g> निवडले"</string>
-    <string name="mediapicker_gallery_image_item_description" msgid="8812237405495409901">"प्रतिमा <xliff:g id="DATE">%1$tB %1$te %1$tY %1$tl %1$tM %1$tp</xliff:g>"</string>
-    <string name="mediapicker_gallery_image_item_description_no_date" msgid="8142175029053370662">"प्रतिमा"</string>
     <string name="mediapicker_audio_title" msgid="5455016591560739789">"ऑडिओ रेकॉर्ड करा"</string>
     <string name="action_share" msgid="2143483844803153871">"सामायिक करा"</string>
     <string name="posted_just_now" msgid="6632467048088811568">"आत्ताच"</string>
@@ -138,9 +130,6 @@
     </plurals>
     <string name="start_conversation" msgid="7984539515326392793">"प्रारंभ करा"</string>
     <string name="camera_error_opening" msgid="2739332294400420426">"कॅमेरा उपलब्ध नाही"</string>
-    <string name="camera_error_unknown" msgid="4283956364220459608">"कॅमेरा उपलब्ध नाही"</string>
-    <string name="camera_error_video_init_fail" msgid="994632067015578879">"व्हिडिओ कॅप्चर उपलब्ध नाही"</string>
-    <string name="camera_error_storage_fail" msgid="5536300789483863989">"मीडिया जतन करू शकत नाही"</string>
     <string name="camera_error_failure_taking_picture" msgid="4894133709734862250">"चित्र घेऊ शकत नाही"</string>
     <string name="back" msgid="1477626055115561645">"परत"</string>
     <string name="action_menu_show_archived" msgid="1628518043533374868">"संग्रहित"</string>
@@ -163,13 +152,10 @@
     <string name="delete_conversation_confirmation_button" msgid="744574085809600863">"हटवा"</string>
     <string name="delete_conversation_decline_button" msgid="5470021965641900456">"रद्द करा"</string>
     <string name="recipient_hint" msgid="1819710673158265515">"प्रति"</string>
-    <string name="action_multiselect" msgid="1219683118692013380">"एकाधिक प्रतिमा निवडा"</string>
-    <string name="action_confirm_multiselect" msgid="8283370294120913166">"निवडीची पुष्टी करा"</string>
     <string name="attachment_more_items" msgid="2861573099241369958">"+<xliff:g id="COUNT">%d</xliff:g>"</string>
     <string name="audio_recording_start_failed" msgid="4442450764642560851">"ऑडिओ रेकॉर्ड करू शकत नाही. पुन्हा प्रयत्न करा."</string>
     <string name="audio_recording_replay_failed" msgid="3585760856463273828">"ऑडिओ प्ले करू शकत नाही. पुन्हा प्रयत्न करा."</string>
     <string name="audio_recording_error" msgid="7762310055059024872">"ऑडिओ जतन करू शकलो नाही. पुन्हा प्रयत्न करा."</string>
-    <string name="audio_picker_hint_text" msgid="6986250080467111491">"स्पर्श करा आणि धरून ठेवा"</string>
     <string name="enumeration_comma" msgid="7032804261692931808">", "</string>
     <string name="notification_separator" msgid="3472521786709813414">"  "</string>
     <string name="notification_ticker_separator" msgid="2027929074008933906">": "</string>
@@ -218,14 +204,7 @@
     <string name="failed_message_content_description" msgid="7047161648867054936">"संदेश अयशस्वी. पुन्हा प्रयत्न करण्यासाठी स्पर्श करा."</string>
     <string name="group_conversation_description" msgid="2339270924401184182">"<xliff:g id="PARTICIPANTS">%s</xliff:g> सह संभाषण"</string>
     <string name="delete_subject_content_description" msgid="8910749398836396698">"विषय हटवा"</string>
-    <string name="camera_switch_to_video_mode" msgid="2926868205952641428">"व्‍हिडिओ कॅप्‍चर करा"</string>
-    <string name="camera_switch_to_still_mode" msgid="4419617715199157958">"एक स्थिर प्रतिमा कॅप्च करा"</string>
-    <string name="camera_take_picture" msgid="2573317952200799489">"चित्र घ्या"</string>
-    <string name="camera_start_recording" msgid="1736478301191221786">"व्हिडिओ रेकॉर्ड करणे प्रारंभ करा"</string>
-    <string name="camera_switch_full_screen" msgid="6156039742035097276">"पूर्ण स्क्रीन कॅमेर्‍यावर स्विच करा"</string>
     <string name="camera_switch_camera_facing" msgid="1566112129296559159">"पुढील आणि मागील कॅमेर्‍यात स्विच करा"</string>
-    <string name="camera_stop_recording" msgid="5331592576107271152">"रेकॉर्डिंग थांबवा आणि व्‍हिडिओ संलग्न करा"</string>
-    <string name="camera_cancel_recording" msgid="6431544304743145818">"व्हिडिओ रेकॉर्ड करणे थांबवा"</string>
     <string name="photo_view_activity_title" msgid="6556006393051918135">"संदेशन फोटो"</string>
     <plurals name="photos_saved_to_album" formatted="false" msgid="7529478299745446838">
       <item quantity="one"><xliff:g id="QUANTITY_2">%d</xliff:g> फोटो \"<xliff:g id="ALBUMNAME_3">%s</xliff:g>\" अल्बममध्‍ये जतन केला</item>
@@ -410,7 +389,6 @@
     <string name="blocked_contacts_title" msgid="7709164518967312281">"अवरोधित संपर्क"</string>
     <string name="tap_to_unblock_message" msgid="1284284144816901647">"अनावरोधित करा"</string>
     <string name="view_blocked_contacts_title" msgid="7417596291306885403">"अवरोधित संपर्क"</string>
-    <string name="pick_image_from_document_library_content_description" msgid="132845956503874378">"दस्तऐवज लायब्ररीतून प्रतिमा निवडा"</string>
     <string name="sending_message" msgid="6363584950085384929">"संदेश पाठवित आहे"</string>
     <string name="send_message_success" msgid="4088006261869323324">"संदेश पाठवला"</string>
     <string name="send_message_failure_no_data" msgid="7404080465234559802">"सेल्युलर डेटा बंद आहे. आपल्या सेटिंग्ज तपासा."</string>

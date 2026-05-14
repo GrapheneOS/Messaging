@@ -37,15 +37,7 @@
     <string name="contact_picker_frequents_tab_title" msgid="7157326165824706883">"​ຄວາມ​ຖີ່"</string>
     <string name="contact_picker_all_contacts_tab_title" msgid="1424746082040243161">"ລາຍ​ຊື່​ຜູ້ຕິດ​ຕໍ່​ທັງ​ໝົດ"</string>
     <string name="contact_list_send_to_text" msgid="3167455944684758290">"ສົ່ງໄປ <xliff:g id="DESTINATION">%s</xliff:g>"</string>
-    <string name="mediapicker_cameraChooserDescription" msgid="8498255650058981250">"ບັນ​ທຶກ​ຮູບ ຫຼື​ວິ​ດີ​ໂອ"</string>
-    <string name="mediapicker_galleryChooserDescription" msgid="1227741581156455777">"ເລືອກ​ຮູບ​ສຳ​ລັບ​ອຸ​ປະ​ກອນ​ນີ້"</string>
-    <string name="mediapicker_audioChooserDescription" msgid="3660616501040372452">"ບັນທຶກສຽງ"</string>
     <string name="mediapicker_gallery_title" msgid="3169528536727885763">"ເລືອກ​ຮູບ"</string>
-    <string name="mediapicker_gallery_item_selected_content_description" msgid="2569545441879514283">"ມີ​ດີ​ນີ້​ຖືກ​ເລືອກ​ແລ້ວ."</string>
-    <string name="mediapicker_gallery_item_unselected_content_description" msgid="40021674722525910">"ມີ​ເດຍ​ຖືກ​ຖອນ​ເລືອກ​ແລ້ວ."</string>
-    <string name="mediapicker_gallery_title_selection" msgid="3621616141966436510">"ເລືອກແລ້ວ <xliff:g id="COUNT">%d</xliff:g> ລາຍການ"</string>
-    <string name="mediapicker_gallery_image_item_description" msgid="8812237405495409901">"ຮູບ <xliff:g id="DATE">%1$tB %1$te %1$tY %1$tl %1$tM %1$tp</xliff:g>"</string>
-    <string name="mediapicker_gallery_image_item_description_no_date" msgid="8142175029053370662">"ຮູບ"</string>
     <string name="mediapicker_audio_title" msgid="5455016591560739789">"ບັນທຶກສຽງ"</string>
     <string name="action_share" msgid="2143483844803153871">"ແບ່ງ​ປັນ"</string>
     <string name="posted_just_now" msgid="6632467048088811568">"ຕອນນີ້"</string>
@@ -138,9 +130,6 @@
     </plurals>
     <string name="start_conversation" msgid="7984539515326392793">"ເລີ່ມ"</string>
     <string name="camera_error_opening" msgid="2739332294400420426">"ບໍ່​ສາມາດ​ໃຊ້​ກ້ອງໄດ້"</string>
-    <string name="camera_error_unknown" msgid="4283956364220459608">"ບໍ່​ສາມາດ​ໃຊ້​ກ້ອງໄດ້"</string>
-    <string name="camera_error_video_init_fail" msgid="994632067015578879">"​ບໍ່​ສາ​ມາດ​ໃຊ້​ການບັນ​ທຶກວິ​ດີ​ໂອ​ໄດ້"</string>
-    <string name="camera_error_storage_fail" msgid="5536300789483863989">"​ບໍ່​ສາ​ມາດ​ບັນ​ທຶກ​ມີ​ເດຍ​ໄດ້"</string>
     <string name="camera_error_failure_taking_picture" msgid="4894133709734862250">"ບໍ່​ສາ​ມາດ​ຖ່າຍ​ຮູບ​ໄດ້"</string>
     <string name="back" msgid="1477626055115561645">"ກັບຄືນ"</string>
     <string name="action_menu_show_archived" msgid="1628518043533374868">"ຈັດເກັບແລ້ວ"</string>
@@ -163,13 +152,10 @@
     <string name="delete_conversation_confirmation_button" msgid="744574085809600863">"​ລຶບ"</string>
     <string name="delete_conversation_decline_button" msgid="5470021965641900456">"​ຍົກ​ເລີກ"</string>
     <string name="recipient_hint" msgid="1819710673158265515">"ໄປ"</string>
-    <string name="action_multiselect" msgid="1219683118692013380">"​ເລືອກ​ຫຼາຍ​ຮູບ"</string>
-    <string name="action_confirm_multiselect" msgid="8283370294120913166">"​ຢືນ​ຢັນ​ການ​ເລືອກ"</string>
     <string name="attachment_more_items" msgid="2861573099241369958">"+<xliff:g id="COUNT">%d</xliff:g>"</string>
     <string name="audio_recording_start_failed" msgid="4442450764642560851">"ບໍ່​ສາ​ມາດ​ອັດ​ສຽງ​ໄດ້. ລອງ​ໃໝ່​ອີກ​ຄັ້ງ."</string>
     <string name="audio_recording_replay_failed" msgid="3585760856463273828">"ບໍ່​ສາ​ມາດຫຼິ້ນ​ສຽງ​ໄດ້. ລອງ​ໃໝ່​ອີກ​ຄັ້ງ."</string>
     <string name="audio_recording_error" msgid="7762310055059024872">"​ບໍ່​ສາ​ມາດ​ບັນ​ທຶກ​ສຽງ​ໄດ້. ລອງ​ໃໝ່​ອີກ​ຄັ້ງ."</string>
-    <string name="audio_picker_hint_text" msgid="6986250080467111491">"ແຕະຄ້າງ​ໄວ້"</string>
     <string name="enumeration_comma" msgid="7032804261692931808">", "</string>
     <string name="notification_separator" msgid="3472521786709813414">"  "</string>
     <string name="notification_ticker_separator" msgid="2027929074008933906">": "</string>
@@ -218,14 +204,7 @@
     <string name="failed_message_content_description" msgid="7047161648867054936">"ຂໍ້​ຄວາມ​ບໍ່​ສຳ​ເລັດ. ສຳ​ຜັດ​ເພື່ອ​ລອງ​ໃໝ່​ອີກ."</string>
     <string name="group_conversation_description" msgid="2339270924401184182">"ການ​ສົນ​ທະ​ນາ​ກັບ <xliff:g id="PARTICIPANTS">%s</xliff:g>"</string>
     <string name="delete_subject_content_description" msgid="8910749398836396698">"​ລຶບ​ຫົວ​ຂໍ້"</string>
-    <string name="camera_switch_to_video_mode" msgid="2926868205952641428">"ບັນ​ທຶກ​ວິດີໂອ"</string>
-    <string name="camera_switch_to_still_mode" msgid="4419617715199157958">"ບັນ​ທຶກ​ຮູບ"</string>
-    <string name="camera_take_picture" msgid="2573317952200799489">"ຖ່າຍຮູບ"</string>
-    <string name="camera_start_recording" msgid="1736478301191221786">"ເລີ່ມ​ການ​ບັນທຶກ​ວິດີໂອ"</string>
-    <string name="camera_switch_full_screen" msgid="6156039742035097276">"ສະລັບ​ໄປ​ໃຊ້​ກ້ອງ​ແບບ​ເຕັມຈໍ"</string>
     <string name="camera_switch_camera_facing" msgid="1566112129296559159">"​ສະ​ລັບ​ລະ​ຫວ່າງ​ກ້ອງ​ໜ້າ ແລະ ຫຼັງ"</string>
-    <string name="camera_stop_recording" msgid="5331592576107271152">"​ຢຸດ​ການ​ບັນ​ທຶກ ແລະ ແນບ​ວິ​ດີ​ໂອ"</string>
-    <string name="camera_cancel_recording" msgid="6431544304743145818">"​ຢຸດ​ການ​ບັນ​ທຶກວິ​ດີ​ໂອ"</string>
     <string name="photo_view_activity_title" msgid="6556006393051918135">"ຮູບຖ່າຍານສົ່ງ​ຂໍ້​ຄວາມ"</string>
     <plurals name="photos_saved_to_album" formatted="false" msgid="7529478299745446838">
       <item quantity="other"><xliff:g id="QUANTITY_2">%d</xliff:g> ຮູບ​ຖືກ​ບັນ​ທຶກ​ໄປ​ໃສ່​ອາ​ລະ​ບັ້ມ \"<xliff:g id="ALBUMNAME_3">%s</xliff:g>\"</item>
@@ -410,7 +389,6 @@
     <string name="blocked_contacts_title" msgid="7709164518967312281">"​ລາຍ​ຊື່​ຜູ່​ຕິດ​ຕໍ່​ທີ່​ຖືກບລັອກ"</string>
     <string name="tap_to_unblock_message" msgid="1284284144816901647">"​ປົດ​ບລັອກ"</string>
     <string name="view_blocked_contacts_title" msgid="7417596291306885403">"ບລັອກ​ລາຍ​ຊື່​ຜູ່​ຕິດ​ຕໍ່​ແລ້ວ"</string>
-    <string name="pick_image_from_document_library_content_description" msgid="132845956503874378">"​ເລືອກ​ຮູບ​ຈາກ​ຫ້ອງ​ສະ​ໝຸດ​ເອ​ກະ​ສານ"</string>
     <string name="sending_message" msgid="6363584950085384929">"ກຳລັງສົ່ງຂໍ້ຄວາມ"</string>
     <string name="send_message_success" msgid="4088006261869323324">"ສົ່ງຂໍ້ຄວາມແລ້ວ"</string>
     <string name="send_message_failure_no_data" msgid="7404080465234559802">"ຂໍ້​ມູນ​ເຄືອ​ຂ່າຍ​ໂທ​ລະ​ສັບ​ຖືກ​ປິດ​ໄວ້. ກະ​ລຸ​ນາ​ກວດ​ສອບ​ການ​ຕັ້ງ​ຄ່າ​ຂອງ​ທ່ານ."</string>

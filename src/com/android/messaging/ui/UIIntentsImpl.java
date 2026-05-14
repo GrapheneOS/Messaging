@@ -63,7 +63,6 @@ import com.android.messaging.util.UiUtils;
 import com.android.messaging.util.UriUtil;
 
 import androidx.core.app.TaskStackBuilder;
-import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 /**
@@ -227,29 +226,6 @@ public class UIIntentsImpl extends UIIntents {
     public void launchBlockedParticipantsActivity(final Context context) {
         final Intent intent = new Intent(context, BlockedParticipantsActivity.class);
         context.startActivity(intent);
-    }
-
-    @Override
-    public void launchDocumentImagePicker(final Fragment fragment) {
-        final Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.putExtra(Intent.EXTRA_MIME_TYPES, MessagePartData.ACCEPTABLE_GALLERY_MEDIA_TYPES);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType(ContentType.ANY_TYPE);
-
-        fragment.startActivityForResult(intent, REQUEST_PICK_MEDIA_FROM_DOCUMENT_PICKER);
-    }
-
-    @Override
-    public void launchContactCardPicker(final Fragment fragment) {
-        final Intent intent = new Intent(Intent.ACTION_PICK);
-        intent.setType(Contacts.CONTENT_TYPE);
-
-        try {
-            fragment.startActivityForResult(intent, REQUEST_PICK_CONTACT_CARD);
-        } catch (final ActivityNotFoundException ex) {
-            LogUtil.w(LogUtil.BUGLE_TAG, "Couldn't find activity:", ex);
-            UiUtils.showToastAtBottom(R.string.activity_not_found_message);
-        }
     }
 
     @Override

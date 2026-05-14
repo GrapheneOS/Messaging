@@ -94,20 +94,12 @@
     <color name="chips_background_color">#33000000</color>
     <color name="chips_text_color">@android:color/white</color>
 
-    <color name="camera_button_container_background">#80000000</color>
-
     <color name="translucent_white">#80ffffff</color>
 
-    <color name="gallery_image_default_background">#eeeeee</color>
-    <color name="gallery_image_pressed">#6733b5e5</color>
     <color name="attachment_preview_more_items_text_background">#44000000</color>
 
     <color name="letter_tile_font_color">#ffffff</color>
 
-    <color name="audio_picker_level_primary_color">#29000000</color>
-    <color name="audio_record_control_button_stroke">#30000000</color>
-    <color name="audio_picker_hint_text_color">#40000000</color>
-    <color name="audio_picker_timer_text_color">#323232</color>
     <color name="audio_attachment_timer_text_color">#323232</color>
     <color name="audio_progress_bar_color">@color/primary_color</color>
 

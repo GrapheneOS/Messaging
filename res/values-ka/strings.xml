@@ -37,15 +37,7 @@
     <string name="contact_picker_frequents_tab_title" msgid="7157326165824706883">"ხშირად გამოყენებული კონტაქტები"</string>
     <string name="contact_picker_all_contacts_tab_title" msgid="1424746082040243161">"ყველა კონტაქტი"</string>
     <string name="contact_list_send_to_text" msgid="3167455944684758290">"<xliff:g id="DESTINATION">%s</xliff:g>-ზე გაგზავნა"</string>
-    <string name="mediapicker_cameraChooserDescription" msgid="8498255650058981250">"სურათების ან ვიდეოს გადაღება"</string>
-    <string name="mediapicker_galleryChooserDescription" msgid="1227741581156455777">"ამ მოწყობილობიდან სურათების არჩევა"</string>
-    <string name="mediapicker_audioChooserDescription" msgid="3660616501040372452">"აუდიოს ჩაწერა"</string>
     <string name="mediapicker_gallery_title" msgid="3169528536727885763">"ფოტოს არჩევა"</string>
-    <string name="mediapicker_gallery_item_selected_content_description" msgid="2569545441879514283">"მედია შერჩეულია."</string>
-    <string name="mediapicker_gallery_item_unselected_content_description" msgid="40021674722525910">"მედია არ არის შერჩეული."</string>
-    <string name="mediapicker_gallery_title_selection" msgid="3621616141966436510">"<xliff:g id="COUNT">%d</xliff:g> შერჩეულია"</string>
-    <string name="mediapicker_gallery_image_item_description" msgid="8812237405495409901">"სურათის <xliff:g id="DATE">%1$tB %1$te %1$tY %1$tl %1$tM %1$tp</xliff:g>"</string>
-    <string name="mediapicker_gallery_image_item_description_no_date" msgid="8142175029053370662">"სურათი"</string>
     <string name="mediapicker_audio_title" msgid="5455016591560739789">"აუდიოს ჩაწერა"</string>
     <string name="action_share" msgid="2143483844803153871">"გაზიარება"</string>
     <string name="posted_just_now" msgid="6632467048088811568">"ახლახანს"</string>
@@ -138,9 +130,6 @@
     </plurals>
     <string name="start_conversation" msgid="7984539515326392793">"დაწყება"</string>
     <string name="camera_error_opening" msgid="2739332294400420426">"კამერა მიუწვდომელია"</string>
-    <string name="camera_error_unknown" msgid="4283956364220459608">"კამერა მიუწვდომელია"</string>
-    <string name="camera_error_video_init_fail" msgid="994632067015578879">"ვიდეო ჩაწერა მიუწვდომელია"</string>
-    <string name="camera_error_storage_fail" msgid="5536300789483863989">"მედიას შენახვა ვერ ვერხდება"</string>
     <string name="camera_error_failure_taking_picture" msgid="4894133709734862250">"ვერ ხორციელდება სურათის გადაღება"</string>
     <string name="back" msgid="1477626055115561645">"უკან"</string>
     <string name="action_menu_show_archived" msgid="1628518043533374868">"დაარქივებული"</string>
@@ -163,13 +152,10 @@
     <string name="delete_conversation_confirmation_button" msgid="744574085809600863">"წაშლა"</string>
     <string name="delete_conversation_decline_button" msgid="5470021965641900456">"გაუქმება"</string>
     <string name="recipient_hint" msgid="1819710673158265515">"მიმღები:"</string>
-    <string name="action_multiselect" msgid="1219683118692013380">"მრავალი სურათის არჩევა"</string>
-    <string name="action_confirm_multiselect" msgid="8283370294120913166">"არჩევანის დადასტურება"</string>
     <string name="attachment_more_items" msgid="2861573099241369958">"+<xliff:g id="COUNT">%d</xliff:g>"</string>
     <string name="audio_recording_start_failed" msgid="4442450764642560851">"ხმის ჩაწერა ვერ ხერხდენა. სცადეთ ისევ."</string>
     <string name="audio_recording_replay_failed" msgid="3585760856463273828">"ხმის დაკვრა ვერ ხერხდება. სცადეთ ისევ."</string>
     <string name="audio_recording_error" msgid="7762310055059024872">"ხმის ჩაწერა ვერ მოხერხდა. სცადეთ ისევ."</string>
-    <string name="audio_picker_hint_text" msgid="6986250080467111491">"შეეხეთ &amp; დააყოვნეთ"</string>
     <string name="enumeration_comma" msgid="7032804261692931808">", "</string>
     <string name="notification_separator" msgid="3472521786709813414">"  "</string>
     <string name="notification_ticker_separator" msgid="2027929074008933906">": "</string>
@@ -218,14 +204,7 @@
     <string name="failed_message_content_description" msgid="7047161648867054936">"შეტყობინების შეცდომა. შეეხეთ, რათა ხელახლა სცადოთ."</string>
     <string name="group_conversation_description" msgid="2339270924401184182">"საუბარი <xliff:g id="PARTICIPANTS">%s</xliff:g> -სთან"</string>
     <string name="delete_subject_content_description" msgid="8910749398836396698">"თემის წაშლა"</string>
-    <string name="camera_switch_to_video_mode" msgid="2926868205952641428">"ვიდეოს გადაღება"</string>
-    <string name="camera_switch_to_still_mode" msgid="4419617715199157958">"ფოტოსურათის აღბეჭდვა"</string>
-    <string name="camera_take_picture" msgid="2573317952200799489">"სურათის გადაღება"</string>
-    <string name="camera_start_recording" msgid="1736478301191221786">"ვიდეოს ჩაწერის დაწყება"</string>
-    <string name="camera_switch_full_screen" msgid="6156039742035097276">"სრულეკრანიან კამერაზე გადართვა"</string>
     <string name="camera_switch_camera_facing" msgid="1566112129296559159">"წინა და უკანა კამერებს შორის გადართვა"</string>
-    <string name="camera_stop_recording" msgid="5331592576107271152">"ჩაწერის შეჩერება და ვიდეოს მიბმა"</string>
-    <string name="camera_cancel_recording" msgid="6431544304743145818">"ვიდეოს ჩაწერის შეჩერება"</string>
     <string name="photo_view_activity_title" msgid="6556006393051918135">"შეტყობინებების ფოტოები"</string>
     <plurals name="photos_saved_to_album" formatted="false" msgid="7529478299745446838">
       <item quantity="other"><xliff:g id="QUANTITY_2">%d</xliff:g> ფოტო შენახულია ალბომში „<xliff:g id="ALBUMNAME_3">%s</xliff:g>“</item>
@@ -410,7 +389,6 @@
     <string name="blocked_contacts_title" msgid="7709164518967312281">"დაბლოკილი კონტაქტები"</string>
     <string name="tap_to_unblock_message" msgid="1284284144816901647">"განბლოკვა"</string>
     <string name="view_blocked_contacts_title" msgid="7417596291306885403">"დაბლოკილი კონტაქტები"</string>
-    <string name="pick_image_from_document_library_content_description" msgid="132845956503874378">"აირჩიეთ სურათი დოკუმენტების ბიბლიოთეკიდან"</string>
     <string name="sending_message" msgid="6363584950085384929">"შეტყობინება იგზავნება"</string>
     <string name="send_message_success" msgid="4088006261869323324">"შეტყობინება გაიგზავნა"</string>
     <string name="send_message_failure_no_data" msgid="7404080465234559802">"მობილური ინტერნეტი გამორთულია. გადაამოწმეთ პარამეტრები."</string>

@@ -196,16 +196,6 @@
         <item name="android:textColor">@android:color/white</item>
     </style>
 
-    <style name="AudioPickerHintText">
-        <item name="android:textSize">@dimen/audio_picker_text_size</item>
-        <item name="android:textColor">@color/audio_picker_hint_text_color</item>
-    </style>
-
-    <style name="AudioPickerTimerText">
-        <item name="android:textSize">@dimen/audio_picker_text_size</item>
-        <item name="android:textColor">@color/audio_picker_timer_text_color</item>
-    </style>
-
     <style name="AudioAttachmentTimerText">
         <item name="android:textSize">@dimen/audio_attachment_text_size</item>
         <item name="android:textColor">@color/audio_attachment_timer_text_color</item>
@@ -299,10 +289,6 @@
 
     <style name="ConversationListFragmentStartNewButtonStyle">
         <item name="android:layout_marginRight">@dimen/fab_left_right_margin</item>
-    </style>
-
-    <style name="GalleryGridItemViewCheckBoxStyle">
-        <item name="android:paddingEnd">4dp</item>
     </style>
 
     <style name="AttachmentPreviewAttachmentStyle">

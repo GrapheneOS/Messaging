@@ -49,21 +49,11 @@
          to a number that he/she typed. eg. "Send to 650-555-1234" -->
     <string name="contact_list_send_to_text">Send to <xliff:g id="destination">%s</xliff:g></string>
 
-    <string name="mediapicker_cameraChooserDescription">Capture pictures or video</string>
-    <string name="mediapicker_galleryChooserDescription">Choose images from this device</string>
-    <string name="mediapicker_audioChooserDescription">Record audio</string>
-    <string name="mediapicker_contactChooserDescription">Choose a contact from this device</string>
     <string name="mediapicker_gallery_title">Choose media</string>
-    <string name="mediapicker_gallery_item_selected_content_description">The media is selected.</string>
-    <string name="mediapicker_gallery_item_unselected_content_description">The media is unselected.</string>
-    <string name="mediapicker_gallery_title_selection"><xliff:g id="count">%d</xliff:g> selected</string>
     <plurals name="conversation_message_selection_title">
         <item quantity="one">%d selected</item>
         <item quantity="other">%d selected</item>
     </plurals>
-    <!-- example: "image January 17 2015 1 59 pm" -->
-    <string name="mediapicker_gallery_image_item_description">image <xliff:g id="date">%1$tB %1$te %1$tY %1$tl %1$tM %1$tp</xliff:g></string>
-    <string name="mediapicker_gallery_image_item_description_no_date">image</string>
     <string name="mediapicker_audio_title">Record audio</string>
     <string name="mediapicker_contact_title">Choose a contact</string>
     <string name="conversation_media_picker_add_selection">Add (<xliff:g id="count">%1$d</xliff:g>)</string>
@@ -260,10 +250,6 @@
     <string name="start_conversation">Start</string>
 
     <string name="camera_error_opening">Camera not available</string>
-    <string name="camera_error_unknown">Camera not available</string>
-    <string name="camera_error_video_init_fail">Video capture not available</string>
-    <!-- Error message when we are unable to write a picture or video file because of an error writing to storage (usually because insufficient space) -->
-    <string name="camera_error_storage_fail">Can\'t save media</string>
     <string name="camera_error_failure_taking_picture">Can\'t take picture</string>
 
     <!-- Content description text for Back button on the action bar -->
@@ -312,10 +298,6 @@
 
     <!-- Hint text for the recipient chips text box when it's empty -->
     <string name="recipient_hint">To</string>
-    <!-- Action menu title for multiple selection in gallery image picker -->
-    <string name="action_multiselect">Select multiple images</string>
-    <!-- Action menu title for confirming multiple selection in gallery image picker -->
-    <string name="action_confirm_multiselect">Confirm selection</string>
     <!-- Text for showing there are more items in the attachments than is shown (e.g. "+2") -->
     <string name="attachment_more_items">+<xliff:g id="count">%d</xliff:g></string>
     <!-- Failed to start recording audio -->
@@ -324,9 +306,6 @@
     <string name="audio_recording_replay_failed">Can\'t play audio. Try again.</string>
     <!-- Error occurred while recording audio -->
     <string name="audio_recording_error"> Couldn\'t save audio. Try again.</string>
-    <!-- Hint text on the audio recorder that instructs user how to start recording -->
-    <string name="audio_picker_hint_text">Tap &amp; hold</string>
-
     <!-- Prefix label shown before the new chat recipient search field. -->
     <string name="new_chat_recipient_prefix">To:</string>
     <!-- Placeholder text shown in the new chat recipient search field. -->
@@ -430,14 +409,7 @@
     <!-- Accessibility : text read on the small X icon on the subject editor -->
     <string name="delete_subject_content_description">Delete subject</string>
 
-    <string name="camera_switch_to_video_mode">Capture video</string>
-    <string name="camera_switch_to_still_mode">Capture a still image</string>
-    <string name="camera_take_picture">Take picture</string>
-    <string name="camera_start_recording">Start recording video</string>
-    <string name="camera_switch_full_screen">Switch to full screen camera</string>
     <string name="camera_switch_camera_facing">Switch between front and back camera</string>
-    <string name="camera_stop_recording">Stop recording and attach video</string>
-    <string name="camera_cancel_recording">Stop recording video</string>
 
     <string name="photo_view_activity_title">Messaging photos</string>
     <plurals name="photos_saved_to_album">
@@ -821,8 +793,6 @@
     <!-- Action menu title for viewing the list of blocked contacts -->
     <string name="view_blocked_contacts_title">Blocked contacts</string>
 
-    <!-- Content description for the button in gallery media picker to pick an image from the document library -->
-    <string name="pick_image_from_document_library_content_description">Choose image from document library</string>
     <!-- Accessibility toast shown when a message is sending. -->
     <string name="sending_message">Sending message</string>
     <!-- Accessibility toast shown when a message is sent. -->

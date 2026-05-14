@@ -22,11 +22,6 @@
             <enum name="small" value="2" />
         </attr>
     </declare-styleable>
-    <declare-styleable name="SoundLevels">
-        <attr name="maxLevelRadius" format="dimension|reference" />
-        <attr name="minLevelRadius" format="dimension|reference" />
-        <attr name="primaryColor" format="color" />
-    </declare-styleable>
     <declare-styleable name="AsyncImageView">
         <attr name="fadeIn" format="boolean" />
         <attr name="placeholderDrawable" format="reference" />

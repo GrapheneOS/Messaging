@@ -32,26 +32,9 @@ import java.io.IOException;
 
 /**
  * Wraps around the functionalities of MediaRecorder, performs routine setup for audio recording
- * and updates the audio level to be displayed in UI.
- *
- * During the start and end of a recording session, we kick off a thread that polls for audio
- * levels, and updates the thread-safe AudioLevelSource instance. Consumers may bind to the
- * sound level by either polling from the level source, or register for a level change callback
- * on the level source object. In Bugle, the UI element (SoundLevels) polls for the sound level
- * on the UI thread by using animation ticks and invalidating itself.
- *
- * Aside from tracking sound levels, this also encapsulates the functionality to save the file
- * to the scratch space. The saved file is returned by calling stopRecording().
+ * and saves the file to scratch space. The saved file is returned by calling stopRecording().
  */
 public class LevelTrackingMediaRecorder {
-    // We refresh sound level every 100ms during a recording session.
-    private static final int REFRESH_INTERVAL_MILLIS = 100;
-
-    // The native amplitude returned from MediaRecorder ranges from 0~32768 (unfortunately, this
-    // is not a constant that's defined anywhere, but the framework's Recorder app is using the
-    // same hard-coded number). Therefore, a constant is needed in order to make it 0~100.
-    private static final int MAX_AMPLITUDE_FACTOR = 32768 / 100;
-
     // We want to limit the max audio file size by the max message size allowed by MmsConfig,
     // plus multiplied by this fudge ratio to guarantee that we don't go over limit.
     private static final float MAX_SIZE_RATIO = 0.8f;
@@ -62,19 +45,9 @@ public class LevelTrackingMediaRecorder {
     private static final int MEDIA_RECORDER_OUTPUT_FORMAT = MediaRecorder.OutputFormat.THREE_GPP;
     private static final int MEDIA_RECORDER_AUDIO_ENCODER = MediaRecorder.AudioEncoder.AMR_NB;
 
-    private final AudioLevelSource mLevelSource;
-    private Thread mRefreshLevelThread;
     private MediaRecorder mRecorder;
     private Uri mOutputUri;
     private ParcelFileDescriptor mOutputFD;
-
-    public LevelTrackingMediaRecorder() {
-        mLevelSource = new AudioLevelSource();
-    }
-
-    public AudioLevelSource getLevelSource() {
-        return mLevelSource;
-    }
 
     /**
      * @return if we are currently in a recording session.
@@ -113,7 +86,6 @@ public class LevelTrackingMediaRecorder {
                     mRecorder.setOnInfoListener(infoListener);
                     mRecorder.prepare();
                     mRecorder.start();
-                    startTrackingSoundLevel();
                     return true;
                 } catch (final Exception e) {
                     // There may be a device failure or I/O failure, record the error but
@@ -174,50 +146,6 @@ public class LevelTrackingMediaRecorder {
             mOutputFD = null;
         }
 
-        stopTrackingSoundLevel();
         return mOutputUri;
-    }
-
-    private int getAmplitude() {
-        synchronized (LevelTrackingMediaRecorder.class) {
-            if (mRecorder != null) {
-                final int maxAmplitude = mRecorder.getMaxAmplitude() / MAX_AMPLITUDE_FACTOR;
-                return Math.min(maxAmplitude, 100);
-            } else {
-                return 0;
-            }
-        }
-    }
-
-    private void startTrackingSoundLevel() {
-        stopTrackingSoundLevel();
-        mRefreshLevelThread = new Thread() {
-            @Override
-            public void run() {
-                try {
-                    while (true) {
-                        synchronized (LevelTrackingMediaRecorder.class) {
-                            if (mRecorder != null) {
-                                mLevelSource.setSpeechLevel(getAmplitude());
-                            } else {
-                                // The recording session is over, finish the thread.
-                                return;
-                            }
-                        }
-                        Thread.sleep(REFRESH_INTERVAL_MILLIS);
-                    }
-                } catch (final InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-        };
-        mRefreshLevelThread.start();
-    }
-
-    private void stopTrackingSoundLevel() {
-        if (mRefreshLevelThread != null && mRefreshLevelThread.isAlive()) {
-            mRefreshLevelThread.interrupt();
-            mRefreshLevelThread = null;
-        }
     }
 }

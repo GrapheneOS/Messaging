@@ -37,15 +37,7 @@
     <string name="contact_picker_frequents_tab_title" msgid="7157326165824706883">"Fréquents"</string>
     <string name="contact_picker_all_contacts_tab_title" msgid="1424746082040243161">"Tous les contacts"</string>
     <string name="contact_list_send_to_text" msgid="3167455944684758290">"Envoyer à <xliff:g id="DESTINATION">%s</xliff:g>"</string>
-    <string name="mediapicker_cameraChooserDescription" msgid="8498255650058981250">"Prendre des photos ou filmer une vidéo"</string>
-    <string name="mediapicker_galleryChooserDescription" msgid="1227741581156455777">"Choisir des images de cet appareil"</string>
-    <string name="mediapicker_audioChooserDescription" msgid="3660616501040372452">"Enregistrer des fichiers audio"</string>
     <string name="mediapicker_gallery_title" msgid="3169528536727885763">"Choisir une photo"</string>
-    <string name="mediapicker_gallery_item_selected_content_description" msgid="2569545441879514283">"Support sélectionné."</string>
-    <string name="mediapicker_gallery_item_unselected_content_description" msgid="40021674722525910">"Support désélectionné."</string>
-    <string name="mediapicker_gallery_title_selection" msgid="3621616141966436510">"<xliff:g id="COUNT">%d</xliff:g> sélectionné(s)"</string>
-    <string name="mediapicker_gallery_image_item_description" msgid="8812237405495409901">"Image : <xliff:g id="DATE">%1$tB %1$te %1$tY %1$tl %1$tM %1$tp</xliff:g>"</string>
-    <string name="mediapicker_gallery_image_item_description_no_date" msgid="8142175029053370662">"image"</string>
     <string name="mediapicker_audio_title" msgid="5455016591560739789">"Enregistrer des fichiers audio"</string>
     <string name="action_share" msgid="2143483844803153871">"Partager"</string>
     <string name="posted_just_now" msgid="6632467048088811568">"À l\'instant"</string>
@@ -138,9 +130,6 @@
     </plurals>
     <string name="start_conversation" msgid="7984539515326392793">"Démarrer"</string>
     <string name="camera_error_opening" msgid="2739332294400420426">"L\'appareil photo n\'est pas disponible"</string>
-    <string name="camera_error_unknown" msgid="4283956364220459608">"L\'appareil photo n\'est pas disponible"</string>
-    <string name="camera_error_video_init_fail" msgid="994632067015578879">"L\'enregistrement vidéo n\'est pas disponible"</string>
-    <string name="camera_error_storage_fail" msgid="5536300789483863989">"Impossible d\'enregistrer le média"</string>
     <string name="camera_error_failure_taking_picture" msgid="4894133709734862250">"Impossible de prendre la photo."</string>
     <string name="back" msgid="1477626055115561645">"Précédent"</string>
     <string name="action_menu_show_archived" msgid="1628518043533374868">"Archivée"</string>
@@ -163,13 +152,10 @@
     <string name="delete_conversation_confirmation_button" msgid="744574085809600863">"Supprimer"</string>
     <string name="delete_conversation_decline_button" msgid="5470021965641900456">"Annuler"</string>
     <string name="recipient_hint" msgid="1819710673158265515">"À"</string>
-    <string name="action_multiselect" msgid="1219683118692013380">"Sélectionner plusieurs images"</string>
-    <string name="action_confirm_multiselect" msgid="8283370294120913166">"Confirmer la sélection"</string>
     <string name="attachment_more_items" msgid="2861573099241369958">"+<xliff:g id="COUNT">%d</xliff:g>"</string>
     <string name="audio_recording_start_failed" msgid="4442450764642560851">"Impossible d\'enregistrer l\'audio. Veuillez réessayer."</string>
     <string name="audio_recording_replay_failed" msgid="3585760856463273828">"Impossible de lire l\'audio. Veuillez réessayer."</string>
     <string name="audio_recording_error" msgid="7762310055059024872">"Impossible d\'enregistrer l\'audio. Veuillez réessayer."</string>
-    <string name="audio_picker_hint_text" msgid="6986250080467111491">"Maintenez le doigt ici"</string>
     <string name="enumeration_comma" msgid="7032804261692931808">", "</string>
     <string name="notification_separator" msgid="3472521786709813414">"  "</string>
     <string name="notification_ticker_separator" msgid="2027929074008933906">": "</string>
@@ -218,14 +204,7 @@
     <string name="failed_message_content_description" msgid="7047161648867054936">"Échec du message. Touchez pour réessayer."</string>
     <string name="group_conversation_description" msgid="2339270924401184182">"Conversation avec <xliff:g id="PARTICIPANTS">%s</xliff:g>"</string>
     <string name="delete_subject_content_description" msgid="8910749398836396698">"Supprimer l\'objet"</string>
-    <string name="camera_switch_to_video_mode" msgid="2926868205952641428">"Filmer une vidéo"</string>
-    <string name="camera_switch_to_still_mode" msgid="4419617715199157958">"Capturer une image fixe"</string>
-    <string name="camera_take_picture" msgid="2573317952200799489">"Prendre une photo"</string>
-    <string name="camera_start_recording" msgid="1736478301191221786">"Lancer l\'enregistrement vidéo"</string>
-    <string name="camera_switch_full_screen" msgid="6156039742035097276">"Activer le mode plein écran de l\'appareil photo"</string>
     <string name="camera_switch_camera_facing" msgid="1566112129296559159">"Basculer entre l\'appareil photo avant et arrière"</string>
-    <string name="camera_stop_recording" msgid="5331592576107271152">"Arrêter l\'enregistrement et joindre la vidéo"</string>
-    <string name="camera_cancel_recording" msgid="6431544304743145818">"Arrêter l\'enregistrement vidéo"</string>
     <string name="photo_view_activity_title" msgid="6556006393051918135">"Photos de Messagerie"</string>
     <plurals name="photos_saved_to_album" formatted="false" msgid="7529478299745446838">
       <item quantity="one"><xliff:g id="QUANTITY_2">%d</xliff:g> photo enregistrée dans l\'album « <xliff:g id="ALBUMNAME_3">%s</xliff:g> »</item>
@@ -410,7 +389,6 @@
     <string name="blocked_contacts_title" msgid="7709164518967312281">"Contacts bloqués"</string>
     <string name="tap_to_unblock_message" msgid="1284284144816901647">"DÉBLOQUER"</string>
     <string name="view_blocked_contacts_title" msgid="7417596291306885403">"Contacts bloqués"</string>
-    <string name="pick_image_from_document_library_content_description" msgid="132845956503874378">"Choisissez une image dans la bibliothèque de documents"</string>
     <string name="sending_message" msgid="6363584950085384929">"Envoi du message en cours..."</string>
     <string name="send_message_success" msgid="4088006261869323324">"Message envoyé"</string>
     <string name="send_message_failure_no_data" msgid="7404080465234559802">"Les données cellulaires sont désactivées. Vérifiez vos paramètres."</string>

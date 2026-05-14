@@ -37,15 +37,7 @@
     <string name="contact_picker_frequents_tab_title" msgid="7157326165824706883">"Freqüents"</string>
     <string name="contact_picker_all_contacts_tab_title" msgid="1424746082040243161">"Tots els contactes"</string>
     <string name="contact_list_send_to_text" msgid="3167455944684758290">"Envia al <xliff:g id="DESTINATION">%s</xliff:g>"</string>
-    <string name="mediapicker_cameraChooserDescription" msgid="8498255650058981250">"Captura fotos o vídeos"</string>
-    <string name="mediapicker_galleryChooserDescription" msgid="1227741581156455777">"Tria imatges d\'aquest dispositiu."</string>
-    <string name="mediapicker_audioChooserDescription" msgid="3660616501040372452">"Enregistra l\'àudio"</string>
     <string name="mediapicker_gallery_title" msgid="3169528536727885763">"Triar una foto"</string>
-    <string name="mediapicker_gallery_item_selected_content_description" msgid="2569545441879514283">"S\'ha seleccionat el fitxer multimèdia."</string>
-    <string name="mediapicker_gallery_item_unselected_content_description" msgid="40021674722525910">"No hi ha cap fitxer multimèdia seleccionat."</string>
-    <string name="mediapicker_gallery_title_selection" msgid="3621616141966436510">"Seleccionats: <xliff:g id="COUNT">%d</xliff:g>"</string>
-    <string name="mediapicker_gallery_image_item_description" msgid="8812237405495409901">"imatge: <xliff:g id="DATE">%1$tB %1$te %1$tY %1$tl %1$tM %1$tp</xliff:g>"</string>
-    <string name="mediapicker_gallery_image_item_description_no_date" msgid="8142175029053370662">"imatge"</string>
     <string name="mediapicker_audio_title" msgid="5455016591560739789">"Enregistra l\'àudio"</string>
     <string name="action_share" msgid="2143483844803153871">"Comparteix"</string>
     <string name="posted_just_now" msgid="6632467048088811568">"Ara mateix"</string>
@@ -138,9 +130,6 @@
     </plurals>
     <string name="start_conversation" msgid="7984539515326392793">"Inicia"</string>
     <string name="camera_error_opening" msgid="2739332294400420426">"La càmera no està disponible."</string>
-    <string name="camera_error_unknown" msgid="4283956364220459608">"La càmera no està disponible."</string>
-    <string name="camera_error_video_init_fail" msgid="994632067015578879">"La captura de vídeo no està disponible."</string>
-    <string name="camera_error_storage_fail" msgid="5536300789483863989">"No es pot desar el fitxer multimèdia."</string>
     <string name="camera_error_failure_taking_picture" msgid="4894133709734862250">"No es pot fer una foto."</string>
     <string name="back" msgid="1477626055115561645">"Enrere"</string>
     <string name="action_menu_show_archived" msgid="1628518043533374868">"Arxivades"</string>
@@ -163,13 +152,10 @@
     <string name="delete_conversation_confirmation_button" msgid="744574085809600863">"Suprimeix"</string>
     <string name="delete_conversation_decline_button" msgid="5470021965641900456">"Cancel·la"</string>
     <string name="recipient_hint" msgid="1819710673158265515">"Per a"</string>
-    <string name="action_multiselect" msgid="1219683118692013380">"Selecciona diverses imatges"</string>
-    <string name="action_confirm_multiselect" msgid="8283370294120913166">"Confirma la selecció"</string>
     <string name="attachment_more_items" msgid="2861573099241369958">"+<xliff:g id="COUNT">%d</xliff:g>"</string>
     <string name="audio_recording_start_failed" msgid="4442450764642560851">"No es pot enregistrar l\'àudio. Torna-ho a provar."</string>
     <string name="audio_recording_replay_failed" msgid="3585760856463273828">"No es pot reproduir l\'àudio. Torna-ho a provar."</string>
     <string name="audio_recording_error" msgid="7762310055059024872">"No s\'ha pogut desar l\'àudio. Torna-ho a provar."</string>
-    <string name="audio_picker_hint_text" msgid="6986250080467111491">"Toca i mantén premut"</string>
     <string name="enumeration_comma" msgid="7032804261692931808">", "</string>
     <string name="notification_separator" msgid="3472521786709813414">"  "</string>
     <string name="notification_ticker_separator" msgid="2027929074008933906">": "</string>
@@ -218,14 +204,7 @@
     <string name="failed_message_content_description" msgid="7047161648867054936">"Hi ha hagut un problema amb aquest missatge. Toca per tornar-ho a provar."</string>
     <string name="group_conversation_description" msgid="2339270924401184182">"Conversa amb <xliff:g id="PARTICIPANTS">%s</xliff:g>"</string>
     <string name="delete_subject_content_description" msgid="8910749398836396698">"Suprimeix l\'assumpte"</string>
-    <string name="camera_switch_to_video_mode" msgid="2926868205952641428">"Captura un vídeo"</string>
-    <string name="camera_switch_to_still_mode" msgid="4419617715199157958">"Captura una imatge fixa"</string>
-    <string name="camera_take_picture" msgid="2573317952200799489">"Fes una foto"</string>
-    <string name="camera_start_recording" msgid="1736478301191221786">"Comença a enregistrar vídeo"</string>
-    <string name="camera_switch_full_screen" msgid="6156039742035097276">"Canvia a la càmera de pantalla completa"</string>
     <string name="camera_switch_camera_facing" msgid="1566112129296559159">"Canvia entre la càmera frontal i la posterior"</string>
-    <string name="camera_stop_recording" msgid="5331592576107271152">"Deixa d\'enregistrar i adjunta un vídeo"</string>
-    <string name="camera_cancel_recording" msgid="6431544304743145818">"Atura l\'enregistrament de vídeo"</string>
     <string name="photo_view_activity_title" msgid="6556006393051918135">"Fotos de missatges"</string>
     <plurals name="photos_saved_to_album" formatted="false" msgid="7529478299745446838">
       <item quantity="other">S\'han desat <xliff:g id="QUANTITY_2">%d</xliff:g> fotos a l\'àlbum <xliff:g id="ALBUMNAME_3">%s</xliff:g></item>
@@ -410,7 +389,6 @@
     <string name="blocked_contacts_title" msgid="7709164518967312281">"Contactes bloquejats"</string>
     <string name="tap_to_unblock_message" msgid="1284284144816901647">"DESBLOQUEJA"</string>
     <string name="view_blocked_contacts_title" msgid="7417596291306885403">"Contactes bloquejats"</string>
-    <string name="pick_image_from_document_library_content_description" msgid="132845956503874378">"Tria una imatge de la biblioteca de documents."</string>
     <string name="sending_message" msgid="6363584950085384929">"S\'està enviant el missatge"</string>
     <string name="send_message_success" msgid="4088006261869323324">"Missatge enviat"</string>
     <string name="send_message_failure_no_data" msgid="7404080465234559802">"Les dades del telèfon estan desactivades. Comprova\'n la configuració."</string>

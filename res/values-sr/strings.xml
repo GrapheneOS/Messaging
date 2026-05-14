@@ -37,15 +37,7 @@
     <string name="contact_picker_frequents_tab_title" msgid="7157326165824706883">"Често контактирани"</string>
     <string name="contact_picker_all_contacts_tab_title" msgid="1424746082040243161">"Сви контакти"</string>
     <string name="contact_list_send_to_text" msgid="3167455944684758290">"Пошаљи на <xliff:g id="DESTINATION">%s</xliff:g>"</string>
-    <string name="mediapicker_cameraChooserDescription" msgid="8498255650058981250">"Сними слику или видео снимак"</string>
-    <string name="mediapicker_galleryChooserDescription" msgid="1227741581156455777">"Избор слика са овог уређаја"</string>
-    <string name="mediapicker_audioChooserDescription" msgid="3660616501040372452">"Сними звук"</string>
     <string name="mediapicker_gallery_title" msgid="3169528536727885763">"Изаберите слику"</string>
-    <string name="mediapicker_gallery_item_selected_content_description" msgid="2569545441879514283">"Изабрали сте медијски садржај."</string>
-    <string name="mediapicker_gallery_item_unselected_content_description" msgid="40021674722525910">"Опозвали сте избор медијског садржаја."</string>
-    <string name="mediapicker_gallery_title_selection" msgid="3621616141966436510">"Изабраних: <xliff:g id="COUNT">%d</xliff:g>"</string>
-    <string name="mediapicker_gallery_image_item_description" msgid="8812237405495409901">"слика <xliff:g id="DATE">%1$tB %1$te %1$tY %1$tl %1$tM %1$tp</xliff:g>"</string>
-    <string name="mediapicker_gallery_image_item_description_no_date" msgid="8142175029053370662">"слика"</string>
     <string name="mediapicker_audio_title" msgid="5455016591560739789">"Снимање звука"</string>
     <string name="action_share" msgid="2143483844803153871">"Дели"</string>
     <string name="posted_just_now" msgid="6632467048088811568">"Управо сад"</string>
@@ -147,9 +139,6 @@
     </plurals>
     <string name="start_conversation" msgid="7984539515326392793">"Покрени"</string>
     <string name="camera_error_opening" msgid="2739332294400420426">"Камера није доступна"</string>
-    <string name="camera_error_unknown" msgid="4283956364220459608">"Камера није доступна"</string>
-    <string name="camera_error_video_init_fail" msgid="994632067015578879">"Снимање видео снимака није доступно"</string>
-    <string name="camera_error_storage_fail" msgid="5536300789483863989">"Чување медија није могуће"</string>
     <string name="camera_error_failure_taking_picture" msgid="4894133709734862250">"Није успело снимање слике"</string>
     <string name="back" msgid="1477626055115561645">"Назад"</string>
     <string name="action_menu_show_archived" msgid="1628518043533374868">"Архивирано"</string>
@@ -173,13 +162,10 @@
     <string name="delete_conversation_confirmation_button" msgid="744574085809600863">"Избриши"</string>
     <string name="delete_conversation_decline_button" msgid="5470021965641900456">"Откажи"</string>
     <string name="recipient_hint" msgid="1819710673158265515">"Прима"</string>
-    <string name="action_multiselect" msgid="1219683118692013380">"Изаберите више слика"</string>
-    <string name="action_confirm_multiselect" msgid="8283370294120913166">"Потврди избор"</string>
     <string name="attachment_more_items" msgid="2861573099241369958">"+<xliff:g id="COUNT">%d</xliff:g>"</string>
     <string name="audio_recording_start_failed" msgid="4442450764642560851">"Снимање звука није успело. Покушајте поново."</string>
     <string name="audio_recording_replay_failed" msgid="3585760856463273828">"Пуштање звука није успело. Покушајте поново."</string>
     <string name="audio_recording_error" msgid="7762310055059024872">"Чување звука није успело. Покушајте поново."</string>
-    <string name="audio_picker_hint_text" msgid="6986250080467111491">"Додирните и задржите"</string>
     <string name="enumeration_comma" msgid="7032804261692931808">", "</string>
     <string name="notification_separator" msgid="3472521786709813414">"  "</string>
     <string name="notification_ticker_separator" msgid="2027929074008933906">": "</string>
@@ -230,14 +216,7 @@
     <string name="failed_message_content_description" msgid="7047161648867054936">"Слање поруке није успело. Додирните да бисте поново покушали."</string>
     <string name="group_conversation_description" msgid="2339270924401184182">"Конверзација са учесницима <xliff:g id="PARTICIPANTS">%s</xliff:g>"</string>
     <string name="delete_subject_content_description" msgid="8910749398836396698">"Брисање наслова"</string>
-    <string name="camera_switch_to_video_mode" msgid="2926868205952641428">"Снимите видео"</string>
-    <string name="camera_switch_to_still_mode" msgid="4419617715199157958">"Снимите слику"</string>
-    <string name="camera_take_picture" msgid="2573317952200799489">"Снимите слику"</string>
-    <string name="camera_start_recording" msgid="1736478301191221786">"Почните да снимате видео"</string>
-    <string name="camera_switch_full_screen" msgid="6156039742035097276">"Пређите на камеру целог екрана"</string>
     <string name="camera_switch_camera_facing" msgid="1566112129296559159">"Пребацујте са предње на задњу камеру и обрнуто"</string>
-    <string name="camera_stop_recording" msgid="5331592576107271152">"Заустави снимање и приложи видео"</string>
-    <string name="camera_cancel_recording" msgid="6431544304743145818">"Заустави снимање звука"</string>
     <string name="photo_view_activity_title" msgid="6556006393051918135">"Слике из Размене порука"</string>
     <plurals name="photos_saved_to_album" formatted="false" msgid="7529478299745446838">
       <item quantity="one"><xliff:g id="QUANTITY_2">%d</xliff:g> слика је сачувана у албуму „<xliff:g id="ALBUMNAME_3">%s</xliff:g>“</item>
@@ -436,7 +415,6 @@
     <string name="blocked_contacts_title" msgid="7709164518967312281">"Блокирани контакти"</string>
     <string name="tap_to_unblock_message" msgid="1284284144816901647">"ДЕБЛОКИРАЈ"</string>
     <string name="view_blocked_contacts_title" msgid="7417596291306885403">"Блокирани контакти"</string>
-    <string name="pick_image_from_document_library_content_description" msgid="132845956503874378">"Изаберите слику из библиотеке докумената"</string>
     <string name="sending_message" msgid="6363584950085384929">"Порука се шаље"</string>
     <string name="send_message_success" msgid="4088006261869323324">"Порука је послата"</string>
     <string name="send_message_failure_no_data" msgid="7404080465234559802">"Подаци за мобилне уређаје су искључени. Проверите подешавања."</string>
