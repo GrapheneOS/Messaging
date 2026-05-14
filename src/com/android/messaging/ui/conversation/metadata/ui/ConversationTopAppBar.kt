@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -64,6 +65,7 @@ import com.android.messaging.ui.conversation.CONVERSATION_DELETE_CONVERSATION_BU
 import com.android.messaging.ui.conversation.CONVERSATION_OVERFLOW_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_SHOW_SUBJECT_FIELD_MENU_ITEM_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_SIM_SELECTOR_MENU_ITEM_TEST_TAG
+import com.android.messaging.ui.conversation.CONVERSATION_TOP_APP_BAR_TITLE_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_UNARCHIVE_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.composer.model.ConversationSimSelectorUiState
 import com.android.messaging.ui.conversation.metadata.model.ConversationMetadataUiState
@@ -193,10 +195,13 @@ private fun ConversationTopAppBarTitle(
     presentation: ConversationTopAppBarPresentation,
 ) {
     Row(
-        modifier = Modifier.clickable(
-            enabled = isClickable,
-            onClick = onClick,
-        ),
+        modifier = Modifier
+            .heightIn(min = TopAppBarDefaults.TopAppBarExpandedHeight)
+            .testTag(tag = CONVERSATION_TOP_APP_BAR_TITLE_TEST_TAG)
+            .clickable(
+                enabled = isClickable,
+                onClick = onClick,
+            ),
         horizontalArrangement = Arrangement.spacedBy(
             space = CONVERSATION_TOP_APP_BAR_TITLE_SPACING,
         ),
