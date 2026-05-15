@@ -4,9 +4,13 @@ import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
+import android.graphics.Point
+import android.net.Uri
 import android.provider.Settings
+import android.view.View
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsScreenEffect as Effect
+import com.android.messaging.util.ContactUtil
 import com.android.messaging.util.NotificationChannelUtil
 import com.android.messaging.util.UiUtils
 
@@ -53,6 +57,24 @@ internal class ConversationSettingsEffectHandlerImpl(
 
             is Effect.ShowMessage -> {
                 UiUtils.showToastAtBottom(effect.messageResId)
+            }
+
+            is Effect.PlacePhoneCall -> {
+                UIIntents.get().launchPhoneCallActivity(
+                    activity,
+                    effect.phoneNumber,
+                    Point(0, 0),
+                )
+            }
+
+            is Effect.ShowOrAddContact -> {
+                ContactUtil.showOrAddContact(
+                    View(activity),
+                    effect.contactId,
+                    effect.contactLookupKey,
+                    effect.avatarUri?.let(Uri::parse),
+                    effect.normalizedDestination,
+                )
             }
         }
     }

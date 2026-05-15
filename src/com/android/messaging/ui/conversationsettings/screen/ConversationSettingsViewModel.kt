@@ -140,6 +140,28 @@ internal class ConversationSettingsViewModel @Inject constructor(
             is Action.SimSelected -> {
                 delegate.setSelfParticipantId(action.selfParticipantId)
             }
+
+            is Action.CallClicked -> {
+                val participant = uiState.value.otherParticipant ?: return
+                val phoneNumber = participant.normalizedDestination
+                    ?.takeIf { it.isNotBlank() }
+                    ?: return
+
+                emitEffect(Effect.PlacePhoneCall(phoneNumber))
+            }
+
+            is Action.ContactInfoClicked -> {
+                val participant = uiState.value.otherParticipant ?: return
+
+                emitEffect(
+                    Effect.ShowOrAddContact(
+                        contactId = participant.contactId,
+                        contactLookupKey = participant.lookupKey,
+                        avatarUri = participant.avatarUri,
+                        normalizedDestination = participant.normalizedDestination,
+                    ),
+                )
+            }
         }
     }
 

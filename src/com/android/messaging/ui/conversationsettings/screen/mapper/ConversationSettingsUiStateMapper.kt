@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationsettings.screen.mapper
 
 import android.content.ContentResolver
+import android.telephony.PhoneNumberUtils
 import com.android.messaging.data.conversation.repository.ConversationNotificationRepository
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.datamodel.MessagingContentProvider
@@ -9,6 +10,7 @@ import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.datamodel.data.PeopleOptionsItemData
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState
 import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
+import com.android.messaging.util.PhoneUtils
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -48,6 +50,8 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
             .map(::toParticipantUiState)
             .toImmutableList()
 
+        val canCall = participants.singleOrNull()?.let(::canCall) ?: false
+
         val metadataCursor = contentResolver.query(
             MessagingContentProvider.buildConversationMetadataUri(conversationId),
             PeopleOptionsItemData.PROJECTION,
@@ -64,6 +68,7 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
                     participants = participants,
                     selfParticipantId = selfIdOverride.orEmpty(),
                     availableSubscriptions = subscriptions,
+                    canCall = canCall,
                 )
             } else {
                 val dbSelfId = cursor.getString(
@@ -85,9 +90,18 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
                     participants = participants,
                     selfParticipantId = effectiveSelfId,
                     availableSubscriptions = subscriptions,
+                    canCall = canCall,
                 )
             }
         }
+    }
+
+    private fun canCall(participant: ParticipantUiState): Boolean {
+        val phoneNumber = participant.normalizedDestination?.takeIf { it.isNotBlank() }
+            ?: return false
+        if (!PhoneUtils.getDefault().isVoiceCapable) return false
+        if (PhoneNumberUtils.isEmergencyNumber(phoneNumber)) return false
+        return true
     }
 
     private fun toParticipantUiState(participant: ParticipantData): ParticipantUiState {

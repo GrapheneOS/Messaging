@@ -590,6 +590,8 @@
     <string name="action_call">Make a call</string>
     <!-- Content description for the overflow menu button in the conversation top app bar -->
     <string name="action_more_options">More options</string>
+    <!-- Label for the contact info button in the conversation settings screen -->
+    <string name="action_contact_info">Contact info</string>
     <!-- The hint text shown in the message compose input box prompting the user to send a message -->
     <string name="compose_message_view_hint_text">Send message</string>
     <!-- The hint text shown in the message compose input box prompting the user to send a message when there are multiple SIMs. -->
