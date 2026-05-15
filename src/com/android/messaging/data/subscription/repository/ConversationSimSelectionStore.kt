@@ -1,6 +1,8 @@
 package com.android.messaging.data.subscription.repository
 
 import com.android.messaging.util.BuglePrefs
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -8,8 +10,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
-import javax.inject.Inject
-import javax.inject.Singleton
 
 @Singleton
 internal class ConversationSimSelectionStore @Inject constructor(

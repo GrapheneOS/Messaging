@@ -1,6 +1,5 @@
 package com.android.messaging.ui.conversationsettings.screen
 
-import android.provider.MediaStore
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -9,7 +8,6 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,13 +18,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Block
@@ -34,20 +28,13 @@ import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PersonAdd
-import androidx.compose.material.icons.filled.SimCard
 import androidx.compose.material.icons.filled.Snooze
-import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.Unarchive
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -60,7 +47,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -69,24 +55,27 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
-import com.android.messaging.data.conversation.model.notification.SnoozeOption
-import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.ui.conversation.ConversationActivity
 import com.android.messaging.ui.conversationsettings.common.ConversationHeader
 import com.android.messaging.ui.conversationsettings.common.ConversationSettingsItem
 import com.android.messaging.ui.conversationsettings.common.ConversationSettingsTopAppBar
-import com.android.messaging.ui.conversationsettings.common.ConversationSimAvatar
+import com.android.messaging.ui.conversationsettings.common.GroupedBottomItemShape
+import com.android.messaging.ui.conversationsettings.common.GroupedItemSpacing
+import com.android.messaging.ui.conversationsettings.common.GroupedMiddleItemShape
+import com.android.messaging.ui.conversationsettings.common.GroupedTopItemShape
 import com.android.messaging.ui.conversationsettings.common.ParticipantItem
-import com.android.messaging.ui.conversationsettings.common.resolveDisplayName
-import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
-import com.android.messaging.ui.core.AppTheme
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
+import com.android.messaging.ui.conversationsettings.common.ScreenContentPadding
+import com.android.messaging.ui.conversationsettings.common.SectionSpacing
+import com.android.messaging.ui.conversationsettings.common.SettingsCardShape
 import com.android.messaging.ui.conversationsettings.screen.ConversationSettingsNavRouteSavedState as NavRouteSavedState
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsAction as Action
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsNavEvent as NavEvent
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsNavRoute as NavRoute
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState as State
+import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
+import com.android.messaging.ui.core.AppTheme
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 private const val SLIDE_OFFSET_DIVISOR = 3
 
@@ -141,7 +130,7 @@ internal fun ConversationSettingsScreen(
 
                 NavEvent.CloseAfterBlock,
                 NavEvent.CloseAfterArchive,
-                    -> {
+                -> {
                     if (isRootRoute()) {
                         resultCode = ConversationActivity.FINISH_RESULT_CODE
                     }
@@ -248,11 +237,11 @@ private fun ConversationSettingsContent(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
                 top = contentPadding.calculateTopPadding(),
-                bottom = contentPadding.calculateBottomPadding() + 16.dp,
-                start = 16.dp,
-                end = 16.dp,
+                bottom = contentPadding.calculateBottomPadding() + ScreenContentPadding,
+                start = ScreenContentPadding,
+                end = ScreenContentPadding,
             ),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(SectionSpacing),
         ) {
             item(key = "header") {
                 ConversationHeader(
@@ -305,7 +294,7 @@ private fun LazyListScope.contactItems(
     item(key = "contact_buttons") {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(SectionSpacing),
         ) {
             if (uiState.canCall) {
                 ContactButtonItem(
@@ -347,14 +336,14 @@ private fun ContactButtonItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(64.dp),
-            shape = RoundedCornerShape(percent = 50),
+            shape = CircleShape,
             color = MaterialTheme.colorScheme.surfaceContainer,
             onClick = onClick,
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = imageVector,
-                    contentDescription = null,
+                    contentDescription = text,
                     tint = MaterialTheme.colorScheme.onSurface,
                 )
             }
@@ -377,52 +366,53 @@ private fun LazyListScope.generalSettingsItems(
     onRequestBlockConfirmation: () -> Unit,
     onRequestSnoozeChooser: () -> Unit,
 ) {
-    item(key = "snooze") {
-        val titleRes = if (uiState.isSnoozed) {
+    item(key = "general_settings") {
+        val snoozeTitleRes = if (uiState.isSnoozed) {
             R.string.unsnooze_chat_setting_title
         } else {
             R.string.snooze_chat_setting_title
         }
 
-        ConversationSettingsItem(
-            icon = Icons.Default.Snooze,
-            title = stringResource(titleRes),
-            onClick = {
-                if (uiState.isSnoozed) {
-                    onAction(Action.UnsnoozeClicked)
-                } else {
-                    onRequestSnoozeChooser()
-                }
-            },
-        )
-    }
-
-    item(key = "notifications") {
-        ConversationSettingsItem(
-            icon = Icons.Default.Notifications,
-            title = stringResource(R.string.notifications_enabled_conversation_pref_title),
-            onClick = { onAction(Action.NotificationsClicked) },
-        )
-    }
-
-    item(key = "archive") {
-        val (icon, titleRes) = if (uiState.isArchived) {
+        val (archiveIcon, archiveTitleRes) = if (uiState.isArchived) {
             Icons.Default.Unarchive to R.string.action_unarchive
         } else {
             Icons.Default.Archive to R.string.action_archive
         }
 
-        ConversationSettingsItem(
-            icon = icon,
-            title = stringResource(titleRes),
-            onClick = {
-                if (uiState.isArchived) {
-                    onAction(Action.UnarchiveClicked)
-                } else {
-                    onAction(Action.ArchiveClicked)
-                }
-            },
-        )
+        Column(verticalArrangement = Arrangement.spacedBy(GroupedItemSpacing)) {
+            ConversationSettingsItem(
+                icon = Icons.Default.Snooze,
+                title = stringResource(snoozeTitleRes),
+                onClick = {
+                    if (uiState.isSnoozed) {
+                        onAction(Action.UnsnoozeClicked)
+                    } else {
+                        onRequestSnoozeChooser()
+                    }
+                },
+                shape = GroupedTopItemShape,
+            )
+
+            ConversationSettingsItem(
+                icon = Icons.Default.Notifications,
+                title = stringResource(R.string.notifications_enabled_conversation_pref_title),
+                onClick = { onAction(Action.NotificationsClicked) },
+                shape = GroupedMiddleItemShape,
+            )
+
+            ConversationSettingsItem(
+                icon = archiveIcon,
+                title = stringResource(archiveTitleRes),
+                onClick = {
+                    if (uiState.isArchived) {
+                        onAction(Action.UnarchiveClicked)
+                    } else {
+                        onAction(Action.ArchiveClicked)
+                    }
+                },
+                shape = GroupedBottomItemShape,
+            )
+        }
     }
 
     val otherParticipant = uiState.otherParticipant
@@ -446,154 +436,6 @@ private fun LazyListScope.generalSettingsItems(
                 },
                 contentColor = MaterialTheme.colorScheme.error,
             )
-        }
-    }
-}
-
-private fun LazyListScope.simSwitchItem(
-    uiState: State,
-    onAction: (Action) -> Unit,
-) {
-    if (!uiState.isSimSwitchAvailable) return
-
-    val selected = uiState.selectedSubscription ?: return
-
-    item(key = "sim_switch") {
-        SimSwitchItem(
-            subscriptions = uiState.availableSubscriptions,
-            selected = selected,
-            onSimSelected = { selfParticipantId ->
-                onAction(Action.SimSelected(selfParticipantId))
-            },
-        )
-    }
-}
-
-@Composable
-private fun SimSwitchItem(
-    subscriptions: ImmutableList<Subscription>,
-    selected: Subscription,
-    onSimSelected: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        onClick = { expanded = true },
-    ) {
-        Row(
-            modifier = Modifier.padding(
-                start = 16.dp,
-                end = 8.dp,
-                top = 12.dp,
-                bottom = 12.dp,
-            ),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = Icons.Default.SimCard,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.size(24.dp),
-            )
-
-            Spacer(modifier = Modifier.width(20.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.sim_selector_item_title),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-
-                val subtitle = selected.displayDestination
-                    ?: selected.label.resolveDisplayName()
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-
-            Box {
-                IconButton(onClick = { expanded = true }) {
-                    Icon(
-                        imageVector = Icons.Default.SwapHoriz,
-                        contentDescription = stringResource(
-                            R.string.sim_selector_item_title,
-                        ),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-
-                DropdownMenu(
-                    expanded = expanded,
-                    shape = RoundedCornerShape(20.dp),
-                    onDismissRequest = { expanded = false },
-                ) {
-                    SimSelectorPopupContent(
-                        subscriptions = subscriptions,
-                        onSimSelected = { id ->
-                            expanded = false
-                            onSimSelected(id)
-                        },
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun SimSelectorPopupContent(
-    subscriptions: ImmutableList<Subscription>,
-    onSimSelected: (String) -> Unit,
-) {
-    Column {
-        subscriptions.forEach { subscription ->
-            SimSelectorRow(
-                subscription = subscription,
-                onClick = { onSimSelected(subscription.selfParticipantId) },
-            )
-        }
-    }
-}
-
-@Composable
-private fun SimSelectorRow(
-    subscription: Subscription,
-    onClick: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(
-                horizontal = 16.dp,
-                vertical = 12.dp,
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(space = 16.dp),
-    ) {
-        ConversationSimAvatar(subscription = subscription)
-
-        Column(modifier = Modifier.weight(weight = 1f)) {
-            Text(
-                text = subscription.label.resolveDisplayName(),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-
-            subscription.displayDestination?.let { destination ->
-                Text(
-                    text = destination,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
         }
     }
 }
@@ -639,7 +481,7 @@ private fun ParticipantsCard(
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = SettingsCardShape,
         color = MaterialTheme.colorScheme.surfaceContainer,
     ) {
         Column(modifier = Modifier.padding(vertical = 8.dp)) {
@@ -665,170 +507,6 @@ private fun ParticipantsCard(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun ConversationSettingsDialogs(
-    uiState: State,
-    onAction: (Action) -> Unit,
-    pendingBlockConfirmation: Boolean,
-    showSnoozeChatDialog: Boolean,
-    onDismissBlockConfirmation: () -> Unit,
-    onDismissSnoozeChat: () -> Unit,
-) {
-    if (pendingBlockConfirmation) {
-        val displayName = uiState.otherParticipant?.displayDestination.orEmpty()
-
-        BlockConfirmationDialog(
-            displayName = displayName,
-            onDismiss = onDismissBlockConfirmation,
-            onConfirm = {
-                onAction(Action.BlockConfirmed)
-                onDismissBlockConfirmation()
-            },
-        )
-    }
-
-    if (showSnoozeChatDialog) {
-        SnoozeChatDialog(
-            onDismiss = onDismissSnoozeChat,
-            onConfirm = { option ->
-                onAction(Action.SnoozeOptionSelected(option))
-                onDismissSnoozeChat()
-            },
-        )
-    }
-}
-
-@Composable
-private fun BlockConfirmationDialog(
-    displayName: String,
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit,
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(text = stringResource(R.string.block_confirmation_title, displayName))
-        },
-        text = {
-            Text(text = stringResource(R.string.block_confirmation_message))
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(text = stringResource(android.R.string.ok))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = stringResource(android.R.string.cancel))
-            }
-        },
-    )
-}
-
-@Composable
-private fun SnoozeChatDialog(
-    onDismiss: () -> Unit,
-    onConfirm: (SnoozeOption) -> Unit,
-) {
-    var selectedOption by rememberSaveable { mutableStateOf(SnoozeOption.OneHour) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        icon = {
-            Icon(
-                imageVector = Icons.Default.Snooze,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        },
-        title = {
-            Text(
-                text = stringResource(R.string.snooze_chat_dialog_title),
-                textAlign = TextAlign.Center,
-            )
-        },
-        text = {
-            Column(modifier = Modifier.selectableGroup()) {
-                Text(
-                    text = stringResource(R.string.snooze_chat_dialog_message),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                SnoozeOption.entries.forEach { option ->
-                    SnoozeOptionRow(
-                        text = stringResource(option.labelRes),
-                        selected = option == selectedOption,
-                        onClick = { selectedOption = option },
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = { onConfirm(selectedOption) }) {
-                Text(text = stringResource(R.string.snooze_chat_dialog_confirm))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = stringResource(android.R.string.cancel))
-            }
-        },
-    )
-}
-
-private val SnoozeOption.labelRes: Int
-    get() = when (this) {
-        SnoozeOption.OneHour -> R.string.snooze_chat_option_one_hour
-        SnoozeOption.EightHours -> R.string.snooze_chat_option_eight_hours
-        SnoozeOption.TwentyFourHours -> R.string.snooze_chat_option_twenty_four_hours
-        SnoozeOption.Always -> R.string.snooze_chat_option_always
-    }
-
-@Composable
-private fun SnoozeOptionRow(
-    text: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .selectable(
-                selected = selected,
-                onClick = onClick,
-                role = Role.RadioButton,
-            )
-            .padding(vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        RadioButton(
-            selected = selected,
-            onClick = null,
-        )
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyLarge,
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun SnoozeChatDialogPreview() {
-    AppTheme {
-        SnoozeChatDialog(
-            onDismiss = {},
-            onConfirm = {},
-        )
     }
 }
 
@@ -873,12 +551,21 @@ private fun ConversationSettingsContentPreview() {
 
 @Preview
 @Composable
-private fun BlockConfirmationDialogPreview() {
+private fun ContactButtonItemPreview() {
     AppTheme {
-        BlockConfirmationDialog(
-            displayName = "+31 6 1234 5678",
-            onDismiss = {},
-            onConfirm = {},
-        )
+        Row(horizontalArrangement = Arrangement.spacedBy(SectionSpacing)) {
+            ContactButtonItem(
+                imageVector = Icons.Default.Call,
+                text = "Call",
+                onClick = {},
+                modifier = Modifier.weight(1f),
+            )
+            ContactButtonItem(
+                imageVector = Icons.Default.Person,
+                text = "Contact info",
+                onClick = {},
+                modifier = Modifier.weight(1f),
+            )
+        }
     }
 }
