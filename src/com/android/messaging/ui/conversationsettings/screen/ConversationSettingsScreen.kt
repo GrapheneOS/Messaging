@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Archive
@@ -38,6 +39,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -226,14 +228,37 @@ private fun ConversationSettingsContent(
     var pendingBlockConfirmation by remember { mutableStateOf(false) }
     var showSnoozeChatDialog by remember { mutableStateOf(false) }
 
+    val listState = rememberLazyListState()
+    val collapseProgress = remember {
+        derivedStateOf {
+            if (listState.firstVisibleItemIndex > 0) {
+                return@derivedStateOf 1f
+            }
+
+            val headerInfo = listState.layoutInfo.visibleItemsInfo.firstOrNull()
+            if (headerInfo == null || headerInfo.size == 0) {
+                return@derivedStateOf 0f
+            }
+
+            val scrollOffset = listState.firstVisibleItemScrollOffset.toFloat()
+            (scrollOffset / headerInfo.size.toFloat()).coerceIn(0f, 1f)
+        }
+    }
+
     Scaffold(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            ConversationSettingsTopAppBar(onNavigateBack = onNavigateBack)
+            ConversationSettingsTopAppBar(
+                title = uiState.conversationTitle,
+                participant = uiState.otherParticipant,
+                onNavigateBack = onNavigateBack,
+                collapseProgress = { collapseProgress.value },
+            )
         },
     ) { contentPadding ->
         LazyColumn(
+            state = listState,
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
                 top = contentPadding.calculateTopPadding(),
@@ -247,6 +272,7 @@ private fun ConversationSettingsContent(
                 ConversationHeader(
                     title = uiState.conversationTitle,
                     participant = uiState.otherParticipant,
+                    collapseProgress = { collapseProgress.value },
                 )
             }
 

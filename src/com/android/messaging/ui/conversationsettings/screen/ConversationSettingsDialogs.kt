@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationsettings.screen
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -7,14 +8,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Snooze
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BasicAlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -31,9 +36,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.notification.SnoozeOption
+import com.android.messaging.ui.core.AppTheme
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsAction as Action
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState as State
-import com.android.messaging.ui.core.AppTheme
+
+private val DialogHorizontalPadding = 24.dp
+
+private val SnoozeOption.labelRes: Int
+    get() = when (this) {
+        SnoozeOption.OneHour -> R.string.snooze_chat_option_one_hour
+        SnoozeOption.EightHours -> R.string.snooze_chat_option_eight_hours
+        SnoozeOption.TwentyFourHours -> R.string.snooze_chat_option_twenty_four_hours
+        SnoozeOption.Always -> R.string.snooze_chat_option_always
+    }
 
 @Composable
 internal fun ConversationSettingsDialogs(
@@ -95,6 +110,7 @@ private fun BlockConfirmationDialog(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SnoozeChatDialog(
     onDismiss: () -> Unit,
@@ -102,51 +118,72 @@ private fun SnoozeChatDialog(
 ) {
     var selectedOption by rememberSaveable { mutableStateOf(SnoozeOption.OneHour) }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        icon = {
-            Icon(
-                imageVector = Icons.Default.Snooze,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        },
-        title = {
-            Text(
-                text = stringResource(R.string.snooze_chat_dialog_title),
-                textAlign = TextAlign.Center,
-            )
-        },
-        text = {
-            Column(modifier = Modifier.selectableGroup()) {
+    BasicAlertDialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        ) {
+            Column(modifier = Modifier.padding(vertical = DialogHorizontalPadding)) {
+                Icon(
+                    imageVector = Icons.Default.Snooze,
+                    contentDescription = stringResource(R.string.snooze_chat_setting_title),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentWidth(Alignment.CenterHorizontally),
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = stringResource(R.string.snooze_chat_dialog_title),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = DialogHorizontalPadding),
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 Text(
                     text = stringResource(R.string.snooze_chat_dialog_message),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = DialogHorizontalPadding),
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-                SnoozeOption.entries.forEach { option ->
-                    SnoozeOptionRow(
-                        text = stringResource(option.labelRes),
-                        selected = option == selectedOption,
-                        onClick = { selectedOption = option },
-                    )
+                Column(modifier = Modifier.selectableGroup()) {
+                    SnoozeOption.entries.forEach { option ->
+                        SnoozeOptionRow(
+                            text = stringResource(option.labelRes),
+                            selected = option == selectedOption,
+                            onClick = { selectedOption = option },
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = DialogHorizontalPadding),
+                    horizontalArrangement = Arrangement.End,
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text(text = stringResource(android.R.string.cancel))
+                    }
+                    TextButton(onClick = { onConfirm(selectedOption) }) {
+                        Text(text = stringResource(R.string.snooze_chat_dialog_confirm))
+                    }
                 }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = { onConfirm(selectedOption) }) {
-                Text(text = stringResource(R.string.snooze_chat_dialog_confirm))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = stringResource(android.R.string.cancel))
-            }
-        },
-    )
+        }
+    }
 }
 
 @Composable
@@ -163,7 +200,10 @@ private fun SnoozeOptionRow(
                 onClick = onClick,
                 role = Role.RadioButton,
             )
-            .padding(vertical = 12.dp),
+            .padding(
+                horizontal = DialogHorizontalPadding,
+                vertical = 12.dp,
+            ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         RadioButton(
@@ -179,14 +219,6 @@ private fun SnoozeOptionRow(
         )
     }
 }
-
-private val SnoozeOption.labelRes: Int
-    get() = when (this) {
-        SnoozeOption.OneHour -> R.string.snooze_chat_option_one_hour
-        SnoozeOption.EightHours -> R.string.snooze_chat_option_eight_hours
-        SnoozeOption.TwentyFourHours -> R.string.snooze_chat_option_twenty_four_hours
-        SnoozeOption.Always -> R.string.snooze_chat_option_always
-    }
 
 @Preview
 @Composable

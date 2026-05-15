@@ -30,10 +30,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -47,6 +49,7 @@ internal fun ConversationHeader(
     title: String,
     participant: ParticipantUiState?,
     modifier: Modifier = Modifier,
+    collapseProgress: () -> Float = { 0f },
 ) {
     Column(
         modifier = modifier
@@ -56,7 +59,13 @@ internal fun ConversationHeader(
     ) {
         ParticipantAvatar(
             avatarUri = participant?.avatarUri,
-            modifier = Modifier.size(112.dp),
+            modifier = Modifier
+                .size(112.dp)
+                .graphicsLayer {
+                    val scale = 1f - collapseProgress()
+                    scaleX = scale
+                    scaleY = scale
+                },
             fallbackIcon = when {
                 participant == null -> Icons.Default.Group
                 else -> Icons.Default.Person
@@ -72,6 +81,11 @@ internal fun ConversationHeader(
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.graphicsLayer {
+                    alpha = 1f - collapseProgress()
+                },
             )
         }
     }
@@ -176,7 +190,7 @@ internal fun ParticipantItem(
 }
 
 @Composable
-private fun ParticipantAvatar(
+internal fun ParticipantAvatar(
     avatarUri: String?,
     fallbackIcon: ImageVector,
     fallbackIconSize: Dp,
