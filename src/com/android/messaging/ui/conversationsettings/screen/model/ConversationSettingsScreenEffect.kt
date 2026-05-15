@@ -21,4 +21,15 @@ internal sealed interface ConversationSettingsScreenEffect {
     data class ShowMessage(
         val messageResId: Int,
     ) : ConversationSettingsScreenEffect
+
+    data class PlacePhoneCall(
+        val phoneNumber: String,
+    ) : ConversationSettingsScreenEffect
+
+    data class ShowOrAddContact(
+        val contactId: Long,
+        val contactLookupKey: String?,
+        val avatarUri: String?,
+        val normalizedDestination: String?,
+    ) : ConversationSettingsScreenEffect
 }

@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationsettings.screen
 
+import android.provider.MediaStore
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -29,8 +30,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Block
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.SimCard
 import androidx.compose.material.icons.filled.Snooze
 import androidx.compose.material.icons.filled.SwapHoriz
@@ -55,6 +58,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
@@ -74,15 +78,15 @@ import com.android.messaging.ui.conversationsettings.common.ConversationSettings
 import com.android.messaging.ui.conversationsettings.common.ConversationSimAvatar
 import com.android.messaging.ui.conversationsettings.common.ParticipantItem
 import com.android.messaging.ui.conversationsettings.common.resolveDisplayName
+import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
+import com.android.messaging.ui.core.AppTheme
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import com.android.messaging.ui.conversationsettings.screen.ConversationSettingsNavRouteSavedState as NavRouteSavedState
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsAction as Action
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsNavEvent as NavEvent
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsNavRoute as NavRoute
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState as State
-import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
-import com.android.messaging.ui.core.AppTheme
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 
 private const val SLIDE_OFFSET_DIVISOR = 3
 
@@ -137,7 +141,7 @@ internal fun ConversationSettingsScreen(
 
                 NavEvent.CloseAfterBlock,
                 NavEvent.CloseAfterArchive,
-                -> {
+                    -> {
                     if (isRootRoute()) {
                         resultCode = ConversationActivity.FINISH_RESULT_CODE
                     }
@@ -257,6 +261,11 @@ private fun ConversationSettingsContent(
                 )
             }
 
+            contactItems(
+                uiState = uiState,
+                onAction = onAction,
+            )
+
             simSwitchItem(
                 uiState = uiState,
                 onAction = onAction,
@@ -284,6 +293,82 @@ private fun ConversationSettingsContent(
         onDismissBlockConfirmation = { pendingBlockConfirmation = false },
         onDismissSnoozeChat = { showSnoozeChatDialog = false },
     )
+}
+
+private fun LazyListScope.contactItems(
+    uiState: State,
+    onAction: (Action) -> Unit,
+) {
+    if (uiState.otherParticipant == null || uiState.participants.size > 1) return
+    if (!uiState.canCall && !uiState.canShowContact) return
+
+    item(key = "contact_buttons") {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            if (uiState.canCall) {
+                ContactButtonItem(
+                    imageVector = Icons.Default.Call,
+                    text = stringResource(R.string.action_call),
+                    onClick = { onAction(Action.CallClicked) },
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            if (uiState.canShowContact) {
+                val (icon, textRes) = if (uiState.isContactSaved) {
+                    Icons.Default.Person to R.string.action_contact_info
+                } else {
+                    Icons.Default.PersonAdd to R.string.action_add_contact
+                }
+                ContactButtonItem(
+                    imageVector = icon,
+                    text = stringResource(textRes),
+                    onClick = { onAction(Action.ContactInfoClicked) },
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ContactButtonItem(
+    imageVector: ImageVector,
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(64.dp),
+            shape = RoundedCornerShape(percent = 50),
+            color = MaterialTheme.colorScheme.surfaceContainer,
+            onClick = onClick,
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = imageVector,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+    }
 }
 
 private fun LazyListScope.generalSettingsItems(

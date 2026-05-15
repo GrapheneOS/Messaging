@@ -14,9 +14,19 @@ internal data class ConversationSettingsUiState(
     val participants: ImmutableList<ParticipantUiState> = persistentListOf(),
     val selfParticipantId: String = "",
     val availableSubscriptions: ImmutableList<Subscription> = persistentListOf(),
+    val canCall: Boolean = false,
 ) {
     val otherParticipant: ParticipantUiState?
         get() = participants.singleOrNull()
+
+    val canShowContact: Boolean
+        get() = !otherParticipant?.normalizedDestination.isNullOrBlank()
+
+    val isContactSaved: Boolean
+        get() {
+            val participant = otherParticipant ?: return false
+            return participant.contactId > 0 && !participant.lookupKey.isNullOrBlank()
+        }
 
     val selectedSubscription: Subscription?
         get() {
