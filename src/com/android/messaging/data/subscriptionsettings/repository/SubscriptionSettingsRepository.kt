@@ -7,10 +7,10 @@ import android.telephony.SubscriptionManager
 import com.android.messaging.Factory
 import com.android.messaging.R
 import com.android.messaging.data.subscriptionsettings.model.PerSubscriptionData
+import com.android.messaging.data.subscriptionsettings.model.SubscriptionBooleanPref
 import com.android.messaging.data.subscriptionsettings.model.SubscriptionSettingsData
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
 import com.android.messaging.datamodel.MessagingContentProvider
-import com.android.messaging.datamodel.ParticipantRefresh
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.di.core.IoDispatcher
 import com.android.messaging.sms.MmsConfig
@@ -31,11 +31,11 @@ internal interface SubscriptionSettingsRepository {
     fun isMultiSim(): Boolean
     fun observeSubscriptionsChanged(): Flow<Unit>
     suspend fun getSubscriptionSettings(): SubscriptionSettingsData
-    suspend fun setGroupMmsEnabled(subId: Int, enabled: Boolean)
-    suspend fun setAutoRetrieveMms(subId: Int, enabled: Boolean)
-    suspend fun setAutoRetrieveMmsWhenRoaming(subId: Int, enabled: Boolean)
-    suspend fun setDeliveryReportsEnabled(subId: Int, enabled: Boolean)
-    suspend fun setPhoneNumber(subId: Int, phoneNumber: String)
+    suspend fun setSubscriptionBooleanPref(
+        subId: Int,
+        pref: SubscriptionBooleanPref,
+        enabled: Boolean,
+    )
 }
 
 internal class SubscriptionSettingsRepositoryImpl @Inject constructor(
@@ -102,82 +102,15 @@ internal class SubscriptionSettingsRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun setGroupMmsEnabled(
+    override suspend fun setSubscriptionBooleanPref(
         subId: Int,
+        pref: SubscriptionBooleanPref,
         enabled: Boolean,
-    ) {
-        putSubscriptionBoolean(
-            subId = subId,
-            keyResId = R.string.group_mms_pref_key,
-            value = enabled,
-        )
-    }
-
-    override suspend fun setAutoRetrieveMms(
-        subId: Int,
-        enabled: Boolean,
-    ) {
-        putSubscriptionBoolean(
-            subId = subId,
-            keyResId = R.string.auto_retrieve_mms_pref_key,
-            value = enabled,
-        )
-    }
-
-    override suspend fun setAutoRetrieveMmsWhenRoaming(
-        subId: Int,
-        enabled: Boolean,
-    ) {
-        putSubscriptionBoolean(
-            subId = subId,
-            keyResId = R.string.auto_retrieve_mms_when_roaming_pref_key,
-            value = enabled,
-        )
-    }
-
-    override suspend fun setDeliveryReportsEnabled(
-        subId: Int,
-        enabled: Boolean,
-    ) {
-        putSubscriptionBoolean(
-            subId = subId,
-            keyResId = R.string.delivery_reports_pref_key,
-            value = enabled,
-        )
-    }
-
-    override suspend fun setPhoneNumber(
-        subId: Int,
-        phoneNumber: String,
-    ) {
-        withContext(ioDispatcher) {
-            val phoneUtils = PhoneUtils.get(subId)
-            val canonical = phoneUtils.getCanonicalBySystemLocale(phoneNumber)
-            val defaultCanonical = phoneUtils.getCanonicalBySystemLocale(
-                phoneUtils.getCanonicalForSelf(false),
-            )
-
-            val key = context.getString(R.string.mms_phone_number_pref_key)
-            val subPrefs = BuglePrefs.getSubscriptionPrefs(subId)
-            if (canonical == defaultCanonical || phoneNumber.isEmpty()) {
-                subPrefs.remove(key)
-            } else {
-                subPrefs.putString(key, phoneNumber)
-            }
-
-            ParticipantRefresh.refreshSelfParticipants()
-        }
-    }
-
-    private suspend fun putSubscriptionBoolean(
-        subId: Int,
-        keyResId: Int,
-        value: Boolean,
     ) {
         withContext(ioDispatcher) {
             BuglePrefs.getSubscriptionPrefs(subId).putBoolean(
-                context.getString(keyResId),
-                value,
+                context.getString(pref.keyResId),
+                enabled,
             )
         }
     }

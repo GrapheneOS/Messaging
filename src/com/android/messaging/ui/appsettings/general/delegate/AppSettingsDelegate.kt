@@ -1,5 +1,6 @@
 package com.android.messaging.ui.appsettings.general.delegate
 
+import com.android.messaging.data.appsettings.model.AppBooleanPref
 import com.android.messaging.data.appsettings.repository.AppSettingsRepository
 import com.android.messaging.ui.appsettings.common.SettingsScreenDelegate
 import com.android.messaging.ui.appsettings.general.mapper.AppSettingsUiStateMapper
@@ -56,22 +57,35 @@ internal class AppSettingsDelegateImpl @Inject constructor(
     }
 
     override fun onSendSoundChanged(enabled: Boolean) {
-        boundScope?.launch {
-            repository.setSendSoundEnabled(enabled)
-            refresh()
-        }
+        setBooleanPref(
+            pref = AppBooleanPref.SEND_SOUND,
+            enabled = enabled,
+        )
     }
 
     override fun onDumpSmsChanged(enabled: Boolean) {
-        boundScope?.launch {
-            repository.setDumpSmsEnabled(enabled)
-            refresh()
-        }
+        setBooleanPref(
+            pref = AppBooleanPref.DUMP_SMS,
+            enabled = enabled,
+        )
     }
 
     override fun onDumpMmsChanged(enabled: Boolean) {
+        setBooleanPref(
+            pref = AppBooleanPref.DUMP_MMS,
+            enabled = enabled,
+        )
+    }
+
+    private fun setBooleanPref(
+        pref: AppBooleanPref,
+        enabled: Boolean,
+    ) {
         boundScope?.launch {
-            repository.setDumpMmsEnabled(enabled)
+            repository.setBooleanPref(
+                pref = pref,
+                enabled = enabled,
+            )
             refresh()
         }
     }
