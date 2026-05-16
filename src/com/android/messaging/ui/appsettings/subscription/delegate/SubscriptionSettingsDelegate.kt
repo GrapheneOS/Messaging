@@ -1,6 +1,8 @@
 package com.android.messaging.ui.appsettings.subscription.delegate
 
+import com.android.messaging.data.subscriptionsettings.model.SubscriptionBooleanPref
 import com.android.messaging.data.subscriptionsettings.repository.SubscriptionSettingsRepository
+import com.android.messaging.domain.subscriptionsettings.usecase.SetSubscriptionPhoneNumber
 import com.android.messaging.ui.appsettings.common.SettingsScreenDelegate
 import com.android.messaging.ui.appsettings.subscription.mapper.SubscriptionSettingsUiStateMapper
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionSettingsUiState
@@ -28,6 +30,7 @@ internal interface SubscriptionSettingsDelegate :
 
 internal class SubscriptionSettingsDelegateImpl @Inject constructor(
     private val repository: SubscriptionSettingsRepository,
+    private val setSubscriptionPhoneNumber: SetSubscriptionPhoneNumber,
     private val mapper: SubscriptionSettingsUiStateMapper,
 ) : SubscriptionSettingsDelegate {
 
@@ -72,52 +75,44 @@ internal class SubscriptionSettingsDelegateImpl @Inject constructor(
         subId: Int,
         enabled: Boolean,
     ) {
-        boundScope?.launch {
-            repository.setAutoRetrieveMms(
-                subId = subId,
-                enabled = enabled,
-            )
-            refresh()
-        }
+        setBooleanPref(
+            subId = subId,
+            pref = SubscriptionBooleanPref.AUTO_RETRIEVE_MMS,
+            enabled = enabled,
+        )
     }
 
     override fun onAutoRetrieveMmsWhenRoamingChanged(
         subId: Int,
         enabled: Boolean,
     ) {
-        boundScope?.launch {
-            repository.setAutoRetrieveMmsWhenRoaming(
-                subId = subId,
-                enabled = enabled,
-            )
-            refresh()
-        }
+        setBooleanPref(
+            subId = subId,
+            pref = SubscriptionBooleanPref.AUTO_RETRIEVE_MMS_WHEN_ROAMING,
+            enabled = enabled,
+        )
     }
 
     override fun onDeliveryReportsChanged(
         subId: Int,
         enabled: Boolean,
     ) {
-        boundScope?.launch {
-            repository.setDeliveryReportsEnabled(
-                subId = subId,
-                enabled = enabled,
-            )
-            refresh()
-        }
+        setBooleanPref(
+            subId = subId,
+            pref = SubscriptionBooleanPref.DELIVERY_REPORTS,
+            enabled = enabled,
+        )
     }
 
     override fun onGroupMmsChanged(
         subId: Int,
         enabled: Boolean,
     ) {
-        boundScope?.launch {
-            repository.setGroupMmsEnabled(
-                subId = subId,
-                enabled = enabled,
-            )
-            refresh()
-        }
+        setBooleanPref(
+            subId = subId,
+            pref = SubscriptionBooleanPref.GROUP_MMS,
+            enabled = enabled,
+        )
     }
 
     override fun onPhoneNumberChanged(
@@ -125,9 +120,24 @@ internal class SubscriptionSettingsDelegateImpl @Inject constructor(
         phoneNumber: String,
     ) {
         boundScope?.launch {
-            repository.setPhoneNumber(
+            setSubscriptionPhoneNumber(
                 subId = subId,
                 phoneNumber = phoneNumber,
+            )
+            refresh()
+        }
+    }
+
+    private fun setBooleanPref(
+        subId: Int,
+        pref: SubscriptionBooleanPref,
+        enabled: Boolean,
+    ) {
+        boundScope?.launch {
+            repository.setSubscriptionBooleanPref(
+                subId = subId,
+                pref = pref,
+                enabled = enabled,
             )
             refresh()
         }
