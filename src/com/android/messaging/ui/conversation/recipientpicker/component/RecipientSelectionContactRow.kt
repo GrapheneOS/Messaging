@@ -1,7 +1,5 @@
 package com.android.messaging.ui.conversation.recipientpicker.component
 
-import android.provider.ContactsContract.CommonDataKinds.Email
-import android.provider.ContactsContract.CommonDataKinds.Phone
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -30,13 +28,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -47,14 +43,11 @@ import com.android.messaging.ui.conversation.recipientpicker.model.picker.Recipi
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionRowDecorators
 import kotlinx.collections.immutable.ImmutableSet
 
-private val contactCornerRadius = 18.dp
-private val contactMiddleCornerRadius = 2.dp
-private val avatarSize = 40.dp
-private val avatarToTextSpacing = 14.dp
-private val rowHorizontalPadding = 16.dp
-private val rowVerticalPadding = 14.dp
-private val destinationIndentation = avatarSize + avatarToTextSpacing
-private val destinationVerticalPadding = 10.dp
+internal val contactCornerRadius = 18.dp
+internal val contactMiddleCornerRadius = 2.dp
+internal val avatarToTextSpacing = 14.dp
+internal val rowHorizontalPadding = 16.dp
+internal val rowVerticalPadding = 14.dp
 
 private val topContactShape = RoundedCornerShape(
     topStart = contactCornerRadius,
@@ -297,197 +290,6 @@ private fun SyntheticPhoneRow(
 }
 
 @Composable
-private fun MultiDestinationContactRow(
-    item: RecipientPickerListItem.Contact,
-    enabled: Boolean,
-    selectedDestinations: ImmutableSet<String>,
-    onDestinationClick: (destination: String) -> Unit,
-    onDestinationLongClick: ((destination: String) -> Unit)?,
-    shape: RoundedCornerShape,
-    rowDecorators: RecipientSelectionRowDecorators,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = Modifier
-            .then(other = modifier)
-            .fillMaxWidth()
-            .testTag(rowDecorators.recipientRowTestTag(item))
-            .background(
-                color = MaterialTheme.colorScheme.background,
-                shape = shape,
-            )
-            .padding(
-                horizontal = rowHorizontalPadding,
-                vertical = rowVerticalPadding,
-            ),
-    ) {
-        MultiDestinationContactHeader(item = item)
-
-        Column(
-            modifier = Modifier.padding(top = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(space = 4.dp),
-        ) {
-            item.destinations.forEach { destination ->
-                MultiDestinationMiniRow(
-                    item = item,
-                    destination = destination,
-                    enabled = enabled,
-                    isSelected = selectedDestinations.contains(destination.normalizedValue),
-                    onClick = { onDestinationClick(destination.normalizedValue) },
-                    onLongClick = onDestinationLongClick?.let { callback ->
-                        { callback(destination.normalizedValue) }
-                    },
-                    rowDecorators = rowDecorators,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun MultiDestinationContactHeader(
-    item: RecipientPickerListItem.Contact,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        RecipientSelectionContactAvatar(
-            item = item,
-            isSelected = false,
-        )
-
-        Text(
-            modifier = Modifier
-                .padding(start = avatarToTextSpacing)
-                .weight(weight = 1f),
-            text = item.contact.displayName,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-    }
-}
-
-@Composable
-private fun MultiDestinationMiniRow(
-    item: RecipientPickerListItem.Contact,
-    destination: ContactDestination,
-    enabled: Boolean,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    onLongClick: (() -> Unit)?,
-    rowDecorators: RecipientSelectionRowDecorators,
-) {
-    val hapticFeedback = LocalHapticFeedback.current
-    val selectionTransition = updateTransition(
-        targetState = isSelected,
-        label = "recipientSelectionContactDestinationSelection",
-    )
-
-    val containerColor by selectionTransition.animateContainerColor()
-    val primaryTextColor by selectionTransition.animatePrimaryTextColor()
-    val secondaryTextColor by selectionTransition.animateSecondaryTextColor()
-
-    val label = rememberDestinationLabel(destination = destination)
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag(rowDecorators.destinationRowTestTag(item, destination.value))
-            .semantics { selected = isSelected }
-            .background(color = containerColor)
-            .combinedClickable(
-                enabled = enabled,
-                onClick = {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.ContextClick)
-                    onClick()
-                },
-                onLongClick = onLongClick?.let { callback ->
-                    {
-                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                        callback()
-                    }
-                },
-            )
-            .padding(
-                start = destinationIndentation,
-                end = 12.dp,
-                top = destinationVerticalPadding,
-                bottom = destinationVerticalPadding,
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        MultiDestinationMiniRowContent(
-            item = item,
-            destination = destination,
-            label = label,
-            primaryTextColor = primaryTextColor,
-            secondaryTextColor = secondaryTextColor,
-            rowDecorators = rowDecorators,
-        )
-    }
-}
-
-@Composable
-private fun RowScope.MultiDestinationMiniRowContent(
-    item: RecipientPickerListItem.Contact,
-    destination: ContactDestination,
-    label: String,
-    primaryTextColor: Color,
-    secondaryTextColor: Color,
-    rowDecorators: RecipientSelectionRowDecorators,
-) {
-    Text(
-        modifier = Modifier.weight(weight = 1f),
-        text = destination.displayValue,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-        style = MaterialTheme.typography.bodyMedium,
-        color = primaryTextColor,
-    )
-
-    Text(
-        modifier = Modifier.padding(start = 12.dp),
-        text = label,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-        style = MaterialTheme.typography.bodySmall,
-        color = secondaryTextColor,
-    )
-
-    RecipientSelectionTrailingIndicator(
-        visible = rowDecorators.showRecipientTrailingIndicator(
-            item,
-            destination.normalizedValue,
-        ),
-        testTag = rowDecorators.trailingIndicatorTestTag,
-    )
-}
-
-@Composable
-private fun rememberDestinationLabel(
-    destination: ContactDestination,
-): String {
-    val resources = LocalResources.current
-
-    return remember(destination.kind, destination.type, destination.customLabel) {
-        val label = when (destination.kind) {
-            ContactDestination.Kind.PHONE -> {
-                Phone.getTypeLabel(resources, destination.type, destination.customLabel)
-            }
-
-            ContactDestination.Kind.EMAIL -> {
-                Email.getTypeLabel(resources, destination.type, destination.customLabel)
-            }
-        }
-
-        label?.toString().orEmpty()
-    }
-}
-
-@Composable
 private fun RowScope.ContactPrimaryAndSecondaryText(
     primaryText: String,
     secondaryText: String?,
@@ -521,7 +323,7 @@ private fun RowScope.ContactPrimaryAndSecondaryText(
 }
 
 @Composable
-private fun RecipientSelectionTrailingIndicator(
+internal fun RecipientSelectionTrailingIndicator(
     visible: Boolean,
     testTag: String?,
 ) {
@@ -576,7 +378,7 @@ internal fun recipientSelectionContactRowShape(
 }
 
 @Composable
-private fun Transition<Boolean>.animateContainerColor(): State<Color> {
+internal fun Transition<Boolean>.animateContainerColor(): State<Color> {
     return animateColor(
         transitionSpec = {
             tween(
@@ -595,7 +397,7 @@ private fun Transition<Boolean>.animateContainerColor(): State<Color> {
 }
 
 @Composable
-private fun Transition<Boolean>.animatePrimaryTextColor(): State<Color> {
+internal fun Transition<Boolean>.animatePrimaryTextColor(): State<Color> {
     return animateColor(
         transitionSpec = {
             tween(
@@ -614,7 +416,7 @@ private fun Transition<Boolean>.animatePrimaryTextColor(): State<Color> {
 }
 
 @Composable
-private fun Transition<Boolean>.animateSecondaryTextColor(): State<Color> {
+internal fun Transition<Boolean>.animateSecondaryTextColor(): State<Color> {
     return animateColor(
         transitionSpec = {
             tween(
