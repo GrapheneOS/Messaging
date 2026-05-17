@@ -47,15 +47,10 @@
     <dimen name="message_metadata_top_padding">4dp</dimen>
     <dimen name="message_audio_attachment_padding">12dp</dimen>
 
-    <dimen name="compose_message_contacts_container_margin">4dp</dimen>
-    <dimen name="compose_message_contacts_height">42dp</dimen>
-    <dimen name="compose_message_chip_height">36dp</dimen>
-    <dimen name="compose_message_chip_padding">3dp</dimen>
     <dimen name="compose_message_fields_horizontal_margin">16dp</dimen>
     <dimen name="compose_message_font_size">16sp</dimen>
     <dimen name="compose_message_attachment_padding_sides">20dp</dimen>
     <dimen name="compose_message_attachment_padding_topBottom">10dp</dimen>
-    <dimen name="compose_message_chips_view_max_height">133dp</dimen>
     <dimen name="compose_message_subject_left_padding">52dp</dimen>
     <dimen name="compose_message_subject_right_padding">64dp</dimen>
     <dimen name="compose_message_subject_top_padding">4dp</dimen>
@@ -67,13 +62,8 @@
     <dimen name="compose_message_text_box_padding_side">8dp</dimen>
 
     <!-- Contact Picker related dimensions. -->
-    <dimen name="contact_list_text_size">16sp</dimen>
     <dimen name="contact_list_detail_text_size">14sp</dimen>
     <dimen name="contact_list_icon_size">42dp</dimen>
-    <dimen name="recipient_edit_text_size">20sp</dimen>
-    <dimen name="pager_tab_header_text_size">14sp</dimen>
-    <dimen name="pager_tab_underline_selected">2dp</dimen>
-    <dimen name="contact_list_alphabet_header_text_size">26dp</dimen>
 
     <dimen name="single_attachment_min_dimen">50dp</dimen>
     <dimen name="single_attachment_max_height">150dp</dimen>
@@ -87,8 +77,6 @@
 
     <dimen name="audio_attachment_text_size">14sp</dimen>
     <dimen name="audio_progress_bar_height">6dp</dimen>
-
-    <dimen name="contact_picker_text_size">16sp</dimen>
 
     <!-- Videos in the message list view should at least be this big in the smallest dimension -->
     <dimen name="video_message_min_size">320dp</dimen>

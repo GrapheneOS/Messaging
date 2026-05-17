@@ -79,20 +79,10 @@
 
     <color name="contact_avatar_default_background">#d2d2d2</color>
     <color name="contact_avatar_pressed_color">#40000000</color>
-    <color name="contact_list_text_primary">#4d4d4d</color>
     <color name="contact_list_text_secondary">#999999</color>
 
-    <color name="compose_contact_text">@android:color/white</color>
-    <color name="compose_contact_faint_text">#a0ffffff</color>
-    <color name="compose_contact_divider">#44000000</color>
-    <color name="contact_picker_tab_pressed">#ddffffff</color>
-    <color name="contact_picker_tab_underline">@android:color/white</color>
-    <color name="contact_list_alphabet_header">@color/primary_color</color>
-    <color name="contact_picker_background">#ffffff</color>
     <color name="chips_dropdown_background_activated">#4285f4</color>
     <color name="chips_dropdown_background_pressed">#ededed</color>
-    <color name="chips_background_color">#33000000</color>
-    <color name="chips_text_color">@android:color/white</color>
 
     <color name="translucent_white">#80ffffff</color>
 
@@ -102,8 +92,6 @@
 
     <color name="audio_attachment_timer_text_color">#323232</color>
     <color name="audio_progress_bar_color">@color/primary_color</color>
-
-    <color name="contact_picker_hint_text_color">#40000000</color>
 
     <color name="notification_sender_text">#DE000000</color>
     <color name="notification_secondary_text">#8A000000</color>

@@ -150,45 +150,10 @@
         <item name="android:layout_marginLeft">@dimen/compose_message_subject_cancel_left_margin</item>
     </style>
 
-    <style name="ContactListItem">
-        <item name="android:textSize">@dimen/contact_list_text_size</item>
-        <item name="android:textColor">@color/contact_list_text_primary</item>
-        <item name="android:background">@null</item>
-    </style>
-
     <style name="ContactListItemDetail">
         <item name="android:textSize">@dimen/contact_list_detail_text_size</item>
         <item name="android:textColor">@color/contact_list_text_secondary</item>
         <item name="android:background">@null</item>
-    </style>
-
-    <style name="ContactListItemDetailType" parent="ContactListItemDetail">
-        <item name="android:paddingStart">12dp</item>
-    </style>
-
-    <style name="ContactListItemDrawableIndicator">
-        <item name="android:background">?android:attr/selectableItemBackgroundBorderless</item>
-    </style>
-
-    <style name="RecipientEditTextView">
-        <item name="android:textSize">@dimen/recipient_edit_text_size</item>
-        <item name="android:textColor">@color/compose_contact_text</item>
-        <item name="android:textColorHint">@color/compose_contact_faint_text</item>
-        <item name="android:fontFamily">sans-serif</item>
-        <item name="android:paddingStart">4dp</item>
-        <item name="android:paddingEnd">4dp</item>
-    </style>
-
-    <style name="PagerTabHeader">
-        <item name="android:textColor">@color/tab_text_color</item>
-        <item name="android:textSize">@dimen/pager_tab_header_text_size</item>
-        <item name="android:background">@null</item>
-        <item name="android:textStyle">bold</item>
-    </style>
-
-    <style name="ContactListAlphabetHeader">
-        <item name="android:textSize">@dimen/contact_list_alphabet_header_text_size</item>
-        <item name="android:textColor">@color/contact_list_alphabet_header</item>
     </style>
 
     <style name="AttachmentPreviewMoreItemsText">
@@ -205,11 +170,6 @@
     <style name="AudioAttachmentViewStyle">
         <item name="android:paddingStart">16dp</item>
         <item name="android:paddingEnd">16dp</item>
-    </style>
-
-    <style name="ContactPickerHintText">
-        <item name="android:textSize">@dimen/contact_picker_text_size</item>
-        <item name="android:textColor">@color/contact_picker_hint_text_color</item>
     </style>
 
     <style name="VcardAttachmentSingleStyle">
@@ -251,10 +211,6 @@
         <item name="android:paddingStart">@dimen/compose_message_attachment_padding_sides</item>
         <item name="android:paddingEnd">@dimen/compose_message_attachment_padding_sides</item>
         <item name="android:background">?android:attr/selectableItemBackground</item>
-    </style>
-
-    <style name="ContactListItemViewStyle">
-        <item name="android:paddingLeft">16dp</item>
     </style>
 
     <style name="ContactListItemLinearLayoutStyle">
