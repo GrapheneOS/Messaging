@@ -7,12 +7,15 @@ import com.android.messaging.data.conversation.model.attachment.ConversationVCar
 import com.android.messaging.datamodel.DataModel
 import com.android.messaging.datamodel.data.PersonItemData
 import com.android.messaging.datamodel.data.VCardContactItemData
+import com.android.messaging.di.core.DefaultDispatcher
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
 
 internal interface ConversationVCardMetadataRepository {
     fun observeAttachmentMetadata(
@@ -24,6 +27,8 @@ internal class ConversationVCardMetadataRepositoryImpl @Inject constructor(
     @param:ApplicationContext
     private val context: Context,
     private val conversationVCardMetadataMapper: ConversationVCardMetadataMapper,
+    @param:DefaultDispatcher
+    private val defaultDispatcher: CoroutineDispatcher,
 ) : ConversationVCardMetadataRepository {
 
     private val dataModel = DataModel.get()
@@ -67,6 +72,6 @@ internal class ConversationVCardMetadataRepositoryImpl @Inject constructor(
             awaitClose {
                 vCardData.unbind(bindingId)
             }
-        }
+        }.flowOn(defaultDispatcher)
     }
 }

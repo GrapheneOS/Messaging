@@ -3,13 +3,10 @@ package com.android.messaging.domain.conversation.usecase.draft
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.send.ConversationSendData
 import com.android.messaging.data.conversation.repository.ConversationsRepository
-import com.android.messaging.di.core.IoDispatcher
 import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
 import com.android.messaging.util.LogUtil
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.withContext
 
 internal interface ResolveConversationDraftSendProtocol {
     suspend operator fun invoke(
@@ -21,8 +18,6 @@ internal interface ResolveConversationDraftSendProtocol {
 internal class ResolveConversationDraftSendProtocolImpl @Inject constructor(
     private val conversationsRepository: ConversationsRepository,
     private val getConversationDraftSendProtocol: GetConversationDraftSendProtocol,
-    @param:IoDispatcher
-    private val ioDispatcher: CoroutineDispatcher,
 ) : ResolveConversationDraftSendProtocol {
 
     @Suppress("TooGenericExceptionCaught")
@@ -64,12 +59,10 @@ internal class ResolveConversationDraftSendProtocolImpl @Inject constructor(
     ): ConversationSendData? {
         return when {
             draft.hasContent && !conversationId.isNullOrBlank() -> {
-                withContext(context = ioDispatcher) {
-                    conversationsRepository.getConversationSendData(
-                        conversationId = conversationId,
-                        requestedSelfParticipantId = draft.selfParticipantId,
-                    )
-                }
+                conversationsRepository.getConversationSendData(
+                    conversationId = conversationId,
+                    requestedSelfParticipantId = draft.selfParticipantId,
+                )
             }
 
             else -> null

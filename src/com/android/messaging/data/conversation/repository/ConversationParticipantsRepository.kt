@@ -6,7 +6,8 @@ import android.net.Uri
 import com.android.messaging.data.conversation.model.recipient.ConversationRecipient
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.data.ParticipantData
-import com.android.messaging.di.core.IoDispatcher
+import com.android.messaging.di.core.DefaultDispatcher
+import com.android.messaging.di.core.MessagingDbDispatcher
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -26,8 +27,10 @@ internal interface ConversationParticipantsRepository {
 
 internal class ConversationParticipantsRepositoryImpl @Inject constructor(
     private val contentResolver: ContentResolver,
-    @param:IoDispatcher
-    private val ioDispatcher: CoroutineDispatcher,
+    @param:DefaultDispatcher
+    private val defaultDispatcher: CoroutineDispatcher,
+    @param:MessagingDbDispatcher
+    private val messagingDbDispatcher: CoroutineDispatcher,
 ) : ConversationParticipantsRepository {
 
     override fun getParticipants(
@@ -36,11 +39,12 @@ internal class ConversationParticipantsRepositoryImpl @Inject constructor(
         val uri = MessagingContentProvider.buildConversationParticipantsUri(conversationId)
 
         return observeUri(uri = uri)
+            .flowOn(defaultDispatcher)
             .conflate()
             .map {
                 queryParticipants(uri = uri)
             }
-            .flowOn(ioDispatcher)
+            .flowOn(messagingDbDispatcher)
     }
 
     private fun observeUri(uri: Uri): Flow<Unit> {

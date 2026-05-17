@@ -11,7 +11,9 @@ import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.store.ConversationDraftStore
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.data.MessageData
+import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.di.core.IoDispatcher
+import com.android.messaging.di.core.MessagingDbDispatcher
 import com.android.messaging.util.ContentType
 import com.android.messaging.util.LogUtil
 import com.android.messaging.util.MediaMetadataRetrieverWrapper
@@ -41,16 +43,23 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
     private val conversationDraftMessageDataMapper: ConversationDraftMessageDataMapper,
     private val conversationMessageDataDraftMapper: ConversationMessageDataDraftMapper,
     private val conversationDraftStore: ConversationDraftStore,
+    @param:DefaultDispatcher
+    private val defaultDispatcher: CoroutineDispatcher,
     @param:IoDispatcher
     private val ioDispatcher: CoroutineDispatcher,
+    @param:MessagingDbDispatcher
+    private val messagingDbDispatcher: CoroutineDispatcher,
 ) : ConversationDraftsRepository {
 
     override fun observeConversationDraft(conversationId: String): Flow<ConversationDraft> {
         val draftChangeUri = MessagingContentProvider.buildConversationMetadataUri(conversationId)
 
         return observeDraftChanges(uri = draftChangeUri)
+            .flowOn(defaultDispatcher)
             .conflate()
-            .map { loadConversationDraft(conversationId = conversationId) }
+            .map { loadConversationDraft(conversationId) }
+            .flowOn(messagingDbDispatcher)
+            .map(::resolveDraftAttachmentMetadata)
             .catch { e ->
                 LogUtil.e(
                     TAG,
@@ -67,7 +76,7 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
         conversationId: String,
         draft: ConversationDraft,
     ) {
-        withContext(context = ioDispatcher) {
+        withContext(context = messagingDbDispatcher) {
             val message = conversationDraftMessageDataMapper.map(
                 conversationId = conversationId,
                 draft = draft,
@@ -137,11 +146,9 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
             }
 
             else -> {
-                resolveDraftAttachmentMetadata(
-                    draft = conversationMessageDataDraftMapper.map(
-                        messageData = draftMessage,
-                        fallbackSelfParticipantId = selfParticipantId,
-                    ),
+                conversationMessageDataDraftMapper.map(
+                    messageData = draftMessage,
+                    fallbackSelfParticipantId = selfParticipantId,
                 )
             }
         }

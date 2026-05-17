@@ -7,7 +7,7 @@ import com.android.messaging.datamodel.data.PendingAttachmentData
 import javax.inject.Inject
 
 internal interface CreateForwardedMessage {
-    operator fun invoke(
+    suspend operator fun invoke(
         conversationId: String,
         messageId: String,
     ): MessageData?
@@ -18,7 +18,7 @@ internal class CreateForwardedMessageImpl @Inject constructor(
     private val forwardedMessageSubjectFormatter: ForwardedMessageSubjectFormatter,
 ) : CreateForwardedMessage {
 
-    override operator fun invoke(
+    override suspend operator fun invoke(
         conversationId: String,
         messageId: String,
     ): MessageData? {

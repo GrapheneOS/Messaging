@@ -10,7 +10,8 @@ import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.debug.DebugSimEmulationMode
 import com.android.messaging.debug.DebugSimEmulationSource
-import com.android.messaging.di.core.IoDispatcher
+import com.android.messaging.di.core.DefaultDispatcher
+import com.android.messaging.di.core.MessagingDbDispatcher
 import com.android.messaging.sms.MmsConfig
 import com.android.messaging.util.BugleGservices
 import com.android.messaging.util.BugleGservicesKeys
@@ -45,19 +46,22 @@ internal interface SubscriptionsRepository {
 internal class SubscriptionsRepositoryImpl @Inject constructor(
     private val contentResolver: ContentResolver,
     private val debugSimEmulationSource: DebugSimEmulationSource,
-    @param:IoDispatcher
-    private val ioDispatcher: CoroutineDispatcher,
+    @param:DefaultDispatcher
+    private val defaultDispatcher: CoroutineDispatcher,
+    @param:MessagingDbDispatcher
+    private val messagingDbDispatcher: CoroutineDispatcher,
 ) : SubscriptionsRepository {
 
     override fun observeActiveSubscriptions(): Flow<ImmutableList<Subscription>> {
         val uri = MessagingContentProvider.PARTICIPANTS_URI
 
         val realSubscriptions = observeUri(uri = uri)
+            .flowOn(defaultDispatcher)
             .conflate()
             .map {
                 queryActiveSubscriptions()
             }
-            .flowOn(ioDispatcher)
+            .flowOn(messagingDbDispatcher)
 
         return combine(
             realSubscriptions,
@@ -85,15 +89,20 @@ internal class SubscriptionsRepositoryImpl @Inject constructor(
 
     override fun resolveMaxMessageSize(selfParticipantId: String): Flow<Int> {
         return typedFlow {
-            queryMaxMessageSize(selfParticipantId = selfParticipantId)
-        }.catch { throwable ->
-            if (throwable is CancellationException) {
-                throw throwable
+            resolveSubscriptionId(selfParticipantId = selfParticipantId)
+        }
+            .flowOn(messagingDbDispatcher)
+            .map { resolvedSubId ->
+                resolveMaxMessageSizeForSubId(resolvedSubId = resolvedSubId)
             }
+            .catch { throwable ->
+                if (throwable is CancellationException) {
+                    throw throwable
+                }
 
-            LogUtil.w(TAG, "Failed to resolve max message size", throwable)
-            emit(MmsConfig.getMaxMaxMessageSize())
-        }.flowOn(ioDispatcher)
+                LogUtil.w(TAG, "Failed to resolve max message size", throwable)
+                emit(MmsConfig.getMaxMaxMessageSize())
+            }
     }
 
     private fun applyDebugEmulation(
@@ -218,11 +227,9 @@ internal class SubscriptionsRepositoryImpl @Inject constructor(
             ?: persistentListOf()
     }
 
-    private fun queryMaxMessageSize(
-        selfParticipantId: String,
+    private fun resolveMaxMessageSizeForSubId(
+        resolvedSubId: Int?,
     ): Int {
-        val resolvedSubId = resolveSubscriptionId(selfParticipantId)
-
         return when {
             resolvedSubId == null || resolvedSubId <= ParticipantData.DEFAULT_SELF_SUB_ID -> {
                 MmsConfig.getMaxMaxMessageSize()

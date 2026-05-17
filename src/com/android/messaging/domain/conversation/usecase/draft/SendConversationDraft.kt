@@ -89,7 +89,7 @@ internal class SendConversationDraftImpl @Inject constructor(
         }
     }
 
-    private fun validateAndSendDraft(
+    private suspend fun validateAndSendDraft(
         conversationId: String,
         draft: ConversationDraft,
         ignoreMessageSizeLimit: Boolean,

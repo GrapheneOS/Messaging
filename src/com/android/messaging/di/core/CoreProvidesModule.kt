@@ -16,7 +16,10 @@ import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
+
+private const val MESSAGING_DB_DISPATCHER_PARALLELISM = 1
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -34,6 +37,17 @@ internal class CoreProvidesModule {
     @IoDispatcher
     fun provideIoDispatcher(): CoroutineDispatcher {
         return Dispatchers.IO
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Provides
+    @Singleton
+    @MessagingDbDispatcher
+    fun provideMessagingDbDispatcher(): CoroutineDispatcher {
+        return Dispatchers.IO.limitedParallelism(
+            parallelism = MESSAGING_DB_DISPATCHER_PARALLELISM,
+            name = "Messaging DB",
+        )
     }
 
     @Provides
