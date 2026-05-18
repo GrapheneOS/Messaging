@@ -9,7 +9,8 @@ import kotlinx.collections.immutable.persistentListOf
 internal data class ConversationSimSelectorUiState(
     val subscriptions: ImmutableList<Subscription> = persistentListOf(),
     val selectedSubscription: Subscription? = null,
+    val isLoading: Boolean = false,
 ) {
     val isAvailable: Boolean
-        get() = subscriptions.size > 1
+        get() = !isLoading && subscriptions.size > 1
 }

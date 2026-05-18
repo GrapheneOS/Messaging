@@ -10,20 +10,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.LinkAnnotation
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextLinkStyles
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel.Status
+import com.android.messaging.ui.conversation.messages.ui.buildConversationSimLinkAnnotatedString
 
 private const val METADATA_SEPARATOR = " • "
-private const val SIM_ANNOTATION_PLACEHOLDER = "%1\$s"
 
 @Composable
 internal fun ConversationMessageMetadata(
@@ -84,66 +78,20 @@ private fun buildMessageMetadataAnnotatedString(
 ): AnnotatedString? {
     return when {
         metadataText == null && simDisplayName == null -> null
-        simDisplayName == null -> AnnotatedString(text = metadataText.orEmpty())
-        else -> buildSimLinkAnnotatedString(
-            metadataText = metadataText,
-            simDisplayName = simDisplayName,
-            simAnnotationTemplate = simAnnotationTemplate,
-            linkColor = linkColor,
-            onSimSelectorClick = onSimSelectorClick,
-        )
-    }
-}
 
-private fun buildSimLinkAnnotatedString(
-    metadataText: String?,
-    simDisplayName: String,
-    simAnnotationTemplate: String,
-    linkColor: Color,
-    onSimSelectorClick: () -> Unit,
-): AnnotatedString {
-    val placeholderIndex = simAnnotationTemplate.indexOf(SIM_ANNOTATION_PLACEHOLDER)
+        simDisplayName == null -> {
+            AnnotatedString(text = metadataText.orEmpty())
+        }
 
-    val annotationPrefix = when {
-        placeholderIndex >= 0 -> simAnnotationTemplate.substring(0, placeholderIndex)
-        else -> simAnnotationTemplate
-    }
-
-    val annotationSuffix = when {
-        placeholderIndex >= 0 -> {
-            simAnnotationTemplate.substring(
-                placeholderIndex + SIM_ANNOTATION_PLACEHOLDER.length,
+        else -> {
+            buildConversationSimLinkAnnotatedString(
+                leadingText = metadataText,
+                leadingSeparator = METADATA_SEPARATOR,
+                simDisplayName = simDisplayName,
+                annotationTemplate = simAnnotationTemplate,
+                linkColor = linkColor,
+                onSimSelectorClick = onSimSelectorClick,
             )
-        }
-        else -> ""
-    }
-
-    val link = LinkAnnotation.Clickable(
-        tag = SIM_LINK_TAG,
-        styles = TextLinkStyles(
-            style = SpanStyle(
-                color = linkColor,
-                textDecoration = TextDecoration.Underline,
-            ),
-        ),
-    ) {
-        onSimSelectorClick()
-    }
-
-    return buildAnnotatedString {
-        if (!metadataText.isNullOrEmpty()) {
-            append(metadataText)
-            append(METADATA_SEPARATOR)
-        }
-
-        append(annotationPrefix)
-
-        withLink(link = link) {
-            append(simDisplayName)
-        }
-
-        if (annotationSuffix.isNotEmpty()) {
-            append(annotationSuffix)
         }
     }
 }
@@ -161,5 +109,3 @@ private fun messageMetadataColor(
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
 }
-
-private const val SIM_LINK_TAG = "sim_selector"

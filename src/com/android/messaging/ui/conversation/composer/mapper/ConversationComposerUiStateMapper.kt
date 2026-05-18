@@ -23,6 +23,7 @@ internal interface ConversationComposerUiStateMapper {
         attachments: ImmutableList<ComposerAttachmentUiModel>,
         composerAvailability: ConversationComposerAvailability,
         subscriptions: ImmutableList<Subscription>,
+        areSubscriptionsLoaded: Boolean,
     ): ConversationComposerUiState
 }
 
@@ -35,6 +36,7 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
         attachments: ImmutableList<ComposerAttachmentUiModel>,
         composerAvailability: ConversationComposerAvailability,
         subscriptions: ImmutableList<Subscription>,
+        areSubscriptionsLoaded: Boolean,
     ): ConversationComposerUiState {
         val draft = draftState.draft
         val hasWorkingDraft = draft.hasContent
@@ -65,6 +67,7 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
         val simSelector = buildSimSelectorUiState(
             subscriptions = subscriptions,
             selfParticipantId = draft.selfParticipantId,
+            areSubscriptionsLoaded = areSubscriptionsLoaded,
         )
 
         return ConversationComposerUiState(
@@ -132,6 +135,7 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
     private fun buildSimSelectorUiState(
         subscriptions: ImmutableList<Subscription>,
         selfParticipantId: String,
+        areSubscriptionsLoaded: Boolean,
     ): ConversationSimSelectorUiState {
         val selected = subscriptions
             .firstOrNull { it.selfParticipantId == selfParticipantId }
@@ -140,6 +144,7 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
         return ConversationSimSelectorUiState(
             subscriptions = subscriptions,
             selectedSubscription = selected,
+            isLoading = !areSubscriptionsLoaded,
         )
     }
 

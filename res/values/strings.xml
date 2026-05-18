@@ -967,6 +967,8 @@
 
     <!-- Annotation appended to a message's metadata row indicating which SIM was used. The SIM name itself is a tappable link that opens the SIM picker. -->
     <string name="conversation_message_sim_annotation">via <xliff:g id="sim_name" example="SIM 2">%1$s</xliff:g></string>
+    <!-- Current SIM indicator shown above the compose box. The SIM name itself is a tappable link that opens the SIM picker. -->
+    <string name="conversation_send_sim_annotation">Sending with <xliff:g id="sim_name" example="SIM 2">%1$s</xliff:g></string>
 
     <!-- Custom TalkBack description for send button long click event when there's no SIM selector, i.e. edit subject -->
     <string name="send_button_long_click_description_no_sim_selector">Edit subject</string>
