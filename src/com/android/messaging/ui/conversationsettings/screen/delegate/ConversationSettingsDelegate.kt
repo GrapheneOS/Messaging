@@ -1,7 +1,7 @@
 package com.android.messaging.ui.conversationsettings.screen.delegate
 
 import com.android.messaging.data.conversationsettings.repository.ConversationSettingsRepository
-import com.android.messaging.data.subscription.repository.ConversationSimSelectionStore
+import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
 import com.android.messaging.datamodel.ParticipantRefresh
 import com.android.messaging.di.core.ApplicationCoroutineScope
@@ -11,7 +11,6 @@ import com.android.messaging.domain.conversationsettings.usecase.SetConversation
 import com.android.messaging.ui.conversationsettings.common.ConversationSettingsScreenDelegate
 import com.android.messaging.ui.conversationsettings.screen.mapper.ConversationSettingsUiStateMapper
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState
-import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -40,7 +39,7 @@ internal interface ConversationSettingsDelegate :
 internal class ConversationSettingsDelegateImpl @Inject constructor(
     private val repository: ConversationSettingsRepository,
     private val subscriptionsRepository: SubscriptionsRepository,
-    private val simSelectionStore: ConversationSimSelectionStore,
+    private val simSelectionRepository: ConversationSimSelectionRepository,
     private val mapper: ConversationSettingsUiStateMapper,
     private val setConversationArchived: SetConversationArchived,
     private val setConversationDestinationBlocked: SetConversationDestinationBlocked,
@@ -80,7 +79,7 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
         return combine(
             triggers,
             subscriptionsRepository.observeActiveSubscriptions(),
-            simSelectionStore.observe(id),
+            simSelectionRepository.observe(id),
         ) { _, subscriptions, storedOverride ->
             val data = repository.getConversationSettings(id)
 

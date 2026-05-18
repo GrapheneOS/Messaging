@@ -8,12 +8,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
@@ -35,13 +38,23 @@ internal fun ConversationSimAvatar(
             .background(color = subscription.resolveAccentColor()),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = subscription.displaySlotId.toString(),
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.SemiBold,
+        val density = LocalDensity.current
+        CompositionLocalProvider(
+            LocalDensity provides Density(
+                density = density.density,
+                fontScale = 1f,
             ),
-            color = Color.White,
-        )
+        ) {
+            Text(
+                text = subscription.displaySlotId.toString(),
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                ),
+                color = Color.White,
+                maxLines = 1,
+                softWrap = false,
+            )
+        }
     }
 }
 

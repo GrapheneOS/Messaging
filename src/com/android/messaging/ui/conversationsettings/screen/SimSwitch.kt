@@ -190,7 +190,7 @@ private fun SimSelectorRow(
 @Composable
 private fun SimSwitchItemPreview() {
     val subscription = Subscription(
-        selfParticipantId = "self",
+        selfParticipantId = "1",
         subId = 1,
         label = ConversationSubscriptionLabel.Slot(slotId = 1),
         displayDestination = "+31 6 1234 5678",

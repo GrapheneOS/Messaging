@@ -1,7 +1,7 @@
 package com.android.messaging.domain.conversationsettings.usecase
 
 import com.android.messaging.data.conversation.repository.ConversationsRepository
-import com.android.messaging.data.subscription.repository.ConversationSimSelectionStore
+import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
 import javax.inject.Inject
 
 internal fun interface SetConversationSelfParticipantId {
@@ -9,7 +9,7 @@ internal fun interface SetConversationSelfParticipantId {
 }
 
 internal class SetConversationSelfParticipantIdImpl @Inject constructor(
-    private val simSelectionStore: ConversationSimSelectionStore,
+    private val simSelectionRepository: ConversationSimSelectionRepository,
     private val conversationsRepository: ConversationsRepository,
 ) : SetConversationSelfParticipantId {
 
@@ -19,7 +19,7 @@ internal class SetConversationSelfParticipantIdImpl @Inject constructor(
     ) {
         if (conversationId.isEmpty() || selfParticipantId.isEmpty()) return
 
-        simSelectionStore.setSelectedSelfId(
+        simSelectionRepository.setSelectedSelfId(
             conversationId = conversationId,
             selfId = selfParticipantId,
         )

@@ -24,6 +24,10 @@ import com.android.messaging.data.media.repository.ConversationAttachmentsReposi
 import com.android.messaging.data.media.repository.ConversationAttachmentsRepositoryImpl
 import com.android.messaging.data.media.repository.ConversationMediaRepository
 import com.android.messaging.data.media.repository.ConversationMediaRepositoryImpl
+import com.android.messaging.data.conversation.store.ConversationSelfIdStore
+import com.android.messaging.data.conversation.store.ConversationSelfIdStoreImpl
+import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
+import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepositoryImpl
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
 import com.android.messaging.data.subscription.repository.SubscriptionsRepositoryImpl
 import com.android.messaging.domain.contacts.usecase.IsReadContactsPermissionGranted
@@ -69,6 +73,8 @@ import dagger.Module
 import dagger.Reusable
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -196,6 +202,12 @@ internal abstract class ConversationBindsModule {
 
     @Binds
     @Reusable
+    abstract fun bindConversationSelfIdStore(
+        impl: ConversationSelfIdStoreImpl,
+    ): ConversationSelfIdStore
+
+    @Binds
+    @Reusable
     abstract fun bindSubscriptionsRepository(
         impl: SubscriptionsRepositoryImpl,
     ): SubscriptionsRepository
@@ -205,6 +217,12 @@ internal abstract class ConversationBindsModule {
     abstract fun bindConversationAttachmentRepository(
         impl: ConversationAttachmentsRepositoryImpl,
     ): ConversationAttachmentsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindConversationSimSelectionRepository(
+        impl: ConversationSimSelectionRepositoryImpl,
+    ): ConversationSimSelectionRepository
 
     @Binds
     @Reusable

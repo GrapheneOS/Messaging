@@ -1,4 +1,4 @@
-package com.android.messaging.data.conversation.model.notification
+package com.android.messaging.data.conversationsettings.model
 
 import java.util.concurrent.TimeUnit
 

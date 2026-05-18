@@ -1,6 +1,6 @@
 package com.android.messaging.ui.conversationsettings.screen.model
 
-import com.android.messaging.data.conversation.model.notification.SnoozeOption
+import com.android.messaging.data.conversationsettings.model.SnoozeOption
 
 internal sealed interface ConversationSettingsAction {
 

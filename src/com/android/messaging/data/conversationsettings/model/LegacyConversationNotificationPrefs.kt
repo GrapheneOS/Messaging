@@ -1,4 +1,4 @@
-package com.android.messaging.data.conversation.model.notification
+package com.android.messaging.data.conversationsettings.model
 
 internal data class LegacyConversationNotificationPrefs(
     val notificationsEnabled: Boolean,

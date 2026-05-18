@@ -2,12 +2,11 @@ package com.android.messaging.data.conversationsettings.repository
 
 import android.content.ContentResolver
 import android.database.ContentObserver
-import com.android.messaging.data.conversation.repository.ConversationNotificationRepository
+import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.data.conversationsettings.model.ConversationSettingsData
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.data.ConversationParticipantsData
 import com.android.messaging.datamodel.data.ParticipantData
-import com.android.messaging.datamodel.data.PeopleOptionsItemData
 import com.android.messaging.di.core.MessagingDbDispatcher
 import com.android.messaging.util.PhoneUtils
 import javax.inject.Inject
@@ -25,6 +24,7 @@ internal interface ConversationSettingsRepository {
 
 internal class ConversationSettingsRepositoryImpl @Inject constructor(
     private val contentResolver: ContentResolver,
+    private val conversationsRepository: ConversationsRepository,
     private val notificationRepository: ConversationNotificationRepository,
     @param:MessagingDbDispatcher private val messagingDbDispatcher: CoroutineDispatcher,
 ) : ConversationSettingsRepository {
@@ -55,22 +55,24 @@ internal class ConversationSettingsRepositoryImpl @Inject constructor(
     override suspend fun getConversationSettings(
         conversationId: String,
     ): ConversationSettingsData {
-        return withContext(messagingDbDispatcher) {
-            val isSnoozed = notificationRepository.isSnoozed(conversationId)
-            val isVoiceCapable = PhoneUtils.getDefault().isVoiceCapable
-            val participants = queryOtherParticipants(conversationId)
-            val metadata = queryConversationMetadata(conversationId)
-
-            ConversationSettingsData(
-                conversationId = conversationId,
-                conversationTitle = metadata?.title.orEmpty(),
-                isArchived = metadata?.isArchived ?: false,
-                isSnoozed = isSnoozed,
-                isVoiceCapable = isVoiceCapable,
-                participants = participants.toImmutableList(),
-                dbSelfParticipantId = metadata?.dbSelfId.orEmpty(),
-            )
+        val isSnoozed = notificationRepository.isSnoozed(conversationId)
+        val isVoiceCapable = PhoneUtils.getDefault().isVoiceCapable
+        val metadata = conversationsRepository.getConversationMetadataSnapshot(
+            conversationId = conversationId,
+        )
+        val participants = withContext(context = messagingDbDispatcher) {
+            queryOtherParticipants(conversationId)
         }
+
+        return ConversationSettingsData(
+            conversationId = conversationId,
+            conversationTitle = metadata?.conversationName.orEmpty(),
+            isArchived = metadata?.isArchived ?: false,
+            isSnoozed = isSnoozed,
+            isVoiceCapable = isVoiceCapable,
+            participants = participants.toImmutableList(),
+            dbSelfParticipantId = metadata?.selfParticipantId.orEmpty(),
+        )
     }
 
     private fun queryOtherParticipants(
@@ -88,38 +90,4 @@ internal class ConversationSettingsRepositoryImpl @Inject constructor(
 
         return participantsData.filter { !it.isSelf }
     }
-
-    private fun queryConversationMetadata(
-        conversationId: String,
-    ): ConversationMetadataRow? {
-        return contentResolver.query(
-            MessagingContentProvider.buildConversationMetadataUri(conversationId),
-            PeopleOptionsItemData.PROJECTION,
-            null,
-            null,
-            null,
-        )?.use { cursor ->
-            if (!cursor.moveToFirst()) {
-                null
-            } else {
-                ConversationMetadataRow(
-                    title = cursor.getString(
-                        PeopleOptionsItemData.INDEX_CONVERSATION_NAME,
-                    ).orEmpty(),
-                    isArchived = cursor.getInt(
-                        PeopleOptionsItemData.INDEX_ARCHIVE_STATUS,
-                    ) == 1,
-                    dbSelfId = cursor.getString(
-                        PeopleOptionsItemData.INDEX_CURRENT_SELF_ID,
-                    ).orEmpty(),
-                )
-            }
-        }
-    }
 }
-
-private data class ConversationMetadataRow(
-    val title: String,
-    val isArchived: Boolean,
-    val dbSelfId: String,
-)

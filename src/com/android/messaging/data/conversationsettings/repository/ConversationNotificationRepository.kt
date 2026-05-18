@@ -1,11 +1,14 @@
-package com.android.messaging.data.conversation.repository
+package com.android.messaging.data.conversationsettings.repository
 
 import android.content.ContentResolver
-import com.android.messaging.data.conversation.model.notification.LegacyConversationNotificationPrefs
-import com.android.messaging.data.conversation.model.notification.SnoozeOption
+import com.android.messaging.data.conversationsettings.model.LegacyConversationNotificationPrefs
+import com.android.messaging.data.conversationsettings.model.SnoozeOption
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.data.PeopleOptionsItemData
 import com.android.messaging.util.BuglePrefs
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
 import javax.inject.Inject
 
 internal interface ConversationNotificationRepository {
@@ -18,6 +21,12 @@ internal interface ConversationNotificationRepository {
     fun snooze(conversationId: String, option: SnoozeOption)
 
     fun clearSnooze(conversationId: String)
+
+    @EntryPoint
+    @InstallIn(SingletonComponent::class)
+    interface Provider {
+        fun conversationNotificationRepository(): ConversationNotificationRepository
+    }
 }
 
 internal class ConversationNotificationRepositoryImpl @Inject constructor(

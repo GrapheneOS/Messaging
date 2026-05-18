@@ -38,7 +38,7 @@ import androidx.core.graphics.drawable.IconCompat;
 
 import com.android.messaging.Factory;
 import com.android.messaging.R;
-import com.android.messaging.data.conversation.notification.ConversationSnoozeChecker;
+import com.android.messaging.data.conversationsettings.repository.ConversationNotificationRepository;
 import com.android.messaging.datamodel.MessageNotificationState.Conversation;
 import com.android.messaging.datamodel.action.MarkAsReadAction;
 import com.android.messaging.datamodel.action.MarkAsSeenAction;
@@ -222,10 +222,10 @@ public class BugleNotifications {
 
     private static boolean isConversationSnoozed(final String conversationId) {
         final Context context = Factory.get().getApplicationContext();
-        final ConversationSnoozeChecker checker = EntryPointAccessors
-                .fromApplication(context, ConversationSnoozeChecker.Provider.class)
-                .conversationSnoozeChecker();
-        return checker.isSnoozed(conversationId);
+        final ConversationNotificationRepository repository = EntryPointAccessors
+                .fromApplication(context, ConversationNotificationRepository.Provider.class)
+                .conversationNotificationRepository();
+        return repository.isSnoozed(conversationId);
     }
 
     private static Uri getNotificationRingtoneUriForConversationId(final String conversationId) {
