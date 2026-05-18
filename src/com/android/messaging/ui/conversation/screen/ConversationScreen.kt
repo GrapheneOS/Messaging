@@ -122,8 +122,11 @@ internal fun ConversationScreenScaffold(
     onLockedAudioRecordingStartRequest: () -> Unit,
     screenModel: ConversationScreenModel,
 ) {
-    val simSheetState = rememberConversationSimSheetState(
-        isAvailable = uiState.composer.simSelector.isAvailable,
+    val isSimSelectorAvailable = uiState.composer.simSelector.isAvailable
+    val simSheetState = rememberConversationSimSheetState(isAvailable = isSimSelectorAvailable)
+    val showSimSelectorSheet = rememberShowSimSelectorSheetCallback(
+        simSheetState = simSheetState,
+        isAvailable = isSimSelectorAvailable,
     )
 
     Scaffold(
@@ -135,7 +138,7 @@ internal fun ConversationScreenScaffold(
                 onAddPeopleClick = onAddPeopleClick,
                 onConversationDetailsClick = onConversationDetailsClick,
                 onNavigateBack = onNavigateBack,
-                onSimSelectorClick = simSheetState::show,
+                onSimSelectorClick = showSimSelectorSheet,
                 screenModel = screenModel,
             )
         },
@@ -148,7 +151,7 @@ internal fun ConversationScreenScaffold(
                 onOpenMediaPicker = onOpenMediaPicker,
                 onAudioRecordingStartRequest = onAudioRecordingStartRequest,
                 onLockedAudioRecordingStartRequest = onLockedAudioRecordingStartRequest,
-                onSendActionLongClick = simSheetState::show,
+                onSendActionLongClick = showSimSelectorSheet,
                 screenModel = screenModel,
             )
         },
@@ -168,7 +171,7 @@ internal fun ConversationScreenScaffold(
             onMessageDownloadClick = screenModel::onMessageDownloadClick,
             onMessageLongClick = screenModel::onMessageLongClick,
             onMessageResendClick = screenModel::onMessageResendClick,
-            onSimSelectorClick = simSheetState::show,
+            onSimSelectorClick = showSimSelectorSheet,
         )
     }
 
@@ -179,6 +182,20 @@ internal fun ConversationScreenScaffold(
         uiState = uiState,
         onSimSelected = screenModel::onSimSelected,
     )
+}
+
+@Composable
+private fun rememberShowSimSelectorSheetCallback(
+    simSheetState: ConversationSimSheetState,
+    isAvailable: Boolean,
+): () -> Unit {
+    return remember(simSheetState, isAvailable) {
+        {
+            if (isAvailable) {
+                simSheetState.show()
+            }
+        }
+    }
 }
 
 @Composable

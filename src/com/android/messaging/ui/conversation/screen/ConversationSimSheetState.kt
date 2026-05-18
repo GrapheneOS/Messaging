@@ -14,12 +14,8 @@ internal class ConversationSimSheetState {
     var isVisible: Boolean by mutableStateOf(value = false)
         private set
 
-    internal var isAvailable: Boolean = false
-
     fun show() {
-        if (isAvailable) {
-            isVisible = true
-        }
+        isVisible = true
     }
 
     fun dismiss() {
@@ -45,8 +41,6 @@ internal fun rememberConversationSimSheetState(
     val state = rememberSaveable(saver = ConversationSimSheetState.Saver) {
         ConversationSimSheetState()
     }
-
-    state.isAvailable = isAvailable
 
     LaunchedEffect(isAvailable) {
         if (!isAvailable) {
