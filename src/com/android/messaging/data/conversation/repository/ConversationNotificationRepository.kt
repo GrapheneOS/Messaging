@@ -22,7 +22,6 @@ internal interface ConversationNotificationRepository {
 
 internal class ConversationNotificationRepositoryImpl @Inject constructor(
     private val contentResolver: ContentResolver,
-    private val prefs: BuglePrefs,
 ) : ConversationNotificationRepository {
 
     override fun getLegacyNotificationPrefs(
@@ -56,6 +55,7 @@ internal class ConversationNotificationRepositoryImpl @Inject constructor(
     }
 
     override fun getSnoozeUntilMillis(conversationId: String): Long {
+        val prefs = BuglePrefs.getApplicationPrefs()
         return prefs.getLong(snoozeKey(conversationId), SNOOZE_NOT_SET)
     }
 
@@ -65,6 +65,7 @@ internal class ConversationNotificationRepositoryImpl @Inject constructor(
     }
 
     override fun snooze(conversationId: String, option: SnoozeOption) {
+        val prefs = BuglePrefs.getApplicationPrefs()
         val untilMillis = when (option) {
             SnoozeOption.Always -> Long.MAX_VALUE
             else -> addSafely(System.currentTimeMillis(), option.durationMillis)
@@ -73,6 +74,7 @@ internal class ConversationNotificationRepositoryImpl @Inject constructor(
     }
 
     override fun clearSnooze(conversationId: String) {
+        val prefs = BuglePrefs.getApplicationPrefs()
         prefs.remove(snoozeKey(conversationId))
     }
 

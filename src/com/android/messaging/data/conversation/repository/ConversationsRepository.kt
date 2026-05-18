@@ -211,10 +211,13 @@ internal class ConversationsRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun setConversationSelfId(conversationId: String, selfId: String) {
+    override suspend fun setConversationSelfId(
+        conversationId: String,
+        selfId: String,
+    ) {
         if (conversationId.isBlank() || selfId.isBlank()) return
 
-        withContext(ioDispatcher) {
+        withContext(messagingDbDispatcher) {
             val db = DataModel.get().database
             db.beginTransaction()
             try {

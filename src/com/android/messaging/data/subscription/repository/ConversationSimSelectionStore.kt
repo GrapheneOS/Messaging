@@ -12,9 +12,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 
 @Singleton
-internal class ConversationSimSelectionStore @Inject constructor(
-    private val prefs: BuglePrefs,
-) {
+internal class ConversationSimSelectionStore @Inject constructor() {
 
     private val changes = MutableSharedFlow<String>(
         extraBufferCapacity = 1,
@@ -23,12 +21,16 @@ internal class ConversationSimSelectionStore @Inject constructor(
 
     fun getSelectedSelfId(conversationId: String): String? {
         if (conversationId.isEmpty()) return null
+
+        val prefs = BuglePrefs.getApplicationPrefs()
         return prefs.getString(prefKey(conversationId), null)
             ?.takeIf(String::isNotEmpty)
     }
 
     fun setSelectedSelfId(conversationId: String, selfId: String) {
         if (conversationId.isEmpty() || selfId.isEmpty()) return
+
+        val prefs = BuglePrefs.getApplicationPrefs()
         prefs.putString(prefKey(conversationId), selfId)
         changes.tryEmit(conversationId)
     }

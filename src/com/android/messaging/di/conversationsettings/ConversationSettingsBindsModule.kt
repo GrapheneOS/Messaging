@@ -1,27 +1,44 @@
 package com.android.messaging.di.conversationsettings
 
-import com.android.messaging.ui.conversationsettings.screen.delegate.ConversationSettingsDelegate
-import com.android.messaging.ui.conversationsettings.screen.delegate.ConversationSettingsDelegateImpl
-import com.android.messaging.ui.conversationsettings.screen.mapper.ConversationSettingsUiStateMapper
-import com.android.messaging.ui.conversationsettings.screen.mapper.ConversationSettingsUiStateMapperImpl
+import com.android.messaging.data.conversationsettings.repository.ConversationSettingsRepository
+import com.android.messaging.data.conversationsettings.repository.ConversationSettingsRepositoryImpl
+import com.android.messaging.domain.conversationsettings.usecase.SetConversationArchived
+import com.android.messaging.domain.conversationsettings.usecase.SetConversationArchivedImpl
+import com.android.messaging.domain.conversationsettings.usecase.SetConversationDestinationBlocked
+import com.android.messaging.domain.conversationsettings.usecase.SetConversationDestinationBlockedImpl
+import com.android.messaging.domain.conversationsettings.usecase.SetConversationSelfParticipantId
+import com.android.messaging.domain.conversationsettings.usecase.SetConversationSelfParticipantIdImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Reusable
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ViewModelComponent
+import dagger.hilt.components.SingletonComponent
 
 @Module
-@InstallIn(ViewModelComponent::class)
+@InstallIn(SingletonComponent::class)
 internal abstract class ConversationSettingsBindsModule {
 
     @Binds
-    abstract fun bindConversationSettingsDelegate(
-        impl: ConversationSettingsDelegateImpl,
-    ): ConversationSettingsDelegate
+    @Reusable
+    abstract fun bindConversationSettingsRepository(
+        impl: ConversationSettingsRepositoryImpl,
+    ): ConversationSettingsRepository
 
     @Binds
     @Reusable
-    abstract fun bindConversationSettingsUiStateMapper(
-        impl: ConversationSettingsUiStateMapperImpl,
-    ): ConversationSettingsUiStateMapper
+    abstract fun bindSetConversationArchived(
+        impl: SetConversationArchivedImpl,
+    ): SetConversationArchived
+
+    @Binds
+    @Reusable
+    abstract fun bindSetConversationDestinationBlocked(
+        impl: SetConversationDestinationBlockedImpl,
+    ): SetConversationDestinationBlocked
+
+    @Binds
+    @Reusable
+    abstract fun bindSetConversationSelfParticipantId(
+        impl: SetConversationSelfParticipantIdImpl,
+    ): SetConversationSelfParticipantId
 }
