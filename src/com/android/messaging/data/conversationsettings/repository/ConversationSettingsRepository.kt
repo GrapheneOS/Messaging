@@ -34,10 +34,10 @@ internal class ConversationSettingsRepositoryImpl @Inject constructor(
         conversationId: String,
     ): Flow<ConversationSettingsData> {
         val metadataUri = MessagingContentProvider.buildConversationMetadataUri(
-            conversationId
+            conversationId,
         )
         val participantsUri = MessagingContentProvider.buildConversationParticipantsUri(
-            conversationId
+            conversationId,
         )
 
         return observeUris(uris = listOf(metadataUri, participantsUri))

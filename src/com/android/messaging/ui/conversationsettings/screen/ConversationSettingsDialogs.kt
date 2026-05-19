@@ -124,37 +124,7 @@ private fun SnoozeChatDialog(
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
         ) {
             Column(modifier = Modifier.padding(vertical = DialogHorizontalPadding)) {
-                Icon(
-                    imageVector = Icons.Default.Snooze,
-                    contentDescription = stringResource(R.string.snooze_chat_setting_title),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentWidth(Alignment.CenterHorizontally),
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = stringResource(R.string.snooze_chat_dialog_title),
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = DialogHorizontalPadding),
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = stringResource(R.string.snooze_chat_dialog_message),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = DialogHorizontalPadding),
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
+                SnoozeChatDialogHeader()
 
                 Column(modifier = Modifier.selectableGroup()) {
                     SnoozeOption.entries.forEach { option ->
@@ -168,20 +138,67 @@ private fun SnoozeChatDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = DialogHorizontalPadding),
-                    horizontalArrangement = Arrangement.End,
-                ) {
-                    TextButton(onClick = onDismiss) {
-                        Text(text = stringResource(android.R.string.cancel))
-                    }
-                    TextButton(onClick = { onConfirm(selectedOption) }) {
-                        Text(text = stringResource(R.string.snooze_chat_dialog_confirm))
-                    }
-                }
+                SnoozeChatDialogButtons(
+                    onDismiss = onDismiss,
+                    onConfirm = { onConfirm(selectedOption) },
+                )
             }
+        }
+    }
+}
+
+@Composable
+private fun SnoozeChatDialogHeader() {
+    Icon(
+        imageVector = Icons.Default.Snooze,
+        contentDescription = stringResource(R.string.snooze_chat_setting_title),
+        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentWidth(Alignment.CenterHorizontally),
+    )
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    Text(
+        text = stringResource(R.string.snooze_chat_dialog_title),
+        style = MaterialTheme.typography.headlineSmall,
+        color = MaterialTheme.colorScheme.onSurface,
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = DialogHorizontalPadding),
+    )
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    Text(
+        text = stringResource(R.string.snooze_chat_dialog_message),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = DialogHorizontalPadding),
+    )
+
+    Spacer(modifier = Modifier.height(16.dp))
+}
+
+@Composable
+private fun SnoozeChatDialogButtons(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = DialogHorizontalPadding),
+        horizontalArrangement = Arrangement.End,
+    ) {
+        TextButton(onClick = onDismiss) {
+            Text(text = stringResource(android.R.string.cancel))
+        }
+
+        TextButton(onClick = onConfirm) {
+            Text(text = stringResource(R.string.snooze_chat_dialog_confirm))
         }
     }
 }

@@ -64,13 +64,11 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor() :
         participant: ParticipantUiState?,
         isVoiceCapable: Boolean,
     ): Boolean {
-        if (!isVoiceCapable) return false
-
         val phoneNumber = participant?.normalizedDestination
-            ?.takeIf { it.isNotBlank() }
-            ?: return false
 
-        return !PhoneNumberUtils.isEmergencyNumber(phoneNumber)
+        return isVoiceCapable &&
+            !phoneNumber.isNullOrBlank() &&
+            !PhoneNumberUtils.isEmergencyNumber(phoneNumber)
     }
 
     private fun isContactSaved(participant: ParticipantUiState?): Boolean {

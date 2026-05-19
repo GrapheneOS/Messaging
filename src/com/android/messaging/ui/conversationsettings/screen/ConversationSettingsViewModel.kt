@@ -4,7 +4,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.messaging.R
-import com.android.messaging.di.core.MainDispatcher
 import com.android.messaging.domain.conversation.usecase.participant.ResolveConversationId
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveConversationIdResult
 import com.android.messaging.ui.UIIntents
@@ -15,7 +14,6 @@ import com.android.messaging.ui.conversationsettings.screen.model.ConversationSe
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState as State
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -41,8 +39,6 @@ internal class ConversationSettingsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val delegate: ConversationSettingsDelegate,
     private val resolveConversationId: ResolveConversationId,
-    @param:MainDispatcher
-    private val mainDispatcher: CoroutineDispatcher,
 ) : ViewModel(),
     ConversationSettingsScreenModel {
 
@@ -76,17 +72,7 @@ internal class ConversationSettingsViewModel @Inject constructor(
     override fun onAction(action: Action) {
         when (action) {
             is Action.NotificationsClicked -> {
-                val state = uiState.value
-                viewModelScope.launch {
-                    val legacyPrefs = delegate.getLegacyNotificationPrefs()
-                    _effects.emit(
-                        Effect.OpenNotificationChannelSettings(
-                            conversationId = state.conversationId,
-                            conversationTitle = state.conversationTitle,
-                            legacyPrefs = legacyPrefs,
-                        ),
-                    )
-                }
+                handleNotificationsClicked()
             }
 
             is Action.SnoozeOptionSelected -> {
@@ -116,10 +102,7 @@ internal class ConversationSettingsViewModel @Inject constructor(
             }
 
             is Action.ParticipantPressed -> {
-                resolveConversation(
-                    destination = action.destination,
-                    shouldOpenChat = true,
-                )
+                resolveConversation(action.destination, shouldOpenChat = true)
             }
 
             is Action.ParticipantLongPressed -> {
@@ -127,10 +110,7 @@ internal class ConversationSettingsViewModel @Inject constructor(
             }
 
             is Action.ParticipantActionPressed -> {
-                resolveConversation(
-                    destination = action.destination,
-                    shouldOpenChat = false,
-                )
+                resolveConversation(action.destination, shouldOpenChat = false)
             }
 
             is Action.SimSelected -> {
@@ -138,27 +118,49 @@ internal class ConversationSettingsViewModel @Inject constructor(
             }
 
             is Action.CallClicked -> {
-                val participant = uiState.value.otherParticipant ?: return
-                val phoneNumber = participant.normalizedDestination
-                    ?.takeIf { it.isNotBlank() }
-                    ?: return
-
-                emitEffect(Effect.PlacePhoneCall(phoneNumber))
+                handleCallClicked()
             }
 
             is Action.ContactInfoClicked -> {
-                val participant = uiState.value.otherParticipant ?: return
-
-                emitEffect(
-                    Effect.ShowOrAddContact(
-                        contactId = participant.contactId,
-                        contactLookupKey = participant.lookupKey,
-                        avatarUri = participant.avatarUri,
-                        normalizedDestination = participant.normalizedDestination,
-                    ),
-                )
+                handleContactInfoClicked()
             }
         }
+    }
+
+    private fun handleNotificationsClicked() {
+        val state = uiState.value
+        viewModelScope.launch {
+            val legacyPrefs = delegate.getLegacyNotificationPrefs()
+            _effects.emit(
+                Effect.OpenNotificationChannelSettings(
+                    conversationId = state.conversationId,
+                    conversationTitle = state.conversationTitle,
+                    legacyPrefs = legacyPrefs,
+                ),
+            )
+        }
+    }
+
+    private fun handleCallClicked() {
+        val participant = uiState.value.otherParticipant ?: return
+        val phoneNumber = participant.normalizedDestination
+            ?.takeIf { it.isNotBlank() }
+            ?: return
+
+        emitEffect(Effect.PlacePhoneCall(phoneNumber))
+    }
+
+    private fun handleContactInfoClicked() {
+        val participant = uiState.value.otherParticipant ?: return
+
+        emitEffect(
+            Effect.ShowOrAddContact(
+                contactId = participant.contactId,
+                contactLookupKey = participant.lookupKey,
+                avatarUri = participant.avatarUri,
+                normalizedDestination = participant.normalizedDestination,
+            ),
+        )
     }
 
     override fun setConversationId(conversationId: String) {
@@ -172,13 +174,9 @@ internal class ConversationSettingsViewModel @Inject constructor(
         shouldOpenChat: Boolean,
     ) {
         resolveConversationJob?.cancel()
-        resolveConversationJob = viewModelScope.launch(mainDispatcher) {
-            try {
-                val result = resolveConversationId.invoke(listOf(destination))
-                handleResolveConversationIdResult(result, shouldOpenChat)
-            } finally {
-                resolveConversationJob = null
-            }
+        resolveConversationJob = viewModelScope.launch {
+            val result = resolveConversationId.invoke(listOf(destination))
+            handleResolveConversationIdResult(result, shouldOpenChat)
         }
     }
 

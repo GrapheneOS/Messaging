@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -39,6 +40,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.State as ComposeState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -186,11 +188,17 @@ private fun ConversationSettingsNavHost(
             uiState = uiState,
         )
 
-        ConversationSettingsContent(
-            uiState = displayed,
-            onAction = onAction,
-            onNavigateBack = onNavigateBack,
-        )
+        if (displayed != null) {
+            ConversationSettingsContent(
+                uiState = displayed,
+                onAction = onAction,
+                onNavigateBack = onNavigateBack,
+            )
+        } else {
+            ConversationSettingsPlaceholder(
+                onNavigateBack = onNavigateBack,
+            )
+        }
     }
 }
 
@@ -207,7 +215,7 @@ private fun NavRoute.targetConversationId(
 private fun rememberDisplayedConversation(
     targetConversationId: String,
     uiState: State,
-): State {
+): State? {
     val current = uiState.takeIf { it.conversationId == targetConversationId }
     var cached by remember(targetConversationId) { mutableStateOf(current) }
     SideEffect {
@@ -215,21 +223,33 @@ private fun rememberDisplayedConversation(
             cached = current
         }
     }
-    return current ?: cached ?: uiState
+    return current ?: cached
 }
 
 @Composable
-private fun ConversationSettingsContent(
-    uiState: State,
-    onAction: (Action) -> Unit,
+private fun ConversationSettingsPlaceholder(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var pendingBlockConfirmation by remember { mutableStateOf(false) }
-    var showSnoozeChatDialog by remember { mutableStateOf(false) }
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+    ) {
+        ConversationSettingsTopAppBar(
+            title = "",
+            participant = null,
+            onNavigateBack = onNavigateBack,
+            collapseProgress = { 0f },
+        )
+    }
+}
 
-    val listState = rememberLazyListState()
-    val collapseProgress = remember {
+@Composable
+private fun rememberCollapseProgress(
+    listState: LazyListState,
+): ComposeState<Float> {
+    return remember {
         derivedStateOf {
             if (listState.firstVisibleItemIndex > 0) {
                 return@derivedStateOf 1f
@@ -244,6 +264,20 @@ private fun ConversationSettingsContent(
             (scrollOffset / headerInfo.size.toFloat()).coerceIn(0f, 1f)
         }
     }
+}
+
+@Composable
+private fun ConversationSettingsContent(
+    uiState: State,
+    onAction: (Action) -> Unit,
+    onNavigateBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var pendingBlockConfirmation by remember { mutableStateOf(false) }
+    var showSnoozeChatDialog by remember { mutableStateOf(false) }
+
+    val listState = rememberLazyListState()
+    val collapseProgress = rememberCollapseProgress(listState)
 
     Scaffold(
         modifier = modifier,
@@ -257,47 +291,15 @@ private fun ConversationSettingsContent(
             )
         },
     ) { contentPadding ->
-        LazyColumn(
-            state = listState,
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(
-                top = contentPadding.calculateTopPadding(),
-                bottom = contentPadding.calculateBottomPadding() + ScreenContentPadding,
-                start = ScreenContentPadding,
-                end = ScreenContentPadding,
-            ),
-            verticalArrangement = Arrangement.spacedBy(SectionSpacing),
-        ) {
-            item(key = "header") {
-                ConversationHeader(
-                    title = uiState.conversationTitle,
-                    participant = uiState.otherParticipant,
-                    collapseProgress = { collapseProgress.value },
-                )
-            }
-
-            contactItems(
-                uiState = uiState,
-                onAction = onAction,
-            )
-
-            simSwitchItem(
-                uiState = uiState,
-                onAction = onAction,
-            )
-
-            generalSettingsItems(
-                uiState = uiState,
-                onAction = onAction,
-                onRequestBlockConfirmation = { pendingBlockConfirmation = true },
-                onRequestSnoozeChooser = { showSnoozeChatDialog = true },
-            )
-
-            participantsItems(
-                uiState = uiState,
-                onAction = onAction,
-            )
-        }
+        ConversationSettingsList(
+            uiState = uiState,
+            onAction = onAction,
+            listState = listState,
+            collapseProgress = { collapseProgress.value },
+            contentPadding = contentPadding,
+            onRequestBlockConfirmation = { pendingBlockConfirmation = true },
+            onRequestSnoozeChooser = { showSnoozeChatDialog = true },
+        )
     }
 
     ConversationSettingsDialogs(
@@ -308,6 +310,59 @@ private fun ConversationSettingsContent(
         onDismissBlockConfirmation = { pendingBlockConfirmation = false },
         onDismissSnoozeChat = { showSnoozeChatDialog = false },
     )
+}
+
+@Composable
+private fun ConversationSettingsList(
+    uiState: State,
+    onAction: (Action) -> Unit,
+    listState: LazyListState,
+    collapseProgress: () -> Float,
+    contentPadding: PaddingValues,
+    onRequestBlockConfirmation: () -> Unit,
+    onRequestSnoozeChooser: () -> Unit,
+) {
+    LazyColumn(
+        state = listState,
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(
+            top = contentPadding.calculateTopPadding(),
+            bottom = contentPadding.calculateBottomPadding() + ScreenContentPadding,
+            start = ScreenContentPadding,
+            end = ScreenContentPadding,
+        ),
+        verticalArrangement = Arrangement.spacedBy(SectionSpacing),
+    ) {
+        item(key = "header") {
+            ConversationHeader(
+                title = uiState.conversationTitle,
+                participant = uiState.otherParticipant,
+                collapseProgress = collapseProgress,
+            )
+        }
+
+        contactItems(
+            uiState = uiState,
+            onAction = onAction,
+        )
+
+        simSwitchItem(
+            uiState = uiState,
+            onAction = onAction,
+        )
+
+        generalSettingsItems(
+            uiState = uiState,
+            onAction = onAction,
+            onRequestBlockConfirmation = onRequestBlockConfirmation,
+            onRequestSnoozeChooser = onRequestSnoozeChooser,
+        )
+
+        participantsItems(
+            uiState = uiState,
+            onAction = onAction,
+        )
+    }
 }
 
 private fun LazyListScope.contactItems(
@@ -393,52 +448,11 @@ private fun LazyListScope.generalSettingsItems(
     onRequestSnoozeChooser: () -> Unit,
 ) {
     item(key = "general_settings") {
-        val snoozeTitleRes = if (uiState.isSnoozed) {
-            R.string.unsnooze_chat_setting_title
-        } else {
-            R.string.snooze_chat_setting_title
-        }
-
-        val (archiveIcon, archiveTitleRes) = if (uiState.isArchived) {
-            Icons.Default.Unarchive to R.string.action_unarchive
-        } else {
-            Icons.Default.Archive to R.string.action_archive
-        }
-
-        Column(verticalArrangement = Arrangement.spacedBy(GroupedItemSpacing)) {
-            ConversationSettingsItem(
-                icon = Icons.Default.Snooze,
-                title = stringResource(snoozeTitleRes),
-                onClick = {
-                    if (uiState.isSnoozed) {
-                        onAction(Action.UnsnoozeClicked)
-                    } else {
-                        onRequestSnoozeChooser()
-                    }
-                },
-                shape = GroupedTopItemShape,
-            )
-
-            ConversationSettingsItem(
-                icon = Icons.Default.Notifications,
-                title = stringResource(R.string.notifications_enabled_conversation_pref_title),
-                onClick = { onAction(Action.NotificationsClicked) },
-                shape = GroupedMiddleItemShape,
-            )
-
-            ConversationSettingsItem(
-                icon = archiveIcon,
-                title = stringResource(archiveTitleRes),
-                onClick = {
-                    if (uiState.isArchived) {
-                        onAction(Action.UnarchiveClicked)
-                    } else {
-                        onAction(Action.ArchiveClicked)
-                    }
-                },
-                shape = GroupedBottomItemShape,
-            )
-        }
+        GeneralSettingsCard(
+            uiState = uiState,
+            onAction = onAction,
+            onRequestSnoozeChooser = onRequestSnoozeChooser,
+        )
     }
 
     val otherParticipant = uiState.otherParticipant
@@ -463,6 +477,60 @@ private fun LazyListScope.generalSettingsItems(
                 contentColor = MaterialTheme.colorScheme.error,
             )
         }
+    }
+}
+
+@Composable
+private fun GeneralSettingsCard(
+    uiState: State,
+    onAction: (Action) -> Unit,
+    onRequestSnoozeChooser: () -> Unit,
+) {
+    val snoozeTitleRes = if (uiState.isSnoozed) {
+        R.string.unsnooze_chat_setting_title
+    } else {
+        R.string.snooze_chat_setting_title
+    }
+
+    val (archiveIcon, archiveTitleRes) = if (uiState.isArchived) {
+        Icons.Default.Unarchive to R.string.action_unarchive
+    } else {
+        Icons.Default.Archive to R.string.action_archive
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(GroupedItemSpacing)) {
+        ConversationSettingsItem(
+            icon = Icons.Default.Snooze,
+            title = stringResource(snoozeTitleRes),
+            onClick = {
+                if (uiState.isSnoozed) {
+                    onAction(Action.UnsnoozeClicked)
+                } else {
+                    onRequestSnoozeChooser()
+                }
+            },
+            shape = GroupedTopItemShape,
+        )
+
+        ConversationSettingsItem(
+            icon = Icons.Default.Notifications,
+            title = stringResource(R.string.notifications_enabled_conversation_pref_title),
+            onClick = { onAction(Action.NotificationsClicked) },
+            shape = GroupedMiddleItemShape,
+        )
+
+        ConversationSettingsItem(
+            icon = archiveIcon,
+            title = stringResource(archiveTitleRes),
+            onClick = {
+                if (uiState.isArchived) {
+                    onAction(Action.UnarchiveClicked)
+                } else {
+                    onAction(Action.ArchiveClicked)
+                }
+            },
+            shape = GroupedBottomItemShape,
+        )
     }
 }
 

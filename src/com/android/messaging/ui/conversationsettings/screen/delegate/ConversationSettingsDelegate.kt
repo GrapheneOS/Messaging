@@ -103,8 +103,10 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
 
     override fun setDestinationBlocked(blocked: Boolean) {
         val participant = _state.value.otherParticipant ?: return
-        val normalizedDestination = participant.normalizedDestination ?: return
-        val conversationId = currentConversationId() ?: return
+        val normalizedDestination = participant.normalizedDestination
+        val conversationId = currentConversationId()
+
+        if (normalizedDestination == null || conversationId == null) return
 
         setConversationDestinationBlocked(
             conversationId = conversationId,

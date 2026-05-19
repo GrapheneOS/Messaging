@@ -92,45 +92,71 @@ private fun SimSwitchItem(
 
             Spacer(modifier = Modifier.width(20.dp))
 
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.sim_selector_item_title),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
+            SimSwitchItemSummary(
+                selected = selected,
+                modifier = Modifier.weight(1f),
+            )
 
-                val subtitle = selected.displayDestination
-                    ?: selected.label.resolveDisplayName()
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            SimSwitchItemMenu(
+                subscriptions = subscriptions,
+                expanded = expanded,
+                onExpandedChange = { expanded = it },
+                onSimSelected = { id ->
+                    expanded = false
+                    onSimSelected(id)
+                },
+            )
+        }
+    }
+}
 
-            Box {
-                IconButton(onClick = { expanded = true }) {
-                    Icon(
-                        imageVector = Icons.Default.SwapHoriz,
-                        contentDescription = stringResource(R.string.sim_selector_item_title),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+@Composable
+private fun SimSwitchItemSummary(
+    selected: Subscription,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = stringResource(R.string.sim_selector_item_title),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
 
-                DropdownMenu(
-                    expanded = expanded,
-                    shape = SettingsCardShape,
-                    onDismissRequest = { expanded = false },
-                ) {
-                    SimSelectorPopupContent(
-                        subscriptions = subscriptions,
-                        onSimSelected = { id ->
-                            expanded = false
-                            onSimSelected(id)
-                        },
-                    )
-                }
-            }
+        val subtitle = selected.displayDestination
+            ?: selected.label.resolveDisplayName()
+        Text(
+            text = subtitle,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun SimSwitchItemMenu(
+    subscriptions: ImmutableList<Subscription>,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    onSimSelected: (String) -> Unit,
+) {
+    Box {
+        IconButton(onClick = { onExpandedChange(true) }) {
+            Icon(
+                imageVector = Icons.Default.SwapHoriz,
+                contentDescription = stringResource(R.string.sim_selector_item_title),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            shape = SettingsCardShape,
+            onDismissRequest = { onExpandedChange(false) },
+        ) {
+            SimSelectorPopupContent(
+                subscriptions = subscriptions,
+                onSimSelected = onSimSelected,
+            )
         }
     }
 }
