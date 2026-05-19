@@ -314,7 +314,7 @@ private fun LazyListScope.contactItems(
     uiState: State,
     onAction: (Action) -> Unit,
 ) {
-    if (uiState.otherParticipant == null || uiState.participants.size > 1) return
+    if (uiState.otherParticipant == null) return
     if (!uiState.canCall && !uiState.canShowContact) return
 
     item(key = "contact_buttons") {
@@ -473,7 +473,7 @@ private fun LazyListScope.participantsItems(
     val participants = uiState.participants
     if (participants.isEmpty()) return
 
-    val showParticipantActions = uiState.otherParticipant == null && participants.size > 1
+    val showParticipantActions = participants.size > 1
 
     item(key = "participants_group") {
         ParticipantsCard(
@@ -546,7 +546,6 @@ private fun ConversationSettingsContentPreview() {
                 conversationTitle = "Family",
                 participants = persistentListOf(
                     ParticipantUiState(
-                        participantId = "+31612345678",
                         avatarUri = null,
                         displayName = "Mother",
                         details = "+31 6 1234 5678",
@@ -557,7 +556,6 @@ private fun ConversationSettingsContentPreview() {
                         displayDestination = "+31 6 1234 5678",
                     ),
                     ParticipantUiState(
-                        participantId = "+31687654321",
                         avatarUri = null,
                         displayName = "Father",
                         details = "+31 6 8765 4321",

@@ -2,6 +2,7 @@ package com.android.messaging.data.conversationsettings.repository
 
 import android.content.ContentResolver
 import android.database.ContentObserver
+import android.net.Uri
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.data.conversationsettings.model.ConversationSettingsData
 import com.android.messaging.datamodel.MessagingContentProvider
@@ -15,11 +16,11 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 
 internal interface ConversationSettingsRepository {
-    fun observeConversationChanges(conversationId: String): Flow<Unit>
-    suspend fun getConversationSettings(conversationId: String): ConversationSettingsData
+    fun getConversationSettings(conversationId: String): Flow<ConversationSettingsData>
 }
 
 internal class ConversationSettingsRepositoryImpl @Inject constructor(
@@ -29,47 +30,36 @@ internal class ConversationSettingsRepositoryImpl @Inject constructor(
     @param:MessagingDbDispatcher private val messagingDbDispatcher: CoroutineDispatcher,
 ) : ConversationSettingsRepository {
 
-    override fun observeConversationChanges(
+    override fun getConversationSettings(
         conversationId: String,
-    ): Flow<Unit> {
-        return callbackFlow {
-            val observer = object : ContentObserver(null) {
-                override fun onChange(selfChange: Boolean) {
-                    trySend(Unit)
-                }
-            }
-            val metadataUri = MessagingContentProvider.buildConversationMetadataUri(
-                conversationId,
-            )
-            val participantsUri = MessagingContentProvider.buildConversationParticipantsUri(
-                conversationId,
-            )
-            contentResolver.registerContentObserver(metadataUri, false, observer)
-            contentResolver.registerContentObserver(participantsUri, false, observer)
-            awaitClose {
-                contentResolver.unregisterContentObserver(observer)
-            }
-        }
+    ): Flow<ConversationSettingsData> {
+        val metadataUri = MessagingContentProvider.buildConversationMetadataUri(
+            conversationId
+        )
+        val participantsUri = MessagingContentProvider.buildConversationParticipantsUri(
+            conversationId
+        )
+
+        return observeUris(uris = listOf(metadataUri, participantsUri))
+            .map { loadConversationSettings(conversationId = conversationId) }
+            .flowOn(messagingDbDispatcher)
     }
 
-    override suspend fun getConversationSettings(
+    private suspend fun loadConversationSettings(
         conversationId: String,
     ): ConversationSettingsData {
-        val isSnoozed = notificationRepository.isSnoozed(conversationId)
-        val isVoiceCapable = PhoneUtils.getDefault().isVoiceCapable
+        val phoneUtils = PhoneUtils.getDefault()
+        val participants = queryOtherParticipants(conversationId)
         val metadata = conversationsRepository.getConversationMetadataSnapshot(
             conversationId = conversationId,
         )
-        val participants = withContext(context = messagingDbDispatcher) {
-            queryOtherParticipants(conversationId)
-        }
 
         return ConversationSettingsData(
             conversationId = conversationId,
             conversationTitle = metadata?.conversationName.orEmpty(),
             isArchived = metadata?.isArchived ?: false,
-            isSnoozed = isSnoozed,
-            isVoiceCapable = isVoiceCapable,
+            isSnoozed = notificationRepository.isSnoozed(conversationId),
+            isVoiceCapable = phoneUtils.isVoiceCapable,
             participants = participants.toImmutableList(),
             dbSelfParticipantId = metadata?.selfParticipantId.orEmpty(),
         )
@@ -89,5 +79,22 @@ internal class ConversationSettingsRepositoryImpl @Inject constructor(
         }
 
         return participantsData.filter { !it.isSelf }
+    }
+
+    private fun observeUris(uris: List<Uri>): Flow<Unit> {
+        return callbackFlow {
+            val observer = object : ContentObserver(null) {
+                override fun onChange(selfChange: Boolean) {
+                    trySend(Unit)
+                }
+            }
+            uris.forEach { uri ->
+                contentResolver.registerContentObserver(uri, false, observer)
+            }
+            trySend(Unit)
+            awaitClose {
+                contentResolver.unregisterContentObserver(observer)
+            }
+        }
     }
 }

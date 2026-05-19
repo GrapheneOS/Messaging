@@ -231,7 +231,6 @@ private fun ConversationHeaderPreview() {
         ConversationHeader(
             title = "Mother",
             participant = ParticipantUiState(
-                participantId = "1",
                 avatarUri = null,
                 displayName = "Mother",
                 details = "+31 6 1234 5678",
@@ -263,7 +262,6 @@ private fun ParticipantItemPreview() {
     AppTheme {
         ParticipantItem(
             participant = ParticipantUiState(
-                participantId = "1",
                 avatarUri = null,
                 displayName = "Mother",
                 details = "+31 6 1234 5678",

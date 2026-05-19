@@ -30,10 +30,15 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor() :
         val participants = data.participants
             .map(::toParticipantUiState)
             .toImmutableList()
+        val otherParticipant = participants.singleOrNull()
 
         val effectiveSelfId = selfIdOverride
             ?.takeIf(String::isNotEmpty)
             ?: data.dbSelfParticipantId
+
+        val selectedSubscription = subscriptions
+            .firstOrNull { it.selfParticipantId == effectiveSelfId }
+            ?: subscriptions.firstOrNull()
 
         return ConversationSettingsUiState(
             conversationId = data.conversationId,
@@ -41,12 +46,17 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor() :
             isArchived = data.isArchived,
             isSnoozed = data.isSnoozed,
             participants = participants,
+            otherParticipant = otherParticipant,
             selfParticipantId = effectiveSelfId,
             availableSubscriptions = subscriptions,
+            selectedSubscription = selectedSubscription,
+            isSimSwitchAvailable = subscriptions.size > 1,
             canCall = canCall(
-                participant = participants.singleOrNull(),
+                participant = otherParticipant,
                 isVoiceCapable = data.isVoiceCapable,
             ),
+            canShowContact = !otherParticipant?.normalizedDestination.isNullOrBlank(),
+            isContactSaved = isContactSaved(otherParticipant),
         )
     }
 
@@ -63,6 +73,11 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor() :
         return !PhoneNumberUtils.isEmergencyNumber(phoneNumber)
     }
 
+    private fun isContactSaved(participant: ParticipantUiState?): Boolean {
+        if (participant == null) return false
+        return participant.contactId > 0 && !participant.lookupKey.isNullOrBlank()
+    }
+
     private fun toParticipantUiState(participant: ParticipantData): ParticipantUiState {
         val fullName = participant.fullName
         val displayName = when {
@@ -75,7 +90,6 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor() :
         }
 
         return ParticipantUiState(
-            participantId = participant.id,
             avatarUri = participant.profilePhotoUri?.takeIf(String::isNotBlank),
             displayName = displayName,
             details = details,

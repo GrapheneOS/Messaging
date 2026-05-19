@@ -4,7 +4,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.messaging.R
-import com.android.messaging.data.conversationsettings.repository.ConversationNotificationRepository
 import com.android.messaging.di.core.MainDispatcher
 import com.android.messaging.domain.conversation.usecase.participant.ResolveConversationId
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveConversationIdResult
@@ -20,6 +19,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
@@ -41,7 +41,6 @@ internal class ConversationSettingsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val delegate: ConversationSettingsDelegate,
     private val resolveConversationId: ResolveConversationId,
-    private val notificationRepository: ConversationNotificationRepository,
     @param:MainDispatcher
     private val mainDispatcher: CoroutineDispatcher,
 ) : ViewModel(),
@@ -59,12 +58,15 @@ internal class ConversationSettingsViewModel @Inject constructor(
         savedStateHandle[UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID],
     ) { "conversationId is required" }
 
+    private val conversationIdFlow = MutableStateFlow<String?>(rootConversationId)
+
     private var resolveConversationJob: Job? = null
-    private var currentConversationId: String = ""
 
     init {
-        setConversationId(rootConversationId)
-        delegate.bind(scope = viewModelScope)
+        delegate.bind(
+            conversationIdFlow = conversationIdFlow,
+            scope = viewModelScope,
+        )
     }
 
     override fun refreshState() {
@@ -75,30 +77,24 @@ internal class ConversationSettingsViewModel @Inject constructor(
         when (action) {
             is Action.NotificationsClicked -> {
                 val state = uiState.value
-                val legacyPrefs = notificationRepository.getLegacyNotificationPrefs(
-                    conversationId = state.conversationId,
-                )
-
-                emitEffect(
-                    Effect.OpenNotificationChannelSettings(
-                        conversationId = state.conversationId,
-                        conversationTitle = state.conversationTitle,
-                        legacyPrefs = legacyPrefs,
-                    ),
-                )
+                viewModelScope.launch {
+                    val legacyPrefs = delegate.getLegacyNotificationPrefs()
+                    _effects.emit(
+                        Effect.OpenNotificationChannelSettings(
+                            conversationId = state.conversationId,
+                            conversationTitle = state.conversationTitle,
+                            legacyPrefs = legacyPrefs,
+                        ),
+                    )
+                }
             }
 
             is Action.SnoozeOptionSelected -> {
-                notificationRepository.snooze(
-                    conversationId = uiState.value.conversationId,
-                    option = action.option,
-                )
-                delegate.refresh()
+                delegate.snooze(action.option)
             }
 
             is Action.UnsnoozeClicked -> {
-                notificationRepository.clearSnooze(uiState.value.conversationId)
-                delegate.refresh()
+                delegate.unsnooze()
             }
 
             is Action.UnarchiveClicked -> {
@@ -166,11 +162,9 @@ internal class ConversationSettingsViewModel @Inject constructor(
     }
 
     override fun setConversationId(conversationId: String) {
-        if (conversationId == currentConversationId) return
+        if (conversationId == conversationIdFlow.value) return
 
-        currentConversationId = conversationId
-        delegate.setConversationId(conversationId)
-        delegate.refresh()
+        conversationIdFlow.value = conversationId
     }
 
     private fun resolveConversation(
