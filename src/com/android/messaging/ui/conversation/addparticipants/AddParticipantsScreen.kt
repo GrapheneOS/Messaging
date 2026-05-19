@@ -19,6 +19,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -48,16 +49,17 @@ internal fun AddParticipantsScreen(
     screenModel: AddParticipantsScreenModel = hiltViewModel<AddParticipantsViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
+    val latestOnNavigateToConversation = rememberUpdatedState(onNavigateToConversation)
 
     LaunchedEffect(conversationId, screenModel) {
         screenModel.onConversationIdChanged(conversationId = conversationId)
     }
 
-    LaunchedEffect(screenModel, onNavigateToConversation) {
+    LaunchedEffect(screenModel) {
         screenModel.effects.collect { effect ->
             when (effect) {
                 is AddParticipantsEffect.NavigateToConversation -> {
-                    onNavigateToConversation(effect.conversationId)
+                    latestOnNavigateToConversation.value(effect.conversationId)
                 }
 
                 is AddParticipantsEffect.ShowMessage -> {
