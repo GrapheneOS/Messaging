@@ -98,7 +98,6 @@ internal class ConversationSettingsViewModel @Inject constructor(
 
             is Action.BlockConfirmed -> {
                 delegate.setDestinationBlocked(true)
-                emitNavigationEvent(NavEvent.CloseAfterBlock)
             }
 
             is Action.ParticipantPressed -> {

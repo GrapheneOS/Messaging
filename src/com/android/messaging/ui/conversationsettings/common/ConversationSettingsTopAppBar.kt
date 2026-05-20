@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,6 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.ui.common.components.ParticipantAvatar
 import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,8 +42,10 @@ internal fun ConversationSettingsTopAppBar(
                 modifier = Modifier.padding(end = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                val isBlocked = participant?.isBlocked == true
+
                 ParticipantAvatar(
-                    avatarUri = participant?.avatarUri,
+                    avatarUri = participant?.avatarUri.takeUnless { isBlocked },
                     modifier = Modifier
                         .size(32.dp)
                         .graphicsLayer {
@@ -50,6 +54,7 @@ internal fun ConversationSettingsTopAppBar(
                             scaleY = scale
                         },
                     fallbackIcon = when {
+                        isBlocked -> Icons.Default.Block
                         participant == null -> Icons.Default.Group
                         else -> Icons.Default.Person
                     },

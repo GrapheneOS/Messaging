@@ -132,9 +132,7 @@ internal fun ConversationSettingsScreen(
                     )
                 }
 
-                NavEvent.CloseAfterBlock,
-                NavEvent.CloseAfterArchive,
-                -> {
+                NavEvent.CloseAfterArchive -> {
                     if (isRootRoute()) {
                         resultCode = ConversationActivity.FINISH_RESULT_CODE
                     }
