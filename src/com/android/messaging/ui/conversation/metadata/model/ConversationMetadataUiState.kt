@@ -21,7 +21,7 @@ internal sealed interface ConversationMetadataUiState {
 
     @Immutable
     data object Loading : ConversationMetadataUiState {
-        override val composerAvailability = ConversationComposerAvailability.unavailable(
+        override val composerAvailability = ConversationComposerAvailability.Unavailable(
             reason = ConversationComposerDisabledReason.CONVERSATION_UNAVAILABLE,
         )
     }
@@ -41,7 +41,7 @@ internal sealed interface ConversationMetadataUiState {
 
     @Immutable
     data object Unavailable : ConversationMetadataUiState {
-        override val composerAvailability = ConversationComposerAvailability.unavailable(
+        override val composerAvailability = ConversationComposerAvailability.Unavailable(
             reason = ConversationComposerDisabledReason.CONVERSATION_UNAVAILABLE,
         )
     }

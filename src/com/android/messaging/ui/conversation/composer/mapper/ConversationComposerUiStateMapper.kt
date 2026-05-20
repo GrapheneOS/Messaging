@@ -40,29 +40,18 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
     ): ConversationComposerUiState {
         val draft = draftState.draft
         val hasWorkingDraft = draft.hasContent
-        val visibleSendProtocol = when {
-            hasWorkingDraft -> draftState.sendProtocol
-            else -> ConversationDraftSendProtocol.SMS
-        }
+        val visibleSendProtocol = getSendProtocol(draftState)
 
-        val isAttachmentActionEnabled = composerAvailability.isAttachmentActionEnabled &&
-            !draft.isCheckingDraft &&
-            !draft.isSending
+        val isComposerEditable = composerAvailability is ConversationComposerAvailability.Editable
+        val isDraftInteractionAvailable = draft.isInteractionAvailable()
+        val isComposerInteractionAvailable = isComposerEditable && isDraftInteractionAvailable
+        val isPrimaryActionAvailable = isComposerInteractionAvailable &&
+            draftState.pendingAttachments.isEmpty()
 
-        val isMessageFieldEnabled = composerAvailability.isMessageFieldEnabled
         val shouldShowRecordAction = !hasWorkingDraft &&
             audioRecording.phase == ConversationAudioRecordingPhase.Idle
 
-        val isRecordActionEnabled = composerAvailability.isSendAvailable &&
-            !draft.isCheckingDraft &&
-            !draft.isSending &&
-            draftState.pendingAttachments.isEmpty()
-
-        val isSendEnabled = composerAvailability.isSendAvailable &&
-            hasWorkingDraft &&
-            !draft.isCheckingDraft &&
-            !draft.isSending &&
-            draftState.pendingAttachments.isEmpty()
+        val isSendEnabled = hasWorkingDraft && isPrimaryActionAvailable
 
         val simSelector = buildSimSelectorUiState(
             subscriptions = subscriptions,
@@ -77,9 +66,9 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
             subjectText = draft.subjectText,
             selfParticipantId = draft.selfParticipantId,
             simSelector = simSelector,
-            isMessageFieldEnabled = isMessageFieldEnabled,
-            isAttachmentActionEnabled = isAttachmentActionEnabled,
-            isRecordActionEnabled = isRecordActionEnabled,
+            isMessageFieldEnabled = isComposerEditable,
+            isAttachmentActionEnabled = isComposerInteractionAvailable,
+            isRecordActionEnabled = isPrimaryActionAvailable,
             isSendEnabled = isSendEnabled,
             shouldShowRecordAction = shouldShowRecordAction,
             hasWorkingDraft = hasWorkingDraft,
@@ -94,7 +83,10 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
             ),
             isCheckingDraft = draft.isCheckingDraft,
             isSending = draft.isSending,
-            disabledReason = composerAvailability.disabledReason,
+            disabledReason = when (composerAvailability) {
+                ConversationComposerAvailability.Editable -> null
+                is ConversationComposerAvailability.Unavailable -> composerAvailability.reason
+            },
         )
     }
 
@@ -146,6 +138,19 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
             selectedSubscription = selected,
             isLoading = !areSubscriptionsLoaded,
         )
+    }
+
+    private fun getSendProtocol(
+        draftState: ConversationDraftState,
+    ): ConversationDraftSendProtocol {
+        return when {
+            draftState.draft.hasContent -> draftState.sendProtocol
+            else -> ConversationDraftSendProtocol.SMS
+        }
+    }
+
+    private fun ConversationDraft.isInteractionAvailable(): Boolean {
+        return !isCheckingDraft && !isSending
     }
 
     private companion object {

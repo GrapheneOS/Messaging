@@ -1,31 +1,9 @@
 package com.android.messaging.data.conversation.model.metadata
 
-internal data class ConversationComposerAvailability(
-    val isMessageFieldEnabled: Boolean,
-    val isAttachmentActionEnabled: Boolean,
-    val isSendAvailable: Boolean,
-    val disabledReason: ConversationComposerDisabledReason?,
-) {
+internal sealed interface ConversationComposerAvailability {
+    data object Editable : ConversationComposerAvailability
 
-    companion object {
-        fun editable(): ConversationComposerAvailability {
-            return ConversationComposerAvailability(
-                isMessageFieldEnabled = true,
-                isAttachmentActionEnabled = true,
-                isSendAvailable = true,
-                disabledReason = null,
-            )
-        }
-
-        fun unavailable(
-            reason: ConversationComposerDisabledReason,
-        ): ConversationComposerAvailability {
-            return ConversationComposerAvailability(
-                isMessageFieldEnabled = false,
-                isAttachmentActionEnabled = false,
-                isSendAvailable = false,
-                disabledReason = reason,
-            )
-        }
-    }
+    data class Unavailable(
+        val reason: ConversationComposerDisabledReason,
+    ) : ConversationComposerAvailability
 }

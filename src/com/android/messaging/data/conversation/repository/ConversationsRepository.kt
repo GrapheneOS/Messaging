@@ -290,7 +290,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
                         ?.profilePhotoUri
                         ?.takeIf { it.isNotBlank() },
                     isArchived = cursor.getInt(ConversationColumns.ARCHIVE_STATUS) == 1,
-                    composerAvailability = ConversationComposerAvailability.editable(),
+                    composerAvailability = ConversationComposerAvailability.Editable,
                     sortTimestamp = cursor.getLong(ConversationColumns.SORT_TIMESTAMP),
                 )
             }
