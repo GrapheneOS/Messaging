@@ -8,8 +8,8 @@ import com.android.messaging.data.subscription.repository.ConversationSimSelecti
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
 import com.android.messaging.datamodel.ParticipantRefresh
 import com.android.messaging.di.core.ApplicationCoroutineScope
+import com.android.messaging.domain.blockedparticipants.usecase.SetDestinationBlocked
 import com.android.messaging.domain.conversationsettings.usecase.SetConversationArchived
-import com.android.messaging.domain.conversationsettings.usecase.SetConversationDestinationBlocked
 import com.android.messaging.domain.conversationsettings.usecase.SetConversationSelfParticipantId
 import com.android.messaging.ui.conversationsettings.common.ConversationSettingsScreenDelegate
 import com.android.messaging.ui.conversationsettings.screen.mapper.ConversationSettingsUiStateMapper
@@ -47,7 +47,7 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
     private val simSelectionRepository: ConversationSimSelectionRepository,
     private val mapper: ConversationSettingsUiStateMapper,
     private val setConversationArchived: SetConversationArchived,
-    private val setConversationDestinationBlocked: SetConversationDestinationBlocked,
+    private val setDestinationBlocked: SetDestinationBlocked,
     private val setConversationSelfParticipantId: SetConversationSelfParticipantId,
     @param:ApplicationCoroutineScope private val applicationScope: CoroutineScope,
 ) : ConversationSettingsDelegate {
@@ -108,10 +108,10 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
 
         if (normalizedDestination == null || conversationId == null) return
 
-        setConversationDestinationBlocked(
-            conversationId = conversationId,
+        setDestinationBlocked(
             normalizedDestination = normalizedDestination,
             blocked = blocked,
+            conversationId = conversationId,
         )
     }
 

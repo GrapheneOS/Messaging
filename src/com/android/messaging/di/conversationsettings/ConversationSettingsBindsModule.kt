@@ -6,8 +6,6 @@ import com.android.messaging.data.conversationsettings.repository.ConversationSe
 import com.android.messaging.data.conversationsettings.repository.ConversationSettingsRepositoryImpl
 import com.android.messaging.domain.conversationsettings.usecase.SetConversationArchived
 import com.android.messaging.domain.conversationsettings.usecase.SetConversationArchivedImpl
-import com.android.messaging.domain.conversationsettings.usecase.SetConversationDestinationBlocked
-import com.android.messaging.domain.conversationsettings.usecase.SetConversationDestinationBlockedImpl
 import com.android.messaging.domain.conversationsettings.usecase.SetConversationSelfParticipantId
 import com.android.messaging.domain.conversationsettings.usecase.SetConversationSelfParticipantIdImpl
 import com.android.messaging.ui.conversationsettings.screen.mapper.ConversationSettingsUiStateMapper
@@ -45,12 +43,6 @@ internal abstract class ConversationSettingsBindsModule {
     abstract fun bindSetConversationArchived(
         impl: SetConversationArchivedImpl,
     ): SetConversationArchived
-
-    @Binds
-    @Reusable
-    abstract fun bindSetConversationDestinationBlocked(
-        impl: SetConversationDestinationBlockedImpl,
-    ): SetConversationDestinationBlocked
 
     @Binds
     @Reusable
