@@ -4,7 +4,6 @@ internal data class ConversationMediaItem(
     val mediaId: String,
     val contentUri: String,
     val contentType: String,
-    val mediaType: ConversationMediaType,
     val width: Int?,
     val height: Int?,
     val durationMillis: Long?,

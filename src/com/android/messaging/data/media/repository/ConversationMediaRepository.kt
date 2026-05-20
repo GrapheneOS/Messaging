@@ -4,7 +4,6 @@ import android.content.ContentResolver
 import android.os.Bundle
 import android.provider.MediaStore
 import com.android.messaging.data.media.model.ConversationMediaItem
-import com.android.messaging.data.media.model.ConversationMediaType
 import com.android.messaging.di.core.IoDispatcher
 import com.android.messaging.util.ContentType
 import com.android.messaging.util.UriUtil
@@ -60,7 +59,6 @@ internal class ConversationMediaRepositoryImpl @Inject constructor(
                 while (cursor.moveToNext()) {
                     val mediaStoreId = cursor.getLong(idIndex)
                     val mediaTypeValue = cursor.getInt(mediaTypeIndex)
-                    val mediaType = getMediaType(mediaTypeValue = mediaTypeValue)
 
                     val item = ConversationMediaItem(
                         mediaId = mediaStoreId.toString(),
@@ -71,7 +69,6 @@ internal class ConversationMediaRepositoryImpl @Inject constructor(
                             .getString(mimeTypeIndex)
                             ?.takeIf { it.isNotBlank() }
                             ?: fallbackContentType(mediaTypeValue = mediaTypeValue),
-                        mediaType = mediaType,
                         width = cursor.getInt(widthIndex).takeIf { it > 0 },
                         height = cursor.getInt(heightIndex).takeIf { it > 0 },
                         durationMillis = cursor.getLong(durationIndex).takeIf { it > 0 },
@@ -98,13 +95,6 @@ internal class ConversationMediaRepositoryImpl @Inject constructor(
                 ContentResolver.QUERY_SORT_DIRECTION_DESCENDING,
             )
             putInt(ContentResolver.QUERY_ARG_LIMIT, limit)
-        }
-    }
-
-    private fun getMediaType(mediaTypeValue: Int): ConversationMediaType {
-        return when (mediaTypeValue) {
-            MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO -> ConversationMediaType.Video
-            else -> ConversationMediaType.Image
         }
     }
 

@@ -54,10 +54,12 @@ internal class GetConversationDraftSendProtocolImpl @Inject constructor() :
             groupConversationRequiresMms -> true
             emailAddressRequiresMms -> true
 
-            else -> messageLengthRequiresMms(
-                messageText = draft.messageText,
-                selfSubId = selfSubId,
-            )
+            else -> {
+                messageLengthRequiresMms(
+                    messageText = draft.messageText,
+                    selfSubId = selfSubId,
+                )
+            }
         }
     }
 

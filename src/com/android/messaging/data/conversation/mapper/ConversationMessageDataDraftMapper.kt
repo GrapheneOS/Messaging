@@ -44,7 +44,7 @@ internal class ConversationMessageDataDraftMapperImpl @Inject constructor() :
         val contentUri = part.contentUri?.toString()?.takeIf { it.isNotBlank() }
 
         return when {
-            contentUri?.isPhotoPickerUri == true -> {
+            isPhotoPickerUri(contentUri) -> {
                 LogUtil.w(TAG, "Dropping draft attachment backed by photo picker URI")
                 null
             }
@@ -74,10 +74,9 @@ internal class ConversationMessageDataDraftMapperImpl @Inject constructor() :
         return size.takeIf { it != MessagePartData.UNSPECIFIED_SIZE }
     }
 
-    private val String.isPhotoPickerUri: Boolean
-        get() {
-            return startsWith(prefix = PHOTO_PICKER_URI_PREFIX)
-        }
+    private fun isPhotoPickerUri(uri: String?): Boolean {
+        return uri?.startsWith(prefix = PHOTO_PICKER_URI_PREFIX) == true
+    }
 
     private companion object {
         private const val TAG = "ConversationMsgDataDraftMapper"

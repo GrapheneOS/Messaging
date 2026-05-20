@@ -18,7 +18,6 @@ import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -69,7 +68,6 @@ internal class ConversationMediaPickerDelegateImpl @Inject constructor(
     )
     private val photoPickerAttachmentLock = Any()
 
-    private val pendingAttachmentJobs = mutableMapOf<String, Job>()
     private val photoPickerContentUris = mutableSetOf<String>()
     private val attachmentContentUriByPhotoPickerContentUri = mutableMapOf<String, String>()
     private val photoPickerContentUriByAttachmentContentUri = mutableMapOf<String, String>()
@@ -310,10 +308,6 @@ internal class ConversationMediaPickerDelegateImpl @Inject constructor(
     }
 
     override fun onRemovePendingAttachment(pendingAttachmentId: String) {
-        synchronized(photoPickerAttachmentLock) {
-            pendingAttachmentJobs.remove(pendingAttachmentId)
-        }?.cancel()
-
         conversationDraftDelegate.removePendingAttachment(
             pendingAttachmentId = pendingAttachmentId,
         )
@@ -338,18 +332,12 @@ internal class ConversationMediaPickerDelegateImpl @Inject constructor(
     }
 
     private fun cancelPendingAttachmentJobs() {
-        val jobs = synchronized(photoPickerAttachmentLock) {
-            val jobs = pendingAttachmentJobs.values.toList()
-            pendingAttachmentJobs.clear()
+        synchronized(photoPickerAttachmentLock) {
             photoPickerContentUris.clear()
             attachmentContentUriByPhotoPickerContentUri.clear()
             photoPickerContentUriByAttachmentContentUri.clear()
             publishPhotoPickerSourceContentUrisLocked()
-
-            jobs
         }
-
-        jobs.forEach { it.cancel() }
     }
 
     private fun registerPhotoPickerAttachment(photoPickerAttachment: PhotoPickerDraftAttachment) {

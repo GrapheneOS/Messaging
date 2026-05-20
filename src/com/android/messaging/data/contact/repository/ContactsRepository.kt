@@ -182,9 +182,8 @@ internal class ContactsRepositoryImpl @Inject constructor(
             contactIds = contactIds,
         )
 
-        val rowsByContact = LinkedHashMap<Long, MutableList<DestinationRow>>()
-        contactIds.forEach { contactId ->
-            rowsByContact[contactId] = mutableListOf()
+        val rowsByContact = contactIds.associateWith {
+            mutableListOf<DestinationRow>()
         }
 
         (phoneRows + emailRows).forEach { row ->
@@ -215,12 +214,10 @@ internal class ContactsRepositoryImpl @Inject constructor(
     private fun groupRowsByContactPreservingOrder(
         rows: List<DestinationRow>,
     ): List<List<DestinationRow>> {
-        val rowsByContact = LinkedHashMap<Long, MutableList<DestinationRow>>()
-        rows.forEach { row ->
-            rowsByContact.getOrPut(row.contactId) { mutableListOf() }.add(row)
-        }
-
-        return rowsByContact.values.toList()
+        return rows
+            .groupBy(DestinationRow::contactId)
+            .values
+            .toList()
     }
 
     private fun readDestinationRowsForContacts(

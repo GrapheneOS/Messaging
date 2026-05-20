@@ -26,7 +26,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Point;
 import android.graphics.Rect;
-import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract.Contacts;
@@ -412,16 +411,6 @@ public class UIIntentsImpl extends UIIntents {
         final PendingIntent resultPendingIntent =
             stackBuilder.getPendingIntent(requestCode, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE);
         return resultPendingIntent;
-    }
-
-    @Override
-    public Intent getRingtonePickerIntent(final String title, final Uri existingUri,
-            final Uri defaultUri, final int toneType) {
-        return new Intent(RingtoneManager.ACTION_RINGTONE_PICKER)
-                .putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, toneType)
-                .putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, title)
-                .putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, existingUri)
-                .putExtra(RingtoneManager.EXTRA_RINGTONE_DEFAULT_URI, defaultUri);
     }
 
     @Override

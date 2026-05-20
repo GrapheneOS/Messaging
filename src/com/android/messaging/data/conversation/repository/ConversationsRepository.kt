@@ -227,10 +227,6 @@ internal class ConversationsRepositoryImpl @Inject constructor(
         conversationId: String,
         messageId: String,
     ): ConversationMessageData? {
-        if (conversationId.isBlank() || messageId.isBlank()) {
-            return null
-        }
-
         return when {
             conversationId.isBlank() || messageId.isBlank() -> null
 
