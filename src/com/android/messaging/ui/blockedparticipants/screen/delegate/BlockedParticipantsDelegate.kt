@@ -1,6 +1,7 @@
 package com.android.messaging.ui.blockedparticipants.screen.delegate
 
 import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepository
+import com.android.messaging.domain.blockedparticipants.usecase.SetDestinationBlocked
 import com.android.messaging.ui.blockedparticipants.screen.mapper.BlockedParticipantsUiStateMapper
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsUiState
 import javax.inject.Inject
@@ -15,11 +16,13 @@ internal interface BlockedParticipantsDelegate {
     val state: StateFlow<BlockedParticipantsUiState>
 
     fun bind(scope: CoroutineScope)
+    fun unblock(normalizedDestination: String)
 }
 
 internal class BlockedParticipantsDelegateImpl @Inject constructor(
     private val repository: BlockedParticipantsRepository,
     private val mapper: BlockedParticipantsUiStateMapper,
+    private val setDestinationBlocked: SetDestinationBlocked,
 ) : BlockedParticipantsDelegate {
 
     private val _state = MutableStateFlow(BlockedParticipantsUiState())
@@ -37,5 +40,14 @@ internal class BlockedParticipantsDelegateImpl @Inject constructor(
                 _state.value = data
             }
             .launchIn(scope)
+    }
+
+    override fun unblock(normalizedDestination: String) {
+        if (normalizedDestination.isEmpty()) return
+
+        setDestinationBlocked(
+            normalizedDestination = normalizedDestination,
+            blocked = false,
+        )
     }
 }
