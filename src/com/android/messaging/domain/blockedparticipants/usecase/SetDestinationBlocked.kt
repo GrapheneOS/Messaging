@@ -1,4 +1,4 @@
-package com.android.messaging.domain.conversationsettings.usecase
+package com.android.messaging.domain.blockedparticipants.usecase
 
 import android.content.Context
 import com.android.messaging.datamodel.action.BugleActionToasts
@@ -6,22 +6,22 @@ import com.android.messaging.datamodel.action.UpdateDestinationBlockedAction
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
-internal fun interface SetConversationDestinationBlocked {
+internal interface SetDestinationBlocked {
     operator fun invoke(
-        conversationId: String,
         normalizedDestination: String,
         blocked: Boolean,
+        conversationId: String? = null,
     )
 }
 
-internal class SetConversationDestinationBlockedImpl @Inject constructor(
+internal class SetDestinationBlockedImpl @Inject constructor(
     @param:ApplicationContext private val context: Context,
-) : SetConversationDestinationBlocked {
+) : SetDestinationBlocked {
 
     override fun invoke(
-        conversationId: String,
         normalizedDestination: String,
         blocked: Boolean,
+        conversationId: String?,
     ) {
         if (normalizedDestination.isEmpty()) return
 
