@@ -2,6 +2,8 @@ package com.android.messaging.di.blockedparticipants
 
 import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepository
 import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepositoryImpl
+import com.android.messaging.domain.blockedparticipants.usecase.SetDestinationBlocked
+import com.android.messaging.domain.blockedparticipants.usecase.SetDestinationBlockedImpl
 import com.android.messaging.ui.blockedparticipants.screen.mapper.BlockedParticipantsUiStateMapper
 import com.android.messaging.ui.blockedparticipants.screen.mapper.BlockedParticipantsUiStateMapperImpl
 import dagger.Binds
@@ -25,4 +27,10 @@ internal abstract class BlockedParticipantsBindsModule {
     abstract fun bindBlockedParticipantsUiStateMapper(
         impl: BlockedParticipantsUiStateMapperImpl,
     ): BlockedParticipantsUiStateMapper
+
+    @Binds
+    @Reusable
+    abstract fun bindSetDestinationBlocked(
+        impl: SetDestinationBlockedImpl,
+    ): SetDestinationBlocked
 }

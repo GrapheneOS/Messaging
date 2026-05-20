@@ -13,12 +13,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.PersonRemove
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -30,7 +33,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -43,14 +45,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
 import com.android.messaging.ui.blockedparticipants.common.ContentSurfaceShape
 import com.android.messaging.ui.blockedparticipants.common.ConversationSettingsTopAppBar
+import com.android.messaging.ui.blockedparticipants.common.ItemDividerHorizontalInset
 import com.android.messaging.ui.blockedparticipants.common.ItemHorizontalPadding
 import com.android.messaging.ui.blockedparticipants.common.ItemShape
-import com.android.messaging.ui.blockedparticipants.common.ItemSpacing
 import com.android.messaging.ui.blockedparticipants.common.ItemVerticalPadding
 import com.android.messaging.ui.blockedparticipants.common.ScreenContentPadding
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantUiState
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsAction as Action
+import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsNavEvent as NavEvent
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsUiState as State
+import com.android.messaging.ui.common.components.ParticipantAvatar
 import com.android.messaging.ui.core.AppTheme
 import kotlinx.collections.immutable.persistentListOf
 
@@ -69,6 +73,9 @@ internal fun BlockedParticipantsScreen(
 
     LaunchedEffect(screenModel, onNavigateBack) {
         screenModel.navigationEvents.collect { event ->
+            when (event) {
+                NavEvent.CloseAfterLastUnblock -> onNavigateBack()
+            }
         }
     }
 
@@ -137,22 +144,31 @@ private fun BlockedParticipantsList(
             start = ScreenContentPadding,
             end = ScreenContentPadding,
         ),
-        verticalArrangement = Arrangement.spacedBy(ItemSpacing),
     ) {
-        items(
+        itemsIndexed(
             items = uiState.participants,
-            key = { it.participantId },
-        ) { participant ->
-            BlockedParticipantItem(
-                participant = participant,
-                isSelected = false,
-                onUnblockClick = {
-                    val destination = participant.normalizedDestination
-                        ?: return@BlockedParticipantItem
+            key = { _, participant -> participant.participantId },
+        ) { index, participant ->
+            Column {
+                if (index > 0) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = ItemDividerHorizontalInset),
+                        thickness = 1.dp,
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    )
+                }
 
-                    onAction(Action.UnblockClicked(destination))
-                },
-            )
+                BlockedParticipantItem(
+                    participant = participant,
+                    isSelected = false,
+                    onUnblockClick = {
+                        val destination = participant.normalizedDestination
+                            ?: return@BlockedParticipantItem
+
+                        onAction(Action.UnblockClicked(destination))
+                    },
+                )
+            }
         }
     }
 }
@@ -189,6 +205,14 @@ private fun BlockedParticipantItem(
                 ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            ParticipantAvatar(
+                avatarUri = participant.avatarUri,
+                size = 48.dp,
+                fallbackIcon = Icons.Default.Person,
+            )
+
+            Spacer(modifier = Modifier.width(ItemHorizontalPadding))
+
             Column(
                 modifier = Modifier
                     .weight(1f)

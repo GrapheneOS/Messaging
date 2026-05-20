@@ -4,10 +4,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.dp
 
 internal val ScreenContentPadding = 8.dp
-internal val ItemSpacing = 2.dp
 
 internal val ItemHorizontalPadding = 8.dp
 internal val ItemVerticalPadding = 8.dp
+
+internal val ItemDividerHorizontalInset = 40.dp
 
 internal val ContentSurfaceShape = RoundedCornerShape(
     topStart = 28.dp,

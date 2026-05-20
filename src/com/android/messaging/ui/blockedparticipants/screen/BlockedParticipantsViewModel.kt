@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.launch
 
 internal interface BlockedParticipantsScreenModel {
     val effects: Flow<Effect>
@@ -41,5 +42,22 @@ internal class BlockedParticipantsViewModel @Inject constructor(
     }
 
     override fun onAction(action: Action) {
+        when (action) {
+            is Action.UnblockClicked -> {
+                unblock(action.normalizedDestination)
+            }
+        }
+    }
+
+    private fun unblock(normalizedDestination: String) {
+        val wasLast = uiState.value.participants.size == 1
+
+        delegate.unblock(normalizedDestination)
+
+        if (wasLast) {
+            viewModelScope.launch {
+                _navigationEvents.emit(NavEvent.CloseAfterLastUnblock)
+            }
+        }
     }
 }
