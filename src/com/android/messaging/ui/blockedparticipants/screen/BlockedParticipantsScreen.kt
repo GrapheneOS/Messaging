@@ -31,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,13 +44,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
-import com.android.messaging.ui.blockedparticipants.common.ContentSurfaceShape
 import com.android.messaging.ui.blockedparticipants.common.ConversationSettingsTopAppBar
 import com.android.messaging.ui.blockedparticipants.common.ItemDividerHorizontalInset
 import com.android.messaging.ui.blockedparticipants.common.ItemHorizontalPadding
-import com.android.messaging.ui.blockedparticipants.common.ItemShape
 import com.android.messaging.ui.blockedparticipants.common.ItemVerticalPadding
 import com.android.messaging.ui.blockedparticipants.common.ScreenContentPadding
+import com.android.messaging.ui.blockedparticipants.common.blockedParticipantItemShape
+import com.android.messaging.ui.blockedparticipants.common.contentSurfaceShape
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantUiState
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsAction as Action
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsNavEvent as NavEvent
@@ -67,14 +68,18 @@ internal fun BlockedParticipantsScreen(
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(screenModel, effectHandler) {
-        screenModel.effects.collect(effectHandler::handle)
+    val currentEffectHandler by rememberUpdatedState(effectHandler)
+    LaunchedEffect(screenModel) {
+        screenModel.effects.collect { effect ->
+            currentEffectHandler.handle(effect)
+        }
     }
 
-    LaunchedEffect(screenModel, onNavigateBack) {
+    val currentOnNavigateBack by rememberUpdatedState(onNavigateBack)
+    LaunchedEffect(screenModel) {
         screenModel.navigationEvents.collect { event ->
             when (event) {
-                NavEvent.CloseAfterLastUnblock -> onNavigateBack()
+                NavEvent.CloseAfterLastUnblock -> currentOnNavigateBack()
             }
         }
     }
@@ -104,7 +109,7 @@ private fun BlockedParticipantsContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = contentPadding.calculateTopPadding())
-                .clip(ContentSurfaceShape)
+                .clip(MaterialTheme.contentSurfaceShape)
                 .background(MaterialTheme.colorScheme.background),
         ) {
             when {
@@ -190,7 +195,7 @@ private fun BlockedParticipantItem(
 
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = ItemShape,
+        shape = MaterialTheme.blockedParticipantItemShape,
         color = backgroundColor,
     ) {
         Row(
