@@ -63,14 +63,14 @@ import com.android.messaging.ui.conversation.ConversationActivity
 import com.android.messaging.ui.conversationsettings.common.ConversationHeader
 import com.android.messaging.ui.conversationsettings.common.ConversationSettingsItem
 import com.android.messaging.ui.conversationsettings.common.ConversationSettingsTopAppBar
-import com.android.messaging.ui.conversationsettings.common.GroupedBottomItemShape
 import com.android.messaging.ui.conversationsettings.common.GroupedItemSpacing
-import com.android.messaging.ui.conversationsettings.common.GroupedMiddleItemShape
-import com.android.messaging.ui.conversationsettings.common.GroupedTopItemShape
 import com.android.messaging.ui.conversationsettings.common.ParticipantItem
 import com.android.messaging.ui.conversationsettings.common.ScreenContentPadding
 import com.android.messaging.ui.conversationsettings.common.SectionSpacing
-import com.android.messaging.ui.conversationsettings.common.SettingsCardShape
+import com.android.messaging.ui.conversationsettings.common.groupedBottomItemShape
+import com.android.messaging.ui.conversationsettings.common.groupedMiddleItemShape
+import com.android.messaging.ui.conversationsettings.common.groupedTopItemShape
+import com.android.messaging.ui.conversationsettings.common.settingsCardShape
 import com.android.messaging.ui.conversationsettings.screen.ConversationSettingsNavRouteSavedState as NavRouteSavedState
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsAction as Action
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsNavEvent as NavEvent
@@ -507,14 +507,14 @@ private fun GeneralSettingsCard(
                     onRequestSnoozeChooser()
                 }
             },
-            shape = GroupedTopItemShape,
+            shape = MaterialTheme.groupedTopItemShape,
         )
 
         ConversationSettingsItem(
             icon = Icons.Default.Notifications,
             title = stringResource(R.string.notifications_enabled_conversation_pref_title),
             onClick = { onAction(Action.NotificationsClicked) },
-            shape = GroupedMiddleItemShape,
+            shape = MaterialTheme.groupedMiddleItemShape,
         )
 
         ConversationSettingsItem(
@@ -527,7 +527,7 @@ private fun GeneralSettingsCard(
                     onAction(Action.ArchiveClicked)
                 }
             },
-            shape = GroupedBottomItemShape,
+            shape = MaterialTheme.groupedBottomItemShape,
         )
     }
 }
@@ -573,7 +573,7 @@ private fun ParticipantsCard(
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = SettingsCardShape,
+        shape = MaterialTheme.settingsCardShape,
         color = MaterialTheme.colorScheme.surfaceContainer,
     ) {
         Column(modifier = Modifier.padding(vertical = 8.dp)) {

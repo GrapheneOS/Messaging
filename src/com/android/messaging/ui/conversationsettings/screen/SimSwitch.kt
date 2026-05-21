@@ -33,7 +33,7 @@ import com.android.messaging.R
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.ui.conversationsettings.common.ConversationSimAvatar
-import com.android.messaging.ui.conversationsettings.common.SettingsCardShape
+import com.android.messaging.ui.conversationsettings.common.settingsCardShape
 import com.android.messaging.ui.conversationsettings.common.resolveDisplayName
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsAction as Action
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState as State
@@ -71,7 +71,7 @@ private fun SimSwitchItem(
 
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = SettingsCardShape,
+        shape = MaterialTheme.settingsCardShape,
         color = MaterialTheme.colorScheme.surfaceContainer,
         onClick = { expanded = true },
     ) {
@@ -150,7 +150,7 @@ private fun SimSwitchItemMenu(
 
         DropdownMenu(
             expanded = expanded,
-            shape = SettingsCardShape,
+            shape = MaterialTheme.settingsCardShape,
             onDismissRequest = { onExpandedChange(false) },
         ) {
             SimSelectorPopupContent(
