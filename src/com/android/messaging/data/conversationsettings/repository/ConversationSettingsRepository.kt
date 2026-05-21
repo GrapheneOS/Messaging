@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package com.android.messaging.data.conversationsettings.repository
 
 import android.content.ContentResolver
@@ -10,14 +12,20 @@ import com.android.messaging.datamodel.data.ConversationParticipantsData
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.di.core.MessagingDbDispatcher
 import com.android.messaging.util.PhoneUtils
-import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
+import javax.inject.Inject
 
 internal interface ConversationSettingsRepository {
     fun getConversationSettings(conversationId: String): Flow<ConversationSettingsData>
@@ -33,16 +41,40 @@ internal class ConversationSettingsRepositoryImpl @Inject constructor(
     override fun getConversationSettings(
         conversationId: String,
     ): Flow<ConversationSettingsData> {
-        val metadataUri = MessagingContentProvider.buildConversationMetadataUri(
-            conversationId,
-        )
-        val participantsUri = MessagingContentProvider.buildConversationParticipantsUri(
-            conversationId,
+        val uris = listOf(
+            MessagingContentProvider.buildConversationMetadataUri(conversationId),
+            MessagingContentProvider.buildConversationParticipantsUri(conversationId),
         )
 
-        return observeUris(uris = listOf(metadataUri, participantsUri))
-            .map { loadConversationSettings(conversationId = conversationId) }
+        return refreshTriggers(conversationId, uris)
+            .map { loadConversationSettings(conversationId) }
             .flowOn(messagingDbDispatcher)
+    }
+
+    private fun refreshTriggers(
+        conversationId: String,
+        uris: List<Uri>,
+    ): Flow<Unit> {
+        return observeUris(uris).flatMapLatest {
+            val immediate = flowOf(Unit)
+            val snoozeExpired = snoozeExpiry(conversationId)
+            merge(immediate, snoozeExpired)
+        }
+    }
+
+    private fun snoozeExpiry(
+        conversationId: String,
+    ): Flow<Unit> {
+        return flow {
+            val snoozeUntilMillis = notificationRepository.getSnoozeUntilMillis(conversationId)
+            if (snoozeUntilMillis == Long.MAX_VALUE) return@flow
+
+            val remaining = snoozeUntilMillis - System.currentTimeMillis()
+            if (remaining <= 0L) return@flow
+
+            delay(remaining)
+            emit(Unit)
+        }
     }
 
     private suspend fun loadConversationSettings(

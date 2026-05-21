@@ -76,7 +76,7 @@ internal class ConversationNotificationRepositoryImpl @Inject constructor(
         val prefs = BuglePrefs.getApplicationPrefs()
         val untilMillis = when (option) {
             SnoozeOption.Always -> Long.MAX_VALUE
-            else -> addSafely(System.currentTimeMillis(), option.durationMillis)
+            else -> addSafely(System.currentTimeMillis(), option.duration.inWholeMilliseconds)
         }
         prefs.putLong(snoozeKey(conversationId), untilMillis)
     }
