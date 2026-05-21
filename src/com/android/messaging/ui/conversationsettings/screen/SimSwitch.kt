@@ -33,8 +33,8 @@ import com.android.messaging.R
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.ui.conversationsettings.common.ConversationSimAvatar
-import com.android.messaging.ui.conversationsettings.common.settingsCardShape
 import com.android.messaging.ui.conversationsettings.common.resolveDisplayName
+import com.android.messaging.ui.conversationsettings.common.settingsCardShape
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsAction as Action
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState as State
 import com.android.messaging.ui.core.AppTheme

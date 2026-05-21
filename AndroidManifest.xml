@@ -224,11 +224,6 @@
                 android:value="com.android.messaging.ui.conversation.ConversationActivity" />
         </activity>
 
-        <activity-alias
-            android:name=".ui.conversationsettings.PeopleAndOptionsActivity"
-            android:exported="true"
-            android:targetActivity=".ui.conversationsettings.ConversationSettingsActivity" />
-
         <!-- License -->
         <activity
             android:name=".ui.license.LicenseActivity"

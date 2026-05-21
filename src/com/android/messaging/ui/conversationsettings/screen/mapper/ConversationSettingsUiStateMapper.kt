@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationsettings.screen.mapper
 
 import android.telephony.PhoneNumberUtils
+import android.telephony.TelephonyManager
 import com.android.messaging.data.conversationsettings.model.ConversationSettingsData
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.datamodel.data.ParticipantData
@@ -19,8 +20,9 @@ internal interface ConversationSettingsUiStateMapper {
     ): ConversationSettingsUiState
 }
 
-internal class ConversationSettingsUiStateMapperImpl @Inject constructor() :
-    ConversationSettingsUiStateMapper {
+internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
+    private val telephonyManager: TelephonyManager,
+) : ConversationSettingsUiStateMapper {
 
     override fun map(
         data: ConversationSettingsData,
@@ -64,11 +66,12 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor() :
         participant: ParticipantUiState?,
         isVoiceCapable: Boolean,
     ): Boolean {
-        val phoneNumber = participant?.normalizedDestination
+        val destination = participant?.normalizedDestination
 
         return isVoiceCapable &&
-            !phoneNumber.isNullOrBlank() &&
-            !PhoneNumberUtils.isEmergencyNumber(phoneNumber)
+            !destination.isNullOrBlank() &&
+            PhoneNumberUtils.isWellFormedSmsAddress(destination) &&
+            !telephonyManager.isEmergencyNumber(destination)
     }
 
     private fun isContactSaved(participant: ParticipantUiState?): Boolean {
