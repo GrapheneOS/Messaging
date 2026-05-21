@@ -47,6 +47,6 @@ private fun conversationMetadata(): ConversationMetadataUiState {
         otherParticipantPhoneNumber = "+37254400024",
         otherParticipantContactLookupKey = null,
         isArchived = false,
-        composerAvailability = ConversationComposerAvailability.editable(),
+        composerAvailability = ConversationComposerAvailability.Editable,
     )
 }
