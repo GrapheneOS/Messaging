@@ -58,6 +58,7 @@ import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticip
 import com.android.messaging.ui.common.components.ParticipantAvatar
 import com.android.messaging.ui.core.AppTheme
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
 
 @Composable
 internal fun BlockedParticipantsScreen(
@@ -103,7 +104,15 @@ private fun BlockedParticipantsContent(
     Scaffold(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        topBar = { ConversationSettingsTopAppBar(onNavigateBack = onNavigateBack) },
+        topBar = {
+            ConversationSettingsTopAppBar(
+                onNavigateBack = onNavigateBack,
+                showDeleteAction = uiState.selectedParticipantIds.isNotEmpty(),
+                onDeleteClick = {
+                    onAction(Action.DeleteSelectedClicked)
+                },
+            )
+        },
     ) { contentPadding ->
         Box(
             modifier = Modifier
@@ -157,7 +166,10 @@ private fun BlockedParticipantsList(
             Column {
                 if (index > 0) {
                     HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = ItemDividerHorizontalInset),
+                        modifier = Modifier.padding(
+                            horizontal = ItemDividerHorizontalInset,
+                            vertical = 1.dp,
+                        ),
                         thickness = 1.dp,
                         color = MaterialTheme.colorScheme.surfaceContainerLow,
                     )
@@ -165,7 +177,13 @@ private fun BlockedParticipantsList(
 
                 BlockedParticipantItem(
                     participant = participant,
-                    isSelected = false,
+                    isSelected = participant.participantId in uiState.selectedParticipantIds,
+                    onClick = {
+                        onAction(Action.ParticipantClicked(participant.participantId))
+                    },
+                    onLongClick = {
+                        onAction(Action.ParticipantLongClicked(participant.participantId))
+                    },
                     onUnblockClick = {
                         val destination = participant.normalizedDestination
                             ?: return@BlockedParticipantItem
@@ -183,6 +201,8 @@ private fun BlockedParticipantsList(
 private fun BlockedParticipantItem(
     participant: BlockedParticipantUiState,
     isSelected: Boolean,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
     onUnblockClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -201,8 +221,8 @@ private fun BlockedParticipantItem(
         Row(
             modifier = Modifier
                 .combinedClickable(
-                    onClick = {},
-                    onLongClick = {},
+                    onClick = onClick,
+                    onLongClick = onLongClick,
                 )
                 .padding(
                     horizontal = ItemHorizontalPadding,
@@ -214,6 +234,7 @@ private fun BlockedParticipantItem(
                 avatarUri = participant.avatarUri,
                 size = 48.dp,
                 fallbackIcon = Icons.Default.Person,
+                isSelected = isSelected,
             )
 
             Spacer(modifier = Modifier.width(ItemHorizontalPadding))
@@ -309,6 +330,7 @@ private fun BlockedParticipantsContentPreview() {
                         normalizedDestination = "+31600001111",
                     ),
                 ),
+                selectedParticipantIds = persistentSetOf("2"),
             ),
             onAction = {},
             onNavigateBack = {},

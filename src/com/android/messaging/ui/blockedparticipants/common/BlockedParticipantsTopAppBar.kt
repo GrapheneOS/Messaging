@@ -2,6 +2,7 @@ package com.android.messaging.ui.blockedparticipants.common
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -17,6 +18,8 @@ import com.android.messaging.R
 @Composable
 internal fun ConversationSettingsTopAppBar(
     onNavigateBack: () -> Unit,
+    showDeleteAction: Boolean = false,
+    onDeleteClick: () -> Unit = {},
 ) {
     TopAppBar(
         title = {
@@ -32,6 +35,17 @@ internal fun ConversationSettingsTopAppBar(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = stringResource(R.string.back),
                 )
+            }
+        },
+        actions = {
+            if (showDeleteAction) {
+                IconButton(onClick = onDeleteClick) {
+                    Icon(
+                        imageVector = Icons.Outlined.Delete,
+                        contentDescription = stringResource(R.string.action_delete),
+                        tint = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(

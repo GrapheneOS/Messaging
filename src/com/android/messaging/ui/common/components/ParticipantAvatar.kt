@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -26,14 +27,29 @@ internal fun ParticipantAvatar(
     fallbackIconSize: Dp,
     modifier: Modifier = Modifier,
     shape: Shape = CircleShape,
+    isSelected: Boolean = false,
 ) {
+    val backgroundColor = when {
+        isSelected -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.primaryContainer
+    }
+
     Box(
         modifier = modifier
             .clip(shape)
-            .background(MaterialTheme.colorScheme.primaryContainer),
+            .background(backgroundColor),
         contentAlignment = Alignment.Center,
     ) {
         when {
+            isSelected -> {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(fallbackIconSize),
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                )
+            }
+
             avatarUri.isNullOrBlank() -> {
                 Icon(
                     imageVector = fallbackIcon,
@@ -63,6 +79,7 @@ internal fun ParticipantAvatar(
     fallbackIconSize: Dp = size / 2,
     fallbackIcon: ImageVector = Icons.Default.Person,
     shape: Shape = CircleShape,
+    isSelected: Boolean = false,
 ) {
     ParticipantAvatar(
         avatarUri = avatarUri,
@@ -70,5 +87,6 @@ internal fun ParticipantAvatar(
         fallbackIconSize = fallbackIconSize,
         modifier = modifier.size(size),
         shape = shape,
+        isSelected = isSelected,
     )
 }

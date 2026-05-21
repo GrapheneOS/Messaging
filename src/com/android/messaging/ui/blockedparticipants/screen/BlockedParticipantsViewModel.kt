@@ -46,6 +46,11 @@ internal class BlockedParticipantsViewModel @Inject constructor(
             is Action.UnblockClicked -> {
                 unblock(action.normalizedDestination)
             }
+
+            is Action.ParticipantClicked,
+            is Action.ParticipantLongClicked,
+            Action.DeleteSelectedClicked,
+            -> Unit
         }
     }
 
