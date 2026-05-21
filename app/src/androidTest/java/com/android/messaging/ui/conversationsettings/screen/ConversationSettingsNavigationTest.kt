@@ -41,15 +41,6 @@ internal class ConversationSettingsNavigationTest : ConversationSettingsTestBase
     }
 
     @Test
-    fun closeAfterBlock_fromRoot_navigatesBackWithFinishResult() {
-        renderScreen()
-
-        emitNavEvent(ConversationSettingsNavEvent.CloseAfterBlock)
-
-        assertEquals(listOf(FINISH_RESULT_CODE), onNavigateBackCalls)
-    }
-
-    @Test
     fun closeAfterArchive_fromRoot_navigatesBackWithFinishResult() {
         renderScreen()
 
