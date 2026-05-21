@@ -20,6 +20,7 @@ internal interface ConversationSettingsEffectHandler {
 
 internal class ConversationSettingsEffectHandlerImpl(
     private val activity: Activity,
+    private val hostView: View,
     private val clipboardManager: ClipboardManager,
 ) : ConversationSettingsEffectHandler {
 
@@ -69,7 +70,7 @@ internal class ConversationSettingsEffectHandlerImpl(
 
             is Effect.ShowOrAddContact -> {
                 ContactUtil.showOrAddContact(
-                    View(activity),
+                    hostView,
                     effect.contactId,
                     effect.contactLookupKey,
                     effect.avatarUri?.let(Uri::parse),

@@ -12,6 +12,7 @@ import com.android.messaging.datamodel.data.ConversationParticipantsData
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.di.core.MessagingDbDispatcher
 import com.android.messaging.util.PhoneUtils
+import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -25,7 +26,6 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
-import javax.inject.Inject
 
 internal interface ConversationSettingsRepository {
     fun getConversationSettings(conversationId: String): Flow<ConversationSettingsData>
