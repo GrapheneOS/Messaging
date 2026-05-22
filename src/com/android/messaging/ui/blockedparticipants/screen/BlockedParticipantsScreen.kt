@@ -47,7 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
-import com.android.messaging.ui.blockedparticipants.common.ConversationSettingsTopAppBar
+import com.android.messaging.ui.blockedparticipants.common.BlockedParticipantsTopAppBar
 import com.android.messaging.ui.blockedparticipants.common.ItemDividerHorizontalInset
 import com.android.messaging.ui.blockedparticipants.common.ItemHorizontalPadding
 import com.android.messaging.ui.blockedparticipants.common.ItemVerticalPadding
@@ -110,9 +110,10 @@ private fun BlockedParticipantsContent(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
         topBar = {
-            ConversationSettingsTopAppBar(
+            BlockedParticipantsTopAppBar(
                 onNavigateBack = onNavigateBack,
-                showDeleteAction = uiState.selectedParticipantIds.isNotEmpty(),
+                selectedCount = uiState.selectedParticipantIds.size,
+                onClearSelectionClick = { onAction(Action.ClearSelectionClicked) },
                 onDeleteClick = { showDeleteConfirmation = true },
             )
         },

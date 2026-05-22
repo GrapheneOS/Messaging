@@ -58,6 +58,10 @@ internal class BlockedParticipantsViewModel @Inject constructor(
             Action.DeleteSelectedConfirmed -> {
                 viewModelScope.launch { delegate.deleteSelectedChats() }
             }
+
+            Action.ClearSelectionClicked -> {
+                delegate.clearSelection()
+            }
         }
     }
 

@@ -23,6 +23,7 @@ import kotlinx.coroutines.launch
 internal interface BlockedParticipantsDelegate : BlockedParticipantsScreenDelegate<State> {
 
     fun toggleSelection(participantId: String)
+    fun clearSelection()
     fun unblock(normalizedDestination: String)
     suspend fun deleteSelectedChats()
 }
@@ -70,6 +71,12 @@ internal class BlockedParticipantsDelegateImpl @Inject constructor(
         }
     }
 
+    override fun clearSelection() {
+        _state.update { current->
+            current.copy(selectedParticipantIds = persistentSetOf())
+        }
+    }
+
     override fun unblock(normalizedDestination: String) {
         setDestinationBlocked(
             normalizedDestination = normalizedDestination,
@@ -80,8 +87,8 @@ internal class BlockedParticipantsDelegateImpl @Inject constructor(
     override suspend fun deleteSelectedChats() {
         val destinations = _state.value.destinationsForSelection()
 
-        _state.update {
-            it.copy(selectedParticipantIds = persistentSetOf())
+        _state.update { current ->
+            current.copy(selectedParticipantIds = persistentSetOf())
         }
 
         if (destinations.isEmpty()) return
