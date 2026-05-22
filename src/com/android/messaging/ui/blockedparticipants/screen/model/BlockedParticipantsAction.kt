@@ -15,4 +15,6 @@ internal sealed interface BlockedParticipantsAction {
     ) : BlockedParticipantsAction
 
     data object DeleteSelectedConfirmed : BlockedParticipantsAction
+
+    data object ClearSelectionClicked : BlockedParticipantsAction
 }

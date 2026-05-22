@@ -2,6 +2,7 @@ package com.android.messaging.ui.blockedparticipants.common
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -17,15 +18,24 @@ import com.android.messaging.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun ConversationSettingsTopAppBar(
+internal fun BlockedParticipantsTopAppBar(
     onNavigateBack: () -> Unit,
-    showDeleteAction: Boolean = false,
+    selectedCount: Int = 0,
+    onClearSelectionClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {},
 ) {
+    val isSelectionMode = selectedCount > 0
+
     TopAppBar(
         title = {
             Text(
-                text = stringResource(R.string.blocked_contacts_title),
+                text = when {
+                    isSelectionMode -> stringResource(
+                        R.string.blocked_contacts_selection_title,
+                        selectedCount,
+                    )
+                    else -> stringResource(R.string.blocked_contacts_title)
+                },
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
@@ -33,15 +43,26 @@ internal fun ConversationSettingsTopAppBar(
             )
         },
         navigationIcon = {
-            IconButton(onClick = onNavigateBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.back),
-                )
+            if (isSelectionMode) {
+                IconButton(onClick = onClearSelectionClick) {
+                    Icon(
+                        imageVector = Icons.Outlined.Close,
+                        contentDescription = stringResource(
+                            R.string.blocked_contacts_clear_selection_content_description,
+                        ),
+                    )
+                }
+            } else {
+                IconButton(onClick = onNavigateBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.back),
+                    )
+                }
             }
         },
         actions = {
-            if (showDeleteAction) {
+            if (isSelectionMode) {
                 IconButton(onClick = onDeleteClick) {
                     Icon(
                         imageVector = Icons.Outlined.Delete,
