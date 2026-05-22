@@ -80,13 +80,12 @@ internal class BlockedParticipantsViewModel @Inject constructor(
             return
         }
 
-        val destination = state.participants
+        val conversationId = state.participants
             .firstOrNull { it.participantId == participantId }
-            ?.normalizedDestination
-            ?.takeIf(String::isNotEmpty)
+            ?.conversationId
             ?: return
 
-        emitEffect(Effect.OpenParticipantChat(destination))
+        emitEffect(Effect.OpenParticipantChat(conversationId))
     }
 
     private fun emitEffect(effect: Effect) {

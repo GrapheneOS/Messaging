@@ -2,7 +2,7 @@ package com.android.messaging.ui.blockedparticipants.screen.mapper
 
 import androidx.core.text.BidiFormatter
 import androidx.core.text.TextDirectionHeuristicsCompat.LTR
-import com.android.messaging.datamodel.data.ParticipantData
+import com.android.messaging.data.blockedparticipants.model.BlockedDirectChat
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantUiState
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
@@ -10,7 +10,7 @@ import kotlinx.collections.immutable.toImmutableList
 
 internal interface BlockedParticipantsUiStateMapper {
     fun map(
-        participants: ImmutableList<ParticipantData>,
+        chats: ImmutableList<BlockedDirectChat>,
     ): ImmutableList<BlockedParticipantUiState>
 }
 
@@ -18,17 +18,18 @@ internal class BlockedParticipantsUiStateMapperImpl @Inject constructor() :
     BlockedParticipantsUiStateMapper {
 
     override fun map(
-        participants: ImmutableList<ParticipantData>,
+        chats: ImmutableList<BlockedDirectChat>,
     ): ImmutableList<BlockedParticipantUiState> {
-        return participants
+        return chats
             .map(::toBlockedParticipantUiState)
             .toImmutableList()
     }
 
     private fun toBlockedParticipantUiState(
-        participant: ParticipantData,
+        chat: BlockedDirectChat,
     ): BlockedParticipantUiState {
         val formatter = BidiFormatter.getInstance()
+        val participant = chat.participant
         val contactName = participant.fullName?.takeIf(String::isNotEmpty)
         val sendDestination = participant.sendDestination.orEmpty()
 
@@ -40,6 +41,7 @@ internal class BlockedParticipantsUiStateMapperImpl @Inject constructor() :
 
         return BlockedParticipantUiState(
             participantId = participant.id,
+            conversationId = chat.conversationId,
             avatarUri = participant.profilePhotoUri?.takeIf(String::isNotBlank),
             displayName = formatter.unicodeWrap(displayName, LTR),
             details = details?.let { formatter.unicodeWrap(it, LTR) },
