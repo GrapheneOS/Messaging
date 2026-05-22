@@ -14,5 +14,5 @@ internal sealed interface BlockedParticipantsAction {
         val participantId: String,
     ) : BlockedParticipantsAction
 
-    data object DeleteSelectedClicked : BlockedParticipantsAction
+    data object DeleteSelectedConfirmed : BlockedParticipantsAction
 }

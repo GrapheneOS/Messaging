@@ -4,13 +4,14 @@ import androidx.core.text.BidiFormatter
 import androidx.core.text.TextDirectionHeuristicsCompat.LTR
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantUiState
-import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsUiState
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
 internal interface BlockedParticipantsUiStateMapper {
-    fun map(participants: ImmutableList<ParticipantData>): BlockedParticipantsUiState
+    fun map(
+        participants: ImmutableList<ParticipantData>,
+    ): ImmutableList<BlockedParticipantUiState>
 }
 
 internal class BlockedParticipantsUiStateMapperImpl @Inject constructor() :
@@ -18,13 +19,10 @@ internal class BlockedParticipantsUiStateMapperImpl @Inject constructor() :
 
     override fun map(
         participants: ImmutableList<ParticipantData>,
-    ): BlockedParticipantsUiState {
-        return BlockedParticipantsUiState(
-            isLoading = false,
-            participants = participants
-                .map(::toBlockedParticipantUiState)
-                .toImmutableList(),
-        )
+    ): ImmutableList<BlockedParticipantUiState> {
+        return participants
+            .map(::toBlockedParticipantUiState)
+            .toImmutableList()
     }
 
     private fun toBlockedParticipantUiState(

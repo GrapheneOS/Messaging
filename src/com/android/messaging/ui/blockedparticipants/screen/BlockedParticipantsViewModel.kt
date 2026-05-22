@@ -44,25 +44,56 @@ internal class BlockedParticipantsViewModel @Inject constructor(
     override fun onAction(action: Action) {
         when (action) {
             is Action.UnblockClicked -> {
-                unblock(action.normalizedDestination)
+                handleUnblockClicked(action.normalizedDestination)
             }
 
-            is Action.ParticipantClicked,
-            is Action.ParticipantLongClicked,
-            Action.DeleteSelectedClicked,
-            -> Unit
+            is Action.ParticipantClicked -> {
+                handleParticipantClicked(action.participantId)
+            }
+
+            is Action.ParticipantLongClicked -> {
+                delegate.toggleSelection(action.participantId)
+            }
+
+            Action.DeleteSelectedConfirmed -> {
+                viewModelScope.launch { delegate.deleteSelectedChats() }
+            }
         }
     }
 
-    private fun unblock(normalizedDestination: String) {
-        val wasLast = uiState.value.participants.size == 1
+    private fun handleUnblockClicked(normalizedDestination: String) {
+        if (normalizedDestination.isEmpty()) return
 
+        val wasLast = uiState.value.participants.size == 1
         delegate.unblock(normalizedDestination)
 
         if (wasLast) {
-            viewModelScope.launch {
-                _navigationEvents.emit(NavEvent.CloseAfterLastUnblock)
-            }
+            emitNavigationEvent(NavEvent.CloseAfterLastUnblock)
         }
+    }
+
+    private fun handleParticipantClicked(participantId: String) {
+        val state = uiState.value
+
+        if (state.selectedParticipantIds.isNotEmpty()) {
+            delegate.toggleSelection(participantId)
+            return
+        }
+
+        val destination = state.participants
+            .firstOrNull { it.participantId == participantId }
+            ?.normalizedDestination
+            ?.takeIf(String::isNotEmpty)
+            ?: return
+
+        emitEffect(Effect.OpenParticipantChat(destination))
+    }
+
+    private fun emitEffect(effect: Effect) {
+        _effects.tryEmit(effect)
+    }
+
+    private fun emitNavigationEvent(event: NavEvent) {
+        _navigationEvents.tryEmit(event)
     }
 }

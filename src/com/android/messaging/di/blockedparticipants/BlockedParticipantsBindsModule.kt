@@ -2,6 +2,8 @@ package com.android.messaging.di.blockedparticipants
 
 import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepository
 import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepositoryImpl
+import com.android.messaging.domain.blockedparticipants.usecase.DeleteDirectChats
+import com.android.messaging.domain.blockedparticipants.usecase.DeleteDirectChatsImpl
 import com.android.messaging.domain.blockedparticipants.usecase.SetDestinationBlocked
 import com.android.messaging.domain.blockedparticipants.usecase.SetDestinationBlockedImpl
 import com.android.messaging.ui.blockedparticipants.screen.mapper.BlockedParticipantsUiStateMapper
@@ -31,4 +33,10 @@ internal abstract class BlockedParticipantsBindsModule {
     abstract fun bindSetDestinationBlocked(
         impl: SetDestinationBlockedImpl,
     ): SetDestinationBlocked
+
+    @Binds
+    @Reusable
+    abstract fun bindDeleteDirectChats(
+        impl: DeleteDirectChatsImpl,
+    ): DeleteDirectChats
 }

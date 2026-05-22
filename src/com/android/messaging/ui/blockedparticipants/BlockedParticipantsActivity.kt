@@ -17,7 +17,9 @@ class BlockedParticipantsActivity : ComponentActivity() {
 
         enableEdgeToEdge()
 
-        val effectHandler = BlockedParticipantsEffectHandlerImpl()
+        val effectHandler = BlockedParticipantsEffectHandlerImpl(
+            activity = this,
+        )
 
         setContent {
             AppTheme {

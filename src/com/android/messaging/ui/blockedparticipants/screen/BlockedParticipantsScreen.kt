@@ -31,7 +31,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -101,6 +104,8 @@ private fun BlockedParticipantsContent(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
+
     Scaffold(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
@@ -108,9 +113,7 @@ private fun BlockedParticipantsContent(
             ConversationSettingsTopAppBar(
                 onNavigateBack = onNavigateBack,
                 showDeleteAction = uiState.selectedParticipantIds.isNotEmpty(),
-                onDeleteClick = {
-                    onAction(Action.DeleteSelectedClicked)
-                },
+                onDeleteClick = { showDeleteConfirmation = true },
             )
         },
     ) { contentPadding ->
@@ -142,6 +145,13 @@ private fun BlockedParticipantsContent(
             }
         }
     }
+
+    BlockedParticipantsDialogs(
+        selectedCount = uiState.selectedParticipantIds.size,
+        onAction = onAction,
+        showDeleteConfirmation = showDeleteConfirmation,
+        onDismissDeleteConfirmation = { showDeleteConfirmation = false },
+    )
 }
 
 @Composable
@@ -187,7 +197,6 @@ private fun BlockedParticipantsList(
                     onUnblockClick = {
                         val destination = participant.normalizedDestination
                             ?: return@BlockedParticipantItem
-
                         onAction(Action.UnblockClicked(destination))
                     },
                 )
