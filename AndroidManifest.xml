@@ -153,11 +153,6 @@
                 android:value="com.android.messaging.ui.conversationlist.ConversationListActivity" />
         </activity>
 
-        <activity-alias
-            android:name=".ui.BlockedParticipantsActivity"
-            android:exported="true"
-            android:targetActivity=".ui.blockedparticipants.BlockedParticipantsActivity" />
-
         <!-- Full-screen photo viewer -->
         <activity
             android:name=".ui.photoviewer.BuglePhotoViewActivity"
