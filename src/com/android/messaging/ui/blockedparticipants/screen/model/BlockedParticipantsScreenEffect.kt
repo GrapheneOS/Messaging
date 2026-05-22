@@ -7,6 +7,6 @@ internal sealed interface BlockedParticipantsScreenEffect {
     ) : BlockedParticipantsScreenEffect
 
     data class OpenParticipantChat(
-        val normalizedDestination: String,
+        val conversationId: String,
     ) : BlockedParticipantsScreenEffect
 }

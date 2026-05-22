@@ -322,6 +322,7 @@ private fun BlockedParticipantsContentPreview() {
                 participants = persistentListOf(
                     BlockedParticipantUiState(
                         participantId = "1",
+                        conversationId = "c1",
                         avatarUri = null,
                         displayName = "Spam Caller",
                         details = "+31 6 1234 5678",
@@ -331,6 +332,7 @@ private fun BlockedParticipantsContentPreview() {
                     ),
                     BlockedParticipantUiState(
                         participantId = "2",
+                        conversationId = "c2",
                         avatarUri = null,
                         displayName = "+31 6 0000 1111",
                         details = null,

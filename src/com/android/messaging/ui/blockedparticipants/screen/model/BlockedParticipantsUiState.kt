@@ -16,6 +16,7 @@ internal data class BlockedParticipantsUiState(
 @Immutable
 internal data class BlockedParticipantUiState(
     val participantId: String,
+    val conversationId: String,
     val avatarUri: String?,
     val displayName: String,
     val details: String?,

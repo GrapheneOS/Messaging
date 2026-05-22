@@ -3,6 +3,7 @@ package com.android.messaging.data.blockedparticipants.repository
 import android.content.ContentResolver
 import android.database.ContentObserver
 import android.net.Uri
+import com.android.messaging.data.blockedparticipants.model.BlockedDirectChat
 import com.android.messaging.datamodel.BugleDatabaseOperations
 import com.android.messaging.datamodel.DataModel
 import com.android.messaging.datamodel.DatabaseHelper
@@ -24,7 +25,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 internal interface BlockedParticipantsRepository {
-    fun observeBlockedParticipants(): Flow<ImmutableList<ParticipantData>>
+    fun observeBlockedParticipants(): Flow<ImmutableList<BlockedDirectChat>>
     suspend fun findDirectConversationIds(normalizedDestinations: List<String>): List<String>
 }
 
@@ -33,14 +34,14 @@ internal class BlockedParticipantsRepositoryImpl @Inject constructor(
     @param:MessagingDbDispatcher private val messagingDbDispatcher: CoroutineDispatcher,
 ) : BlockedParticipantsRepository {
 
-    override fun observeBlockedParticipants(): Flow<ImmutableList<ParticipantData>> {
+    override fun observeBlockedParticipants(): Flow<ImmutableList<BlockedDirectChat>> {
         val uris = listOf(
             MessagingContentProvider.PARTICIPANTS_URI,
             MessagingContentProvider.CONVERSATIONS_URI,
         )
 
         return observeUris(uris)
-            .map { queryBlockedParticipantsWithExistingDirectChat() }
+            .map { queryBlockedDirectChats() }
             .flowOn(messagingDbDispatcher)
     }
 
@@ -63,7 +64,7 @@ internal class BlockedParticipantsRepositoryImpl @Inject constructor(
     // from this screen. The participant stays blocked - if a new chat is started later,
     // they reappear here. Participants blocked without ever having a direct chat are
     // intentionally not shown.
-    private fun queryBlockedParticipantsWithExistingDirectChat(): ImmutableList<ParticipantData> {
+    private fun queryBlockedDirectChats(): ImmutableList<BlockedDirectChat> {
         val otherDestination = ConversationColumns.OTHER_PARTICIPANT_NORMALIZED_DESTINATION
         val selection = "${ParticipantColumns.BLOCKED}=1 " +
             "AND ${ParticipantColumns.NORMALIZED_DESTINATION} IN (" +
@@ -79,13 +80,29 @@ internal class BlockedParticipantsRepositoryImpl @Inject constructor(
             null,
         ) ?: return persistentListOf()
 
-        return cursor.use {
+        val participants = cursor.use {
             buildList {
                 while (it.moveToNext()) {
                     add(ParticipantData.getFromCursor(it))
                 }
-            }.toImmutableList()
+            }
         }
+
+        val database = DataModel.get().database
+        return participants
+            .mapNotNull { participant ->
+                val destination = participant.normalizedDestination?.takeIf(String::isNotEmpty)
+                    ?: return@mapNotNull null
+                val conversationId = BugleDatabaseOperations
+                    .getConversationFromOtherParticipantDestination(database, destination)
+                    ?: return@mapNotNull null
+
+                BlockedDirectChat(
+                    participant = participant,
+                    conversationId = conversationId
+                )
+            }
+            .toImmutableList()
     }
 
     private fun observeUris(uris: List<Uri>): Flow<Unit> {
