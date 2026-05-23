@@ -123,14 +123,11 @@ public class BugleNotifications {
     Assert.isNotMainThread();
 
         if (!shouldNotify()) {
+            cancel(PendingIntentConstants.SMS_NOTIFICATION_ID);
             return;
         }
         if ((coverage & UPDATE_MESSAGES) != 0) {
-            if (conversationId == null) {
-                cancel(PendingIntentConstants.SMS_NOTIFICATION_ID);
-            } else {
-                createMessageNotification(conversationId);
-            }
+            createMessageNotification(conversationId);
         }
         if ((coverage & UPDATE_ERRORS) != 0) {
             MessageNotificationState.checkFailedMessages();
