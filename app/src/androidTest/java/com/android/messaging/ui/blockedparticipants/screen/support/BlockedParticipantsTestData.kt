@@ -89,5 +89,7 @@ internal fun participant(
         contactId = -1L,
         lookupKey = null,
         normalizedDestination = destination,
+        canCall = false,
+        isContactSaved = false,
     )
 }

@@ -9,4 +9,15 @@ internal sealed interface BlockedParticipantsScreenEffect {
     data class OpenParticipantChat(
         val conversationId: String,
     ) : BlockedParticipantsScreenEffect
+
+    data class PlacePhoneCall(
+        val destination: String,
+    ) : BlockedParticipantsScreenEffect
+
+    data class ShowOrAddContact(
+        val contactId: Long,
+        val contactLookupKey: String?,
+        val avatarUri: String?,
+        val normalizedDestination: String?,
+    ) : BlockedParticipantsScreenEffect
 }

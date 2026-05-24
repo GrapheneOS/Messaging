@@ -1,32 +1,23 @@
 package com.android.messaging.ui.blockedparticipants.screen
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.outlined.PersonRemove
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,25 +31,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
+import com.android.messaging.ui.blockedparticipants.common.BlockedParticipantItem
 import com.android.messaging.ui.blockedparticipants.common.BlockedParticipantsTopAppBar
 import com.android.messaging.ui.blockedparticipants.common.ItemDividerHorizontalInset
-import com.android.messaging.ui.blockedparticipants.common.ItemHorizontalPadding
-import com.android.messaging.ui.blockedparticipants.common.ItemVerticalPadding
 import com.android.messaging.ui.blockedparticipants.common.ScreenContentPadding
-import com.android.messaging.ui.blockedparticipants.common.blockedParticipantItemShape
 import com.android.messaging.ui.blockedparticipants.common.contentSurfaceShape
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantUiState
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsAction as Action
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsNavEvent as NavEvent
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsUiState as State
-import com.android.messaging.ui.common.components.ParticipantAvatar
 import com.android.messaging.ui.core.AppTheme
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
@@ -186,6 +173,9 @@ private fun BlockedParticipantsList(
                     )
                 }
 
+                val destination = participant.normalizedDestination.orEmpty()
+                val hasDestination = destination.isNotEmpty()
+
                 BlockedParticipantItem(
                     participant = participant,
                     isSelected = participant.participantId in uiState.selectedParticipantIds,
@@ -196,86 +186,19 @@ private fun BlockedParticipantsList(
                         onAction(Action.ParticipantLongClicked(participant.participantId))
                     },
                     onUnblockClick = {
-                        val destination = participant.normalizedDestination
-                            ?: return@BlockedParticipantItem
-                        onAction(Action.UnblockClicked(destination))
+                        if (hasDestination) {
+                            onAction(Action.UnblockClicked(destination))
+                        }
                     },
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun BlockedParticipantItem(
-    participant: BlockedParticipantUiState,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    onLongClick: () -> Unit,
-    onUnblockClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val backgroundColor = when {
-        isSelected -> MaterialTheme.colorScheme.surfaceContainerLow
-        else -> MaterialTheme.colorScheme.background
-    }
-
-    val details = participant.details
-
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.blockedParticipantItemShape,
-        color = backgroundColor,
-    ) {
-        Row(
-            modifier = Modifier
-                .combinedClickable(
-                    onClick = onClick,
-                    onLongClick = onLongClick,
-                )
-                .padding(
-                    horizontal = ItemHorizontalPadding,
-                    vertical = ItemVerticalPadding,
-                ),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            ParticipantAvatar(
-                avatarUri = participant.avatarUri,
-                size = 48.dp,
-                fallbackIcon = Icons.Default.Person,
-                isSelected = isSelected,
-            )
-
-            Spacer(modifier = Modifier.width(ItemHorizontalPadding))
-
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = ItemHorizontalPadding),
-            ) {
-                Text(
-                    text = participant.displayName,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-
-                Text(
-                    text = details.orEmpty(),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-
-            IconButton(onClick = onUnblockClick) {
-                Icon(
-                    imageVector = Icons.Outlined.PersonRemove,
-                    contentDescription = stringResource(R.string.tap_to_unblock_message),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    onMessageClick = {
+                        onAction(Action.ParticipantMessageClicked(participant.conversationId))
+                    },
+                    onCallClick = {
+                        onAction(Action.ParticipantCallClicked(destination))
+                    }.takeIf { participant.canCall },
+                    onContactClick = {
+                        onAction(Action.ParticipantContactInfoClicked(participant))
+                    }.takeIf { hasDestination },
                 )
             }
         }
@@ -330,6 +253,8 @@ private fun BlockedParticipantsContentPreview() {
                         contactId = 1L,
                         lookupKey = null,
                         normalizedDestination = "+31612345678",
+                        canCall = true,
+                        isContactSaved = true,
                     ),
                     BlockedParticipantUiState(
                         participantId = "2",
@@ -340,6 +265,8 @@ private fun BlockedParticipantsContentPreview() {
                         contactId = -1L,
                         lookupKey = null,
                         normalizedDestination = "+31600001111",
+                        canCall = true,
+                        isContactSaved = false,
                     ),
                 ),
                 selectedParticipantIds = persistentSetOf("2"),

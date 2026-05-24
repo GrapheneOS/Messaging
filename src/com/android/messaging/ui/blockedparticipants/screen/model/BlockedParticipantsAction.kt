@@ -14,6 +14,18 @@ internal sealed interface BlockedParticipantsAction {
         val participantId: String,
     ) : BlockedParticipantsAction
 
+    data class ParticipantMessageClicked(
+        val conversationId: String,
+    ) : BlockedParticipantsAction
+
+    data class ParticipantCallClicked(
+        val destination: String,
+    ) : BlockedParticipantsAction
+
+    data class ParticipantContactInfoClicked(
+        val participant: BlockedParticipantUiState,
+    ) : BlockedParticipantsAction
+
     data object DeleteSelectedConfirmed : BlockedParticipantsAction
 
     data object ClearSelectionClicked : BlockedParticipantsAction

@@ -1,9 +1,11 @@
 package com.android.messaging.ui.blockedparticipants.screen.mapper
 
+import android.telephony.PhoneNumberUtils
 import androidx.core.text.BidiFormatter
 import androidx.core.text.TextDirectionHeuristicsCompat.LTR
 import com.android.messaging.data.blockedparticipants.model.BlockedDirectChat
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantUiState
+import com.android.messaging.util.PhoneUtils
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -38,6 +40,11 @@ internal class BlockedParticipantsUiStateMapperImpl @Inject constructor() :
             contactName != null && !participant.isUnknownSender -> sendDestination
             else -> null
         }
+        val normalizedDestination = participant.normalizedDestination
+        val canCall = !normalizedDestination.isNullOrBlank() &&
+            PhoneNumberUtils.isWellFormedSmsAddress(normalizedDestination) &&
+            PhoneUtils.getDefault().isVoiceCapable
+        val isContactSaved = participant.contactId > 0 && !participant.lookupKey.isNullOrBlank()
 
         return BlockedParticipantUiState(
             participantId = participant.id,
@@ -47,7 +54,9 @@ internal class BlockedParticipantsUiStateMapperImpl @Inject constructor() :
             details = details?.let { formatter.unicodeWrap(it, LTR) },
             contactId = participant.contactId,
             lookupKey = participant.lookupKey,
-            normalizedDestination = participant.normalizedDestination,
+            normalizedDestination = normalizedDestination,
+            canCall = canCall,
+            isContactSaved = isContactSaved,
         )
     }
 }

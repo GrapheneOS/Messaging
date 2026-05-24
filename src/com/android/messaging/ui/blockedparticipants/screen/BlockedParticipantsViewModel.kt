@@ -3,6 +3,7 @@ package com.android.messaging.ui.blockedparticipants.screen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.messaging.ui.blockedparticipants.screen.delegate.BlockedParticipantsDelegate
+import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantUiState
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsAction as Action
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsNavEvent as NavEvent
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsScreenEffect as Effect
@@ -55,6 +56,18 @@ internal class BlockedParticipantsViewModel @Inject constructor(
                 delegate.toggleSelection(action.participantId)
             }
 
+            is Action.ParticipantMessageClicked -> {
+                emitEffect(Effect.OpenParticipantChat(action.conversationId))
+            }
+
+            is Action.ParticipantCallClicked -> {
+                emitEffect(Effect.PlacePhoneCall(action.destination))
+            }
+
+            is Action.ParticipantContactInfoClicked -> {
+                showOrAddContact(action.participant)
+            }
+
             Action.DeleteSelectedConfirmed -> {
                 viewModelScope.launch {
                     delegate.deleteSelectedChats()
@@ -92,6 +105,17 @@ internal class BlockedParticipantsViewModel @Inject constructor(
             ?: return
 
         emitEffect(Effect.OpenParticipantChat(conversationId))
+    }
+
+    private fun showOrAddContact(participant: BlockedParticipantUiState) {
+        emitEffect(
+            Effect.ShowOrAddContact(
+                contactId = participant.contactId,
+                contactLookupKey = participant.lookupKey,
+                avatarUri = participant.avatarUri,
+                normalizedDestination = participant.normalizedDestination,
+            ),
+        )
     }
 
     private fun emitEffect(effect: Effect) {

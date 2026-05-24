@@ -23,4 +23,6 @@ internal data class BlockedParticipantUiState(
     val contactId: Long,
     val lookupKey: String?,
     val normalizedDestination: String?,
+    val canCall: Boolean,
+    val isContactSaved: Boolean,
 )
