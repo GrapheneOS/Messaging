@@ -17,3 +17,19 @@ internal sealed interface ConversationSettingsNavRoute {
         override val depth: Int = 1
     }
 }
+
+internal fun ConversationSettingsNavRoute.targetConversationId(
+    rootConversationId: String,
+): String {
+    return when (this) {
+        ConversationSettingsNavRoute.Conversation -> rootConversationId
+        is ConversationSettingsNavRoute.ParticipantInfo -> conversationId
+    }
+}
+
+internal fun ConversationSettingsNavRoute.saveableKey(): String {
+    return when (this) {
+        ConversationSettingsNavRoute.Conversation -> "conversation"
+        is ConversationSettingsNavRoute.ParticipantInfo -> "participant:$conversationId"
+    }
+}

@@ -47,6 +47,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -80,6 +81,8 @@ import com.android.messaging.ui.conversationsettings.screen.model.ConversationSe
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState as State
 import com.android.messaging.ui.conversationsettings.screen.model.ParticipantConversationSettingsAction as ParticipantAction
 import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
+import com.android.messaging.ui.conversationsettings.screen.model.saveableKey
+import com.android.messaging.ui.conversationsettings.screen.model.targetConversationId
 import com.android.messaging.ui.core.AppTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -172,6 +175,8 @@ private fun ConversationSettingsNavHost(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val saveableStateHolder = rememberSaveableStateHolder()
+
     AnimatedContent(
         targetState = route,
         modifier = modifier.background(MaterialTheme.colorScheme.background),
@@ -187,31 +192,24 @@ private fun ConversationSettingsNavHost(
         },
         label = "conversation_settings_navigation",
     ) { animatedRoute ->
-        val displayed = rememberDisplayedConversation(
-            targetConversationId = animatedRoute.targetConversationId(rootConversationId),
-            uiState = uiState,
-        )
+        saveableStateHolder.SaveableStateProvider(key = animatedRoute.saveableKey()) {
+            val displayed = rememberDisplayedConversation(
+                targetConversationId = animatedRoute.targetConversationId(rootConversationId),
+                uiState = uiState,
+            )
 
-        if (displayed != null) {
-            ConversationSettingsContent(
-                uiState = displayed,
-                onAction = onAction,
-                onNavigateBack = onNavigateBack,
-            )
-        } else {
-            ConversationSettingsPlaceholder(
-                onNavigateBack = onNavigateBack,
-            )
+            if (displayed != null) {
+                ConversationSettingsContent(
+                    uiState = displayed,
+                    onAction = onAction,
+                    onNavigateBack = onNavigateBack,
+                )
+            } else {
+                ConversationSettingsPlaceholder(
+                    onNavigateBack = onNavigateBack,
+                )
+            }
         }
-    }
-}
-
-private fun NavRoute.targetConversationId(
-    rootConversationId: String,
-): String {
-    return when (this) {
-        NavRoute.Conversation -> rootConversationId
-        is NavRoute.ParticipantInfo -> conversationId
     }
 }
 
