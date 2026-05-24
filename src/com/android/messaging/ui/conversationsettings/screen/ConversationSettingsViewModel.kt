@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationsettings.screen
 
+import android.telephony.PhoneNumberUtils
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,6 +13,8 @@ import com.android.messaging.ui.conversationsettings.screen.model.ConversationSe
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsNavEvent as NavEvent
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsScreenEffect as Effect
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState as State
+import com.android.messaging.ui.conversationsettings.screen.model.ParticipantConversationSettingsAction as ParticipantAction
+import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Job
@@ -100,28 +103,42 @@ internal class ConversationSettingsViewModel @Inject constructor(
                 delegate.setDestinationBlocked(true)
             }
 
-            is Action.ParticipantPressed -> {
-                resolveConversation(action.destination, shouldOpenChat = true)
-            }
-
-            is Action.ParticipantLongPressed -> {
-                emitEffect(Effect.CopyToClipboard(action.details))
-            }
-
-            is Action.ParticipantActionPressed -> {
-                resolveConversation(action.destination, shouldOpenChat = false)
-            }
-
             is Action.SimSelected -> {
                 delegate.setSelfParticipantId(action.selfParticipantId)
             }
 
-            is Action.CallClicked -> {
-                handleCallClicked()
+            is ParticipantAction -> {
+                handleParticipantAction(action)
+            }
+        }
+    }
+
+    private fun handleParticipantAction(action: ParticipantAction) {
+        when (action) {
+            is ParticipantAction.ParticipantPressed -> {
+                resolveConversation(
+                    action.destination,
+                    shouldOpenChat = true,
+                )
             }
 
-            is Action.ContactInfoClicked -> {
-                handleContactInfoClicked()
+            is ParticipantAction.ParticipantLongPressed -> {
+                emitEffect(Effect.CopyToClipboard(action.details))
+            }
+
+            is ParticipantAction.ParticipantActionPressed -> {
+                resolveConversation(
+                    action.destination,
+                    shouldOpenChat = false,
+                )
+            }
+
+            is ParticipantAction.ParticipantCallClicked -> {
+                emitEffect(Effect.PlacePhoneCall(action.destination))
+            }
+
+            is ParticipantAction.ParticipantContactInfoClicked -> {
+                showOrAddContact(action.participant)
             }
         }
     }
@@ -140,18 +157,7 @@ internal class ConversationSettingsViewModel @Inject constructor(
         }
     }
 
-    private fun handleCallClicked() {
-        val participant = uiState.value.otherParticipant ?: return
-        val phoneNumber = participant.normalizedDestination
-            ?.takeIf { it.isNotBlank() }
-            ?: return
-
-        emitEffect(Effect.PlacePhoneCall(phoneNumber))
-    }
-
-    private fun handleContactInfoClicked() {
-        val participant = uiState.value.otherParticipant ?: return
-
+    private fun showOrAddContact(participant: ParticipantUiState) {
         emitEffect(
             Effect.ShowOrAddContact(
                 contactId = participant.contactId,

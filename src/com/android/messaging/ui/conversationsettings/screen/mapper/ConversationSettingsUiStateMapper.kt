@@ -30,7 +30,12 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
         selfIdOverride: String?,
     ): ConversationSettingsUiState {
         val participants = data.participants
-            .map(::toParticipantUiState)
+            .map { participant ->
+                toParticipantUiState(
+                    participant = participant,
+                    isVoiceCapable = data.isVoiceCapable,
+                )
+            }
             .toImmutableList()
         val otherParticipant = participants.singleOrNull()
 
@@ -53,33 +58,26 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
             availableSubscriptions = subscriptions,
             selectedSubscription = selectedSubscription,
             isSimSwitchAvailable = subscriptions.size > 1,
-            canCall = canCall(
-                participant = otherParticipant,
-                isVoiceCapable = data.isVoiceCapable,
-            ),
+            canCall = otherParticipant?.canCall == true,
             canShowContact = !otherParticipant?.normalizedDestination.isNullOrBlank(),
-            isContactSaved = isContactSaved(otherParticipant),
+            isContactSaved = otherParticipant?.isContactSaved == true,
         )
     }
 
     private fun canCall(
-        participant: ParticipantUiState?,
+        destination: String?,
         isVoiceCapable: Boolean,
     ): Boolean {
-        val destination = participant?.normalizedDestination
-
         return isVoiceCapable &&
             !destination.isNullOrBlank() &&
             PhoneNumberUtils.isWellFormedSmsAddress(destination) &&
             !telephonyManager.isEmergencyNumber(destination)
     }
 
-    private fun isContactSaved(participant: ParticipantUiState?): Boolean {
-        if (participant == null) return false
-        return participant.contactId > 0 && !participant.lookupKey.isNullOrBlank()
-    }
-
-    private fun toParticipantUiState(participant: ParticipantData): ParticipantUiState {
+    private fun toParticipantUiState(
+        participant: ParticipantData,
+        isVoiceCapable: Boolean,
+    ): ParticipantUiState {
         val fullName = participant.fullName
         val displayName = when {
             fullName.isNullOrEmpty() -> participant.sendDestination.orEmpty()
@@ -89,6 +87,7 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
             fullName.isNullOrEmpty() || participant.isUnknownSender -> null
             else -> participant.sendDestination
         }
+        val isContactSaved = participant.contactId > 0 && !participant.lookupKey.isNullOrBlank()
 
         return ParticipantUiState(
             avatarUri = participant.profilePhotoUri?.takeIf(String::isNotBlank),
@@ -99,6 +98,11 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
             normalizedDestination = participant.normalizedDestination,
             isBlocked = participant.isBlocked,
             displayDestination = participant.displayDestination,
+            canCall = canCall(
+                destination = participant.normalizedDestination,
+                isVoiceCapable = isVoiceCapable,
+            ),
+            isContactSaved = isContactSaved,
         )
     }
 }

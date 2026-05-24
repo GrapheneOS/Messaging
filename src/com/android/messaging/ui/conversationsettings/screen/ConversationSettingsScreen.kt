@@ -53,6 +53,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -77,6 +78,7 @@ import com.android.messaging.ui.conversationsettings.screen.model.ConversationSe
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsNavEvent as NavEvent
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsNavRoute as NavRoute
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState as State
+import com.android.messaging.ui.conversationsettings.screen.model.ParticipantConversationSettingsAction as ParticipantAction
 import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
 import com.android.messaging.ui.core.AppTheme
 import kotlinx.collections.immutable.ImmutableList
@@ -371,7 +373,7 @@ private fun LazyListScope.contactItems(
     uiState: State,
     onAction: (Action) -> Unit,
 ) {
-    if (uiState.otherParticipant == null) return
+    val participant = uiState.otherParticipant ?: return
     if (!uiState.canCall && !uiState.canShowContact) return
 
     item(key = "contact_buttons") {
@@ -380,10 +382,14 @@ private fun LazyListScope.contactItems(
             horizontalArrangement = Arrangement.spacedBy(SectionSpacing),
         ) {
             if (uiState.canCall) {
+                val destination = participant.normalizedDestination.orEmpty()
+
                 ContactButtonItem(
                     imageVector = Icons.Default.Call,
                     text = stringResource(R.string.action_call),
-                    onClick = { onAction(Action.CallClicked) },
+                    onClick = {
+                        onAction(ParticipantAction.ParticipantCallClicked(destination))
+                    },
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -393,10 +399,13 @@ private fun LazyListScope.contactItems(
                 } else {
                     Icons.Default.PersonAdd to R.string.action_add_contact
                 }
+
                 ContactButtonItem(
                     imageVector = icon,
                     text = stringResource(textRes),
-                    onClick = { onAction(Action.ContactInfoClicked) },
+                    onClick = {
+                        onAction(ParticipantAction.ParticipantContactInfoClicked(participant))
+                    },
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -439,6 +448,8 @@ private fun ContactButtonItem(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -543,25 +554,13 @@ private fun LazyListScope.participantsItems(
     val participants = uiState.participants
     if (participants.isEmpty()) return
 
-    val showParticipantActions = participants.size > 1
+    val isGroup = participants.size > 1
 
     item(key = "participants_group") {
         ParticipantsCard(
             participants = participants,
-            showParticipantActions = showParticipantActions,
-            onParticipantClick = { participant ->
-                val destination = participant.normalizedDestination ?: return@ParticipantsCard
-                onAction(Action.ParticipantPressed(destination))
-            },
-            onParticipantLongClick = { participant ->
-                participant.details?.takeIf { it.isNotEmpty() }?.let {
-                    onAction(Action.ParticipantLongPressed(it))
-                }
-            },
-            onParticipantActionClick = { participant ->
-                val destination = participant.normalizedDestination ?: return@ParticipantsCard
-                onAction(Action.ParticipantActionPressed(destination))
-            },
+            isGroup = isGroup,
+            onAction = onAction,
         )
     }
 }
@@ -569,10 +568,8 @@ private fun LazyListScope.participantsItems(
 @Composable
 private fun ParticipantsCard(
     participants: ImmutableList<ParticipantUiState>,
-    showParticipantActions: Boolean,
-    onParticipantClick: (ParticipantUiState) -> Unit,
-    onParticipantLongClick: (ParticipantUiState) -> Unit,
-    onParticipantActionClick: (ParticipantUiState) -> Unit,
+    isGroup: Boolean,
+    onAction: (Action) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -591,15 +588,37 @@ private fun ParticipantsCard(
                 ),
             )
             participants.forEach { participant ->
-                val hasInfoAction =
-                    showParticipantActions && participant.normalizedDestination != null
+                val destination = participant.normalizedDestination.orEmpty()
+                val hasDestination = destination.isNotEmpty()
 
                 ParticipantItem(
                     participant = participant,
-                    onClick = { onParticipantClick(participant) },
-                    onLongClick = { onParticipantLongClick(participant) },
-                    onAction = { onParticipantActionClick(participant) }
-                        .takeIf { hasInfoAction },
+                    onClick = {
+                        if (hasDestination) {
+                            onAction(ParticipantAction.ParticipantPressed(destination))
+                        }
+                    },
+                    onLongClick = {
+                        val details = participant.details
+                        if (!details.isNullOrEmpty()) {
+                            onAction(ParticipantAction.ParticipantLongPressed(details))
+                        }
+                    },
+                    onCallClick = if (participant.canCall) {
+                        { onAction(ParticipantAction.ParticipantCallClicked(destination)) }
+                    } else {
+                        null
+                    },
+                    onContactClick = if (hasDestination) {
+                        { onAction(ParticipantAction.ParticipantContactInfoClicked(participant)) }
+                    } else {
+                        null
+                    },
+                    onAction = if (hasDestination && isGroup) {
+                        { onAction(ParticipantAction.ParticipantActionPressed(destination)) }
+                    } else {
+                        null
+                    },
                 )
             }
         }
@@ -624,6 +643,8 @@ private fun ConversationSettingsContentPreview() {
                         normalizedDestination = "+31612345678",
                         isBlocked = false,
                         displayDestination = "+31 6 1234 5678",
+                        canCall = true,
+                        isContactSaved = true,
                     ),
                     ParticipantUiState(
                         avatarUri = null,
@@ -634,6 +655,8 @@ private fun ConversationSettingsContentPreview() {
                         normalizedDestination = "+31687654321",
                         isBlocked = false,
                         displayDestination = "+31 6 8765 4321",
+                        canCall = true,
+                        isContactSaved = true,
                     ),
                 ),
             ),

@@ -75,6 +75,8 @@ internal fun participant(
     displayName: String = MOTHER_NAME,
     displayDestination: String = TEST_DESTINATION,
     isBlocked: Boolean = false,
+    canCall: Boolean = true,
+    isContactSaved: Boolean = true,
 ): ParticipantUiState {
     return ParticipantUiState(
         avatarUri = null,
@@ -85,6 +87,8 @@ internal fun participant(
         normalizedDestination = displayDestination,
         isBlocked = isBlocked,
         displayDestination = displayDestination,
+        canCall = canCall,
+        isContactSaved = isContactSaved,
     )
 }
 
