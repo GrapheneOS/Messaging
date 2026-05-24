@@ -2,15 +2,17 @@ package com.android.messaging.ui.conversationsettings.screen.mapper
 
 import android.telephony.PhoneNumberUtils
 import android.telephony.TelephonyManager
+import androidx.core.text.BidiFormatter
+import androidx.core.text.TextDirectionHeuristicsCompat.LTR
 import com.android.messaging.data.conversationsettings.model.ConversationSettingsData
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState
 import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
-import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import javax.inject.Inject
 
 internal interface ConversationSettingsUiStateMapper {
     fun map(
@@ -78,14 +80,19 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
         participant: ParticipantData,
         isVoiceCapable: Boolean,
     ): ParticipantUiState {
+        val bidiFormatter = BidiFormatter.getInstance()
         val fullName = participant.fullName
         val displayName = when {
-            fullName.isNullOrEmpty() -> participant.sendDestination.orEmpty()
+            fullName.isNullOrEmpty() -> {
+                bidiFormatter.unicodeWrap(participant.sendDestination.orEmpty(), LTR)
+            }
             else -> fullName
         }
         val details = when {
             fullName.isNullOrEmpty() || participant.isUnknownSender -> null
-            else -> participant.sendDestination
+            else -> participant.sendDestination?.let {
+                bidiFormatter.unicodeWrap(it, LTR)
+            }
         }
         val isContactSaved = participant.contactId > 0 && !participant.lookupKey.isNullOrBlank()
 
@@ -97,7 +104,9 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
             lookupKey = participant.lookupKey,
             normalizedDestination = participant.normalizedDestination,
             isBlocked = participant.isBlocked,
-            displayDestination = participant.displayDestination,
+            displayDestination = participant.displayDestination?.let {
+                bidiFormatter.unicodeWrap(it, LTR)
+            },
             canCall = canCall(
                 destination = participant.normalizedDestination,
                 isVoiceCapable = isVoiceCapable,
