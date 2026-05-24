@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -14,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
@@ -25,29 +25,15 @@ internal fun ParticipantAvatar(
     fallbackIcon: ImageVector,
     fallbackIconSize: Dp,
     modifier: Modifier = Modifier,
-    isSelected: Boolean = false,
+    shape: Shape = CircleShape,
 ) {
-    val backgroundColor = when {
-        isSelected -> MaterialTheme.colorScheme.primary
-        else -> MaterialTheme.colorScheme.primaryContainer
-    }
-
     Box(
         modifier = modifier
-            .clip(CircleShape)
-            .background(backgroundColor),
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.primaryContainer),
         contentAlignment = Alignment.Center,
     ) {
         when {
-            isSelected -> {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = null,
-                    modifier = Modifier.size(fallbackIconSize),
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                )
-            }
-
             avatarUri.isNullOrBlank() -> {
                 Icon(
                     imageVector = fallbackIcon,
@@ -76,13 +62,13 @@ internal fun ParticipantAvatar(
     modifier: Modifier = Modifier,
     fallbackIconSize: Dp = size / 2,
     fallbackIcon: ImageVector = Icons.Default.Person,
-    isSelected: Boolean = false,
+    shape: Shape = CircleShape,
 ) {
     ParticipantAvatar(
         avatarUri = avatarUri,
         fallbackIcon = fallbackIcon,
         fallbackIconSize = fallbackIconSize,
         modifier = modifier.size(size),
-        isSelected = isSelected,
+        shape = shape,
     )
 }
