@@ -35,7 +35,9 @@ internal interface ConversationSettingsDelegate :
     fun setDestinationBlocked(blocked: Boolean)
     fun setArchived(archived: Boolean)
     fun setSelfParticipantId(selfParticipantId: String)
-    suspend fun getLegacyNotificationPrefs(): LegacyConversationNotificationPrefs
+    suspend fun getLegacyNotificationPrefs(
+        conversationId: String,
+    ): LegacyConversationNotificationPrefs
     fun snooze(option: SnoozeOption)
     fun unsnooze()
 }
@@ -57,24 +59,24 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
 
     private val refreshTriggers = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
-    private var conversationIdFlow: StateFlow<String?>? = null
+    private val conversationIdFlow = MutableStateFlow<String?>(null)
     private var isBound = false
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun bind(
-        conversationIdFlow: StateFlow<String?>,
-        scope: CoroutineScope,
-    ) {
+    override fun bind(scope: CoroutineScope) {
         if (isBound) return
         isBound = true
-
-        this.conversationIdFlow = conversationIdFlow
 
         conversationIdFlow
             .filterNotNull()
             .flatMapLatest(::observeUiState)
             .onEach { _state.value = it }
             .launchIn(scope)
+    }
+
+    override fun setConversationId(conversationId: String) {
+        if (conversationIdFlow.value == conversationId) return
+        conversationIdFlow.value = conversationId
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -135,9 +137,10 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
         }
     }
 
-    override suspend fun getLegacyNotificationPrefs(): LegacyConversationNotificationPrefs {
-        val conversationId = currentConversationId()
-            ?: return LegacyConversationNotificationPrefs.Default
+    override suspend fun getLegacyNotificationPrefs(
+        conversationId: String,
+    ): LegacyConversationNotificationPrefs {
+        if (conversationId.isBlank()) return LegacyConversationNotificationPrefs.Default
         return notificationRepository.getLegacyNotificationPrefs(conversationId)
     }
 
@@ -154,6 +157,6 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
     }
 
     private fun currentConversationId(): String? {
-        return conversationIdFlow?.value?.takeIf(String::isNotBlank)
+        return conversationIdFlow.value?.takeIf(String::isNotBlank)
     }
 }

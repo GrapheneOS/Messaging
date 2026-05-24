@@ -1,6 +1,5 @@
 package com.android.messaging.ui.conversationsettings.screen
 
-import android.telephony.PhoneNumberUtils
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -20,7 +19,6 @@ import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
@@ -57,15 +55,11 @@ internal class ConversationSettingsViewModel @Inject constructor(
         savedStateHandle[UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID],
     ) { "conversationId is required" }
 
-    private val conversationIdFlow = MutableStateFlow<String?>(rootConversationId)
-
     private var resolveConversationJob: Job? = null
 
     init {
-        delegate.bind(
-            conversationIdFlow = conversationIdFlow,
-            scope = viewModelScope,
-        )
+        delegate.setConversationId(rootConversationId)
+        delegate.bind(viewModelScope)
     }
 
     override fun refreshState() {
@@ -145,12 +139,15 @@ internal class ConversationSettingsViewModel @Inject constructor(
 
     private fun handleNotificationsClicked() {
         val state = uiState.value
+        val conversationId = state.conversationId
+        val conversationTitle = state.conversationTitle
+
         viewModelScope.launch {
-            val legacyPrefs = delegate.getLegacyNotificationPrefs()
+            val legacyPrefs = delegate.getLegacyNotificationPrefs(conversationId)
             _effects.emit(
                 Effect.OpenNotificationChannelSettings(
-                    conversationId = state.conversationId,
-                    conversationTitle = state.conversationTitle,
+                    conversationId = conversationId,
+                    conversationTitle = conversationTitle,
                     legacyPrefs = legacyPrefs,
                 ),
             )
@@ -169,9 +166,7 @@ internal class ConversationSettingsViewModel @Inject constructor(
     }
 
     override fun setConversationId(conversationId: String) {
-        if (conversationId == conversationIdFlow.value) return
-
-        conversationIdFlow.value = conversationId
+        delegate.setConversationId(conversationId)
     }
 
     private fun resolveConversation(
