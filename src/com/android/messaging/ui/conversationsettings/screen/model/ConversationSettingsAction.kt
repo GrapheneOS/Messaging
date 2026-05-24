@@ -20,23 +20,30 @@ internal sealed interface ConversationSettingsAction {
 
     data object BlockConfirmed : ConversationSettingsAction
 
-    data class ParticipantPressed(
-        val destination: String,
-    ) : ConversationSettingsAction
-
-    data class ParticipantLongPressed(
-        val details: String,
-    ) : ConversationSettingsAction
-
-    data class ParticipantActionPressed(
-        val destination: String,
-    ) : ConversationSettingsAction
-
     data class SimSelected(
         val selfParticipantId: String,
     ) : ConversationSettingsAction
+}
 
-    data object CallClicked : ConversationSettingsAction
+internal sealed interface ParticipantConversationSettingsAction : ConversationSettingsAction {
 
-    data object ContactInfoClicked : ConversationSettingsAction
+    data class ParticipantPressed(
+        val destination: String,
+    ) : ParticipantConversationSettingsAction
+
+    data class ParticipantLongPressed(
+        val details: String,
+    ) : ParticipantConversationSettingsAction
+
+    data class ParticipantActionPressed(
+        val destination: String,
+    ) : ParticipantConversationSettingsAction
+
+    data class ParticipantCallClicked(
+        val destination: String,
+    ) : ParticipantConversationSettingsAction
+
+    data class ParticipantContactInfoClicked(
+        val participant: ParticipantUiState,
+    ) : ParticipantConversationSettingsAction
 }

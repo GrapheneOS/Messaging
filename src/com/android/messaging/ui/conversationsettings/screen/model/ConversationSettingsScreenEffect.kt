@@ -23,7 +23,7 @@ internal sealed interface ConversationSettingsScreenEffect {
     ) : ConversationSettingsScreenEffect
 
     data class PlacePhoneCall(
-        val phoneNumber: String,
+        val destination: String,
     ) : ConversationSettingsScreenEffect
 
     data class ShowOrAddContact(

@@ -32,4 +32,6 @@ internal data class ParticipantUiState(
     val normalizedDestination: String?,
     val isBlocked: Boolean,
     val displayDestination: String?,
+    val canCall: Boolean,
+    val isContactSaved: Boolean,
 )

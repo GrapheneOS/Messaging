@@ -5,10 +5,12 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.android.messaging.R
-import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsAction
+import com.android.messaging.ui.conversationsettings.screen.model.ParticipantConversationSettingsAction
 import com.android.messaging.ui.conversationsettings.screen.support.ConversationSettingsTestBase
+import com.android.messaging.ui.conversationsettings.screen.support.TEST_DESTINATION
 import com.android.messaging.ui.conversationsettings.screen.support.groupState
 import com.android.messaging.ui.conversationsettings.screen.support.oneToOneState
+import com.android.messaging.ui.conversationsettings.screen.support.participant
 import io.mockk.verify
 import org.junit.Test
 
@@ -32,7 +34,9 @@ internal class ContactActionsTest : ConversationSettingsTestBase() {
         composeTestRule.onNodeWithContentDescription(callLabel).performClick()
 
         verify(exactly = 1) {
-            screenModel.onAction(ConversationSettingsAction.CallClicked)
+            screenModel.onAction(
+                ParticipantConversationSettingsAction.ParticipantCallClicked(TEST_DESTINATION),
+            )
         }
     }
 
@@ -62,14 +66,25 @@ internal class ContactActionsTest : ConversationSettingsTestBase() {
 
     @Test
     fun contactInfoButton_showsContactInfo_whenContactSaved_andDispatchesAction() {
-        renderScreen(oneToOneState(canShowContact = true, isContactSaved = true))
+        val otherParticipant = participant()
+        renderScreen(
+            oneToOneState(
+                canShowContact = true,
+                isContactSaved = true,
+                otherParticipant = otherParticipant,
+            ),
+        )
 
         composeTestRule
             .onNodeWithContentDescription(string(R.string.action_contact_info))
             .performClick()
 
         verify(exactly = 1) {
-            screenModel.onAction(ConversationSettingsAction.ContactInfoClicked)
+            screenModel.onAction(
+                ParticipantConversationSettingsAction.ParticipantContactInfoClicked(
+                    otherParticipant,
+                ),
+            )
         }
     }
 

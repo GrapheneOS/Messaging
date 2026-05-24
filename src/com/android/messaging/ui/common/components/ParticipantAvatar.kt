@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
@@ -24,10 +25,11 @@ internal fun ParticipantAvatar(
     fallbackIcon: ImageVector,
     fallbackIconSize: Dp,
     modifier: Modifier = Modifier,
+    shape: Shape = CircleShape,
 ) {
     Box(
         modifier = modifier
-            .clip(CircleShape)
+            .clip(shape)
             .background(MaterialTheme.colorScheme.primaryContainer),
         contentAlignment = Alignment.Center,
     ) {
@@ -60,11 +62,13 @@ internal fun ParticipantAvatar(
     modifier: Modifier = Modifier,
     fallbackIconSize: Dp = size / 2,
     fallbackIcon: ImageVector = Icons.Default.Person,
+    shape: Shape = CircleShape,
 ) {
     ParticipantAvatar(
         avatarUri = avatarUri,
         fallbackIcon = fallbackIcon,
         fallbackIconSize = fallbackIconSize,
         modifier = modifier.size(size),
+        shape = shape,
     )
 }

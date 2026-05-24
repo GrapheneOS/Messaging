@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Group
@@ -21,19 +22,28 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.common.components.ParticipantAvatar
+import com.android.messaging.ui.common.components.ParticipantQuickActionsPopup
 import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
 import com.android.messaging.ui.core.AppTheme
 
@@ -122,6 +132,8 @@ internal fun ConversationSettingsItem(
                 text = title,
                 style = MaterialTheme.typography.bodyLarge,
                 color = contentColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }
@@ -132,59 +144,137 @@ internal fun ParticipantItem(
     participant: ParticipantUiState,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
+    onCallClick: (() -> Unit)?,
+    onContactClick: (() -> Unit)?,
     onAction: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
+    var showQuickActions by remember { mutableStateOf(false) }
+    var avatarBoundsPx by remember { mutableStateOf(IntRect.Zero) }
+    val isBlocked = participant.isBlocked
+    val fallbackIcon = if (isBlocked) Icons.Default.Block else Icons.Default.Person
+    val avatarUri = participant.avatarUri.takeUnless { isBlocked }
+    val dismissPopup = { showQuickActions = false }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
             .combinedClickable(
-                onClick = onClick,
+                onClick = { showQuickActions = true },
                 onLongClick = onLongClick,
             )
             .padding(
-                horizontal = 16.dp,
-                vertical = 8.dp,
+                start = 16.dp,
+                top = 8.dp,
+                end = 2.dp,
+                bottom = 8.dp
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        ParticipantAvatar(
-            avatarUri = participant.avatarUri.takeUnless { participant.isBlocked },
-            modifier = Modifier.size(40.dp),
-            fallbackIcon = when {
-                participant.isBlocked -> Icons.Default.Block
-                else -> Icons.Default.Person
-            },
-            fallbackIconSize = 24.dp,
+        ParticipantAvatarSlot(
+            avatarUri = avatarUri,
+            fallbackIcon = fallbackIcon,
+            onBoundsChanged = { avatarBoundsPx = it },
         )
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = participant.displayName,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-
-            if (!participant.details.isNullOrEmpty()) {
-                Text(
-                    text = participant.details,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
+        ParticipantInfo(
+            displayName = participant.displayName,
+            details = participant.details,
+            modifier = Modifier.weight(1f),
+        )
 
         if (onAction != null) {
-            IconButton(onClick = onAction) {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = stringResource(R.string.action_contact_info),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            ParticipantInfoButton(onClick = onAction)
         }
+    }
+
+    ParticipantQuickActionsPopup(
+        visible = showQuickActions,
+        anchorBoundsPx = avatarBoundsPx,
+        avatarUri = avatarUri,
+        displayName = participant.displayName,
+        subtitle = participant.details,
+        fallbackIcon = fallbackIcon,
+        onDismiss = dismissPopup,
+        onMessageClick = {
+            onClick()
+            dismissPopup()
+        },
+        onCallClick = {
+            onCallClick?.invoke()
+            dismissPopup()
+        }.takeIf { onCallClick != null },
+        onContactClick = {
+            onContactClick?.invoke()
+            dismissPopup()
+        }.takeIf { onContactClick != null },
+        isContactSaved = participant.isContactSaved,
+    )
+}
+
+@Composable
+private fun ParticipantAvatarSlot(
+    avatarUri: String?,
+    fallbackIcon: ImageVector,
+    onBoundsChanged: (IntRect) -> Unit,
+) {
+    ParticipantAvatar(
+        avatarUri = avatarUri,
+        fallbackIcon = fallbackIcon,
+        fallbackIconSize = 24.dp,
+        modifier = Modifier
+            .size(40.dp)
+            .onGloballyPositioned { coords ->
+                val pos = coords.positionInWindow()
+                onBoundsChanged(
+                    IntRect(
+                        left = pos.x.toInt(),
+                        top = pos.y.toInt(),
+                        right = pos.x.toInt() + coords.size.width,
+                        bottom = pos.y.toInt() + coords.size.height,
+                    ),
+                )
+            },
+    )
+}
+
+@Composable
+private fun ParticipantInfo(
+    displayName: String,
+    details: String?,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = displayName,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+
+        if (!details.isNullOrEmpty()) {
+            Text(
+                text = details,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ParticipantInfoButton(onClick: () -> Unit) {
+    IconButton(onClick = onClick) {
+        Icon(
+            imageVector = Icons.Default.Info,
+            contentDescription = stringResource(R.string.action_contact_info),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -203,6 +293,8 @@ private fun ConversationHeaderPreview() {
                 normalizedDestination = "+31612345678",
                 isBlocked = false,
                 displayDestination = "+31 6 1234 5678",
+                canCall = true,
+                isContactSaved = true,
             ),
         )
     }
@@ -234,10 +326,14 @@ private fun ParticipantItemPreview() {
                 normalizedDestination = "+31612345678",
                 isBlocked = false,
                 displayDestination = "+31 6 1234 5678",
+                canCall = true,
+                isContactSaved = true,
             ),
             onClick = {},
             onLongClick = {},
             onAction = {},
+            onCallClick = {},
+            onContactClick = {},
         )
     }
 }

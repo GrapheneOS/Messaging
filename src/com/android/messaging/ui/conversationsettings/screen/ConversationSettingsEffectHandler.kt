@@ -63,7 +63,7 @@ internal class ConversationSettingsEffectHandlerImpl(
             is Effect.PlacePhoneCall -> {
                 UIIntents.get().launchPhoneCallActivity(
                     activity,
-                    effect.phoneNumber,
+                    effect.destination,
                     Point(0, 0),
                 )
             }
