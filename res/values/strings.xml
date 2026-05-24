@@ -826,15 +826,6 @@
     <!-- The message in a blocked contact item which indicates tapping will unblock -->
     <string name="tap_to_unblock_message">UNBLOCK</string>
 
-    <!-- Empty state message shown when no contacts are blocked -->
-    <string name="blocked_contacts_empty">No blocked contacts</string>
-
-    <!-- Title shown in the blocked contacts top bar while items are selected -->
-    <string name="blocked_contacts_selection_title"><xliff:g id="count">%d</xliff:g> selected</string>
-
-    <!-- Content description for the button that clears the current selection in the blocked contacts screen -->
-    <string name="blocked_contacts_clear_selection_content_description">Clear selection</string>
-
     <!-- Action menu title for viewing the list of blocked contacts -->
     <string name="view_blocked_contacts_title">Blocked contacts</string>
 
