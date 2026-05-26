@@ -24,6 +24,7 @@ internal data class ConversationSettingsUiState(
 
 @Immutable
 internal data class ParticipantUiState(
+    val id: String,
     val avatarUri: String?,
     val displayName: String,
     val details: String?,

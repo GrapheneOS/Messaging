@@ -43,6 +43,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.State as ComposeState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -588,30 +589,31 @@ private fun ParticipantsCard(
             participants.forEach { participant ->
                 val destination = participant.normalizedDestination.orEmpty()
                 val hasDestination = destination.isNotEmpty()
-
-                ParticipantItem(
-                    participant = participant,
-                    onClick = {
-                        if (hasDestination) {
-                            onAction(ParticipantAction.ParticipantPressed(destination))
-                        }
-                    },
-                    onLongClick = {
-                        val details = participant.details
-                        if (!details.isNullOrEmpty()) {
-                            onAction(ParticipantAction.ParticipantLongPressed(details))
-                        }
-                    },
-                    onCallClick = {
-                        onAction(ParticipantAction.ParticipantCallClicked(destination))
-                    }.takeIf { participant.canCall },
-                    onContactClick = {
-                        onAction(ParticipantAction.ParticipantContactInfoClicked(participant))
-                    }.takeIf { hasDestination },
-                    onAction = {
-                        onAction(ParticipantAction.ParticipantActionPressed(destination))
-                    }.takeIf { hasDestination && isGroup },
-                )
+                key(participant.id) {
+                    ParticipantItem(
+                        participant = participant,
+                        onClick = {
+                            if (hasDestination) {
+                                onAction(ParticipantAction.ParticipantPressed(destination))
+                            }
+                        },
+                        onLongClick = {
+                            val details = participant.details
+                            if (!details.isNullOrEmpty()) {
+                                onAction(ParticipantAction.ParticipantLongPressed(details))
+                            }
+                        },
+                        onCallClick = {
+                            onAction(ParticipantAction.ParticipantCallClicked(destination))
+                        }.takeIf { participant.canCall },
+                        onContactClick = {
+                            onAction(ParticipantAction.ParticipantContactInfoClicked(participant))
+                        }.takeIf { hasDestination },
+                        onAction = {
+                            onAction(ParticipantAction.ParticipantActionPressed(destination))
+                        }.takeIf { hasDestination && isGroup },
+                    )
+                }
             }
         }
     }
@@ -627,6 +629,7 @@ private fun ConversationSettingsContentPreview() {
                 conversationTitle = "Family",
                 participants = persistentListOf(
                     ParticipantUiState(
+                        id = "p1",
                         avatarUri = null,
                         displayName = "Mother",
                         details = "+31 6 1234 5678",
@@ -639,6 +642,7 @@ private fun ConversationSettingsContentPreview() {
                         isContactSaved = true,
                     ),
                     ParticipantUiState(
+                        id = "p2",
                         avatarUri = null,
                         displayName = "Father",
                         details = "+31 6 8765 4321",

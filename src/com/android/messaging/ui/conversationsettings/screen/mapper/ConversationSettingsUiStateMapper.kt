@@ -97,6 +97,7 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
         val isContactSaved = participant.contactId > 0 && !participant.lookupKey.isNullOrBlank()
 
         return ParticipantUiState(
+            id = participant.id,
             avatarUri = participant.profilePhotoUri?.takeIf(String::isNotBlank),
             displayName = displayName,
             details = details,

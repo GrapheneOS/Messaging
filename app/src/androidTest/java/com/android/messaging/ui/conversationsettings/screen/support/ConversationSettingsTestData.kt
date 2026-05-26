@@ -62,8 +62,16 @@ internal fun groupState(): ConversationSettingsUiState {
         conversationId = ROOT_CONVERSATION_ID,
         conversationTitle = GROUP_TITLE,
         participants = persistentListOf(
-            participant(displayName = MOTHER_NAME, displayDestination = MOTHER_DESTINATION),
-            participant(displayName = FATHER_NAME, displayDestination = FATHER_DESTINATION),
+            participant(
+                id = "mother",
+                displayName = MOTHER_NAME,
+                displayDestination = MOTHER_DESTINATION,
+            ),
+            participant(
+                id = "father",
+                displayName = FATHER_NAME,
+                displayDestination = FATHER_DESTINATION,
+            ),
         ),
         otherParticipant = null,
         canCall = false,
@@ -72,6 +80,7 @@ internal fun groupState(): ConversationSettingsUiState {
 }
 
 internal fun participant(
+    id: String = "test_participant",
     displayName: String = MOTHER_NAME,
     displayDestination: String = TEST_DESTINATION,
     isBlocked: Boolean = false,
@@ -79,6 +88,7 @@ internal fun participant(
     isContactSaved: Boolean = true,
 ): ParticipantUiState {
     return ParticipantUiState(
+        id = id,
         avatarUri = null,
         displayName = displayName,
         details = displayDestination,
