@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -37,11 +38,14 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.ui.contact.model.ContactDestinationUiModel
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerListItem
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionRowDecorators
+import com.android.messaging.ui.core.MessagingPreviewColumn
 import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.persistentSetOf
 
 internal val contactCornerRadius = 18.dp
 internal val contactMiddleCornerRadius = 2.dp
@@ -435,4 +439,163 @@ internal fun Transition<Boolean>.animateSecondaryTextColor(): State<Color> {
             }
         },
     )
+}
+
+@PreviewLightDark
+@Composable
+private fun RecipientSelectionContactRowGroupedListPreview() {
+    val items = previewRecipientSelectionContactRowGroupedItems()
+    MessagingPreviewColumn {
+        Column(verticalArrangement = Arrangement.spacedBy(space = 4.dp)) {
+            items.forEachIndexed { index, item ->
+                PreviewRecipientSelectionContactRow(
+                    item = item,
+                    enabled = true,
+                    selectedDestinations = persistentSetOf(
+                        RECIPIENT_ROW_PREVIEW_PRIMARY_DESTINATION,
+                    ),
+                    shape = recipientSelectionContactRowShape(
+                        index = index,
+                        totalCount = items.size,
+                    ),
+                    loadingDestination = RECIPIENT_ROW_PREVIEW_SYNTHETIC_DESTINATION,
+                )
+            }
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun RecipientSelectionContactRowSingleDestinationStatesPreview() {
+    val phoneContactItem = previewRecipientSelectionSingleDestinationContactItem()
+    val emailContactItem = previewRecipientSelectionSingleEmailDestinationContactItem()
+    MessagingPreviewColumn {
+        Column(verticalArrangement = Arrangement.spacedBy(space = 12.dp)) {
+            PreviewRecipientSelectionContactRow(
+                item = phoneContactItem,
+                selectedDestinations = persistentSetOf(),
+            )
+
+            PreviewRecipientSelectionContactRow(
+                item = phoneContactItem,
+                selectedDestinations = persistentSetOf(
+                    RECIPIENT_ROW_PREVIEW_PRIMARY_DESTINATION,
+                ),
+            )
+
+            PreviewRecipientSelectionContactRow(
+                item = emailContactItem,
+                selectedDestinations = persistentSetOf(),
+                loadingDestination = RECIPIENT_ROW_PREVIEW_EMAIL_DESTINATION,
+            )
+
+            PreviewRecipientSelectionContactRow(
+                item = emailContactItem,
+                enabled = false,
+                selectedDestinations = persistentSetOf(
+                    RECIPIENT_ROW_PREVIEW_EMAIL_DESTINATION,
+                ),
+                onDestinationLongClick = null,
+            )
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun RecipientSelectionContactRowSyntheticPhoneStatesPreview() {
+    val syntheticPhoneItem = previewRecipientSelectionSyntheticPhoneItem()
+    MessagingPreviewColumn {
+        Column(verticalArrangement = Arrangement.spacedBy(space = 12.dp)) {
+            PreviewRecipientSelectionContactRow(
+                item = syntheticPhoneItem,
+                selectedDestinations = persistentSetOf(),
+            )
+
+            PreviewRecipientSelectionContactRow(
+                item = syntheticPhoneItem,
+                selectedDestinations = persistentSetOf(
+                    RECIPIENT_ROW_PREVIEW_SYNTHETIC_DESTINATION,
+                ),
+            )
+
+            PreviewRecipientSelectionContactRow(
+                item = syntheticPhoneItem,
+                selectedDestinations = persistentSetOf(
+                    RECIPIENT_ROW_PREVIEW_SYNTHETIC_DESTINATION,
+                ),
+                loadingDestination = RECIPIENT_ROW_PREVIEW_SYNTHETIC_DESTINATION,
+            )
+
+            PreviewRecipientSelectionContactRow(
+                item = syntheticPhoneItem,
+                enabled = false,
+                selectedDestinations = persistentSetOf(),
+                onDestinationLongClick = null,
+            )
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun RecipientSelectionContactRowMultiDestinationWrapperPreview() {
+    val contactItem = previewRecipientSelectionMultiDestinationContactItem()
+    MessagingPreviewColumn {
+        Column(verticalArrangement = Arrangement.spacedBy(space = 12.dp)) {
+            PreviewRecipientSelectionContactRow(
+                item = contactItem,
+                selectedDestinations = persistentSetOf(),
+            )
+
+            PreviewRecipientSelectionContactRow(
+                item = contactItem,
+                selectedDestinations = persistentSetOf(
+                    RECIPIENT_ROW_PREVIEW_SECONDARY_DESTINATION,
+                ),
+            )
+
+            PreviewRecipientSelectionContactRow(
+                item = contactItem,
+                selectedDestinations = persistentSetOf<String>()
+                    .add(RECIPIENT_ROW_PREVIEW_PRIMARY_DESTINATION)
+                    .add(RECIPIENT_ROW_PREVIEW_SECONDARY_DESTINATION)
+                    .add(RECIPIENT_ROW_PREVIEW_EMAIL_DESTINATION),
+                loadingDestination = RECIPIENT_ROW_PREVIEW_EMAIL_DESTINATION,
+            )
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun RecipientSelectionContactRowLongTextPreview() {
+    MessagingPreviewColumn {
+        Column(
+            modifier = Modifier.width(width = 320.dp),
+            verticalArrangement = Arrangement.spacedBy(space = 12.dp),
+        ) {
+            PreviewRecipientSelectionContactRow(
+                item = previewRecipientSelectionLongSingleDestinationContactItem(),
+                selectedDestinations = persistentSetOf(
+                    RECIPIENT_ROW_PREVIEW_LONG_PHONE_DESTINATION,
+                ),
+            )
+
+            PreviewRecipientSelectionContactRow(
+                item = previewRecipientSelectionLongMultiDestinationContactItem(),
+                selectedDestinations = persistentSetOf(
+                    RECIPIENT_ROW_PREVIEW_LONG_EMAIL_DESTINATION,
+                ),
+            )
+
+            PreviewRecipientSelectionContactRow(
+                item = previewRecipientSelectionLongSyntheticPhoneItem(),
+                selectedDestinations = persistentSetOf(
+                    RECIPIENT_ROW_PREVIEW_LONG_SYNTHETIC_DESTINATION,
+                ),
+            )
+        }
+    }
 }

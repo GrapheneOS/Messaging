@@ -12,7 +12,9 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -29,10 +31,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.android.messaging.R
+import com.android.messaging.ui.conversation.preview.previewRecipientPickerUiState
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerListItem
+import com.android.messaging.ui.core.MessagingPreviewColumn
 
 @Composable
 internal fun RecipientSelectionContactAvatar(
@@ -207,4 +212,23 @@ private fun rememberRecipientSelectionContactAvatarScale(
             }
         },
     )
+}
+
+@PreviewLightDark
+@Composable
+private fun RecipientSelectionContactAvatarPreview() {
+    MessagingPreviewColumn {
+        Row(horizontalArrangement = Arrangement.spacedBy(space = 12.dp)) {
+            previewRecipientPickerUiState().items.forEach { item ->
+                RecipientSelectionContactAvatar(
+                    item = item,
+                    isSelected = false,
+                )
+                RecipientSelectionContactAvatar(
+                    item = item,
+                    isSelected = true,
+                )
+            }
+        }
+    }
 }

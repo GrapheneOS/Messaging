@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
@@ -24,6 +25,15 @@ import com.android.messaging.sms.cleanseMmsSubject
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageContent
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel.Status
+import com.android.messaging.ui.conversation.preview.previewAudioPart
+import com.android.messaging.ui.conversation.preview.previewFilePart
+import com.android.messaging.ui.conversation.preview.previewImagePart
+import com.android.messaging.ui.conversation.preview.previewIncomingMessage
+import com.android.messaging.ui.conversation.preview.previewMmsDownloadUiModel
+import com.android.messaging.ui.conversation.preview.previewOutgoingMessage
+import com.android.messaging.ui.conversation.preview.previewVCardPart
+import com.android.messaging.ui.conversation.preview.previewVideoPart
+import kotlinx.collections.immutable.persistentListOf
 
 private const val MESSAGE_BUBBLE_MAX_WIDTH_DP = 360
 private const val MESSAGE_BUBBLE_WIDTH_FRACTION = 0.8f
@@ -417,5 +427,226 @@ private fun messageStatusTextResourceId(status: Status): Int? {
             R.string.message_status_send_failed_emergency_number
         }
         else -> null
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationMessageOutgoingStatusPreview() {
+    ConversationMessagePreviewColumn {
+        outgoingStatusPreviewItems().forEach { item ->
+            ConversationMessagePreviewItem(
+                message = previewOutgoingMessage(
+                    messageId = item.messageId,
+                    text = item.text,
+                    status = item.status,
+                ),
+                simDisplayName = "Personal",
+            )
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationMessageIncomingStatusPreview() {
+    ConversationMessagePreviewColumn {
+        ConversationMessagePreviewItem(
+            message = previewIncomingMessage(
+                messageId = "incoming-complete",
+                text = "Incoming complete message.",
+                status = Status.Incoming.Complete,
+            ),
+            simDisplayName = "Personal",
+        )
+        ConversationMessagePreviewItem(
+            message = previewIncomingMessage(
+                messageId = "incoming-unknown",
+                text = "Incoming message with unknown status.",
+                status = Status.Unknown,
+                protocol = ConversationMessageUiModel.Protocol.UNKNOWN,
+            ),
+            simDisplayName = "Personal",
+        )
+        mmsDownloadStatusPreviewItems().forEach { item ->
+            ConversationMessagePreviewItem(
+                message = previewIncomingMessage(
+                    messageId = item.messageId,
+                    text = null,
+                    parts = persistentListOf(),
+                    status = item.status,
+                    mmsDownload = previewMmsDownloadUiModel(state = item.downloadState),
+                    protocol = ConversationMessageUiModel.Protocol.MMS_PUSH_NOTIFICATION,
+                    canDownloadMessage = item.canDownloadMessage,
+                ),
+                simDisplayName = "Personal",
+            )
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationMessageAttachmentContentPreview() {
+    ConversationMessagePreviewColumn {
+        ConversationMessagePreviewItem(
+            message = previewIncomingMessage(
+                messageId = "incoming-image-only",
+                text = null,
+                parts = persistentListOf(previewImagePart(text = null)),
+                protocol = ConversationMessageUiModel.Protocol.MMS,
+                canSaveAttachments = true,
+            ),
+            simDisplayName = "Personal",
+        )
+        ConversationMessagePreviewItem(
+            message = previewIncomingMessage(
+                messageId = "incoming-image-only-selected",
+                text = null,
+                parts = persistentListOf(previewImagePart(text = null)),
+                protocol = ConversationMessageUiModel.Protocol.MMS,
+                canSaveAttachments = true,
+            ),
+            isSelected = true,
+            isSelectionMode = true,
+            simDisplayName = "Personal",
+        )
+        ConversationMessagePreviewItem(
+            message = previewIncomingMessage(
+                messageId = "incoming-media-with-subject",
+                text = "Long body text below the gallery with a URL " +
+                    "https://example.com/trip-notes.",
+                parts = persistentListOf(
+                    previewImagePart(text = "Image caption"),
+                    previewVideoPart(text = "Video caption"),
+                ),
+                protocol = ConversationMessageUiModel.Protocol.MMS,
+                canSaveAttachments = true,
+            ).copy(
+                mmsSubject = "Trip media",
+            ),
+            simDisplayName = "Personal",
+        )
+        ConversationMessagePreviewItem(
+            message = previewOutgoingMessage(
+                messageId = "outgoing-audio",
+                text = null,
+                parts = persistentListOf(previewAudioPart(text = "Voice note caption")),
+                status = Status.Outgoing.Delivered,
+            ).copy(
+                protocol = ConversationMessageUiModel.Protocol.MMS,
+                canSaveAttachments = true,
+            ),
+            simDisplayName = "Work",
+        )
+        ConversationMessagePreviewItem(
+            message = previewIncomingMessage(
+                messageId = "incoming-vcard",
+                text = null,
+                parts = persistentListOf(previewVCardPart()),
+                protocol = ConversationMessageUiModel.Protocol.MMS,
+                canSaveAttachments = true,
+            ),
+            simDisplayName = "Personal",
+        )
+        ConversationMessagePreviewItem(
+            message = previewOutgoingMessage(
+                messageId = "outgoing-file-unsupported",
+                text = null,
+                parts = persistentListOf(previewFilePart(text = "Unsupported PDF attachment")),
+                status = Status.Outgoing.Complete,
+            ).copy(
+                protocol = ConversationMessageUiModel.Protocol.MMS,
+                canSaveAttachments = true,
+            ),
+            simDisplayName = "Work",
+        )
+        ConversationMessagePreviewItem(
+            message = previewOutgoingMessage(
+                messageId = "outgoing-youtube-preview",
+                text = "Watch this: https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                status = Status.Outgoing.Delivered,
+            ),
+            simDisplayName = "Personal",
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationMessageClusterSelectionPreview() {
+    ConversationMessagePreviewColumn {
+        ConversationMessagePreviewItem(
+            message = previewIncomingMessage(
+                messageId = "incoming-cluster-start",
+                text = "Incoming cluster starts here.",
+            ).copy(
+                canClusterWithNext = true,
+            ),
+            simDisplayName = "Personal",
+        )
+        ConversationMessagePreviewItem(
+            message = previewIncomingMessage(
+                messageId = "incoming-cluster-middle",
+                text = "Incoming cluster middle.",
+            ).copy(
+                canClusterWithPrevious = true,
+                canClusterWithNext = true,
+            ),
+            simDisplayName = "Personal",
+        )
+        ConversationMessagePreviewItem(
+            message = previewIncomingMessage(
+                messageId = "incoming-cluster-end",
+                text = "Incoming cluster ends here.",
+            ).copy(
+                canClusterWithPrevious = true,
+            ),
+            simDisplayName = "Personal",
+        )
+        ConversationMessagePreviewItem(
+            message = previewOutgoingMessage(
+                messageId = "outgoing-cluster-start",
+                text = "Outgoing cluster starts here.",
+            ).copy(
+                canClusterWithNext = true,
+            ),
+            simDisplayName = "Work",
+        )
+        ConversationMessagePreviewItem(
+            message = previewOutgoingMessage(
+                messageId = "outgoing-cluster-end",
+                text = "Outgoing cluster ends here.",
+            ).copy(
+                canClusterWithPrevious = true,
+            ),
+            simDisplayName = "Work",
+        )
+        ConversationMessagePreviewItem(
+            message = previewIncomingMessage(
+                messageId = "incoming-identity-hidden",
+                text = "Incoming without participant identity.",
+            ),
+            showIncomingParticipantIdentity = false,
+            simDisplayName = null,
+        )
+        ConversationMessagePreviewItem(
+            message = previewIncomingMessage(
+                messageId = "incoming-selection-unselected",
+                text = "Selection mode, not selected.",
+            ),
+            isSelectionMode = true,
+            simDisplayName = "Personal",
+        )
+        ConversationMessagePreviewItem(
+            message = previewOutgoingMessage(
+                messageId = "outgoing-selection-selected",
+                text = "Selection mode, selected.",
+                status = Status.Outgoing.Failed,
+            ),
+            isSelected = true,
+            isSelectionMode = true,
+            simDisplayName = "Work",
+        )
     }
 }

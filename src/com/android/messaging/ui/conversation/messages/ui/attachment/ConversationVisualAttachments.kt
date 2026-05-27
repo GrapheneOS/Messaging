@@ -28,14 +28,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.android.messaging.ui.conversation.attachment.ui.ConversationMediaThumbnail
 import com.android.messaging.ui.conversation.messages.model.attachment.ConversationMessageAttachment
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
+import com.android.messaging.ui.conversation.preview.previewMessageAttachments
+import com.android.messaging.ui.core.MessagingPreviewColumn
 import com.android.messaging.util.ContentType
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 internal val MESSAGE_ATTACHMENT_CORNER_RADIUS = 0.dp
 internal val MESSAGE_ATTACHMENT_GRID_SPACING = 6.dp
@@ -395,5 +399,38 @@ private fun resolvePartAspectRatio(
         }
 
         else -> MESSAGE_ATTACHMENT_DEFAULT_IMAGE_ASPECT_RATIO
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationVisualAttachmentsPreview() {
+    MessagingPreviewColumn {
+        Column(verticalArrangement = Arrangement.spacedBy(space = 12.dp)) {
+            ConversationGalleryVisualAttachments(
+                attachments = previewMessageAttachments(),
+                hasTextAboveVisualAttachments = false,
+                hasTextBelowVisualAttachments = true,
+                onAttachmentClick = { _, _ -> },
+                onExternalUriClick = {},
+                onMessageLongClick = {},
+            )
+            ConversationStandaloneVisualAttachment(
+                attachment = previewMessageAttachments().first(),
+                hasTextAboveVisualAttachments = true,
+                hasTextBelowVisualAttachments = false,
+                onAttachmentClick = { _, _ -> },
+                onExternalUriClick = {},
+                onMessageLongClick = {},
+            )
+            ConversationGalleryVisualAttachments(
+                attachments = persistentListOf(previewMessageAttachments().last()),
+                hasTextAboveVisualAttachments = false,
+                hasTextBelowVisualAttachments = false,
+                onAttachmentClick = { _, _ -> },
+                onExternalUriClick = {},
+                onMessageLongClick = {},
+            )
+        }
     }
 }

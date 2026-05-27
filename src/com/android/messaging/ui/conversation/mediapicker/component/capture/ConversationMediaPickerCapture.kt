@@ -18,11 +18,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.conversation.mediapicker.ConversationCaptureMode
 import com.android.messaging.ui.conversation.mediapicker.camera.ConversationPhotoFlashMode
 import com.android.messaging.ui.conversation.mediapicker.component.PermissionFallback
+import com.android.messaging.ui.core.MessagingPreviewTheme
 
 @Composable
 internal fun ConversationMediaCameraPreviewSurface(
@@ -176,5 +178,45 @@ internal fun ConversationMediaCaptureContent(
                 onVideoModeClick = onVideoModeClick,
             )
         }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationMediaCameraPreviewSurfacePermissionPreview() {
+    MessagingPreviewTheme {
+        ConversationMediaCameraPreviewSurface(
+            modifier = Modifier.fillMaxSize(),
+            cameraPermissionGranted = false,
+            contentPadding = PaddingValues(),
+            surfaceRequest = null,
+            onRequestCameraPermission = {},
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationMediaCaptureContentPreview() {
+    MessagingPreviewTheme {
+        ConversationMediaCaptureContent(
+            modifier = Modifier.fillMaxSize(),
+            audioPermissionGranted = true,
+            captureMode = ConversationCaptureMode.Video,
+            cameraPermissionGranted = true,
+            hasFlashUnit = true,
+            isPhotoCaptureInProgress = false,
+            isRecording = true,
+            photoFlashMode = ConversationPhotoFlashMode.Off,
+            onCloseClick = {},
+            onRequestAudioPermission = {},
+            onPhotoCaptureClick = {},
+            onPhotoModeClick = {},
+            onSwitchCameraClick = {},
+            onToggleFlashClick = {},
+            onVideoCaptureClick = {},
+            onVideoModeClick = {},
+            recordingDurationMillis = 37_000L,
+        )
     }
 }

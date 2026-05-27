@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -36,6 +37,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerListItem
@@ -43,6 +45,7 @@ import com.android.messaging.ui.conversation.recipientpicker.model.picker.Recipi
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.OnRecipientDestinationAction
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionContentUiState
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionRowDecorators
+import com.android.messaging.ui.core.MessagingPreviewColumn
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.toImmutableSet
 
@@ -354,4 +357,111 @@ private fun RecipientSelectionEmptyState() {
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
+}
+
+@PreviewLightDark
+@Composable
+private fun RecipientSelectionContactsContentLoadedPreview() {
+    MessagingPreviewColumn {
+        PreviewRecipientSelectionContactsContent(
+            modifier = Modifier.height(height = 420.dp),
+            uiState = previewRecipientSelectionContactsLoadedState(),
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun RecipientSelectionContactsContentLoadingPreview() {
+    MessagingPreviewColumn {
+        PreviewRecipientSelectionContactsContent(
+            modifier = Modifier.height(height = 260.dp),
+            uiState = previewRecipientSelectionContactsLoadingState(),
+            onRecipientDestinationLongClick = null,
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun RecipientSelectionContactsContentEmptyPreview() {
+    MessagingPreviewColumn {
+        PreviewRecipientSelectionContactsContent(
+            modifier = Modifier.height(height = 260.dp),
+            uiState = previewRecipientSelectionContactsEmptyState(),
+            onRecipientDestinationLongClick = null,
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun RecipientSelectionContactsContentLoadingMorePreview() {
+    MessagingPreviewColumn {
+        PreviewRecipientSelectionContactsContent(
+            modifier = Modifier.height(height = 420.dp),
+            uiState = previewRecipientSelectionContactsLoadingMoreState(),
+            loadingDestination = RECIPIENT_ROW_PREVIEW_EMAIL_DESTINATION,
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun RecipientSelectionContactsContentPrimaryActionDisabledPreview() {
+    MessagingPreviewColumn {
+        PreviewRecipientSelectionContactsContent(
+            modifier = Modifier.height(height = 420.dp),
+            uiState = previewRecipientSelectionContactsPrimaryActionDisabledState(),
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun RecipientSelectionContactsContentPrimaryActionLoadingPreview() {
+    MessagingPreviewColumn {
+        PreviewRecipientSelectionContactsContent(
+            modifier = Modifier.height(height = 420.dp),
+            uiState = previewRecipientSelectionContactsPrimaryActionLoadingState(),
+            loadingDestination = RECIPIENT_ROW_PREVIEW_SECONDARY_DESTINATION,
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun RecipientSelectionContactsContentNoPrimaryActionPreview() {
+    MessagingPreviewColumn {
+        PreviewRecipientSelectionContactsContent(
+            modifier = Modifier.height(height = 360.dp),
+            uiState = previewRecipientSelectionContactsNoPrimaryActionState(),
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun RecipientSelectionContactsContentTopListContentPreview() {
+    MessagingPreviewColumn {
+        PreviewRecipientSelectionContactsContent(
+            modifier = Modifier.height(height = 420.dp),
+            uiState = previewRecipientSelectionContactsTopContentState(),
+            topListContent = {
+                PreviewRecipientSelectionContactsTopListContent()
+            },
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun RecipientSelectionContactsContentLongTextPreview() {
+    MessagingPreviewColumn {
+        PreviewRecipientSelectionContactsContent(
+            modifier = Modifier.height(height = 420.dp),
+            uiState = previewRecipientSelectionContactsLongTextState(),
+            loadingDestination = RECIPIENT_ROW_PREVIEW_LONG_EMAIL_DESTINATION,
+        )
+    }
 }

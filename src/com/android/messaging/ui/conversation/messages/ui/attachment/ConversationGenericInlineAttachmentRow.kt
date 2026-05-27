@@ -20,8 +20,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.ui.conversation.messages.model.attachment.ConversationInlineAttachment
+import com.android.messaging.ui.conversation.preview.previewInlineFileAttachment
+import com.android.messaging.ui.core.MessagingPreviewColumn
 
 @Composable
 internal fun ConversationGenericInlineAttachmentRow(
@@ -114,4 +117,17 @@ private fun ConversationFileInlineAttachmentIcon() {
         imageVector = Icons.Rounded.Description,
         contentDescription = null,
     )
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationGenericInlineAttachmentRowPreview() {
+    MessagingPreviewColumn {
+        ConversationGenericInlineAttachmentRow(
+            attachment = previewInlineFileAttachment(),
+            onAttachmentClick = { _, _ -> },
+            onExternalUriClick = {},
+            onLongClick = {},
+        )
+    }
 }

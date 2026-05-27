@@ -22,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.R
@@ -30,6 +31,8 @@ import com.android.messaging.ui.conversation.addParticipantsContactDestinationRo
 import com.android.messaging.ui.conversation.addParticipantsContactRowTestTag
 import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsEffect
 import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsUiState
+import com.android.messaging.ui.conversation.preview.previewRecipientPickerUiState
+import com.android.messaging.ui.conversation.preview.previewSelectedRecipient
 import com.android.messaging.ui.conversation.recipientpicker.component.RecipientSelectionContent
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerListItem
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.SelectedRecipient
@@ -38,7 +41,9 @@ import com.android.messaging.ui.conversation.recipientpicker.model.selection.Rec
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionPrimaryActionUiState
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionRowDecorators
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionStrings
+import com.android.messaging.ui.core.MessagingPreviewTheme
 import com.android.messaging.util.UiUtils
+import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun AddParticipantsScreen(
@@ -210,5 +215,24 @@ private fun addParticipantsQueryHint(
     return when {
         hasSelectedRecipients -> stringResource(R.string.recipient_selection_query_hint_more)
         else -> stringResource(R.string.new_chat_query_hint)
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun AddParticipantsRecipientSelectionContentPreview() {
+    MessagingPreviewTheme {
+        AddParticipantsRecipientSelectionContent(
+            modifier = Modifier.fillMaxSize(),
+            uiState = AddParticipantsUiState(
+                isLoadingConversationParticipants = false,
+                recipientPickerUiState = previewRecipientPickerUiState(),
+                selectedRecipients = persistentListOf(previewSelectedRecipient()),
+            ),
+            onConfirmClick = {},
+            onLoadMore = {},
+            onQueryChanged = { _ -> },
+            onRecipientClick = { _ -> },
+        )
     }
 }

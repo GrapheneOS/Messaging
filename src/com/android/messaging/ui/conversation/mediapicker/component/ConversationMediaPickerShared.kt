@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CameraAlt
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
@@ -24,8 +25,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.android.messaging.ui.core.MessagingPreviewColumn
 
 private val PICKER_CONTROL_BUTTON_SIZE = 48.dp
 
@@ -153,5 +156,31 @@ internal fun PickerOverlayIconButton(
             imageVector = imageVector,
             contentDescription = contentDescription,
         )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationMediaPickerSharedPreview() {
+    MessagingPreviewColumn {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            PermissionFallback(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Rounded.CameraAlt,
+                        contentDescription = null,
+                    )
+                },
+                message = "Allow camera access to take photos and videos.",
+                actionLabel = "Allow camera",
+                onActionClick = {},
+            )
+            Spacer(modifier = Modifier.size(size = 12.dp))
+            PickerOverlayIconButton(
+                contentDescription = "Close",
+                imageVector = Icons.Rounded.Close,
+                onClick = {},
+            )
+        }
     }
 }

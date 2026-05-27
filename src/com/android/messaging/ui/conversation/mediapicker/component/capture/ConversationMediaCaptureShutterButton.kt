@@ -9,8 +9,10 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -23,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.messaging.ui.conversation.mediapicker.ConversationCaptureMode
@@ -31,6 +34,7 @@ import com.android.messaging.ui.conversation.mediapicker.component.capture.Conve
 import com.android.messaging.ui.conversation.mediapicker.component.capture.ConversationMediaCaptureShutterPhase.VideoRecording
 import com.android.messaging.ui.conversation.mediapicker.component.pickerOverlayContainerColor
 import com.android.messaging.ui.conversation.mediapicker.component.pickerOverlayContentColor
+import com.android.messaging.ui.core.MessagingPreviewColumn
 
 private val PICKER_SHUTTER_BORDER_WIDTH = 3.dp
 private val PICKER_SHUTTER_OUTER_SIZE = 78.dp
@@ -455,3 +459,36 @@ private data class ConversationMediaCaptureVideoCenterDotVisualState(
     val alpha: Float,
     val scale: Float,
 )
+
+@PreviewLightDark
+@Composable
+private fun ConversationMediaCaptureShutterButtonPreview() {
+    MessagingPreviewColumn {
+        Row(horizontalArrangement = Arrangement.spacedBy(space = 16.dp)) {
+            ConversationMediaCaptureShutterButton(
+                captureMode = ConversationCaptureMode.Photo,
+                isPhotoCaptureInProgress = false,
+                isRecording = false,
+                onClick = {},
+            )
+            ConversationMediaCaptureShutterButton(
+                captureMode = ConversationCaptureMode.Photo,
+                isPhotoCaptureInProgress = true,
+                isRecording = false,
+                onClick = {},
+            )
+            ConversationMediaCaptureShutterButton(
+                captureMode = ConversationCaptureMode.Video,
+                isPhotoCaptureInProgress = false,
+                isRecording = false,
+                onClick = {},
+            )
+            ConversationMediaCaptureShutterButton(
+                captureMode = ConversationCaptureMode.Video,
+                isPhotoCaptureInProgress = false,
+                isRecording = true,
+                onClick = {},
+            )
+        }
+    }
+}

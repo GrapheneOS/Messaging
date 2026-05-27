@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -17,11 +18,15 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntSize
 import androidx.core.net.toUri
 import com.android.messaging.ui.conversation.attachment.ui.loadConversationMediaThumbnailBitmap
 import com.android.messaging.ui.conversation.composer.model.ComposerAttachmentUiModel
 import com.android.messaging.ui.conversation.mediapicker.component.pickerOverlayContainerColor
+import com.android.messaging.ui.conversation.preview.previewResolvedImageAttachment
+import com.android.messaging.ui.conversation.preview.previewResolvedVideoAttachment
+import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -212,3 +217,19 @@ private data class ConversationMediaReviewBackgroundState(
     val settledBackgroundImageBitmap: ImageBitmap?,
     val fallbackBackgroundColor: Color,
 )
+
+@PreviewLightDark
+@Composable
+private fun ConversationMediaReviewBackgroundPreview() {
+    val attachments = persistentListOf(
+        previewResolvedImageAttachment(),
+        previewResolvedVideoAttachment(),
+    )
+    MessagingPreviewTheme {
+        ConversationMediaReviewBackground(
+            modifier = Modifier.fillMaxSize(),
+            pagerState = rememberPagerState(pageCount = { attachments.size }),
+            attachments = attachments,
+        )
+    }
+}

@@ -12,13 +12,17 @@ import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.BottomSheetScaffoldState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.android.messaging.ui.core.MessagingPreviewTheme
 
 private const val CAMERA_PREVIEW_HEIGHT_FRACTION = 2f / 3f
 private val PICKER_GALLERY_SHEET_HEIGHT_REDUCTION = 16.dp
@@ -88,5 +92,38 @@ private fun ConversationPhotoPickerSheetHeader(
         contentAlignment = Alignment.Center,
     ) {
         BottomSheetDefaults.DragHandle()
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@PreviewLightDark
+@Composable
+private fun ConversationMediaPickerSheetScaffoldPreview() {
+    MessagingPreviewTheme {
+        ConversationMediaPickerSheetScaffold(
+            scaffoldState = rememberBottomSheetScaffoldState(),
+            photoPickerSheetContent = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(color = MaterialTheme.colorScheme.surface),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(text = "Photo picker")
+                }
+            },
+        ) { _ ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(color = MaterialTheme.colorScheme.scrim),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "Camera preview",
+                    color = Color.White,
+                )
+            }
+        }
     }
 }

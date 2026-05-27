@@ -2,7 +2,10 @@
 
 package com.android.messaging.ui.conversation.recipientpicker.component
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicTextField
@@ -27,10 +30,16 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.messaging.ui.conversation.RECIPIENT_SELECTION_QUERY_FIELD_TEST_TAG
+import com.android.messaging.ui.conversation.preview.previewSelectedRecipient
+import com.android.messaging.ui.conversation.recipientpicker.model.picker.SelectedRecipient
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionQueryFieldUiState
+import com.android.messaging.ui.core.MessagingPreviewColumn
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun RecipientSelectionQueryField(
@@ -159,4 +168,133 @@ private fun recipientSelectionQueryPlaceholderTextStyle(
             MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Normal)
         }
     }
+}
+
+@PreviewLightDark
+@Composable
+private fun RecipientSelectionQueryFieldPlaceholderPreview() {
+    MessagingPreviewColumn {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(space = 16.dp),
+        ) {
+            RecipientSelectionQueryFieldPreviewItem(
+                label = "Empty, no selected recipients",
+                uiState = previewRecipientSelectionQueryFieldUiState(),
+            )
+            RecipientSelectionQueryFieldPreviewItem(
+                label = "Empty, selected recipient backspace target",
+                uiState = previewRecipientSelectionQueryFieldUiState(
+                    selectedRecipients = persistentListOf(previewSelectedRecipient()),
+                ),
+            )
+            RecipientSelectionQueryFieldPreviewItem(
+                label = "Disabled placeholder",
+                uiState = previewRecipientSelectionQueryFieldUiState(
+                    enabled = false,
+                    selectedRecipients = persistentListOf(previewSelectedRecipient()),
+                ),
+            )
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun RecipientSelectionQueryFieldQueryPreview() {
+    MessagingPreviewColumn {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(space = 16.dp),
+        ) {
+            RecipientSelectionQueryFieldPreviewItem(
+                label = "Short query",
+                uiState = previewRecipientSelectionQueryFieldUiState(query = "Ada"),
+            )
+            RecipientSelectionQueryFieldPreviewItem(
+                label = "Query after selected recipient",
+                uiState = previewRecipientSelectionQueryFieldUiState(
+                    query = "Grace Hopper",
+                    selectedRecipients = persistentListOf(previewSelectedRecipient()),
+                ),
+            )
+            RecipientSelectionQueryFieldPreviewItem(
+                label = "Disabled query",
+                uiState = previewRecipientSelectionQueryFieldUiState(
+                    query = "+31 6 2222 3333",
+                    enabled = false,
+                ),
+            )
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun RecipientSelectionQueryFieldLongTextPreview() {
+    MessagingPreviewColumn {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(space = 16.dp),
+        ) {
+            RecipientSelectionQueryFieldPreviewItem(
+                label = "Long query constrained by available row width",
+                uiState = previewRecipientSelectionQueryFieldUiState(
+                    query = "averylongcontactsearchquery@example.messaging.preview",
+                    selectedRecipients = persistentListOf(previewSelectedRecipient()),
+                ),
+                maxWidth = 152.dp,
+            )
+            RecipientSelectionQueryFieldPreviewItem(
+                label = "Long localized placeholder constrained by row width",
+                uiState = previewRecipientSelectionQueryFieldUiState(
+                    placeholderText = "Name, phone number, email address, or group alias",
+                ),
+                maxWidth = 184.dp,
+            )
+        }
+    }
+}
+
+@Composable
+private fun RecipientSelectionQueryFieldPreviewItem(
+    label: String,
+    uiState: RecipientSelectionQueryFieldUiState,
+    maxWidth: Dp? = null,
+) {
+    val editableText = recipientSelectionQueryFieldEditableText(uiState = uiState)
+    val textFieldState = remember(editableText) {
+        TextFieldState(initialText = editableText)
+    }
+    val focusRequester = remember { FocusRequester() }
+
+    Column(verticalArrangement = Arrangement.spacedBy(space = 4.dp)) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        RecipientSelectionQueryField(
+            uiState = uiState,
+            state = textFieldState,
+            onQueryFocusChanged = { _ -> },
+            onLastSelectedRecipientRemove = {},
+            focusRequester = focusRequester,
+            maxWidth = maxWidth,
+        )
+    }
+}
+
+private fun previewRecipientSelectionQueryFieldUiState(
+    query: String = "",
+    enabled: Boolean = true,
+    placeholderText: String = "Name or phone number",
+    selectedRecipients: ImmutableList<SelectedRecipient> = persistentListOf(),
+): RecipientSelectionQueryFieldUiState {
+    return RecipientSelectionQueryFieldUiState(
+        query = query,
+        enabled = enabled,
+        placeholderText = placeholderText,
+        selectedRecipients = selectedRecipients,
+    )
 }

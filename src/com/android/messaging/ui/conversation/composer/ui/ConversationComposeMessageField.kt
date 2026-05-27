@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.composer.ui
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -40,6 +41,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
@@ -51,6 +53,7 @@ import com.android.messaging.ui.conversation.CONVERSATION_ATTACHMENT_CONTACT_MEN
 import com.android.messaging.ui.conversation.CONVERSATION_ATTACHMENT_MEDIA_MENU_ITEM_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_MMS_INDICATOR_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_TEXT_FIELD_TEST_TAG
+import com.android.messaging.ui.core.MessagingPreviewColumn
 
 @Composable
 internal fun rememberConversationComposeBarPresentation(): ConversationComposeBarPresentation {
@@ -320,3 +323,67 @@ internal data class ConversationComposeBarPresentation(
     val fieldShape: Shape,
     val fieldColors: TextFieldColors,
 )
+
+@PreviewLightDark
+@Composable
+private fun ConversationComposeMessageFieldPreview() {
+    MessagingPreviewColumn {
+        Column {
+            ConversationComposeMessageField(
+                value = "",
+                enabled = true,
+                sendProtocol = ConversationDraftSendProtocol.SMS,
+                isVisuallyHidden = false,
+                messageFieldFocusRequester = null,
+                presentation = rememberConversationComposeBarPresentation(),
+                isAttachmentActionEnabled = true,
+                isAudioRecordActionEnabled = true,
+                onValueChange = { _ -> },
+                onContactAttachClick = {},
+                onMediaPickerClick = {},
+                onAudioAttachClick = {},
+            )
+            ConversationComposeMessageField(
+                value = "Photo attached",
+                enabled = true,
+                sendProtocol = ConversationDraftSendProtocol.MMS,
+                isVisuallyHidden = false,
+                messageFieldFocusRequester = null,
+                presentation = rememberConversationComposeBarPresentation(),
+                isAttachmentActionEnabled = true,
+                isAudioRecordActionEnabled = false,
+                onValueChange = { _ -> },
+                onContactAttachClick = {},
+                onMediaPickerClick = {},
+                onAudioAttachClick = {},
+            )
+            ConversationComposeMessageField(
+                value = "Disabled conversation",
+                enabled = false,
+                sendProtocol = ConversationDraftSendProtocol.SMS,
+                isVisuallyHidden = false,
+                messageFieldFocusRequester = null,
+                presentation = rememberConversationComposeBarPresentation(),
+                isAttachmentActionEnabled = false,
+                isAudioRecordActionEnabled = false,
+                onValueChange = { _ -> },
+                onContactAttachClick = {},
+                onMediaPickerClick = {},
+                onAudioAttachClick = {},
+            )
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationComposeAttachmentMenuContentPreview() {
+    MessagingPreviewColumn {
+        ConversationComposeAttachmentMenuContent(
+            isAudioRecordActionEnabled = false,
+            onMediaPickerClick = {},
+            onAudioAttachClick = {},
+            onContactAttachClick = {},
+        )
+    }
+}

@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -29,7 +30,9 @@ import com.android.messaging.ui.appsettings.screen.model.SettingsNavRoute
 import com.android.messaging.ui.appsettings.screen.model.SettingsUiState
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionUiState
 import com.android.messaging.ui.appsettings.subscription.ui.SubscriptionSettingsScreen
+import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 private const val SLIDE_OFFSET_DIVISOR = 3
 
@@ -255,4 +258,83 @@ private fun advancedClickHandler(
         ?.let { sub ->
             { onRouteChange(SettingsNavRoute.SubscriptionSettings(sub.subId, sub.displayName)) }
         }
+}
+
+@PreviewLightDark
+@Composable
+private fun SettingsNavHostMainPreview() {
+    MessagingPreviewTheme {
+        SettingsNavHost(
+            effectiveRoute = SettingsNavRoute.Main,
+            uiState = previewSettingsUiState(),
+            onAction = {},
+            onNavigateBack = {},
+            navigateUp = {},
+            onRouteChange = { _ -> },
+            modifier = Modifier,
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun SettingsNavHostAppSettingsPreview() {
+    MessagingPreviewTheme {
+        SettingsNavHost(
+            effectiveRoute = SettingsNavRoute.AppSettings,
+            uiState = previewSettingsUiState(),
+            onAction = {},
+            onNavigateBack = {},
+            navigateUp = {},
+            onRouteChange = { _ -> },
+            modifier = Modifier,
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun SettingsNavHostSubscriptionSettingsPreview() {
+    MessagingPreviewTheme {
+        SettingsNavHost(
+            effectiveRoute = SettingsNavRoute.SubscriptionSettings(
+                subId = 1,
+                title = "SIM 1",
+            ),
+            uiState = previewSettingsUiState(),
+            onAction = {},
+            onNavigateBack = {},
+            navigateUp = {},
+            onRouteChange = { _ -> },
+            modifier = Modifier,
+        )
+    }
+}
+
+private fun previewSettingsUiState(): SettingsUiState {
+    return SettingsUiState(
+        isMultiSim = true,
+        areSubscriptionsLoaded = true,
+        subscriptionSettings = persistentListOf(
+            SubscriptionUiState(
+                subId = 1,
+                displayName = "SIM 1",
+                displayDetail = "+31 6 1234 5678",
+                phoneNumber = "+31 6 1234 5678",
+                defaultPhoneNumber = "+31 6 0000 0000",
+                isGroupMmsSupported = true,
+                isGroupMmsEnabled = true,
+                isDeliveryReportsSupported = true,
+                deliveryReportsEnabled = true,
+                isWirelessAlertsSupported = true,
+                isDefaultSmsApp = true,
+            ),
+            SubscriptionUiState(
+                subId = 2,
+                displayName = "Travel SIM",
+                displayDetail = "+372 5555 0101",
+                isDefaultSmsApp = true,
+            ),
+        ),
+    )
 }

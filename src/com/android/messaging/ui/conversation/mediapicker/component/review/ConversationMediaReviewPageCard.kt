@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
@@ -32,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -43,8 +45,12 @@ import com.android.messaging.ui.conversation.composer.model.ComposerAttachmentUi
 import com.android.messaging.ui.conversation.mediapicker.component.PickerOverlayBackgroundButton
 import com.android.messaging.ui.conversation.mediapicker.component.pickerOverlayContainerColor
 import com.android.messaging.ui.conversation.mediapicker.component.pickerOverlayContentColor
+import com.android.messaging.ui.conversation.preview.previewResolvedImageAttachment
+import com.android.messaging.ui.conversation.preview.previewResolvedVideoAttachment
+import com.android.messaging.ui.core.MessagingPreviewColumn
 import kotlin.math.absoluteValue
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.delay
 
 private const val PICKER_REVIEW_PAGE_REMOVE_ANIMATION_DURATION_MILLIS = 160
@@ -329,3 +335,28 @@ private data class ConversationMediaReviewPageCardContentState(
     val deleteChipVisibilityProgress: Float,
     val removalVisibilityProgress: Float,
 )
+
+@PreviewLightDark
+@Composable
+private fun ConversationMediaReviewPageCardPreview() {
+    val attachments = persistentListOf(
+        previewResolvedImageAttachment(),
+        previewResolvedVideoAttachment(),
+    )
+    val pagerState = rememberPagerState(pageCount = { attachments.size })
+    MessagingPreviewColumn {
+        ConversationMediaReviewPageCard(
+            attachment = attachments.first(),
+            attachments = attachments,
+            page = 0,
+            pageHeight = 240.dp,
+            pageWidth = 192.dp,
+            pagerState = pagerState,
+            previewSize = IntSize(width = 384, height = 480),
+            shouldShowDeleteChip = true,
+            onAttachmentPreviewClick = { _ -> },
+            onAttachmentRemove = { _ -> },
+            onClearReview = {},
+        )
+    }
+}

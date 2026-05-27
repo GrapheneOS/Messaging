@@ -29,12 +29,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.android.messaging.R
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
+import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toPersistentList
 
 private val messageSelectionActions = persistentListOf(
@@ -281,5 +284,46 @@ private fun selectionActionLabel(
         ConversationMessageSelectionAction.Share -> {
             stringResource(R.string.action_share)
         }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationSelectionTopAppBarSingleMessagePreview() {
+    MessagingPreviewTheme {
+        ConversationSelectionTopAppBar(
+            selection = ConversationMessageSelectionUiState(
+                selectedMessageIds = persistentSetOf("message-1"),
+                availableActions = persistentSetOf(
+                    ConversationMessageSelectionAction.Copy,
+                    ConversationMessageSelectionAction.Delete,
+                    ConversationMessageSelectionAction.Forward,
+                    ConversationMessageSelectionAction.Share,
+                ),
+            ),
+            onActionClick = { _ -> },
+            onDismissSelection = {},
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationSelectionTopAppBarMultiMessagePreview() {
+    MessagingPreviewTheme {
+        ConversationSelectionTopAppBar(
+            selection = ConversationMessageSelectionUiState(
+                selectedMessageIds = persistentSetOf("message-1", "message-2", "message-3"),
+                availableActions = persistentSetOf(
+                    ConversationMessageSelectionAction.Delete,
+                    ConversationMessageSelectionAction.SaveAttachment,
+                    ConversationMessageSelectionAction.Details,
+                    ConversationMessageSelectionAction.Resend,
+                    ConversationMessageSelectionAction.Download,
+                ),
+            ),
+            onActionClick = { _ -> },
+            onDismissSelection = {},
+        )
     }
 }

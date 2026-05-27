@@ -51,12 +51,16 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.android.messaging.R
+import com.android.messaging.ui.conversation.preview.previewSelectedRecipient
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.SelectedRecipient
+import com.android.messaging.ui.core.MessagingPreviewColumn
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 private val selectedRecipientAvatarSize = 24.dp
 private val selectedRecipientChipAvatarLabelSpacing = 4.dp
@@ -377,5 +381,26 @@ private fun selectedRecipientChipContentDescription(
                 recipient.label,
             )
         }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun RecipientSelectionSelectedRecipientChipsPreview() {
+    MessagingPreviewColumn {
+        RecipientSelectionSelectedRecipientChips(
+            recipients = persistentListOf(
+                previewSelectedRecipient(),
+                SelectedRecipient(
+                    destination = "+37255550101",
+                    label = "Grace Hopper",
+                    displayDestination = "+372 5555 0101",
+                    photoUri = null,
+                ),
+            ),
+            armedRecipientDestination = "+31622223333",
+            enabled = true,
+            onRecipientClick = { _ -> },
+        )
     }
 }

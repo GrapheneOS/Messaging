@@ -50,11 +50,28 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.ui.contact.model.ContactDestinationUiModel
+import com.android.messaging.ui.conversation.preview.previewRecipientPickerUiState
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerListItem
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionRowDecorators
+import com.android.messaging.ui.core.MessagingPreviewColumn
 import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
+
+private const val PREVIEW_MOBILE_DESTINATION = "+31622223333"
+private const val PREVIEW_WORK_DESTINATION = "+31644445555"
+private const val PREVIEW_HOME_DESTINATION = "+31677778888"
+private const val PREVIEW_EMAIL_DESTINATION = "ada@example.com"
+private const val PREVIEW_LONG_CONTACT_NAME =
+    "Alexandria Cassandra Montgomery-Washington from International Partnerships"
+private const val PREVIEW_LONG_PHONE_DESTINATION = "+1 415 555 0198 ext. 4827"
+private const val PREVIEW_LONG_EMAIL_DESTINATION =
+    "alexandria.montgomery-washington@international-partnerships.example"
+private const val PREVIEW_LONG_LOCATION_DESTINATION =
+    "northwest-visitor-center-routing-desk@example.com"
 
 private val avatarSize = 40.dp
 private val destinationVerticalPadding = 10.dp
@@ -364,5 +381,248 @@ private fun rememberDestinationHighlightShape(
         topEnd = topCornerRadius,
         bottomStart = bottomCornerRadius,
         bottomEnd = bottomCornerRadius,
+    )
+}
+
+@PreviewLightDark
+@Composable
+private fun MultiDestinationContactRowSelectionStatesPreview() {
+    val contactItem = previewMultiDestinationContactItem()
+    MessagingPreviewColumn {
+        Column(verticalArrangement = Arrangement.spacedBy(space = 12.dp)) {
+            PreviewMultiDestinationContactRow(
+                item = contactItem,
+                selectedDestinations = persistentSetOf(),
+            )
+
+            PreviewMultiDestinationContactRow(
+                item = contactItem,
+                selectedDestinations = persistentSetOf(PREVIEW_WORK_DESTINATION),
+            )
+
+            PreviewMultiDestinationContactRow(
+                item = contactItem,
+                selectedDestinations = persistentSetOf<String>()
+                    .add(PREVIEW_MOBILE_DESTINATION)
+                    .add(PREVIEW_WORK_DESTINATION)
+                    .add(PREVIEW_HOME_DESTINATION),
+            )
+
+            PreviewMultiDestinationContactRow(
+                item = contactItem,
+                selectedDestinations = persistentSetOf<String>()
+                    .add(PREVIEW_MOBILE_DESTINATION)
+                    .add(PREVIEW_WORK_DESTINATION)
+                    .add(PREVIEW_HOME_DESTINATION)
+                    .add(PREVIEW_EMAIL_DESTINATION),
+            )
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun MultiDestinationContactRowContentStatesPreview() {
+    val contactItem = previewLongMultiDestinationContactItem()
+    MessagingPreviewColumn {
+        Column(
+            modifier = Modifier.width(width = 320.dp),
+            verticalArrangement = Arrangement.spacedBy(space = 12.dp),
+        ) {
+            PreviewMultiDestinationContactRow(
+                item = contactItem,
+                selectedDestinations = persistentSetOf(PREVIEW_LONG_PHONE_DESTINATION),
+            )
+
+            PreviewMultiDestinationContactRow(
+                item = contactItem,
+                selectedDestinations = persistentSetOf<String>()
+                    .add(PREVIEW_LONG_EMAIL_DESTINATION)
+                    .add(PREVIEW_LONG_LOCATION_DESTINATION),
+            )
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun MultiDestinationContactRowInteractionStatesPreview() {
+    val contactItem = previewMultiDestinationContactItem()
+    MessagingPreviewColumn {
+        Column(verticalArrangement = Arrangement.spacedBy(space = 12.dp)) {
+            PreviewMultiDestinationContactRow(
+                item = contactItem,
+                selectedDestinations = persistentSetOf(),
+                enabled = false,
+                onDestinationLongClick = null,
+            )
+
+            PreviewMultiDestinationContactRow(
+                item = contactItem,
+                selectedDestinations = persistentSetOf(PREVIEW_MOBILE_DESTINATION),
+                enabled = false,
+                loadingDestination = PREVIEW_EMAIL_DESTINATION,
+                onDestinationLongClick = null,
+            )
+
+            PreviewMultiDestinationContactRow(
+                item = contactItem,
+                selectedDestinations = persistentSetOf(PREVIEW_EMAIL_DESTINATION),
+                loadingDestination = PREVIEW_EMAIL_DESTINATION,
+            )
+        }
+    }
+}
+
+@Composable
+private fun PreviewMultiDestinationContactRow(
+    item: RecipientPickerListItem.Contact,
+    selectedDestinations: ImmutableSet<String>,
+    enabled: Boolean = true,
+    loadingDestination: String? = null,
+    onDestinationLongClick: ((destination: String) -> Unit)? = { _ -> },
+) {
+    MultiDestinationContactRow(
+        item = item,
+        enabled = enabled,
+        selectedDestinations = selectedDestinations,
+        onDestinationClick = { _ -> },
+        onDestinationLongClick = onDestinationLongClick,
+        shape = RoundedCornerShape(size = 20.dp),
+        rowDecorators = previewRecipientSelectionRowDecorators(
+            loadingDestination = loadingDestination,
+        ),
+    )
+}
+
+private fun previewRecipientSelectionRowDecorators(
+    loadingDestination: String?,
+): RecipientSelectionRowDecorators {
+    return RecipientSelectionRowDecorators(
+        recipientRowTestTag = { item -> item.id },
+        destinationRowTestTag = { item, destination -> "${item.id}:$destination" },
+        showRecipientTrailingIndicator = { _, destination ->
+            destination == loadingDestination
+        },
+    )
+}
+
+private fun previewMultiDestinationContactItem(): RecipientPickerListItem.Contact {
+    val baseContact = previewRecipientPickerUiState()
+        .items
+        .filterIsInstance<RecipientPickerListItem.Contact>()
+        .first()
+        .contact
+
+    return RecipientPickerListItem.Contact(
+        contact = baseContact.copy(
+            destinations = persistentListOf<ContactDestinationUiModel>()
+                .add(
+                    previewContactDestination(
+                        dataId = 11L,
+                        value = PREVIEW_MOBILE_DESTINATION,
+                        displayValue = "+31 6 2222 3333",
+                        kind = ContactDestinationUiModel.Kind.PHONE,
+                        type = Phone.TYPE_MOBILE,
+                        isPrimary = true,
+                        isSuperPrimary = true,
+                    ),
+                )
+                .add(
+                    previewContactDestination(
+                        dataId = 12L,
+                        value = PREVIEW_WORK_DESTINATION,
+                        displayValue = "+31 6 4444 5555",
+                        kind = ContactDestinationUiModel.Kind.PHONE,
+                        type = Phone.TYPE_WORK,
+                    ),
+                )
+                .add(
+                    previewContactDestination(
+                        dataId = 13L,
+                        value = PREVIEW_HOME_DESTINATION,
+                        displayValue = "+31 6 7777 8888",
+                        kind = ContactDestinationUiModel.Kind.PHONE,
+                        type = Phone.TYPE_HOME,
+                    ),
+                )
+                .add(
+                    previewContactDestination(
+                        dataId = 14L,
+                        value = PREVIEW_EMAIL_DESTINATION,
+                        displayValue = PREVIEW_EMAIL_DESTINATION,
+                        kind = ContactDestinationUiModel.Kind.EMAIL,
+                        type = Email.TYPE_HOME,
+                    ),
+                ),
+        ),
+    )
+}
+
+private fun previewLongMultiDestinationContactItem(): RecipientPickerListItem.Contact {
+    val baseContact = previewRecipientPickerUiState()
+        .items
+        .filterIsInstance<RecipientPickerListItem.Contact>()
+        .first()
+        .contact
+
+    return RecipientPickerListItem.Contact(
+        contact = baseContact.copy(
+            displayName = PREVIEW_LONG_CONTACT_NAME,
+            destinations = persistentListOf<ContactDestinationUiModel>()
+                .add(
+                    previewContactDestination(
+                        dataId = 21L,
+                        value = PREVIEW_LONG_PHONE_DESTINATION,
+                        displayValue = PREVIEW_LONG_PHONE_DESTINATION,
+                        kind = ContactDestinationUiModel.Kind.PHONE,
+                        type = Phone.TYPE_CUSTOM,
+                        customLabel = "Emergency escalation mobile",
+                    ),
+                )
+                .add(
+                    previewContactDestination(
+                        dataId = 22L,
+                        value = PREVIEW_LONG_EMAIL_DESTINATION,
+                        displayValue = PREVIEW_LONG_EMAIL_DESTINATION,
+                        kind = ContactDestinationUiModel.Kind.EMAIL,
+                        type = Email.TYPE_WORK,
+                    ),
+                )
+                .add(
+                    previewContactDestination(
+                        dataId = 23L,
+                        value = PREVIEW_LONG_LOCATION_DESTINATION,
+                        displayValue = PREVIEW_LONG_LOCATION_DESTINATION,
+                        kind = ContactDestinationUiModel.Kind.EMAIL,
+                        type = Email.TYPE_CUSTOM,
+                        customLabel = "Visitor center routing desk",
+                    ),
+                ),
+        ),
+    )
+}
+
+private fun previewContactDestination(
+    dataId: Long,
+    value: String,
+    displayValue: String,
+    kind: ContactDestinationUiModel.Kind,
+    type: Int,
+    customLabel: String? = null,
+    isPrimary: Boolean = false,
+    isSuperPrimary: Boolean = false,
+): ContactDestinationUiModel {
+    return ContactDestinationUiModel(
+        dataId = dataId,
+        contactId = 1L,
+        value = value,
+        normalizedValue = value,
+        displayValue = displayValue,
+        kind = kind,
+        type = type,
+        customLabel = customLabel,
+        isPrimary = isPrimary,
+        isSuperPrimary = isSuperPrimary,
     )
 }

@@ -20,13 +20,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageContent
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
+import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel.Status
 import com.android.messaging.ui.conversation.messages.ui.attachment.ConversationMessageAttachments
 import com.android.messaging.ui.conversation.messages.ui.text.ConversationMessageText
 import com.android.messaging.ui.conversation.messages.ui.text.LocalConversationMessageLinkColor
+import com.android.messaging.ui.conversation.preview.previewAudioPart
+import com.android.messaging.ui.conversation.preview.previewFilePart
+import com.android.messaging.ui.conversation.preview.previewImagePart
+import com.android.messaging.ui.conversation.preview.previewIncomingMessage
+import com.android.messaging.ui.conversation.preview.previewMmsDownloadUiModel
+import com.android.messaging.ui.conversation.preview.previewOutgoingMessage
+import com.android.messaging.ui.conversation.preview.previewVCardPart
+import com.android.messaging.ui.conversation.preview.previewVideoPart
+import kotlinx.collections.immutable.persistentListOf
 
 private val MESSAGE_BUBBLE_MEDIA_SECTION_SPACING = 8.dp
 private val MESSAGE_BUBBLE_MEDIA_TEXT_PADDING = 12.dp
@@ -502,5 +513,267 @@ private fun messageSenderColor(
                 isSelected = false,
             )
         }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationMessageBubbleTextPreview() {
+    ConversationMessageBubblePreviewColumn {
+        ConversationMessageBubblePreviewItem(
+            message = previewIncomingMessage(
+                messageId = "bubble-incoming-short",
+                text = "Incoming text with sender.",
+            ),
+            bubbleLayoutMode = ConversationMessageBubbleLayoutMode.TextInSurface,
+            simDisplayName = "Personal",
+        )
+        ConversationMessageBubblePreviewItem(
+            message = previewIncomingMessage(
+                messageId = "bubble-incoming-long",
+                text = PREVIEW_LONG_BUBBLE_TEXT,
+            ),
+            bubbleLayoutMode = ConversationMessageBubbleLayoutMode.TextInSurface,
+            showSender = false,
+            simDisplayName = "Personal",
+        )
+        ConversationMessageBubblePreviewItem(
+            message = previewOutgoingMessage(
+                messageId = "bubble-outgoing-link",
+                text = "Outgoing text with link https://example.com/support.",
+                status = Status.Outgoing.Delivered,
+            ),
+            bubbleLayoutMode = ConversationMessageBubbleLayoutMode.TextInSurface,
+            simDisplayName = "Work",
+        )
+        ConversationMessageBubblePreviewItem(
+            message = previewOutgoingMessage(
+                messageId = "bubble-outgoing-overflow",
+                text = PREVIEW_OVERFLOW_BUBBLE_TEXT,
+                status = Status.Outgoing.Sending,
+            ),
+            bubbleLayoutMode = ConversationMessageBubbleLayoutMode.TextInSurface,
+            simDisplayName = "Work",
+        )
+        ConversationMessageBubblePreviewItem(
+            message = previewOutgoingMessage(
+                messageId = "bubble-outgoing-selected",
+                text = "Selected outgoing text in selection mode.",
+                status = Status.Outgoing.Failed,
+            ),
+            bubbleLayoutMode = ConversationMessageBubbleLayoutMode.TextInSurface,
+            isSelected = true,
+            isSelectionMode = true,
+            simDisplayName = "Work",
+        )
+        ConversationMessageBubblePreviewItem(
+            message = previewIncomingMessage(
+                messageId = "bubble-incoming-selection-mode",
+                text = "Incoming text while selection mode is active.",
+            ),
+            bubbleLayoutMode = ConversationMessageBubbleLayoutMode.TextInSurface,
+            isSelectionMode = true,
+            simDisplayName = "Personal",
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationMessageBubbleMmsDownloadPreview() {
+    ConversationMessageBubblePreviewColumn {
+        conversationMessageBubbleMmsDownloadPreviewItems().forEach { item ->
+            ConversationMessageBubblePreviewItem(
+                message = previewIncomingMessage(
+                    messageId = item.messageId,
+                    text = null,
+                    parts = persistentListOf(),
+                    status = item.status,
+                    mmsDownload = previewMmsDownloadUiModel(state = item.downloadState),
+                    protocol = ConversationMessageUiModel.Protocol.MMS_PUSH_NOTIFICATION,
+                    canDownloadMessage = item.canDownloadMessage,
+                ),
+                bubbleLayoutMode = ConversationMessageBubbleLayoutMode.TextInSurface,
+                isSelected = item.isSelected,
+                simDisplayName = "Personal",
+            )
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationMessageBubbleAttachmentSurfacePreview() {
+    ConversationMessageBubblePreviewColumn {
+        ConversationMessageBubblePreviewItem(
+            message = previewIncomingMessage(
+                messageId = "bubble-incoming-media-subject",
+                text = "Body text below the media with https://example.com/trip.",
+                parts = persistentListOf(
+                    previewImagePart(text = "Image caption"),
+                    previewVideoPart(text = "Video caption"),
+                ),
+                protocol = ConversationMessageUiModel.Protocol.MMS,
+                canSaveAttachments = true,
+            ).copy(
+                mmsSubject = "Trip media",
+            ),
+            bubbleLayoutMode = ConversationMessageBubbleLayoutMode.AttachmentsInSurface,
+            simDisplayName = "Personal",
+        )
+        ConversationMessageBubblePreviewItem(
+            message = previewOutgoingMessage(
+                messageId = "bubble-outgoing-audio",
+                text = null,
+                parts = persistentListOf(previewAudioPart(text = "Voice note caption")),
+                status = Status.Outgoing.Delivered,
+            ).copy(
+                protocol = ConversationMessageUiModel.Protocol.MMS,
+                canSaveAttachments = true,
+            ),
+            bubbleLayoutMode = ConversationMessageBubbleLayoutMode.AttachmentsInSurface,
+            simDisplayName = "Work",
+        )
+        ConversationMessageBubblePreviewItem(
+            message = previewIncomingMessage(
+                messageId = "bubble-incoming-vcard",
+                text = null,
+                parts = persistentListOf(previewVCardPart()),
+                protocol = ConversationMessageUiModel.Protocol.MMS,
+                canSaveAttachments = true,
+            ),
+            bubbleLayoutMode = ConversationMessageBubbleLayoutMode.AttachmentsInSurface,
+            simDisplayName = "Personal",
+        )
+        ConversationMessageBubblePreviewItem(
+            message = previewOutgoingMessage(
+                messageId = "bubble-outgoing-file",
+                text = null,
+                parts = persistentListOf(previewFilePart(text = "Unsupported PDF attachment")),
+                status = Status.Outgoing.Failed,
+            ).copy(
+                protocol = ConversationMessageUiModel.Protocol.MMS,
+                canSaveAttachments = true,
+            ),
+            bubbleLayoutMode = ConversationMessageBubbleLayoutMode.AttachmentsInSurface,
+            isSelected = true,
+            isSelectionMode = true,
+            simDisplayName = "Work",
+        )
+        ConversationMessageBubblePreviewItem(
+            message = previewOutgoingMessage(
+                messageId = "bubble-outgoing-youtube",
+                text = "Watch this: https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                status = Status.Outgoing.Delivered,
+            ),
+            bubbleLayoutMode = ConversationMessageBubbleLayoutMode.AttachmentsInSurface,
+            simDisplayName = "Personal",
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationMessageBubbleAttachmentOnlyPreview() {
+    ConversationMessageBubblePreviewColumn {
+        ConversationMessageBubblePreviewItem(
+            message = previewOutgoingMessage(
+                messageId = "bubble-outgoing-image-only",
+                text = null,
+                parts = persistentListOf(previewImagePart(text = null)),
+                status = Status.Outgoing.Complete,
+            ).copy(
+                protocol = ConversationMessageUiModel.Protocol.MMS,
+                canSaveAttachments = true,
+            ),
+            bubbleLayoutMode = ConversationMessageBubbleLayoutMode.AttachmentOnlyWithoutSurface,
+            simDisplayName = "Work",
+        )
+        ConversationMessageBubblePreviewItem(
+            message = previewIncomingMessage(
+                messageId = "bubble-incoming-image-only",
+                text = null,
+                parts = persistentListOf(previewImagePart(text = null)),
+                protocol = ConversationMessageUiModel.Protocol.MMS,
+                canSaveAttachments = true,
+            ),
+            bubbleLayoutMode = ConversationMessageBubbleLayoutMode.AttachmentOnlyWithoutSurface,
+            showSender = false,
+            simDisplayName = "Personal",
+        )
+        ConversationMessageBubblePreviewItem(
+            message = previewIncomingMessage(
+                messageId = "bubble-incoming-video-only-selected",
+                text = null,
+                parts = persistentListOf(previewVideoPart(text = null)),
+                protocol = ConversationMessageUiModel.Protocol.MMS,
+                canSaveAttachments = true,
+            ),
+            bubbleLayoutMode = ConversationMessageBubbleLayoutMode.AttachmentOnlyWithoutSurface,
+            isSelected = true,
+            isSelectionMode = true,
+            showSender = false,
+            simDisplayName = "Personal",
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationMessageBubbleClusterShapePreview() {
+    ConversationMessageBubblePreviewColumn {
+        ConversationMessageBubblePreviewItem(
+            message = previewIncomingMessage(
+                messageId = "bubble-incoming-cluster-start",
+                text = "Incoming cluster start.",
+            ).copy(
+                canClusterWithNext = true,
+            ),
+            bubbleLayoutMode = ConversationMessageBubbleLayoutMode.TextInSurface,
+            simDisplayName = "Personal",
+        )
+        ConversationMessageBubblePreviewItem(
+            message = previewIncomingMessage(
+                messageId = "bubble-incoming-cluster-middle",
+                text = "Incoming cluster middle.",
+            ).copy(
+                canClusterWithPrevious = true,
+                canClusterWithNext = true,
+            ),
+            bubbleLayoutMode = ConversationMessageBubbleLayoutMode.TextInSurface,
+            showSender = false,
+            simDisplayName = "Personal",
+        )
+        ConversationMessageBubblePreviewItem(
+            message = previewIncomingMessage(
+                messageId = "bubble-incoming-cluster-end",
+                text = "Incoming cluster end.",
+            ).copy(
+                canClusterWithPrevious = true,
+            ),
+            bubbleLayoutMode = ConversationMessageBubbleLayoutMode.TextInSurface,
+            showSender = false,
+            simDisplayName = "Personal",
+        )
+        ConversationMessageBubblePreviewItem(
+            message = previewOutgoingMessage(
+                messageId = "bubble-outgoing-cluster-start",
+                text = "Outgoing cluster start.",
+            ).copy(
+                canClusterWithNext = true,
+            ),
+            bubbleLayoutMode = ConversationMessageBubbleLayoutMode.TextInSurface,
+            simDisplayName = "Work",
+        )
+        ConversationMessageBubblePreviewItem(
+            message = previewOutgoingMessage(
+                messageId = "bubble-outgoing-cluster-end",
+                text = "Outgoing cluster end.",
+            ).copy(
+                canClusterWithPrevious = true,
+            ),
+            bubbleLayoutMode = ConversationMessageBubbleLayoutMode.TextInSurface,
+            simDisplayName = "Work",
+        )
     }
 }

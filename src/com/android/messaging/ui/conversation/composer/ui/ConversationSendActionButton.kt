@@ -19,7 +19,9 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -45,10 +47,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.conversation.composer.model.ConversationSendActionButtonGestureState
 import com.android.messaging.ui.conversation.composer.model.ConversationSendActionButtonMode
+import com.android.messaging.ui.core.MessagingPreviewColumn
 
 @Immutable
 private data class ConversationSendActionButtonVisualState(
@@ -466,5 +470,66 @@ private fun ConversationSendActionPulseCircle(
                 color = MaterialTheme.colorScheme.error,
                 shape = CircleShape,
             ),
+    )
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationSendActionButtonPreview() {
+    MessagingPreviewColumn {
+        Row(horizontalArrangement = Arrangement.spacedBy(space = 16.dp)) {
+            PreviewConversationSendActionButton(
+                enabled = true,
+                mode = ConversationSendActionButtonMode.Send,
+                isRecordingActive = false,
+                isRecordingLocked = false,
+            )
+            PreviewConversationSendActionButton(
+                enabled = true,
+                mode = ConversationSendActionButtonMode.Record,
+                isRecordingActive = false,
+                isRecordingLocked = false,
+            )
+            PreviewConversationSendActionButton(
+                enabled = true,
+                mode = ConversationSendActionButtonMode.Record,
+                isRecordingActive = true,
+                isRecordingLocked = false,
+            )
+            PreviewConversationSendActionButton(
+                enabled = true,
+                mode = ConversationSendActionButtonMode.Stop,
+                isRecordingActive = true,
+                isRecordingLocked = true,
+            )
+            PreviewConversationSendActionButton(
+                enabled = false,
+                mode = ConversationSendActionButtonMode.Send,
+                isRecordingActive = false,
+                isRecordingLocked = false,
+            )
+        }
+    }
+}
+
+@Composable
+private fun PreviewConversationSendActionButton(
+    enabled: Boolean,
+    mode: ConversationSendActionButtonMode,
+    isRecordingActive: Boolean,
+    isRecordingLocked: Boolean,
+) {
+    ConversationSendActionButton(
+        enabled = enabled,
+        mode = mode,
+        isRecordingActive = isRecordingActive,
+        isRecordingLocked = isRecordingLocked,
+        onClick = {},
+        onLockedStopClick = {},
+        onRecordGestureStart = {},
+        onRecordGestureMove = { _ -> },
+        onRecordGestureLock = { true },
+        onRecordGestureFinish = { _ -> },
+        onSendActionLongClick = {},
     )
 }

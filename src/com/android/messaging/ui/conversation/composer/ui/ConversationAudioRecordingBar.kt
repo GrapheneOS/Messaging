@@ -15,6 +15,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -43,12 +44,14 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.conversation.CONVERSATION_AUDIO_RECORDING_BAR_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_AUDIO_RECORDING_CANCEL_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_AUDIO_RECORDING_LOCK_AFFORDANCE_TEST_TAG
 import com.android.messaging.ui.conversation.audio.formatConversationAudioDuration
+import com.android.messaging.ui.core.MessagingPreviewColumn
 
 private const val AUDIO_RECORDING_COLOR_ANIMATION_THRESHOLD = 0.7f
 
@@ -405,3 +408,26 @@ private data class ConversationAudioRecordingLockAffordanceVisualState(
     val scale: Float,
     val verticalTranslation: Float,
 )
+
+@PreviewLightDark
+@Composable
+private fun ConversationAudioRecordingBarPreview() {
+    MessagingPreviewColumn {
+        Column(verticalArrangement = Arrangement.spacedBy(space = 16.dp)) {
+            ConversationAudioRecordingBar(
+                durationMillis = 12_000L,
+                cancelProgress = 0f,
+                isCancellationArmed = false,
+            )
+            ConversationAudioRecordingBar(
+                durationMillis = 65_000L,
+                cancelProgress = 1f,
+                isCancellationArmed = true,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(space = 16.dp)) {
+                ConversationAudioRecordingLockAffordance(lockProgress = 0f)
+                ConversationAudioRecordingLockAffordance(lockProgress = 1f)
+            }
+        }
+    }
+}

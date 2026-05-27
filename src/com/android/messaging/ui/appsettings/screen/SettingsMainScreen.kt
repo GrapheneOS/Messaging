@@ -12,11 +12,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.android.messaging.R
 import com.android.messaging.ui.appsettings.common.SettingsClickableItem
 import com.android.messaging.ui.appsettings.common.SettingsTopAppBar
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionUiState
+import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,5 +73,42 @@ internal fun SettingsMainScreen(
                 }
             }
         }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun SettingsMainScreenSingleSimPreview() {
+    MessagingPreviewTheme {
+        SettingsMainScreen(
+            subscriptions = persistentListOf(),
+            onNavigateBack = {},
+            onGeneralSettingsClick = {},
+            onSubscriptionClick = { _, _ -> },
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun SettingsMainScreenMultiSimPreview() {
+    MessagingPreviewTheme {
+        SettingsMainScreen(
+            subscriptions = persistentListOf(
+                SubscriptionUiState(
+                    subId = 1,
+                    displayName = "SIM 1",
+                    displayDetail = "+31 6 1234 5678",
+                ),
+                SubscriptionUiState(
+                    subId = 2,
+                    displayName = "Travel SIM",
+                    displayDetail = "+372 5555 0101",
+                ),
+            ),
+            onNavigateBack = {},
+            onGeneralSettingsClick = {},
+            onSubscriptionClick = { _, _ -> },
+        )
     }
 }

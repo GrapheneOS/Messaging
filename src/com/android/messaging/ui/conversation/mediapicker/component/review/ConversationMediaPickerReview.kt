@@ -39,6 +39,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -48,8 +49,12 @@ import com.android.messaging.ui.conversation.composer.model.ConversationSendActi
 import com.android.messaging.ui.conversation.composer.ui.ConversationSendActionButton
 import com.android.messaging.ui.conversation.mediapicker.component.PickerOverlayIconButton
 import com.android.messaging.ui.conversation.mediapicker.component.pickerOverlayContentColor
+import com.android.messaging.ui.conversation.preview.previewResolvedImageAttachment
+import com.android.messaging.ui.conversation.preview.previewResolvedVideoAttachment
+import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 
 private const val PICKER_REVIEW_PAGE_ASPECT_RATIO = 0.8f
@@ -484,6 +489,31 @@ private fun ConversationMediaReviewBottomBar(
             onRecordGestureLock = { false },
             onRecordGestureFinish = {},
             onSendActionLongClick = {},
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationMediaReviewScenePreview() {
+    MessagingPreviewTheme {
+        ConversationMediaReviewScene(
+            modifier = Modifier.fillMaxSize(),
+            attachments = persistentListOf(
+                previewResolvedImageAttachment(),
+                previewResolvedVideoAttachment(),
+            ),
+            conversationTitle = "Ada Lovelace",
+            initiallyReviewedContentUri = null,
+            reviewRequestSequence = 0,
+            isSendActionEnabled = true,
+            onAttachmentPreviewClick = { _ -> },
+            onCaptionChange = { _, _ -> },
+            onAttachmentRemove = { _ -> },
+            onAddMoreClick = {},
+            onClearReview = {},
+            onCloseClick = {},
+            onSendClick = {},
         )
     }
 }

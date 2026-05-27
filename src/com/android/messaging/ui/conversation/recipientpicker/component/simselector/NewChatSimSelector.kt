@@ -30,6 +30,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.data.subscription.model.Subscription
@@ -38,7 +39,9 @@ import com.android.messaging.ui.conversation.NEW_CHAT_SIM_SELECTOR_DROPDOWN_TEST
 import com.android.messaging.ui.conversation.composer.model.ConversationSimSelectorUiState
 import com.android.messaging.ui.conversation.composer.ui.ConversationSimAvatar
 import com.android.messaging.ui.conversation.newChatSimSelectorItemTestTag
+import com.android.messaging.ui.conversation.preview.previewSimSelectorUiState
 import com.android.messaging.ui.conversation.resolveDisplayName
+import com.android.messaging.ui.core.MessagingPreviewColumn
 import kotlinx.collections.immutable.ImmutableList
 
 private val ChipAvatarSize = 24.dp
@@ -234,5 +237,16 @@ private fun NewChatSimSelectorDropdownItemText(
                 overflow = TextOverflow.Ellipsis,
             )
         }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun NewChatSimSelectorRowPreview() {
+    MessagingPreviewColumn {
+        NewChatSimSelectorRow(
+            uiState = previewSimSelectorUiState(),
+            onSimSelected = { _ -> },
+        )
     }
 }
