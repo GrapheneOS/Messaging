@@ -11,6 +11,11 @@ complexity:
     allowedFunctionsPerInterface: 50
     ignoreAnnotatedFunctions:
       - Preview
+      - PreviewLightDark
+  LongMethod:
+    ignoreAnnotated:
+      - Preview
+      - PreviewLightDark
 
 naming:
   FunctionNaming:
@@ -30,3 +35,4 @@ style:
   UnusedPrivateFunction:
     ignoreAnnotated:
       - Preview
+      - PreviewLightDark
