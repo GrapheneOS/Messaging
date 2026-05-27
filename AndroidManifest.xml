@@ -228,7 +228,7 @@
             android:name=".ui.license.LicenseActivity"
             android:exported="true"
             android:label="@string/menu_license"
-            android:theme="@style/Theme.Compose" />
+            android:theme="@style/Theme.License" />
 
         <activity-alias
             android:name=".ui.LicenseActivity"
