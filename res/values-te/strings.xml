@@ -26,10 +26,8 @@
     <string name="help_and_feedback_activity_label" msgid="8070710971014835182">"సహాయం"</string>
     <string name="welcome" msgid="2857560951820802321">"స్వాగతం"</string>
     <string name="skip" msgid="7238879696319945853">"దాటవేయి"</string>
-    <string name="next_with_arrow" msgid="2840729397885031655">"తదుపరి &gt;"</string>
     <string name="next" msgid="4496962051601713843">"తదుపరి"</string>
     <string name="exit" msgid="1905187380359981199">"నిష్క్రమించండి"</string>
-    <string name="settings_with_arrow" msgid="8534633224579301342">"సెట్టింగ్‌లు &gt;"</string>
     <string name="settings" msgid="1045695083932447399">"సెట్టింగ్‌లు"</string>
     <string name="required_permissions_promo" msgid="3898014894175251590">"సందేశ సేవకు SMS, ఫోన్ మరియు పరిచయాల ప్రాప్యత అనుమతి ఇవ్వడం అవసరం."</string>
     <string name="enable_permission_procedure" msgid="2778471831376319587">"మీరు సెట్టింగ్‌లు &gt; అనువర్తనాలు &gt; సందేశ సేవ &gt; అనుమతులులో అనుమతులను మార్చవచ్చు."</string>

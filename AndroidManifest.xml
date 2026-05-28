@@ -86,9 +86,9 @@
         </activity>
 
         <activity
-            android:name=".ui.PermissionCheckActivity"
-            android:screenOrientation="portrait"
-            android:configChanges="orientation|screenSize|keyboardHidden" />
+            android:name=".ui.permissioncheck.PermissionCheckActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:theme="@style/Theme.Compose" />
 
         <!-- Launches a conversation (ensures correct app name shown in recents) -->
         <activity

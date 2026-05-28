@@ -26,10 +26,8 @@
     <string name="help_and_feedback_activity_label" msgid="8070710971014835182">"সহায়তা"</string>
     <string name="welcome" msgid="2857560951820802321">"স্বাগতম"</string>
     <string name="skip" msgid="7238879696319945853">"এড়িয়ে যান"</string>
-    <string name="next_with_arrow" msgid="2840729397885031655">"পরবর্তী &gt;"</string>
     <string name="next" msgid="4496962051601713843">"পরবর্তী"</string>
     <string name="exit" msgid="1905187380359981199">"প্রস্থান করুন"</string>
-    <string name="settings_with_arrow" msgid="8534633224579301342">"সেটিংস &gt;"</string>
     <string name="settings" msgid="1045695083932447399">"সেটিংস"</string>
     <string name="required_permissions_promo" msgid="3898014894175251590">"SMS, ফোন এবং পরিচিতিগুলিতে বার্তাপ্রেরণ -এর অনুমতির প্রয়োজন।"</string>
     <string name="enable_permission_procedure" msgid="2778471831376319587">"আপনি সেটিংস &gt; অ্যাপ্লিকেশানগুলি &gt; বার্তাপ্রেরণ &gt; অনুমতিগুলি এ অনুমতিগুলি পরিবর্তন করতে পারেন৷"</string>

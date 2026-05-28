@@ -26,10 +26,8 @@
     <string name="help_and_feedback_activity_label" msgid="8070710971014835182">"സഹായം"</string>
     <string name="welcome" msgid="2857560951820802321">"സ്വാഗതം"</string>
     <string name="skip" msgid="7238879696319945853">"ഒഴിവാക്കുക"</string>
-    <string name="next_with_arrow" msgid="2840729397885031655">"അടുത്തത് &gt;"</string>
     <string name="next" msgid="4496962051601713843">"അടുത്തത്"</string>
     <string name="exit" msgid="1905187380359981199">"പുറത്തുകടക്കുക"</string>
-    <string name="settings_with_arrow" msgid="8534633224579301342">"ക്രമീകരണം &gt;"</string>
     <string name="settings" msgid="1045695083932447399">"ക്രമീകരണം"</string>
     <string name="required_permissions_promo" msgid="3898014894175251590">"SMS, ഫോൺ, കോൺടാക്റ്റുകൾ എന്നിവയിലേക്ക് സന്ദേശമയയ്ക്കലിന് അനുമതി ആവശ്യമാണ്."</string>
     <string name="enable_permission_procedure" msgid="2778471831376319587">"ക്രമീകരണം &gt; ആപ്സ് &gt; സന്ദേശമയയ്ക്കൽ &gt; അനുമതികൾ എന്നതിൽ നിങ്ങൾക്ക് അനുമതികൾ മാറ്റാവുന്നതാണ്."</string>

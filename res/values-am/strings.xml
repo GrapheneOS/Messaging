@@ -26,10 +26,8 @@
     <string name="help_and_feedback_activity_label" msgid="8070710971014835182">"እገዛ"</string>
     <string name="welcome" msgid="2857560951820802321">"እንኳን በደህና መጡ"</string>
     <string name="skip" msgid="7238879696319945853">"ዝለል"</string>
-    <string name="next_with_arrow" msgid="2840729397885031655">"ቀጣይ &gt;"</string>
     <string name="next" msgid="4496962051601713843">"ቀጣይ"</string>
     <string name="exit" msgid="1905187380359981199">"ውጣ"</string>
-    <string name="settings_with_arrow" msgid="8534633224579301342">"ቅንብሮች &gt;"</string>
     <string name="settings" msgid="1045695083932447399">"ቅንብሮች"</string>
     <string name="required_permissions_promo" msgid="3898014894175251590">"አላላክ የኤስኤምኤስ፣ ስልክ እና እውቂያዎች ፍቃድ ያስፈልገዋል።"</string>
     <string name="enable_permission_procedure" msgid="2778471831376319587">"ፍቃዶችን በቅንብሮች &gt; መተግበሪያዎች &gt; አላላክ &gt; ፍቃዶች ውስጥ መለወጥ ይችላሉ።"</string>
