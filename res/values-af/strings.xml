@@ -26,10 +26,8 @@
     <string name="help_and_feedback_activity_label" msgid="8070710971014835182">"Hulp"</string>
     <string name="welcome" msgid="2857560951820802321">"Welkom"</string>
     <string name="skip" msgid="7238879696319945853">"Slaan oor"</string>
-    <string name="next_with_arrow" msgid="2840729397885031655">"Volgende &gt;"</string>
     <string name="next" msgid="4496962051601713843">"Volgende"</string>
     <string name="exit" msgid="1905187380359981199">"Gaan uit"</string>
-    <string name="settings_with_arrow" msgid="8534633224579301342">"Instellings &gt;"</string>
     <string name="settings" msgid="1045695083932447399">"Instellings"</string>
     <string name="required_permissions_promo" msgid="3898014894175251590">"Boodskappe het toestemming nodig vir SMS, foon en kontakte."</string>
     <string name="enable_permission_procedure" msgid="2778471831376319587">"Jy kan toestemmings verander in Instellings &gt; Programme &gt; Boodskappe &gt; Toestemmings."</string>

@@ -26,10 +26,8 @@
     <string name="help_and_feedback_activity_label" msgid="8070710971014835182">"Βοήθεια"</string>
     <string name="welcome" msgid="2857560951820802321">"Καλώς ήρθατε"</string>
     <string name="skip" msgid="7238879696319945853">"Παράλειψη"</string>
-    <string name="next_with_arrow" msgid="2840729397885031655">"Επόμενο &gt;"</string>
     <string name="next" msgid="4496962051601713843">"Επόμενο"</string>
     <string name="exit" msgid="1905187380359981199">"Έξοδος"</string>
-    <string name="settings_with_arrow" msgid="8534633224579301342">"Ρυθμίσεις &gt;"</string>
     <string name="settings" msgid="1045695083932447399">"Ρυθμίσεις"</string>
     <string name="required_permissions_promo" msgid="3898014894175251590">"Η Ανταλλαγή μηνυμάτων χρειάζεται άδεια για SMS, Τηλέφωνο και Επαφές."</string>
     <string name="enable_permission_procedure" msgid="2778471831376319587">"Μπορείτε να αλλάξετε τα δικαιώματα στις Ρυθμίσεις &gt; Εφαρμογές &gt; Ανταλλαγή μηνυμάτων &gt; Δικαιώματα."</string>

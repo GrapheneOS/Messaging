@@ -26,10 +26,8 @@
     <string name="help_and_feedback_activity_label" msgid="8070710971014835182">"Laguntza"</string>
     <string name="welcome" msgid="2857560951820802321">"Ongi etorri"</string>
     <string name="skip" msgid="7238879696319945853">"Saltatu"</string>
-    <string name="next_with_arrow" msgid="2840729397885031655">"Hurrengoa &gt;"</string>
     <string name="next" msgid="4496962051601713843">"Hurrengoa"</string>
     <string name="exit" msgid="1905187380359981199">"Irten"</string>
-    <string name="settings_with_arrow" msgid="8534633224579301342">"Ezarpenak &gt;"</string>
     <string name="settings" msgid="1045695083932447399">"Ezarpenak"</string>
     <string name="required_permissions_promo" msgid="3898014894175251590">"Mezuak aplikazioak baimena behar du SMS mezuak bidaltzeko eta jasotzeko, deiak egiteko eta kontaktuak atzitzeko."</string>
     <string name="enable_permission_procedure" msgid="2778471831376319587">"Baimenak aldatzeko, zoaz Ezarpenak &gt; Aplikazioak &gt; Mezuak &gt; Baimenak atalera."</string>

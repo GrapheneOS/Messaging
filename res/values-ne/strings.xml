@@ -26,10 +26,8 @@
     <string name="help_and_feedback_activity_label" msgid="8070710971014835182">"मद्दत"</string>
     <string name="welcome" msgid="2857560951820802321">"स्वागतम"</string>
     <string name="skip" msgid="7238879696319945853">"छोड्नुहोस्"</string>
-    <string name="next_with_arrow" msgid="2840729397885031655">"अर्को &gt;"</string>
     <string name="next" msgid="4496962051601713843">"अर्को"</string>
     <string name="exit" msgid="1905187380359981199">"बाहिर"</string>
-    <string name="settings_with_arrow" msgid="8534633224579301342">"सेटिङहरू &gt;"</string>
     <string name="settings" msgid="1045695083932447399">"सेटिङहरू"</string>
     <string name="required_permissions_promo" msgid="3898014894175251590">"सन्देश प्रवाहलाई SMS, फोन र सम्पर्क ठेगानाहरूमा अनुमतिको आवश्यक पर्छ।"</string>
     <string name="enable_permission_procedure" msgid="2778471831376319587">"तपाईँ अनुमतिहरूलाई सेटिङ अनुप्रयोगहरू &gt; सन्देश प्रवाह &gt; अनुमतिहरूमा परिवर्तन गर्न सक्नु हुनेछ।"</string>

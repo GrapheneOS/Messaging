@@ -26,10 +26,8 @@
     <string name="help_and_feedback_activity_label" msgid="8070710971014835182">"मदत"</string>
     <string name="welcome" msgid="2857560951820802321">"सुस्वागतम"</string>
     <string name="skip" msgid="7238879696319945853">"वगळा"</string>
-    <string name="next_with_arrow" msgid="2840729397885031655">"पुढील &gt;"</string>
     <string name="next" msgid="4496962051601713843">"पुढील"</string>
     <string name="exit" msgid="1905187380359981199">"बाहेर पडा"</string>
-    <string name="settings_with_arrow" msgid="8534633224579301342">"सेटिंग्ज &gt;"</string>
     <string name="settings" msgid="1045695083932447399">"सेटिंग्ज"</string>
     <string name="required_permissions_promo" msgid="3898014894175251590">"संदेशनला SMS, फोन आणि संपर्कांसाठी परवानगी आवश्यक आहे."</string>
     <string name="enable_permission_procedure" msgid="2778471831376319587">"आपण सेटिंग्ज &gt; अॅप्स &gt; संदेशन &gt; परवानग्या मध्ये परवानग्या बदलू शकता."</string>

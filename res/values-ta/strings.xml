@@ -26,10 +26,8 @@
     <string name="help_and_feedback_activity_label" msgid="8070710971014835182">"உதவி"</string>
     <string name="welcome" msgid="2857560951820802321">"நல்வரவு"</string>
     <string name="skip" msgid="7238879696319945853">"தவிர்"</string>
-    <string name="next_with_arrow" msgid="2840729397885031655">"அடுத்து &gt;"</string>
     <string name="next" msgid="4496962051601713843">"அடுத்து"</string>
     <string name="exit" msgid="1905187380359981199">"வெளியேறு"</string>
-    <string name="settings_with_arrow" msgid="8534633224579301342">"அமைப்புகள் &gt;"</string>
     <string name="settings" msgid="1045695083932447399">"அமைப்புகள்"</string>
     <string name="required_permissions_promo" msgid="3898014894175251590">"செய்தியிடலுக்கு SMS, ஃபோன் மற்றும் தொடர்புகள் ஆகியவற்றுக்கான அனுமதி தேவை."</string>
     <string name="enable_permission_procedure" msgid="2778471831376319587">"அமைப்புகள் &gt; பயன்பாடுகள் &gt; செய்தியிடல் &gt; அனுமதிகள் என்பதில் அனுமதிகளை மாற்றலாம்."</string>

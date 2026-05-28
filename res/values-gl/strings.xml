@@ -26,10 +26,8 @@
     <string name="help_and_feedback_activity_label" msgid="8070710971014835182">"Axuda"</string>
     <string name="welcome" msgid="2857560951820802321">"Dámosche a benvida"</string>
     <string name="skip" msgid="7238879696319945853">"Omitir"</string>
-    <string name="next_with_arrow" msgid="2840729397885031655">"Seguinte &gt;"</string>
     <string name="next" msgid="4496962051601713843">"Seguinte"</string>
     <string name="exit" msgid="1905187380359981199">"Saír"</string>
-    <string name="settings_with_arrow" msgid="8534633224579301342">"Configuración &gt;"</string>
     <string name="settings" msgid="1045695083932447399">"Configuración"</string>
     <string name="required_permissions_promo" msgid="3898014894175251590">"Mensaxería necesita permiso para acceder ás SMS, ao teléfono e aos contactos."</string>
     <string name="enable_permission_procedure" msgid="2778471831376319587">"Podes cambiar os permisos en Configuración &gt; Aplicacións &gt; Mensaxería &gt; Permisos."</string>

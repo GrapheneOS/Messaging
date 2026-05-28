@@ -26,10 +26,8 @@
     <string name="help_and_feedback_activity_label" msgid="8070710971014835182">"帮助"</string>
     <string name="welcome" msgid="2857560951820802321">"欢迎使用"</string>
     <string name="skip" msgid="7238879696319945853">"跳过"</string>
-    <string name="next_with_arrow" msgid="2840729397885031655">"下一步 &gt;"</string>
     <string name="next" msgid="4496962051601713843">"下一步"</string>
     <string name="exit" msgid="1905187380359981199">"退出"</string>
-    <string name="settings_with_arrow" msgid="8534633224579301342">"设置 &gt;"</string>
     <string name="settings" msgid="1045695083932447399">"设置"</string>
     <string name="required_permissions_promo" msgid="3898014894175251590">"“短信”应用需要获得“短信”、“电话”和“通讯录”的访问权限。"</string>
     <string name="enable_permission_procedure" msgid="2778471831376319587">"您可以在“设置”&gt;“应用”&gt;“短信”&gt;“权限”中更改权限。"</string>

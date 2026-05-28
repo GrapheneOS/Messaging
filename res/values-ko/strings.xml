@@ -26,10 +26,8 @@
     <string name="help_and_feedback_activity_label" msgid="8070710971014835182">"도움말"</string>
     <string name="welcome" msgid="2857560951820802321">"환영합니다."</string>
     <string name="skip" msgid="7238879696319945853">"건너뛰기"</string>
-    <string name="next_with_arrow" msgid="2840729397885031655">"다음 &gt;"</string>
     <string name="next" msgid="4496962051601713843">"다음"</string>
     <string name="exit" msgid="1905187380359981199">"종료"</string>
-    <string name="settings_with_arrow" msgid="8534633224579301342">"설정 &gt;"</string>
     <string name="settings" msgid="1045695083932447399">"설정"</string>
     <string name="required_permissions_promo" msgid="3898014894175251590">"메시지를 사용하려면 SMS, 전화, 주소록에 대한 권한이 필요합니다."</string>
     <string name="enable_permission_procedure" msgid="2778471831376319587">"설정 &gt; 앱 &gt; 메시지 &gt; 권한에서 권한을 변경할 수 있습니다."</string>
