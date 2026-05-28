@@ -20,12 +20,12 @@ import com.android.messaging.data.conversation.repository.ConversationsRepositor
 import com.android.messaging.data.conversation.repository.ConversationsRepositoryImpl
 import com.android.messaging.data.conversation.store.ConversationDraftStore
 import com.android.messaging.data.conversation.store.ConversationDraftStoreImpl
+import com.android.messaging.data.conversation.store.ConversationSelfIdStore
+import com.android.messaging.data.conversation.store.ConversationSelfIdStoreImpl
 import com.android.messaging.data.media.repository.ConversationAttachmentsRepository
 import com.android.messaging.data.media.repository.ConversationAttachmentsRepositoryImpl
 import com.android.messaging.data.media.repository.ConversationMediaRepository
 import com.android.messaging.data.media.repository.ConversationMediaRepositoryImpl
-import com.android.messaging.data.conversation.store.ConversationSelfIdStore
-import com.android.messaging.data.conversation.store.ConversationSelfIdStoreImpl
 import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
 import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepositoryImpl
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
@@ -73,7 +73,6 @@ import dagger.Module
 import dagger.Reusable
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
 import javax.inject.Singleton
 
 @Module
