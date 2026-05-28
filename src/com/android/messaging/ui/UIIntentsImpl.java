@@ -52,6 +52,7 @@ import com.android.messaging.ui.conversationlist.ConversationListActivity;
 import com.android.messaging.ui.conversationlist.ForwardMessageActivity;
 import com.android.messaging.ui.conversationsettings.PeopleAndOptionsActivity;
 import com.android.messaging.ui.debug.DebugMmsConfigActivity;
+import com.android.messaging.ui.permissioncheck.PermissionCheckActivity;
 import com.android.messaging.ui.photoviewer.BuglePhotoViewActivity;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.ContentType;
