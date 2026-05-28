@@ -17,7 +17,9 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -34,7 +36,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import com.android.messaging.ui.core.MessagingPreviewColumn
 
 private val MESSAGE_SELECTION_INDICATOR_SIZE = 22.dp
 private val MESSAGE_SELECTION_INDICATOR_HORIZONTAL_GAP = 16.dp
@@ -251,4 +255,25 @@ private fun Transition<Boolean>.animateSelectionIndicatorCheckmarkScale(): State
             }
         },
     )
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationMessageSelectionIndicatorPreview() {
+    MessagingPreviewColumn {
+        Row(horizontalArrangement = Arrangement.spacedBy(space = 12.dp)) {
+            ConversationMessageSelectionIndicator(
+                visible = true,
+                isSelected = false,
+                expandFrom = Alignment.Start,
+                shrinkTowards = Alignment.Start,
+            )
+            ConversationMessageSelectionIndicator(
+                visible = true,
+                isSelected = true,
+                expandFrom = Alignment.Start,
+                shrinkTowards = Alignment.Start,
+            )
+        }
+    }
 }

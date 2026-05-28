@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.android.messaging.R
 import com.android.messaging.ui.appsettings.common.SettingsCategoryHeader
 import com.android.messaging.ui.appsettings.common.SettingsClickableItem
@@ -19,6 +20,7 @@ import com.android.messaging.ui.appsettings.common.SettingsSwitchItem
 import com.android.messaging.ui.appsettings.common.SettingsTopAppBar
 import com.android.messaging.ui.appsettings.general.model.AppSettingsUiState
 import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
+import com.android.messaging.ui.core.MessagingPreviewTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -161,6 +163,43 @@ private fun LazyListScope.licenseSettingsItems(
             onClick = {
                 onAction(Action.LicensesClicked)
             },
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun AppSettingsScreenTopLevelPreview() {
+    MessagingPreviewTheme {
+        AppSettingsScreen(
+            appSettings = AppSettingsUiState(
+                isDefaultSmsApp = true,
+                defaultSmsAppLabel = "Messaging",
+                sendSoundEnabled = true,
+            ),
+            onAction = {},
+            onNavigateBack = {},
+            isTopLevel = true,
+            onAdvancedClick = {},
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun AppSettingsScreenDebugPreview() {
+    MessagingPreviewTheme {
+        AppSettingsScreen(
+            appSettings = AppSettingsUiState(
+                isDefaultSmsApp = false,
+                defaultSmsAppLabel = "Phone",
+                sendSoundEnabled = false,
+                isDebugEnabled = true,
+                dumpSmsEnabled = true,
+                dumpMmsEnabled = false,
+            ),
+            onAction = {},
+            onNavigateBack = {},
         )
     }
 }

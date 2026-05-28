@@ -52,6 +52,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.core.text.BidiFormatter
 import androidx.core.text.TextDirectionHeuristicsCompat
@@ -69,7 +70,12 @@ import com.android.messaging.ui.conversation.CONVERSATION_TOP_APP_BAR_TITLE_TEST
 import com.android.messaging.ui.conversation.CONVERSATION_UNARCHIVE_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.composer.model.ConversationSimSelectorUiState
 import com.android.messaging.ui.conversation.metadata.model.ConversationMetadataUiState
+import com.android.messaging.ui.conversation.preview.previewGroupMetadata
+import com.android.messaging.ui.conversation.preview.previewMetadata
+import com.android.messaging.ui.conversation.preview.previewSimSelectorUiState
 import com.android.messaging.ui.conversation.resolveDisplayName
+import com.android.messaging.ui.core.MessagingPreviewColumn
+import com.android.messaging.ui.core.MessagingPreviewTheme
 import com.android.messaging.util.AccessibilityUtil
 
 private val CONVERSATION_TOP_APP_BAR_TITLE_SPACING = 12.dp
@@ -646,4 +652,79 @@ private data class ConversationTopAppBarOverflowVisibility(
                 isShowSubjectFieldVisible ||
                 isSimSelectorVisible
         }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationTopAppBarLoadingPreview() {
+    MessagingPreviewTheme {
+        ConversationTopAppBar(
+            metadata = ConversationMetadataUiState.Loading,
+            onAddPeopleClick = {},
+            onTitleClick = {},
+            onNavigateBack = {},
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationTopAppBarOneOnOnePreview() {
+    MessagingPreviewTheme {
+        ConversationTopAppBar(
+            metadata = previewMetadata(),
+            isCallVisible = true,
+            isArchiveVisible = true,
+            isAddContactVisible = true,
+            isDeleteConversationVisible = true,
+            isShowSubjectFieldVisible = true,
+            simSelector = previewSimSelectorUiState(),
+            onAddPeopleClick = {},
+            onTitleClick = {},
+            onNavigateBack = {},
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationTopAppBarGroupPreview() {
+    MessagingPreviewTheme {
+        ConversationTopAppBar(
+            metadata = previewGroupMetadata(),
+            isAddPeopleVisible = true,
+            isUnarchiveVisible = true,
+            isDeleteConversationVisible = true,
+            onAddPeopleClick = {},
+            onTitleClick = {},
+            onNavigateBack = {},
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationTopAppBarOverflowMenuContentPreview() {
+    MessagingPreviewColumn {
+        ConversationTopAppBarOverflowMenuContent(
+            visibility = ConversationTopAppBarOverflowVisibility(
+                isAddPeopleVisible = true,
+                isArchiveVisible = true,
+                isUnarchiveVisible = true,
+                isAddContactVisible = true,
+                isDeleteConversationVisible = true,
+                isShowSubjectFieldVisible = true,
+                isSimSelectorVisible = true,
+            ),
+            simSelectorLabel = "Personal",
+            onAddPeopleClick = {},
+            onArchiveClick = {},
+            onUnarchiveClick = {},
+            onAddContactClick = {},
+            onDeleteConversationClick = {},
+            onShowSubjectFieldClick = {},
+            onSimSelectorClick = {},
+            onItemClick = { action -> action() },
+        )
+    }
 }

@@ -4,9 +4,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.ui.conversation.messages.model.attachment.ConversationAttachmentItem
 import com.android.messaging.ui.conversation.messages.model.attachment.ConversationAttachmentSections
+import com.android.messaging.ui.conversation.preview.previewAttachmentSections
+import com.android.messaging.ui.core.MessagingPreviewColumn
 
 @Composable
 internal fun ConversationMessageAttachments(
@@ -69,5 +72,23 @@ internal fun ConversationMessageAttachments(
                 }
             }
         }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationMessageAttachmentsPreview() {
+    MessagingPreviewColumn {
+        ConversationMessageAttachments(
+            attachmentSections = previewAttachmentSections(),
+            hasTextAboveVisualAttachments = true,
+            hasTextBelowVisualAttachments = true,
+            isIncoming = true,
+            isSelectionMode = false,
+            useStandaloneAudioAttachmentBg = true,
+            onAttachmentClick = { _, _ -> },
+            onExternalUriClick = {},
+            onMessageLongClick = {},
+        )
     }
 }

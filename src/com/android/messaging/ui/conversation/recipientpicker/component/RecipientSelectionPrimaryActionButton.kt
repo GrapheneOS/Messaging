@@ -11,6 +11,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
@@ -25,7 +26,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import com.android.messaging.ui.core.MessagingPreviewColumn
 
 @Composable
 internal fun RecipientSelectionPrimaryActionButton(
@@ -110,4 +113,31 @@ private fun recipientSelectionPrimaryActionContentTransform(): ContentTransform 
             targetScale = 0.9f,
         ),
     )
+}
+
+@PreviewLightDark
+@Composable
+private fun RecipientSelectionPrimaryActionButtonPreview() {
+    MessagingPreviewColumn {
+        Row(horizontalArrangement = Arrangement.spacedBy(space = 12.dp)) {
+            RecipientSelectionPrimaryActionButton(
+                enabled = true,
+                isLoading = false,
+                text = "Start chat",
+                onClick = {},
+            )
+            RecipientSelectionPrimaryActionButton(
+                enabled = false,
+                isLoading = false,
+                text = "Start chat",
+                onClick = {},
+            )
+            RecipientSelectionPrimaryActionButton(
+                enabled = true,
+                isLoading = true,
+                text = "Start chat",
+                onClick = {},
+            )
+        }
+    }
 }

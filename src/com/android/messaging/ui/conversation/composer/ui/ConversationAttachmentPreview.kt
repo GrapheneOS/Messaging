@@ -35,6 +35,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
@@ -46,7 +47,16 @@ import com.android.messaging.ui.conversation.audio.formatConversationAudioDurati
 import com.android.messaging.ui.conversation.composer.model.ComposerAttachmentUiModel
 import com.android.messaging.ui.conversation.conversationAttachmentPreviewItemTestTag
 import com.android.messaging.ui.conversation.conversationAttachmentPreviewRemoveButtonTestTag
+import com.android.messaging.ui.conversation.preview.previewPendingAttachment
+import com.android.messaging.ui.conversation.preview.previewPendingAudioAttachment
+import com.android.messaging.ui.conversation.preview.previewResolvedAudioAttachment
+import com.android.messaging.ui.conversation.preview.previewResolvedFileAttachment
+import com.android.messaging.ui.conversation.preview.previewResolvedImageAttachment
+import com.android.messaging.ui.conversation.preview.previewResolvedVCardAttachment
+import com.android.messaging.ui.conversation.preview.previewResolvedVideoAttachment
+import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 private val ATTACHMENT_PREVIEW_CARD_HEIGHT = 88.dp
 private val ATTACHMENT_PREVIEW_CARD_WIDTH = 220.dp
@@ -462,6 +472,27 @@ private fun InlineAudioRemoveAttachmentButton(
                 id = R.plurals.attachment_preview_close_content_description,
                 count = 1,
             ),
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationAttachmentPreviewPreview() {
+    MessagingPreviewTheme {
+        ConversationAttachmentPreview(
+            attachments = persistentListOf(
+                previewPendingAttachment(),
+                previewPendingAudioAttachment(),
+                previewResolvedImageAttachment(),
+                previewResolvedVideoAttachment(),
+                previewResolvedAudioAttachment(),
+                previewResolvedFileAttachment(),
+                previewResolvedVCardAttachment(),
+            ),
+            onPendingAttachmentRemove = { _ -> },
+            onResolvedAttachmentClick = { _ -> },
+            onResolvedAttachmentRemove = { _ -> },
         )
     }
 }

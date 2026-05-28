@@ -1,7 +1,9 @@
 package com.android.messaging.ui.conversation.messages.ui.message
 
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -20,10 +22,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.android.messaging.sms.MmsSmsUtils
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
+import com.android.messaging.ui.conversation.preview.previewIncomingMessage
+import com.android.messaging.ui.core.MessagingPreviewColumn
 
 internal val CONVERSATION_MESSAGE_AVATAR_SIZE = 32.dp
 internal val CONVERSATION_MESSAGE_AVATAR_GAP = 8.dp
@@ -188,3 +193,25 @@ private data class ConversationMessageAvatarColors(
     val container: Color,
     val content: Color,
 )
+
+@PreviewLightDark
+@Composable
+private fun ConversationMessageAvatarPreview() {
+    MessagingPreviewColumn {
+        Row(horizontalArrangement = Arrangement.spacedBy(space = 12.dp)) {
+            ConversationMessageAvatar(
+                message = previewIncomingMessage(),
+                onClick = {},
+                onLongClick = {},
+            )
+            ConversationMessageAvatar(
+                message = previewIncomingMessage(
+                    messageId = "phone-avatar",
+                    text = "Phone number sender",
+                ).copy(senderDisplayName = "+31 6 2222 3333"),
+                onClick = {},
+                onLongClick = {},
+            )
+        }
+    }
+}

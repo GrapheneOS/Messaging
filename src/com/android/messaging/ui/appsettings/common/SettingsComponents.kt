@@ -25,10 +25,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.android.messaging.ui.core.AppTheme
+import com.android.messaging.ui.core.MessagingPreviewColumn
 
 private const val DISABLED_ALPHA = 0.38f
 
@@ -173,10 +173,10 @@ private fun SettingsItemLayout(
     }
 }
 
-@Preview(showBackground = true)
+@PreviewLightDark
 @Composable
 private fun SettingsClickableItemPreview() {
-    AppTheme {
+    MessagingPreviewColumn {
         Column {
             SettingsClickableItem(
                 title = "Language",
@@ -205,20 +205,20 @@ private fun SettingsClickableItemPreview() {
     }
 }
 
-@Preview(showBackground = true)
+@PreviewLightDark
 @Composable
 private fun SettingsCategoryHeaderPreview() {
-    AppTheme {
+    MessagingPreviewColumn {
         SettingsCategoryHeader(
             title = "MMS Messaging",
         )
     }
 }
 
-@Preview(showBackground = true)
+@PreviewLightDark
 @Composable
 private fun SettingsSwitchItemPreview() {
-    AppTheme {
+    MessagingPreviewColumn {
         Column {
             SettingsSwitchItem(
                 title = "Auto-retrieve MMS",

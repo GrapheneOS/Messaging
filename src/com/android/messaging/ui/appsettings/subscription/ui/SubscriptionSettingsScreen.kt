@@ -33,7 +33,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.appsettings.common.SettingsCategoryHeader
@@ -43,7 +43,7 @@ import com.android.messaging.ui.appsettings.common.SettingsTopAppBar
 import com.android.messaging.ui.appsettings.screen.SettingsScreenModel
 import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionUiState
-import com.android.messaging.ui.core.AppTheme
+import com.android.messaging.ui.core.MessagingPreviewTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,7 +80,7 @@ internal fun SubscriptionSettingsScreen(
             )
             advancedSettingsItems(
                 subscriptionSettings = subscriptionSettings,
-                onAction = onAction
+                onAction = onAction,
             )
         }
     }
@@ -348,10 +348,36 @@ private fun PhoneNumberDialog(
     )
 }
 
-@Preview
+@PreviewLightDark
+@Composable
+private fun SubscriptionSettingsScreenDefaultSmsPreview() {
+    MessagingPreviewTheme {
+        SubscriptionSettingsScreen(
+            subscriptionSettings = previewSubscriptionSettings(isDefaultSmsApp = true),
+            title = "SIM 1",
+            onAction = {},
+            onNavigateBack = {},
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun SubscriptionSettingsScreenNotDefaultSmsPreview() {
+    MessagingPreviewTheme {
+        SubscriptionSettingsScreen(
+            subscriptionSettings = previewSubscriptionSettings(isDefaultSmsApp = false),
+            title = "SIM 2",
+            onAction = {},
+            onNavigateBack = {},
+        )
+    }
+}
+
+@PreviewLightDark
 @Composable
 private fun GroupMmsDialogPreview() {
-    AppTheme {
+    MessagingPreviewTheme {
         GroupMmsDialog(
             isEnabled = true,
             onDismiss = {},
@@ -360,14 +386,44 @@ private fun GroupMmsDialogPreview() {
     }
 }
 
-@Preview
+@PreviewLightDark
+@Composable
+private fun GroupMmsDialogDisabledPreview() {
+    MessagingPreviewTheme {
+        GroupMmsDialog(
+            isEnabled = false,
+            onDismiss = {},
+            onConfirm = {},
+        )
+    }
+}
+
+@PreviewLightDark
 @Composable
 private fun PhoneNumberDialogPreview() {
-    AppTheme {
+    MessagingPreviewTheme {
         PhoneNumberDialog(
             currentNumber = "+31 6 1234 5678",
             onDismiss = {},
             onConfirm = {},
         )
     }
+}
+
+private fun previewSubscriptionSettings(isDefaultSmsApp: Boolean): SubscriptionUiState {
+    return SubscriptionUiState(
+        subId = 1,
+        displayName = "SIM 1",
+        displayDetail = "+31 6 1234 5678",
+        phoneNumber = "+31 6 1234 5678",
+        defaultPhoneNumber = "+31 6 0000 0000",
+        isGroupMmsSupported = true,
+        isGroupMmsEnabled = true,
+        autoRetrieveMms = true,
+        autoRetrieveMmsWhenRoaming = false,
+        isDeliveryReportsSupported = true,
+        deliveryReportsEnabled = true,
+        isWirelessAlertsSupported = true,
+        isDefaultSmsApp = isDefaultSmsApp,
+    )
 }

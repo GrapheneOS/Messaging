@@ -23,13 +23,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.ui.conversation.CONVERSATION_SIM_SELECTOR_SHEET_TEST_TAG
 import com.android.messaging.ui.conversation.composer.model.ConversationSimSelectorUiState
 import com.android.messaging.ui.conversation.conversationSimSelectorItemTestTag
+import com.android.messaging.ui.conversation.preview.previewSimSelectorUiState
 import com.android.messaging.ui.conversation.resolveDisplayName
+import com.android.messaging.ui.core.MessagingPreviewTheme
 
 private val SHEET_VERTICAL_PADDING = 8.dp
 
@@ -145,5 +148,16 @@ private fun ConversationSimSelectorRow(
                 tint = MaterialTheme.colorScheme.primary,
             )
         }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationSimSelectorSheetContentPreview() {
+    MessagingPreviewTheme {
+        ConversationSimSelectorSheetContent(
+            uiState = previewSimSelectorUiState(),
+            onSimSelected = { _ -> },
+        )
     }
 }

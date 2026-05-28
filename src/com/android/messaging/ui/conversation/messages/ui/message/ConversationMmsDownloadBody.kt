@@ -16,9 +16,12 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.conversation.messages.model.message.MmsDownloadUiModel
+import com.android.messaging.ui.conversation.preview.previewMmsDownloadUiModel
+import com.android.messaging.ui.core.MessagingPreviewColumn
 
 private const val MMS_DOWNLOAD_STATUS_SEPARATOR = " • "
 
@@ -220,5 +223,23 @@ private fun buildMmsDownloadStatusLineText(
     return when {
         simAnnotation == null -> statusText
         else -> "$statusText$MMS_DOWNLOAD_STATUS_SEPARATOR$simAnnotation"
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationMmsDownloadBodyPreview() {
+    MessagingPreviewColumn {
+        Column(verticalArrangement = Arrangement.spacedBy(space = 12.dp)) {
+            MmsDownloadUiModel.State.entries.forEach { state ->
+                ConversationMmsDownloadBody(
+                    download = previewMmsDownloadUiModel(state = state),
+                    canDownloadMessage = true,
+                    isSelected = state == MmsDownloadUiModel.State.Downloading,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    simDisplayName = "Personal",
+                )
+            }
+        }
     }
 }

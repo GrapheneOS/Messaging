@@ -25,6 +25,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.R
@@ -35,6 +36,9 @@ import com.android.messaging.ui.conversation.entry.model.NewChatEffect
 import com.android.messaging.ui.conversation.entry.model.NewChatUiState
 import com.android.messaging.ui.conversation.newChatContactDestinationRowTestTag
 import com.android.messaging.ui.conversation.newChatContactRowTestTag
+import com.android.messaging.ui.conversation.preview.previewRecipientPickerUiState
+import com.android.messaging.ui.conversation.preview.previewSelectedRecipient
+import com.android.messaging.ui.conversation.preview.previewSimSelectorUiState
 import com.android.messaging.ui.conversation.recipientpicker.component.RecipientSelectionContent
 import com.android.messaging.ui.conversation.recipientpicker.component.simselector.NewChatSimSelectorRow
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerUiState
@@ -45,6 +49,7 @@ import com.android.messaging.ui.conversation.recipientpicker.model.selection.Rec
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionPrimaryActionUiState
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionRowDecorators
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionStrings
+import com.android.messaging.ui.core.MessagingPreviewTheme
 import com.android.messaging.util.UiUtils
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -388,5 +393,31 @@ private fun newChatTitle(
     return when {
         isCreatingGroup -> stringResource(R.string.conversation_new_group)
         else -> stringResource(R.string.start_new_conversation)
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun NewChatScreenContentPreview() {
+    MessagingPreviewTheme {
+        NewChatScreenContent(
+            modifier = Modifier.fillMaxSize(),
+            pickerUiState = previewRecipientPickerUiState(),
+            simSelectorUiState = previewSimSelectorUiState(),
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun NewChatScreenContentCreatingGroupPreview() {
+    MessagingPreviewTheme {
+        NewChatScreenContent(
+            modifier = Modifier.fillMaxSize(),
+            isCreatingGroup = true,
+            pickerUiState = previewRecipientPickerUiState(),
+            selectedGroupRecipients = persistentListOf(previewSelectedRecipient()),
+            simSelectorUiState = previewSimSelectorUiState(),
+        )
     }
 }

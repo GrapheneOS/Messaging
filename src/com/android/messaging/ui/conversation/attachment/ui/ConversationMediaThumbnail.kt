@@ -6,8 +6,11 @@ import android.net.Uri
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -23,10 +26,13 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
+import com.android.messaging.ui.core.MessagingPreviewColumn
 import com.android.messaging.util.ContentType
 
 private const val THUMBNAIL_FADE_IN_DURATION_MILLIS = 90
@@ -271,5 +277,28 @@ private fun resolveBitmapFilterQuality(useBitmapLoader: Boolean): FilterQuality 
     return when {
         useBitmapLoader -> FilterQuality.Medium
         else -> FilterQuality.Low
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationMediaThumbnailPreview() {
+    MessagingPreviewColumn {
+        Row(horizontalArrangement = Arrangement.spacedBy(space = 12.dp)) {
+            ConversationMediaThumbnail(
+                modifier = Modifier.size(size = 88.dp),
+                contentUri = "content://com.android.messaging.preview/image.jpg",
+                contentType = "image/jpeg",
+                size = IntSize(width = 256, height = 256),
+                useBitmapLoader = true,
+            )
+            ConversationMediaThumbnail(
+                modifier = Modifier.size(size = 88.dp),
+                contentUri = "content://com.android.messaging.preview/video.mp4",
+                contentType = "video/mp4",
+                size = IntSize(width = 256, height = 256),
+                backgroundColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+            )
+        }
     }
 }

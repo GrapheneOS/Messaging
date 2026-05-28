@@ -44,6 +44,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
@@ -53,10 +54,15 @@ import com.android.messaging.ui.conversation.CONVERSATION_SEND_BUTTON_SHAPE_CIRC
 import com.android.messaging.ui.conversation.CONVERSATION_SEND_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingPhase
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingUiState
+import com.android.messaging.ui.conversation.composer.model.ConversationComposerUiState
 import com.android.messaging.ui.conversation.composer.model.ConversationSegmentCounterUiState
 import com.android.messaging.ui.conversation.composer.model.ConversationSendActionButtonGestureState
 import com.android.messaging.ui.conversation.composer.model.ConversationSendActionButtonMode
 import com.android.messaging.ui.conversation.conversationShape
+import com.android.messaging.ui.conversation.preview.previewComposerUiState
+import com.android.messaging.ui.conversation.preview.previewRecordingComposer
+import com.android.messaging.ui.core.MessagingPreviewColumn
+import com.android.messaging.ui.core.MessagingPreviewTheme
 
 internal val AUDIO_RECORD_CANCEL_THRESHOLD = 96.dp
 internal val AUDIO_RECORD_LOCK_THRESHOLD = 72.dp
@@ -67,6 +73,18 @@ private const val CONTENT_SWAP_ENTER_SLIDE_OFFSET_DIVISOR = 10
 private const val CONTENT_SWAP_EXIT_FADE_DURATION_MILLIS = 120
 private const val CONTENT_SWAP_EXIT_SLIDE_DURATION_MILLIS = 180
 private const val CONTENT_SWAP_EXIT_SLIDE_OFFSET_DIVISOR = 12
+
+private const val PREVIEW_MULTILINE_MESSAGE_TEXT = "Can you review these before tonight?\n" +
+    "First pass is enough for the meeting.\n" +
+    "I will send the final attachment after dinner."
+private const val PREVIEW_OVERFLOW_MESSAGE_TEXT =
+    "PreviewOverflowTokenWithoutBreaksABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" +
+        "PreviewOverflowTokenWithoutBreaksABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+private const val PREVIEW_MMS_BODY_TEXT =
+    "Photo attached. I am adding the complete notes from the trip, " +
+        "including the hotel confirmation, train times, restaurant address, " +
+        "and a few reminders about what " +
+        "still needs to be booked before everyone arrives tomorrow afternoon."
 
 @Composable
 internal fun ConversationComposeBar(
@@ -649,3 +667,82 @@ private data class ConversationAudioRecordingGestureController(
     val onAudioRecordingLock: () -> Boolean,
     val onAudioRecordingFinish: (Boolean) -> Unit,
 )
+
+@PreviewLightDark
+@Composable
+private fun ConversationComposeBarTextPreview() {
+    MessagingPreviewColumn {
+        Column(verticalArrangement = Arrangement.spacedBy(space = 12.dp)) {
+            PreviewConversationComposeBar(
+                uiState = previewComposerUiState(),
+            )
+            PreviewConversationComposeBar(
+                uiState = previewComposerUiState(messageText = PREVIEW_MULTILINE_MESSAGE_TEXT),
+            )
+            PreviewConversationComposeBar(
+                uiState = previewComposerUiState(messageText = PREVIEW_OVERFLOW_MESSAGE_TEXT),
+            )
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationComposeBarSubjectPreview() {
+    MessagingPreviewTheme {
+        PreviewConversationComposeBar(
+            uiState = previewComposerUiState(
+                messageText = PREVIEW_MMS_BODY_TEXT,
+                subjectText = "Trip updates",
+            ).copy(sendProtocol = ConversationDraftSendProtocol.MMS),
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationComposeBarRecordingPreview() {
+    MessagingPreviewTheme {
+        PreviewConversationComposeBar(
+            uiState = previewRecordingComposer(isLocked = false),
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationComposeBarLockedRecordingPreview() {
+    MessagingPreviewTheme {
+        PreviewConversationComposeBar(
+            uiState = previewRecordingComposer(isLocked = true),
+        )
+    }
+}
+
+@Composable
+private fun PreviewConversationComposeBar(uiState: ConversationComposerUiState) {
+    ConversationComposeBar(
+        audioRecording = uiState.audioRecording,
+        messageText = uiState.messageText,
+        subjectText = uiState.subjectText,
+        sendProtocol = uiState.sendProtocol,
+        segmentCounter = uiState.segmentCounter,
+        isMessageFieldEnabled = uiState.isMessageFieldEnabled,
+        isAttachmentActionEnabled = uiState.isAttachmentActionEnabled,
+        isRecordActionEnabled = uiState.isRecordActionEnabled,
+        isSendActionEnabled = uiState.isSendEnabled,
+        shouldShowRecordAction = uiState.shouldShowRecordAction,
+        onContactAttachClick = {},
+        onMediaPickerClick = {},
+        onLockedAudioRecordingStartRequest = {},
+        onMessageTextChange = { _ -> },
+        onAudioRecordingStartRequest = {},
+        onAudioRecordingFinish = {},
+        onAudioRecordingLock = { true },
+        onAudioRecordingCancel = {},
+        onSendClick = {},
+        onSendActionLongClick = {},
+        onSubjectChipClick = {},
+        onSubjectChipClear = {},
+    )
+}

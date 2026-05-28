@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.recipientpicker.component
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -27,7 +28,9 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import com.android.messaging.ui.conversation.preview.previewRecipientSelectionContentUiState
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.SelectedRecipient
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionContentUiState
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionQueryCardUiState
@@ -35,6 +38,7 @@ import com.android.messaging.ui.conversation.recipientpicker.model.selection.Rec
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionQueryFieldUiState
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionQueryTextUiState
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionStrings
+import com.android.messaging.ui.core.MessagingPreviewColumn
 import kotlinx.collections.immutable.ImmutableList
 
 private val recipientSelectionInputRowMinHeight = 32.dp
@@ -328,4 +332,29 @@ private fun recipientSelectionMutationsEnabled(
     uiState: RecipientSelectionContentUiState,
 ): Boolean {
     return uiState.isQueryEnabled && uiState.primaryAction?.isLoading != true
+}
+
+@SuppressLint("RememberInComposition")
+@PreviewLightDark
+@Composable
+private fun RecipientSelectionQueryCardPreview() {
+    val uiState = recipientSelectionQueryCardUiState(
+        uiState = previewRecipientSelectionContentUiState(),
+        strings = RecipientSelectionStrings(
+            queryPrefixText = "To",
+            queryPlaceholderText = "Name or phone number",
+        ),
+        armedRecipientDestination = "+31622223333",
+    )
+    MessagingPreviewColumn {
+        RecipientSelectionQueryCard(
+            uiState = uiState,
+            onQueryChanged = { _ -> },
+            onQueryFocused = {},
+            onSelectedRecipientClick = { _ -> },
+            onSelectedRecipientBackspace = { _ -> },
+            focusRequester = FocusRequester(),
+            simSelectorSlot = null,
+        )
+    }
 }

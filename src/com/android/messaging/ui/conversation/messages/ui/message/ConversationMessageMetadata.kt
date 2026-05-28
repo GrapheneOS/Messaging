@@ -1,5 +1,7 @@
 package com.android.messaging.ui.conversation.messages.ui.message
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -11,11 +13,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel.Status
 import com.android.messaging.ui.conversation.messages.ui.buildConversationSimLinkAnnotatedString
+import com.android.messaging.ui.conversation.preview.previewIncomingMessage
+import com.android.messaging.ui.conversation.preview.previewOutgoingMessage
+import com.android.messaging.ui.core.MessagingPreviewColumn
 
 private const val METADATA_SEPARATOR = " • "
 
@@ -107,5 +113,26 @@ private fun messageMetadataColor(
         -> MaterialTheme.colorScheme.error
 
         else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationMessageMetadataPreview() {
+    MessagingPreviewColumn {
+        Column(verticalArrangement = Arrangement.spacedBy(space = 8.dp)) {
+            ConversationMessageMetadata(
+                message = previewIncomingMessage(),
+                metadataText = "18:04",
+                simDisplayName = "Personal",
+                onSimSelectorClick = {},
+            )
+            ConversationMessageMetadata(
+                message = previewOutgoingMessage(status = Status.Outgoing.Failed),
+                metadataText = "18:05 • Failed",
+                simDisplayName = "Work",
+                onSimSelectorClick = {},
+            )
+        }
     }
 }

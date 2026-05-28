@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.conversation.audio.formatConversationAudioDuration
@@ -33,6 +34,7 @@ import com.android.messaging.ui.conversation.mediapicker.camera.ConversationPhot
 import com.android.messaging.ui.conversation.mediapicker.component.PickerOverlayIconButton
 import com.android.messaging.ui.conversation.mediapicker.component.pickerOverlayContainerColor
 import com.android.messaging.ui.conversation.mediapicker.component.pickerOverlayContentColor
+import com.android.messaging.ui.core.MessagingPreviewColumn
 
 @Composable
 internal fun ConversationMediaCaptureTopBar(
@@ -227,5 +229,43 @@ private fun ConversationMediaRecordingTimerPill(
             color = MaterialTheme.colorScheme.onErrorContainer,
             style = MaterialTheme.typography.labelLarge,
         )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationMediaCaptureControlsPreview() {
+    MessagingPreviewColumn {
+        Column(verticalArrangement = Arrangement.spacedBy(space = 24.dp)) {
+            ConversationMediaCaptureTopBar(
+                captureMode = ConversationCaptureMode.Photo,
+                hasFlashUnit = true,
+                isPhotoCaptureInProgress = false,
+                isRecording = false,
+                photoFlashMode = ConversationPhotoFlashMode.Auto,
+                onCloseClick = {},
+                onFlashClick = {},
+            )
+            ConversationMediaCaptureControls(
+                captureMode = ConversationCaptureMode.Photo,
+                isPhotoCaptureInProgress = false,
+                isRecording = false,
+                recordingDurationMillis = 0L,
+                onCaptureClick = {},
+                onPhotoModeClick = {},
+                onSwitchCameraClick = {},
+                onVideoModeClick = {},
+            )
+            ConversationMediaCaptureControls(
+                captureMode = ConversationCaptureMode.Video,
+                isPhotoCaptureInProgress = false,
+                isRecording = true,
+                recordingDurationMillis = 24_000L,
+                onCaptureClick = {},
+                onPhotoModeClick = {},
+                onSwitchCameraClick = {},
+                onVideoModeClick = {},
+            )
+        }
     }
 }

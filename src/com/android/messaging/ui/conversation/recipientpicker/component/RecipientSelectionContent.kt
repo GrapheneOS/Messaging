@@ -19,12 +19,16 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import com.android.messaging.ui.conversation.preview.previewSimSelectorUiState
+import com.android.messaging.ui.conversation.recipientpicker.component.simselector.NewChatSimSelectorRow
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.SelectedRecipient
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.OnRecipientDestinationAction
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionContentUiState
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionRowDecorators
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionStrings
+import com.android.messaging.ui.core.MessagingPreviewTheme
 
 @Composable
 internal fun RecipientSelectionContent(
@@ -235,4 +239,93 @@ private fun RecipientSelectionAutoFocusEffect(
             focusRequester.requestFocus()
         }
     }
+}
+
+@PreviewLightDark
+@Composable
+private fun RecipientSelectionContentLoadedPreview() {
+    PreviewRecipientSelectionContent(
+        uiState = previewRecipientSelectionContactsLoadedState(),
+    )
+}
+
+@PreviewLightDark
+@Composable
+private fun RecipientSelectionContentLoadingPreview() {
+    PreviewRecipientSelectionContent(
+        uiState = previewRecipientSelectionContactsLoadingState(),
+        onRecipientDestinationLongClick = null,
+    )
+}
+
+@PreviewLightDark
+@Composable
+private fun RecipientSelectionContentEmptyPreview() {
+    PreviewRecipientSelectionContent(
+        uiState = previewRecipientSelectionContactsEmptyState(),
+        onRecipientDestinationLongClick = null,
+    )
+}
+
+@PreviewLightDark
+@Composable
+private fun RecipientSelectionContentSimSelectorAndTopContentPreview() {
+    PreviewRecipientSelectionContent(
+        uiState = previewRecipientSelectionContactsTopContentState(),
+        simSelectorSlot = {
+            NewChatSimSelectorRow(
+                uiState = previewSimSelectorUiState(),
+                onSimSelected = { _ -> },
+            )
+        },
+        topListContent = {
+            PreviewRecipientSelectionContactsTopListContent()
+        },
+    )
+}
+
+@PreviewLightDark
+@Composable
+private fun RecipientSelectionContentPrimaryActionLoadingPreview() {
+    PreviewRecipientSelectionContent(
+        uiState = previewRecipientSelectionContactsPrimaryActionLoadingState(),
+    )
+}
+
+@Composable
+private fun PreviewRecipientSelectionContent(
+    uiState: RecipientSelectionContentUiState,
+    modifier: Modifier = Modifier.height(height = 560.dp),
+    onRecipientDestinationLongClick: OnRecipientDestinationAction? = { _, _ -> },
+    simSelectorSlot: (@Composable () -> Unit)? = null,
+    topListContent: (@Composable () -> Unit)? = null,
+) {
+    MessagingPreviewTheme {
+        RecipientSelectionContent(
+            modifier = modifier,
+            uiState = uiState,
+            strings = previewRecipientSelectionStrings(),
+            rowDecorators = previewRecipientSelectionContentRowDecorators(),
+            onRecipientDestinationClick = { _, _ -> },
+            onRecipientDestinationLongClick = onRecipientDestinationLongClick,
+            onSelectedRecipientClick = { _ -> },
+            onQueryChanged = { _ -> },
+            simSelectorSlot = simSelectorSlot,
+            topListContent = topListContent,
+        )
+    }
+}
+
+private fun previewRecipientSelectionStrings(): RecipientSelectionStrings {
+    return RecipientSelectionStrings(
+        queryPrefixText = "To",
+        queryPlaceholderText = "Name or phone number",
+    )
+}
+
+private fun previewRecipientSelectionContentRowDecorators(): RecipientSelectionRowDecorators {
+    return RecipientSelectionRowDecorators(
+        recipientRowTestTag = { item -> item.id },
+        destinationRowTestTag = { item, destination -> "${item.id}:$destination" },
+    )
 }

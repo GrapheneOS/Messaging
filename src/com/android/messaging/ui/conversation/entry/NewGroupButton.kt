@@ -32,8 +32,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.ui.core.MessagingPreviewColumn
 
 @Composable
 internal fun NewChatRecipientSelectionTopListContent(
@@ -130,4 +132,15 @@ private fun <T> newChatSpatialAnimationSpec(): FiniteAnimationSpec<T> {
         dampingRatio = Spring.DampingRatioNoBouncy,
         stiffness = Spring.StiffnessMediumLow,
     )
+}
+
+@PreviewLightDark
+@Composable
+private fun NewChatRecipientSelectionTopListContentPreview() {
+    MessagingPreviewColumn {
+        NewChatRecipientSelectionTopListContent(
+            isCreatingGroup = false,
+            onCreateGroupClick = {},
+        )
+    }
 }

@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
@@ -32,7 +33,10 @@ import com.android.messaging.ui.conversation.messages.ui.message.ConversationMes
 import com.android.messaging.ui.conversation.messages.ui.message.conversationMessageDisplayEpochDay
 import com.android.messaging.ui.conversation.messages.ui.message.formatDateSeparatorText
 import com.android.messaging.ui.conversation.messages.ui.message.resolveConversationMessageSimDisplayName
+import com.android.messaging.ui.conversation.preview.previewMessages
+import com.android.messaging.ui.conversation.preview.previewSubscriptions
 import com.android.messaging.ui.conversation.resolveDisplayName
+import com.android.messaging.ui.core.MessagingPreviewTheme
 import java.util.TimeZone
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
@@ -494,4 +498,27 @@ private fun shouldShowDateSeparatorBetweenMessages(
     )
 
     return messageAboveEpochDay != currentEpochDay
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationMessagesPreview() {
+    MessagingPreviewTheme {
+        ConversationMessages(
+            messages = previewMessages(),
+            listState = LazyListState(),
+            selectedMessageIds = persistentSetOf("outgoing-delivered"),
+            showIncomingParticipantIdentity = true,
+            subscriptions = previewSubscriptions(),
+            currentSendSimDisplayName = "Personal",
+            onAttachmentClick = { _, _ -> },
+            onExternalUriClick = {},
+            onMessageClick = {},
+            onMessageAvatarClick = {},
+            onMessageDownloadClick = {},
+            onMessageLongClick = {},
+            onMessageResendClick = {},
+            onSimSelectorClick = {},
+        )
+    }
 }

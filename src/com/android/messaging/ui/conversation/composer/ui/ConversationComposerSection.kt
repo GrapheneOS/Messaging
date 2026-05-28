@@ -4,10 +4,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingUiState
 import com.android.messaging.ui.conversation.composer.model.ComposerAttachmentUiModel
 import com.android.messaging.ui.conversation.composer.model.ConversationSegmentCounterUiState
+import com.android.messaging.ui.conversation.preview.previewComposerWithAttachments
+import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
@@ -75,6 +78,43 @@ internal fun ConversationComposerSection(
             onSendActionLongClick = onSendActionLongClick,
             onSubjectChipClick = onSubjectChipClick,
             onSubjectChipClear = onSubjectChipClear,
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationComposerSectionPreview() {
+    val uiState = previewComposerWithAttachments()
+    MessagingPreviewTheme {
+        ConversationComposerSection(
+            audioRecording = uiState.audioRecording,
+            attachments = uiState.attachments,
+            messageText = uiState.messageText,
+            subjectText = uiState.subjectText,
+            sendProtocol = uiState.sendProtocol,
+            segmentCounter = uiState.segmentCounter,
+            isMessageFieldEnabled = uiState.isMessageFieldEnabled,
+            isAttachmentActionEnabled = uiState.isAttachmentActionEnabled,
+            isRecordActionEnabled = uiState.isRecordActionEnabled,
+            isSendActionEnabled = uiState.isSendEnabled,
+            shouldShowRecordAction = uiState.shouldShowRecordAction,
+            messageFieldFocusRequester = FocusRequester(),
+            onContactAttachClick = {},
+            onMediaPickerClick = {},
+            onMessageTextChange = { _ -> },
+            onPendingAttachmentRemove = { _ -> },
+            onResolvedAttachmentClick = { _ -> },
+            onResolvedAttachmentRemove = { _ -> },
+            onAudioRecordingStartRequest = {},
+            onLockedAudioRecordingStartRequest = {},
+            onAudioRecordingFinish = {},
+            onAudioRecordingLock = { true },
+            onAudioRecordingCancel = {},
+            onSendClick = {},
+            onSendActionLongClick = {},
+            onSubjectChipClick = {},
+            onSubjectChipClear = {},
         )
     }
 }

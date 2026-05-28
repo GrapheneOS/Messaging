@@ -17,12 +17,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.conversation.CONVERSATION_SUBJECT_CHIP_CLEAR_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_SUBJECT_CHIP_TEST_TAG
+import com.android.messaging.ui.core.MessagingPreviewColumn
 
 private val SUBJECT_CHIP_TEXT_VERTICAL_PADDING = 12.dp
+private const val PREVIEW_LONG_SUBJECT_TEXT =
+    "Upcoming weekend plans, dinner reservation details, parking instructions, and confirmation number"
 
 @Composable
 internal fun ConversationSubjectChip(
@@ -65,5 +69,29 @@ internal fun ConversationSubjectChip(
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationSubjectChipPreview() {
+    MessagingPreviewColumn {
+        ConversationSubjectChip(
+            subjectText = "Dinner reservation details",
+            onClick = {},
+            onClear = {},
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationSubjectChipLongTextPreview() {
+    MessagingPreviewColumn {
+        ConversationSubjectChip(
+            subjectText = PREVIEW_LONG_SUBJECT_TEXT,
+            onClick = {},
+            onClear = {},
+        )
     }
 }

@@ -35,11 +35,13 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.conversation.CONVERSATION_INLINE_AUDIO_ATTACHMENT_PLAY_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_INLINE_AUDIO_ATTACHMENT_PROGRESS_TEST_TAG
 import com.android.messaging.ui.conversation.messages.model.attachment.ConversationInlineAttachment
+import com.android.messaging.ui.core.MessagingPreviewColumn
 
 private val AUDIO_ATTACHMENT_HEIGHT = 70.dp
 
@@ -341,3 +343,54 @@ internal data class ConversationInlineAudioAttachmentColors(
     val progressTrack: Color,
     val secondaryContent: Color,
 )
+
+@PreviewLightDark
+@Composable
+private fun ConversationInlineAudioAttachmentRowContentPreview() {
+    MessagingPreviewColumn {
+        Column(verticalArrangement = Arrangement.spacedBy(space = 12.dp)) {
+            ConversationInlineAudioAttachmentRowContent(
+                colors = rememberConversationInlineAudioAttachmentColors(
+                    isIncoming = true,
+                    isSelectionMode = false,
+                    useStandaloneAudioAttachmentBackground = true,
+                ),
+                isSelectionMode = false,
+                isPlaying = false,
+                title = "Voice note",
+                durationLabel = "0:42",
+                progress = 0f,
+                onClick = {},
+                onLongClick = {},
+            )
+            ConversationInlineAudioAttachmentRowContent(
+                colors = rememberConversationInlineAudioAttachmentColors(
+                    isIncoming = false,
+                    isSelectionMode = false,
+                    useStandaloneAudioAttachmentBackground = true,
+                ),
+                isSelectionMode = false,
+                isPlaying = true,
+                title = "Recorded message",
+                durationLabel = "1:12",
+                progress = 0.45f,
+                onClick = {},
+                onLongClick = {},
+            )
+            ConversationInlineAudioAttachmentRowContent(
+                colors = rememberConversationInlineAudioAttachmentColors(
+                    isIncoming = true,
+                    isSelectionMode = true,
+                    useStandaloneAudioAttachmentBackground = false,
+                ),
+                isSelectionMode = true,
+                isPlaying = false,
+                title = "Selected audio",
+                durationLabel = "0:09",
+                progress = 0.25f,
+                onClick = {},
+                onLongClick = {},
+            )
+        }
+    }
+}
