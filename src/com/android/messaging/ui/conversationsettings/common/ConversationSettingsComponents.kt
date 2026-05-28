@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationsettings.common
 
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Group
@@ -28,18 +28,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.common.components.ParticipantAvatar
@@ -150,7 +146,6 @@ internal fun ParticipantItem(
     modifier: Modifier = Modifier,
 ) {
     var showQuickActions by remember { mutableStateOf(false) }
-    var avatarBoundsPx by remember { mutableStateOf(IntRect.Zero) }
     val isBlocked = participant.isBlocked
     val fallbackIcon = if (isBlocked) Icons.Default.Block else Icons.Default.Person
     val avatarUri = participant.avatarUri.takeUnless { isBlocked }
@@ -163,20 +158,12 @@ internal fun ParticipantItem(
         onRowClick = { showQuickActions = true },
         onLongClick = onLongClick,
         onAction = onAction,
-        onAvatarBoundsChanged = { avatarBoundsPx = it },
-        modifier = modifier,
-    )
-
-    ParticipantQuickActions(
-        visible = showQuickActions,
-        anchorBoundsPx = avatarBoundsPx,
-        participant = participant,
-        avatarUri = avatarUri,
-        fallbackIcon = fallbackIcon,
-        onDismiss = dismissPopup,
+        quickActionsVisible = showQuickActions,
+        onDismissQuickActions = dismissPopup,
         onMessageClick = onClick,
         onCallClick = onCallClick,
         onContactClick = onContactClick,
+        modifier = modifier,
     )
 }
 
@@ -188,7 +175,11 @@ private fun ParticipantRow(
     onRowClick: () -> Unit,
     onLongClick: () -> Unit,
     onAction: (() -> Unit)?,
-    onAvatarBoundsChanged: (IntRect) -> Unit,
+    quickActionsVisible: Boolean,
+    onDismissQuickActions: () -> Unit,
+    onMessageClick: () -> Unit,
+    onCallClick: (() -> Unit)?,
+    onContactClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -206,10 +197,15 @@ private fun ParticipantRow(
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        ParticipantAvatarSlot(
+        ParticipantAvatarWithQuickActions(
+            participant = participant,
             avatarUri = avatarUri,
             fallbackIcon = fallbackIcon,
-            onBoundsChanged = onAvatarBoundsChanged,
+            quickActionsVisible = quickActionsVisible,
+            onDismissQuickActions = onDismissQuickActions,
+            onMessageClick = onMessageClick,
+            onCallClick = onCallClick,
+            onContactClick = onContactClick,
         )
 
         Spacer(modifier = Modifier.width(16.dp))
@@ -229,7 +225,6 @@ private fun ParticipantRow(
 @Composable
 private fun ParticipantQuickActions(
     visible: Boolean,
-    anchorBoundsPx: IntRect,
     participant: ParticipantUiState,
     avatarUri: String?,
     fallbackIcon: ImageVector,
@@ -240,7 +235,6 @@ private fun ParticipantQuickActions(
 ) {
     ParticipantQuickActionsPopup(
         visible = visible,
-        anchorBoundsPx = anchorBoundsPx,
         avatarUri = avatarUri,
         displayName = participant.displayName,
         subtitle = participant.details,
@@ -263,29 +257,35 @@ private fun ParticipantQuickActions(
 }
 
 @Composable
-private fun ParticipantAvatarSlot(
+private fun ParticipantAvatarWithQuickActions(
+    participant: ParticipantUiState,
     avatarUri: String?,
     fallbackIcon: ImageVector,
-    onBoundsChanged: (IntRect) -> Unit,
+    quickActionsVisible: Boolean,
+    onDismissQuickActions: () -> Unit,
+    onMessageClick: () -> Unit,
+    onCallClick: (() -> Unit)?,
+    onContactClick: (() -> Unit)?,
 ) {
-    ParticipantAvatar(
-        avatarUri = avatarUri,
-        fallbackIcon = fallbackIcon,
-        fallbackIconSize = 24.dp,
-        modifier = Modifier
-            .size(40.dp)
-            .onGloballyPositioned { coords ->
-                val pos = coords.positionInWindow()
-                onBoundsChanged(
-                    IntRect(
-                        left = pos.x.toInt(),
-                        top = pos.y.toInt(),
-                        right = pos.x.toInt() + coords.size.width,
-                        bottom = pos.y.toInt() + coords.size.height,
-                    ),
-                )
-            },
-    )
+    Box(modifier = Modifier.size(40.dp)) {
+        ParticipantAvatar(
+            avatarUri = avatarUri,
+            fallbackIcon = fallbackIcon,
+            fallbackIconSize = 24.dp,
+            modifier = Modifier.matchParentSize(),
+        )
+
+        ParticipantQuickActions(
+            visible = quickActionsVisible,
+            participant = participant,
+            avatarUri = avatarUri,
+            fallbackIcon = fallbackIcon,
+            onDismiss = onDismissQuickActions,
+            onMessageClick = onMessageClick,
+            onCallClick = onCallClick,
+            onContactClick = onContactClick,
+        )
+    }
 }
 
 @Composable
