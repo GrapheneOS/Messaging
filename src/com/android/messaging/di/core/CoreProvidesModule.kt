@@ -4,8 +4,10 @@ import android.app.role.RoleManager
 import android.content.ClipboardManager
 import android.content.ContentResolver
 import android.content.Context
+import android.os.SystemClock
 import android.telephony.SubscriptionManager
 import android.telephony.TelephonyManager
+import com.android.messaging.util.core.ElapsedRealtimeProvider
 import dagger.Module
 import dagger.Provides
 import dagger.Reusable
@@ -110,5 +112,11 @@ internal class CoreProvidesModule {
         context: Context,
     ): TelephonyManager {
         return context.getSystemService(TelephonyManager::class.java)
+    }
+
+    @Provides
+    @Reusable
+    fun provideElapsedRealtimeProvider(): ElapsedRealtimeProvider {
+        return ElapsedRealtimeProvider { SystemClock.elapsedRealtime() }
     }
 }
