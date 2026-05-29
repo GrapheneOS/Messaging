@@ -3,11 +3,13 @@ package com.android.messaging.ui.blockedparticipants.common
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -29,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -215,7 +218,15 @@ private fun BlockedParticipantInfo(
     details: String?,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier) {
+    val twoLineHeight = with(LocalDensity.current) {
+        MaterialTheme.typography.bodyLarge.lineHeight.toDp() +
+            MaterialTheme.typography.bodySmall.lineHeight.toDp()
+    }
+
+    Column(
+        modifier = modifier.heightIn(min = twoLineHeight),
+        verticalArrangement = Arrangement.Center,
+    ) {
         Text(
             text = displayName,
             style = MaterialTheme.typography.bodyLarge,
@@ -224,13 +235,15 @@ private fun BlockedParticipantInfo(
             overflow = TextOverflow.Ellipsis,
         )
 
-        Text(
-            text = details.orEmpty(),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        if (!details.isNullOrBlank()) {
+            Text(
+                text = details,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 
