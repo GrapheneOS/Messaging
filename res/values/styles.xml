@@ -244,30 +244,8 @@
         <item name="android:paddingEnd">24dp</item>
     </style>
 
-    <style name="CopyContactDialogTextStyle" parent="ParticipantListItem">
-        <item name="android:paddingStart">@dimen/copy_contact_dialog_left_padding</item>
-        <item name="android:paddingEnd">@dimen/copy_contact_dialog_right_padding</item>
-    </style>
-
-    <style name="ParticipantListItemDetail">
-        <item name="android:textSize">@dimen/participant_list_detail_text_size</item>
-        <item name="android:textColor">@color/participant_list_text_secondary</item>
-        <item name="android:background">@null</item>
-    </style>
-
     <style name="PeopleListItemViewStyle">
         <item name="android:paddingStart">16dp</item>
-    </style>
-
-    <style name="PeopleAndOptionsItemStyle">
-        <item name="android:paddingStart">16dp</item>
-        <item name="android:paddingEnd">16dp</item>
-    </style>
-
-    <style name="PeopleAndOptionsSectionHeader">
-        <item name="android:textSize">@dimen/people_and_options_header_text_size</item>
-        <item name="android:textColor">@color/people_and_options_header_text</item>
-        <item name="android:background">@null</item>
     </style>
 
     <style name="DropDownListViewStyle" parent="Widget.AppCompat.ListView.DropDown">

@@ -7,6 +7,7 @@ import com.android.messaging.data.conversation.model.message.ConversationMessage
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
 import com.android.messaging.data.conversation.model.send.ConversationSendData
+import com.android.messaging.data.conversation.store.ConversationSelfIdStore
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
 import com.android.messaging.datamodel.MessagingContentProvider
@@ -37,6 +38,7 @@ import kotlinx.coroutines.withContext
 
 internal interface ConversationsRepository {
     fun getConversationMetadata(conversationId: String): Flow<ConversationMetadata?>
+    suspend fun getConversationMetadataSnapshot(conversationId: String): ConversationMetadata?
     fun getConversationMessages(conversationId: String): Flow<List<ConversationMessageData>>
     suspend fun getConversationSendData(
         conversationId: String,
@@ -64,10 +66,13 @@ internal interface ConversationsRepository {
     fun unarchiveConversation(conversationId: String)
 
     fun deleteConversation(conversationId: String, cutoffTimestamp: Long)
+
+    suspend fun setConversationSelfId(conversationId: String, selfId: String)
 }
 
 internal class ConversationsRepositoryImpl @Inject constructor(
     private val contentResolver: ContentResolver,
+    private val conversationSelfIdStore: ConversationSelfIdStore,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
     @param:MessagingDbDispatcher
@@ -83,6 +88,19 @@ internal class ConversationsRepositoryImpl @Inject constructor(
                 queryConversationMetadata(uri = uri)
             }
             .flowOn(messagingDbDispatcher)
+    }
+
+    override suspend fun getConversationMetadataSnapshot(
+        conversationId: String,
+    ): ConversationMetadata? {
+        if (conversationId.isBlank()) return null
+
+        val uri = MessagingContentProvider.buildConversationMetadataUri(conversationId)
+        return withContext(context = messagingDbDispatcher) {
+            queryConversationMetadata(
+                uri = uri,
+            )
+        }
     }
 
     override fun getConversationMessages(
@@ -204,6 +222,22 @@ internal class ConversationsRepositoryImpl @Inject constructor(
             conversationId,
             cutoffTimestamp,
         )
+    }
+
+    override suspend fun setConversationSelfId(
+        conversationId: String,
+        selfId: String,
+    ) {
+        if (conversationId.isBlank() || selfId.isBlank()) return
+
+        withContext(context = messagingDbDispatcher) {
+            conversationSelfIdStore.updateSelfId(
+                conversationId = conversationId,
+                selfId = selfId,
+            )
+            MessagingContentProvider.notifyConversationListChanged()
+            MessagingContentProvider.notifyConversationMetadataChanged(conversationId)
+        }
     }
 
     private fun observeUri(uri: Uri): Flow<Unit> {

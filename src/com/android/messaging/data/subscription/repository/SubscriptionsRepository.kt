@@ -257,6 +257,7 @@ internal class SubscriptionsRepositoryImpl @Inject constructor(
                 cursor.moveToFirst() -> {
                     ParticipantData.getFromCursor(cursor).subId
                 }
+
                 else -> null
             }
         }

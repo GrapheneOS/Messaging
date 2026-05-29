@@ -40,11 +40,6 @@ import com.android.messaging.datamodel.data.LaunchConversationData;
 import com.android.messaging.datamodel.data.LaunchConversationData.LaunchConversationDataListener;
 import com.android.messaging.datamodel.data.MediaPickerData;
 import com.android.messaging.datamodel.data.MessagePartData;
-import com.android.messaging.datamodel.data.ParticipantData;
-import com.android.messaging.datamodel.data.ParticipantListItemData;
-import com.android.messaging.datamodel.data.PeopleAndOptionsData;
-import com.android.messaging.datamodel.data.PeopleAndOptionsData.PeopleAndOptionsDataListener;
-import com.android.messaging.datamodel.data.PeopleOptionsItemData;
 import com.android.messaging.datamodel.data.VCardContactItemData;
 import com.android.messaging.util.Assert.DoesNotRunOnMainThread;
 
@@ -83,19 +78,11 @@ public abstract class DataModel {
     public abstract LaunchConversationData createLaunchConversationData(
             LaunchConversationDataListener listener);
 
-    public abstract PeopleOptionsItemData createPeopleOptionsItemData(final Context context);
-
-    public abstract PeopleAndOptionsData createPeopleAndOptionsData(final String conversationId,
-            final Context context, final PeopleAndOptionsDataListener listener);
-
     public abstract VCardContactItemData createVCardContactItemData(final Context context,
             final MessagePartData data);
 
     public abstract VCardContactItemData createVCardContactItemData(final Context context,
             final Uri vCardUri);
-
-    public abstract ParticipantListItemData createParticipantListItemData(
-            final ParticipantData participant);
 
     public abstract BlockedParticipantsData createBlockedParticipantsData(Context context,
             BlockedParticipantsDataListener listener);
