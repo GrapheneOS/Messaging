@@ -9,9 +9,10 @@ import com.android.messaging.ui.blockedparticipants.screen.mapper.BlockedPartici
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantUiState
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsUiState as State
 import javax.inject.Inject
-import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.PersistentSet
+import kotlinx.collections.immutable.minus
 import kotlinx.collections.immutable.persistentSetOf
-import kotlinx.collections.immutable.toPersistentSet
+import kotlinx.collections.immutable.plus
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -66,7 +67,7 @@ internal class BlockedParticipantsDelegateImpl @Inject constructor(
             } else {
                 current.selectedParticipantIds + participantId
             }
-            current.copy(selectedParticipantIds = updated.toPersistentSet())
+            current.copy(selectedParticipantIds = updated)
         }
     }
 
@@ -102,15 +103,15 @@ internal class BlockedParticipantsDelegateImpl @Inject constructor(
             .toList()
     }
 
-    private fun ImmutableSet<String>.retainKnown(
+    private fun PersistentSet<String>.retainKnown(
         participants: List<BlockedParticipantUiState>,
-    ): ImmutableSet<String> {
+    ): PersistentSet<String> {
         if (isEmpty()) return this
 
         val knownIds = participants.mapTo(HashSet(participants.size)) {
             it.participantId
         }
 
-        return filter { it in knownIds }.toPersistentSet()
+        return retainAll(knownIds)
     }
 }

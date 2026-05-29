@@ -3,7 +3,7 @@ package com.android.messaging.ui.blockedparticipants.screen.support
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantUiState
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsUiState
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toPersistentList
@@ -27,7 +27,7 @@ internal const val DESTINATION_3 = "+31633333333"
 
 internal fun loadedState(
     participants: ImmutableList<BlockedParticipantUiState> = defaultParticipants(),
-    selectedIds: ImmutableSet<String> = persistentSetOf(),
+    selectedIds: PersistentSet<String> = persistentSetOf(),
 ): BlockedParticipantsUiState {
     return BlockedParticipantsUiState(
         isLoading = false,
