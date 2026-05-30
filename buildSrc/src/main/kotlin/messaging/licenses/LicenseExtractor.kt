@@ -216,7 +216,7 @@ internal class LicenseExtractor(
                 while (entries.hasMoreElements()) {
                     val name = entries.nextElement().name
 
-                    if (LICENSE_FILE_RE.containsMatchIn(name)){
+                    if (LICENSE_FILE_RE.containsMatchIn(name)) {
                         licenseCandidates += name
                     }
 
@@ -266,6 +266,10 @@ internal class LicenseExtractor(
         } catch (_: Exception) {
             null
         }
+    }
+
+    fun bundledSpdxText(spdxId: String): String? {
+        return spdxText(spdxId)
     }
 
     private fun spdxText(spdxId: String): String? {

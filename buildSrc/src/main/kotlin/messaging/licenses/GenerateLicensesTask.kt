@@ -5,7 +5,7 @@ import org.gradle.api.GradleException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
@@ -21,7 +21,10 @@ abstract class GenerateLicensesTask : DefaultTask() {
     abstract val configurationName: Property<String>
 
     @get:Input
-    abstract val copyrightOverrides: MapProperty<String, String>
+    abstract val copyrightOverrides: ListProperty<CopyrightOverride>
+
+    @get:Input
+    abstract val extraNotices: ListProperty<ExtraNotice>
 
     @get:OutputFile
     abstract val output: RegularFileProperty
@@ -29,7 +32,8 @@ abstract class GenerateLicensesTask : DefaultTask() {
     init {
         title.convention(DEFAULT_TITLE)
         configurationName.convention(DEFAULT_CONFIGURATION_NAME)
-        copyrightOverrides.convention(emptyMap())
+        copyrightOverrides.convention(emptyList())
+        extraNotices.convention(emptyList())
         notCompatibleWithConfigurationCache(
             "Uses ArtifactResolutionQuery to fetch POMs at execution time",
         )
@@ -58,13 +62,86 @@ abstract class GenerateLicensesTask : DefaultTask() {
             SpdxPolicy.checkOwner(rendered.record)
         }
 
+        val licenseBlocks = overridden.map(::toNoticeBlock)
+        val extraBlocks = resolveExtraNotices(extraNotices.get(), extractor)
+        val blocks = (licenseBlocks + extraBlocks).sortedWith(BY_HEADING)
+
         val outputFile = output.get().asFile
         outputFile.parentFile.mkdirs()
 
-        val html = HtmlRenderer.render(title.get(), overridden)
+        val html = HtmlRenderer.render(title.get(), blocks)
         outputFile.writeText(html)
 
-        logSummary(overridden, outputFile)
+        logSummary(overridden, extraBlocks, outputFile)
+    }
+
+    private fun toNoticeBlock(rendered: RenderedLicense): NoticeBlock {
+        return NoticeBlock(
+            heading = licenseHeading(rendered.record),
+            body = withSource(rendered.record.projectUrl, rendered.text),
+        )
+    }
+
+    private fun licenseHeading(record: LicenseRecord): String {
+        val coordinates = record.coordinates
+        val projectName = record.projectName?.trim().orEmpty()
+        val isMissing = projectName.isEmpty()
+        val sameAsArtifact = projectName.equals(coordinates.name, ignoreCase = true)
+
+        return when {
+            isMissing || sameAsArtifact -> "Notice for $coordinates"
+            else -> "Notice for $projectName ($coordinates)"
+        }
+    }
+
+    private fun resolveExtraNotices(
+        notices: List<ExtraNotice>,
+        extractor: LicenseExtractor,
+    ): List<NoticeBlock> {
+        return notices.map { notice ->
+            val spdxBody = notice.spdxId?.let { id ->
+                extractor.bundledSpdxText(id)
+                    ?: throw GradleException(
+                        "Extra notice '${notice.name}' references unknown SPDX id '$id'. " +
+                            "Add the text to buildSrc/src/main/resources/licenses/$id.txt.",
+                    )
+            }
+
+            val body = buildNoticeBody(notice.text, spdxBody)
+                ?: throw GradleException(
+                    "Extra notice '${notice.name}' must define text and/or spdxId.",
+                )
+
+            NoticeBlock(
+                heading = "Notice for ${notice.name}",
+                body = withSource(notice.url, body),
+            )
+        }
+    }
+
+    private fun buildNoticeBody(
+        inlineText: String?,
+        spdxBody: String?,
+    ): String? {
+        val inline = inlineText?.trimEnd()?.ifEmpty { null }
+        val spdx = spdxBody?.trim()?.ifEmpty { null }
+
+        return when {
+            inline != null && spdx != null -> "$inline\n\n$spdx"
+            inline != null -> inline
+            else -> spdx
+        }
+    }
+
+    private fun withSource(
+        sourceUrl: String?,
+        body: String,
+    ): String {
+        val url = sourceUrl?.trim().orEmpty()
+        return when {
+            url.isEmpty() -> body
+            else -> "Source: $url\n\n$body"
+        }
     }
 
     private fun collectComponents(
@@ -121,7 +198,7 @@ abstract class GenerateLicensesTask : DefaultTask() {
             }
         }
 
-        return topByModule.values.sortedWith(BY_GROUP_AND_NAME)
+        return topByModule.values.toList()
     }
 
     private fun resolveAll(
@@ -162,14 +239,15 @@ abstract class GenerateLicensesTask : DefaultTask() {
 
     private fun applyOverrides(
         items: List<RenderedLicense>,
-        copyrightByKey: Map<String, String>,
+        overrides: List<CopyrightOverride>,
     ): List<RenderedLicense> {
-        if (copyrightByKey.isEmpty()) {
+        if (overrides.isEmpty()) {
             return items
         }
 
+        val copyrightByPattern = overrides.associate { it.coordinates to it.copyright }
         return items.map { item ->
-            val copyright = matchOverride(item.record.coordinates, copyrightByKey)
+            val copyright = matchOverride(item.record.coordinates, copyrightByPattern)
                 ?: return@map item
 
             val combinedText = listOf(
@@ -207,6 +285,7 @@ abstract class GenerateLicensesTask : DefaultTask() {
 
     private fun logSummary(
         items: List<RenderedLicense>,
+        extras: List<NoticeBlock>,
         outputFile: File,
     ) {
         val embeddedCount = items.count { it.record.source is LicenseSource.Embedded }
@@ -221,7 +300,8 @@ abstract class GenerateLicensesTask : DefaultTask() {
 
         logger.lifecycle(
             "Done. embedded=$embeddedCount via-spdx=$viaSpdxCount " +
-                "with-notice=$withNoticeCount total=${items.size}",
+                "with-notice=$withNoticeCount extra=${extras.size} " +
+                "total=${items.size + extras.size}",
         )
         logger.lifecycle("SPDX texts used: $spdxUsage")
         logger.lifecycle("HTML: ${outputFile.absolutePath}")
@@ -275,19 +355,8 @@ abstract class GenerateLicensesTask : DefaultTask() {
 
         val VERSION_SPLIT_RE = Regex("[.\\-_+]")
 
-        val BY_GROUP_AND_NAME: Comparator<Component> = Comparator { left, right ->
-            val byGroup = left.coordinates.group.compareTo(
-                right.coordinates.group,
-                ignoreCase = true,
-            )
-
-            when {
-                byGroup != 0 -> byGroup
-                else -> left.coordinates.name.compareTo(
-                    right.coordinates.name,
-                    ignoreCase = true,
-                )
-            }
+        val BY_HEADING: Comparator<NoticeBlock> = Comparator { left, right ->
+            left.heading.compareTo(right.heading, ignoreCase = true)
         }
     }
 }

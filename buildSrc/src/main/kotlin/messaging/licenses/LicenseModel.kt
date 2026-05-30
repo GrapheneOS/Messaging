@@ -1,5 +1,19 @@
 package messaging.licenses
 
+import java.io.Serializable
+
+data class CopyrightOverride(
+    val coordinates: String,
+    val copyright: String,
+) : Serializable
+
+data class ExtraNotice(
+    val name: String,
+    val url: String? = null,
+    val spdxId: String? = null,
+    val text: String? = null,
+) : Serializable
+
 internal data class Coordinates(
     val group: String,
     val name: String,
@@ -42,6 +56,11 @@ internal data class LicenseRecord(
 internal data class RenderedLicense(
     val record: LicenseRecord,
     val text: String,
+)
+
+internal data class NoticeBlock(
+    val heading: String,
+    val body: String,
 )
 
 internal data class ExtractionResult(

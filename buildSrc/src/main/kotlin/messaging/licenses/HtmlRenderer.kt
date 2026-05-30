@@ -19,39 +19,18 @@ internal object HtmlRenderer {
 
     fun render(
         title: String,
-        items: List<RenderedLicense>,
+        blocks: List<NoticeBlock>,
     ): String = buildString {
         append(headBefore)
         append(title.htmlEscape())
         append(headAfter)
-        for (item in items) {
+        for (block in blocks) {
             appendBlock(
-                heading = headingFor(item.record),
-                body = bodyFor(item),
+                heading = block.heading,
+                body = block.body,
             )
         }
         append(TAIL)
-    }
-
-    private fun headingFor(record: LicenseRecord): String {
-        val coordinates = record.coordinates
-        val projectName = record.projectName?.trim().orEmpty()
-        val isMissing = projectName.isEmpty()
-        val sameAsArtifact = projectName.equals(coordinates.name, ignoreCase = true)
-
-        return when {
-            isMissing || sameAsArtifact -> "Notice for $coordinates"
-            else -> "Notice for $projectName ($coordinates)"
-        }
-    }
-
-    private fun bodyFor(item: RenderedLicense): String {
-        val url = item.record.projectUrl?.trim().orEmpty()
-
-        return when {
-            url.isEmpty() -> item.text
-            else -> "Source: $url\n\n${item.text}"
-        }
     }
 
     private fun StringBuilder.appendBlock(
