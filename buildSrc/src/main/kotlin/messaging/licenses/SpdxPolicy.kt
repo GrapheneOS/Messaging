@@ -11,6 +11,7 @@ internal object SpdxPolicy {
     private val HARD_FAIL_PREFIXES = listOf(
         "GPL-",
         "AGPL-",
+        "EUPL-",
     )
 
     private val SOURCE_AVAILABILITY = setOf(
@@ -49,6 +50,9 @@ internal object SpdxPolicy {
         "gnu general public license v3" to "GPL-3.0-only",
         "gnu general public license v2" to "GPL-2.0-only",
         "gnu general public license" to "GPL-2.0-only",
+        "european union public licence" to "EUPL-1.2",
+        "european union public license" to "EUPL-1.2",
+        "eupl" to "EUPL-1.2",
     )
 
     private val URL_MAP = listOf(
@@ -58,6 +62,7 @@ internal object SpdxPolicy {
         "eclipse.org/legal/epl-v10" to "EPL-1.0",
         "mozilla.org/en-us/mpl/2.0" to "MPL-2.0",
         "mozilla.org/mpl/2.0" to "MPL-2.0",
+        "eupl" to "EUPL-1.2",
     )
 
     fun resolve(
