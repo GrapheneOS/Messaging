@@ -46,6 +46,7 @@ import com.android.messaging.ui.core.AppTheme
 internal fun BlockedParticipantItem(
     participant: BlockedParticipantUiState,
     isSelected: Boolean,
+    inSelectionMode: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     onUnblockClick: () -> Unit,
@@ -57,15 +58,22 @@ internal fun BlockedParticipantItem(
     var showQuickActions by remember { mutableStateOf(false) }
     val fallbackIcon = Icons.Default.Person
     val dismissPopup = { showQuickActions = false }
+    val onAvatarClick = {
+        when {
+            inSelectionMode -> onClick()
+            else -> showQuickActions = true
+        }
+    }
 
     BlockedParticipantRow(
         participant = participant,
         isSelected = isSelected,
+        inSelectionMode = inSelectionMode,
         fallbackIcon = fallbackIcon,
         onClick = onClick,
         onLongClick = onLongClick,
         onUnblockClick = onUnblockClick,
-        onAvatarClick = { showQuickActions = true },
+        onAvatarClick = onAvatarClick,
         quickActionsVisible = showQuickActions,
         onDismissQuickActions = dismissPopup,
         onMessageClick = onMessageClick,
@@ -80,6 +88,7 @@ internal fun BlockedParticipantItem(
 private fun BlockedParticipantRow(
     participant: BlockedParticipantUiState,
     isSelected: Boolean,
+    inSelectionMode: Boolean,
     fallbackIcon: ImageVector,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
@@ -118,6 +127,7 @@ private fun BlockedParticipantRow(
                 participant = participant,
                 fallbackIcon = fallbackIcon,
                 isSelected = isSelected,
+                inSelectionMode = inSelectionMode,
                 onAvatarClick = onAvatarClick,
                 quickActionsVisible = quickActionsVisible,
                 onDismissQuickActions = onDismissQuickActions,
@@ -179,6 +189,7 @@ private fun BlockedParticipantAvatarWithQuickActions(
     participant: BlockedParticipantUiState,
     fallbackIcon: ImageVector,
     isSelected: Boolean,
+    inSelectionMode: Boolean,
     onAvatarClick: () -> Unit,
     quickActionsVisible: Boolean,
     onDismissQuickActions: () -> Unit,
@@ -195,13 +206,13 @@ private fun BlockedParticipantAvatarWithQuickActions(
             modifier = Modifier
                 .clip(CircleShape)
                 .clickable(
-                    enabled = !isSelected,
+                    enabled = inSelectionMode || !isSelected,
                     onClick = onAvatarClick
                 ),
         )
 
         BlockedParticipantQuickActions(
-            visible = quickActionsVisible,
+            visible = quickActionsVisible && !inSelectionMode,
             participant = participant,
             fallbackIcon = fallbackIcon,
             onDismiss = onDismissQuickActions,
@@ -276,6 +287,7 @@ private fun BlockedParticipantItemPreview() {
                 isContactSaved = true,
             ),
             isSelected = false,
+            inSelectionMode = false,
             onClick = {},
             onLongClick = {},
             onUnblockClick = {},

@@ -175,10 +175,13 @@ private fun BlockedParticipantsList(
 
                 val destination = participant.normalizedDestination.orEmpty()
                 val hasDestination = destination.isNotEmpty()
+                val isSelected = participant.participantId in uiState.selectedParticipantIds
+                val inSelectionMode = uiState.selectedParticipantIds.isNotEmpty()
 
                 BlockedParticipantItem(
                     participant = participant,
-                    isSelected = participant.participantId in uiState.selectedParticipantIds,
+                    isSelected = isSelected,
+                    inSelectionMode = inSelectionMode,
                     onClick = {
                         onAction(Action.ParticipantClicked(participant.participantId))
                     },
