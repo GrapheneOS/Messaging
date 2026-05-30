@@ -3,6 +3,7 @@ import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
+    id("messaging.licenses")
     alias(libs.plugins.android.application)
     alias(libs.plugins.detekt)
     alias(libs.plugins.hilt)

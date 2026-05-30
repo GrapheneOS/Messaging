@@ -5,9 +5,9 @@ import android.app.role.RoleManager
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.provider.Settings
-import com.android.messaging.ui.LicenseActivity
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.appsettings.screen.model.SettingsScreenEffect as Effect
+import com.android.messaging.ui.license.LicenseActivity
 import com.android.messaging.util.LogUtil
 
 internal interface SettingsEffectHandler {

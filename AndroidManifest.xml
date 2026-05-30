@@ -223,12 +223,17 @@
                 android:value="com.android.messaging.ui.conversation.ConversationActivity" />
         </activity>
 
-         <!-- License -->
-        <activity android:name=".ui.LicenseActivity"
+        <!-- License -->
+        <activity
+            android:name=".ui.license.LicenseActivity"
             android:exported="true"
-            android:theme="@android:style/Theme.Holo.Light.Dialog"
-            android:label="@string/menu_license">
-        </activity>
+            android:label="@string/menu_license"
+            android:theme="@style/Theme.License" />
+
+        <activity-alias
+            android:name=".ui.LicenseActivity"
+            android:exported="true"
+            android:targetActivity=".ui.license.LicenseActivity" />
 
         <!-- Message Forwarding -->
         <activity

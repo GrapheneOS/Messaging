@@ -25,6 +25,8 @@
 
     <style name="Theme.Compose" parent="android:Theme.Material.Light.NoActionBar" />
 
+    <style name="Theme.License" parent="Theme.AppCompat.DayNight.NoActionBar" />
+
     <!-- Application theme. -->
     <style name="BugleTheme" parent="BugleBaseTheme">
         <!-- All customizations that are NOT specific to a particular API-level can go here. -->
