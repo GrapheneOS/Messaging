@@ -141,12 +141,14 @@
 
         <!-- Blocked Participants -->
         <activity
-            android:name=".ui.BlockedParticipantsActivity"
+            android:name=".ui.blockedparticipants.BlockedParticipantsActivity"
+            android:allowEmbedded="true"
             android:configChanges="orientation|screenSize|keyboardHidden"
-            android:screenOrientation="user"
             android:label="@string/blocked_contacts_title"
-            android:theme="@style/BugleTheme"
-            android:parentActivityName="com.android.messaging.ui.conversationlist.ConversationListActivity">
+            android:parentActivityName="com.android.messaging.ui.conversationlist.ConversationListActivity"
+            android:resizeableActivity="true"
+            android:screenOrientation="user"
+            android:theme="@style/Theme.Compose">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.android.messaging.ui.conversationlist.ConversationListActivity" />

@@ -36,7 +36,6 @@
     <dimen name="conversation_message_photo_min_size">96dp</dimen>
     <dimen name="conversation_list_notification_bell_padding">4dp</dimen>
     <dimen name="conversation_list_empty_text_bottom_margin">30dp</dimen>
-    <dimen name="blocked_participant_list_item_view_padding">16dp</dimen>
 
     <dimen name="message_bubble_arrow_width">9dp</dimen>
     <dimen name="message_text_bottom_padding">12dp</dimen>

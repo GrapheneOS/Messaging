@@ -586,6 +586,10 @@
     <string name="action_call">Make a call</string>
     <!-- Content description for the overflow menu button in the conversation top app bar -->
     <string name="action_more_options">More options</string>
+    <!-- Label for the contact info button in the conversation settings screen -->
+    <string name="action_contact_info">Contact info</string>
+    <!-- Accessibility label for the message action button shown in the participant quick actions dialog -->
+    <string name="action_send_message">Send message</string>
     <!-- The hint text shown in the message compose input box prompting the user to send a message -->
     <string name="compose_message_view_hint_text">Send message</string>
     <!-- The hint text shown in the message compose input box prompting the user to send a message when there are multiple SIMs. -->
@@ -785,6 +789,27 @@
     <!-- Label of unblock contact item in People & Options for 1:1 conversation -->
     <string name="unblock_contact_title">Unblock <xliff:g id="destination">%s</xliff:g></string>
 
+    <!-- Title of the snooze chat dialog opened from conversation settings -->
+    <string name="snooze_chat_dialog_title">Snooze chat</string>
+
+    <!-- Description shown inside the snooze chat dialog -->
+    <string name="snooze_chat_dialog_message">You won\'t get notifications from this chat for the selected period.</string>
+
+    <!-- Confirm button label for the snooze chat dialog -->
+    <string name="snooze_chat_dialog_confirm">Snooze</string>
+
+    <!-- Snooze duration options shown in the snooze chat dialog -->
+    <string name="snooze_chat_option_one_hour">1 hour</string>
+    <string name="snooze_chat_option_eight_hours">8 hours</string>
+    <string name="snooze_chat_option_twenty_four_hours">24 hours</string>
+    <string name="snooze_chat_option_always">Always</string>
+
+    <!-- Conversation settings entry that opens the snooze chat dialog -->
+    <string name="snooze_chat_setting_title">Snooze chat</string>
+
+    <!-- Conversation settings entry shown when the chat is already snoozed -->
+    <string name="unsnooze_chat_setting_title">Unsnooze chat</string>
+
     <!-- Title of block confirmation dialog -->
     <string name="block_confirmation_title">Block <xliff:g id="destination">%s</xliff:g>?</string>
 
@@ -796,6 +821,15 @@
 
     <!-- The message in a blocked contact item which indicates tapping will unblock -->
     <string name="tap_to_unblock_message">UNBLOCK</string>
+
+    <!-- Empty state message shown when no contacts are blocked -->
+    <string name="blocked_contacts_empty">No blocked contacts</string>
+
+    <!-- Title shown in the blocked contacts top bar while items are selected -->
+    <string name="blocked_contacts_selection_title"><xliff:g id="count">%d</xliff:g> selected</string>
+
+    <!-- Content description for the button that clears the current selection in the blocked contacts screen -->
+    <string name="blocked_contacts_clear_selection_content_description">Clear selection</string>
 
     <!-- Action menu title for viewing the list of blocked contacts -->
     <string name="view_blocked_contacts_title">Blocked contacts</string>
@@ -959,6 +993,8 @@
     <string name="sim_selector_button_content_description">SIM selector</string>
     <!-- Content description for the SIM selector button with selected sim name -->
     <string name="sim_selector_button_content_description_with_selection"><xliff:g id="sim">%1$s</xliff:g> selected, SIM selector</string>
+    <!-- Title shown above the SIM switch row in conversation settings -->
+    <string name="sim_selector_item_title">Send with</string>
     <!-- Title for the modal bottom sheet that lets the user pick which SIM sends a message -->
     <string name="sim_selector_sheet_title">Send from</string>
     <!-- Accessibility label for an item in the SIM picker that is currently selected -->

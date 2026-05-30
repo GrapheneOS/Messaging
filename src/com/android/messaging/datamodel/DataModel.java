@@ -25,8 +25,6 @@ import com.android.messaging.Factory;
 import com.android.messaging.datamodel.action.Action;
 import com.android.messaging.datamodel.action.ActionService;
 import com.android.messaging.datamodel.action.BackgroundWorker;
-import com.android.messaging.datamodel.data.BlockedParticipantsData;
-import com.android.messaging.datamodel.data.BlockedParticipantsData.BlockedParticipantsDataListener;
 import com.android.messaging.datamodel.data.ContactListItemData;
 import com.android.messaging.datamodel.data.ContactPickerData;
 import com.android.messaging.datamodel.data.ContactPickerData.ContactPickerDataListener;
@@ -96,9 +94,6 @@ public abstract class DataModel {
 
     public abstract ParticipantListItemData createParticipantListItemData(
             final ParticipantData participant);
-
-    public abstract BlockedParticipantsData createBlockedParticipantsData(Context context,
-            BlockedParticipantsDataListener listener);
 
     public abstract DraftMessageData createDraftMessageData(String conversationId);
 
