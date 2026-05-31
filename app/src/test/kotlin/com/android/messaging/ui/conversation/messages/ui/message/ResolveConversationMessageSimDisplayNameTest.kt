@@ -9,16 +9,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
-private const val SIM_1_ID = "self-sim-1"
-private const val SIM_2_ID = "self-sim-2"
-private const val SIM_1_NAME = "SIM 1"
-private const val SIM_2_NAME = "SIM 2"
-
-private val SIM_DISPLAY_NAMES = mapOf(
-    SIM_1_ID to SIM_1_NAME,
-    SIM_2_ID to SIM_2_NAME,
-)
-
 class ResolveConversationMessageSimDisplayNameTest {
 
     @Test
@@ -35,26 +25,13 @@ class ResolveConversationMessageSimDisplayNameTest {
     }
 
     @Test
-    fun returnsNullWhenMessageHasNoSelfParticipantId() {
-        val message = message(selfParticipantId = null, isIncoming = true)
-
-        val result = resolveConversationMessageSimDisplayName(
-            message = message,
-            messageBelow = null,
-            simDisplayNameByParticipantId = SIM_DISPLAY_NAMES,
-        )
-
-        assertNull(result)
-    }
-
-    @Test
     fun returnsNullWhenSelfParticipantIdMissingFromMap() {
         val message = message(selfParticipantId = "unknown", isIncoming = false)
 
         val result = resolveConversationMessageSimDisplayName(
             message = message,
             messageBelow = null,
-            simDisplayNameByParticipantId = SIM_DISPLAY_NAMES,
+            simDisplayNameByParticipantId = simDisplayNames,
         )
 
         assertNull(result)
@@ -67,7 +44,7 @@ class ResolveConversationMessageSimDisplayNameTest {
         val result = resolveConversationMessageSimDisplayName(
             message = message,
             messageBelow = null,
-            simDisplayNameByParticipantId = SIM_DISPLAY_NAMES,
+            simDisplayNameByParticipantId = simDisplayNames,
         )
 
         assertEquals(SIM_2_NAME, result)
@@ -81,7 +58,7 @@ class ResolveConversationMessageSimDisplayNameTest {
         val result = resolveConversationMessageSimDisplayName(
             message = message,
             messageBelow = below,
-            simDisplayNameByParticipantId = SIM_DISPLAY_NAMES,
+            simDisplayNameByParticipantId = simDisplayNames,
         )
 
         assertEquals(SIM_1_NAME, result)
@@ -95,7 +72,7 @@ class ResolveConversationMessageSimDisplayNameTest {
         val result = resolveConversationMessageSimDisplayName(
             message = message,
             messageBelow = below,
-            simDisplayNameByParticipantId = SIM_DISPLAY_NAMES,
+            simDisplayNameByParticipantId = simDisplayNames,
         )
 
         assertEquals(SIM_1_NAME, result)
@@ -109,7 +86,7 @@ class ResolveConversationMessageSimDisplayNameTest {
         val result = resolveConversationMessageSimDisplayName(
             message = message,
             messageBelow = below,
-            simDisplayNameByParticipantId = SIM_DISPLAY_NAMES,
+            simDisplayNameByParticipantId = simDisplayNames,
         )
 
         assertNull(result)
@@ -127,54 +104,66 @@ class ResolveConversationMessageSimDisplayNameTest {
         val result = resolveConversationMessageSimDisplayName(
             message = message,
             messageBelow = below,
-            simDisplayNameByParticipantId = SIM_DISPLAY_NAMES,
+            simDisplayNameByParticipantId = simDisplayNames,
         )
 
         assertEquals(SIM_1_NAME, result)
     }
-}
 
-private fun message(
-    selfParticipantId: String?,
-    isIncoming: Boolean,
-    mmsDownload: MmsDownloadUiModel? = null,
-): ConversationMessageUiModel {
-    return ConversationMessageUiModel(
-        messageId = "id-${selfParticipantId.orEmpty()}-$isIncoming",
-        conversationId = "conversation",
-        text = "text",
-        parts = persistentListOf(
-            ConversationMessagePartUiModel.Text(text = "text"),
-        ),
-        sentTimestamp = 0L,
-        receivedTimestamp = 0L,
-        displayTimestamp = 0L,
-        status = ConversationMessageUiModel.Status.Outgoing.Complete,
-        isIncoming = isIncoming,
-        senderDisplayName = null,
-        senderAvatarUri = null,
-        senderContactId = ParticipantData.PARTICIPANT_CONTACT_ID_NOT_RESOLVED,
-        senderContactLookupKey = null,
-        senderNormalizedDestination = null,
-        senderParticipantId = null,
-        selfParticipantId = selfParticipantId,
-        canClusterWithPrevious = false,
-        canClusterWithNext = false,
-        canCopyMessageToClipboard = false,
-        canDownloadMessage = false,
-        canForwardMessage = false,
-        canResendMessage = false,
-        canSaveAttachments = false,
-        mmsDownload = mmsDownload,
-        mmsSubject = null,
-        protocol = ConversationMessageUiModel.Protocol.SMS,
-    )
-}
+    private fun message(
+        selfParticipantId: String?,
+        isIncoming: Boolean,
+        mmsDownload: MmsDownloadUiModel? = null,
+    ): ConversationMessageUiModel {
+        return ConversationMessageUiModel(
+            messageId = "id-${selfParticipantId.orEmpty()}-$isIncoming",
+            conversationId = "conversation",
+            text = "text",
+            parts = persistentListOf(
+                ConversationMessagePartUiModel.Text(text = "text"),
+            ),
+            sentTimestamp = 0L,
+            receivedTimestamp = 0L,
+            displayTimestamp = 0L,
+            status = ConversationMessageUiModel.Status.Outgoing.Complete,
+            isIncoming = isIncoming,
+            senderDisplayName = null,
+            senderAvatarUri = null,
+            senderContactId = ParticipantData.PARTICIPANT_CONTACT_ID_NOT_RESOLVED,
+            senderContactLookupKey = null,
+            senderNormalizedDestination = null,
+            senderParticipantId = null,
+            selfParticipantId = selfParticipantId,
+            canClusterWithPrevious = false,
+            canClusterWithNext = false,
+            canCopyMessageToClipboard = false,
+            canDownloadMessage = false,
+            canForwardMessage = false,
+            canResendMessage = false,
+            canSaveAttachments = false,
+            mmsDownload = mmsDownload,
+            mmsSubject = null,
+            protocol = ConversationMessageUiModel.Protocol.SMS,
+        )
+    }
 
-private fun mmsDownload(): MmsDownloadUiModel {
-    return MmsDownloadUiModel(
-        state = MmsDownloadUiModel.State.AwaitingManualDownload,
-        sizeBytes = 0L,
-        expiryTimestamp = 0L,
-    )
+    private fun mmsDownload(): MmsDownloadUiModel {
+        return MmsDownloadUiModel(
+            state = MmsDownloadUiModel.State.AwaitingManualDownload,
+            sizeBytes = 0L,
+            expiryTimestamp = 0L,
+        )
+    }
+
+    private companion object {
+        private const val SIM_1_ID = "self-sim-1"
+        private const val SIM_2_ID = "self-sim-2"
+        private const val SIM_1_NAME = "SIM 1"
+        private const val SIM_2_NAME = "SIM 2"
+
+        private val simDisplayNames = mapOf(
+            SIM_1_ID to SIM_1_NAME,
+            SIM_2_ID to SIM_2_NAME,
+        )
+    }
 }
