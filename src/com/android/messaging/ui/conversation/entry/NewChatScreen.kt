@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -31,6 +32,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.R
 import com.android.messaging.ui.conversation.NEW_CHAT_CONTACT_RESOLVING_INDICATOR_TEST_TAG
 import com.android.messaging.ui.conversation.NEW_CHAT_CREATE_GROUP_NEXT_BUTTON_TEST_TAG
+import com.android.messaging.ui.conversation.NEW_CHAT_NAVIGATE_BACK_BUTTON_TEST_TAG
+import com.android.messaging.ui.conversation.NEW_CHAT_TOP_APP_BAR_TITLE_TEST_TAG
 import com.android.messaging.ui.conversation.composer.model.ConversationSimSelectorUiState
 import com.android.messaging.ui.conversation.entry.model.NewChatEffect
 import com.android.messaging.ui.conversation.entry.model.NewChatUiState
@@ -204,6 +207,8 @@ private fun NewChatTopAppBar(
         ),
         navigationIcon = {
             IconButton(
+                modifier = Modifier
+                    .testTag(tag = NEW_CHAT_NAVIGATE_BACK_BUTTON_TEST_TAG),
                 onClick = onNavigateBack,
             ) {
                 Icon(
@@ -213,7 +218,11 @@ private fun NewChatTopAppBar(
             }
         },
         title = {
-            Text(text = newChatTitle(isCreatingGroup = isCreatingGroup))
+            Text(
+                modifier = Modifier
+                    .testTag(tag = NEW_CHAT_TOP_APP_BAR_TITLE_TEST_TAG),
+                text = newChatTitle(isCreatingGroup = isCreatingGroup),
+            )
         },
     )
 }
