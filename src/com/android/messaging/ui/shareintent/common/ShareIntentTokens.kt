@@ -1,0 +1,17 @@
+package com.android.messaging.ui.shareintent.common
+
+import androidx.compose.foundation.shape.CornerBasedShape
+import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.ui.unit.dp
+
+private val ZeroCornerSize = CornerSize(0.dp)
+
+internal val MaterialTheme.contentSurfaceShape: CornerBasedShape
+    @Composable @ReadOnlyComposable
+    get() = shapes.large.copy(
+        bottomStart = ZeroCornerSize,
+        bottomEnd = ZeroCornerSize,
+    )
