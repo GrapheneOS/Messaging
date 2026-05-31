@@ -9,6 +9,7 @@ import com.android.messaging.data.contact.formatter.ContactDestinationFormatterI
 import com.android.messaging.data.contact.model.Contact
 import com.android.messaging.data.contact.model.ContactDestination
 import com.android.messaging.sms.MmsSmsUtils
+import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.util.PhoneUtils
 import io.mockk.every
 import io.mockk.mockk
@@ -16,18 +17,21 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
-internal class ContactsRepositoryImplTest {
+class ContactsRepositoryImplTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
 
     private val contentResolver = mockk<ContentResolver>()
     private val phoneUtilsInstance = mockk<PhoneUtils>(relaxed = true)
@@ -64,355 +68,357 @@ internal class ContactsRepositoryImplTest {
     }
 
     @Test
-    fun multiNumberContactReturnsAllDestinationsWithSuperPrimaryFirst() = runTest {
-        stubFilterPhoneCursor(
-            query = "Multi",
-            rows = listOf(
-                phoneRow(
-                    contactId = 1L,
-                    sortKey = "Multi Person",
-                    number = "+15550001",
-                    type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
-                    isPrimary = false,
-                    isSuperPrimary = false,
+    fun multiNumberContactReturnsAllDestinationsWithSuperPrimaryFirst() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher
+        ) {
+            stubFilterPhoneCursor(
+                query = "Multi",
+                rows = listOf(
+                    phoneRow(
+                        contactId = 1L,
+                        sortKey = "Multi Person",
+                        number = "+15550001",
+                        type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
+                        isPrimary = false,
+                        isSuperPrimary = false,
+                    ),
                 ),
-            ),
-        )
-        stubFilterEmailCursor(query = "Multi", rows = emptyList())
-        stubExpansionPhoneCursor(
-            rows = listOf(
-                phoneRow(
-                    contactId = 1L,
-                    sortKey = "Multi Person",
-                    number = "+15550001",
-                    type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
+            )
+            stubFilterEmailCursor(query = "Multi", rows = emptyList())
+            stubExpansionPhoneCursor(
+                rows = listOf(
+                    phoneRow(
+                        contactId = 1L,
+                        sortKey = "Multi Person",
+                        number = "+15550001",
+                        type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
+                    ),
+                    phoneRow(
+                        contactId = 1L,
+                        sortKey = "Multi Person",
+                        number = "+15550002",
+                        type = ContactsContract.CommonDataKinds.Phone.TYPE_HOME,
+                        isSuperPrimary = true,
+                    ),
+                    phoneRow(
+                        contactId = 1L,
+                        sortKey = "Multi Person",
+                        number = "+15550003",
+                        type = ContactsContract.CommonDataKinds.Phone.TYPE_WORK,
+                        isPrimary = true,
+                    ),
                 ),
-                phoneRow(
-                    contactId = 1L,
-                    sortKey = "Multi Person",
-                    number = "+15550002",
-                    type = ContactsContract.CommonDataKinds.Phone.TYPE_HOME,
-                    isSuperPrimary = true,
-                ),
-                phoneRow(
-                    contactId = 1L,
-                    sortKey = "Multi Person",
-                    number = "+15550003",
-                    type = ContactsContract.CommonDataKinds.Phone.TYPE_WORK,
-                    isPrimary = true,
-                ),
-            ),
-        )
-        stubExpansionEmailCursor(rows = emptyList())
+            )
+            stubExpansionEmailCursor(rows = emptyList())
 
-        val repo = createRepository()
-        val page = repo.searchContacts(query = "Multi", offset = 0).first()
+            val repo = createRepository()
+            val page = repo.searchContacts(query = "Multi", offset = 0).first()
 
-        val contact = page.contacts.single()
-        Assert.assertEquals(1L, contact.id)
-        Assert.assertEquals(3, contact.destinations.size)
-        Assert.assertEquals(
-            listOf("+15550002", "+15550003", "+15550001"),
-            contact.destinations.map { it.value },
-        )
-        Assert.assertEquals(ContactDestination.Kind.PHONE, contact.destinations[0].kind)
-        Assert.assertTrue(contact.destinations[0].isSuperPrimary)
-        Assert.assertNull(page.nextOffset)
-    }
-
-    @Test
-    fun nameAndNumberMatchesCollapseToSingleContactExpandedOnce() = runTest {
-        stubFilterPhoneCursor(
-            query = "Bob",
-            rows = listOf(
-                phoneRow(
-                    contactId = 7L,
-                    sortKey = "Bob",
-                    number = "+17777777",
-                    type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
-                ),
-                phoneRow(
-                    contactId = 7L,
-                    sortKey = "Bob",
-                    number = "+17777778",
-                    type = ContactsContract.CommonDataKinds.Phone.TYPE_HOME,
-                ),
-            ),
-        )
-        stubFilterEmailCursor(query = "Bob", rows = emptyList())
-        stubExpansionPhoneCursor(
-            rows = listOf(
-                phoneRow(
-                    contactId = 7L,
-                    sortKey = "Bob",
-                    number = "+17777777",
-                    type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
-                ),
-                phoneRow(
-                    contactId = 7L,
-                    sortKey = "Bob",
-                    number = "+17777778",
-                    type = ContactsContract.CommonDataKinds.Phone.TYPE_HOME,
-                ),
-            ),
-        )
-        stubExpansionEmailCursor(rows = emptyList())
-
-        val repo = createRepository()
-        val page = repo.searchContacts(query = "Bob", offset = 0).first()
-
-        val contact = page.contacts.single()
-        Assert.assertEquals(7L, contact.id)
-        Assert.assertEquals(
-            listOf("+17777777", "+17777778"),
-            contact.destinations.map { it.value },
-        )
-    }
-
-    @Test
-    fun twoContactsSharingNumberBothKeepIt() = runTest {
-        stubFilterPhoneCursor(
-            query = "Same",
-            rows = listOf(
-                phoneRow(
-                    contactId = 1L,
-                    sortKey = "Alpha",
-                    number = "+15551111",
-                    type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
-                ),
-                phoneRow(
-                    contactId = 2L,
-                    sortKey = "Beta",
-                    number = "+15551111",
-                    type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
-                ),
-            ),
-        )
-        stubFilterEmailCursor(query = "Same", rows = emptyList())
-        stubExpansionPhoneCursor(
-            rows = listOf(
-                phoneRow(
-                    contactId = 1L,
-                    sortKey = "Alpha",
-                    number = "+15551111",
-                    type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
-                ),
-                phoneRow(
-                    contactId = 2L,
-                    sortKey = "Beta",
-                    number = "+15551111",
-                    type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
-                ),
-            ),
-        )
-        stubExpansionEmailCursor(rows = emptyList())
-
-        val repo = createRepository()
-        val page = repo.searchContacts(query = "Same", offset = 0).first()
-
-        Assert.assertEquals(listOf(1L, 2L), page.contacts.map(Contact::id))
-        page.contacts.forEach { contact ->
-            Assert.assertEquals("+15551111", contact.destinations.single().value)
+            val contact = page.contacts.single()
+            Assert.assertEquals(1L, contact.id)
+            Assert.assertEquals(3, contact.destinations.size)
+            Assert.assertEquals(
+                listOf("+15550002", "+15550003", "+15550001"),
+                contact.destinations.map { it.value },
+            )
+            Assert.assertEquals(ContactDestination.Kind.PHONE, contact.destinations[0].kind)
+            Assert.assertTrue(contact.destinations[0].isSuperPrimary)
+            Assert.assertNull(page.nextOffset)
         }
     }
 
     @Test
-    fun digitFallbackRecoversContactWhenFilterMatchesNothing() = runTest {
-        stubFilterPhoneCursor(query = "1234", rows = emptyList())
-        stubFilterEmailCursor(query = "1234", rows = emptyList())
-        stubDefaultPhoneCursor(
-            rows = listOf(
-                phoneRow(
-                    contactId = 3L,
-                    sortKey = "Charlie",
-                    number = "+1 (555) 1234567",
-                    type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
+    fun nameAndNumberMatchesCollapseToSingleContactExpandedOnce() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher
+        ) {
+            stubFilterPhoneCursor(
+                query = "Bob",
+                rows = listOf(
+                    phoneRow(
+                        contactId = 7L,
+                        sortKey = "Bob",
+                        number = "+17777777",
+                        type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
+                    ),
+                    phoneRow(
+                        contactId = 7L,
+                        sortKey = "Bob",
+                        number = "+17777778",
+                        type = ContactsContract.CommonDataKinds.Phone.TYPE_HOME,
+                    ),
                 ),
-            ),
-        )
-        stubExpansionPhoneCursor(
-            rows = listOf(
-                phoneRow(
-                    contactId = 3L,
-                    sortKey = "Charlie",
-                    number = "+1 (555) 1234567",
-                    type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
+            )
+            stubFilterEmailCursor(query = "Bob", rows = emptyList())
+            stubExpansionPhoneCursor(
+                rows = listOf(
+                    phoneRow(
+                        contactId = 7L,
+                        sortKey = "Bob",
+                        number = "+17777777",
+                        type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
+                    ),
+                    phoneRow(
+                        contactId = 7L,
+                        sortKey = "Bob",
+                        number = "+17777778",
+                        type = ContactsContract.CommonDataKinds.Phone.TYPE_HOME,
+                    ),
                 ),
-            ),
-        )
-        stubExpansionEmailCursor(rows = emptyList())
+            )
+            stubExpansionEmailCursor(rows = emptyList())
 
-        val repo = createRepository()
-        val page = repo.searchContacts(query = "1234", offset = 0).first()
+            val repo = createRepository()
+            val page = repo.searchContacts(query = "Bob", offset = 0).first()
 
-        Assert.assertEquals(3L, page.contacts.single().id)
-    }
-
-    @Test
-    fun paginationSplitsContactsAcrossPages() = runTest {
-        val rows = (1..250).map { id ->
-            phoneRow(
-                contactId = id.toLong(),
-                sortKey = "Person %03d".format(id),
-                number = "+1555%07d".format(id),
-                type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
+            val contact = page.contacts.single()
+            Assert.assertEquals(7L, contact.id)
+            Assert.assertEquals(
+                listOf("+17777777", "+17777778"),
+                contact.destinations.map { it.value },
             )
         }
-        stubDefaultPhoneCursor(rows = rows)
-        stubExpansionPhoneCursor(
-            rows = rows,
-        )
-        stubExpansionEmailCursor(
-            rows = emptyList(),
-        )
-
-        val repo = createRepository()
-        val firstPage = repo.searchContacts(query = "", offset = 0).first()
-        val secondPage = repo.searchContacts(query = "", offset = 200).first()
-
-        Assert.assertEquals(200, firstPage.contacts.size)
-        Assert.assertEquals(200, firstPage.nextOffset)
-        Assert.assertEquals(50, secondPage.contacts.size)
-        Assert.assertNull(secondPage.nextOffset)
     }
 
     @Test
-    fun phoneAndEmailDestinationsForSameContactMerge() = runTest {
-        stubFilterPhoneCursor(
-            query = "Dee",
-            rows = listOf(
+    fun twoContactsSharingNumberBothKeepIt() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher
+        ) {
+            stubFilterPhoneCursor(
+                query = "Same",
+                rows = listOf(
+                    phoneRow(
+                        contactId = 1L,
+                        sortKey = "Alpha",
+                        number = "+15551111",
+                        type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
+                    ),
+                    phoneRow(
+                        contactId = 2L,
+                        sortKey = "Beta",
+                        number = "+15551111",
+                        type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
+                    ),
+                ),
+            )
+            stubFilterEmailCursor(query = "Same", rows = emptyList())
+            stubExpansionPhoneCursor(
+                rows = listOf(
+                    phoneRow(
+                        contactId = 1L,
+                        sortKey = "Alpha",
+                        number = "+15551111",
+                        type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
+                    ),
+                    phoneRow(
+                        contactId = 2L,
+                        sortKey = "Beta",
+                        number = "+15551111",
+                        type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
+                    ),
+                ),
+            )
+            stubExpansionEmailCursor(rows = emptyList())
+
+            val repo = createRepository()
+            val page = repo.searchContacts(query = "Same", offset = 0).first()
+
+            Assert.assertEquals(listOf(1L, 2L), page.contacts.map(Contact::id))
+            page.contacts.forEach { contact ->
+                Assert.assertEquals("+15551111", contact.destinations.single().value)
+            }
+        }
+    }
+
+    @Test
+    fun digitFallbackRecoversContactWhenFilterMatchesNothing() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher
+        ) {
+            stubFilterPhoneCursor(query = "1234", rows = emptyList())
+            stubFilterEmailCursor(query = "1234", rows = emptyList())
+            stubDefaultPhoneCursor(
+                rows = listOf(
+                    phoneRow(
+                        contactId = 3L,
+                        sortKey = "Charlie",
+                        number = "+1 (555) 1234567",
+                        type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
+                    ),
+                ),
+            )
+            stubExpansionPhoneCursor(
+                rows = listOf(
+                    phoneRow(
+                        contactId = 3L,
+                        sortKey = "Charlie",
+                        number = "+1 (555) 1234567",
+                        type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
+                    ),
+                ),
+            )
+            stubExpansionEmailCursor(rows = emptyList())
+
+            val repo = createRepository()
+            val page = repo.searchContacts(query = "1234", offset = 0).first()
+
+            Assert.assertEquals(3L, page.contacts.single().id)
+        }
+    }
+
+    @Test
+    fun paginationSplitsContactsAcrossPages() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher
+        ) {
+            val rows = (1..250).map { id ->
                 phoneRow(
-                    contactId = 4L,
-                    sortKey = "Dee",
-                    number = "+14444444",
+                    contactId = id.toLong(),
+                    sortKey = "Person %03d".format(id),
+                    number = "+1555%07d".format(id),
                     type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
+                )
+            }
+            stubDefaultPhoneCursor(rows = rows)
+            stubExpansionPhoneCursor(
+                rows = rows,
+            )
+            stubExpansionEmailCursor(
+                rows = emptyList(),
+            )
+
+            val repo = createRepository()
+            val firstPage = repo.searchContacts(query = "", offset = 0).first()
+            val secondPage = repo.searchContacts(query = "", offset = 200).first()
+
+            Assert.assertEquals(200, firstPage.contacts.size)
+            Assert.assertEquals(200, firstPage.nextOffset)
+            Assert.assertEquals(50, secondPage.contacts.size)
+            Assert.assertNull(secondPage.nextOffset)
+        }
+    }
+
+    @Test
+    fun phoneAndEmailDestinationsForSameContactMerge() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher
+        ) {
+            stubFilterPhoneCursor(
+                query = "Dee",
+                rows = listOf(
+                    phoneRow(
+                        contactId = 4L,
+                        sortKey = "Dee",
+                        number = "+14444444",
+                        type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
+                    ),
                 ),
-            ),
-        )
-        stubFilterEmailCursor(query = "Dee", rows = emptyList())
-        stubExpansionPhoneCursor(
-            rows = listOf(
+            )
+            stubFilterEmailCursor(query = "Dee", rows = emptyList())
+            stubExpansionPhoneCursor(
+                rows = listOf(
+                    phoneRow(
+                        contactId = 4L,
+                        sortKey = "Dee",
+                        number = "+14444444",
+                        type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
+                    ),
+                ),
+            )
+            stubExpansionEmailCursor(
+                rows = listOf(
+                    emailRow(
+                        contactId = 4L,
+                        sortKey = "Dee",
+                        address = "dee@example.com",
+                        type = ContactsContract.CommonDataKinds.Email.TYPE_WORK,
+                    ),
+                ),
+            )
+
+            val repo = createRepository()
+            val page = repo.searchContacts(query = "Dee", offset = 0).first()
+
+            val contact = page.contacts.single()
+            Assert.assertEquals(2, contact.destinations.size)
+            val kinds = contact.destinations.map { it.kind }
+            Assert.assertEquals(ContactDestination.Kind.PHONE, kinds[0])
+            Assert.assertEquals(ContactDestination.Kind.EMAIL, kinds[1])
+        }
+    }
+
+    @Test
+    fun searchExpandsOnlyPageContactsNotAllMatches() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher
+        ) {
+            val totalMatches = 600
+            val ids = (1..totalMatches).map { it.toLong() }
+            val rows = ids.map { id ->
                 phoneRow(
-                    contactId = 4L,
-                    sortKey = "Dee",
-                    number = "+14444444",
+                    contactId = id,
+                    sortKey = "Person %05d".format(id),
+                    number = "+1555%07d".format(id),
                     type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
-                ),
-            ),
-        )
-        stubExpansionEmailCursor(
-            rows = listOf(
-                emailRow(
-                    contactId = 4L,
-                    sortKey = "Dee",
-                    address = "dee@example.com",
-                    type = ContactsContract.CommonDataKinds.Email.TYPE_WORK,
-                ),
-            ),
-        )
+                )
+            }
+            stubFilterPhoneCursor(query = "Person", rows = rows)
+            stubFilterEmailCursor(query = "Person", rows = emptyList())
 
-        val repo = createRepository()
-        val page = repo.searchContacts(query = "Dee", offset = 0).first()
+            val queriedPhoneContactIds = mutableSetOf<Long>()
+            val queriedEmailContactIds = mutableSetOf<Long>()
 
-        val contact = page.contacts.single()
-        Assert.assertEquals(2, contact.destinations.size)
-        val kinds = contact.destinations.map { it.kind }
-        Assert.assertEquals(ContactDestination.Kind.PHONE, kinds[0])
-        Assert.assertEquals(ContactDestination.Kind.EMAIL, kinds[1])
-    }
+            every {
+                contentResolver.query(
+                    match { uri -> uri == ContactsContract.CommonDataKinds.Phone.CONTENT_URI },
+                    any(),
+                    match { selection ->
+                        selection.startsWith(ContactsContract.CommonDataKinds.Phone.CONTACT_ID)
+                    },
+                    any(),
+                    isNull(),
+                )
+            } answers {
+                val selectionArgs = arg<Array<String>?>(3) ?: emptyArray()
+                selectionArgs.forEach { queriedPhoneContactIds.add(it.toLong()) }
+                val argSet = selectionArgs.toSet()
+                val matchingRows = rows.filter { row -> row.contactId.toString() in argSet }
+                phoneCursor(rows = matchingRows)
+            }
 
-    @Test
-    fun largeContactSetGetsChunkedAndMergedEquivalently() = runTest {
-        val contactCount = 1100
-        val ids = (1..contactCount).map { it.toLong() }
-        val rows = ids.map { id ->
-            phoneRow(
-                contactId = id,
-                sortKey = "Person %05d".format(id),
-                number = "+1555%07d".format(id),
-                type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
-            )
+            every {
+                contentResolver.query(
+                    match { uri -> uri == ContactsContract.CommonDataKinds.Email.CONTENT_URI },
+                    any(),
+                    match { selection ->
+                        selection.startsWith(ContactsContract.CommonDataKinds.Email.CONTACT_ID)
+                    },
+                    any(),
+                    isNull(),
+                )
+            } answers {
+                val selectionArgs = arg<Array<String>?>(3) ?: emptyArray()
+                selectionArgs.forEach { queriedEmailContactIds.add(it.toLong()) }
+                emailCursor(rows = emptyList())
+            }
+
+            val repo = createRepository()
+            val page = repo.searchContacts(query = "Person", offset = 0).first()
+
+            Assert.assertEquals(200, page.contacts.size)
+            Assert.assertEquals(200, page.nextOffset)
+            Assert.assertEquals((1L..200L).toSet(), queriedPhoneContactIds)
+            Assert.assertEquals((1L..200L).toSet(), queriedEmailContactIds)
         }
-        stubFilterPhoneCursor(query = "Person", rows = rows)
-        stubFilterEmailCursor(query = "Person", rows = emptyList())
-        stubExpansionPhoneCursor(rows = rows)
-        stubExpansionEmailCursor(rows = emptyList())
-
-        val repo = createRepository()
-        val page = repo.searchContacts(query = "Person", offset = 0).first()
-
-        Assert.assertEquals(200, page.contacts.size)
-        Assert.assertEquals(200, page.nextOffset)
-        val firstContact = page.contacts.first()
-        Assert.assertFalse(firstContact.destinations.isEmpty())
-    }
-
-    @Test
-    fun searchExpandsOnlyPageContactsNotAllMatches() = runTest {
-        val totalMatches = 600
-        val ids = (1..totalMatches).map { it.toLong() }
-        val rows = ids.map { id ->
-            phoneRow(
-                contactId = id,
-                sortKey = "Person %05d".format(id),
-                number = "+1555%07d".format(id),
-                type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
-            )
-        }
-        stubFilterPhoneCursor(query = "Person", rows = rows)
-        stubFilterEmailCursor(query = "Person", rows = emptyList())
-
-        val queriedPhoneContactIds = mutableSetOf<Long>()
-        val queriedEmailContactIds = mutableSetOf<Long>()
-
-        every {
-            contentResolver.query(
-                match { uri -> uri == ContactsContract.CommonDataKinds.Phone.CONTENT_URI },
-                any(),
-                match { selection ->
-                    selection.startsWith(ContactsContract.CommonDataKinds.Phone.CONTACT_ID)
-                },
-                any(),
-                isNull(),
-            )
-        } answers {
-            val selectionArgs = arg<Array<String>?>(3) ?: emptyArray()
-            selectionArgs.forEach { queriedPhoneContactIds.add(it.toLong()) }
-            val argSet = selectionArgs.toSet()
-            val matchingRows = rows.filter { row -> row.contactId.toString() in argSet }
-            phoneCursor(rows = matchingRows)
-        }
-
-        every {
-            contentResolver.query(
-                match { uri -> uri == ContactsContract.CommonDataKinds.Email.CONTENT_URI },
-                any(),
-                match { selection ->
-                    selection.startsWith(ContactsContract.CommonDataKinds.Email.CONTACT_ID)
-                },
-                any(),
-                isNull(),
-            )
-        } answers {
-            val selectionArgs = arg<Array<String>?>(3) ?: emptyArray()
-            selectionArgs.forEach { queriedEmailContactIds.add(it.toLong()) }
-            emailCursor(rows = emptyList())
-        }
-
-        val repo = createRepository()
-        val page = repo.searchContacts(query = "Person", offset = 0).first()
-
-        Assert.assertEquals(200, page.contacts.size)
-        Assert.assertEquals(200, page.nextOffset)
-        Assert.assertEquals((1L..200L).toSet(), queriedPhoneContactIds)
-        Assert.assertEquals((1L..200L).toSet(), queriedEmailContactIds)
     }
 
     private fun createRepository(): ContactsRepositoryImpl {
         return ContactsRepositoryImpl(
             formatter = ContactDestinationFormatterImpl(),
             contentResolver = contentResolver,
-            ioDispatcher = UnconfinedTestDispatcher(),
+            ioDispatcher = mainDispatcherRule.testDispatcher,
         )
     }
 
