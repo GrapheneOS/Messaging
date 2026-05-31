@@ -26,6 +26,8 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
 import com.android.messaging.R
+import com.android.messaging.ui.conversation.CONVERSATION_DELETE_MESSAGES_CONFIRM_BUTTON_TEST_TAG
+import com.android.messaging.ui.conversation.CONVERSATION_DELETE_MESSAGES_DISMISS_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_SUBJECT_DIALOG_CLEAR_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_SUBJECT_DIALOG_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_SUBJECT_DIALOG_TEXT_FIELD_TEST_TAG
@@ -268,6 +270,9 @@ private fun ConversationDeleteMessagesDialog(
         },
         confirmButton = {
             TextButton(
+                modifier = Modifier.testTag(
+                    tag = CONVERSATION_DELETE_MESSAGES_CONFIRM_BUTTON_TEST_TAG,
+                ),
                 onClick = onConfirm,
             ) {
                 Text(
@@ -277,6 +282,9 @@ private fun ConversationDeleteMessagesDialog(
         },
         dismissButton = {
             TextButton(
+                modifier = Modifier.testTag(
+                    tag = CONVERSATION_DELETE_MESSAGES_DISMISS_BUTTON_TEST_TAG,
+                ),
                 onClick = onDismiss,
             ) {
                 Text(

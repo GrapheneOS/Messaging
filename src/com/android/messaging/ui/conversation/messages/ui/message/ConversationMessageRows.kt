@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
@@ -24,6 +25,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.android.messaging.ui.conversation.conversationMessageBubbleTestTag
+import com.android.messaging.ui.conversation.conversationMessageSelectionRowTestTag
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel.Status
 import com.android.messaging.ui.conversation.messages.ui.attachment.OnConversationAttachmentClick
@@ -113,6 +116,11 @@ private fun ConversationMessageBubbleRowContainer(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .testTag(
+                tag = conversationMessageSelectionRowTestTag(
+                    messageId = message.messageId,
+                ),
+            )
             .conversationMessageSelectionModeRowModifier(
                 isSelected = isSelected,
                 isSelectionMode = isSelectionMode,
@@ -237,6 +245,11 @@ private fun Modifier.conversationMessageBubbleInteractionModifier(
 ): Modifier {
     val hapticFeedback = LocalHapticFeedback.current
     val bubbleModifier = this
+        .testTag(
+            tag = conversationMessageBubbleTestTag(
+                messageId = message.messageId,
+            ),
+        )
         .clip(shape = layout.bubbleShape)
 
     return when {

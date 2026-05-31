@@ -26,10 +26,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.android.messaging.R
+import com.android.messaging.ui.conversation.CONVERSATION_SELECTION_OVERFLOW_BUTTON_TEST_TAG
+import com.android.messaging.ui.conversation.conversationMessageSelectionActionButtonTestTag
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
 import com.android.messaging.ui.core.MessagingPreviewTheme
@@ -160,6 +165,10 @@ private fun ConversationSelectionActions(
 @Composable
 private fun ConversationSelectionOverflowButton(onClick: () -> Unit) {
     IconButton(
+        modifier = Modifier
+            .testTag(
+                tag = CONVERSATION_SELECTION_OVERFLOW_BUTTON_TEST_TAG,
+            ),
         onClick = onClick,
     ) {
         Icon(
@@ -184,6 +193,11 @@ private fun ConversationSelectionOverflowMenu(
     ) {
         actions.forEach { action ->
             DropdownMenuItem(
+                modifier = Modifier.testTag(
+                    tag = conversationMessageSelectionActionButtonTestTag(
+                        action = action.name,
+                    ),
+                ),
                 text = {
                     Text(text = selectionActionLabel(action = action))
                 },
@@ -218,6 +232,9 @@ private fun ConversationSelectionActionButton(
     onActionClick: (ConversationMessageSelectionAction) -> Unit,
 ) {
     IconButton(
+        modifier = Modifier.testTag(
+            tag = conversationMessageSelectionActionButtonTestTag(action = action.name),
+        ),
         onClick = {
             onActionClick(action)
         },
