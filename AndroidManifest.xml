@@ -189,18 +189,24 @@
 
         <!-- Handles sharing intent -->
         <activity
-            android:name=".ui.conversationlist.ShareIntentActivity"
+            android:name=".ui.shareintent.ShareIntentActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
-            android:screenOrientation="user"
-            android:theme="@style/BugleTheme.DialogActivity"
+            android:documentLaunchMode="always"
             android:excludeFromRecents="true"
+            android:exported="false"
+            android:screenOrientation="user"
+            android:theme="@style/Theme.Compose" />
+
+        <activity-alias
+            android:name=".ui.conversationlist.ShareIntentActivity"
             android:exported="true"
-            android:documentLaunchMode="always">
-            <intent-filter
-                android:label="@string/share_intent_label">
+            android:targetActivity=".ui.shareintent.ShareIntentActivity">
+            <intent-filter android:label="@string/share_intent_label">
                 <action android:name="android.intent.action.SEND" />
                 <action android:name="android.intent.action.SEND_MULTIPLE" />
+
                 <category android:name="android.intent.category.DEFAULT" />
+
                 <data android:mimeType="text/plain" />
                 <data android:mimeType="text/x-vCard" />
                 <data android:mimeType="text/x-vcard" />
@@ -209,7 +215,7 @@
                 <data android:mimeType="video/*" />
                 <data android:mimeType="application/ogg" />
             </intent-filter>
-        </activity>
+        </activity-alias>
 
         <!-- People & Options -->
         <activity
