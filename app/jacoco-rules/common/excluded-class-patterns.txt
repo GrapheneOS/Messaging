@@ -1,0 +1,19 @@
+# Common class-directory exclude patterns for unit and instrumented JaCoCo tracks.
+
+# Dependency injection generated classes.
+**/Dagger*
+**/Hilt_*
+**/_Factory*
+**/_GeneratedInjector*
+**/_HiltModules*
+**/_MembersInjector*
+
+# Compose and data-holder noise.
+**/*ComposableSingletons*
+**/model/**
+
+# Kotlin compiler-generated classes.
+**/*$DefaultImpls*
+**/*$invokeSuspend$*
+**/*$serializer
+**/*$$inlined$*
