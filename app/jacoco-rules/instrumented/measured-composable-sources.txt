@@ -1,0 +1,2 @@
+# Composable source files intentionally measured by the instrumented coverage track.
+# Currently empty; composables measured by the unit track are excluded from this track.
