@@ -15,16 +15,15 @@ import com.android.messaging.ui.conversation.recipientpicker.model.selection.Rec
 import com.android.messaging.ui.core.AppTheme
 import kotlinx.collections.immutable.toPersistentList
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
-private const val PLACEHOLDER_TEXT = "Name, phone or email"
-private const val SENTINEL = "⁠"
-
-internal class RecipientSelectionQueryFieldTest {
+@RunWith(RobolectricTestRunner::class)
+class RecipientSelectionQueryFieldTest {
     @get:Rule
-    val composeRule = createComposeRule()
+    val composeTestRule = createComposeRule()
 
     @Test
     fun softBackspaceWithChipsAndEmptyQueryRemovesLastRecipient() {
@@ -33,7 +32,7 @@ internal class RecipientSelectionQueryFieldTest {
         val focusRequester = FocusRequester()
         var lastRecipientRemoveCount = 0
 
-        composeRule.setContent {
+        composeTestRule.setContent {
             AppTheme {
                 RecipientSelectionQueryField(
                     uiState = uiState,
@@ -47,13 +46,44 @@ internal class RecipientSelectionQueryFieldTest {
             }
         }
 
-        composeRule
+        composeTestRule
             .onNodeWithTag(testTag = RECIPIENT_SELECTION_QUERY_FIELD_TEST_TAG)
             .requestFocus()
             .performKeyInput { pressKey(key = Key.Backspace) }
 
-        composeRule.runOnIdle {
+        composeTestRule.runOnIdle {
             assertEquals(1, lastRecipientRemoveCount)
+        }
+    }
+
+    @Test
+    fun softBackspaceWithoutChipsAndEmptyQueryDoesNotRemoveRecipient() {
+        val uiState = queryFieldUiState(query = "", recipientCount = 0)
+        val state = TextFieldState(initialText = recipientSelectionQueryFieldEditableText(uiState))
+        val focusRequester = FocusRequester()
+        var lastRecipientRemoveCount = 0
+
+        composeTestRule.setContent {
+            AppTheme {
+                RecipientSelectionQueryField(
+                    uiState = uiState,
+                    state = state,
+                    onQueryFocusChanged = {},
+                    onLastSelectedRecipientRemove = {
+                        lastRecipientRemoveCount += 1
+                    },
+                    focusRequester = focusRequester,
+                )
+            }
+        }
+
+        composeTestRule
+            .onNodeWithTag(testTag = RECIPIENT_SELECTION_QUERY_FIELD_TEST_TAG)
+            .requestFocus()
+            .performKeyInput { pressKey(key = Key.Backspace) }
+
+        composeTestRule.runOnIdle {
+            assertEquals(0, lastRecipientRemoveCount)
         }
     }
 
@@ -63,7 +93,7 @@ internal class RecipientSelectionQueryFieldTest {
         val state = TextFieldState(initialText = recipientSelectionQueryFieldEditableText(uiState))
         val focusRequester = FocusRequester()
 
-        composeRule.setContent {
+        composeTestRule.setContent {
             AppTheme {
                 RecipientSelectionQueryField(
                     uiState = uiState,
@@ -75,14 +105,13 @@ internal class RecipientSelectionQueryFieldTest {
             }
         }
 
-        composeRule
+        composeTestRule
             .onNodeWithTag(testTag = RECIPIENT_SELECTION_QUERY_FIELD_TEST_TAG)
             .performTextInput(text = "a")
 
-        composeRule.runOnIdle {
+        composeTestRule.runOnIdle {
             val currentText = state.text.toString()
             assertEquals("a", currentText)
-            assertNotEquals(SENTINEL + "a", currentText)
         }
     }
 
@@ -93,7 +122,7 @@ internal class RecipientSelectionQueryFieldTest {
         val focusRequester = FocusRequester()
         var lastRecipientRemoveCount = 0
 
-        composeRule.setContent {
+        composeTestRule.setContent {
             AppTheme {
                 RecipientSelectionQueryField(
                     uiState = uiState,
@@ -107,12 +136,12 @@ internal class RecipientSelectionQueryFieldTest {
             }
         }
 
-        composeRule
+        composeTestRule
             .onNodeWithTag(testTag = RECIPIENT_SELECTION_QUERY_FIELD_TEST_TAG)
             .requestFocus()
             .performKeyInput { pressKey(key = Key.Backspace) }
 
-        composeRule.runOnIdle {
+        composeTestRule.runOnIdle {
             assertEquals(0, lastRecipientRemoveCount)
         }
     }
@@ -133,7 +162,7 @@ internal class RecipientSelectionQueryFieldTest {
         return RecipientSelectionQueryFieldUiState(
             query = query,
             enabled = true,
-            placeholderText = PLACEHOLDER_TEXT,
+            placeholderText = RECIPIENT_SELECTION_PLACEHOLDER_TEXT,
             selectedRecipients = recipients.toPersistentList(),
         )
     }

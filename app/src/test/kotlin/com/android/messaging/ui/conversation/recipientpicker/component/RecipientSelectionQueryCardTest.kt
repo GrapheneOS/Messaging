@@ -19,13 +19,13 @@ import kotlinx.collections.immutable.persistentListOf
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
-private const val PREFIX_TEXT = "To"
-private const val PLACEHOLDER_TEXT = "Name, phone or email"
-
-internal class RecipientSelectionQueryCardTest {
+@RunWith(RobolectricTestRunner::class)
+class RecipientSelectionQueryCardTest {
     @get:Rule
-    val composeRule = createComposeRule()
+    val composeTestRule = createComposeRule()
 
     @Test
     fun softBackspaceRemovesEachChipInSequenceWhenStartingWithMultipleChips() {
@@ -48,14 +48,14 @@ internal class RecipientSelectionQueryCardTest {
         val focusRequester = FocusRequester()
         var removeCount = 0
 
-        composeRule.setContent {
+        composeTestRule.setContent {
             AppTheme {
                 val uiState = RecipientSelectionQueryCardUiState(
                     text = RecipientSelectionQueryTextUiState(
                         query = "",
                         enabled = true,
                         prefixText = PREFIX_TEXT,
-                        placeholderText = PLACEHOLDER_TEXT,
+                        placeholderText = RECIPIENT_SELECTION_PLACEHOLDER_TEXT,
                     ),
                     chips = RecipientSelectionQueryChipsUiState(
                         recipients = recipients,
@@ -79,19 +79,19 @@ internal class RecipientSelectionQueryCardTest {
             }
         }
 
-        composeRule
+        composeTestRule
             .onNodeWithTag(testTag = RECIPIENT_SELECTION_QUERY_FIELD_TEST_TAG)
             .performTextReplacement(text = "")
 
-        composeRule.runOnIdle {
+        composeTestRule.runOnIdle {
             assertEquals(1, removeCount)
         }
 
-        composeRule
+        composeTestRule
             .onNodeWithTag(testTag = RECIPIENT_SELECTION_QUERY_FIELD_TEST_TAG)
             .performTextReplacement(text = "")
 
-        composeRule.runOnIdle {
+        composeTestRule.runOnIdle {
             assertEquals(2, removeCount)
         }
     }
@@ -101,14 +101,14 @@ internal class RecipientSelectionQueryCardTest {
         var recipients by mutableStateOf(persistentListOf<SelectedRecipient>())
         val focusRequester = FocusRequester()
 
-        composeRule.setContent {
+        composeTestRule.setContent {
             AppTheme {
                 val uiState = RecipientSelectionQueryCardUiState(
                     text = RecipientSelectionQueryTextUiState(
                         query = "",
                         enabled = true,
                         prefixText = PREFIX_TEXT,
-                        placeholderText = PLACEHOLDER_TEXT,
+                        placeholderText = RECIPIENT_SELECTION_PLACEHOLDER_TEXT,
                     ),
                     chips = RecipientSelectionQueryChipsUiState(
                         recipients = recipients,
@@ -129,12 +129,12 @@ internal class RecipientSelectionQueryCardTest {
             }
         }
 
-        composeRule
+        composeTestRule
             .onNodeWithTag(testTag = RECIPIENT_SELECTION_QUERY_FIELD_TEST_TAG)
             .requestFocus()
             .assertIsFocused()
 
-        composeRule.runOnIdle {
+        composeTestRule.runOnIdle {
             recipients = persistentListOf(
                 SelectedRecipient(
                     destination = "+3725400001",
@@ -145,8 +145,12 @@ internal class RecipientSelectionQueryCardTest {
             )
         }
 
-        composeRule
+        composeTestRule
             .onNodeWithTag(testTag = RECIPIENT_SELECTION_QUERY_FIELD_TEST_TAG)
             .assertIsFocused()
+    }
+
+    private companion object {
+        private const val PREFIX_TEXT = "To"
     }
 }
