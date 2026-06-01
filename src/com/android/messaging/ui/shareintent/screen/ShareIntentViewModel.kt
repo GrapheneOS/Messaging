@@ -10,8 +10,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.stateIn
 
 internal interface ShareIntentScreenModel {
     val effects: Flow<Effect>
@@ -22,14 +24,20 @@ internal interface ShareIntentScreenModel {
 
 @HiltViewModel
 internal class ShareIntentViewModel @Inject constructor(
-    delegate: ShareIntentScreenDelegate,
+    private val delegate: ShareIntentScreenDelegate,
 ) : ViewModel(),
     ShareIntentScreenModel {
 
     private val _effects = MutableSharedFlow<Effect>(extraBufferCapacity = 1)
     override val effects: Flow<Effect> = _effects.asSharedFlow()
 
-    override val uiState: StateFlow<State> = delegate.state
+    override val uiState: StateFlow<State> = delegate.state.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(
+            stopTimeoutMillis = STATEFLOW_STOP_TIMEOUT_MILLIS,
+        ),
+        initialValue = State(),
+    )
 
     init {
         delegate.bind(viewModelScope)
@@ -44,6 +52,22 @@ internal class ShareIntentViewModel @Inject constructor(
             Action.NewMessageClicked -> {
                 _effects.tryEmit(Effect.CreateNewConversation)
             }
+
+            Action.SearchOpened -> {
+                delegate.setSearchActive(true)
+            }
+
+            Action.SearchClosed -> {
+                delegate.setSearchActive(false)
+            }
+
+            is Action.SearchQueryChanged -> {
+                delegate.setSearchQuery(action.query)
+            }
         }
+    }
+
+    private companion object {
+        private const val STATEFLOW_STOP_TIMEOUT_MILLIS = 5_000L
     }
 }

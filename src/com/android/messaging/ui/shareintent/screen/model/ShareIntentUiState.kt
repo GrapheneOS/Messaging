@@ -8,6 +8,7 @@ import kotlinx.collections.immutable.persistentListOf
 internal data class ShareIntentUiState(
     val isLoading: Boolean = true,
     val targets: ImmutableList<ShareTargetUiState> = persistentListOf(),
+    val isSearchActive: Boolean = false,
 )
 
 @Immutable

@@ -1,12 +1,16 @@
 package com.android.messaging.ui.shareintent.screen
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -14,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
@@ -64,11 +69,34 @@ private fun ShareIntentContent(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val searchState = rememberTextFieldState()
+
+    LaunchedEffect(searchState) {
+        snapshotFlow { searchState.text.toString() }
+            .collect { query ->
+                onAction(Action.SearchQueryChanged(query))
+            }
+    }
+
+    BackHandler(enabled = uiState.isSearchActive) {
+        searchState.clearText()
+        onAction(Action.SearchClosed)
+    }
+
     Scaffold(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
         topBar = {
-            ShareIntentTopAppBar(onClose = onNavigateBack)
+            ShareIntentTopAppBar(
+                isSearchActive = uiState.isSearchActive,
+                searchState = searchState,
+                onNavigateBack = onNavigateBack,
+                onSearchOpen = { onAction(Action.SearchOpened) },
+                onSearchClose = {
+                    searchState.clearText()
+                    onAction(Action.SearchClosed)
+                },
+            )
         },
     ) { contentPadding ->
         Box(
@@ -81,6 +109,7 @@ private fun ShareIntentContent(
             if (!uiState.isLoading) {
                 ShareTargetList(
                     targets = uiState.targets,
+                    showNewMessage = !uiState.isSearchActive,
                     onAction = onAction,
                     bottomPadding = contentPadding.calculateBottomPadding(),
                 )
@@ -92,6 +121,7 @@ private fun ShareIntentContent(
 @Composable
 private fun ShareTargetList(
     targets: List<ShareTargetUiState>,
+    showNewMessage: Boolean,
     onAction: (Action) -> Unit,
     bottomPadding: Dp,
 ) {
@@ -104,22 +134,29 @@ private fun ShareTargetList(
             end = ScreenContentPadding,
         ),
     ) {
-        item(key = "new_message") {
-            NewMessageItem(
-                onClick = { onAction(Action.NewMessageClicked) },
-            )
+        if (showNewMessage) {
+            item(key = "new_message") {
+                NewMessageItem(
+                    onClick = { onAction(Action.NewMessageClicked) },
+                    modifier = Modifier.animateItem(),
+                )
+            }
         }
 
-        items(
+        itemsIndexed(
             items = targets,
-            key = { it.conversationId },
-        ) { target ->
-            ItemDivider()
+            key = { _, target -> target.conversationId },
+        ) { index, target ->
+            Column(modifier = Modifier.animateItem()) {
+                if (showNewMessage || index > 0) {
+                    ItemDivider()
+                }
 
-            ShareTargetItem(
-                target = target,
-                onClick = { onAction(Action.TargetClicked(target.conversationId)) },
-            )
+                ShareTargetItem(
+                    target = target,
+                    onClick = { onAction(Action.TargetClicked(target.conversationId)) },
+                )
+            }
         }
     }
 }

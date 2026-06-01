@@ -7,4 +7,12 @@ internal sealed interface ShareIntentAction {
     ) : ShareIntentAction
 
     data object NewMessageClicked : ShareIntentAction
+
+    data object SearchOpened : ShareIntentAction
+
+    data object SearchClosed : ShareIntentAction
+
+    data class SearchQueryChanged(
+        val query: String,
+    ) : ShareIntentAction
 }
