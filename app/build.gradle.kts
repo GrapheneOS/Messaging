@@ -20,6 +20,10 @@ java {
     }
 }
 
+val unitTestJavaLauncher = javaToolchains.launcherFor {
+    languageVersion.set(JavaLanguageVersion.of(21))
+}
+
 detekt {
     basePath.set(rootDir)
     buildUponDefaultConfig = true
@@ -142,10 +146,14 @@ android {
     }
 
     testOptions {
-        unitTests.all {
-            it.extensions.configure(JacocoTaskExtension::class.java) {
-                isIncludeNoLocationClasses = true
-                excludes = listOf("jdk.internal.*")
+        unitTests {
+            isIncludeAndroidResources = true
+            all { unitTest ->
+                unitTest.javaLauncher.set(unitTestJavaLauncher)
+                unitTest.extensions.configure(JacocoTaskExtension::class.java) {
+                    isIncludeNoLocationClasses = true
+                    excludes = listOf("jdk.internal.*")
+                }
             }
         }
     }
@@ -212,6 +220,8 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
     testImplementation(libs.junit4)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
