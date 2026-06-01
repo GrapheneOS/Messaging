@@ -70,12 +70,17 @@ private fun ShareIntentContent(
     modifier: Modifier = Modifier,
 ) {
     val searchState = rememberTextFieldState()
+    val inSelectionMode = uiState.selectedConversationIds.isNotEmpty()
 
     LaunchedEffect(searchState) {
         snapshotFlow { searchState.text.toString() }
             .collect { query ->
                 onAction(Action.SearchQueryChanged(query))
             }
+    }
+
+    BackHandler(enabled = inSelectionMode) {
+        onAction(Action.SelectionCleared)
     }
 
     BackHandler(enabled = uiState.isSearchActive) {
@@ -89,6 +94,8 @@ private fun ShareIntentContent(
         topBar = {
             ShareIntentTopAppBar(
                 isSearchActive = uiState.isSearchActive,
+                inSelectionMode = inSelectionMode,
+                selectedCount = uiState.selectedConversationIds.size,
                 searchState = searchState,
                 onNavigateBack = onNavigateBack,
                 onSearchOpen = { onAction(Action.SearchOpened) },
@@ -96,6 +103,8 @@ private fun ShareIntentContent(
                     searchState.clearText()
                     onAction(Action.SearchClosed)
                 },
+                onSelectionClear = { onAction(Action.SelectionCleared) },
+                onSendToSelected = { onAction(Action.SendToSelectedClicked) },
             )
         },
     ) { contentPadding ->
@@ -109,7 +118,9 @@ private fun ShareIntentContent(
             if (!uiState.isLoading) {
                 ShareTargetList(
                     targets = uiState.targets,
-                    showNewMessage = !uiState.isSearchActive,
+                    selectedConversationIds = uiState.selectedConversationIds,
+                    inSelectionMode = inSelectionMode,
+                    showNewMessage = !uiState.isSearchActive && !inSelectionMode,
                     onAction = onAction,
                     bottomPadding = contentPadding.calculateBottomPadding(),
                 )
@@ -121,6 +132,8 @@ private fun ShareIntentContent(
 @Composable
 private fun ShareTargetList(
     targets: List<ShareTargetUiState>,
+    selectedConversationIds: Set<String>,
+    inSelectionMode: Boolean,
     showNewMessage: Boolean,
     onAction: (Action) -> Unit,
     bottomPadding: Dp,
@@ -154,7 +167,17 @@ private fun ShareTargetList(
 
                 ShareTargetItem(
                     target = target,
-                    onClick = { onAction(Action.TargetClicked(target.conversationId)) },
+                    isSelected = target.conversationId in selectedConversationIds,
+                    onClick = {
+                        val action = when {
+                            inSelectionMode -> Action.SelectionToggled(target.conversationId)
+                            else -> Action.TargetClicked(target.conversationId)
+                        }
+                        onAction(action)
+                    },
+                    onLongClick = {
+                        onAction(Action.TargetLongPressed(target.conversationId))
+                    },
                 )
             }
         }

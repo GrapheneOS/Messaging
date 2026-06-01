@@ -1,8 +1,6 @@
 package com.android.messaging.domain.shareintent.usecase
 
-import android.content.ContentResolver
 import android.content.Intent
-import android.media.MediaMetadataRetriever
 import android.net.Uri
 import androidx.core.content.IntentCompat
 import com.android.messaging.datamodel.data.MessageData
@@ -10,8 +8,6 @@ import com.android.messaging.datamodel.data.PendingAttachmentData
 import com.android.messaging.util.Assert
 import com.android.messaging.util.ContentType
 import com.android.messaging.util.LogUtil
-import com.android.messaging.util.MediaMetadataRetrieverWrapper
-import java.io.IOException
 import javax.inject.Inject
 
 internal interface BuildSharedDraftMessage {
@@ -19,7 +15,7 @@ internal interface BuildSharedDraftMessage {
 }
 
 internal class BuildSharedDraftMessageImpl @Inject constructor(
-    private val contentResolver: ContentResolver,
+    private val resolveSharedContentType: ResolveSharedContentType,
 ) : BuildSharedDraftMessage {
 
     override fun invoke(intent: Intent): MessageData? {
@@ -42,7 +38,7 @@ internal class BuildSharedDraftMessageImpl @Inject constructor(
             Intent.EXTRA_STREAM,
             Uri::class.java,
         )
-        val contentType = extractContentType(contentUri, intent.type)
+        val contentType = resolveSharedContentType(contentUri, intent.type)
 
         if (LogUtil.isLoggable(LogUtil.BUGLE_TAG, LogUtil.DEBUG)) {
             LogUtil.d(
@@ -93,40 +89,10 @@ internal class BuildSharedDraftMessageImpl @Inject constructor(
             else -> {
                 MessageData.createSharedMessage(null, subject).apply {
                     imageUris.forEach { uri ->
-                        addSharedPart(extractContentType(uri, contentType), uri)
+                        addSharedPart(resolveSharedContentType(uri, contentType), uri)
                     }
                 }
             }
-        }
-    }
-
-    private fun extractContentType(
-        uri: Uri?,
-        contentType: String?,
-    ): String? {
-        if (uri == null) {
-            return contentType
-        }
-
-        // First try looking at file extension. This is less reliable in some ways but it's
-        // recommended by
-        // https://developer.android.com/training/secure-file-sharing/retrieve-info.html
-        // Some implementations of MediaMetadataRetriever get things horribly wrong for common
-        // formats such as jpeg (reports as video/ffmpeg).
-        return contentResolver.getType(uri) ?: extractTypeFromMetadata(uri, contentType)
-    }
-
-    private fun extractTypeFromMetadata(uri: Uri, contentType: String?): String? {
-        val retriever = MediaMetadataRetrieverWrapper()
-
-        return try {
-            retriever.setDataSource(uri)
-            retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_MIMETYPE) ?: contentType
-        } catch (e: IOException) {
-            LogUtil.i(LogUtil.BUGLE_TAG, "Could not determine type of $uri", e)
-            contentType
-        } finally {
-            retriever.release()
         }
     }
 

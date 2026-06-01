@@ -913,6 +913,12 @@
     <string name="share_search_hint">Search conversations</string>
     <!-- Accessibility : Content description for clearing the share conversation picker search query -->
     <string name="share_search_clear">Clear search</string>
+    <!-- Title shown while selecting multiple conversations to share with -->
+    <string name="share_selection_count">%1$d selected</string>
+    <!-- Accessibility : Content description for clearing the current multi conversation selection -->
+    <string name="share_selection_clear">Clear selection</string>
+    <!-- Accessibility : Content description for sending the shared content to the selected conversations -->
+    <string name="share_selection_send">Send</string>
 
     <!-- Screen title after user selects APNs setting option -->
     <string name="apn_edit">Edit access point</string>

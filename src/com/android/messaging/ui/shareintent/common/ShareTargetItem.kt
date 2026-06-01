@@ -23,7 +23,9 @@ internal fun NewMessageItem(
         subtitle = null,
         avatarUri = null,
         fallbackIcon = Icons.Outlined.Edit,
+        isSelected = false,
         onClick = onClick,
+        onLongClick = null,
         modifier = modifier,
     )
 }
@@ -31,7 +33,9 @@ internal fun NewMessageItem(
 @Composable
 internal fun ShareTargetItem(
     target: ShareTargetUiState,
+    isSelected: Boolean,
     onClick: () -> Unit,
+    onLongClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     ShareTargetRow(
@@ -39,7 +43,9 @@ internal fun ShareTargetItem(
         subtitle = target.details,
         avatarUri = target.avatarUri,
         fallbackIcon = null,
+        isSelected = isSelected,
         onClick = onClick,
+        onLongClick = onLongClick,
         modifier = modifier,
     )
 }
@@ -50,7 +56,9 @@ private fun ShareTargetRow(
     subtitle: String?,
     avatarUri: String?,
     fallbackIcon: ImageVector?,
+    isSelected: Boolean,
     onClick: () -> Unit,
+    onLongClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     TwoLineListItem(
@@ -58,6 +66,7 @@ private fun ShareTargetRow(
         subtitle = subtitle,
         onClick = onClick,
         modifier = modifier,
+        onLongClick = onLongClick,
         leadingContent = {
             if (fallbackIcon != null) {
                 ParticipantAvatar(
@@ -65,11 +74,13 @@ private fun ShareTargetRow(
                     size = AvatarSize,
                     fallbackIconSize = FallbackIconSize,
                     fallbackIcon = fallbackIcon,
+                    isSelected = isSelected,
                 )
             } else {
                 ParticipantAvatar(
                     avatarUri = avatarUri,
                     size = AvatarSize,
+                    isSelected = isSelected,
                 )
             }
         },
@@ -87,7 +98,9 @@ private fun ShareTargetItemPreview() {
                 details = "+31 6 1234 5678",
                 avatarUri = null,
             ),
+            isSelected = false,
             onClick = {},
+            onLongClick = null,
         )
     }
 }

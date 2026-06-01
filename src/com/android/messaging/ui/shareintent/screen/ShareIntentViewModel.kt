@@ -49,6 +49,22 @@ internal class ShareIntentViewModel @Inject constructor(
                 _effects.tryEmit(Effect.OpenConversation(action.conversationId))
             }
 
+            is Action.TargetLongPressed -> {
+                delegate.toggleSelection(action.conversationId)
+            }
+
+            is Action.SelectionToggled -> {
+                delegate.toggleSelection(action.conversationId)
+            }
+
+            Action.SelectionCleared -> {
+                delegate.clearSelection()
+            }
+
+            Action.SendToSelectedClicked -> {
+                _effects.tryEmit(Effect.SendToSelected(delegate.currentSelection()))
+            }
+
             Action.NewMessageClicked -> {
                 _effects.tryEmit(Effect.CreateNewConversation)
             }

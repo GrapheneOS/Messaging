@@ -6,6 +6,18 @@ internal sealed interface ShareIntentAction {
         val conversationId: String,
     ) : ShareIntentAction
 
+    data class TargetLongPressed(
+        val conversationId: String,
+    ) : ShareIntentAction
+
+    data class SelectionToggled(
+        val conversationId: String,
+    ) : ShareIntentAction
+
+    data object SelectionCleared : ShareIntentAction
+
+    data object SendToSelectedClicked : ShareIntentAction
+
     data object NewMessageClicked : ShareIntentAction
 
     data object SearchOpened : ShareIntentAction
