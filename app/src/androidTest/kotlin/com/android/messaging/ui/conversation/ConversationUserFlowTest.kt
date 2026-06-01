@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.Espresso.pressBackUnconditionally
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
@@ -17,6 +18,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.common.test.rules.AppTestRule
 import com.android.common.test.rules.MessagingTestRule
 import com.android.messaging.R
+import com.android.messaging.testutil.TEST_WAIT_TIMEOUT_MILLIS
 import com.android.messaging.ui.conversationlist.ConversationListActivity
 import org.junit.Rule
 import org.junit.Test
@@ -32,7 +34,7 @@ class ConversationUserFlowTest {
     val messagingRule = MessagingTestRule()
 
     @get:Rule
-    val composeRule = createEmptyComposeRule()
+    val composeTestRule = createEmptyComposeRule()
 
     @OptIn(ExperimentalTestApi::class)
     @Test
@@ -56,33 +58,34 @@ class ConversationUserFlowTest {
                     ),
                 )
 
-            composeRule.waitUntilAtLeastOneExists(
+            composeTestRule.waitUntilAtLeastOneExists(
                 matcher = hasTestTag(testTag = CONVERSATION_TEXT_FIELD_TEST_TAG),
                 timeoutMillis = TEST_WAIT_TIMEOUT_MILLIS,
             )
 
-            composeRule
+            composeTestRule
                 .onNodeWithTag(testTag = CONVERSATION_MESSAGES_LIST_TEST_TAG)
                 .assertIsDisplayed()
 
-            composeRule
+            composeTestRule
                 .onNodeWithTag(testTag = CONVERSATION_COMPOSE_BAR_TEST_TAG)
                 .assertIsDisplayed()
 
-            composeRule
+            composeTestRule
                 .onNodeWithTag(testTag = CONVERSATION_TEXT_FIELD_TEST_TAG)
                 .assertIsDisplayed()
 
-            composeRule
+            composeTestRule
                 .onNodeWithTag(
                     testTag = CONVERSATION_ATTACHMENT_BUTTON_TEST_TAG,
                     useUnmergedTree = true,
                 )
                 .assertIsDisplayed()
-        }
-    }
 
-    private companion object {
-        private const val TEST_WAIT_TIMEOUT_MILLIS = 5_000L
+            pressBackUnconditionally()
+
+            onView(withId(android.R.id.list))
+                .check(matches(isDisplayed()))
+        }
     }
 }

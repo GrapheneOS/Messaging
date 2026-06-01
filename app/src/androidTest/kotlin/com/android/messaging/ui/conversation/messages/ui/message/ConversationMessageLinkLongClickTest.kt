@@ -7,15 +7,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.Density
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.messaging.datamodel.data.ParticipantData
+import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
+import com.android.messaging.testutil.TEST_WAIT_TIMEOUT_MILLIS
+import com.android.messaging.ui.conversation.conversationMessageBubbleTestTag
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.core.AppTheme
@@ -23,26 +30,19 @@ import kotlinx.collections.immutable.persistentListOf
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 
-private const val MESSAGE_ID = "message-id"
-private const val CONVERSATION_ID = "conversation-id"
-private const val HEIGHT_ASSERTION_DELTA_DP = 0.5f
-private const val LINK_ONLY_TEXT = "https://example.com"
-private const val MESSAGE_TEST_TAG = "conversation-message"
-private const val MINIMAL_FONT_SCALE = 0.85f
-private const val PLAIN_TEXT = "plain outgoing message"
-private const val TIMESTAMP = 1_700_000_000_000L
-
-internal class ConversationMessageLinkLongClickTest {
+@RunWith(AndroidJUnit4::class)
+class ConversationMessageLinkLongClickTest {
     @get:Rule
-    val composeRule = createComposeRule()
+    val composeTestRule = createComposeRule()
 
     @Test
     fun longClickOutgoingLinkOnlyMessageSelectsMessage() {
         var externalUriClickCount = 0
         var messageLongClickCount = 0
 
-        composeRule.setContent {
+        composeTestRule.setContent {
             AppTheme {
                 ConversationMessage(
                     message = outgoingMessage(text = LINK_ONLY_TEXT),
@@ -56,23 +56,23 @@ internal class ConversationMessageLinkLongClickTest {
             }
         }
 
-        composeRule.waitForIdle()
+        awaitLinkAnnotated(text = LINK_ONLY_TEXT)
 
-        composeRule
+        composeTestRule
             .onNodeWithText(text = LINK_ONLY_TEXT, useUnmergedTree = true)
             .performClick()
 
-        composeRule.runOnIdle {
+        composeTestRule.runOnIdle {
             assertEquals(1, externalUriClickCount)
         }
 
-        composeRule
+        composeTestRule
             .onNodeWithText(text = LINK_ONLY_TEXT, useUnmergedTree = true)
             .performTouchInput {
                 longClick(position = center)
             }
 
-        composeRule.runOnIdle {
+        composeTestRule.runOnIdle {
             assertEquals(1, externalUriClickCount)
             assertEquals(1, messageLongClickCount)
         }
@@ -86,7 +86,7 @@ internal class ConversationMessageLinkLongClickTest {
         var isSelected by mutableStateOf(false)
         var isSelectionMode by mutableStateOf(false)
 
-        composeRule.setContent {
+        composeTestRule.setContent {
             AppTheme {
                 ConversationMessage(
                     message = outgoingMessage(text = LINK_ONLY_TEXT),
@@ -108,15 +108,15 @@ internal class ConversationMessageLinkLongClickTest {
             }
         }
 
-        composeRule.waitForIdle()
+        awaitLinkAnnotated(text = LINK_ONLY_TEXT)
 
-        composeRule
+        composeTestRule
             .onNodeWithText(text = LINK_ONLY_TEXT, useUnmergedTree = true)
             .performTouchInput {
                 longClick(position = center)
             }
 
-        composeRule.runOnIdle {
+        composeTestRule.runOnIdle {
             assertEquals(0, externalUriClickCount)
             assertEquals(0, messageClickCount)
             assertEquals(1, messageLongClickCount)
@@ -129,7 +129,7 @@ internal class ConversationMessageLinkLongClickTest {
     fun longClickOutgoingPlainTextMessageSelectsMessageOnce() {
         var messageLongClickCount = 0
 
-        composeRule.setContent {
+        composeTestRule.setContent {
             AppTheme {
                 ConversationMessage(
                     message = outgoingMessage(text = PLAIN_TEXT),
@@ -140,15 +140,19 @@ internal class ConversationMessageLinkLongClickTest {
             }
         }
 
-        composeRule.waitForIdle()
+        composeTestRule.waitForIdle()
 
-        composeRule
-            .onNodeWithText(text = PLAIN_TEXT, useUnmergedTree = true)
+        composeTestRule
+            .onNodeWithTag(
+                testTag = conversationMessageBubbleTestTag(
+                    messageId = MESSAGE_ID,
+                ),
+            )
             .performTouchInput {
                 longClick(position = center)
             }
 
-        composeRule.runOnIdle {
+        composeTestRule.runOnIdle {
             assertEquals(1, messageLongClickCount)
         }
     }
@@ -158,7 +162,7 @@ internal class ConversationMessageLinkLongClickTest {
         var isSelected by mutableStateOf(false)
         var isSelectionMode by mutableStateOf(false)
 
-        composeRule.setContent {
+        composeTestRule.setContent {
             val density = LocalDensity.current
 
             CompositionLocalProvider(
@@ -178,29 +182,29 @@ internal class ConversationMessageLinkLongClickTest {
             }
         }
 
-        composeRule.waitForIdle()
+        composeTestRule.waitForIdle()
 
-        val unselectedHeight = composeRule
+        val unselectedHeight = composeTestRule
             .onNodeWithTag(testTag = MESSAGE_TEST_TAG)
             .getUnclippedBoundsInRoot()
             .let { bounds ->
                 bounds.bottom - bounds.top
             }
 
-        composeRule.runOnIdle {
+        composeTestRule.runOnIdle {
             isSelected = true
             isSelectionMode = true
         }
-        composeRule.waitForIdle()
+        composeTestRule.waitForIdle()
 
-        val selectedHeight = composeRule
+        val selectedHeight = composeTestRule
             .onNodeWithTag(testTag = MESSAGE_TEST_TAG)
             .getUnclippedBoundsInRoot()
             .let { bounds ->
                 bounds.bottom - bounds.top
             }
 
-        composeRule.runOnIdle {
+        composeTestRule.runOnIdle {
             assertEquals(
                 unselectedHeight.value,
                 selectedHeight.value,
@@ -208,39 +212,62 @@ internal class ConversationMessageLinkLongClickTest {
             )
         }
     }
-}
 
-private fun outgoingMessage(text: String): ConversationMessageUiModel {
-    return ConversationMessageUiModel(
-        messageId = MESSAGE_ID,
-        conversationId = CONVERSATION_ID,
-        text = text,
-        parts = persistentListOf(
-            ConversationMessagePartUiModel.Text(
-                text = text,
+    private fun awaitLinkAnnotated(text: String) {
+        composeTestRule.waitUntil(timeoutMillis = TEST_WAIT_TIMEOUT_MILLIS) {
+            composeTestRule
+                .onAllNodesWithText(text = text, useUnmergedTree = true)
+                .fetchSemanticsNodes()
+                .any { node ->
+                    node.config
+                        .getOrNull(SemanticsProperties.Text)
+                        ?.any { it.hasLinkAnnotations(start = 0, end = it.length) } == true
+                }
+        }
+    }
+
+    private fun outgoingMessage(text: String): ConversationMessageUiModel {
+        return ConversationMessageUiModel(
+            messageId = MESSAGE_ID,
+            conversationId = CONVERSATION_ID,
+            text = text,
+            parts = persistentListOf(
+                ConversationMessagePartUiModel.Text(
+                    text = text,
+                ),
             ),
-        ),
-        sentTimestamp = TIMESTAMP,
-        receivedTimestamp = TIMESTAMP,
-        displayTimestamp = TIMESTAMP,
-        status = ConversationMessageUiModel.Status.Outgoing.Complete,
-        isIncoming = false,
-        senderDisplayName = null,
-        senderAvatarUri = null,
-        senderContactId = ParticipantData.PARTICIPANT_CONTACT_ID_NOT_RESOLVED,
-        senderContactLookupKey = null,
-        senderNormalizedDestination = null,
-        senderParticipantId = null,
-        selfParticipantId = null,
-        canClusterWithPrevious = false,
-        canClusterWithNext = false,
-        canCopyMessageToClipboard = true,
-        canDownloadMessage = false,
-        canForwardMessage = true,
-        canResendMessage = false,
-        canSaveAttachments = false,
-        mmsDownload = null,
-        mmsSubject = null,
-        protocol = ConversationMessageUiModel.Protocol.SMS,
-    )
+            sentTimestamp = TIMESTAMP,
+            receivedTimestamp = TIMESTAMP,
+            displayTimestamp = TIMESTAMP,
+            status = ConversationMessageUiModel.Status.Outgoing.Complete,
+            isIncoming = false,
+            senderDisplayName = null,
+            senderAvatarUri = null,
+            senderContactId = ParticipantData.PARTICIPANT_CONTACT_ID_NOT_RESOLVED,
+            senderContactLookupKey = null,
+            senderNormalizedDestination = null,
+            senderParticipantId = null,
+            selfParticipantId = null,
+            canClusterWithPrevious = false,
+            canClusterWithNext = false,
+            canCopyMessageToClipboard = true,
+            canDownloadMessage = false,
+            canForwardMessage = true,
+            canResendMessage = false,
+            canSaveAttachments = false,
+            mmsDownload = null,
+            mmsSubject = null,
+            protocol = ConversationMessageUiModel.Protocol.SMS,
+        )
+    }
+
+    private companion object {
+        private const val MESSAGE_ID = "message-id"
+        private const val HEIGHT_ASSERTION_DELTA_DP = 0.5f
+        private const val LINK_ONLY_TEXT = "https://example.com"
+        private const val MESSAGE_TEST_TAG = "conversation-message"
+        private const val MINIMAL_FONT_SCALE = 0.85f
+        private const val PLAIN_TEXT = "plain outgoing message"
+        private const val TIMESTAMP = 1_700_000_000_000L
+    }
 }

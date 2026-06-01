@@ -1,10 +1,11 @@
 package com.android.messaging.ui.appsettings.general.ui
 
-import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
 import com.android.messaging.ui.appsettings.general.model.AppSettingsUiState
 import com.android.messaging.ui.appsettings.screen.SettingsScreenModel
@@ -16,11 +17,13 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 
+@RunWith(AndroidJUnit4::class)
 class AppSettingsScreenTest {
 
     @get:Rule
-    val composeTestRule = createAndroidComposeRule<ComponentActivity>()
+    val composeTestRule = createComposeRule()
 
     private lateinit var screenModel: SettingsScreenModel
 
@@ -50,11 +53,13 @@ class AppSettingsScreenTest {
 
         setContent(appSettings = appSettings)
 
-        val title = composeTestRule.activity.getString(R.string.sms_disabled_pref_title)
+        val title = targetContext.getString(R.string.sms_disabled_pref_title)
         composeTestRule.onNodeWithText(title).performClick()
 
-        verify(exactly = 1) {
-            screenModel.onAction(Action.DefaultSmsAppClicked(true))
+        composeTestRule.runOnIdle {
+            verify(exactly = 1) {
+                screenModel.onAction(Action.DefaultSmsAppClicked(true))
+            }
         }
     }
 
@@ -62,13 +67,15 @@ class AppSettingsScreenTest {
     fun notificationsClick_delegatesToScreenModel() {
         setContent()
 
-        val title = composeTestRule.activity.getString(
+        val title = targetContext.getString(
             R.string.notifications_enabled_conversation_pref_title,
         )
         composeTestRule.onNodeWithText(title).performClick()
 
-        verify(exactly = 1) {
-            screenModel.onAction(Action.NotificationsClicked)
+        composeTestRule.runOnIdle {
+            verify(exactly = 1) {
+                screenModel.onAction(Action.NotificationsClicked)
+            }
         }
     }
 
@@ -78,11 +85,13 @@ class AppSettingsScreenTest {
 
         setContent(appSettings = appSettings)
 
-        val title = composeTestRule.activity.getString(R.string.send_sound_pref_title)
+        val title = targetContext.getString(R.string.send_sound_pref_title)
         composeTestRule.onNodeWithText(title).performClick()
 
-        verify(exactly = 1) {
-            screenModel.onAction(Action.SendSoundChanged(false))
+        composeTestRule.runOnIdle {
+            verify(exactly = 1) {
+                screenModel.onAction(Action.SendSoundChanged(false))
+            }
         }
     }
 
@@ -92,10 +101,10 @@ class AppSettingsScreenTest {
 
         setContent(appSettings = appSettings)
 
-        val debugTitle = composeTestRule.activity.getString(R.string.debug_category_pref_title)
+        val debugTitle = targetContext.getString(R.string.debug_category_pref_title)
         composeTestRule.onNodeWithText(debugTitle).assertDoesNotExist()
 
-        val dumpSmsTitle = composeTestRule.activity.getString(R.string.dump_sms_pref_title)
+        val dumpSmsTitle = targetContext.getString(R.string.dump_sms_pref_title)
         composeTestRule.onNodeWithText(dumpSmsTitle).assertDoesNotExist()
     }
 
@@ -109,13 +118,13 @@ class AppSettingsScreenTest {
 
         setContent(appSettings = appSettings)
 
-        val debugTitle = composeTestRule.activity.getString(R.string.debug_category_pref_title)
+        val debugTitle = targetContext.getString(R.string.debug_category_pref_title)
         composeTestRule.onNodeWithText(debugTitle).assertIsDisplayed()
 
-        val dumpSmsTitle = composeTestRule.activity.getString(R.string.dump_sms_pref_title)
+        val dumpSmsTitle = targetContext.getString(R.string.dump_sms_pref_title)
         composeTestRule.onNodeWithText(dumpSmsTitle).assertIsDisplayed()
 
-        val dumpMmsTitle = composeTestRule.activity.getString(R.string.dump_mms_pref_title)
+        val dumpMmsTitle = targetContext.getString(R.string.dump_mms_pref_title)
         composeTestRule.onNodeWithText(dumpMmsTitle).assertIsDisplayed()
     }
 
@@ -128,11 +137,13 @@ class AppSettingsScreenTest {
 
         setContent(appSettings = appSettings)
 
-        val title = composeTestRule.activity.getString(R.string.dump_sms_pref_title)
+        val title = targetContext.getString(R.string.dump_sms_pref_title)
         composeTestRule.onNodeWithText(title).performClick()
 
-        verify(exactly = 1) {
-            screenModel.onAction(Action.DumpSmsChanged(true))
+        composeTestRule.runOnIdle {
+            verify(exactly = 1) {
+                screenModel.onAction(Action.DumpSmsChanged(true))
+            }
         }
     }
 
@@ -145,11 +156,13 @@ class AppSettingsScreenTest {
 
         setContent(appSettings = appSettings)
 
-        val title = composeTestRule.activity.getString(R.string.dump_mms_pref_title)
+        val title = targetContext.getString(R.string.dump_mms_pref_title)
         composeTestRule.onNodeWithText(title).performClick()
 
-        verify(exactly = 1) {
-            screenModel.onAction(Action.DumpMmsChanged(true))
+        composeTestRule.runOnIdle {
+            verify(exactly = 1) {
+                screenModel.onAction(Action.DumpMmsChanged(true))
+            }
         }
     }
 
@@ -157,11 +170,13 @@ class AppSettingsScreenTest {
     fun licensesClick_delegatesToScreenModel() {
         setContent()
 
-        val title = composeTestRule.activity.getString(R.string.menu_license)
+        val title = targetContext.getString(R.string.menu_license)
         composeTestRule.onNodeWithText(title).performClick()
 
-        verify(exactly = 1) {
-            screenModel.onAction(Action.LicensesClicked)
+        composeTestRule.runOnIdle {
+            verify(exactly = 1) {
+                screenModel.onAction(Action.LicensesClicked)
+            }
         }
     }
 
@@ -169,19 +184,12 @@ class AppSettingsScreenTest {
     fun advancedSettings_shownWhenTopLevel() {
         var advancedClicks = 0
 
-        composeTestRule.setContent {
-            AppTheme {
-                AppSettingsScreen(
-                    appSettings = AppSettingsUiState(),
-                    onAction = screenModel::onAction,
-                    onNavigateBack = {},
-                    isTopLevel = true,
-                    onAdvancedClick = { advancedClicks += 1 },
-                )
-            }
-        }
+        setContent(
+            isTopLevel = true,
+            onAdvancedClick = { advancedClicks += 1 },
+        )
 
-        val advancedTitle = composeTestRule.activity.getString(R.string.advanced_settings)
+        val advancedTitle = targetContext.getString(R.string.advanced_settings)
         composeTestRule.onNodeWithText(advancedTitle).assertIsDisplayed()
         composeTestRule.onNodeWithText(advancedTitle).performClick()
 
@@ -192,24 +200,16 @@ class AppSettingsScreenTest {
 
     @Test
     fun advancedSettings_hiddenWhenNotTopLevel() {
-        composeTestRule.setContent {
-            AppTheme {
-                AppSettingsScreen(
-                    appSettings = AppSettingsUiState(),
-                    onAction = screenModel::onAction,
-                    onNavigateBack = {},
-                    isTopLevel = false,
-                    onAdvancedClick = null,
-                )
-            }
-        }
+        setContent(isTopLevel = false)
 
-        val advancedTitle = composeTestRule.activity.getString(R.string.advanced_settings)
+        val advancedTitle = targetContext.getString(R.string.advanced_settings)
         composeTestRule.onNodeWithText(advancedTitle).assertDoesNotExist()
     }
 
     private fun setContent(
         appSettings: AppSettingsUiState = AppSettingsUiState(),
+        isTopLevel: Boolean = false,
+        onAdvancedClick: (() -> Unit)? = null,
     ) {
         composeTestRule.setContent {
             AppTheme {
@@ -217,6 +217,8 @@ class AppSettingsScreenTest {
                     appSettings = appSettings,
                     onAction = screenModel::onAction,
                     onNavigateBack = {},
+                    isTopLevel = isTopLevel,
+                    onAdvancedClick = onAdvancedClick,
                 )
             }
         }

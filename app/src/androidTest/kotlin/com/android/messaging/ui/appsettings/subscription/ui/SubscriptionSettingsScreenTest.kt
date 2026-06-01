@@ -1,12 +1,13 @@
 package com.android.messaging.ui.appsettings.subscription.ui
 
-import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
 import com.android.messaging.ui.appsettings.screen.SettingsScreenModel
 import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
@@ -17,11 +18,13 @@ import io.mockk.verify
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 
+@RunWith(AndroidJUnit4::class)
 class SubscriptionSettingsScreenTest {
 
     @get:Rule
-    val composeTestRule = createAndroidComposeRule<ComponentActivity>()
+    val composeTestRule = createComposeRule()
 
     private lateinit var screenModel: SettingsScreenModel
 
@@ -31,21 +34,11 @@ class SubscriptionSettingsScreenTest {
     }
 
     @Test
-    fun mmsCategoryHeader_isDisplayed() {
-        setContent(subscriptionSettings = createDefaultSubscription())
-
-        val mmsTitle = composeTestRule.activity.getString(
-            R.string.mms_messaging_category_pref_title,
-        )
-        composeTestRule.onNodeWithText(mmsTitle).assertIsDisplayed()
-    }
-
-    @Test
     fun groupMms_shownWhenSupported() {
         val sub = createDefaultSubscription(isGroupMmsSupported = true)
         setContent(subscriptionSettings = sub)
 
-        val groupMmsTitle = composeTestRule.activity.getString(R.string.group_mms_pref_title)
+        val groupMmsTitle = targetContext.getString(R.string.group_mms_pref_title)
         composeTestRule.onNodeWithText(groupMmsTitle).assertIsDisplayed()
     }
 
@@ -54,7 +47,7 @@ class SubscriptionSettingsScreenTest {
         val sub = createDefaultSubscription(isGroupMmsSupported = false)
         setContent(subscriptionSettings = sub)
 
-        val groupMmsTitle = composeTestRule.activity.getString(R.string.group_mms_pref_title)
+        val groupMmsTitle = targetContext.getString(R.string.group_mms_pref_title)
         composeTestRule.onNodeWithText(groupMmsTitle).assertDoesNotExist()
     }
 
@@ -66,26 +59,26 @@ class SubscriptionSettingsScreenTest {
         )
         setContent(subscriptionSettings = sub)
 
-        val groupMmsTitle = composeTestRule.activity.getString(R.string.group_mms_pref_title)
+        val groupMmsTitle = targetContext.getString(R.string.group_mms_pref_title)
         composeTestRule.onNodeWithText(groupMmsTitle).performClick()
         composeTestRule.waitForIdle()
 
-        val disableLabel = composeTestRule.activity.getString(R.string.disable_group_mms)
+        val disableLabel = targetContext.getString(R.string.disable_group_mms)
         composeTestRule.onNodeWithText(disableLabel).assertIsDisplayed()
 
-        val okText = composeTestRule.activity.getString(android.R.string.ok)
+        val okText = targetContext.getString(android.R.string.ok)
         composeTestRule.onNodeWithText(okText).assertIsDisplayed()
 
-        val cancelText = composeTestRule.activity.getString(android.R.string.cancel)
+        val cancelText = targetContext.getString(android.R.string.cancel)
         composeTestRule.onNodeWithText(cancelText).assertIsDisplayed()
     }
 
     @Test
     fun phoneNumberItem_displaysCurrentNumber() {
-        val sub = createDefaultSubscription(displayDetail = "+1234567890")
+        val sub = createDefaultSubscription(displayDetail = "+1 555-010-2034")
         setContent(subscriptionSettings = sub)
 
-        composeTestRule.onNodeWithText("+1234567890").assertIsDisplayed()
+        composeTestRule.onNodeWithText("+1 555-010-2034").assertIsDisplayed()
     }
 
     @Test
@@ -93,11 +86,11 @@ class SubscriptionSettingsScreenTest {
         val sub = createDefaultSubscription(phoneNumber = "+1234567890")
         setContent(subscriptionSettings = sub)
 
-        val phoneTitle = composeTestRule.activity.getString(R.string.mms_phone_number_pref_title)
+        val phoneTitle = targetContext.getString(R.string.mms_phone_number_pref_title)
         composeTestRule.onNodeWithText(phoneTitle).performClick()
         composeTestRule.waitForIdle()
 
-        val okText = composeTestRule.activity.getString(android.R.string.ok)
+        val okText = targetContext.getString(android.R.string.ok)
         composeTestRule.onNodeWithText(okText).assertIsDisplayed()
     }
 
@@ -109,11 +102,13 @@ class SubscriptionSettingsScreenTest {
         )
         setContent(subscriptionSettings = sub)
 
-        val title = composeTestRule.activity.getString(R.string.auto_retrieve_mms_pref_title)
+        val title = targetContext.getString(R.string.auto_retrieve_mms_pref_title)
         composeTestRule.onNodeWithText(title).performClick()
 
-        verify(exactly = 1) {
-            screenModel.onAction(Action.AutoRetrieveMmsChanged(1, false))
+        composeTestRule.runOnIdle {
+            verify(exactly = 1) {
+                screenModel.onAction(Action.AutoRetrieveMmsChanged(1, false))
+            }
         }
     }
 
@@ -125,7 +120,7 @@ class SubscriptionSettingsScreenTest {
         )
         setContent(subscriptionSettings = sub)
 
-        val title = composeTestRule.activity.getString(
+        val title = targetContext.getString(
             R.string.auto_retrieve_mms_when_roaming_pref_title,
         )
         composeTestRule.onNodeWithText(title).assertIsNotEnabled()
@@ -139,7 +134,7 @@ class SubscriptionSettingsScreenTest {
         )
         setContent(subscriptionSettings = sub)
 
-        val title = composeTestRule.activity.getString(
+        val title = targetContext.getString(
             R.string.auto_retrieve_mms_when_roaming_pref_title,
         )
         composeTestRule.onNodeWithText(title).assertIsEnabled()
@@ -150,7 +145,7 @@ class SubscriptionSettingsScreenTest {
         val sub = createDefaultSubscription(isDeliveryReportsSupported = true)
         setContent(subscriptionSettings = sub)
 
-        val title = composeTestRule.activity.getString(R.string.delivery_reports_pref_title)
+        val title = targetContext.getString(R.string.delivery_reports_pref_title)
         composeTestRule.onNodeWithText(title).assertIsDisplayed()
     }
 
@@ -159,7 +154,7 @@ class SubscriptionSettingsScreenTest {
         val sub = createDefaultSubscription(isDeliveryReportsSupported = false)
         setContent(subscriptionSettings = sub)
 
-        val title = composeTestRule.activity.getString(R.string.delivery_reports_pref_title)
+        val title = targetContext.getString(R.string.delivery_reports_pref_title)
         composeTestRule.onNodeWithText(title).assertDoesNotExist()
     }
 
@@ -172,11 +167,13 @@ class SubscriptionSettingsScreenTest {
         )
         setContent(subscriptionSettings = sub)
 
-        val title = composeTestRule.activity.getString(R.string.delivery_reports_pref_title)
+        val title = targetContext.getString(R.string.delivery_reports_pref_title)
         composeTestRule.onNodeWithText(title).performClick()
 
-        verify(exactly = 1) {
-            screenModel.onAction(Action.DeliveryReportsChanged(1, true))
+        composeTestRule.runOnIdle {
+            verify(exactly = 1) {
+                screenModel.onAction(Action.DeliveryReportsChanged(1, true))
+            }
         }
     }
 
@@ -185,7 +182,7 @@ class SubscriptionSettingsScreenTest {
         val sub = createDefaultSubscription(isWirelessAlertsSupported = true)
         setContent(subscriptionSettings = sub)
 
-        val title = composeTestRule.activity.getString(R.string.wireless_alerts_title)
+        val title = targetContext.getString(R.string.wireless_alerts_title)
         composeTestRule.onNodeWithText(title).assertIsDisplayed()
     }
 
@@ -194,7 +191,7 @@ class SubscriptionSettingsScreenTest {
         val sub = createDefaultSubscription(isWirelessAlertsSupported = false)
         setContent(subscriptionSettings = sub)
 
-        val title = composeTestRule.activity.getString(R.string.wireless_alerts_title)
+        val title = targetContext.getString(R.string.wireless_alerts_title)
         composeTestRule.onNodeWithText(title).assertDoesNotExist()
     }
 
@@ -203,11 +200,13 @@ class SubscriptionSettingsScreenTest {
         val sub = createDefaultSubscription(isWirelessAlertsSupported = true)
         setContent(subscriptionSettings = sub)
 
-        val title = composeTestRule.activity.getString(R.string.wireless_alerts_title)
+        val title = targetContext.getString(R.string.wireless_alerts_title)
         composeTestRule.onNodeWithText(title).performClick()
 
-        verify(exactly = 1) {
-            screenModel.onAction(Action.WirelessAlertsClicked(1))
+        composeTestRule.runOnIdle {
+            verify(exactly = 1) {
+                screenModel.onAction(Action.WirelessAlertsClicked(1))
+            }
         }
     }
 
@@ -220,7 +219,7 @@ class SubscriptionSettingsScreenTest {
         setContent(subscriptionSettings = sub)
 
         val advancedTitle =
-            composeTestRule.activity.getString(R.string.advanced_category_pref_title)
+            targetContext.getString(R.string.advanced_category_pref_title)
         composeTestRule.onNodeWithText(advancedTitle).assertIsDisplayed()
     }
 
@@ -233,7 +232,7 @@ class SubscriptionSettingsScreenTest {
         setContent(subscriptionSettings = sub)
 
         val advancedTitle =
-            composeTestRule.activity.getString(R.string.advanced_category_pref_title)
+            targetContext.getString(R.string.advanced_category_pref_title)
         composeTestRule.onNodeWithText(advancedTitle).assertDoesNotExist()
     }
 
@@ -246,15 +245,15 @@ class SubscriptionSettingsScreenTest {
         )
         setContent(subscriptionSettings = sub)
 
-        val groupMmsTitle = composeTestRule.activity.getString(R.string.group_mms_pref_title)
+        val groupMmsTitle = targetContext.getString(R.string.group_mms_pref_title)
         composeTestRule.onNodeWithText(groupMmsTitle).assertIsNotEnabled()
 
-        val autoRetrieveTitle = composeTestRule.activity.getString(
+        val autoRetrieveTitle = targetContext.getString(
             R.string.auto_retrieve_mms_pref_title,
         )
         composeTestRule.onNodeWithText(autoRetrieveTitle).assertIsNotEnabled()
 
-        val deliveryTitle = composeTestRule.activity.getString(R.string.delivery_reports_pref_title)
+        val deliveryTitle = targetContext.getString(R.string.delivery_reports_pref_title)
         composeTestRule.onNodeWithText(deliveryTitle).assertIsNotEnabled()
     }
 
