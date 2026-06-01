@@ -32,6 +32,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
@@ -42,6 +43,7 @@ import androidx.compose.ui.zIndex
 import com.android.messaging.R
 import com.android.messaging.ui.conversation.attachment.ui.ConversationMediaThumbnail
 import com.android.messaging.ui.conversation.composer.model.ComposerAttachmentUiModel
+import com.android.messaging.ui.conversation.conversationMediaReviewPreviewTestTag
 import com.android.messaging.ui.conversation.mediapicker.component.PickerOverlayBackgroundButton
 import com.android.messaging.ui.conversation.mediapicker.component.pickerOverlayContainerColor
 import com.android.messaging.ui.conversation.mediapicker.component.pickerOverlayContentColor
@@ -53,7 +55,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.delay
 
-private const val PICKER_REVIEW_PAGE_REMOVE_ANIMATION_DURATION_MILLIS = 160
+internal const val PICKER_REVIEW_PAGE_REMOVE_ANIMATION_DURATION_MILLIS = 160
 
 @Composable
 internal fun ConversationMediaReviewPageCard(
@@ -194,6 +196,11 @@ private fun ConversationMediaReviewPageCardContent(
         ConversationMediaReviewPreview(
             modifier = Modifier
                 .fillMaxSize()
+                .testTag(
+                    tag = conversationMediaReviewPreviewTestTag(
+                        contentUri = attachment.contentUri,
+                    ),
+                )
                 .clickable(
                     enabled = contentState.isPreviewEnabled,
                     onClick = { onAttachmentPreviewClick(attachment) },

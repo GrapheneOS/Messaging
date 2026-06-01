@@ -23,6 +23,8 @@ internal const val CONVERSATION_DELETE_CONVERSATION_BUTTON_TEST_TAG =
     "conversation_delete_conversation_button"
 internal const val CONVERSATION_LOADING_INDICATOR_TEST_TAG = "conversation_loading_indicator"
 internal const val CONVERSATION_MESSAGES_LIST_TEST_TAG = "conversation_messages_list"
+internal const val CONVERSATION_MEDIA_CAPTURE_SHUTTER_BUTTON_TEST_TAG =
+    "conversation_media_capture_shutter_button"
 internal const val CONVERSATION_MEDIA_PICKER_OVERLAY_TEST_TAG = "conversation_media_picker_overlay"
 internal const val CONVERSATION_MMS_INDICATOR_TEST_TAG = "conversation_mms_indicator"
 internal const val CONVERSATION_SEGMENT_COUNTER_TEST_TAG = "conversation_segment_counter"
@@ -101,6 +103,10 @@ internal fun conversationAttachmentPreviewRemoveButtonTestTag(
     attachmentKey: String,
 ): String {
     return "conversation_attachment_preview_remove_button_$attachmentKey"
+}
+
+internal fun conversationMediaReviewPreviewTestTag(contentUri: String): String {
+    return "conversation_media_review_preview_$contentUri"
 }
 
 internal fun newChatContactRowTestTag(contactId: String): String {
