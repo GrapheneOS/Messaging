@@ -24,11 +24,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.common.components.attachment.formatAudioDuration
+import com.android.messaging.ui.conversation.CONVERSATION_MEDIA_CAPTURE_SHUTTER_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.mediapicker.ConversationCaptureMode
 import com.android.messaging.ui.conversation.mediapicker.camera.ConversationPhotoFlashMode
 import com.android.messaging.ui.conversation.mediapicker.component.PickerOverlayIconButton
@@ -115,6 +117,8 @@ internal fun ConversationMediaCaptureControls(
                 }
 
                 ConversationMediaCaptureShutterButton(
+                    modifier = Modifier
+                        .testTag(CONVERSATION_MEDIA_CAPTURE_SHUTTER_BUTTON_TEST_TAG),
                     captureMode = captureMode,
                     isPhotoCaptureInProgress = isPhotoCaptureInProgress,
                     isRecording = isRecording,
