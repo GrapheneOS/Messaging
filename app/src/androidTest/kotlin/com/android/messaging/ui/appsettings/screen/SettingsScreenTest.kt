@@ -1,16 +1,18 @@
 package com.android.messaging.ui.appsettings.screen
 
-import androidx.activity.ComponentActivity
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
+import com.android.messaging.testutil.TestLifecycleOwner
 import com.android.messaging.ui.appsettings.general.model.AppSettingsUiState
 import com.android.messaging.ui.appsettings.screen.model.SettingsUiState
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionUiState
@@ -24,11 +26,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 
+@RunWith(AndroidJUnit4::class)
 class SettingsScreenTest {
 
     @get:Rule
-    val composeTestRule = createAndroidComposeRule<ComponentActivity>()
+    val composeTestRule = createComposeRule()
 
     private val fakeUiStateFlow = MutableStateFlow(createSingleSimState())
     private lateinit var screenModel: SettingsScreenModel
@@ -45,12 +49,12 @@ class SettingsScreenTest {
     fun singleSim_skipsMainScreen_showsAppSettings() {
         fakeUiStateFlow.value = createSingleSimState()
 
-        setScreenContent()
+        setContent()
 
-        val generalTitle = composeTestRule.activity.getString(R.string.settings_activity_title)
+        val generalTitle = targetContext.getString(R.string.settings_activity_title)
         composeTestRule.onNodeWithText(generalTitle).assertIsDisplayed()
 
-        val sendSoundTitle = composeTestRule.activity.getString(R.string.send_sound_pref_title)
+        val sendSoundTitle = targetContext.getString(R.string.send_sound_pref_title)
         composeTestRule.onNodeWithText(sendSoundTitle).assertIsDisplayed()
     }
 
@@ -58,9 +62,9 @@ class SettingsScreenTest {
     fun multiSim_showsMainScreen_withSubscriptions() {
         fakeUiStateFlow.value = createMultiSimState()
 
-        setScreenContent()
+        setContent()
 
-        val settingsTitle = composeTestRule.activity.getString(R.string.settings_activity_title)
+        val settingsTitle = targetContext.getString(R.string.settings_activity_title)
         composeTestRule.onNodeWithText(settingsTitle).assertIsDisplayed()
 
         composeTestRule.onNodeWithText("SIM 1").assertIsDisplayed()
@@ -71,13 +75,13 @@ class SettingsScreenTest {
     fun multiSim_generalSettingsClick_navigatesToAppSettings() {
         fakeUiStateFlow.value = createMultiSimState()
 
-        setScreenContent()
+        setContent()
 
-        val generalSettings = composeTestRule.activity.getString(R.string.general_settings)
+        val generalSettings = targetContext.getString(R.string.general_settings)
         composeTestRule.onNodeWithText(generalSettings).performClick()
         composeTestRule.waitForIdle()
 
-        val sendSoundTitle = composeTestRule.activity.getString(R.string.send_sound_pref_title)
+        val sendSoundTitle = targetContext.getString(R.string.send_sound_pref_title)
         composeTestRule.onNodeWithText(sendSoundTitle).assertIsDisplayed()
     }
 
@@ -92,25 +96,17 @@ class SettingsScreenTest {
             )
         }
 
-        composeTestRule.setContent {
-            CompositionLocalProvider(LocalLifecycleOwner provides lifecycleOwner) {
-                AppTheme {
-                    SettingsScreen(
-                        effectHandler = effectHandler,
-                        onNavigateBack = {},
-                        screenModel = screenModel,
-                    )
-                }
-            }
-        }
+        setContent(lifecycleOwner = lifecycleOwner)
 
         composeTestRule.runOnIdle {
             lifecycleOwner.moveTo(state = Lifecycle.State.RESUMED)
         }
         composeTestRule.waitForIdle()
 
-        verify(atLeast = 1) {
-            screenModel.refreshState()
+        composeTestRule.runOnIdle {
+            verify(exactly = 1) {
+                screenModel.refreshState()
+            }
         }
     }
 
@@ -118,9 +114,9 @@ class SettingsScreenTest {
     fun singleSim_showsAdvancedSettings() {
         fakeUiStateFlow.value = createSingleSimState()
 
-        setScreenContent()
+        setContent()
 
-        val advancedTitle = composeTestRule.activity.getString(R.string.advanced_settings)
+        val advancedTitle = targetContext.getString(R.string.advanced_settings)
         composeTestRule.onNodeWithText(advancedTitle).assertIsDisplayed()
     }
 
@@ -128,9 +124,9 @@ class SettingsScreenTest {
     fun singleSim_disablingLastSubscription_hidesAdvancedSettings() {
         fakeUiStateFlow.value = createSingleSimState()
 
-        setScreenContent()
+        setContent()
 
-        val advancedTitle = composeTestRule.activity.getString(R.string.advanced_settings)
+        val advancedTitle = targetContext.getString(R.string.advanced_settings)
         composeTestRule.onNodeWithText(advancedTitle).assertIsDisplayed()
 
         fakeUiStateFlow.value = createSingleSimState().copy(
@@ -147,12 +143,12 @@ class SettingsScreenTest {
             subscriptionSettings = persistentListOf(),
         )
 
-        setScreenContent()
+        setContent()
 
-        val sendSoundTitle = composeTestRule.activity.getString(R.string.send_sound_pref_title)
+        val sendSoundTitle = targetContext.getString(R.string.send_sound_pref_title)
         composeTestRule.onNodeWithText(sendSoundTitle).assertIsDisplayed()
 
-        val advancedTitle = composeTestRule.activity.getString(R.string.advanced_settings)
+        val advancedTitle = targetContext.getString(R.string.advanced_settings)
         composeTestRule.onNodeWithText(advancedTitle).assertDoesNotExist()
     }
 
@@ -160,9 +156,9 @@ class SettingsScreenTest {
     fun multiSim_topLevelIntent_showsAppSettingsDirectly() {
         fakeUiStateFlow.value = createMultiSimState()
 
-        setScreenContent(isTopLevelIntent = true)
+        setContent(isTopLevelIntent = true)
 
-        val sendSoundTitle = composeTestRule.activity.getString(R.string.send_sound_pref_title)
+        val sendSoundTitle = targetContext.getString(R.string.send_sound_pref_title)
         composeTestRule.onNodeWithText(sendSoundTitle).assertIsDisplayed()
 
         composeTestRule.onNodeWithText("SIM 1").assertDoesNotExist()
@@ -173,12 +169,12 @@ class SettingsScreenTest {
     fun multiSim_disablingOpenedSubscription_navigatesBackToMain() {
         fakeUiStateFlow.value = createMultiSimState()
 
-        setScreenContent(
+        setContent(
             intentSubId = 2,
             intentSubTitle = "SIM 2",
         )
 
-        val phoneNumberTitle = composeTestRule.activity.getString(
+        val phoneNumberTitle = targetContext.getString(
             R.string.mms_phone_number_pref_title,
         )
         composeTestRule.onNodeWithText(phoneNumberTitle).assertIsDisplayed()
@@ -190,7 +186,7 @@ class SettingsScreenTest {
         )
         composeTestRule.waitForIdle()
 
-        val mainTitle = composeTestRule.activity.getString(R.string.settings_activity_title)
+        val mainTitle = targetContext.getString(R.string.settings_activity_title)
         composeTestRule.onNodeWithText(mainTitle).assertIsDisplayed()
         composeTestRule.onNodeWithText("SIM 1").assertIsDisplayed()
         composeTestRule.onNodeWithText("SIM 2").assertDoesNotExist()
@@ -200,12 +196,12 @@ class SettingsScreenTest {
     fun singleSim_disablingOpenedSubscription_navigatesBackToAppSettings() {
         fakeUiStateFlow.value = createSingleSimState()
 
-        setScreenContent(
+        setContent(
             intentSubId = 1,
             intentSubTitle = "Advanced Settings",
         )
 
-        val phoneNumberTitle = composeTestRule.activity.getString(
+        val phoneNumberTitle = targetContext.getString(
             R.string.mms_phone_number_pref_title,
         )
         composeTestRule.onNodeWithText(phoneNumberTitle).assertIsDisplayed()
@@ -215,7 +211,7 @@ class SettingsScreenTest {
         )
         composeTestRule.waitForIdle()
 
-        val sendSoundTitle = composeTestRule.activity.getString(R.string.send_sound_pref_title)
+        val sendSoundTitle = targetContext.getString(R.string.send_sound_pref_title)
         composeTestRule.onNodeWithText(sendSoundTitle).assertIsDisplayed()
         composeTestRule.onNodeWithText(phoneNumberTitle).assertDoesNotExist()
     }
@@ -224,12 +220,12 @@ class SettingsScreenTest {
     fun multiSim_disablingAllSubscriptions_navigatesToAppSettings() {
         fakeUiStateFlow.value = createMultiSimState()
 
-        setScreenContent(
+        setContent(
             intentSubId = 2,
             intentSubTitle = "SIM 2",
         )
 
-        val phoneNumberTitle = composeTestRule.activity.getString(
+        val phoneNumberTitle = targetContext.getString(
             R.string.mms_phone_number_pref_title,
         )
         composeTestRule.onNodeWithText(phoneNumberTitle).assertIsDisplayed()
@@ -240,7 +236,7 @@ class SettingsScreenTest {
         )
         composeTestRule.waitForIdle()
 
-        val sendSoundTitle = composeTestRule.activity.getString(R.string.send_sound_pref_title)
+        val sendSoundTitle = targetContext.getString(R.string.send_sound_pref_title)
         composeTestRule.onNodeWithText(sendSoundTitle).assertIsDisplayed()
         composeTestRule.onNodeWithText(phoneNumberTitle).assertDoesNotExist()
     }
@@ -249,12 +245,12 @@ class SettingsScreenTest {
     fun multiSim_disablingOtherSubscription_keepsCurrentSubscriptionScreen() {
         fakeUiStateFlow.value = createMultiSimState()
 
-        setScreenContent(
+        setContent(
             intentSubId = 1,
             intentSubTitle = "SIM 1",
         )
 
-        val phoneNumberTitle = composeTestRule.activity.getString(
+        val phoneNumberTitle = targetContext.getString(
             R.string.mms_phone_number_pref_title,
         )
         composeTestRule.onNodeWithText(phoneNumberTitle).assertIsDisplayed()
@@ -270,21 +266,32 @@ class SettingsScreenTest {
         composeTestRule.onNodeWithText("SIM 1").assertIsDisplayed()
     }
 
-    private fun setScreenContent(
+    private fun setContent(
         intentSubId: Int = 0,
         intentSubTitle: String? = null,
         isTopLevelIntent: Boolean = false,
+        lifecycleOwner: LifecycleOwner? = null,
     ) {
         composeTestRule.setContent {
-            AppTheme {
-                SettingsScreen(
-                    effectHandler = effectHandler,
-                    onNavigateBack = {},
-                    intentSubId = intentSubId,
-                    intentSubTitle = intentSubTitle,
-                    isTopLevelIntent = isTopLevelIntent,
-                    screenModel = screenModel,
-                )
+            val content = @Composable {
+                AppTheme {
+                    SettingsScreen(
+                        effectHandler = effectHandler,
+                        onNavigateBack = {},
+                        intentSubId = intentSubId,
+                        intentSubTitle = intentSubTitle,
+                        isTopLevelIntent = isTopLevelIntent,
+                        screenModel = screenModel,
+                    )
+                }
+            }
+
+            if (lifecycleOwner == null) {
+                content()
+            } else {
+                CompositionLocalProvider(LocalLifecycleOwner provides lifecycleOwner) {
+                    content()
+                }
             }
         }
     }
@@ -330,22 +337,5 @@ class SettingsScreenTest {
             isMultiSim = true,
             areSubscriptionsLoaded = true,
         )
-    }
-
-    private class TestLifecycleOwner(
-        initialState: Lifecycle.State,
-    ) : LifecycleOwner {
-        private val lifecycleRegistry = LifecycleRegistry(this)
-
-        init {
-            lifecycleRegistry.currentState = initialState
-        }
-
-        override val lifecycle: Lifecycle
-            get() = lifecycleRegistry
-
-        fun moveTo(state: Lifecycle.State) {
-            lifecycleRegistry.currentState = state
-        }
     }
 }
