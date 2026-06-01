@@ -51,6 +51,7 @@ private val PICKER_SHUTTER_FLOAT_SPRING_ANIMATION_SPEC = spring<Float>(
 
 @Composable
 internal fun ConversationMediaCaptureShutterButton(
+    modifier: Modifier = Modifier,
     captureMode: ConversationCaptureMode,
     isPhotoCaptureInProgress: Boolean,
     isRecording: Boolean,
@@ -63,6 +64,7 @@ internal fun ConversationMediaCaptureShutterButton(
         isRecording = isRecording,
     )
     ConversationMediaCaptureShutterButtonAnimatedContent(
+        modifier = modifier,
         colorScheme = colorScheme,
         isEnabled = isEnabled,
         onClick = onClick,
@@ -72,6 +74,7 @@ internal fun ConversationMediaCaptureShutterButton(
 
 @Composable
 private fun ConversationMediaCaptureShutterButtonAnimatedContent(
+    modifier: Modifier,
     colorScheme: ColorScheme,
     isEnabled: Boolean,
     onClick: () -> Unit,
@@ -83,6 +86,7 @@ private fun ConversationMediaCaptureShutterButtonAnimatedContent(
     )
 
     ConversationMediaCaptureShutterButtonShell(
+        modifier = modifier,
         borderColor = pickerOverlayContentColor(),
         isEnabled = isEnabled,
         onClick = onClick,
@@ -255,6 +259,7 @@ private fun Transition<ConversationMediaCaptureShutterPhase>.animateVideoCenterD
 
 @Composable
 private fun ConversationMediaCaptureShutterButtonShell(
+    modifier: Modifier,
     borderColor: Color,
     isEnabled: Boolean,
     onClick: () -> Unit,
@@ -263,7 +268,7 @@ private fun ConversationMediaCaptureShutterButtonShell(
     content: @Composable () -> Unit,
 ) {
     Surface(
-        modifier = Modifier
+        modifier = modifier
             .size(PICKER_SHUTTER_OUTER_SIZE)
             .graphicsLayer {
                 alpha = if (isEnabled) 1f else 0.7f
