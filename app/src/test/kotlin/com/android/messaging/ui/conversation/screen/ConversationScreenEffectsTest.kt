@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.geometry.Rect as ComposeRect
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import com.android.messaging.testutil.TEST_WAIT_TIMEOUT_MILLIS
 import com.android.messaging.ui.conversation.screen.model.ConversationMediaPickerOverlayUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaffoldUiState
@@ -19,13 +20,13 @@ import kotlinx.coroutines.flow.callbackFlow
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
-private const val CAPTURED_INPUT_CHANGE_COUNT = 5
-private const val TEST_WAIT_TIMEOUT_MILLIS = 5_000L
-
-internal class ConversationScreenEffectsTest {
+@RunWith(RobolectricTestRunner::class)
+class ConversationScreenEffectsTest {
     @get:Rule
-    val composeRule = createComposeRule()
+    val composeTestRule = createComposeRule()
 
     @Test
     fun changingCapturedHandlerInputsDoesNotRestartEffectsCollector() {
@@ -41,7 +42,7 @@ internal class ConversationScreenEffectsTest {
         )
         val inputGeneration = mutableStateOf(value = 0)
 
-        composeRule.setContent {
+        composeTestRule.setContent {
             val snackbarHostState = remember(inputGeneration.value) {
                 SnackbarHostState()
             }
@@ -61,18 +62,18 @@ internal class ConversationScreenEffectsTest {
             )
         }
 
-        composeRule.waitUntil(timeoutMillis = TEST_WAIT_TIMEOUT_MILLIS) {
+        composeTestRule.waitUntil(timeoutMillis = TEST_WAIT_TIMEOUT_MILLIS) {
             subscriptionCount.get() == 1
         }
 
         repeat(CAPTURED_INPUT_CHANGE_COUNT) { changeIndex ->
-            composeRule.runOnIdle {
+            composeTestRule.runOnIdle {
                 inputGeneration.value = changeIndex + 1
             }
-            composeRule.waitForIdle()
+            composeTestRule.waitForIdle()
         }
 
-        composeRule.runOnIdle {
+        composeTestRule.runOnIdle {
             assertEquals(1, subscriptionCount.get())
             assertEquals(0, cancellationCount.get())
         }
@@ -88,7 +89,7 @@ internal class ConversationScreenEffectsTest {
         val currentNavigateBackCount = AtomicInteger()
         val inputGeneration = mutableStateOf(value = 0)
 
-        composeRule.setContent {
+        composeTestRule.setContent {
             val snackbarHostState = remember(inputGeneration.value) {
                 SnackbarHostState()
             }
@@ -120,25 +121,25 @@ internal class ConversationScreenEffectsTest {
             )
         }
 
-        composeRule.waitUntil(timeoutMillis = TEST_WAIT_TIMEOUT_MILLIS) {
+        composeTestRule.waitUntil(timeoutMillis = TEST_WAIT_TIMEOUT_MILLIS) {
             effectFlow.subscriptionCount.value == 1
         }
 
-        composeRule.runOnIdle {
+        composeTestRule.runOnIdle {
             inputGeneration.value = 1
         }
-        composeRule.waitForIdle()
+        composeTestRule.waitForIdle()
 
-        composeRule.runOnIdle {
+        composeTestRule.runOnIdle {
             assertEquals(1, effectFlow.subscriptionCount.value)
             assertEquals(true, effectFlow.tryEmit(ConversationScreenEffect.CloseConversation))
         }
 
-        composeRule.waitUntil(timeoutMillis = TEST_WAIT_TIMEOUT_MILLIS) {
+        composeTestRule.waitUntil(timeoutMillis = TEST_WAIT_TIMEOUT_MILLIS) {
             currentNavigateBackCount.get() == 1
         }
 
-        composeRule.runOnIdle {
+        composeTestRule.runOnIdle {
             assertEquals(0, staleNavigateBackCount.get())
             assertEquals(1, currentNavigateBackCount.get())
         }
@@ -156,5 +157,9 @@ internal class ConversationScreenEffectsTest {
                 value = ConversationScreenScaffoldUiState(),
             )
         }
+    }
+
+    private companion object {
+        private const val CAPTURED_INPUT_CHANGE_COUNT = 5
     }
 }
