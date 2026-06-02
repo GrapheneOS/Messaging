@@ -158,14 +158,19 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Run instrumented tests
+      - name: Run instrumented tests and coverage gate
         uses: reactivecircus/android-emulator-runner@e89f39f1abbbd05b1113a29cf4db69e7540cae5a
         with:
           api-level: 36
           arch: x86_64
           target: default
           disable-animations: true
-          script: ./gradlew :app:connectedDebugAndroidTest --no-daemon --stacktrace --console=plain
+          script: >
+            ./gradlew :app:connectedDebugAndroidTest :app:jacocoAndroidTestVerification
+            -PandroidTestCoverage=true
+            -PandroidTestMinCoverage=80
+            -PandroidTestMinBranchCoverage=50
+            --no-daemon --stacktrace --console=plain
 
       - name: Upload instrumented test reports
         if: failure()
@@ -173,6 +178,8 @@ jobs:
         with:
           name: instrumented-test-reports
           path: |
+            app/build/outputs/code_coverage/debugAndroidTest/connected/
             app/build/outputs/androidTest-results/connected/
+            app/build/reports/jacoco/jacocoAndroidTestReport/
             app/build/reports/androidTests/connected/
           if-no-files-found: ignore
