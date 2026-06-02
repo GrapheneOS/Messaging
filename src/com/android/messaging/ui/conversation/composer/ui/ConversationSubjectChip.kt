@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.composer.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -27,6 +28,24 @@ import com.android.messaging.ui.core.MessagingPreviewColumn
 private val SUBJECT_CHIP_TEXT_VERTICAL_PADDING = 12.dp
 private const val PREVIEW_LONG_SUBJECT_TEXT =
     "Upcoming weekend plans, dinner reservation details, parking instructions, and confirmation number"
+
+internal fun conversationComposeSubjectSlot(
+    subjectText: String,
+    onSubjectChipClick: () -> Unit,
+    onSubjectChipClear: () -> Unit,
+): (@Composable ColumnScope.() -> Unit)? {
+    if (subjectText.isBlank()) {
+        return null
+    }
+
+    return {
+        ConversationSubjectChip(
+            subjectText = subjectText,
+            onClick = onSubjectChipClick,
+            onClear = onSubjectChipClear,
+        )
+    }
+}
 
 @Composable
 internal fun ConversationSubjectChip(

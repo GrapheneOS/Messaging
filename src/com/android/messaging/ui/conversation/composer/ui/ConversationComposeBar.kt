@@ -10,10 +10,8 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -22,7 +20,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -48,10 +45,13 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
+import com.android.messaging.ui.common.components.composer.MessageComposeBar
+import com.android.messaging.ui.conversation.CONVERSATION_ATTACHMENT_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_COMPOSE_BAR_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_SEGMENT_COUNTER_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_SEND_BUTTON_SHAPE_CIRCLE
 import com.android.messaging.ui.conversation.CONVERSATION_SEND_BUTTON_TEST_TAG
+import com.android.messaging.ui.conversation.CONVERSATION_TEXT_FIELD_TEST_TAG
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingPhase
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingUiState
 import com.android.messaging.ui.conversation.composer.model.ConversationComposerUiState
@@ -113,7 +113,6 @@ internal fun ConversationComposeBar(
     onSubjectChipClick: () -> Unit,
     onSubjectChipClear: () -> Unit,
 ) {
-    val presentation = rememberConversationComposeBarPresentation()
     val recordingGestureController = rememberConversationAudioRecordingGestureController(
         audioRecording = audioRecording,
         onAudioRecordingStartRequest = onAudioRecordingStartRequest,
@@ -142,7 +141,6 @@ internal fun ConversationComposeBar(
             shouldShowRecordAction = shouldShowRecordAction,
             recordingGestureState = recordingGestureController.recordingGestureState,
             messageFieldFocusRequester = messageFieldFocusRequester,
-            presentation = presentation,
             onContactAttachClick = onContactAttachClick,
             onMediaPickerClick = onMediaPickerClick,
             onLockedAudioRecordingStartRequest = onLockedAudioRecordingStartRequest,
@@ -226,7 +224,6 @@ internal fun ConversationComposeInputContent(
     shouldShowRecordAction: Boolean,
     recordingGestureState: ConversationSendActionButtonGestureState,
     messageFieldFocusRequester: FocusRequester?,
-    presentation: ConversationComposeBarPresentation,
     onContactAttachClick: () -> Unit,
     onMediaPickerClick: () -> Unit,
     onLockedAudioRecordingStartRequest: () -> Unit,
@@ -247,51 +244,57 @@ internal fun ConversationComposeInputContent(
         isRecordActionEnabled = isRecordActionEnabled,
         isSendActionEnabled = isSendActionEnabled,
     )
+    val isInputActionEnabled = !inputState.isActiveRecording
+    val mmsText = stringResource(id = R.string.mms_text)
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                horizontal = 12.dp,
-                vertical = 8.dp,
-            ),
-        horizontalArrangement = Arrangement.spacedBy(
-            space = 8.dp,
-        ),
-        verticalAlignment = Alignment.Bottom,
-    ) {
-        ConversationComposeMessageRecordingContent(
-            modifier = Modifier.weight(weight = 1f),
-            messageText = messageText,
-            subjectText = subjectText,
-            sendProtocol = sendProtocol,
-            durationMillis = audioRecording.durationMillis,
-            inputState = inputState,
-            isMessageFieldEnabled = isMessageFieldEnabled,
-            isAttachmentActionEnabled = isAttachmentActionEnabled,
-            isRecordActionEnabled = isRecordActionEnabled,
-            messageFieldFocusRequester = messageFieldFocusRequester,
-            presentation = presentation,
-            onContactAttachClick = onContactAttachClick,
-            onMediaPickerClick = onMediaPickerClick,
-            onLockedAudioRecordingStartRequest = onLockedAudioRecordingStartRequest,
+    MessageComposeBar(
+        text = messageText,
+        onTextChange = conversationMessageTextChangeHandler(
+            isActiveRecording = inputState.isActiveRecording,
             onMessageTextChange = onMessageTextChange,
+        ),
+        isFieldEnabled = isMessageFieldEnabled,
+        isFieldContentHidden = inputState.isActiveRecording,
+        fieldFocusRequester = messageFieldFocusRequester,
+        fieldStateDescription = conversationComposeFieldStateDescription(sendProtocol, mmsText),
+        fieldTestTag = CONVERSATION_TEXT_FIELD_TEST_TAG,
+        topContent = conversationComposeSubjectSlot(
+            subjectText = subjectText,
             onSubjectChipClick = onSubjectChipClick,
             onSubjectChipClear = onSubjectChipClear,
-        )
-
-        ConversationComposeInputSendAction(
-            audioRecording = audioRecording,
-            inputState = inputState,
-            segmentCounter = segmentCounter,
-            onSendClick = onSendClick,
-            onSendActionLongClick = onSendActionLongClick,
-            onAudioRecordingStartRequest = onAudioRecordingStartRequest,
-            onAudioRecordingDrag = onAudioRecordingDrag,
-            onAudioRecordingLock = onAudioRecordingLock,
-            onAudioRecordingFinish = onAudioRecordingFinish,
-        )
-    }
+        ),
+        leadingContent = {
+            ConversationComposeAttachmentMenu(
+                modifier = Modifier.testTag(CONVERSATION_ATTACHMENT_BUTTON_TEST_TAG),
+                enabled = isAttachmentActionEnabled && isInputActionEnabled,
+                isAudioRecordActionEnabled = isRecordActionEnabled && isInputActionEnabled,
+                onContactAttachClick = onContactAttachClick,
+                onMediaPickerClick = onMediaPickerClick,
+                onAudioAttachClick = onLockedAudioRecordingStartRequest,
+            )
+        },
+        trailingContent = conversationComposeMmsSlot(sendProtocol = sendProtocol),
+        fieldOverlay = {
+            ConversationComposeRecordingOverlay(
+                modifier = Modifier.matchParentSize(),
+                inputState = inputState,
+                durationMillis = audioRecording.durationMillis,
+            )
+        },
+        sendAction = {
+            ConversationComposeInputSendAction(
+                audioRecording = audioRecording,
+                inputState = inputState,
+                segmentCounter = segmentCounter,
+                onSendClick = onSendClick,
+                onSendActionLongClick = onSendActionLongClick,
+                onAudioRecordingStartRequest = onAudioRecordingStartRequest,
+                onAudioRecordingDrag = onAudioRecordingDrag,
+                onAudioRecordingLock = onAudioRecordingLock,
+                onAudioRecordingFinish = onAudioRecordingFinish,
+            )
+        },
+    )
 }
 
 @Composable
@@ -387,77 +390,39 @@ private fun conversationComposeInputState(
     )
 }
 
-@Composable
-private fun ConversationComposeMessageRecordingContent(
-    modifier: Modifier = Modifier,
-    messageText: String,
-    subjectText: String,
+private fun conversationComposeFieldStateDescription(
     sendProtocol: ConversationDraftSendProtocol,
-    durationMillis: Long,
-    inputState: ConversationComposeInputState,
-    isMessageFieldEnabled: Boolean,
-    isAttachmentActionEnabled: Boolean,
-    isRecordActionEnabled: Boolean,
-    messageFieldFocusRequester: FocusRequester?,
-    presentation: ConversationComposeBarPresentation,
-    onContactAttachClick: () -> Unit,
-    onMediaPickerClick: () -> Unit,
-    onLockedAudioRecordingStartRequest: () -> Unit,
+    mmsText: String,
+): String? = when (sendProtocol) {
+    ConversationDraftSendProtocol.MMS -> mmsText
+    ConversationDraftSendProtocol.SMS -> null
+}
+
+private fun conversationMessageTextChangeHandler(
+    isActiveRecording: Boolean,
     onMessageTextChange: (String) -> Unit,
-    onSubjectChipClick: () -> Unit,
-    onSubjectChipClear: () -> Unit,
-) {
-    val isInputActionEnabled = !inputState.isActiveRecording
-
-    Surface(
-        modifier = modifier,
-        shape = presentation.fieldShape,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-    ) {
-        Column {
-            if (!subjectText.isBlank()) {
-                ConversationSubjectChip(
-                    subjectText = subjectText,
-                    onClick = onSubjectChipClick,
-                    onClear = onSubjectChipClear,
-                )
-            }
-
-            Box {
-                ConversationComposeMessageField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = messageText,
-                    onValueChange = { updatedMessageText ->
-                        if (!inputState.isActiveRecording) {
-                            onMessageTextChange(updatedMessageText)
-                        }
-                    },
-                    enabled = isMessageFieldEnabled,
-                    sendProtocol = sendProtocol,
-                    isVisuallyHidden = inputState.isActiveRecording,
-                    messageFieldFocusRequester = messageFieldFocusRequester,
-                    presentation = presentation,
-                    isAttachmentActionEnabled = isAttachmentActionEnabled && isInputActionEnabled,
-                    isAudioRecordActionEnabled = isRecordActionEnabled && isInputActionEnabled,
-                    onContactAttachClick = onContactAttachClick,
-                    onMediaPickerClick = onMediaPickerClick,
-                    onAudioAttachClick = onLockedAudioRecordingStartRequest,
-                )
-
-                ConversationAudioRecordingContentOverlay(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .consumeRecordingInputTouches(
-                            isActiveRecording = inputState.isActiveRecording,
-                        ),
-                    isActiveRecording = inputState.isActiveRecording,
-                    durationMillis = durationMillis,
-                    cancelProgress = inputState.cancelProgress,
-                    isCancellationArmed = inputState.isCancellationArmed,
-                )
-            }
-        }
+): (String) -> Unit = { updatedMessageText ->
+    if (!isActiveRecording) {
+        onMessageTextChange(updatedMessageText)
     }
+}
+
+@Composable
+private fun ConversationComposeRecordingOverlay(
+    inputState: ConversationComposeInputState,
+    durationMillis: Long,
+    modifier: Modifier = Modifier,
+) {
+    ConversationAudioRecordingContentOverlay(
+        modifier = modifier
+            .consumeRecordingInputTouches(
+                isActiveRecording = inputState.isActiveRecording,
+            ),
+        isActiveRecording = inputState.isActiveRecording,
+        durationMillis = durationMillis,
+        cancelProgress = inputState.cancelProgress,
+        isCancellationArmed = inputState.isCancellationArmed,
+    )
 }
 
 private fun Modifier.consumeRecordingInputTouches(isActiveRecording: Boolean): Modifier {

@@ -5,7 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,17 +13,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -33,12 +27,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.ui.common.components.composer.AttachmentPreviewRemoveButton
+import com.android.messaging.ui.common.components.composer.AttachmentPreviewRow
 import com.android.messaging.ui.conversation.CONVERSATION_ATTACHMENT_PREVIEW_LIST_TEST_TAG
 import com.android.messaging.ui.conversation.attachment.model.ConversationVCardAttachmentUiModel
 import com.android.messaging.ui.conversation.attachment.ui.ConversationMediaThumbnail
@@ -72,52 +67,38 @@ internal fun ConversationAttachmentPreview(
     onResolvedAttachmentClick: (ComposerAttachmentUiModel.Resolved) -> Unit,
     onResolvedAttachmentRemove: (String) -> Unit,
 ) {
-    if (attachments.isEmpty()) {
-        return
-    }
-
-    LazyRow(
+    AttachmentPreviewRow(
+        attachments = attachments,
+        key = { attachment -> attachment.key },
         modifier = modifier.testTag(CONVERSATION_ATTACHMENT_PREVIEW_LIST_TEST_TAG),
-        contentPadding = PaddingValues(
-            start = 12.dp,
-            top = 4.dp,
-            end = 12.dp,
-            bottom = 4.dp,
-        ),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        items(
-            items = attachments,
-            key = { attachment -> attachment.key },
-        ) { attachment ->
-            when (attachment) {
-                is ComposerAttachmentUiModel.Pending.AudioFinalizing -> {
-                    PendingAudioAttachmentPreviewItem(
-                        attachmentKey = attachment.key,
-                    )
-                }
+    ) { attachment ->
+        when (attachment) {
+            is ComposerAttachmentUiModel.Pending.AudioFinalizing -> {
+                PendingAudioAttachmentPreviewItem(
+                    attachmentKey = attachment.key,
+                )
+            }
 
-                is ComposerAttachmentUiModel.Pending.Generic -> {
-                    PendingAttachmentPreviewItem(
-                        attachmentKey = attachment.key,
-                        onRemoveClick = {
-                            onPendingAttachmentRemove(attachment.key)
-                        },
-                    )
-                }
+            is ComposerAttachmentUiModel.Pending.Generic -> {
+                PendingAttachmentPreviewItem(
+                    attachmentKey = attachment.key,
+                    onRemoveClick = {
+                        onPendingAttachmentRemove(attachment.key)
+                    },
+                )
+            }
 
-                is ComposerAttachmentUiModel.Resolved -> {
-                    ResolvedAttachmentPreviewItem(
-                        attachment = attachment,
-                        attachmentKey = attachment.key,
-                        onAttachmentClick = {
-                            onResolvedAttachmentClick(attachment)
-                        },
-                        onRemoveClick = {
-                            onResolvedAttachmentRemove(attachment.contentUri)
-                        },
-                    )
-                }
+            is ComposerAttachmentUiModel.Resolved -> {
+                ResolvedAttachmentPreviewItem(
+                    attachment = attachment,
+                    attachmentKey = attachment.key,
+                    onAttachmentClick = {
+                        onResolvedAttachmentClick(attachment)
+                    },
+                    onRemoveClick = {
+                        onResolvedAttachmentRemove(attachment.contentUri)
+                    },
+                )
             }
         }
     }
@@ -421,30 +402,18 @@ private fun BoxScope.RemoveAttachmentButton(
     attachmentKey: String,
     onClick: () -> Unit,
 ) {
-    FilledIconButton(
+    AttachmentPreviewRemoveButton(
+        onClick = onClick,
+        size = 28.dp,
         modifier = Modifier
             .align(Alignment.TopEnd)
             .padding(6.dp)
-            .size(28.dp)
             .testTag(
                 conversationAttachmentPreviewRemoveButtonTestTag(
                     attachmentKey = attachmentKey,
                 ),
             ),
-        onClick = onClick,
-        colors = IconButtonDefaults.filledIconButtonColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-            contentColor = MaterialTheme.colorScheme.onSurface,
-        ),
-    ) {
-        Icon(
-            imageVector = Icons.Rounded.Close,
-            contentDescription = pluralStringResource(
-                id = R.plurals.attachment_preview_close_content_description,
-                count = 1,
-            ),
-        )
-    }
+    )
 }
 
 @Composable
@@ -452,28 +421,15 @@ private fun InlineAudioRemoveAttachmentButton(
     attachmentKey: String,
     onClick: () -> Unit,
 ) {
-    FilledIconButton(
-        modifier = Modifier
-            .size(size = ATTACHMENT_PREVIEW_AUDIO_REMOVE_BUTTON_SIZE)
-            .testTag(
-                conversationAttachmentPreviewRemoveButtonTestTag(
-                    attachmentKey = attachmentKey,
-                ),
-            ),
+    AttachmentPreviewRemoveButton(
         onClick = onClick,
-        colors = IconButtonDefaults.filledIconButtonColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-            contentColor = MaterialTheme.colorScheme.onSurface,
-        ),
-    ) {
-        Icon(
-            imageVector = Icons.Rounded.Close,
-            contentDescription = pluralStringResource(
-                id = R.plurals.attachment_preview_close_content_description,
-                count = 1,
+        size = ATTACHMENT_PREVIEW_AUDIO_REMOVE_BUTTON_SIZE,
+        modifier = Modifier.testTag(
+            conversationAttachmentPreviewRemoveButtonTestTag(
+                attachmentKey = attachmentKey,
             ),
-        )
-    }
+        ),
+    )
 }
 
 @PreviewLightDark
