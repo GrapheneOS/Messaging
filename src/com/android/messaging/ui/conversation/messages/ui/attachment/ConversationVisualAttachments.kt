@@ -32,7 +32,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.android.messaging.ui.conversation.attachment.ui.ConversationMediaThumbnail
+import com.android.messaging.ui.common.components.attachment.MediaThumbnail
 import com.android.messaging.ui.conversation.messages.model.attachment.ConversationMessageAttachment
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
 import com.android.messaging.ui.conversation.preview.previewMessageAttachments
@@ -269,7 +269,7 @@ private fun ConversationAttachmentThumbnail(
 ) {
     when (attachment) {
         is ConversationMessageAttachment.Media -> {
-            ConversationMediaThumbnail(
+            MediaThumbnail(
                 modifier = modifier,
                 contentUri = attachment.part.contentUri.toString(),
                 contentType = attachment.part.contentType,
@@ -279,7 +279,7 @@ private fun ConversationAttachmentThumbnail(
         }
 
         is ConversationMessageAttachment.YouTubePreview -> {
-            ConversationMediaThumbnail(
+            MediaThumbnail(
                 modifier = modifier,
                 contentUri = attachment.thumbnailUrl,
                 contentType = ContentType.IMAGE_JPEG,

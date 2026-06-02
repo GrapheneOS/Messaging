@@ -13,7 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.net.toUri
 import com.android.messaging.R
-import com.android.messaging.ui.conversation.audio.formatConversationAudioDuration
+import com.android.messaging.ui.common.components.attachment.formatAudioDuration
 import com.android.messaging.util.UiUtils
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
@@ -213,5 +213,5 @@ private fun formatAudioDuration(
         else -> durationMillis
     }
 
-    return formatConversationAudioDuration(durationMillis = displayedMillis)
+    return formatAudioDuration(durationMillis = displayedMillis)
 }

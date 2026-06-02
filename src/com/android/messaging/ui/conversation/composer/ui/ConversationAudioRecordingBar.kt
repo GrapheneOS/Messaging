@@ -50,7 +50,7 @@ import com.android.messaging.R
 import com.android.messaging.ui.conversation.CONVERSATION_AUDIO_RECORDING_BAR_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_AUDIO_RECORDING_CANCEL_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_AUDIO_RECORDING_LOCK_AFFORDANCE_TEST_TAG
-import com.android.messaging.ui.conversation.audio.formatConversationAudioDuration
+import com.android.messaging.ui.common.components.attachment.formatAudioDuration
 import com.android.messaging.ui.core.MessagingPreviewColumn
 
 private const val AUDIO_RECORDING_COLOR_ANIMATION_THRESHOLD = 0.7f
@@ -201,7 +201,7 @@ private fun AudioRecordingDurationLabel(
                     start = 8.dp,
                     end = 12.dp,
                 ),
-                text = formatConversationAudioDuration(durationMillis = durationMillis),
+                text = formatAudioDuration(durationMillis = durationMillis),
                 style = MaterialTheme.typography.titleMedium,
                 color = contentColor,
             )

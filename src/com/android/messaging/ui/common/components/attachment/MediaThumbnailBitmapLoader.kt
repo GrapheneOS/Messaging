@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversation.attachment.ui
+package com.android.messaging.ui.common.components.attachment
 
 import android.content.ContentResolver
 import android.graphics.Bitmap
@@ -20,7 +20,7 @@ private const val SECOND_PASS_DIVISOR = 3
 private const val SECOND_PASS_MAXIMUM_SIZE = 48
 private const val SECOND_PASS_MINIMUM_SIZE = 24
 
-internal suspend fun loadConversationMediaThumbnailBitmap(
+internal suspend fun loadMediaThumbnailBitmap(
     contentResolver: ContentResolver,
     contentUri: Uri,
     contentType: String,

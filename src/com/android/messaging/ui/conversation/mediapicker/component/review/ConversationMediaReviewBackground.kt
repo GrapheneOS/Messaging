@@ -21,7 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntSize
 import androidx.core.net.toUri
-import com.android.messaging.ui.conversation.attachment.ui.loadConversationMediaThumbnailBitmap
+import com.android.messaging.ui.common.components.attachment.loadMediaThumbnailBitmap
 import com.android.messaging.ui.conversation.composer.model.ComposerAttachmentUiModel
 import com.android.messaging.ui.conversation.mediapicker.component.pickerOverlayContainerColor
 import com.android.messaging.ui.conversation.preview.previewResolvedImageAttachment
@@ -147,7 +147,7 @@ private fun rememberConversationMediaReviewBitmapCache(
             .asSequence()
             .filter { backgroundBitmapCache[it.contentUri] == null }
             .forEach { attachment ->
-                loadConversationMediaThumbnailBitmap(
+                loadMediaThumbnailBitmap(
                     contentResolver = context.contentResolver,
                     contentUri = attachment.contentUri.toUri(),
                     contentType = attachment.contentType,
