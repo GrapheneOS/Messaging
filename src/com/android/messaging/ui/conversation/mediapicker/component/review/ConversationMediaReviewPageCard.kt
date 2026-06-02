@@ -40,7 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import androidx.compose.ui.zIndex
 import com.android.messaging.R
-import com.android.messaging.ui.conversation.attachment.ui.ConversationMediaThumbnail
+import com.android.messaging.ui.common.components.attachment.MediaThumbnail
 import com.android.messaging.ui.conversation.composer.model.ComposerAttachmentUiModel
 import com.android.messaging.ui.conversation.mediapicker.component.PickerOverlayBackgroundButton
 import com.android.messaging.ui.conversation.mediapicker.component.pickerOverlayContainerColor
@@ -241,7 +241,7 @@ private fun ConversationMediaReviewPreview(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
-            ConversationMediaThumbnail(
+            MediaThumbnail(
                 modifier = Modifier.fillMaxSize(),
                 contentUri = attachment.contentUri,
                 contentType = attachment.contentType,

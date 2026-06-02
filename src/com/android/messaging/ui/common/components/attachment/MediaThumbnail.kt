@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversation.attachment.ui
+package com.android.messaging.ui.common.components.attachment
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -38,7 +38,7 @@ import com.android.messaging.util.ContentType
 private const val THUMBNAIL_FADE_IN_DURATION_MILLIS = 90
 
 @Composable
-internal fun ConversationMediaThumbnail(
+internal fun MediaThumbnail(
     modifier: Modifier = Modifier,
     contentUri: String,
     contentType: String,
@@ -92,7 +92,7 @@ internal fun ConversationMediaThumbnail(
 }
 
 @Composable
-internal fun rememberConversationMediaThumbnailBitmap(
+internal fun rememberMediaThumbnailBitmap(
     contentUri: Uri,
     contentType: String,
     size: IntSize,
@@ -107,7 +107,7 @@ internal fun rememberConversationMediaThumbnailBitmap(
         size,
         softenBitmap,
     ) {
-        value = loadConversationMediaThumbnailBitmap(
+        value = loadMediaThumbnailBitmap(
             contentResolver = context.contentResolver,
             contentUri = contentUri,
             contentType = contentType,
@@ -131,7 +131,7 @@ private fun BitmapThumbnail(
     softenBitmap: Boolean,
     useBitmapLoader: Boolean,
 ) {
-    val bitmap = rememberConversationMediaThumbnailBitmap(
+    val bitmap = rememberMediaThumbnailBitmap(
         contentUri = contentUri,
         contentType = contentType,
         size = size,
@@ -140,7 +140,7 @@ private fun BitmapThumbnail(
     val bitmapAlpha = rememberThumbnailAlpha(
         crossfadeEnabled = crossfadeEnabled,
         isLoaded = bitmap != null,
-        animationLabel = "conversationMediaThumbnailBitmapAlpha",
+        animationLabel = "mediaThumbnailBitmapAlpha",
     )
     val filterQuality = resolveBitmapFilterQuality(useBitmapLoader = useBitmapLoader)
 
@@ -191,7 +191,7 @@ private fun CoilThumbnail(
     val visibilityAlpha = rememberThumbnailAlpha(
         crossfadeEnabled = crossfadeEnabled,
         isLoaded = isImageLoaded.value,
-        animationLabel = "conversationMediaThumbnailImageAlpha",
+        animationLabel = "mediaThumbnailImageAlpha",
     )
 
     AsyncImage(

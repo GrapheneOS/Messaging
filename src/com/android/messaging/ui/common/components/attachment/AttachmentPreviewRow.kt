@@ -1,4 +1,4 @@
-package com.android.messaging.ui.common.components.composer
+package com.android.messaging.ui.common.components.attachment
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues

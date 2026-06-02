@@ -28,7 +28,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
-import com.android.messaging.ui.conversation.audio.formatConversationAudioDuration
+import com.android.messaging.ui.common.components.attachment.formatAudioDuration
 import com.android.messaging.ui.conversation.mediapicker.ConversationCaptureMode
 import com.android.messaging.ui.conversation.mediapicker.camera.ConversationPhotoFlashMode
 import com.android.messaging.ui.conversation.mediapicker.component.PickerOverlayIconButton
@@ -225,7 +225,7 @@ private fun ConversationMediaRecordingTimerPill(
         Text(
             modifier = Modifier
                 .padding(horizontal = 14.dp, vertical = 8.dp),
-            text = formatConversationAudioDuration(durationMillis = durationMillis),
+            text = formatAudioDuration(durationMillis = durationMillis),
             color = MaterialTheme.colorScheme.onErrorContainer,
             style = MaterialTheme.typography.labelLarge,
         )
