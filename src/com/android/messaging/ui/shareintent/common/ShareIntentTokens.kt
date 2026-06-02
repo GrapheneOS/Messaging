@@ -15,6 +15,42 @@ internal val AvatarSize = 48.dp
 
 internal val FallbackIconSize = 20.dp
 
+internal val SelectedBarBottomPadding = 8.dp
+
+internal val SelectedChipSpacing = 8.dp
+
+internal val SelectedChipAvatarSize = 56.dp
+
+internal val SelectedChipLabelSpacing = 4.dp
+
+internal val SelectedChipLabelHeight = 16.dp
+
+internal val SelectedChipRemoveBadgeSize = 18.dp
+
+internal val SelectedChipRemoveIconSize = 12.dp
+
+internal val SelectedSendButtonSize = 56.dp
+
+internal val SelectedSendButtonCornerRadius = 18.dp
+
+private val ListRowHorizontalPadding = 8.dp
+
+internal val SelectedBarHeight =
+    SelectedChipAvatarSize +
+        SelectedChipLabelSpacing +
+        SelectedChipLabelHeight +
+        SelectedBarBottomPadding
+
+internal val SelectedBarStartPadding =
+    ScreenContentPadding +
+        ListRowHorizontalPadding +
+        (AvatarSize - SelectedChipAvatarSize) / 2
+
+internal val SelectedBarEndPadding =
+    SelectedBarStartPadding +
+        SelectedSendButtonSize +
+        SelectedChipSpacing
+
 private val ZeroCornerSize = CornerSize(0.dp)
 
 internal val MaterialTheme.contentSurfaceShape: CornerBasedShape

@@ -8,10 +8,9 @@ import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.automirrored.outlined.Send
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,7 +41,6 @@ internal fun ShareIntentTopAppBar(
     onSearchOpen: () -> Unit,
     onSearchClose: () -> Unit,
     onSelectionClear: () -> Unit,
-    onSendToSelected: () -> Unit,
 ) {
     TopAppBar(
         title = {
@@ -65,10 +63,8 @@ internal fun ShareIntentTopAppBar(
         actions = {
             ShareIntentTopAppBarActions(
                 isSearchActive = isSearchActive,
-                inSelectionMode = inSelectionMode,
                 searchState = searchState,
                 onSearchOpen = onSearchOpen,
-                onSendToSelected = onSendToSelected,
             )
         },
         colors = TopAppBarDefaults.topAppBarColors(
@@ -129,12 +125,12 @@ private fun ShareIntentNavigationIcon(
     }
 
     val imageVector = when {
-        inSelectionMode -> Icons.Outlined.Close
-        else -> Icons.AutoMirrored.Outlined.ArrowBack
+        inSelectionMode && !isSearchActive -> Icons.Default.Close
+        else -> Icons.AutoMirrored.Default.ArrowBack
     }
 
     val contentDescription = when {
-        inSelectionMode -> stringResource(R.string.share_selection_clear)
+        inSelectionMode && !isSearchActive -> stringResource(R.string.share_selection_clear)
         else -> stringResource(R.string.share_cancel)
     }
 
@@ -149,25 +145,14 @@ private fun ShareIntentNavigationIcon(
 @Composable
 private fun ShareIntentTopAppBarActions(
     isSearchActive: Boolean,
-    inSelectionMode: Boolean,
     searchState: TextFieldState,
     onSearchOpen: () -> Unit,
-    onSendToSelected: () -> Unit,
 ) {
     when {
-        inSelectionMode -> {
-            IconButton(onClick = onSendToSelected) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.Send,
-                    contentDescription = stringResource(R.string.share_selection_send),
-                )
-            }
-        }
-
         isSearchActive && searchState.text.isNotEmpty() -> {
             IconButton(onClick = { searchState.clearText() }) {
                 Icon(
-                    imageVector = Icons.Outlined.Close,
+                    imageVector = Icons.Default.Close,
                     contentDescription = stringResource(R.string.share_search_clear),
                 )
             }
@@ -176,7 +161,7 @@ private fun ShareIntentTopAppBarActions(
         !isSearchActive -> {
             IconButton(onClick = onSearchOpen) {
                 Icon(
-                    imageVector = Icons.Outlined.Search,
+                    imageVector = Icons.Default.Search,
                     contentDescription = stringResource(R.string.share_search),
                 )
             }

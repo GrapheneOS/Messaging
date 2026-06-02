@@ -43,6 +43,7 @@ internal class ShareTargetUiStateMapperImpl @Inject constructor() : ShareTargetU
             displayName = formatter.unicodeWrap(name, LTR),
             details = details?.let { formatter.unicodeWrap(it, LTR) },
             avatarUri = resolveAvatarUri(conversation.icon),
+            isGroup = conversation.isGroup,
         )
     }
 

@@ -1,6 +1,11 @@
 package com.android.messaging.ui.shareintent.screen
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,13 +35,15 @@ import com.android.messaging.ui.core.AppTheme
 import com.android.messaging.ui.shareintent.common.ItemDividerHorizontalInset
 import com.android.messaging.ui.shareintent.common.NewMessageItem
 import com.android.messaging.ui.shareintent.common.ScreenContentPadding
+import com.android.messaging.ui.shareintent.common.SelectedTargetsBar
 import com.android.messaging.ui.shareintent.common.ShareIntentTopAppBar
 import com.android.messaging.ui.shareintent.common.ShareTargetItem
 import com.android.messaging.ui.shareintent.common.contentSurfaceShape
-import com.android.messaging.ui.shareintent.screen.model.ShareIntentAction as Action
-import com.android.messaging.ui.shareintent.screen.model.ShareIntentUiState as State
 import com.android.messaging.ui.shareintent.screen.model.ShareTargetUiState
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
+import com.android.messaging.ui.shareintent.screen.model.ShareIntentAction as Action
+import com.android.messaging.ui.shareintent.screen.model.ShareIntentUiState as State
 
 @Composable
 internal fun ShareIntentScreen(
@@ -92,20 +99,35 @@ private fun ShareIntentContent(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
         topBar = {
-            ShareIntentTopAppBar(
-                isSearchActive = uiState.isSearchActive,
-                inSelectionMode = inSelectionMode,
-                selectedCount = uiState.selectedConversationIds.size,
-                searchState = searchState,
-                onNavigateBack = onNavigateBack,
-                onSearchOpen = { onAction(Action.SearchOpened) },
-                onSearchClose = {
-                    searchState.clearText()
-                    onAction(Action.SearchClosed)
-                },
-                onSelectionClear = { onAction(Action.SelectionCleared) },
-                onSendToSelected = { onAction(Action.SendToSelectedClicked) },
-            )
+            Column(
+                modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainer),
+            ) {
+                ShareIntentTopAppBar(
+                    isSearchActive = uiState.isSearchActive,
+                    inSelectionMode = inSelectionMode,
+                    selectedCount = uiState.selectedConversationIds.size,
+                    searchState = searchState,
+                    onNavigateBack = onNavigateBack,
+                    onSearchOpen = { onAction(Action.SearchOpened) },
+                    onSearchClose = {
+                        searchState.clearText()
+                        onAction(Action.SearchClosed)
+                    },
+                    onSelectionClear = { onAction(Action.SelectionCleared) },
+                )
+
+                AnimatedVisibility(
+                    visible = inSelectionMode,
+                    enter = expandVertically() + fadeIn(),
+                    exit = shrinkVertically() + fadeOut(),
+                ) {
+                    SelectedTargetsBar(
+                        targets = uiState.selectedTargets,
+                        onRemove = { onAction(Action.SelectionToggled(it)) },
+                        onSend = { onAction(Action.SendToSelectedClicked) },
+                    )
+                }
+            }
         },
     ) { contentPadding ->
         Box(
@@ -209,14 +231,50 @@ private fun ShareIntentContentPreview() {
                         displayName = "Jane Doe",
                         details = "+31 6 1234 5678",
                         avatarUri = null,
+                        isGroup = false,
                     ),
                     ShareTargetUiState(
                         conversationId = "2",
                         displayName = "Project group",
                         details = null,
                         avatarUri = null,
+                        isGroup = true,
                     ),
                 ),
+            ),
+            onAction = {},
+            onNavigateBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun ShareIntentSelectionPreview() {
+    val targets = persistentListOf(
+        ShareTargetUiState(
+            conversationId = "1",
+            displayName = "Jane Doe",
+            details = "+31 6 1234 5678",
+            avatarUri = null,
+            isGroup = false,
+        ),
+        ShareTargetUiState(
+            conversationId = "2",
+            displayName = "Project group",
+            details = null,
+            avatarUri = null,
+            isGroup = true,
+        ),
+    )
+
+    AppTheme {
+        ShareIntentContent(
+            uiState = State(
+                isLoading = false,
+                targets = targets,
+                selectedConversationIds = persistentSetOf("1", "2"),
+                selectedTargets = targets,
             ),
             onAction = {},
             onNavigateBack = {},
