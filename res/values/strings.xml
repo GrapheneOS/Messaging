@@ -919,6 +919,8 @@
     <string name="share_selection_clear">Clear selection</string>
     <!-- Accessibility : Content description for sending the shared content to the selected conversations -->
     <string name="share_selection_send">Send</string>
+    <!-- Accessibility : Content description for removing a conversation from the current multi conversation selection -->
+    <string name="share_selection_remove">Remove %1$s from selection</string>
 
     <!-- Screen title after user selects APNs setting option -->
     <string name="apn_edit">Edit access point</string>

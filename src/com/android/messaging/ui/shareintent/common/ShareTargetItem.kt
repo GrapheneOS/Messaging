@@ -1,7 +1,10 @@
 package com.android.messaging.ui.shareintent.common
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -22,7 +25,7 @@ internal fun NewMessageItem(
         title = stringResource(R.string.share_new_message),
         subtitle = null,
         avatarUri = null,
-        fallbackIcon = Icons.Outlined.Edit,
+        fallbackIcon = Icons.Default.Edit,
         isSelected = false,
         onClick = onClick,
         onLongClick = null,
@@ -42,7 +45,10 @@ internal fun ShareTargetItem(
         title = target.displayName,
         subtitle = target.details,
         avatarUri = target.avatarUri,
-        fallbackIcon = null,
+        fallbackIcon = when {
+            target.isGroup -> Icons.Default.Group
+            else -> Icons.Default.Person
+        },
         isSelected = isSelected,
         onClick = onClick,
         onLongClick = onLongClick,
@@ -55,34 +61,32 @@ private fun ShareTargetRow(
     title: String,
     subtitle: String?,
     avatarUri: String?,
-    fallbackIcon: ImageVector?,
+    fallbackIcon: ImageVector,
     isSelected: Boolean,
     onClick: () -> Unit,
     onLongClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
+    val backgroundColor = when {
+        isSelected -> MaterialTheme.colorScheme.surfaceContainerLow
+        else -> MaterialTheme.colorScheme.background
+    }
+
     TwoLineListItem(
         title = title,
         subtitle = subtitle,
         onClick = onClick,
         modifier = modifier,
         onLongClick = onLongClick,
+        color = backgroundColor,
         leadingContent = {
-            if (fallbackIcon != null) {
-                ParticipantAvatar(
-                    avatarUri = avatarUri,
-                    size = AvatarSize,
-                    fallbackIconSize = FallbackIconSize,
-                    fallbackIcon = fallbackIcon,
-                    isSelected = isSelected,
-                )
-            } else {
-                ParticipantAvatar(
-                    avatarUri = avatarUri,
-                    size = AvatarSize,
-                    isSelected = isSelected,
-                )
-            }
+            ParticipantAvatar(
+                avatarUri = avatarUri,
+                size = AvatarSize,
+                fallbackIconSize = FallbackIconSize,
+                fallbackIcon = fallbackIcon,
+                isSelected = isSelected,
+            )
         },
     )
 }
@@ -97,6 +101,7 @@ private fun ShareTargetItemPreview() {
                 displayName = "Jane Doe",
                 details = "+31 6 1234 5678",
                 avatarUri = null,
+                isGroup = false,
             ),
             isSelected = false,
             onClick = {},

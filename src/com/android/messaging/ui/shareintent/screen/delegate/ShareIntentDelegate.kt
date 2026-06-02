@@ -9,6 +9,7 @@ import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.PersistentSet
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineDispatcher
@@ -61,6 +62,7 @@ internal class ShareIntentScreenDelegateImpl @Inject constructor(
                 targets = filterTargets(allTargets, query),
                 isSearchActive = active,
                 selectedConversationIds = selected,
+                selectedTargets = selectedTargets(allTargets, selected),
             )
         }
     }.flowOn(defaultDispatcher)
@@ -117,6 +119,20 @@ internal class ShareIntentScreenDelegateImpl @Inject constructor(
         selectedIds.update { selected ->
             selected.retainAll(availableIds)
         }
+    }
+
+    private fun selectedTargets(
+        targets: ImmutableList<ShareTargetUiState>,
+        selected: ImmutableSet<String>,
+    ): ImmutableList<ShareTargetUiState> {
+        if (selected.isEmpty()) {
+            return persistentListOf()
+        }
+
+        val targetsById = targets.associateBy { it.conversationId }
+        return selected
+            .mapNotNull { targetsById[it] }
+            .toImmutableList()
     }
 
     private fun filterTargets(

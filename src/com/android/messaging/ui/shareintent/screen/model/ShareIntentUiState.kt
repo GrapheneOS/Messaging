@@ -12,6 +12,7 @@ internal data class ShareIntentUiState(
     val targets: ImmutableList<ShareTargetUiState> = persistentListOf(),
     val isSearchActive: Boolean = false,
     val selectedConversationIds: ImmutableSet<String> = persistentSetOf(),
+    val selectedTargets: ImmutableList<ShareTargetUiState> = persistentListOf(),
 )
 
 @Immutable
@@ -20,4 +21,5 @@ internal data class ShareTargetUiState(
     val displayName: String,
     val details: String?,
     val avatarUri: String?,
+    val isGroup: Boolean,
 )
