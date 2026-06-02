@@ -1,11 +1,28 @@
 name: Validate Gradle Wrapper
 
-on: [pull_request, push]
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   validation:
     name: Validation
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+
     steps:
-      - uses: actions/checkout@v5
-      - uses: gradle/actions/wrapper-validation@v6
+      - name: Check out sources
+        uses: actions/checkout@v6
+
+      - name: Validate Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@v6
