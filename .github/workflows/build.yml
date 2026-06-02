@@ -116,8 +116,12 @@ jobs:
             21
           cache: gradle
 
-      - name: Run unit tests
-        run: ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace --console=plain
+      - name: Run unit tests and coverage gate
+        run: >
+          ./gradlew :app:jacocoUnitTestVerification
+          -PunitTestMinCoverage=80
+          -PunitTestMinBranchCoverage=60
+          --no-daemon --stacktrace --console=plain
 
       - name: Upload unit test reports
         if: failure()
@@ -125,6 +129,7 @@ jobs:
         with:
           name: unit-test-reports
           path: |
+            app/build/reports/jacoco/jacocoUnitTestReport/
             app/build/reports/tests/testDebugUnitTest/
             app/build/test-results/testDebugUnitTest/
           if-no-files-found: ignore

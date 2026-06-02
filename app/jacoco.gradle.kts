@@ -22,14 +22,17 @@ private val unitExecutionDataPattern =
 private val instrumentedExecutionDataPattern =
     "outputs/code_coverage/debugAndroidTest/connected/**/*.ec"
 
-private val unitMinCoverageProperty = "unitTestMinCoverage"
-private val instrumentedMinCoverageProperty = "androidTestMinCoverage"
+private val unitMinInstructionCoverageProperty = "unitTestMinCoverage"
+private val unitMinBranchCoverageProperty = "unitTestMinBranchCoverage"
+private val instrumentedMinInstructionCoverageProperty = "androidTestMinCoverage"
+private val instrumentedMinBranchCoverageProperty = "androidTestMinBranchCoverage"
 
 private val reportingGroup = "Reporting"
 private val verificationGroup = "Verification"
 private val kotlinExtension = "kt"
 private val composableAnnotation = "@Composable"
 private val ruleCommentPrefix = "#"
+private val coveragePercentDivisor = BigDecimal("100")
 
 private enum class CoverageTrack {
     UNIT,
@@ -46,6 +49,11 @@ private data class TrackRules(
     val excludedClassPatterns: List<String>,
     val measuredComposableSourcePaths: Set<String>,
     val measuredNonComposableSourcePaths: Set<String> = emptySet(),
+)
+
+private data class CoverageMinimum(
+    val counter: String,
+    val propertyName: String,
 )
 
 private data class UiKotlinSourceFile(
@@ -209,10 +217,28 @@ private fun getExecutionDataPattern(track: CoverageTrack): String {
     }
 }
 
-private fun getMinimumCoveragePropertyName(track: CoverageTrack): String {
+private fun getCoverageMinimums(track: CoverageTrack): List<CoverageMinimum> {
     return when (track) {
-        CoverageTrack.UNIT -> unitMinCoverageProperty
-        CoverageTrack.INSTRUMENTED -> instrumentedMinCoverageProperty
+        CoverageTrack.UNIT -> listOf(
+            CoverageMinimum(
+                counter = "INSTRUCTION",
+                propertyName = unitMinInstructionCoverageProperty,
+            ),
+            CoverageMinimum(
+                counter = "BRANCH",
+                propertyName = unitMinBranchCoverageProperty,
+            ),
+        )
+        CoverageTrack.INSTRUMENTED -> listOf(
+            CoverageMinimum(
+                counter = "INSTRUCTION",
+                propertyName = instrumentedMinInstructionCoverageProperty,
+            ),
+            CoverageMinimum(
+                counter = "BRANCH",
+                propertyName = instrumentedMinBranchCoverageProperty,
+            ),
+        )
     }
 }
 
@@ -441,25 +467,31 @@ private fun JacocoCoverageVerification.configureCoverageVerification(track: Cove
     violationRules {
         rule {
             element = "BUNDLE"
-            limit {
-                counter = "INSTRUCTION"
-                value = "COVEREDRATIO"
-                minimum = getMinimumCoverage(
-                    propertyName = getMinimumCoveragePropertyName(track = track),
-                )
+            getCoverageMinimums(track = track).forEach { coverageMinimum ->
+                limit {
+                    counter = coverageMinimum.counter
+                    value = "COVEREDRATIO"
+                    minimum = getMinimumCoverage(propertyName = coverageMinimum.propertyName)
+                }
             }
         }
     }
 }
 
 private fun getMinimumCoverage(propertyName: String): BigDecimal {
-    val minimumPercent = project
-        .findProperty(propertyName)
-        ?.toString()
-        ?.toDoubleOrNull()
-        ?: 0.0
+    val rawMinimumPercent = project.findProperty(propertyName)?.toString()
+        ?: return BigDecimal.ZERO
 
-    return (minimumPercent / 100.0).toBigDecimal()
+    val minimumPercent = rawMinimumPercent.toBigDecimalOrNull()
+    check(minimumPercent != null) {
+        "Jacoco minimum coverage property must be numeric: -P$propertyName=$rawMinimumPercent"
+    }
+    check(minimumPercent in BigDecimal.ZERO..coveragePercentDivisor) {
+        "Jacoco minimum coverage property must be between 0 and 100: " +
+            "-P$propertyName=$rawMinimumPercent"
+    }
+
+    return minimumPercent.divide(coveragePercentDivisor)
 }
 
 tasks.register<JacocoReport>("jacocoUnitTestReport") {
