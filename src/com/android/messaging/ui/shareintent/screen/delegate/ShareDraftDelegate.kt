@@ -23,6 +23,7 @@ internal interface ShareDraftDelegate {
     fun bind(scope: CoroutineScope, selectedIds: StateFlow<ImmutableSet<String>>)
     fun resolveDraft(draft: ConversationDraft?)
     fun setDraftText(text: String)
+    fun clearDraftSubject()
     fun removeDraftAttachment(id: String)
     fun enterReview()
     fun exitReview()
@@ -50,6 +51,7 @@ internal class ShareDraftDelegateImpl @Inject constructor(
                 isLoading = loading,
                 isReviewing = reviewing,
                 text = current.messageText,
+                subjectText = current.subjectText,
                 attachments = current.attachments
                     .map(ConversationDraftAttachment::toShareAttachmentUiModel)
                     .toImmutableList(),
@@ -84,6 +86,12 @@ internal class ShareDraftDelegateImpl @Inject constructor(
     override fun setDraftText(text: String) {
         draft.update { current ->
             current.copy(messageText = text)
+        }
+    }
+
+    override fun clearDraftSubject() {
+        draft.update { current ->
+            current.copy(subjectText = "")
         }
     }
 

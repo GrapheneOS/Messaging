@@ -53,6 +53,7 @@ import com.android.messaging.ui.shareintent.common.ShareConfirmTopAppBar
 import com.android.messaging.ui.shareintent.common.ShareIntentTopAppBar
 import com.android.messaging.ui.shareintent.common.ShareTargetItem
 import com.android.messaging.ui.shareintent.common.contentSurfaceShape
+import com.android.messaging.ui.shareintent.common.shareComposeSubjectSlot
 import com.android.messaging.ui.shareintent.screen.model.ShareIntentAction as Action
 import com.android.messaging.ui.shareintent.screen.model.ShareIntentUiState as State
 import com.android.messaging.ui.shareintent.screen.model.ShareTargetUiState
@@ -288,6 +289,10 @@ private fun ShareConfirmScreen(
                 fieldFocusRequester = null,
                 fieldStateDescription = null,
                 fieldTestTag = MESSAGE_COMPOSE_FIELD_TEST_TAG,
+                topContent = shareComposeSubjectSlot(
+                    subjectText = uiState.draftSubject,
+                    onClear = { onAction(Action.DraftSubjectCleared) },
+                ),
                 sendAction = {
                     MessageSendButton(
                         enabled = uiState.isSendEnabled,

@@ -38,7 +38,9 @@ internal class ShareIntentViewModel @Inject constructor(
         targetsDelegate.state,
         draftDelegate.state,
     ) { targetsState, draftState ->
-        val hasDraftContent = draftState.text.isNotBlank() || draftState.attachments.isNotEmpty()
+        val hasDraftContent = draftState.text.isNotBlank() ||
+            draftState.subjectText.isNotBlank() ||
+            draftState.attachments.isNotEmpty()
 
         State(
             isLoading = targetsState.isLoading || draftState.isLoading,
@@ -48,6 +50,7 @@ internal class ShareIntentViewModel @Inject constructor(
             selectedTargets = targetsState.selectedTargets,
             isReviewing = draftState.isReviewing,
             draftText = draftState.text,
+            draftSubject = draftState.subjectText,
             draftAttachments = draftState.attachments,
             isSendEnabled = hasDraftContent && targetsState.selectedConversationIds.isNotEmpty(),
         )
@@ -123,6 +126,10 @@ internal class ShareIntentViewModel @Inject constructor(
 
             is Action.DraftAttachmentRemoved -> {
                 draftDelegate.removeDraftAttachment(action.id)
+            }
+
+            Action.DraftSubjectCleared -> {
+                draftDelegate.clearDraftSubject()
             }
 
             Action.ReviewDismissed -> {

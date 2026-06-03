@@ -46,6 +46,8 @@ internal sealed interface ShareIntentAction {
         val id: String,
     ) : DraftAction
 
+    data object DraftSubjectCleared : DraftAction
+
     data object ReviewDismissed : DraftAction
 
     data object ConfirmSendClicked : DraftAction

@@ -15,6 +15,7 @@ internal data class ShareIntentUiState(
     val selectedTargets: ImmutableList<ShareTargetUiState> = persistentListOf(),
     val isReviewing: Boolean = false,
     val draftText: String = "",
+    val draftSubject: String = "",
     val draftAttachments: ImmutableList<ShareAttachmentUiModel> = persistentListOf(),
     val isSendEnabled: Boolean = false,
 )

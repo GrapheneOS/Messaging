@@ -1,12 +1,16 @@
 package com.android.messaging.data.shareintent.repository
 
 import android.content.ContentResolver
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.provider.OpenableColumns
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.di.core.IoDispatcher
+import com.android.messaging.util.ContentType
 import com.android.messaging.util.LogUtil
+import com.android.messaging.util.MediaMetadataRetrieverWrapper
 import com.android.messaging.util.UriUtil
+import java.io.IOException
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -30,6 +34,7 @@ internal class SharedAttachmentRepositoryImpl @Inject constructor(
     ): ConversationDraftAttachment? {
         return withContext(ioDispatcher) {
             val displayName = queryDisplayName(sourceUri)
+            val durationMillis = audioDurationMillis(sourceUri, contentType)
 
             when (val persistedUri = UriUtil.persistContentToScratchSpace(sourceUri)) {
                 null -> {
@@ -41,8 +46,28 @@ internal class SharedAttachmentRepositoryImpl @Inject constructor(
                     contentType = contentType,
                     contentUri = persistedUri.toString(),
                     displayName = displayName,
+                    durationMillis = durationMillis,
                 )
             }
+        }
+    }
+
+    private fun audioDurationMillis(sourceUri: Uri, contentType: String): Long? {
+        if (!ContentType.isAudioType(contentType)) {
+            return null
+        }
+
+        val retriever = MediaMetadataRetrieverWrapper()
+        return try {
+            retriever.setDataSource(sourceUri)
+            retriever.extractInteger(MediaMetadataRetriever.METADATA_KEY_DURATION, 0)
+                .toLong()
+                .takeIf { it > 0L }
+        } catch (exception: IOException) {
+            LogUtil.w(TAG, "Could not read duration of shared audio $sourceUri", exception)
+            null
+        } finally {
+            retriever.release()
         }
     }
 
