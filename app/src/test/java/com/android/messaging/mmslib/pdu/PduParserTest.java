@@ -49,4 +49,11 @@ public class PduParserTest {
 
         assertNull(new PduParser(pdu, true).parse());
     }
+
+    @Test
+    public void parse_malformedNotificationIndWithInvalidFromValueLength_doesNotCrash() {
+        final byte[] pdu = new byte[] { (byte) 0x8C, (byte) 0x82, (byte) 0x89, (byte) 0x40 };
+
+        assertNull(new PduParser(pdu, true).parse());
+    }
 }

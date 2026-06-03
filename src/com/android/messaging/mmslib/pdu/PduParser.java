@@ -120,6 +120,15 @@ public class PduParser {
      * null if parsing error happened or mandatory fields are not set.
      */
     public GenericPdu parse() {
+        try {
+            return parseInternal();
+        } catch (MalformedPduException e) {
+            log("Malformed PDU: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private GenericPdu parseInternal() {
         if (mPduDataStream == null) {
             return null;
         }
@@ -1046,7 +1055,7 @@ public class PduParser {
             return parseUnsignedInt(pduDataStream);
         }
 
-        throw new RuntimeException("Value length > LENGTH_QUOTE!");
+        throw new MalformedPduException("Value length > LENGTH_QUOTE!");
     }
 
     /**
@@ -2044,5 +2053,11 @@ public class PduParser {
         }
 
         return true;
+    }
+
+    private static class MalformedPduException extends RuntimeException {
+        MalformedPduException(String message) {
+            super(message);
+        }
     }
 }
