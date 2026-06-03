@@ -125,7 +125,12 @@ public class PduParser {
         }
 
         /* parse headers */
-        mHeaders = parseHeaders(mPduDataStream);
+        try {
+            mHeaders = parseHeaders(mPduDataStream);
+        } catch (final RuntimeException e) {
+            log("parse headers failed: " + e);
+            return null;
+        }
         if (null == mHeaders) {
             // Parse headers failed.
             return null;
