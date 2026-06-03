@@ -261,7 +261,7 @@ bool GifTranscoder::resizeBoxFilter(GifFileType* gifIn, GifFileType* gifOut) {
                     return false;
                 }
                 LOGD("Read extension block, code: %d", extCode);
-                if (extCode == GRAPHICS_EXT_FUNC_CODE) {
+                if (extCode == GRAPHICS_EXT_FUNC_CODE && ext != NULL) {
                     GraphicsControlBlock gcb;
                     if (DGifExtensionToGCB(ext[0], ext + 1, &gcb) == GIF_ERROR) {
                         LOGE("Could not interpret GCB extension");
@@ -295,7 +295,8 @@ bool GifTranscoder::resizeBoxFilter(GifFileType* gifIn, GifFileType* gifOut) {
                     LOGE("Could not write extension leader");
                     return false;
                 }
-                if (EGifPutExtensionBlock(gifOut, ext[0], ext + 1) == GIF_ERROR) {
+                if (ext != NULL &&
+                        EGifPutExtensionBlock(gifOut, ext[0], ext + 1) == GIF_ERROR) {
                     LOGE("Could not write extension block");
                     return false;
                 }
