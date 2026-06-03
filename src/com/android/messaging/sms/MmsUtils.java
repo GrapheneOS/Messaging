@@ -2038,7 +2038,12 @@ public class MmsUtils {
         // Get raw PDU push-data from the message and parse it
         final PduParser parser = new PduParser(pushData,
                 MmsConfig.get(subId).getSupportMmsContentDisposition());
-        final GenericPdu pdu = parser.parse();
+        GenericPdu pdu = null;
+        try {
+            pdu = parser.parse();
+        } catch (final RuntimeException e) {
+            LogUtil.e(TAG, "processReceivedPdu: Failed to parse PUSH data", e);
+        }
 
         if (null == pdu) {
             LogUtil.e(TAG, "Invalid PUSH data");

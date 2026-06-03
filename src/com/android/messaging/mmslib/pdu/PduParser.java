@@ -1610,8 +1610,12 @@ public class PduParser {
         } else if (cur <= TEXT_MAX) {
             contentType = parseWapString(pduDataStream, TYPE_TEXT_STRING);
         } else {
-            contentType =
-                    (PduContentTypes.contentTypes[parseShortInteger(pduDataStream)]).getBytes();
+            final int index = parseShortInteger(pduDataStream);
+            if (index < PduContentTypes.contentTypes.length) {
+                contentType = (PduContentTypes.contentTypes[index]).getBytes();
+            } else {
+                contentType = (PduContentTypes.contentTypes[0]).getBytes();
+            }
         }
 
         return contentType;
