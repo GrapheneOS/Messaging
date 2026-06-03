@@ -598,9 +598,8 @@ private fun ParticipantsCard(
                             }
                         },
                         onLongClick = {
-                            val details = participant.details
-                            if (!details.isNullOrEmpty()) {
-                                onAction(ParticipantAction.ParticipantLongPressed(details))
+                            if (hasDestination) {
+                                onAction(ParticipantAction.ParticipantLongPressed(destination))
                             }
                         },
                         onCallClick = {
