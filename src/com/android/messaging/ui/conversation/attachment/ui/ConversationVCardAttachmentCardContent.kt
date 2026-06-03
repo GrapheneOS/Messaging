@@ -1,11 +1,30 @@
 package com.android.messaging.ui.conversation.attachment.ui
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
+import com.android.messaging.R
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentType
 import com.android.messaging.ui.common.components.attachment.VCardAttachmentCard
 import com.android.messaging.ui.common.components.attachment.VCardAttachmentKind
+import com.android.messaging.ui.conversation.preview.previewVCardUiModel
+import com.android.messaging.ui.core.MessagingPreviewColumn
+
+private const val PREVIEW_LOCAL_AVATAR_URI =
+    "content://com.android.messaging.preview/avatar.jpg"
+private const val PREVIEW_LONG_CONTACT_TITLE =
+    "Alexandria Cassandra Montgomery-Washington from International Partnerships"
+private const val PREVIEW_LONG_CONTACT_SUBTITLE =
+    "mobile +1 415 555 0198, work +1 415 555 0134, alexandria.montgomery-washington@example.com"
+private const val PREVIEW_LONG_LOCATION_TITLE =
+    "Northwest corner entrance near the visitor center and underground parking"
+private const val PREVIEW_LONG_LOCATION_SUBTITLE =
+    "1600 Amphitheatre Parkway, Building 43, Mountain View, California 94043, United States"
 
 @Composable
 internal fun ConversationVCardAttachmentCardContent(

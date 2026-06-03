@@ -38,6 +38,14 @@ import com.android.messaging.ui.conversation.attachment.ui.toVCardAttachmentKind
 import com.android.messaging.ui.conversation.composer.model.ComposerAttachmentUiModel
 import com.android.messaging.ui.conversation.conversationAttachmentPreviewItemTestTag
 import com.android.messaging.ui.conversation.conversationAttachmentPreviewRemoveButtonTestTag
+import com.android.messaging.ui.conversation.preview.previewPendingAttachment
+import com.android.messaging.ui.conversation.preview.previewPendingAudioAttachment
+import com.android.messaging.ui.conversation.preview.previewResolvedAudioAttachment
+import com.android.messaging.ui.conversation.preview.previewResolvedFileAttachment
+import com.android.messaging.ui.conversation.preview.previewResolvedImageAttachment
+import com.android.messaging.ui.conversation.preview.previewResolvedVCardAttachment
+import com.android.messaging.ui.conversation.preview.previewResolvedVideoAttachment
+import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 

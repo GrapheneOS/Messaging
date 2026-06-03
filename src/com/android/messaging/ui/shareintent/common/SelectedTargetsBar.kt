@@ -44,10 +44,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.android.messaging.R
 import com.android.messaging.ui.common.components.ParticipantAvatar
-import com.android.messaging.ui.core.AppTheme
+import com.android.messaging.ui.core.MessagingPreviewColumn
 import com.android.messaging.ui.shareintent.screen.model.ShareTargetUiState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -207,10 +207,10 @@ private fun SelectedTargetChip(
     }
 }
 
-@Preview
+@PreviewLightDark
 @Composable
 private fun SelectedTargetsBarPreview() {
-    AppTheme {
+    MessagingPreviewColumn {
         SelectedTargetsBar(
             targets = persistentListOf(
                 ShareTargetUiState(

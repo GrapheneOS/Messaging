@@ -34,7 +34,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -43,7 +43,7 @@ import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.common.components.composer.MESSAGE_COMPOSE_FIELD_TEST_TAG
 import com.android.messaging.ui.common.components.composer.MessageComposeBar
 import com.android.messaging.ui.common.components.composer.MessageSendButton
-import com.android.messaging.ui.core.AppTheme
+import com.android.messaging.ui.core.MessagingPreviewTheme
 import com.android.messaging.ui.shareintent.common.ItemDividerHorizontalInset
 import com.android.messaging.ui.shareintent.common.NewMessageItem
 import com.android.messaging.ui.shareintent.common.ScreenContentPadding
@@ -377,10 +377,10 @@ private fun ItemDivider() {
     )
 }
 
-@Preview
+@PreviewLightDark
 @Composable
 private fun ShareIntentContentPreview() {
-    AppTheme {
+    MessagingPreviewTheme {
         ShareIntentContent(
             uiState = State(
                 isLoading = false,
@@ -407,7 +407,7 @@ private fun ShareIntentContentPreview() {
     }
 }
 
-@Preview
+@PreviewLightDark
 @Composable
 private fun ShareIntentSelectionPreview() {
     val targets = persistentListOf(
@@ -427,7 +427,7 @@ private fun ShareIntentSelectionPreview() {
         ),
     )
 
-    AppTheme {
+    MessagingPreviewTheme {
         ShareIntentContent(
             uiState = State(
                 isLoading = false,
@@ -441,10 +441,10 @@ private fun ShareIntentSelectionPreview() {
     }
 }
 
-@Preview
+@PreviewLightDark
 @Composable
 private fun ShareIntentEmptyPreview() {
-    AppTheme {
+    MessagingPreviewTheme {
         ShareIntentContent(
             uiState = State(isLoading = false),
             onAction = {},

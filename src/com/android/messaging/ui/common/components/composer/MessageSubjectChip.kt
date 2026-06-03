@@ -17,10 +17,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
-import com.android.messaging.ui.core.AppTheme
+import com.android.messaging.ui.core.MessagingPreviewColumn
+
+private const val PREVIEW_LONG_SUBJECT_TEXT =
+    "Dinner reservation details for the team offsite next Friday evening downtown"
 
 private val SubjectChipTextVerticalPadding = 12.dp
 
@@ -74,12 +77,25 @@ internal fun MessageSubjectChip(
     }
 }
 
-@Preview
+@PreviewLightDark
 @Composable
 private fun MessageSubjectChipPreview() {
-    AppTheme {
+    MessagingPreviewColumn {
         MessageSubjectChip(
-            subjectText = "Trip photos",
+            subjectText = "Dinner reservation details",
+            onClick = {},
+            onClear = {},
+            clearButtonTestTag = "",
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun MessageSubjectChipLongTextPreview() {
+    MessagingPreviewColumn {
+        MessageSubjectChip(
+            subjectText = PREVIEW_LONG_SUBJECT_TEXT,
             onClick = {},
             onClear = {},
             clearButtonTestTag = "",

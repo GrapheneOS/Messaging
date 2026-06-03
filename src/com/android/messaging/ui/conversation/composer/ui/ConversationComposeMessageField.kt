@@ -38,6 +38,7 @@ import com.android.messaging.ui.conversation.CONVERSATION_ATTACHMENT_AUDIO_MENU_
 import com.android.messaging.ui.conversation.CONVERSATION_ATTACHMENT_CONTACT_MENU_ITEM_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_ATTACHMENT_MEDIA_MENU_ITEM_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_MMS_INDICATOR_TEST_TAG
+import com.android.messaging.ui.core.MessagingPreviewColumn
 
 internal fun conversationComposeMmsSlot(
     sendProtocol: ConversationDraftSendProtocol,
@@ -192,57 +193,6 @@ private fun ConversationComposeAttachmentMenuItem(
         enabled = enabled,
         onClick = onClick,
     )
-}
-
-@PreviewLightDark
-@Composable
-private fun ConversationComposeMessageFieldPreview() {
-    MessagingPreviewColumn {
-        Column {
-            ConversationComposeMessageField(
-                value = "",
-                enabled = true,
-                sendProtocol = ConversationDraftSendProtocol.SMS,
-                isVisuallyHidden = false,
-                messageFieldFocusRequester = null,
-                presentation = rememberConversationComposeBarPresentation(),
-                isAttachmentActionEnabled = true,
-                isAudioRecordActionEnabled = true,
-                onValueChange = { _ -> },
-                onContactAttachClick = {},
-                onMediaPickerClick = {},
-                onAudioAttachClick = {},
-            )
-            ConversationComposeMessageField(
-                value = "Photo attached",
-                enabled = true,
-                sendProtocol = ConversationDraftSendProtocol.MMS,
-                isVisuallyHidden = false,
-                messageFieldFocusRequester = null,
-                presentation = rememberConversationComposeBarPresentation(),
-                isAttachmentActionEnabled = true,
-                isAudioRecordActionEnabled = false,
-                onValueChange = { _ -> },
-                onContactAttachClick = {},
-                onMediaPickerClick = {},
-                onAudioAttachClick = {},
-            )
-            ConversationComposeMessageField(
-                value = "Disabled conversation",
-                enabled = false,
-                sendProtocol = ConversationDraftSendProtocol.SMS,
-                isVisuallyHidden = false,
-                messageFieldFocusRequester = null,
-                presentation = rememberConversationComposeBarPresentation(),
-                isAttachmentActionEnabled = false,
-                isAudioRecordActionEnabled = false,
-                onValueChange = { _ -> },
-                onContactAttachClick = {},
-                onMediaPickerClick = {},
-                onAudioAttachClick = {},
-            )
-        }
-    }
 }
 
 @PreviewLightDark

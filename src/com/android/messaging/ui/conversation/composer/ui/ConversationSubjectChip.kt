@@ -7,7 +7,6 @@ import androidx.compose.ui.platform.testTag
 import com.android.messaging.ui.common.components.composer.MessageSubjectChip
 import com.android.messaging.ui.conversation.CONVERSATION_SUBJECT_CHIP_CLEAR_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_SUBJECT_CHIP_TEST_TAG
-import com.android.messaging.ui.core.MessagingPreviewColumn
 
 internal fun conversationComposeSubjectSlot(
     subjectText: String,
@@ -25,30 +24,6 @@ internal fun conversationComposeSubjectSlot(
             onClick = onSubjectChipClick,
             onClear = onSubjectChipClear,
             clearButtonTestTag = CONVERSATION_SUBJECT_CHIP_CLEAR_BUTTON_TEST_TAG,
-        )
-    }
-}
-
-@PreviewLightDark
-@Composable
-private fun ConversationSubjectChipPreview() {
-    MessagingPreviewColumn {
-        ConversationSubjectChip(
-            subjectText = "Dinner reservation details",
-            onClick = {},
-            onClear = {},
-        )
-    }
-}
-
-@PreviewLightDark
-@Composable
-private fun ConversationSubjectChipLongTextPreview() {
-    MessagingPreviewColumn {
-        ConversationSubjectChip(
-            subjectText = PREVIEW_LONG_SUBJECT_TEXT,
-            onClick = {},
-            onClear = {},
         )
     }
 }

@@ -282,17 +282,17 @@ private fun resolveBitmapFilterQuality(useBitmapLoader: Boolean): FilterQuality 
 
 @PreviewLightDark
 @Composable
-private fun ConversationMediaThumbnailPreview() {
+private fun MediaThumbnailPreview() {
     MessagingPreviewColumn {
         Row(horizontalArrangement = Arrangement.spacedBy(space = 12.dp)) {
-            ConversationMediaThumbnail(
+            MediaThumbnail(
                 modifier = Modifier.size(size = 88.dp),
                 contentUri = "content://com.android.messaging.preview/image.jpg",
                 contentType = "image/jpeg",
                 size = IntSize(width = 256, height = 256),
                 useBitmapLoader = true,
             )
-            ConversationMediaThumbnail(
+            MediaThumbnail(
                 modifier = Modifier.size(size = 88.dp),
                 contentUri = "content://com.android.messaging.preview/video.mp4",
                 contentType = "video/mp4",

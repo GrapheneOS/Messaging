@@ -35,10 +35,10 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
-import com.android.messaging.ui.core.AppTheme
+import com.android.messaging.ui.core.MessagingPreviewColumn
 
 internal const val MESSAGE_COMPOSE_FIELD_TEST_TAG = "message_compose_field"
 internal const val MESSAGE_SEND_BUTTON_TEST_TAG = "message_send_button"
@@ -247,10 +247,10 @@ internal fun MessageSendButton(
     }
 }
 
-@Preview
+@PreviewLightDark
 @Composable
 private fun MessageComposeBarPreview() {
-    AppTheme {
+    MessagingPreviewColumn {
         MessageComposeBar(
             text = "",
             onTextChange = {},
