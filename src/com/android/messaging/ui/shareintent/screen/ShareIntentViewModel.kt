@@ -45,6 +45,39 @@ internal class ShareIntentViewModel @Inject constructor(
 
     override fun onAction(action: Action) {
         when (action) {
+            is Action.DraftResolved -> {
+                delegate.resolveDraft(action.draft)
+            }
+
+            is Action.DraftTextChanged -> {
+                delegate.setDraftText(action.text)
+            }
+
+            is Action.DraftAttachmentRemoved -> {
+                delegate.removeDraftAttachment(action.id)
+            }
+
+            Action.ReviewDismissed -> {
+                delegate.exitReview()
+            }
+
+            Action.ConfirmSendClicked -> {
+                _effects.tryEmit(
+                    Effect.SendToSelected(
+                        conversationIds = delegate.currentSelection(),
+                        draft = delegate.currentDraft(),
+                    ),
+                )
+            }
+
+            else -> {
+                onTargetAction(action)
+            }
+        }
+    }
+
+    private fun onTargetAction(action: Action) {
+        when (action) {
             is Action.TargetClicked -> {
                 _effects.tryEmit(Effect.OpenConversation(action.conversationId))
             }
@@ -62,7 +95,7 @@ internal class ShareIntentViewModel @Inject constructor(
             }
 
             Action.SendToSelectedClicked -> {
-                _effects.tryEmit(Effect.SendToSelected(delegate.currentSelection()))
+                delegate.enterReview()
             }
 
             Action.NewMessageClicked -> {
@@ -80,6 +113,8 @@ internal class ShareIntentViewModel @Inject constructor(
             is Action.SearchQueryChanged -> {
                 delegate.setSearchQuery(action.query)
             }
+
+            else -> Unit
         }
     }
 

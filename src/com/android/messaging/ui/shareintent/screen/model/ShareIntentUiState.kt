@@ -13,6 +13,10 @@ internal data class ShareIntentUiState(
     val isSearchActive: Boolean = false,
     val selectedConversationIds: ImmutableSet<String> = persistentSetOf(),
     val selectedTargets: ImmutableList<ShareTargetUiState> = persistentListOf(),
+    val isReviewing: Boolean = false,
+    val draftText: String = "",
+    val draftAttachments: ImmutableList<ShareAttachmentUiModel> = persistentListOf(),
+    val isSendEnabled: Boolean = false,
 )
 
 @Immutable

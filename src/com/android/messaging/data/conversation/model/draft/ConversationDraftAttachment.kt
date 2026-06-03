@@ -8,4 +8,5 @@ internal data class ConversationDraftAttachment(
     val width: Int? = null,
     val height: Int? = null,
     val durationMillis: Long? = null,
+    val displayName: String? = null,
 )

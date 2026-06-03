@@ -1,6 +1,24 @@
 package com.android.messaging.ui.shareintent.screen.model
 
+import com.android.messaging.data.conversation.model.draft.ConversationDraft
+
 internal sealed interface ShareIntentAction {
+
+    data class DraftResolved(
+        val draft: ConversationDraft?,
+    ) : ShareIntentAction
+
+    data class DraftTextChanged(
+        val text: String,
+    ) : ShareIntentAction
+
+    data class DraftAttachmentRemoved(
+        val id: String,
+    ) : ShareIntentAction
+
+    data object ReviewDismissed : ShareIntentAction
+
+    data object ConfirmSendClicked : ShareIntentAction
 
     data class TargetClicked(
         val conversationId: String,

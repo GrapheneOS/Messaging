@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -56,6 +57,7 @@ internal fun SelectedTargetsBar(
     targets: ImmutableList<ShareTargetUiState>,
     onRemove: (String) -> Unit,
     onSend: () -> Unit,
+    showSendButton: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
@@ -96,38 +98,47 @@ internal fun SelectedTargetsBar(
             }
         }
 
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .fillMaxHeight()
-                .width(SelectedBarEndPadding)
-                .background(
-                    Brush.horizontalGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            MaterialTheme.colorScheme.surfaceContainer,
-                        ),
+        if (showSendButton) {
+            SelectedTargetsSendButton(onSend = onSend)
+        }
+    }
+}
+
+@Composable
+private fun BoxScope.SelectedTargetsSendButton(
+    onSend: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .align(Alignment.CenterEnd)
+            .fillMaxHeight()
+            .width(SelectedBarEndPadding)
+            .background(
+                Brush.horizontalGradient(
+                    colors = listOf(
+                        Color.Transparent,
+                        MaterialTheme.colorScheme.surfaceContainer,
                     ),
                 ),
-        )
-
-        FilledIconButton(
-            onClick = onSend,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(end = SelectedBarStartPadding)
-                .size(SelectedSendButtonSize),
-            shape = RoundedCornerShape(SelectedSendButtonCornerRadius),
-            colors = IconButtonDefaults.filledIconButtonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
             ),
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Default.Send,
-                contentDescription = stringResource(R.string.share_selection_send),
-            )
-        }
+    )
+
+    FilledIconButton(
+        onClick = onSend,
+        modifier = Modifier
+            .align(Alignment.TopEnd)
+            .padding(end = SelectedBarStartPadding)
+            .size(SelectedSendButtonSize),
+        shape = RoundedCornerShape(SelectedSendButtonCornerRadius),
+        colors = IconButtonDefaults.filledIconButtonColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+        ),
+    ) {
+        Icon(
+            imageVector = Icons.AutoMirrored.Default.Send,
+            contentDescription = stringResource(R.string.share_selection_send),
+        )
     }
 }
 
@@ -219,6 +230,7 @@ private fun SelectedTargetsBarPreview() {
             ),
             onRemove = {},
             onSend = {},
+            showSendButton = true,
         )
     }
 }

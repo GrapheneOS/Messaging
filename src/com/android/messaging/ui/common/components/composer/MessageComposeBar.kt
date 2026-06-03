@@ -121,9 +121,11 @@ private fun MessageComposeField(
         ?: Modifier
 
     val contentHiddenModifier = when {
-        isContentHidden -> Modifier
-            .alpha(alpha = 0f)
-            .clearAndSetSemantics {}
+        isContentHidden -> {
+            Modifier
+                .alpha(alpha = 0f)
+                .clearAndSetSemantics {}
+        }
 
         else -> Modifier
     }

@@ -1,10 +1,14 @@
 package com.android.messaging.ui.shareintent.screen
 
 import androidx.activity.ComponentActivity
+import androidx.core.net.toUri
+import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.datamodel.data.MessageData
+import com.android.messaging.datamodel.data.PendingAttachmentData
 import com.android.messaging.domain.shareintent.usecase.SendSharedContentToConversations
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.shareintent.screen.model.ShareIntentScreenEffect as Effect
+import com.android.messaging.util.ContentType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -15,9 +19,11 @@ internal interface ShareIntentEffectHandler {
 internal class ShareIntentEffectHandlerImpl(
     private val applicationScope: CoroutineScope,
     private val activity: ComponentActivity,
-    private val draft: MessageData?,
+    private val draft: ConversationDraft?,
     private val sendSharedContentToConversations: SendSharedContentToConversations,
 ) : ShareIntentEffectHandler {
+
+    private val messageData: MessageData? by lazy { draft?.toMessageData() }
 
     override fun handle(effect: Effect) {
         when (effect) {
@@ -30,29 +36,44 @@ internal class ShareIntentEffectHandlerImpl(
             }
 
             is Effect.SendToSelected -> {
-                sendToSelected(effect.conversationIds)
+                sendToSelected(effect.conversationIds, effect.draft)
             }
         }
     }
 
     private fun openConversation(conversationId: String) {
-        UIIntents.get().launchConversationActivity(activity, conversationId, draft)
+        UIIntents.get().launchConversationActivity(activity, conversationId, messageData)
         activity.finish()
     }
 
     private fun createNewConversation() {
-        UIIntents.get().launchCreateNewConversationActivity(activity, draft)
+        UIIntents.get().launchCreateNewConversationActivity(activity, messageData)
         activity.finish()
     }
 
-    private fun sendToSelected(conversationIds: Set<String>) {
-        val intent = activity.intent
-
+    private fun sendToSelected(conversationIds: Set<String>, draft: ConversationDraft) {
         applicationScope.launch {
-            sendSharedContentToConversations(intent, conversationIds)
+            sendSharedContentToConversations(draft, conversationIds)
         }
 
         UIIntents.get().launchConversationListActivity(activity)
         activity.finish()
+    }
+}
+
+private fun ConversationDraft.toMessageData(): MessageData {
+    return MessageData.createSharedMessage(messageText, subjectText).apply {
+        attachments
+            .filter { attachment ->
+                ContentType.isMediaType(attachment.contentType)
+            }
+            .forEach { attachment ->
+                addPart(
+                    PendingAttachmentData.createPendingAttachmentData(
+                        attachment.contentType,
+                        attachment.contentUri.toUri(),
+                    ),
+                )
+            }
     }
 }

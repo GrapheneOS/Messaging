@@ -47,10 +47,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.ui.common.components.attachment.formatAudioDuration
 import com.android.messaging.ui.conversation.CONVERSATION_AUDIO_RECORDING_BAR_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_AUDIO_RECORDING_CANCEL_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_AUDIO_RECORDING_LOCK_AFFORDANCE_TEST_TAG
-import com.android.messaging.ui.common.components.attachment.formatAudioDuration
 import com.android.messaging.ui.core.MessagingPreviewColumn
 
 private const val AUDIO_RECORDING_COLOR_ANIMATION_THRESHOLD = 0.7f

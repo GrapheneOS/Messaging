@@ -1,6 +1,5 @@
 package com.android.messaging.domain.shareintent.usecase
 
-import android.content.Intent
 import androidx.core.net.toUri
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
@@ -17,19 +16,24 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.withContext
 
 internal interface SendSharedContentToConversations {
-    suspend operator fun invoke(intent: Intent, conversationIds: Set<String>)
+    suspend operator fun invoke(draft: ConversationDraft, conversationIds: Set<String>)
 }
 
 internal class SendSharedContentToConversationsImpl @Inject constructor(
-    private val buildSharedConversationDraft: BuildSharedConversationDraft,
     private val sendConversationDraft: SendConversationDraft,
     @param:IoDispatcher
     private val ioDispatcher: CoroutineDispatcher,
 ) : SendSharedContentToConversations {
 
-    override suspend fun invoke(intent: Intent, conversationIds: Set<String>) {
-        val template = buildSharedConversationDraft(intent) ?: return
-        val drafts = perConversationDrafts(template, conversationIds.size)
+    override suspend fun invoke(
+        draft: ConversationDraft,
+        conversationIds: Set<String>,
+    ) {
+        if (conversationIds.isEmpty()) {
+            return
+        }
+
+        val drafts = perConversationDrafts(draft, conversationIds.size)
 
         conversationIds.forEachIndexed { index, conversationId ->
             sendToConversation(conversationId, drafts[index])

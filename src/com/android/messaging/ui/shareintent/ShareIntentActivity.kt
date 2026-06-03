@@ -5,9 +5,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.di.core.ApplicationCoroutineScope
-import com.android.messaging.domain.shareintent.usecase.BuildSharedDraftMessage
+import com.android.messaging.domain.shareintent.usecase.BuildSharedConversationDraft
 import com.android.messaging.domain.shareintent.usecase.SendSharedContentToConversations
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.core.AppTheme
@@ -25,10 +30,10 @@ class ShareIntentActivity : ComponentActivity() {
     internal lateinit var applicationScope: CoroutineScope
 
     @Inject
-    internal lateinit var buildSharedDraftMessage: BuildSharedDraftMessage
+    internal lateinit var sendSharedContentToConversations: SendSharedContentToConversations
 
     @Inject
-    internal lateinit var sendSharedContentToConversations: SendSharedContentToConversations
+    internal lateinit var buildSharedConversationDraft: BuildSharedConversationDraft
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,17 +42,22 @@ class ShareIntentActivity : ComponentActivity() {
             return
         }
 
-        val draft = buildSharedDraftMessage(intent)
-
         enableEdgeToEdge()
 
         setContent {
             AppTheme {
-                val effectHandler = remember(draft) {
+                var isDraftLoading by remember { mutableStateOf(true) }
+
+                val conversationDraft by produceState<ConversationDraft?>(initialValue = null) {
+                    value = buildSharedConversationDraft(intent)
+                    isDraftLoading = false
+                }
+
+                val effectHandler = remember(conversationDraft) {
                     ShareIntentEffectHandlerImpl(
                         applicationScope = applicationScope,
                         activity = this,
-                        draft = draft,
+                        draft = conversationDraft,
                         sendSharedContentToConversations = sendSharedContentToConversations,
                     )
                 }
@@ -55,6 +65,8 @@ class ShareIntentActivity : ComponentActivity() {
                 ShareIntentScreen(
                     effectHandler = effectHandler,
                     onNavigateBack = ::finish,
+                    isInitialDraftLoading = isDraftLoading,
+                    initialDraft = conversationDraft,
                 )
             }
         }

@@ -5,14 +5,10 @@ import android.net.Uri
 import androidx.core.content.IntentCompat
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
-import com.android.messaging.di.core.IoDispatcher
+import com.android.messaging.data.shareintent.repository.SharedAttachmentRepository
 import com.android.messaging.util.ContentType
-import com.android.messaging.util.LogUtil
-import com.android.messaging.util.UriUtil
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.withContext
 
 internal interface BuildSharedConversationDraft {
     suspend operator fun invoke(intent: Intent): ConversationDraft?
@@ -20,17 +16,10 @@ internal interface BuildSharedConversationDraft {
 
 internal class BuildSharedConversationDraftImpl @Inject constructor(
     private val resolveSharedContentType: ResolveSharedContentType,
-    @param:IoDispatcher
-    private val ioDispatcher: CoroutineDispatcher,
+    private val sharedAttachmentRepository: SharedAttachmentRepository,
 ) : BuildSharedConversationDraft {
 
     override suspend fun invoke(intent: Intent): ConversationDraft? {
-        return withContext(ioDispatcher) {
-            buildDraft(intent)
-        }
-    }
-
-    private fun buildDraft(intent: Intent): ConversationDraft? {
         val subject = intent.getStringExtra(Intent.EXTRA_SUBJECT).orEmpty()
 
         return when (intent.action) {
@@ -40,7 +29,10 @@ internal class BuildSharedConversationDraftImpl @Inject constructor(
         }
     }
 
-    private fun buildFromSend(intent: Intent, subject: String): ConversationDraft? {
+    private suspend fun buildFromSend(
+        intent: Intent,
+        subject: String,
+    ): ConversationDraft? {
         val contentUri = IntentCompat.getParcelableExtra(
             intent,
             Intent.EXTRA_STREAM,
@@ -50,20 +42,22 @@ internal class BuildSharedConversationDraftImpl @Inject constructor(
 
         return when {
             ContentType.TEXT_PLAIN == contentType -> {
-                val messageText = intent.getStringExtra(Intent.EXTRA_TEXT).orEmpty()
-                draftOrNull(messageText, subject, emptyList())
+                draftOrNull(intent.sharedMessageText(), subject, emptyList())
             }
 
             ContentType.isMediaType(contentType) && contentUri != null -> {
                 val attachment = persistAttachment(contentUri, contentType)
-                draftOrNull("", subject, listOfNotNull(attachment))
+                draftOrNull(intent.sharedMessageText(), subject, listOfNotNull(attachment))
             }
 
             else -> null
         }
     }
 
-    private fun buildFromSendMultiple(intent: Intent, subject: String): ConversationDraft? {
+    private suspend fun buildFromSendMultiple(
+        intent: Intent,
+        subject: String,
+    ): ConversationDraft? {
         if (!ContentType.isImageType(intent.type)) {
             return null
         }
@@ -78,7 +72,11 @@ internal class BuildSharedConversationDraftImpl @Inject constructor(
             persistAttachment(uri, resolveSharedContentType(uri, intent.type))
         }
 
-        return draftOrNull("", subject, attachments)
+        return draftOrNull(intent.sharedMessageText(), subject, attachments)
+    }
+
+    private fun Intent.sharedMessageText(): String {
+        return getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString().orEmpty()
     }
 
     private fun draftOrNull(
@@ -97,7 +95,7 @@ internal class BuildSharedConversationDraftImpl @Inject constructor(
         )
     }
 
-    private fun persistAttachment(
+    private suspend fun persistAttachment(
         sourceUri: Uri,
         contentType: String?,
     ): ConversationDraftAttachment? {
@@ -105,22 +103,6 @@ internal class BuildSharedConversationDraftImpl @Inject constructor(
             return null
         }
 
-        val persistedUri = UriUtil.persistContentToScratchSpace(sourceUri)
-
-        return when (persistedUri) {
-            null -> {
-                LogUtil.w(TAG, "Failed to persist shared attachment to scratch space")
-                null
-            }
-
-            else -> ConversationDraftAttachment(
-                contentType = contentType,
-                contentUri = persistedUri.toString(),
-            )
-        }
-    }
-
-    private companion object {
-        private const val TAG = "BuildSharedConvDraft"
+        return sharedAttachmentRepository.persistToScratchSpace(sourceUri, contentType)
     }
 }

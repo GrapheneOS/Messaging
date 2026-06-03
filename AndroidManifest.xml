@@ -195,7 +195,8 @@
             android:excludeFromRecents="true"
             android:exported="false"
             android:screenOrientation="user"
-            android:theme="@style/Theme.Compose" />
+            android:theme="@style/Theme.Compose"
+            android:windowSoftInputMode="stateHidden|adjustResize" />
 
         <activity-alias
             android:name=".ui.conversationlist.ShareIntentActivity"
