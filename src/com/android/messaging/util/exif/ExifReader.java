@@ -70,7 +70,12 @@ class ExifReader {
                     exifData.getIfdData(tag.getIfd()).setTag(tag);
                     break;
                 case ExifParser.EVENT_COMPRESSED_IMAGE:
-                    byte buf[] = new byte[parser.getCompressedImageSize()];
+                    int thumbnailSize = parser.getCompressedImageSize();
+                    if (thumbnailSize < 0 || thumbnailSize > parser.getApp1End()) {
+                        Log.w(TAG, "Invalid compressed thumbnail size");
+                        break;
+                    }
+                    byte buf[] = new byte[thumbnailSize];
                     if (buf.length == parser.read(buf)) {
                         exifData.setCompressedThumbnail(buf);
                     } else {
@@ -78,7 +83,12 @@ class ExifReader {
                     }
                     break;
                 case ExifParser.EVENT_UNCOMPRESSED_STRIP:
-                    buf = new byte[parser.getStripSize()];
+                    int stripSize = parser.getStripSize();
+                    if (stripSize < 0 || stripSize > parser.getApp1End()) {
+                        Log.w(TAG, "Invalid strip size");
+                        break;
+                    }
+                    buf = new byte[stripSize];
                     if (buf.length == parser.read(buf)) {
                         exifData.setStripBytes(parser.getStripIndex(), buf);
                     } else {
