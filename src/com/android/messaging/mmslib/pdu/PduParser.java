@@ -928,6 +928,9 @@ public class PduParser {
 
             /* get part's data */
             if (dataLength > 0) {
+                if (dataLength > pduDataStream.available()) {
+                    return null;
+                }
                 byte[] partData = new byte[dataLength];
                 String partContentType = new String(part.getContentType());
                 pduDataStream.read(partData, 0, dataLength);
@@ -1354,12 +1357,11 @@ public class PduParser {
      */
     protected static int skipWapValue(ByteArrayInputStream pduDataStream, int length) {
         assert (null != pduDataStream);
-        byte[] area = new byte[length];
-        int readLen = pduDataStream.read(area, 0, length);
-        if (readLen < length) { //The actually read length is lower than the length
+        long skipped = pduDataStream.skip(length);
+        if (skipped < length) { //The actually skipped length is lower than the length
             return -1;
         } else {
-            return readLen;
+            return (int) skipped;
         }
     }
 
@@ -1535,9 +1537,8 @@ public class PduParser {
                     }
                     if (-1 == skipWapValue(pduDataStream, lastLen)) {
                         Log.e(LOG_TAG, "Corrupt Content-Type");
-                    } else {
-                        lastLen = 0;
                     }
+                    lastLen = 0;
                     break;
             }
         }
@@ -1734,8 +1735,7 @@ public class PduParser {
                                 thisEndPos = pduDataStream.available();
                                 if (thisStartPos - thisEndPos < len) {
                                     int last = len - (thisStartPos - thisEndPos);
-                                    byte[] temp = new byte[last];
-                                    pduDataStream.read(temp, 0, last);
+                                    pduDataStream.skip(last);
                                 }
                             }
 
