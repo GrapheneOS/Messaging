@@ -35,6 +35,8 @@ public class GifTranscoder {
 
     private static int MIN_HEIGHT = 100;
     private static int MIN_WIDTH = 100;
+    private static int MAX_HEIGHT = 2048;
+    private static int MAX_WIDTH = 2048;
 
     static {
         System.loadLibrary("giftranscode");
@@ -79,7 +81,8 @@ public class GifTranscoder {
         if (!isEnabled()) {
             return false;
         }
-        return width >= MIN_WIDTH && height >= MIN_HEIGHT;
+        return width >= MIN_WIDTH && height >= MIN_HEIGHT
+                && width <= MAX_WIDTH && height <= MAX_HEIGHT;
     }
 
     private static boolean isEnabled() {
