@@ -39,6 +39,8 @@ static const ColorARGB TRANSPARENT = 0x0;
 
 #define MAX_COLOR_DISTANCE (255 * 255 * 255)
 
+static const int64_t kGifMaxArea = 4LL * 1024 * 1024;
+
 #define TAG "GifTranscoder.cpp"
 #define LOGD_ENABLED 0
 #if LOGD_ENABLED
@@ -119,6 +121,11 @@ bool GifTranscoder::resizeBoxFilter(GifFileType* gifIn, GifFileType* gifOut) {
 
     if (gifIn->SWidth < 0 || gifIn->SHeight < 0) {
         LOGE("Input GIF has invalid size: %d x %d", gifIn->SWidth, gifIn->SHeight);
+        return false;
+    }
+
+    if ((int64_t) gifIn->SWidth * gifIn->SHeight > kGifMaxArea) {
+        LOGE("Input GIF is too large: %d x %d", gifIn->SWidth, gifIn->SHeight);
         return false;
     }
 
