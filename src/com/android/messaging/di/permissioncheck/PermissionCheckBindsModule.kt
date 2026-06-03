@@ -1,5 +1,7 @@
 package com.android.messaging.di.permissioncheck
 
+import com.android.messaging.data.permissioncheck.GetMissingPermissionLabels
+import com.android.messaging.data.permissioncheck.GetMissingPermissionLabelsImpl
 import com.android.messaging.data.permissioncheck.RequiredPermissionsChecker
 import com.android.messaging.data.permissioncheck.RequiredPermissionsCheckerImpl
 import com.android.messaging.domain.permissioncheck.usecase.DeterminePermissionRequest
@@ -25,4 +27,10 @@ internal abstract class PermissionCheckBindsModule {
     abstract fun bindDeterminePermissionRequest(
         impl: DeterminePermissionRequestImpl,
     ): DeterminePermissionRequest
+
+    @Binds
+    @Reusable
+    abstract fun bindGetMissingPermissionLabels(
+        impl: GetMissingPermissionLabelsImpl,
+    ): GetMissingPermissionLabels
 }

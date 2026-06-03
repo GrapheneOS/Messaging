@@ -1,15 +1,18 @@
 package com.android.messaging.ui.permissioncheck.screen
 
 import androidx.lifecycle.ViewModel
+import com.android.messaging.data.permissioncheck.GetMissingPermissionLabels
 import com.android.messaging.data.permissioncheck.RequiredPermissionsChecker
 import com.android.messaging.domain.permissioncheck.model.PermissionRequest
 import com.android.messaging.domain.permissioncheck.usecase.DeterminePermissionRequest
 import com.android.messaging.ui.permissioncheck.screen.model.PermissionCheckAction as Action
 import com.android.messaging.ui.permissioncheck.screen.model.PermissionCheckScreenEffect as Effect
 import com.android.messaging.ui.permissioncheck.screen.model.PermissionCheckUiState as State
+import com.android.messaging.ui.permissioncheck.screen.model.SettingsGuidance
 import com.android.messaging.util.core.ElapsedRealtimeProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,6 +34,7 @@ internal interface PermissionCheckScreenModel {
 internal class PermissionCheckViewModel @Inject constructor(
     private val checker: RequiredPermissionsChecker,
     private val determinePermissionRequest: DeterminePermissionRequest,
+    private val getMissingPermissionLabels: GetMissingPermissionLabels,
     private val elapsedRealtimeProvider: ElapsedRealtimeProvider,
 ) : ViewModel(),
     PermissionCheckScreenModel {
@@ -69,8 +73,20 @@ internal class PermissionCheckViewModel @Inject constructor(
 
         val elapsed = elapsedRealtimeProvider.elapsedRealtimeMillis() - requestStartedAtMillis
         if (elapsed < AUTOMATED_RESULT_THRESHOLD_MILLIS) {
+            val guidance = when {
+                !checker.isSmsRoleHeld() -> SettingsGuidance.DefaultSmsApp
+                else -> SettingsGuidance.Permissions
+            }
+            val missingPermissions = when (guidance) {
+                SettingsGuidance.DefaultSmsApp -> persistentListOf()
+                SettingsGuidance.Permissions -> getMissingPermissionLabels()
+            }
+
             _uiState.update {
-                it.copy(showSettingsGuidance = true)
+                it.copy(
+                    settingsGuidance = guidance,
+                    missingPermissions = missingPermissions,
+                )
             }
         }
     }

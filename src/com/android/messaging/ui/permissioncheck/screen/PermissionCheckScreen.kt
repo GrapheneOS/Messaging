@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -43,6 +45,9 @@ import com.android.messaging.ui.core.MessagingPreviewTheme
 import com.android.messaging.ui.permissioncheck.screen.model.PermissionCheckAction as Action
 import com.android.messaging.ui.permissioncheck.screen.model.PermissionCheckScreenEffect as Effect
 import com.android.messaging.ui.permissioncheck.screen.model.PermissionCheckUiState as State
+import com.android.messaging.ui.permissioncheck.screen.model.SettingsGuidance
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 private val HeroIconSize = 96.dp
 private val ScreenPadding = 24.dp
@@ -119,7 +124,8 @@ private fun PermissionCheckContent(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
@@ -134,15 +140,20 @@ private fun PermissionCheckContent(
                     textAlign = TextAlign.Center,
                 )
 
-                if (uiState.showSettingsGuidance) {
+                uiState.settingsGuidance?.let { guidance ->
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    PermissionSettingsGuidance()
+                    PermissionSettingsGuidance(
+                        guidance = guidance,
+                        missingPermissions = uiState.missingPermissions,
+                    )
                 }
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
             PermissionCheckActions(
-                showSettingsGuidance = uiState.showSettingsGuidance,
+                showSettingsGuidance = uiState.settingsGuidance != null,
                 onAction = onAction,
                 onNavigateBack = onNavigateBack,
             )
@@ -163,23 +174,54 @@ private fun PermissionHero() {
 }
 
 @Composable
-private fun PermissionSettingsGuidance() {
-    val description = stringResource(R.string.enable_permission_procedure_description)
+private fun PermissionSettingsGuidance(
+    guidance: SettingsGuidance,
+    missingPermissions: ImmutableList<String>,
+) {
+    val textRes = when (guidance) {
+        SettingsGuidance.DefaultSmsApp -> R.string.set_default_sms_app_procedure
+        SettingsGuidance.Permissions -> R.string.enable_permission_procedure
+    }
+    val descriptionRes = when (guidance) {
+        SettingsGuidance.DefaultSmsApp -> R.string.set_default_sms_app_procedure_description
+        SettingsGuidance.Permissions -> R.string.enable_permission_procedure_description
+    }
+    val appName = stringResource(R.string.app_name)
+    val description = stringResource(descriptionRes, appName)
 
-    Surface(
+    Column(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
-            text = stringResource(R.string.enable_permission_procedure),
-            modifier = Modifier
-                .padding(16.dp)
-                .semantics { contentDescription = description },
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large,
+            color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        ) {
+            Text(
+                text = stringResource(textRes, appName),
+                modifier = Modifier
+                    .padding(16.dp)
+                    .semantics { contentDescription = description },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+        }
+
+        if (missingPermissions.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = stringResource(
+                    R.string.missing_permissions_list,
+                    missingPermissions.joinToString(separator = ", "),
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }
 
@@ -225,7 +267,7 @@ private fun PermissionCheckActions(
 private fun PermissionCheckContentPreview() {
     MessagingPreviewTheme {
         PermissionCheckContent(
-            uiState = State(showSettingsGuidance = false),
+            uiState = State(settingsGuidance = null),
             onAction = {},
             onNavigateBack = {},
         )
@@ -234,10 +276,28 @@ private fun PermissionCheckContentPreview() {
 
 @PreviewLightDark
 @Composable
-private fun PermissionCheckContentSettingsPreview() {
+private fun PermissionCheckContentDefaultSmsAppGuidancePreview() {
     MessagingPreviewTheme {
         PermissionCheckContent(
-            uiState = State(showSettingsGuidance = true),
+            uiState = State(settingsGuidance = SettingsGuidance.DefaultSmsApp),
+            onAction = {},
+            onNavigateBack = {},
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun PermissionCheckContentPermissionsGuidancePreview() {
+    MessagingPreviewTheme {
+        PermissionCheckContent(
+            uiState = State(
+                settingsGuidance = SettingsGuidance.Permissions,
+                missingPermissions = persistentListOf(
+                    "read your text messages",
+                    "read your contacts",
+                ),
+            ),
             onAction = {},
             onNavigateBack = {},
         )

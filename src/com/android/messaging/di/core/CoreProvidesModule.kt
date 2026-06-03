@@ -4,6 +4,7 @@ import android.app.role.RoleManager
 import android.content.ClipboardManager
 import android.content.ContentResolver
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.SystemClock
 import android.telephony.SubscriptionManager
 import android.telephony.TelephonyManager
@@ -85,6 +86,15 @@ internal class CoreProvidesModule {
         context: Context,
     ): ClipboardManager {
         return context.getSystemService(ClipboardManager::class.java)
+    }
+
+    @Provides
+    @Reusable
+    fun providePackageManager(
+        @ApplicationContext
+        context: Context,
+    ): PackageManager {
+        return context.packageManager
     }
 
     @Provides

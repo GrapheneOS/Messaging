@@ -35,8 +35,14 @@
     <string name="settings">Settings</string>
     <!-- Inform user of the names of permissions that are required to use the app -->
     <string name="required_permissions_promo">Messaging needs permission to SMS, Phone and Contacts.</string>
-    <string name="enable_permission_procedure">You can change permissions in Settings > Apps > Messaging > Permissions.</string>
-    <string name="enable_permission_procedure_description">You can change permissions in Settings, Apps, Messaging, Permissions.</string>
+    <!-- Guidance shown when the app is not the default SMS app and the role request was permanently dismissed -->
+    <string name="set_default_sms_app_procedure">Set <xliff:g id="app_name" example="Messaging">%1$s</xliff:g> as your default SMS app in Settings > Apps > <xliff:g id="app_name" example="Messaging">%1$s</xliff:g> > SMS app.</string>
+    <string name="set_default_sms_app_procedure_description">Set <xliff:g id="app_name" example="Messaging">%1$s</xliff:g> as your default SMS app in Settings, Apps, <xliff:g id="app_name" example="Messaging">%1$s</xliff:g>, SMS app.</string>
+    <!-- Lists the specific permission categories that are still missing -->
+    <string name="missing_permissions_list">Still needed: <xliff:g id="permissions" example="SMS, Contacts">%1$s</xliff:g></string>
+    <!-- Guidance shown when a required permission was permanently denied and must be re-enabled from settings -->
+    <string name="enable_permission_procedure">You can change permissions in Settings > Apps > <xliff:g id="app_name" example="Messaging">%1$s</xliff:g> > Permissions.</string>
+    <string name="enable_permission_procedure_description">You can change permissions in Settings, Apps, <xliff:g id="app_name" example="Messaging">%1$s</xliff:g>, Permissions.</string>
 
     <!-- The tab header for the frequently used contacts list -->
     <string name="contact_picker_frequents_tab_title">Frequents</string>

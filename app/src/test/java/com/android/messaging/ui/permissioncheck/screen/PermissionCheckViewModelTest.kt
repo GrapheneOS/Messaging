@@ -1,12 +1,14 @@
 package com.android.messaging.ui.permissioncheck.screen
 
 import app.cash.turbine.test
+import com.android.messaging.data.permissioncheck.GetMissingPermissionLabels
 import com.android.messaging.data.permissioncheck.RequiredPermissionsChecker
 import com.android.messaging.domain.permissioncheck.model.PermissionRequest
 import com.android.messaging.domain.permissioncheck.usecase.DeterminePermissionRequest
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.ui.permissioncheck.screen.model.PermissionCheckAction as Action
 import com.android.messaging.ui.permissioncheck.screen.model.PermissionCheckScreenEffect as Effect
+import com.android.messaging.ui.permissioncheck.screen.model.SettingsGuidance
 import com.android.messaging.util.core.ElapsedRealtimeProvider
 import io.mockk.every
 import io.mockk.mockk
@@ -14,8 +16,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 
@@ -130,17 +131,17 @@ class PermissionCheckViewModelTest {
                 cancelAndIgnoreRemainingEvents()
             }
 
-            assertFalse(viewModel.uiState.value.showSettingsGuidance)
+            assertNull(viewModel.uiState.value.settingsGuidance)
         }
     }
 
     @Test
-    fun onRequestResult_whenDeniedInstantly_showsSettingsGuidance() {
+    fun onRequestResult_whenSmsRoleDeniedInstantly_showsDefaultSmsAppGuidance() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             // Request started at 1000ms, result arrives at 1100ms -> 100ms elapsed (< 250ms),
-            // meaning the system auto-denied without showing the dialog (permanently denied),
-            // so the user must be guided to app settings.
-            val checker = mockChecker(hasRequiredPermissions = false)
+            // meaning the system auto-denied without showing the dialog (permanently denied).
+            // The SMS role is still not held, so guide the user to set the default SMS app first.
+            val checker = mockChecker(hasRequiredPermissions = false, isSmsRoleHeld = false)
             val time = mockTime(startMillis = 1000L, resultMillis = 1100L)
             val determineRequest = DeterminePermissionRequest { PermissionRequest.SmsRole }
             val viewModel = createViewModel(
@@ -157,7 +158,40 @@ class PermissionCheckViewModelTest {
 
             viewModel.onRequestResult()
 
-            assertTrue(viewModel.uiState.value.showSettingsGuidance)
+            assertEquals(SettingsGuidance.DefaultSmsApp, viewModel.uiState.value.settingsGuidance)
+            assertEquals(persistentListOf<String>(), viewModel.uiState.value.missingPermissions)
+        }
+    }
+
+    @Test
+    fun onRequestResult_whenPermissionDeniedInstantlyWithSmsRoleHeld_showsPermissionsGuidance() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            // The app already holds the SMS role, so the instant denial is a permanently denied
+            // runtime permission. Guide the user to the permissions screen instead.
+            val checker = mockChecker(hasRequiredPermissions = false, isSmsRoleHeld = true)
+            val time = mockTime(startMillis = 1000L, resultMillis = 1100L)
+            val permissions = persistentListOf("android.permission.READ_SMS")
+            val determineRequest = DeterminePermissionRequest {
+                PermissionRequest.RuntimePermissions(permissions)
+            }
+            val labels = persistentListOf("SMS", "Contacts")
+            val viewModel = createViewModel(
+                checker = checker,
+                determinePermissionRequest = determineRequest,
+                getMissingPermissionLabels = { labels },
+                elapsedRealtimeProvider = time,
+            )
+
+            viewModel.effects.test {
+                viewModel.onAction(Action.NextClicked)
+                awaitItem()
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            viewModel.onRequestResult()
+
+            assertEquals(SettingsGuidance.Permissions, viewModel.uiState.value.settingsGuidance)
+            assertEquals(labels, viewModel.uiState.value.missingPermissions)
         }
     }
 
@@ -183,7 +217,7 @@ class PermissionCheckViewModelTest {
 
             viewModel.onRequestResult()
 
-            assertFalse(viewModel.uiState.value.showSettingsGuidance)
+            assertNull(viewModel.uiState.value.settingsGuidance)
         }
     }
 
@@ -208,7 +242,7 @@ class PermissionCheckViewModelTest {
 
             viewModel.onRequestResult()
 
-            assertFalse(viewModel.uiState.value.showSettingsGuidance)
+            assertNull(viewModel.uiState.value.settingsGuidance)
         }
     }
 
@@ -217,18 +251,26 @@ class PermissionCheckViewModelTest {
         determinePermissionRequest: DeterminePermissionRequest = DeterminePermissionRequest {
             PermissionRequest.AlreadyGranted
         },
+        getMissingPermissionLabels: GetMissingPermissionLabels = GetMissingPermissionLabels {
+            persistentListOf()
+        },
         elapsedRealtimeProvider: ElapsedRealtimeProvider = ElapsedRealtimeProvider { 0L },
     ): PermissionCheckViewModel {
         return PermissionCheckViewModel(
             checker = checker,
             determinePermissionRequest = determinePermissionRequest,
+            getMissingPermissionLabels = getMissingPermissionLabels,
             elapsedRealtimeProvider = elapsedRealtimeProvider,
         )
     }
 
-    private fun mockChecker(hasRequiredPermissions: Boolean): RequiredPermissionsChecker {
+    private fun mockChecker(
+        hasRequiredPermissions: Boolean,
+        isSmsRoleHeld: Boolean = false,
+    ): RequiredPermissionsChecker {
         return mockk<RequiredPermissionsChecker>(relaxed = true).also {
             every { it.hasRequiredPermissions() } returns hasRequiredPermissions
+            every { it.isSmsRoleHeld() } returns isSmsRoleHeld
         }
     }
 
