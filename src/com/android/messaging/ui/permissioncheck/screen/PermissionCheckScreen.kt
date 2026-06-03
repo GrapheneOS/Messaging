@@ -32,14 +32,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
-import com.android.messaging.ui.core.AppTheme
+import com.android.messaging.ui.core.MessagingPreviewTheme
 import com.android.messaging.ui.permissioncheck.screen.model.PermissionCheckAction as Action
 import com.android.messaging.ui.permissioncheck.screen.model.PermissionCheckScreenEffect as Effect
 import com.android.messaging.ui.permissioncheck.screen.model.PermissionCheckUiState as State
@@ -220,10 +220,10 @@ private fun PermissionCheckActions(
     }
 }
 
-@Preview
+@PreviewLightDark
 @Composable
 private fun PermissionCheckContentPreview() {
-    AppTheme {
+    MessagingPreviewTheme {
         PermissionCheckContent(
             uiState = State(showSettingsGuidance = false),
             onAction = {},
@@ -232,10 +232,10 @@ private fun PermissionCheckContentPreview() {
     }
 }
 
-@Preview
+@PreviewLightDark
 @Composable
 private fun PermissionCheckContentSettingsPreview() {
-    AppTheme {
+    MessagingPreviewTheme {
         PermissionCheckContent(
             uiState = State(showSettingsGuidance = true),
             onAction = {},
