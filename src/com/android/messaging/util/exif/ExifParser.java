@@ -217,7 +217,7 @@ public class ExifParser {
 
         parseTiffHeader();
         long offset = mTiffStream.readUnsignedInt();
-        if (offset > Integer.MAX_VALUE) {
+        if (offset > mApp1End) {
             throw new ExifInvalidFormatException("Invalid offset " + offset);
         }
         mIfd0Position = (int) offset;
@@ -495,6 +495,10 @@ public class ExifParser {
         return (int) mJpegSizeTag.getValueAt(0);
     }
 
+    protected int getApp1End() {
+        return mApp1End;
+    }
+
     private void skipTo(int offset) throws IOException {
         mTiffStream.skipTo(offset);
         while (!mCorrespondingEvent.isEmpty() && mCorrespondingEvent.firstKey() < offset) {
@@ -561,6 +565,12 @@ public class ExifParser {
             if (mDataAboveIfd0 != null
                     && offset < mIfd0Position
                     && dataFormat == ExifTag.TYPE_UNDEFINED) {
+                if (numOfComp < 0 || numOfComp > mApp1End) {
+                    throw new ExifInvalidFormatException("Invalid tag size " + numOfComp);
+                }
+                if (offset < DEFAULT_IFD0_OFFSET || offset + numOfComp > mIfd0Position) {
+                    throw new ExifInvalidFormatException("Invalid tag offset " + offset);
+                }
                 byte[] buf = new byte[(int) numOfComp];
                 System.arraycopy(mDataAboveIfd0, (int) offset - DEFAULT_IFD0_OFFSET,
                         buf, 0, (int) numOfComp);
@@ -647,6 +657,11 @@ public class ExifParser {
     }
 
     protected void readFullTagValue(ExifTag tag) throws IOException {
+        final long valueSize = (long) tag.getComponentCount()
+                * ExifTag.getElementSize(tag.getDataType());
+        if (valueSize < 0 || valueSize > mApp1End) {
+            throw new IOException("Invalid tag value size " + valueSize);
+        }
         // Some invalid images contains tags with wrong size, check it here
         short type = tag.getDataType();
         if (type == ExifTag.TYPE_ASCII || type == ExifTag.TYPE_UNDEFINED ||
