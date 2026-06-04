@@ -21,7 +21,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
@@ -134,8 +134,8 @@ private fun BoxScope.SelectedTargetsSendButton(
         ),
     ) {
         Icon(
-            imageVector = Icons.AutoMirrored.Default.Send,
-            contentDescription = stringResource(R.string.share_selection_send),
+            imageVector = Icons.AutoMirrored.Default.ArrowForward,
+            contentDescription = stringResource(R.string.share_selection_next),
         )
     }
 }
