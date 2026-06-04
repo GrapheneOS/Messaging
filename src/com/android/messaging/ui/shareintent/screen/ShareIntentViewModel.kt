@@ -115,6 +115,14 @@ internal class ShareIntentViewModel @Inject constructor(
                 targetsDelegate.loadMoreContacts()
             }
 
+            Action.LoadMoreRecent -> {
+                targetsDelegate.loadMoreRecent()
+            }
+
+            Action.CollapseRecent -> {
+                targetsDelegate.collapseRecent()
+            }
+
             Action.ContactsPermissionGranted -> {
                 targetsDelegate.onContactsPermissionGranted()
             }

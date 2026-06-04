@@ -41,6 +41,8 @@ internal interface ShareTargetsDelegate {
     fun setSearchQuery(query: String)
     fun toggleSelection(target: ShareTargetUiState)
     fun clearSelection()
+    fun loadMoreRecent()
+    fun collapseRecent()
     fun loadMoreContacts()
     fun onContactsPermissionGranted()
     fun currentSelectedTargets(): ImmutableList<ShareTargetUiState>
@@ -60,6 +62,7 @@ internal class ShareTargetsDelegateImpl @Inject constructor(
     private val contactsState = MutableStateFlow(ContactsState())
     private val searchQuery = MutableStateFlow("")
     private val isSearchActive = MutableStateFlow(false)
+    private val visibleRecentLimit = MutableStateFlow(INITIAL_RECENT_TARGET_COUNT)
     private val contactsReloadTrigger = MutableStateFlow(0)
     private val selectedTargetsList = MutableStateFlow<PersistentList<ShareTargetUiState>>(
         persistentListOf(),
@@ -71,18 +74,16 @@ internal class ShareTargetsDelegateImpl @Inject constructor(
     override val selectedIds: StateFlow<ImmutableSet<String>> = mutableSelectedIds.asStateFlow()
 
     override val state: Flow<ShareTargetsUiState> = combine(
-        recents,
+        combine(recents, searchQuery, visibleRecentLimit, ::buildRecentTargets),
         contactsState,
         isSearchActive,
-        searchQuery,
-        combine(selectedTargetsList, mutableSelectedIds, ::Selection),
-    ) { recentConversations, contacts, active, query, selection ->
+        selectedTargetsList,
+    ) { recentTargets, contacts, active, selectedTargets ->
         buildState(
-            recentConversations = recentConversations,
+            recentTargets = recentTargets,
             contacts = contacts,
             isSearchActive = active,
-            query = query,
-            selection = selection,
+            selectedTargets = selectedTargets,
         )
     }.flowOn(defaultDispatcher)
 
@@ -119,7 +120,7 @@ internal class ShareTargetsDelegateImpl @Inject constructor(
     override fun toggleSelection(target: ShareTargetUiState) {
         val current = selectedTargetsList.value
         val next = when {
-            current.any { it.selectionId == target.selectionId } -> {
+            target.selectionId in mutableSelectedIds.value -> {
                 current.removeAll { it.selectionId == target.selectionId }
             }
 
@@ -131,6 +132,14 @@ internal class ShareTargetsDelegateImpl @Inject constructor(
 
     override fun clearSelection() {
         setSelection(persistentListOf())
+    }
+
+    override fun loadMoreRecent() {
+        visibleRecentLimit.update { it + RECENT_TARGET_LOAD_MORE_COUNT }
+    }
+
+    override fun collapseRecent() {
+        visibleRecentLimit.value = INITIAL_RECENT_TARGET_COUNT
     }
 
     override fun loadMoreContacts() {
@@ -150,34 +159,59 @@ internal class ShareTargetsDelegateImpl @Inject constructor(
     }
 
     private fun buildState(
-        recentConversations: ImmutableList<ShareTargetConversation>?,
+        recentTargets: RecentTargetsState,
         contacts: ContactsState,
         isSearchActive: Boolean,
-        query: String,
-        selection: Selection,
+        selectedTargets: PersistentList<ShareTargetUiState>,
     ): ShareTargetsUiState {
-        if (recentConversations == null) {
+        if (recentTargets.isLoading) {
             return ShareTargetsUiState(
                 isLoading = true,
                 isSearchActive = isSearchActive,
                 hasContactsPermission = contacts.hasPermission,
-                selectedIds = selection.ids,
-                selectedTargets = selection.targets,
+                selectedIds = mutableSelectedIds.value,
+                selectedTargets = selectedTargets,
             )
         }
 
-        val recentTargets = conversationMapper.map(recentConversations)
-            .filterByQuery(query)
-
         return ShareTargetsUiState(
             isLoading = false,
-            recentTargets = recentTargets,
+            recentTargets = recentTargets.targets,
             contactTargets = contacts.contacts,
+            canLoadMoreRecent = recentTargets.canLoadMore,
+            canCollapseRecent = recentTargets.canCollapse,
             hasContactsPermission = contacts.hasPermission,
             canLoadMoreContacts = contacts.canLoadMore,
             isSearchActive = isSearchActive,
-            selectedIds = selection.ids,
-            selectedTargets = selection.targets,
+            selectedIds = mutableSelectedIds.value,
+            selectedTargets = selectedTargets,
+        )
+    }
+
+    private fun buildRecentTargets(
+        recentConversations: ImmutableList<ShareTargetConversation>?,
+        query: String,
+        visibleLimit: Int,
+    ): RecentTargetsState {
+        if (recentConversations == null) {
+            return RecentTargetsState(isLoading = true)
+        }
+
+        if (query.isNotBlank()) {
+            val filteredTargets = conversationMapper.map(recentConversations)
+                .filterByQuery(query)
+
+            return RecentTargetsState(targets = filteredTargets)
+        }
+
+        val visibleConversations = recentConversations
+            .take(visibleLimit)
+            .toImmutableList()
+
+        return RecentTargetsState(
+            targets = conversationMapper.map(visibleConversations),
+            canLoadMore = visibleConversations.size < recentConversations.size,
+            canCollapse = visibleLimit > INITIAL_RECENT_TARGET_COUNT,
         )
     }
 
@@ -248,8 +282,8 @@ internal class ShareTargetsDelegateImpl @Inject constructor(
     }
 
     private fun setSelection(targets: PersistentList<ShareTargetUiState>) {
-        selectedTargetsList.value = targets
         mutableSelectedIds.value = targets.map { it.selectionId }.toPersistentSet()
+        selectedTargetsList.value = targets
     }
 
     private fun pruneSelection(availableRecents: ImmutableList<ShareTargetConversation>) {
@@ -286,9 +320,11 @@ internal class ShareTargetsDelegateImpl @Inject constructor(
             details?.contains(query, ignoreCase = true) == true
     }
 
-    private data class Selection(
-        val targets: PersistentList<ShareTargetUiState>,
-        val ids: ImmutableSet<String>,
+    private data class RecentTargetsState(
+        val targets: ImmutableList<ShareTargetUiState> = persistentListOf(),
+        val canLoadMore: Boolean = false,
+        val canCollapse: Boolean = false,
+        val isLoading: Boolean = false,
     )
 
     private data class ContactsState(
@@ -301,6 +337,8 @@ internal class ShareTargetsDelegateImpl @Inject constructor(
     )
 
     private companion object {
+        private const val INITIAL_RECENT_TARGET_COUNT = 5
+        private const val RECENT_TARGET_LOAD_MORE_COUNT = 15
         private val SEARCH_DEBOUNCE = 150L.milliseconds
     }
 }

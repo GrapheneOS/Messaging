@@ -11,6 +11,8 @@ internal data class ShareTargetsUiState(
     val isLoading: Boolean = true,
     val recentTargets: ImmutableList<ShareTargetUiState> = persistentListOf(),
     val contactTargets: ImmutableList<ShareTargetUiState> = persistentListOf(),
+    val canLoadMoreRecent: Boolean = false,
+    val canCollapseRecent: Boolean = false,
     val hasContactsPermission: Boolean = true,
     val canLoadMoreContacts: Boolean = false,
     val isSearchActive: Boolean = false,

@@ -246,6 +246,8 @@ private fun ShareIntentPickerScaffold(
                         selectedIds = uiState.targets.selectedIds,
                         inSelectionMode = inSelectionMode,
                         showNewMessage = !uiState.targets.isSearchActive && !inSelectionMode,
+                        canLoadMoreRecent = uiState.targets.canLoadMoreRecent,
+                        canCollapseRecent = uiState.targets.canCollapseRecent,
                         hasContactsPermission = uiState.targets.hasContactsPermission,
                         canLoadMoreContacts = uiState.targets.canLoadMoreContacts,
                         onAction = onAction,
@@ -372,6 +374,8 @@ private fun ShareTargetList(
     selectedIds: Set<String>,
     inSelectionMode: Boolean,
     showNewMessage: Boolean,
+    canLoadMoreRecent: Boolean,
+    canCollapseRecent: Boolean,
     hasContactsPermission: Boolean,
     canLoadMoreContacts: Boolean,
     onAction: (Action) -> Unit,
@@ -401,6 +405,8 @@ private fun ShareTargetList(
             selectedIds = selectedIds,
             inSelectionMode = inSelectionMode,
             showNewMessage = showNewMessage,
+            canLoadMoreRecent = canLoadMoreRecent,
+            canCollapseRecent = canCollapseRecent,
             onAction = onAction,
         )
 
@@ -420,6 +426,8 @@ private fun LazyListScope.recentTargetsSection(
     selectedIds: Set<String>,
     inSelectionMode: Boolean,
     showNewMessage: Boolean,
+    canLoadMoreRecent: Boolean,
+    canCollapseRecent: Boolean,
     onAction: (Action) -> Unit,
 ) {
     if (showNewMessage) {
@@ -446,6 +454,30 @@ private fun LazyListScope.recentTargetsSection(
                 inSelectionMode = inSelectionMode,
                 onAction = onAction,
             )
+        }
+    }
+
+    if (canLoadMoreRecent || canCollapseRecent) {
+        item(key = "load_more_recent") {
+            TextButton(
+                onClick = {
+                    val action = when {
+                        canLoadMoreRecent -> Action.LoadMoreRecent
+                        else -> Action.CollapseRecent
+                    }
+                    onAction(action)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = ItemDividerHorizontalInset),
+            ) {
+                val textRes = when {
+                    canLoadMoreRecent -> R.string.share_recent_show_more_action
+                    else -> R.string.share_recent_show_less_action
+                }
+
+                Text(text = stringResource(textRes))
+            }
         }
     }
 }

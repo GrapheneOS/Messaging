@@ -36,6 +36,10 @@ internal sealed interface ShareIntentAction {
 
     data object LoadMoreContacts : TargetsAction
 
+    data object LoadMoreRecent : TargetsAction
+
+    data object CollapseRecent : TargetsAction
+
     data object ContactsPermissionGranted : TargetsAction
 
     data class DraftResolved(
