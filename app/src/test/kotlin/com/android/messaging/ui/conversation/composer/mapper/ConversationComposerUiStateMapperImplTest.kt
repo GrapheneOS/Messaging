@@ -5,16 +5,23 @@ import com.android.messaging.data.conversation.model.metadata.ConversationCompos
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerDisabledReason
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
 import com.android.messaging.data.subscription.model.Subscription
+import com.android.messaging.datamodel.MessageTextStats
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
 import com.android.messaging.sms.MmsConfig
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingUiState
 import com.android.messaging.ui.conversation.composer.model.ComposerAttachmentUiModel
 import com.android.messaging.ui.conversation.composer.model.ConversationDraftState
+import com.android.messaging.ui.conversation.composer.model.ConversationSegmentCounterUiState
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkConstructor
 import io.mockk.mockkStatic
+import io.mockk.runs
+import io.mockk.unmockkConstructor
 import io.mockk.unmockkStatic
+import io.mockk.verify
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -40,10 +47,20 @@ internal class ConversationComposerUiStateMapperImplTest {
         every { mmsConfig.smsToMmsTextThreshold } returns -1
         mockkStatic(MmsConfig::class)
         every { MmsConfig.get(any()) } returns mmsConfig
+
+        mockkConstructor(MessageTextStats::class)
+        every {
+            anyConstructed<MessageTextStats>().updateMessageTextStats(any(), any())
+        } just runs
+        every { anyConstructed<MessageTextStats>().numMessagesToBeSent } returns 1
+        every {
+            anyConstructed<MessageTextStats>().codePointsRemainingInCurrentMessage
+        } returns Int.MAX_VALUE
     }
 
     @After
     fun tearDown() {
+        unmockkConstructor(MessageTextStats::class)
         unmockkStatic(MmsConfig::class)
     }
 
@@ -182,6 +199,170 @@ internal class ConversationComposerUiStateMapperImplTest {
         )
 
         assertEquals(ConversationDraftSendProtocol.SMS, uiState.sendProtocol)
+    }
+
+    @Test
+    fun map_hidesSegmentCounterWhenSmsMessageIsNotNearBoundary() {
+        every { anyConstructed<MessageTextStats>().numMessagesToBeSent } returns 1
+        every {
+            anyConstructed<MessageTextStats>().codePointsRemainingInCurrentMessage
+        } returns 11
+
+        val uiState = mapper.map(
+            audioRecording = ConversationAudioRecordingUiState(),
+            draftState = ConversationDraftState(
+                draft = ConversationDraft(
+                    messageText = "Hello",
+                ),
+            ),
+            attachments = persistentListOf(),
+            composerAvailability = ConversationComposerAvailability.Editable,
+            subscriptions = persistentListOf(),
+            areSubscriptionsLoaded = true,
+            defaultSmsSubscriptionId = ParticipantData.DEFAULT_SELF_SUB_ID,
+        )
+
+        assertNull(uiState.segmentCounter)
+    }
+
+    @Test
+    fun map_showsSingleSegmentCounterWhenSmsMessageIsNearBoundary() {
+        val messageText = "Almost full"
+        every { anyConstructed<MessageTextStats>().numMessagesToBeSent } returns 1
+        every {
+            anyConstructed<MessageTextStats>().codePointsRemainingInCurrentMessage
+        } returns 10
+
+        val uiState = mapper.map(
+            audioRecording = ConversationAudioRecordingUiState(),
+            draftState = ConversationDraftState(
+                draft = ConversationDraft(
+                    messageText = messageText,
+                    selfParticipantId = "sub-b",
+                ),
+            ),
+            attachments = persistentListOf(),
+            composerAvailability = ConversationComposerAvailability.Editable,
+            subscriptions = persistentListOf(
+                createSubscription(
+                    selfParticipantId = "sub-a",
+                    subId = FIRST_SUB_ID,
+                    slotId = 1,
+                ),
+                createSubscription(
+                    selfParticipantId = "sub-b",
+                    subId = SECOND_SUB_ID,
+                    slotId = 2,
+                ),
+            ),
+            areSubscriptionsLoaded = true,
+            defaultSmsSubscriptionId = FIRST_SUB_ID,
+        )
+
+        assertEquals(
+            ConversationSegmentCounterUiState(
+                codePointsRemainingInCurrentMessage = 10,
+                messageCount = 1,
+            ),
+            uiState.segmentCounter,
+        )
+        verify(exactly = 1) {
+            anyConstructed<MessageTextStats>().updateMessageTextStats(
+                SECOND_SUB_ID,
+                messageText,
+            )
+        }
+    }
+
+    @Test
+    fun map_showsMultiSegmentCounterWhenSmsMessageSpansMultipleMessages() {
+        every { anyConstructed<MessageTextStats>().numMessagesToBeSent } returns 3
+        every {
+            anyConstructed<MessageTextStats>().codePointsRemainingInCurrentMessage
+        } returns 82
+
+        val uiState = mapper.map(
+            audioRecording = ConversationAudioRecordingUiState(),
+            draftState = ConversationDraftState(
+                draft = ConversationDraft(
+                    messageText = "Long message",
+                ),
+            ),
+            attachments = persistentListOf(),
+            composerAvailability = ConversationComposerAvailability.Editable,
+            subscriptions = persistentListOf(),
+            areSubscriptionsLoaded = true,
+            defaultSmsSubscriptionId = ParticipantData.DEFAULT_SELF_SUB_ID,
+        )
+
+        assertEquals(
+            ConversationSegmentCounterUiState(
+                codePointsRemainingInCurrentMessage = 82,
+                messageCount = 3,
+            ),
+            uiState.segmentCounter,
+        )
+    }
+
+    @Test
+    fun map_hidesSegmentCounterForMmsDraft() {
+        every { anyConstructed<MessageTextStats>().numMessagesToBeSent } returns 3
+        every {
+            anyConstructed<MessageTextStats>().codePointsRemainingInCurrentMessage
+        } returns 10
+
+        val uiState = mapper.map(
+            audioRecording = ConversationAudioRecordingUiState(),
+            draftState = ConversationDraftState(
+                draft = ConversationDraft(
+                    messageText = "Long message",
+                ),
+                sendProtocol = ConversationDraftSendProtocol.MMS,
+            ),
+            attachments = persistentListOf(),
+            composerAvailability = ConversationComposerAvailability.Editable,
+            subscriptions = persistentListOf(),
+            areSubscriptionsLoaded = true,
+            defaultSmsSubscriptionId = ParticipantData.DEFAULT_SELF_SUB_ID,
+        )
+
+        assertNull(uiState.segmentCounter)
+    }
+
+    @Test
+    fun map_usesDefaultSelfSubIdForSegmentCounterWhenNoSubscriptionIsSelected() {
+        every { anyConstructed<MessageTextStats>().numMessagesToBeSent } returns 1
+        every {
+            anyConstructed<MessageTextStats>().codePointsRemainingInCurrentMessage
+        } returns 10
+
+        val uiState = mapper.map(
+            audioRecording = ConversationAudioRecordingUiState(),
+            draftState = ConversationDraftState(
+                draft = ConversationDraft(
+                    messageText = "Almost full",
+                ),
+            ),
+            attachments = persistentListOf(),
+            composerAvailability = ConversationComposerAvailability.Editable,
+            subscriptions = persistentListOf(),
+            areSubscriptionsLoaded = true,
+            defaultSmsSubscriptionId = ParticipantData.DEFAULT_SELF_SUB_ID,
+        )
+
+        assertEquals(
+            ConversationSegmentCounterUiState(
+                codePointsRemainingInCurrentMessage = 10,
+                messageCount = 1,
+            ),
+            uiState.segmentCounter,
+        )
+        verify(exactly = 1) {
+            anyConstructed<MessageTextStats>().updateMessageTextStats(
+                ParticipantData.DEFAULT_SELF_SUB_ID,
+                "Almost full",
+            )
+        }
     }
 
     @Test
@@ -331,6 +512,39 @@ internal class ConversationComposerUiStateMapperImplTest {
         assertEquals(matchingSubscription, uiState.simSelector.selectedSubscription)
         assertEquals(subscriptions, uiState.simSelector.subscriptions)
         assertTrue(uiState.simSelector.isAvailable)
+    }
+
+    @Test
+    fun map_fallsBackToFirstSubscriptionWhenDraftSelfParticipantIdDoesNotMatch() {
+        val firstSubscription = createSubscription(
+            selfParticipantId = "sub-a",
+            subId = FIRST_SUB_ID,
+            slotId = 1,
+        )
+        val subscriptions = persistentListOf(
+            firstSubscription,
+            createSubscription(
+                selfParticipantId = "sub-b",
+                subId = SECOND_SUB_ID,
+                slotId = 2,
+            ),
+        )
+
+        val uiState = mapper.map(
+            audioRecording = ConversationAudioRecordingUiState(),
+            draftState = ConversationDraftState(
+                draft = ConversationDraft(
+                    selfParticipantId = "non-existent",
+                ),
+            ),
+            attachments = persistentListOf(),
+            composerAvailability = ConversationComposerAvailability.Editable,
+            subscriptions = subscriptions,
+            areSubscriptionsLoaded = true,
+            defaultSmsSubscriptionId = ParticipantData.DEFAULT_SELF_SUB_ID,
+        )
+
+        assertEquals(firstSubscription, uiState.simSelector.selectedSubscription)
     }
 
     @Test

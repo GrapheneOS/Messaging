@@ -21,6 +21,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -43,6 +44,7 @@ import com.android.messaging.ui.conversation.CONVERSATION_ATTACHMENT_MEDIA_MENU_
 import com.android.messaging.ui.conversation.CONVERSATION_AUDIO_RECORDING_BAR_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_AUDIO_RECORDING_LOCK_AFFORDANCE_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_MMS_INDICATOR_TEST_TAG
+import com.android.messaging.ui.conversation.CONVERSATION_SEGMENT_COUNTER_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_SEND_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_TEXT_FIELD_TEST_TAG
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingPhase
@@ -124,6 +126,78 @@ class ConversationComposeBarTest {
                 testTag = CONVERSATION_MMS_INDICATOR_TEST_TAG,
                 useUnmergedTree = true,
             )
+            .assertCountEquals(expectedSize = 0)
+    }
+
+    @Test
+    fun singleSegmentCounter_showsRemainingCharactersDescription() {
+        val expectedDescription = targetContext.resources.getQuantityString(
+            R.plurals.conversation_segment_counter_single_content_description,
+            1,
+            1,
+        )
+
+        setContent(
+            messageText = "Hello",
+            segmentCounter = segmentCounterState(
+                codePointsRemainingInCurrentMessage = 1,
+                messageCount = 1,
+            ),
+        )
+
+        composeTestRule
+            .onNodeWithTag(CONVERSATION_SEGMENT_COUNTER_TEST_TAG)
+            .assertIsDisplayed()
+            .assertTextEquals("1")
+            .assert(
+                SemanticsMatcher.expectValue(
+                    SemanticsProperties.ContentDescription,
+                    listOf(expectedDescription),
+                ),
+            )
+    }
+
+    @Test
+    fun multiSegmentCounter_showsRemainingCharactersAndMessageCountDescription() {
+        val expectedDescription = targetContext.resources.getQuantityString(
+            R.plurals.conversation_segment_counter_content_description,
+            7,
+            7,
+            3,
+        )
+
+        setContent(
+            messageText = "Long message",
+            segmentCounter = segmentCounterState(
+                codePointsRemainingInCurrentMessage = 7,
+                messageCount = 3,
+            ),
+        )
+
+        composeTestRule
+            .onNodeWithTag(CONVERSATION_SEGMENT_COUNTER_TEST_TAG)
+            .assertIsDisplayed()
+            .assertTextEquals("7/3")
+            .assert(
+                SemanticsMatcher.expectValue(
+                    SemanticsProperties.ContentDescription,
+                    listOf(expectedDescription),
+                ),
+            )
+    }
+
+    @Test
+    fun activeRecording_hidesSegmentCounter() {
+        setContent(
+            audioRecording = recordingAudioState(),
+            messageText = "",
+            subjectText = "",
+            segmentCounter = segmentCounterState(),
+            shouldShowRecordAction = true,
+        )
+
+        composeTestRule
+            .onAllNodesWithTag(CONVERSATION_SEGMENT_COUNTER_TEST_TAG)
             .assertCountEquals(expectedSize = 0)
     }
 
@@ -807,6 +881,16 @@ class ConversationComposeBarTest {
             hapticFeedback.performHapticFeedback(any())
         } just runs
         return hapticFeedback
+    }
+
+    private fun segmentCounterState(
+        codePointsRemainingInCurrentMessage: Int = 1,
+        messageCount: Int = 1,
+    ): ConversationSegmentCounterUiState {
+        return ConversationSegmentCounterUiState(
+            codePointsRemainingInCurrentMessage = codePointsRemainingInCurrentMessage,
+            messageCount = messageCount,
+        )
     }
 
     private fun recordingAudioState(
