@@ -1,5 +1,6 @@
 package com.android.messaging.domain.conversation.usecase.draft
 
+import android.net.Uri
 import app.cash.turbine.test
 import com.android.messaging.data.conversation.mapper.ConversationDraftMessageDataMapper
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
@@ -11,12 +12,14 @@ import com.android.messaging.data.subscription.repository.SubscriptionsRepositor
 import com.android.messaging.datamodel.action.InsertNewMessageAction
 import com.android.messaging.datamodel.data.ConversationParticipantsData
 import com.android.messaging.datamodel.data.MessageData
+import com.android.messaging.datamodel.data.MessagePartData
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.domain.conversation.usecase.draft.exception.BlankConversationIdException
 import com.android.messaging.domain.conversation.usecase.draft.exception.ConversationRecipientsNotLoadedException
 import com.android.messaging.domain.conversation.usecase.draft.exception.ConversationSimNotReadyException
 import com.android.messaging.domain.conversation.usecase.draft.exception.DraftDispatchFailedException
 import com.android.messaging.domain.conversation.usecase.draft.exception.EmptyConversationDraftException
+import com.android.messaging.domain.conversation.usecase.draft.exception.MessageLimitExceededException
 import com.android.messaging.domain.conversation.usecase.draft.exception.MissingSelfPhoneNumberForGroupMmsException
 import com.android.messaging.domain.conversation.usecase.draft.exception.TooManyVideoAttachmentsException
 import com.android.messaging.domain.conversation.usecase.draft.exception.UnknownConversationRecipientException
@@ -399,6 +402,40 @@ class SendConversationDraftImplTest {
     }
 
     @Test
+    fun invoke_throwsWhenMappedMessageExceedsAttachmentLimit() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val messageData = createMessageDataWithAttachments(attachmentCount = 2)
+            val subscriptionsRepository = createSubscriptionsRepositoryMock(attachmentLimit = 1)
+            val useCase = createUseCase(
+                subscriptionsRepository = subscriptionsRepository,
+                mapper = createConversationDraftMessageDataMapperMock(
+                    messageToReturn = messageData,
+                ),
+            )
+
+            val exception = collectFailure(
+                useCase.invoke(
+                    conversationId = CONVERSATION_ID,
+                    draft = ConversationDraft(
+                        messageText = "Hello",
+                    ),
+                ),
+            )
+
+            assertEquals(MessageLimitExceededException::class.java, exception.javaClass)
+            verify(exactly = 0) {
+                InsertNewMessageAction.insertNewMessage(any<MessageData>())
+            }
+            verify(exactly = 0) {
+                InsertNewMessageAction.insertNewMessage(
+                    any<MessageData>(),
+                    any(),
+                )
+            }
+        }
+    }
+
+    @Test
     fun invoke_locksDefaultSelfMessageToSystemDefaultSubscription() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val messageData = createMessageData()
@@ -542,9 +579,11 @@ class SendConversationDraftImplTest {
         return repository
     }
 
-    private fun createSubscriptionsRepositoryMock(): SubscriptionsRepository {
+    private fun createSubscriptionsRepositoryMock(
+        attachmentLimit: Int = Int.MAX_VALUE,
+    ): SubscriptionsRepository {
         val repository = mockk<SubscriptionsRepository>(relaxed = true)
-        every { repository.resolveAttachmentLimit() } returns Int.MAX_VALUE
+        every { repository.resolveAttachmentLimit() } returns attachmentLimit
         return repository
     }
 
@@ -609,5 +648,25 @@ class SendConversationDraftImplTest {
             "self-1",
             "Hello",
         )
+    }
+
+    private fun createMessageDataWithAttachments(attachmentCount: Int): MessageData {
+        return MessageData.createDraftMmsMessage(
+            CONVERSATION_ID,
+            "self-1",
+            "Hello",
+            "",
+        ).apply {
+            repeat(attachmentCount) { index ->
+                addPart(
+                    MessagePartData.createMediaMessagePart(
+                        "image/jpeg",
+                        Uri.parse("content://media/image/$index"),
+                        640,
+                        480,
+                    ),
+                )
+            }
+        }
     }
 }
