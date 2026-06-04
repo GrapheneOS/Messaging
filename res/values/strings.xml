@@ -921,6 +921,12 @@
     <string name="share_selection_send">Send</string>
     <!-- Accessibility : Content description for removing a conversation from the current multi conversation selection -->
     <string name="share_selection_remove">Remove %1$s from selection</string>
+    <!-- Section header above the list of all device contacts in the share conversation picker -->
+    <string name="share_contacts_section_title">Contacts</string>
+    <!-- Explanation shown when contacts access is not granted in the share conversation picker -->
+    <string name="share_contacts_permission_rationale">Allow access to share with your contacts</string>
+    <!-- Button that requests contacts access in the share conversation picker -->
+    <string name="share_contacts_permission_action">Allow access</string>
 
     <!-- Screen title after user selects APNs setting option -->
     <string name="apn_edit">Edit access point</string>

@@ -9,8 +9,11 @@ import kotlinx.collections.immutable.persistentSetOf
 @Immutable
 internal data class ShareTargetsUiState(
     val isLoading: Boolean = true,
-    val targets: ImmutableList<ShareTargetUiState> = persistentListOf(),
+    val recentTargets: ImmutableList<ShareTargetUiState> = persistentListOf(),
+    val contactTargets: ImmutableList<ShareTargetUiState> = persistentListOf(),
+    val hasContactsPermission: Boolean = true,
+    val canLoadMoreContacts: Boolean = false,
     val isSearchActive: Boolean = false,
-    val selectedConversationIds: ImmutableSet<String> = persistentSetOf(),
+    val selectedIds: ImmutableSet<String> = persistentSetOf(),
     val selectedTargets: ImmutableList<ShareTargetUiState> = persistentListOf(),
 )

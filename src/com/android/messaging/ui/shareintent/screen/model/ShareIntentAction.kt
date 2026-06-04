@@ -9,15 +9,15 @@ internal sealed interface ShareIntentAction {
     sealed interface DraftAction : ShareIntentAction
 
     data class TargetClicked(
-        val conversationId: String,
+        val target: ShareTargetUiState,
     ) : TargetsAction
 
     data class TargetLongPressed(
-        val conversationId: String,
+        val target: ShareTargetUiState,
     ) : TargetsAction
 
     data class SelectionToggled(
-        val conversationId: String,
+        val target: ShareTargetUiState,
     ) : TargetsAction
 
     data object SelectionCleared : TargetsAction
@@ -33,6 +33,10 @@ internal sealed interface ShareIntentAction {
     data class SearchQueryChanged(
         val query: String,
     ) : TargetsAction
+
+    data object LoadMoreContacts : TargetsAction
+
+    data object ContactsPermissionGranted : TargetsAction
 
     data class DraftResolved(
         val draft: ConversationDraft?,

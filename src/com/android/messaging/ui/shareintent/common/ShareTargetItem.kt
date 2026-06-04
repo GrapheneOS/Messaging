@@ -41,14 +41,20 @@ internal fun ShareTargetItem(
     onLongClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
+    val fallbackIcon = when (target) {
+        is ShareTargetUiState.Conversation -> when {
+            target.isGroup -> Icons.Default.Group
+            else -> Icons.Default.Person
+        }
+
+        is ShareTargetUiState.Contact -> Icons.Default.Person
+    }
+
     ShareTargetRow(
         title = target.displayName,
         subtitle = target.details,
         avatarUri = target.avatarUri,
-        fallbackIcon = when {
-            target.isGroup -> Icons.Default.Group
-            else -> Icons.Default.Person
-        },
+        fallbackIcon = fallbackIcon,
         isSelected = isSelected,
         onClick = onClick,
         onLongClick = onLongClick,
@@ -96,8 +102,9 @@ private fun ShareTargetRow(
 private fun ShareTargetItemPreview() {
     MessagingPreviewColumn {
         ShareTargetItem(
-            target = ShareTargetUiState(
+            target = ShareTargetUiState.Conversation(
                 conversationId = "1",
+                normalizedDestination = "+31612345678",
                 displayName = "Jane Doe",
                 details = "+31 6 1234 5678",
                 avatarUri = null,

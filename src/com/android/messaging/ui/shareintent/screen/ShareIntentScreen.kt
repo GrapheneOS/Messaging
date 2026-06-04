@@ -1,6 +1,11 @@
 package com.android.messaging.ui.shareintent.screen
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -12,13 +17,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -26,6 +35,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,11 +45,16 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.messaging.R
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.common.components.composer.MESSAGE_COMPOSE_FIELD_TEST_TAG
 import com.android.messaging.ui.common.components.composer.MessageComposeBar
@@ -54,11 +70,17 @@ import com.android.messaging.ui.shareintent.common.ShareIntentTopAppBar
 import com.android.messaging.ui.shareintent.common.ShareTargetItem
 import com.android.messaging.ui.shareintent.common.contentSurfaceShape
 import com.android.messaging.ui.shareintent.common.shareComposeSubjectSlot
+import com.android.messaging.ui.shareintent.screen.model.ShareDraftUiState
 import com.android.messaging.ui.shareintent.screen.model.ShareIntentAction as Action
 import com.android.messaging.ui.shareintent.screen.model.ShareIntentUiState as State
 import com.android.messaging.ui.shareintent.screen.model.ShareTargetUiState
+import com.android.messaging.ui.shareintent.screen.model.ShareTargetsUiState
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
+
+private val ContactsSectionHeaderVerticalPadding = 8.dp
+private val ContactsPermissionActionSpacing = 4.dp
+private const val LOAD_MORE_PREFETCH_DISTANCE = 10
 
 @Composable
 internal fun ShareIntentScreen(
@@ -84,12 +106,38 @@ internal fun ShareIntentScreen(
         }
     }
 
+    val context = LocalContext.current
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { isGranted ->
+        if (isGranted) {
+            screenModel.onAction(Action.ContactsPermissionGranted)
+        }
+    }
+
+    LifecycleResumeEffect(context) {
+        if (isReadContactsPermissionGranted(context)) {
+            screenModel.onAction(Action.ContactsPermissionGranted)
+        }
+        onPauseOrDispose {}
+    }
+
     ShareIntentContent(
         uiState = uiState,
         onAction = screenModel::onAction,
         onNavigateBack = onNavigateBack,
+        onGrantContactsPermission = {
+            permissionLauncher.launch(Manifest.permission.READ_CONTACTS)
+        },
         modifier = modifier,
     )
+}
+
+private fun isReadContactsPermissionGranted(context: Context): Boolean {
+    return ContextCompat.checkSelfPermission(
+        context,
+        Manifest.permission.READ_CONTACTS,
+    ) == PackageManager.PERMISSION_GRANTED
 }
 
 @Composable
@@ -97,6 +145,7 @@ private fun ShareIntentContent(
     uiState: State,
     onAction: (Action) -> Unit,
     onNavigateBack: () -> Unit,
+    onGrantContactsPermission: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val searchState = rememberTextFieldState()
@@ -114,7 +163,7 @@ private fun ShareIntentContent(
         onAction = onAction,
     )
 
-    if (uiState.isReviewing) {
+    if (uiState.draft.isReviewing) {
         ShareConfirmScreen(
             uiState = uiState,
             onAction = onAction,
@@ -126,6 +175,7 @@ private fun ShareIntentContent(
             searchState = searchState,
             onAction = onAction,
             onNavigateBack = onNavigateBack,
+            onGrantContactsPermission = onGrantContactsPermission,
             modifier = modifier,
         )
     }
@@ -137,15 +187,15 @@ private fun ShareIntentBackHandlers(
     searchState: TextFieldState,
     onAction: (Action) -> Unit,
 ) {
-    BackHandler(enabled = uiState.isReviewing) {
+    BackHandler(enabled = uiState.draft.isReviewing) {
         onAction(Action.ReviewDismissed)
     }
 
-    BackHandler(enabled = !uiState.isReviewing && uiState.selectedConversationIds.isNotEmpty()) {
+    BackHandler(enabled = !uiState.draft.isReviewing && uiState.targets.selectedIds.isNotEmpty()) {
         onAction(Action.SelectionCleared)
     }
 
-    BackHandler(enabled = !uiState.isReviewing && uiState.isSearchActive) {
+    BackHandler(enabled = !uiState.draft.isReviewing && uiState.targets.isSearchActive) {
         searchState.clearText()
         onAction(Action.SearchClosed)
     }
@@ -157,9 +207,10 @@ private fun ShareIntentPickerScaffold(
     searchState: TextFieldState,
     onAction: (Action) -> Unit,
     onNavigateBack: () -> Unit,
+    onGrantContactsPermission: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val inSelectionMode = uiState.selectedConversationIds.isNotEmpty()
+    val inSelectionMode = uiState.targets.selectedIds.isNotEmpty()
 
     Scaffold(
         modifier = modifier,
@@ -190,11 +241,15 @@ private fun ShareIntentPickerScaffold(
 
                 else -> {
                     ShareTargetList(
-                        targets = uiState.targets,
-                        selectedConversationIds = uiState.selectedConversationIds,
+                        recentTargets = uiState.targets.recentTargets,
+                        contactTargets = uiState.targets.contactTargets,
+                        selectedIds = uiState.targets.selectedIds,
                         inSelectionMode = inSelectionMode,
-                        showNewMessage = !uiState.isSearchActive && !inSelectionMode,
+                        showNewMessage = !uiState.targets.isSearchActive && !inSelectionMode,
+                        hasContactsPermission = uiState.targets.hasContactsPermission,
+                        canLoadMoreContacts = uiState.targets.canLoadMoreContacts,
                         onAction = onAction,
+                        onGrantContactsPermission = onGrantContactsPermission,
                         bottomPadding = contentPadding.calculateBottomPadding(),
                     )
                 }
@@ -215,9 +270,9 @@ private fun ShareIntentPickerTopBar(
         modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainer),
     ) {
         ShareIntentTopAppBar(
-            isSearchActive = uiState.isSearchActive,
+            isSearchActive = uiState.targets.isSearchActive,
             inSelectionMode = inSelectionMode,
-            selectedCount = uiState.selectedConversationIds.size,
+            selectedCount = uiState.targets.selectedIds.size,
             searchState = searchState,
             onNavigateBack = onNavigateBack,
             onSearchOpen = { onAction(Action.SearchOpened) },
@@ -234,7 +289,7 @@ private fun ShareIntentPickerTopBar(
             exit = shrinkVertically() + fadeOut(),
         ) {
             SelectedTargetsBar(
-                targets = uiState.selectedTargets,
+                targets = uiState.targets.selectedTargets,
                 onRemove = { onAction(Action.SelectionToggled(it)) },
                 onSend = { onAction(Action.SendToSelectedClicked) },
                 showSendButton = true,
@@ -261,7 +316,7 @@ private fun ShareConfirmScreen(
                 )
 
                 SelectedTargetsBar(
-                    targets = uiState.selectedTargets,
+                    targets = uiState.targets.selectedTargets,
                     onRemove = { onAction(Action.SelectionToggled(it)) },
                     onSend = {},
                     showSendButton = false,
@@ -282,7 +337,7 @@ private fun ShareConfirmScreen(
                     .windowInsetsPadding(
                         WindowInsets.ime.union(WindowInsets.navigationBars),
                     ),
-                text = uiState.draftText,
+                text = uiState.draft.text,
                 onTextChange = { onAction(Action.DraftTextChanged(it)) },
                 isFieldEnabled = true,
                 isFieldContentHidden = false,
@@ -290,7 +345,7 @@ private fun ShareConfirmScreen(
                 fieldStateDescription = null,
                 fieldTestTag = MESSAGE_COMPOSE_FIELD_TEST_TAG,
                 topContent = shareComposeSubjectSlot(
-                    subjectText = uiState.draftSubject,
+                    subjectText = uiState.draft.subjectText,
                     onClear = { onAction(Action.DraftSubjectCleared) },
                 ),
                 sendAction = {
@@ -301,7 +356,7 @@ private fun ShareConfirmScreen(
                 },
                 attachmentsContent = {
                     ShareAttachmentPreview(
-                        attachments = uiState.draftAttachments,
+                        attachments = uiState.draft.attachments,
                         onRemove = { onAction(Action.DraftAttachmentRemoved(it)) },
                     )
                 },
@@ -312,14 +367,27 @@ private fun ShareConfirmScreen(
 
 @Composable
 private fun ShareTargetList(
-    targets: List<ShareTargetUiState>,
-    selectedConversationIds: Set<String>,
+    recentTargets: List<ShareTargetUiState>,
+    contactTargets: List<ShareTargetUiState>,
+    selectedIds: Set<String>,
     inSelectionMode: Boolean,
     showNewMessage: Boolean,
+    hasContactsPermission: Boolean,
+    canLoadMoreContacts: Boolean,
     onAction: (Action) -> Unit,
+    onGrantContactsPermission: () -> Unit,
     bottomPadding: Dp,
 ) {
+    val listState = rememberLazyListState()
+
+    LoadMoreContactsOnScroll(
+        listState = listState,
+        enabled = canLoadMoreContacts,
+        onLoadMore = { onAction(Action.LoadMoreContacts) },
+    )
+
     LazyColumn(
+        state = listState,
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
             top = ScreenContentPadding,
@@ -328,38 +396,194 @@ private fun ShareTargetList(
             end = ScreenContentPadding,
         ),
     ) {
-        if (showNewMessage) {
-            item(key = "new_message") {
-                NewMessageItem(
-                    onClick = { onAction(Action.NewMessageClicked) },
+        recentTargetsSection(
+            recentTargets = recentTargets,
+            selectedIds = selectedIds,
+            inSelectionMode = inSelectionMode,
+            showNewMessage = showNewMessage,
+            onAction = onAction,
+        )
+
+        contactsSection(
+            contactTargets = contactTargets,
+            selectedIds = selectedIds,
+            inSelectionMode = inSelectionMode,
+            hasContactsPermission = hasContactsPermission,
+            onAction = onAction,
+            onGrantContactsPermission = onGrantContactsPermission,
+        )
+    }
+}
+
+private fun LazyListScope.recentTargetsSection(
+    recentTargets: List<ShareTargetUiState>,
+    selectedIds: Set<String>,
+    inSelectionMode: Boolean,
+    showNewMessage: Boolean,
+    onAction: (Action) -> Unit,
+) {
+    if (showNewMessage) {
+        item(key = "new_message") {
+            NewMessageItem(
+                onClick = { onAction(Action.NewMessageClicked) },
+                modifier = Modifier.animateItem(),
+            )
+        }
+    }
+
+    itemsIndexed(
+        items = recentTargets,
+        key = { _, target -> target.key },
+    ) { index, target ->
+        Column(modifier = Modifier.animateItem()) {
+            if (showNewMessage || index > 0) {
+                ItemDivider()
+            }
+
+            ShareTargetRow(
+                target = target,
+                selectedIds = selectedIds,
+                inSelectionMode = inSelectionMode,
+                onAction = onAction,
+            )
+        }
+    }
+}
+
+private fun LazyListScope.contactsSection(
+    contactTargets: List<ShareTargetUiState>,
+    selectedIds: Set<String>,
+    inSelectionMode: Boolean,
+    hasContactsPermission: Boolean,
+    onAction: (Action) -> Unit,
+    onGrantContactsPermission: () -> Unit,
+) {
+    when {
+        !hasContactsPermission -> {
+            item(key = "contacts_permission") {
+                ContactsPermissionPrompt(
+                    onGrant = onGrantContactsPermission,
                     modifier = Modifier.animateItem(),
                 )
             }
         }
 
-        itemsIndexed(
-            items = targets,
-            key = { _, target -> target.conversationId },
-        ) { index, target ->
-            Column(modifier = Modifier.animateItem()) {
-                if (showNewMessage || index > 0) {
-                    ItemDivider()
-                }
+        contactTargets.isNotEmpty() -> {
+            item(key = "contacts_header") {
+                ContactsSectionHeader(modifier = Modifier.animateItem())
+            }
 
-                ShareTargetItem(
-                    target = target,
-                    isSelected = target.conversationId in selectedConversationIds,
-                    onClick = {
-                        val action = when {
-                            inSelectionMode -> Action.SelectionToggled(target.conversationId)
-                            else -> Action.TargetClicked(target.conversationId)
-                        }
-                        onAction(action)
-                    },
-                    onLongClick = {
-                        onAction(Action.TargetLongPressed(target.conversationId))
-                    },
-                )
+            itemsIndexed(
+                items = contactTargets,
+                key = { _, target -> target.key },
+            ) { index, target ->
+                Column(modifier = Modifier.animateItem()) {
+                    if (index > 0) {
+                        ItemDivider()
+                    }
+
+                    ShareTargetRow(
+                        target = target,
+                        selectedIds = selectedIds,
+                        inSelectionMode = inSelectionMode,
+                        onAction = onAction,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ShareTargetRow(
+    target: ShareTargetUiState,
+    selectedIds: Set<String>,
+    inSelectionMode: Boolean,
+    onAction: (Action) -> Unit,
+) {
+    ShareTargetItem(
+        target = target,
+        isSelected = target.selectionId in selectedIds,
+        onClick = {
+            val action = when {
+                inSelectionMode -> Action.SelectionToggled(target)
+                else -> Action.TargetClicked(target)
+            }
+            onAction(action)
+        },
+        onLongClick = {
+            onAction(Action.TargetLongPressed(target))
+        },
+    )
+}
+
+@Composable
+private fun ContactsSectionHeader(
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = stringResource(R.string.share_contacts_section_title),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(
+                horizontal = ItemDividerHorizontalInset,
+                vertical = ContactsSectionHeaderVerticalPadding,
+            ),
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+@Composable
+private fun ContactsPermissionPrompt(
+    onGrant: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(
+                horizontal = ItemDividerHorizontalInset,
+                vertical = ContactsSectionHeaderVerticalPadding,
+            ),
+    ) {
+        Text(
+            text = stringResource(R.string.share_contacts_permission_rationale),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        TextButton(
+            onClick = onGrant,
+            modifier = Modifier.padding(top = ContactsPermissionActionSpacing),
+        ) {
+            Text(text = stringResource(R.string.share_contacts_permission_action))
+        }
+    }
+}
+
+@Composable
+private fun LoadMoreContactsOnScroll(
+    listState: LazyListState,
+    enabled: Boolean,
+    onLoadMore: () -> Unit,
+) {
+    val currentOnLoadMore by rememberUpdatedState(onLoadMore)
+
+    LaunchedEffect(listState, enabled) {
+        if (!enabled) {
+            return@LaunchedEffect
+        }
+
+        snapshotFlow {
+            val layoutInfo = listState.layoutInfo
+            val lastVisibleIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            lastVisibleIndex to layoutInfo.totalItemsCount
+        }.collect { (lastVisibleIndex, totalItemsCount) ->
+            if (totalItemsCount > 0 &&
+                lastVisibleIndex >= totalItemsCount - LOAD_MORE_PREFETCH_DISTANCE
+            ) {
+                currentOnLoadMore()
             }
         }
     }
@@ -383,26 +607,42 @@ private fun ShareIntentContentPreview() {
     MessagingPreviewTheme {
         ShareIntentContent(
             uiState = State(
-                isLoading = false,
-                targets = persistentListOf(
-                    ShareTargetUiState(
-                        conversationId = "1",
-                        displayName = "Jane Doe",
-                        details = "+31 6 1234 5678",
-                        avatarUri = null,
-                        isGroup = false,
+                targets = ShareTargetsUiState(
+                    isLoading = false,
+                    recentTargets = persistentListOf(
+                        ShareTargetUiState.Conversation(
+                            conversationId = "1",
+                            normalizedDestination = "+31612345678",
+                            displayName = "Jane Doe",
+                            details = "+31 6 1234 5678",
+                            avatarUri = null,
+                            isGroup = false,
+                        ),
+                        ShareTargetUiState.Conversation(
+                            conversationId = "2",
+                            normalizedDestination = null,
+                            displayName = "Project group",
+                            details = null,
+                            avatarUri = null,
+                            isGroup = true,
+                        ),
                     ),
-                    ShareTargetUiState(
-                        conversationId = "2",
-                        displayName = "Project group",
-                        details = null,
-                        avatarUri = null,
-                        isGroup = true,
+                    contactTargets = persistentListOf(
+                        ShareTargetUiState.Contact(
+                            contactId = 10L,
+                            destination = "+31 6 9999 0000",
+                            normalizedDestination = "+31699990000",
+                            displayName = "Alex Appleseed",
+                            details = "+31 6 9999 0000",
+                            avatarUri = null,
+                        ),
                     ),
                 ),
+                draft = ShareDraftUiState(isLoading = false),
             ),
             onAction = {},
             onNavigateBack = {},
+            onGrantContactsPermission = {},
         )
     }
 }
@@ -411,15 +651,17 @@ private fun ShareIntentContentPreview() {
 @Composable
 private fun ShareIntentSelectionPreview() {
     val targets = persistentListOf(
-        ShareTargetUiState(
+        ShareTargetUiState.Conversation(
             conversationId = "1",
+            normalizedDestination = "+31612345678",
             displayName = "Jane Doe",
             details = "+31 6 1234 5678",
             avatarUri = null,
             isGroup = false,
         ),
-        ShareTargetUiState(
+        ShareTargetUiState.Conversation(
             conversationId = "2",
+            normalizedDestination = null,
             displayName = "Project group",
             details = null,
             avatarUri = null,
@@ -430,13 +672,17 @@ private fun ShareIntentSelectionPreview() {
     MessagingPreviewTheme {
         ShareIntentContent(
             uiState = State(
-                isLoading = false,
-                targets = targets,
-                selectedConversationIds = persistentSetOf("1", "2"),
-                selectedTargets = targets,
+                targets = ShareTargetsUiState(
+                    isLoading = false,
+                    recentTargets = targets,
+                    selectedIds = persistentSetOf("dest:+31612345678", "conversation:2"),
+                    selectedTargets = targets,
+                ),
+                draft = ShareDraftUiState(isLoading = false),
             ),
             onAction = {},
             onNavigateBack = {},
+            onGrantContactsPermission = {},
         )
     }
 }
@@ -446,9 +692,13 @@ private fun ShareIntentSelectionPreview() {
 private fun ShareIntentEmptyPreview() {
     MessagingPreviewTheme {
         ShareIntentContent(
-            uiState = State(isLoading = false),
+            uiState = State(
+                targets = ShareTargetsUiState(isLoading = false),
+                draft = ShareDraftUiState(isLoading = false),
+            ),
             onAction = {},
             onNavigateBack = {},
+            onGrantContactsPermission = {},
         )
     }
 }

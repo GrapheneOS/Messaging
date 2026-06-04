@@ -1,26 +1,35 @@
 package com.android.messaging.ui.shareintent.screen.delegate
 
+import com.android.messaging.data.contact.repository.ContactsRepository
+import com.android.messaging.data.shareintent.model.ShareTargetConversation
 import com.android.messaging.data.shareintent.repository.ShareTargetsRepository
 import com.android.messaging.di.core.DefaultDispatcher
+import com.android.messaging.domain.contacts.usecase.IsReadContactsPermissionGranted
+import com.android.messaging.ui.shareintent.screen.mapper.ShareContactUiStateMapper
 import com.android.messaging.ui.shareintent.screen.mapper.ShareTargetUiStateMapper
 import com.android.messaging.ui.shareintent.screen.model.ShareTargetUiState
 import com.android.messaging.ui.shareintent.screen.model.ShareTargetsUiState
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
-import kotlinx.collections.immutable.PersistentSet
+import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentList
+import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -30,61 +39,68 @@ internal interface ShareTargetsDelegate {
     fun bind(scope: CoroutineScope)
     fun setSearchActive(active: Boolean)
     fun setSearchQuery(query: String)
-    fun toggleSelection(conversationId: String)
+    fun toggleSelection(target: ShareTargetUiState)
     fun clearSelection()
-    fun currentSelection(): ImmutableSet<String>
+    fun loadMoreContacts()
+    fun onContactsPermissionGranted()
+    fun currentSelectedTargets(): ImmutableList<ShareTargetUiState>
 }
 
 internal class ShareTargetsDelegateImpl @Inject constructor(
     private val repository: ShareTargetsRepository,
-    private val mapper: ShareTargetUiStateMapper,
+    private val contactsRepository: ContactsRepository,
+    private val conversationMapper: ShareTargetUiStateMapper,
+    private val contactMapper: ShareContactUiStateMapper,
+    private val isReadContactsPermissionGranted: IsReadContactsPermissionGranted,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
 ) : ShareTargetsDelegate {
 
-    private val targets = MutableStateFlow<ImmutableList<ShareTargetUiState>?>(null)
+    private val recents = MutableStateFlow<ImmutableList<ShareTargetConversation>?>(null)
+    private val contactsState = MutableStateFlow(ContactsState())
     private val searchQuery = MutableStateFlow("")
     private val isSearchActive = MutableStateFlow(false)
-    private val mutableSelectedIds = MutableStateFlow<PersistentSet<String>>(persistentSetOf())
+    private val contactsReloadTrigger = MutableStateFlow(0)
+    private val selectedTargetsList = MutableStateFlow<PersistentList<ShareTargetUiState>>(
+        persistentListOf(),
+    )
+    private val mutableSelectedIds = MutableStateFlow<ImmutableSet<String>>(persistentSetOf())
 
-    private var isBound = false
+    private var boundScope: CoroutineScope? = null
 
     override val selectedIds: StateFlow<ImmutableSet<String>> = mutableSelectedIds.asStateFlow()
 
     override val state: Flow<ShareTargetsUiState> = combine(
-        targets,
+        recents,
+        contactsState,
         isSearchActive,
         searchQuery,
-        mutableSelectedIds,
-    ) { allTargets, active, query, selected ->
-        when (allTargets) {
-            null -> ShareTargetsUiState(
-                isLoading = true,
-                isSearchActive = active,
-                selectedConversationIds = selected,
-            )
-
-            else -> ShareTargetsUiState(
-                isLoading = false,
-                targets = filterTargets(allTargets, query),
-                isSearchActive = active,
-                selectedConversationIds = selected,
-                selectedTargets = selectedTargets(allTargets, selected),
-            )
-        }
+        combine(selectedTargetsList, mutableSelectedIds, ::Selection),
+    ) { recentConversations, contacts, active, query, selection ->
+        buildState(
+            recentConversations = recentConversations,
+            contacts = contacts,
+            isSearchActive = active,
+            query = query,
+            selection = selection,
+        )
     }.flowOn(defaultDispatcher)
 
     override fun bind(scope: CoroutineScope) {
-        if (isBound) return
-        isBound = true
+        if (boundScope != null) return
+        boundScope = scope
 
         scope.launch(defaultDispatcher) {
             repository.observeShareTargets()
-                .map(mapper::map)
-                .collect { mapped ->
-                    targets.value = mapped
-                    pruneSelection(mapped)
+                .collect { conversations ->
+                    recents.value = conversations
+                    pruneSelection(conversations)
                 }
+        }
+
+        scope.launch(defaultDispatcher) {
+            combine(searchQuery, contactsReloadTrigger) { query, _ -> query }
+                .collectLatest(::loadInitialContacts)
         }
     }
 
@@ -100,65 +116,191 @@ internal class ShareTargetsDelegateImpl @Inject constructor(
         searchQuery.value = query
     }
 
-    override fun toggleSelection(conversationId: String) {
-        mutableSelectedIds.update { selected ->
-            when (conversationId) {
-                in selected -> selected.remove(conversationId)
-                else -> selected.add(conversationId)
+    override fun toggleSelection(target: ShareTargetUiState) {
+        val current = selectedTargetsList.value
+        val next = when {
+            current.any { it.selectionId == target.selectionId } -> {
+                current.removeAll { it.selectionId == target.selectionId }
             }
+
+            else -> current.add(target)
         }
+
+        setSelection(next)
     }
 
     override fun clearSelection() {
-        mutableSelectedIds.value = persistentSetOf()
+        setSelection(persistentListOf())
     }
 
-    override fun currentSelection(): ImmutableSet<String> {
-        return mutableSelectedIds.value
+    override fun loadMoreContacts() {
+        boundScope?.launch(defaultDispatcher) {
+            loadMoreContactsPage()
+        }
     }
 
-    private fun pruneSelection(available: ImmutableList<ShareTargetUiState>) {
-        if (mutableSelectedIds.value.isEmpty()) {
+    override fun onContactsPermissionGranted() {
+        if (!contactsState.value.hasPermission) {
+            contactsReloadTrigger.update { it + 1 }
+        }
+    }
+
+    override fun currentSelectedTargets(): ImmutableList<ShareTargetUiState> {
+        return selectedTargetsList.value
+    }
+
+    private fun buildState(
+        recentConversations: ImmutableList<ShareTargetConversation>?,
+        contacts: ContactsState,
+        isSearchActive: Boolean,
+        query: String,
+        selection: Selection,
+    ): ShareTargetsUiState {
+        if (recentConversations == null) {
+            return ShareTargetsUiState(
+                isLoading = true,
+                isSearchActive = isSearchActive,
+                hasContactsPermission = contacts.hasPermission,
+                selectedIds = selection.ids,
+                selectedTargets = selection.targets,
+            )
+        }
+
+        val recentTargets = conversationMapper.map(recentConversations)
+            .filterByQuery(query)
+
+        return ShareTargetsUiState(
+            isLoading = false,
+            recentTargets = recentTargets,
+            contactTargets = contacts.contacts,
+            hasContactsPermission = contacts.hasPermission,
+            canLoadMoreContacts = contacts.canLoadMore,
+            isSearchActive = isSearchActive,
+            selectedIds = selection.ids,
+            selectedTargets = selection.targets,
+        )
+    }
+
+    private suspend fun loadInitialContacts(query: String) {
+        if (!isReadContactsPermissionGranted()) {
+            contactsState.value = ContactsState(hasPermission = false)
             return
         }
 
-        val availableIds = available.mapTo(HashSet(available.size)) { it.conversationId }
-        mutableSelectedIds.update { selected ->
-            selected.retainAll(availableIds)
+        delay(SEARCH_DEBOUNCE)
+
+        val page = contactsRepository.searchContacts(
+            query = query,
+            offset = 0
+        ).first()
+
+        contactsState.value = ContactsState(
+            contacts = contactMapper.map(page.contacts),
+            hasPermission = true,
+            canLoadMore = page.nextOffset != null,
+            nextOffset = page.nextOffset,
+            loadedQuery = query,
+        )
+    }
+
+    private suspend fun loadMoreContactsPage() {
+        val current = contactsState.value
+        val nextOffset = current.nextOffset
+
+        if (!current.hasPermission || current.isLoadingMore || nextOffset == null) {
+            return
+        }
+
+        contactsState.update { it.copy(isLoadingMore = true) }
+
+        val page = contactsRepository
+            .searchContacts(
+                query = current.loadedQuery,
+                offset = nextOffset
+            )
+            .first()
+
+        if (searchQuery.value != current.loadedQuery) {
+            contactsState.update { it.copy(isLoadingMore = false) }
+            return
+        }
+
+        val additional = contactMapper.map(page.contacts)
+
+        contactsState.update { state ->
+            state.copy(
+                contacts = mergeContacts(state.contacts, additional),
+                canLoadMore = page.nextOffset != null,
+                nextOffset = page.nextOffset,
+                isLoadingMore = false,
+            )
         }
     }
 
-    private fun selectedTargets(
-        targets: ImmutableList<ShareTargetUiState>,
-        selected: ImmutableSet<String>,
-    ): ImmutableList<ShareTargetUiState> {
-        if (selected.isEmpty()) {
-            return persistentListOf()
-        }
+    private fun mergeContacts(
+        existing: ImmutableList<ShareTargetUiState.Contact>,
+        additional: ImmutableList<ShareTargetUiState.Contact>,
+    ): ImmutableList<ShareTargetUiState.Contact> {
+        val seenKeys = existing.mapTo(HashSet()) { it.key }
 
-        val targetsById = targets.associateBy { it.conversationId }
-        return selected
-            .mapNotNull { targetsById[it] }
+        return (existing + additional.filter { seenKeys.add(it.key) })
             .toImmutableList()
     }
 
-    private fun filterTargets(
-        targets: ImmutableList<ShareTargetUiState>,
+    private fun setSelection(targets: PersistentList<ShareTargetUiState>) {
+        selectedTargetsList.value = targets
+        mutableSelectedIds.value = targets.map { it.selectionId }.toPersistentSet()
+    }
+
+    private fun pruneSelection(availableRecents: ImmutableList<ShareTargetConversation>) {
+        if (selectedTargetsList.value.isEmpty()) {
+            return
+        }
+
+        val availableConversationIds = availableRecents.mapTo(HashSet()) { it.conversationId }
+
+        val retained = selectedTargetsList.value.filterNot { target ->
+            target is ShareTargetUiState.Conversation &&
+                target.conversationId !in availableConversationIds
+        }
+
+        if (retained.size != selectedTargetsList.value.size) {
+            setSelection(retained.toPersistentList())
+        }
+    }
+
+    private fun ImmutableList<ShareTargetUiState>.filterByQuery(
         query: String,
     ): ImmutableList<ShareTargetUiState> {
         if (query.isBlank()) {
-            return targets
+            return this
         }
 
-        return targets
-            .filter { target ->
-                target.matches(query)
-            }
-            .toImmutableList()
+        return filter { target ->
+            target.matches(query)
+        }.toImmutableList()
     }
 
     private fun ShareTargetUiState.matches(query: String): Boolean {
         return displayName.contains(query, ignoreCase = true) ||
             details?.contains(query, ignoreCase = true) == true
+    }
+
+    private data class Selection(
+        val targets: PersistentList<ShareTargetUiState>,
+        val ids: ImmutableSet<String>,
+    )
+
+    private data class ContactsState(
+        val contacts: ImmutableList<ShareTargetUiState.Contact> = persistentListOf(),
+        val hasPermission: Boolean = true,
+        val canLoadMore: Boolean = false,
+        val isLoadingMore: Boolean = false,
+        val nextOffset: Int? = 0,
+        val loadedQuery: String = "",
+    )
+
+    private companion object {
+        private val SEARCH_DEBOUNCE = 150L.milliseconds
     }
 }

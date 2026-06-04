@@ -13,7 +13,7 @@ import androidx.compose.runtime.setValue
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.di.core.ApplicationCoroutineScope
 import com.android.messaging.domain.shareintent.usecase.BuildSharedConversationDraft
-import com.android.messaging.domain.shareintent.usecase.SendSharedContentToConversations
+import com.android.messaging.domain.shareintent.usecase.SendSharedContentToTargets
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.core.AppTheme
 import com.android.messaging.ui.shareintent.screen.ShareIntentEffectHandlerImpl
@@ -30,7 +30,7 @@ class ShareIntentActivity : ComponentActivity() {
     internal lateinit var applicationScope: CoroutineScope
 
     @Inject
-    internal lateinit var sendSharedContentToConversations: SendSharedContentToConversations
+    internal lateinit var sendSharedContentToTargets: SendSharedContentToTargets
 
     @Inject
     internal lateinit var buildSharedConversationDraft: BuildSharedConversationDraft
@@ -58,7 +58,7 @@ class ShareIntentActivity : ComponentActivity() {
                         applicationScope = applicationScope,
                         activity = this,
                         draft = conversationDraft,
-                        sendSharedContentToConversations = sendSharedContentToConversations,
+                        sendSharedContentToTargets = sendSharedContentToTargets,
                     )
                 }
 

@@ -55,7 +55,7 @@ import kotlinx.collections.immutable.persistentListOf
 @Composable
 internal fun SelectedTargetsBar(
     targets: ImmutableList<ShareTargetUiState>,
-    onRemove: (String) -> Unit,
+    onRemove: (ShareTargetUiState) -> Unit,
     onSend: () -> Unit,
     showSendButton: Boolean,
     modifier: Modifier = Modifier,
@@ -88,11 +88,11 @@ internal fun SelectedTargetsBar(
         ) {
             items(
                 items = targets,
-                key = { it.conversationId },
+                key = { it.key },
             ) { target ->
                 SelectedTargetChip(
                     target = target,
-                    onRemove = { onRemove(target.conversationId) },
+                    onRemove = { onRemove(target) },
                     modifier = Modifier.animateItem(),
                 )
             }
@@ -163,9 +163,13 @@ private fun SelectedTargetChip(
                     avatarUri = target.avatarUri,
                     size = SelectedChipAvatarSize,
                     fallbackIconSize = FallbackIconSize,
-                    fallbackIcon = when {
-                        target.isGroup -> Icons.Default.Group
-                        else -> Icons.Default.Person
+                    fallbackIcon = when (target) {
+                        is ShareTargetUiState.Conversation -> when {
+                            target.isGroup -> Icons.Default.Group
+                            else -> Icons.Default.Person
+                        }
+
+                        is ShareTargetUiState.Contact -> Icons.Default.Person
                     },
                 )
             }
@@ -213,15 +217,17 @@ private fun SelectedTargetsBarPreview() {
     MessagingPreviewColumn {
         SelectedTargetsBar(
             targets = persistentListOf(
-                ShareTargetUiState(
+                ShareTargetUiState.Conversation(
                     conversationId = "1",
+                    normalizedDestination = "+31612345678",
                     displayName = "Jane Doe",
                     details = "+31 6 1234 5678",
                     avatarUri = null,
                     isGroup = false,
                 ),
-                ShareTargetUiState(
+                ShareTargetUiState.Conversation(
                     conversationId = "2",
+                    normalizedDestination = null,
                     displayName = "Project group",
                     details = null,
                     avatarUri = null,

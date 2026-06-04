@@ -2,13 +2,21 @@ package com.android.messaging.ui.shareintent.screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.messaging.domain.conversation.usecase.participant.ResolveConversationId
+import com.android.messaging.domain.conversation.usecase.participant.model.ResolveConversationIdResult
+import com.android.messaging.domain.shareintent.model.ShareSendTarget
 import com.android.messaging.ui.shareintent.screen.delegate.ShareDraftDelegate
 import com.android.messaging.ui.shareintent.screen.delegate.ShareTargetsDelegate
+import com.android.messaging.ui.shareintent.screen.model.ShareDraftUiState
 import com.android.messaging.ui.shareintent.screen.model.ShareIntentAction as Action
 import com.android.messaging.ui.shareintent.screen.model.ShareIntentScreenEffect as Effect
 import com.android.messaging.ui.shareintent.screen.model.ShareIntentUiState as State
+import com.android.messaging.ui.shareintent.screen.model.ShareTargetUiState
+import com.android.messaging.ui.shareintent.screen.model.ShareTargetsUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,6 +24,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 internal interface ShareIntentScreenModel {
     val effects: Flow<Effect>
@@ -28,6 +37,7 @@ internal interface ShareIntentScreenModel {
 internal class ShareIntentViewModel @Inject constructor(
     private val targetsDelegate: ShareTargetsDelegate,
     private val draftDelegate: ShareDraftDelegate,
+    private val resolveConversationId: ResolveConversationId,
 ) : ViewModel(),
     ShareIntentScreenModel {
 
@@ -38,21 +48,10 @@ internal class ShareIntentViewModel @Inject constructor(
         targetsDelegate.state,
         draftDelegate.state,
     ) { targetsState, draftState ->
-        val hasDraftContent = draftState.text.isNotBlank() ||
-            draftState.subjectText.isNotBlank() ||
-            draftState.attachments.isNotEmpty()
-
         State(
-            isLoading = targetsState.isLoading || draftState.isLoading,
-            targets = targetsState.targets,
-            isSearchActive = targetsState.isSearchActive,
-            selectedConversationIds = targetsState.selectedConversationIds,
-            selectedTargets = targetsState.selectedTargets,
-            isReviewing = draftState.isReviewing,
-            draftText = draftState.text,
-            draftSubject = draftState.subjectText,
-            draftAttachments = draftState.attachments,
-            isSendEnabled = hasDraftContent && targetsState.selectedConversationIds.isNotEmpty(),
+            targets = targetsState,
+            draft = draftState,
+            isSendEnabled = isSendEnabled(targetsState, draftState),
         )
     }.stateIn(
         scope = viewModelScope,
@@ -77,15 +76,15 @@ internal class ShareIntentViewModel @Inject constructor(
     private fun onTargetsAction(action: Action.TargetsAction) {
         when (action) {
             is Action.TargetClicked -> {
-                _effects.tryEmit(Effect.OpenConversation(action.conversationId))
+                onTargetClicked(action.target)
             }
 
             is Action.TargetLongPressed -> {
-                targetsDelegate.toggleSelection(action.conversationId)
+                targetsDelegate.toggleSelection(action.target)
             }
 
             is Action.SelectionToggled -> {
-                targetsDelegate.toggleSelection(action.conversationId)
+                targetsDelegate.toggleSelection(action.target)
             }
 
             Action.SelectionCleared -> {
@@ -110,6 +109,14 @@ internal class ShareIntentViewModel @Inject constructor(
 
             is Action.SearchQueryChanged -> {
                 targetsDelegate.setSearchQuery(action.query)
+            }
+
+            Action.LoadMoreContacts -> {
+                targetsDelegate.loadMoreContacts()
+            }
+
+            Action.ContactsPermissionGranted -> {
+                targetsDelegate.onContactsPermissionGranted()
             }
         }
     }
@@ -139,10 +146,61 @@ internal class ShareIntentViewModel @Inject constructor(
             Action.ConfirmSendClicked -> {
                 _effects.tryEmit(
                     Effect.SendToSelected(
-                        conversationIds = targetsDelegate.currentSelection(),
+                        targets = currentSendTargets(),
                         draft = draftDelegate.currentDraft(),
                     ),
                 )
+            }
+        }
+    }
+
+    private fun isSendEnabled(
+        targets: ShareTargetsUiState,
+        draft: ShareDraftUiState,
+    ): Boolean {
+        val hasDraftContent = draft.text.isNotBlank() ||
+            draft.subjectText.isNotBlank() ||
+            draft.attachments.isNotEmpty()
+
+        return hasDraftContent && targets.selectedIds.isNotEmpty()
+    }
+
+    private fun onTargetClicked(target: ShareTargetUiState) {
+        when (target) {
+            is ShareTargetUiState.Conversation -> {
+                _effects.tryEmit(Effect.OpenConversation(target.conversationId))
+            }
+
+            is ShareTargetUiState.Contact -> {
+                openContactConversation(destination = target.destination)
+            }
+        }
+    }
+
+    private fun openContactConversation(destination: String) {
+        viewModelScope.launch {
+            val result = resolveConversationId(destinations = listOf(destination))
+
+            if (result is ResolveConversationIdResult.Resolved) {
+                _effects.tryEmit(Effect.OpenConversation(result.conversationId))
+            }
+        }
+    }
+
+    private fun currentSendTargets(): ImmutableSet<ShareSendTarget> {
+        return targetsDelegate.currentSelectedTargets()
+            .map(::toSendTarget)
+            .toImmutableSet()
+    }
+
+    private fun toSendTarget(target: ShareTargetUiState): ShareSendTarget {
+        return when (target) {
+            is ShareTargetUiState.Conversation -> {
+                ShareSendTarget.Conversation(conversationId = target.conversationId)
+            }
+
+            is ShareTargetUiState.Contact -> {
+                ShareSendTarget.Contact(destination = target.destination)
             }
         }
     }

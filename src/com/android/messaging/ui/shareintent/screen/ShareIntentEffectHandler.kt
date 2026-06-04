@@ -5,7 +5,8 @@ import androidx.core.net.toUri
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.datamodel.data.PendingAttachmentData
-import com.android.messaging.domain.shareintent.usecase.SendSharedContentToConversations
+import com.android.messaging.domain.shareintent.model.ShareSendTarget
+import com.android.messaging.domain.shareintent.usecase.SendSharedContentToTargets
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.shareintent.screen.model.ShareIntentScreenEffect as Effect
 import com.android.messaging.util.ContentType
@@ -20,7 +21,7 @@ internal class ShareIntentEffectHandlerImpl(
     private val applicationScope: CoroutineScope,
     private val activity: ComponentActivity,
     private val draft: ConversationDraft?,
-    private val sendSharedContentToConversations: SendSharedContentToConversations,
+    private val sendSharedContentToTargets: SendSharedContentToTargets,
 ) : ShareIntentEffectHandler {
 
     private val messageData: MessageData? by lazy { draft?.toMessageData() }
@@ -36,7 +37,7 @@ internal class ShareIntentEffectHandlerImpl(
             }
 
             is Effect.SendToSelected -> {
-                sendToSelected(effect.conversationIds, effect.draft)
+                sendToSelected(effect.targets, effect.draft)
             }
         }
     }
@@ -51,9 +52,12 @@ internal class ShareIntentEffectHandlerImpl(
         activity.finish()
     }
 
-    private fun sendToSelected(conversationIds: Set<String>, draft: ConversationDraft) {
+    private fun sendToSelected(
+        targets: Set<ShareSendTarget>,
+        draft: ConversationDraft,
+    ) {
         applicationScope.launch {
-            sendSharedContentToConversations(draft, conversationIds)
+            sendSharedContentToTargets(draft, targets)
         }
 
         UIIntents.get().launchConversationListActivity(activity)

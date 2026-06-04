@@ -3,6 +3,7 @@ package com.android.messaging.ui.shareintent.screen.mapper
 import androidx.core.net.toUri
 import androidx.core.text.BidiFormatter
 import androidx.core.text.TextDirectionHeuristicsCompat.LTR
+import com.android.messaging.data.contact.formatter.ContactDestinationFormatter
 import com.android.messaging.data.shareintent.model.ShareTargetConversation
 import com.android.messaging.ui.shareintent.screen.model.ShareTargetUiState
 import com.android.messaging.util.AvatarUriUtil
@@ -17,7 +18,9 @@ internal interface ShareTargetUiStateMapper {
     ): ImmutableList<ShareTargetUiState>
 }
 
-internal class ShareTargetUiStateMapperImpl @Inject constructor() : ShareTargetUiStateMapper {
+internal class ShareTargetUiStateMapperImpl @Inject constructor(
+    private val contactDestinationFormatter: ContactDestinationFormatter,
+) : ShareTargetUiStateMapper {
 
     override fun map(
         conversations: ImmutableList<ShareTargetConversation>,
@@ -33,13 +36,20 @@ internal class ShareTargetUiStateMapperImpl @Inject constructor() : ShareTargetU
         val formatter = BidiFormatter.getInstance()
         val name = conversation.name
 
-        val formattedDestination = conversation.normalizedDestination
+        val otherParticipantDestination = conversation.normalizedDestination
             ?.takeUnless { conversation.isGroup }
+
+        val formattedDestination = otherParticipantDestination
             ?.let { PhoneUtils.getDefault().formatForDisplay(it) }
         val details = formattedDestination?.takeIf { it.isNotEmpty() && it != name }
 
-        return ShareTargetUiState(
+        val canonicalDestination = otherParticipantDestination
+            ?.let { contactDestinationFormatter.canonicalize(value = it) }
+            ?.takeIf { it.isNotEmpty() }
+
+        return ShareTargetUiState.Conversation(
             conversationId = conversation.conversationId,
+            normalizedDestination = canonicalDestination,
             displayName = formatter.unicodeWrap(name, LTR),
             details = details?.let { formatter.unicodeWrap(it, LTR) },
             avatarUri = resolveAvatarUri(conversation.icon),
