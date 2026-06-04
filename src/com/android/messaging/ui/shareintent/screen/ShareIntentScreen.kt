@@ -61,7 +61,6 @@ import com.android.messaging.ui.common.components.composer.MessageComposeBar
 import com.android.messaging.ui.common.components.composer.MessageSendButton
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import com.android.messaging.ui.shareintent.common.ItemDividerHorizontalInset
-import com.android.messaging.ui.shareintent.common.NewMessageItem
 import com.android.messaging.ui.shareintent.common.ScreenContentPadding
 import com.android.messaging.ui.shareintent.common.SelectedTargetsBar
 import com.android.messaging.ui.shareintent.common.ShareAttachmentPreview
@@ -245,7 +244,6 @@ private fun ShareIntentPickerScaffold(
                         contactTargets = uiState.targets.contactTargets,
                         selectedIds = uiState.targets.selectedIds,
                         inSelectionMode = inSelectionMode,
-                        showNewMessage = !uiState.targets.isSearchActive && !inSelectionMode,
                         canLoadMoreRecent = uiState.targets.canLoadMoreRecent,
                         canCollapseRecent = uiState.targets.canCollapseRecent,
                         hasContactsPermission = uiState.targets.hasContactsPermission,
@@ -373,7 +371,6 @@ private fun ShareTargetList(
     contactTargets: List<ShareTargetUiState>,
     selectedIds: Set<String>,
     inSelectionMode: Boolean,
-    showNewMessage: Boolean,
     canLoadMoreRecent: Boolean,
     canCollapseRecent: Boolean,
     hasContactsPermission: Boolean,
@@ -404,7 +401,6 @@ private fun ShareTargetList(
             recentTargets = recentTargets,
             selectedIds = selectedIds,
             inSelectionMode = inSelectionMode,
-            showNewMessage = showNewMessage,
             canLoadMoreRecent = canLoadMoreRecent,
             canCollapseRecent = canCollapseRecent,
             onAction = onAction,
@@ -425,26 +421,16 @@ private fun LazyListScope.recentTargetsSection(
     recentTargets: List<ShareTargetUiState>,
     selectedIds: Set<String>,
     inSelectionMode: Boolean,
-    showNewMessage: Boolean,
     canLoadMoreRecent: Boolean,
     canCollapseRecent: Boolean,
     onAction: (Action) -> Unit,
 ) {
-    if (showNewMessage) {
-        item(key = "new_message") {
-            NewMessageItem(
-                onClick = { onAction(Action.NewMessageClicked) },
-                modifier = Modifier.animateItem(),
-            )
-        }
-    }
-
     itemsIndexed(
         items = recentTargets,
         key = { _, target -> target.key },
     ) { index, target ->
         Column(modifier = Modifier.animateItem()) {
-            if (showNewMessage || index > 0) {
+            if (index > 0) {
                 ItemDivider()
             }
 

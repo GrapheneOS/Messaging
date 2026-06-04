@@ -1,37 +1,14 @@
 package com.android.messaging.ui.shareintent.common
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.android.messaging.R
 import com.android.messaging.ui.common.components.ParticipantAvatar
 import com.android.messaging.ui.common.components.TwoLineListItem
 import com.android.messaging.ui.core.MessagingPreviewColumn
 import com.android.messaging.ui.shareintent.screen.model.ShareTargetUiState
-
-@Composable
-internal fun NewMessageItem(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    ShareTargetRow(
-        title = stringResource(R.string.share_new_message),
-        subtitle = null,
-        avatarUri = null,
-        colorSeedCode = null,
-        fallbackIcon = Icons.Default.Edit,
-        fallbackLabel = null,
-        isSelected = false,
-        onClick = onClick,
-        onLongClick = null,
-        modifier = modifier,
-    )
-}
 
 @Composable
 internal fun ShareTargetItem(
@@ -113,13 +90,5 @@ private fun ShareTargetItemPreview() {
             onClick = {},
             onLongClick = null,
         )
-    }
-}
-
-@PreviewLightDark
-@Composable
-private fun NewMessageItemPreview() {
-    MessagingPreviewColumn {
-        NewMessageItem(onClick = {})
     }
 }

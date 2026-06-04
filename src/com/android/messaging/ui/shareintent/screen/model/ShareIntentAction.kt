@@ -24,8 +24,6 @@ internal sealed interface ShareIntentAction {
 
     data object SendToSelectedClicked : TargetsAction
 
-    data object NewMessageClicked : TargetsAction
-
     data object SearchOpened : TargetsAction
 
     data object SearchClosed : TargetsAction

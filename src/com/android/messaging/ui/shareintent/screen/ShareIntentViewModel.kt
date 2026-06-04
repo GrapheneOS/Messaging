@@ -95,10 +95,6 @@ internal class ShareIntentViewModel @Inject constructor(
                 draftDelegate.enterReview()
             }
 
-            Action.NewMessageClicked -> {
-                _effects.tryEmit(Effect.CreateNewConversation)
-            }
-
             Action.SearchOpened -> {
                 targetsDelegate.setSearchActive(true)
             }

@@ -10,8 +10,6 @@ internal sealed interface ShareIntentScreenEffect {
         val conversationId: String,
     ) : ShareIntentScreenEffect
 
-    data object CreateNewConversation : ShareIntentScreenEffect
-
     data class SendToSelected(
         val targets: ImmutableSet<ShareSendTarget>,
         val draft: ConversationDraft,

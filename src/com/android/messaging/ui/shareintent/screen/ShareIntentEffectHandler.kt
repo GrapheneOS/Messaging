@@ -32,10 +32,6 @@ internal class ShareIntentEffectHandlerImpl(
                 openConversation(effect.conversationId)
             }
 
-            is Effect.CreateNewConversation -> {
-                createNewConversation()
-            }
-
             is Effect.SendToSelected -> {
                 sendToSelected(effect.targets, effect.draft)
             }
@@ -44,11 +40,6 @@ internal class ShareIntentEffectHandlerImpl(
 
     private fun openConversation(conversationId: String) {
         UIIntents.get().launchConversationActivity(activity, conversationId, messageData)
-        activity.finish()
-    }
-
-    private fun createNewConversation() {
-        UIIntents.get().launchCreateNewConversationActivity(activity, messageData)
         activity.finish()
     }
 
