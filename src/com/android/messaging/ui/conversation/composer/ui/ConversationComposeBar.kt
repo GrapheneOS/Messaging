@@ -40,7 +40,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
@@ -641,7 +640,7 @@ private fun SegmentCounterIndicator(
     Text(
         modifier = Modifier
             .padding(bottom = 4.dp)
-            .clearAndSetSemantics {
+            .semantics {
                 testTag = CONVERSATION_SEGMENT_COUNTER_TEST_TAG
                 contentDescription = accessibilityDescription
             },
