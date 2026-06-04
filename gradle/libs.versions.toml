@@ -33,7 +33,7 @@ recyclerview = "1.4.0"
 
 
 junit4 = "4.13.2"
-mockk = "1.14.9"
+mockk = "1.14.11"
 robolectric = "4.16.1"
 turbine = "1.2.1"
 
