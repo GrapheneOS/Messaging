@@ -179,6 +179,10 @@ public class ShareIntentActivity extends BaseBugleActivity implements
         if (contentUri == null) {
             return null;
         }
+        if (FileUtil.isInPrivateDir(contentUri)) {
+            LogUtil.w(LogUtil.BUGLE_TAG, "Ignoring shared text from a private file URI");
+            return null;
+        }
         final ContentResolver resolver = Factory.get().getApplicationContext().getContentResolver();
         BufferedReader reader = null;
         try {
