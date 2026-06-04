@@ -46,7 +46,7 @@ public class UriUtil {
     private static final String SCHEME_SMS = "sms";
     private static final String SCHEME_SMSTO = "smsto";
     private static final String SCHEME_MMS = "mms";
-    private static final String SCHEME_MMSTO = "smsto";
+    private static final String SCHEME_MMSTO = "mmsto";
     public static final HashSet<String> SMS_MMS_SCHEMES = new HashSet<String>(
         Arrays.asList(SCHEME_SMS, SCHEME_MMS, SCHEME_SMSTO, SCHEME_MMSTO));
     private static final String SCHEME_HTTP = "http";
