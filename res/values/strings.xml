@@ -917,18 +917,20 @@
     <string name="share_selection_count">%1$d selected</string>
     <!-- Accessibility : Content description for clearing the current multi conversation selection -->
     <string name="share_selection_clear">Clear selection</string>
-    <!-- Accessibility : Content description for sending the shared content to the selected conversations -->
-    <string name="share_selection_send">Send</string>
+    <!-- Accessibility : Content description for advancing to review the message before sending to the selected conversations -->
+    <string name="share_selection_next">Next</string>
     <!-- Accessibility : Content description for removing a conversation from the current multi conversation selection -->
     <string name="share_selection_remove">Remove %1$s from selection</string>
-    <!-- Section header above the list of all device contacts in the share conversation picker -->
-    <string name="share_contacts_section_title">Contacts</string>
+    <!-- Section header above the list of recent conversations in the share conversation picker -->
+    <string name="share_recent_conversations_title">Recent conversations</string>
     <!-- Button that reveals more recent conversations in the share conversation picker -->
     <string name="share_recent_show_more_action">Show more</string>
     <!-- Button that collapses recent conversations in the share conversation picker -->
     <string name="share_recent_show_less_action">Show less</string>
+    <!-- Title of the card prompting contacts access in the share conversation picker -->
+    <string name="share_contacts_permission_title">Share with your contacts</string>
     <!-- Explanation shown when contacts access is not granted in the share conversation picker -->
-    <string name="share_contacts_permission_rationale">Allow access to share with your contacts</string>
+    <string name="share_contacts_permission_rationale">Give access to your contacts to quickly find and message the people you know.</string>
     <!-- Button that requests contacts access in the share conversation picker -->
     <string name="share_contacts_permission_action">Allow access</string>
 
