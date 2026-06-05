@@ -420,7 +420,6 @@
     <string name="message_image_content_description" msgid="621604138442762130">"प्रतिमा"</string>
     <string name="activity_not_found_message" msgid="2355153262520375529">"योग्य अनुप्रयोग शोधणे शक्य झाले नाही"</string>
     <string name="chips_delete_content_description" msgid="4655699207140895492">"प्राप्तकर्ता काढा"</string>
-    <string name="share_new_message" msgid="2135955613694195483">"नवीन संदेश"</string>
     <string name="share_cancel" msgid="6666929391961668469">"रद्द करा"</string>
     <string name="apn_edit" msgid="2134993966166435648">"प्रवेश बिंदू संपादित करा"</string>
     <string name="apn_not_set" msgid="463728018542184151">"सेट केले नाही"</string>

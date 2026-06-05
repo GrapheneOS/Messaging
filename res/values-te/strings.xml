@@ -420,7 +420,6 @@
     <string name="message_image_content_description" msgid="621604138442762130">"చిత్రం"</string>
     <string name="activity_not_found_message" msgid="2355153262520375529">"సముచిత అనువర్తనాన్ని కనుగొనడం సాధ్యపడలేదు"</string>
     <string name="chips_delete_content_description" msgid="4655699207140895492">"స్వీకర్తను తీసివేయండి"</string>
-    <string name="share_new_message" msgid="2135955613694195483">"కొత్త సందేశం"</string>
     <string name="share_cancel" msgid="6666929391961668469">"రద్దు చేయి"</string>
     <string name="apn_edit" msgid="2134993966166435648">"ప్రాప్యత స్థానాన్ని సవరించు"</string>
     <string name="apn_not_set" msgid="463728018542184151">"సెట్ చేయలేదు"</string>

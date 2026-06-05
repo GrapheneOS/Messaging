@@ -420,7 +420,6 @@
     <string name="message_image_content_description" msgid="621604138442762130">"படம்"</string>
     <string name="activity_not_found_message" msgid="2355153262520375529">"தகுந்த பயன்பாட்டைக் கண்டுபிடிக்க இயலவில்லை"</string>
     <string name="chips_delete_content_description" msgid="4655699207140895492">"பெறுநரை அகற்று"</string>
-    <string name="share_new_message" msgid="2135955613694195483">"புதிய செய்தி"</string>
     <string name="share_cancel" msgid="6666929391961668469">"ரத்துசெய்"</string>
     <string name="apn_edit" msgid="2134993966166435648">"ஆக்சஸ் பாயிண்ட்டைத் திருத்து"</string>
     <string name="apn_not_set" msgid="463728018542184151">"அமைக்கப்படவில்லை"</string>

@@ -524,7 +524,6 @@
     <string name="message_image_content_description" msgid="621604138442762130">"صورة"</string>
     <string name="activity_not_found_message" msgid="2355153262520375529">"تعذر العثور على تطبيق مناسب"</string>
     <string name="chips_delete_content_description" msgid="4655699207140895492">"إزالة المستلم"</string>
-    <string name="share_new_message" msgid="2135955613694195483">"رسالة جديدة"</string>
     <string name="share_cancel" msgid="6666929391961668469">"إلغاء"</string>
     <string name="apn_edit" msgid="2134993966166435648">"تعديل نقطة الدخول"</string>
     <string name="apn_not_set" msgid="463728018542184151">"لم يتم التعيين"</string>

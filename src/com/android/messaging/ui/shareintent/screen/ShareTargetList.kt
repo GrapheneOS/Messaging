@@ -58,6 +58,7 @@ internal fun ShareTargetList(
     contactTargets: List<ShareTargetUiState>,
     selectedIds: Set<String>,
     inSelectionMode: Boolean,
+    allowMultiSelect: Boolean,
     canLoadMoreRecent: Boolean,
     canCollapseRecent: Boolean,
     hasContactsPermission: Boolean,
@@ -88,6 +89,7 @@ internal fun ShareTargetList(
             recentTargets = recentTargets,
             selectedIds = selectedIds,
             inSelectionMode = inSelectionMode,
+            allowMultiSelect = allowMultiSelect,
             canLoadMoreRecent = canLoadMoreRecent,
             canCollapseRecent = canCollapseRecent,
             onAction = onAction,
@@ -97,6 +99,7 @@ internal fun ShareTargetList(
             contactTargets = contactTargets,
             selectedIds = selectedIds,
             inSelectionMode = inSelectionMode,
+            allowMultiSelect = allowMultiSelect,
             hasContactsPermission = hasContactsPermission,
             onAction = onAction,
             onGrantContactsPermission = onGrantContactsPermission,
@@ -108,6 +111,7 @@ private fun LazyListScope.recentTargetsSection(
     recentTargets: List<ShareTargetUiState>,
     selectedIds: Set<String>,
     inSelectionMode: Boolean,
+    allowMultiSelect: Boolean,
     canLoadMoreRecent: Boolean,
     canCollapseRecent: Boolean,
     onAction: (Action) -> Unit,
@@ -134,6 +138,7 @@ private fun LazyListScope.recentTargetsSection(
                 target = target,
                 selectedIds = selectedIds,
                 inSelectionMode = inSelectionMode,
+                allowMultiSelect = allowMultiSelect,
                 onAction = onAction,
             )
         }
@@ -166,6 +171,7 @@ private fun LazyListScope.contactsSection(
     contactTargets: List<ShareTargetUiState>,
     selectedIds: Set<String>,
     inSelectionMode: Boolean,
+    allowMultiSelect: Boolean,
     hasContactsPermission: Boolean,
     onAction: (Action) -> Unit,
     onGrantContactsPermission: () -> Unit,
@@ -207,6 +213,7 @@ private fun LazyListScope.contactsSection(
                             target = target,
                             selectedIds = selectedIds,
                             inSelectionMode = inSelectionMode,
+                            allowMultiSelect = allowMultiSelect,
                             onAction = onAction,
                         )
                     }
@@ -230,6 +237,7 @@ private fun ShareTargetRow(
     target: ShareTargetUiState,
     selectedIds: Set<String>,
     inSelectionMode: Boolean,
+    allowMultiSelect: Boolean,
     onAction: (Action) -> Unit,
 ) {
     ShareTargetItem(
@@ -244,7 +252,7 @@ private fun ShareTargetRow(
         },
         onLongClick = {
             onAction(Action.TargetLongPressed(target))
-        },
+        }.takeIf { allowMultiSelect },
     )
 }
 

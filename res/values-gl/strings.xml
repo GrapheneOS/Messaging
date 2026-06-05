@@ -420,7 +420,6 @@
     <string name="message_image_content_description" msgid="621604138442762130">"Imaxe"</string>
     <string name="activity_not_found_message" msgid="2355153262520375529">"Non se puido encontrar unha aplicación adecuada"</string>
     <string name="chips_delete_content_description" msgid="4655699207140895492">"Elimina o destinatario"</string>
-    <string name="share_new_message" msgid="2135955613694195483">"Mensaxe nova"</string>
     <string name="share_cancel" msgid="6666929391961668469">"Cancelar"</string>
     <string name="apn_edit" msgid="2134993966166435648">"Editar punto de acceso"</string>
     <string name="apn_not_set" msgid="463728018542184151">"Sen configurar"</string>
