@@ -68,6 +68,7 @@ internal fun ShareIntentScreen(
     effectHandler: ShareIntentEffectHandler,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
+    allowMultiSelect: Boolean = true,
     screenModel: ShareIntentScreenModel = viewModel<ShareIntentViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
@@ -108,6 +109,7 @@ internal fun ShareIntentScreen(
         onGrantContactsPermission = {
             permissionLauncher.launch(Manifest.permission.READ_CONTACTS)
         },
+        allowMultiSelect = allowMultiSelect,
         modifier = modifier,
     )
 }
@@ -126,6 +128,7 @@ private fun ShareIntentContent(
     onNavigateBack: () -> Unit,
     onGrantContactsPermission: () -> Unit,
     modifier: Modifier = Modifier,
+    allowMultiSelect: Boolean = true,
 ) {
     val searchState = rememberTextFieldState()
 
@@ -155,6 +158,7 @@ private fun ShareIntentContent(
             onAction = onAction,
             onNavigateBack = onNavigateBack,
             onGrantContactsPermission = onGrantContactsPermission,
+            allowMultiSelect = allowMultiSelect,
             modifier = modifier,
         )
     }
@@ -187,6 +191,7 @@ private fun ShareIntentPickerScaffold(
     onAction: (Action) -> Unit,
     onNavigateBack: () -> Unit,
     onGrantContactsPermission: () -> Unit,
+    allowMultiSelect: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val inSelectionMode = uiState.targets.selectedIds.isNotEmpty()
@@ -224,6 +229,7 @@ private fun ShareIntentPickerScaffold(
                         contactTargets = uiState.targets.contactTargets,
                         selectedIds = uiState.targets.selectedIds,
                         inSelectionMode = inSelectionMode,
+                        allowMultiSelect = allowMultiSelect,
                         canLoadMoreRecent = uiState.targets.canLoadMoreRecent,
                         canCollapseRecent = uiState.targets.canCollapseRecent,
                         hasContactsPermission = uiState.targets.hasContactsPermission,

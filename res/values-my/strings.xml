@@ -420,7 +420,6 @@
     <string name="message_image_content_description" msgid="621604138442762130">"ပုံ"</string>
     <string name="activity_not_found_message" msgid="2355153262520375529">"သင့်တော်သည့် အပလီကေးရှင်းကို ရှာမရခဲ့"</string>
     <string name="chips_delete_content_description" msgid="4655699207140895492">"အဝေးမှ လက်ခံရရှိသူ"</string>
-    <string name="share_new_message" msgid="2135955613694195483">"စာ အသစ်"</string>
     <string name="share_cancel" msgid="6666929391961668469">"ဖျက်သိမ်းရန်"</string>
     <string name="apn_edit" msgid="2134993966166435648">"ဝင်ရောက်မည့်ပွိုင့်အား ပြင်ဆင်ရန်"</string>
     <string name="apn_not_set" msgid="463728018542184151">"မသတ်မှတ်ထားပါ"</string>

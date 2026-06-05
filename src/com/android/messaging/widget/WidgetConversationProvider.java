@@ -32,7 +32,6 @@ import com.android.messaging.R;
 import com.android.messaging.datamodel.MessagingContentProvider;
 import com.android.messaging.datamodel.data.ConversationListItemData;
 import com.android.messaging.ui.UIIntents;
-import com.android.messaging.ui.WidgetPickConversationActivity;
 import com.android.messaging.util.LogUtil;
 import com.android.messaging.util.OsUtil;
 import com.android.messaging.util.SafeAsyncTask;
@@ -109,7 +108,7 @@ public class WidgetConversationProvider extends BaseWidgetProvider {
             remoteViews.setViewVisibility(R.id.widget_configuration, View.GONE);
 
             final String conversationId =
-                    WidgetPickConversationActivity.getConversationIdPref(appWidgetId);
+                    WidgetConversationPrefs.getConversationIdPref(appWidgetId);
             final boolean isMainThread =  Looper.myLooper() == Looper.getMainLooper();
             // If we're running on the UI thread, we can't do the DB access needed to get the
             // conversation data. We'll do excute this again off of the UI thread.
@@ -190,11 +189,11 @@ public class WidgetConversationProvider extends BaseWidgetProvider {
                 WidgetConversationProvider.class))) {
             // Retrieve the persisted information for this widget from preferences.
             final String widgetConvId =
-                    WidgetPickConversationActivity.getConversationIdPref(appWidgetId);
+                    WidgetConversationPrefs.getConversationIdPref(appWidgetId);
 
             if (widgetConvId == null || widgetConvId.equals(conversationId)) {
                 if (widgetConvId != null) {
-                    WidgetPickConversationActivity.deleteConversationIdPref(appWidgetId);
+                    WidgetConversationPrefs.deleteConversationIdPref(appWidgetId);
                 }
                 rebuildWidget(context, appWidgetId);
             }
@@ -216,7 +215,7 @@ public class WidgetConversationProvider extends BaseWidgetProvider {
                 WidgetConversationProvider.class))) {
             // Retrieve the persisted information for this widget from preferences.
             final String widgetConvId =
-                    WidgetPickConversationActivity.getConversationIdPref(appWidgetId);
+                    WidgetConversationPrefs.getConversationIdPref(appWidgetId);
 
             if (widgetConvId != null && widgetConvId.equals(conversationId)) {
                 rebuildWidget(context, appWidgetId);
@@ -257,7 +256,7 @@ public class WidgetConversationProvider extends BaseWidgetProvider {
             for (final int widgetId : appWidgetIds) {
                 // Retrieve the persisted information for this widget from preferences.
                 final String widgetConvId =
-                        WidgetPickConversationActivity.getConversationIdPref(widgetId);
+                        WidgetConversationPrefs.getConversationIdPref(widgetId);
                 if (conversationId == null || TextUtils.equals(conversationId, widgetConvId)) {
                     // Update the list portion (i.e. the message list) of the widget
                     appWidgetManager.notifyAppWidgetViewDataChanged(widgetId, getListId());
@@ -297,7 +296,7 @@ public class WidgetConversationProvider extends BaseWidgetProvider {
 
     @Override
     protected void deletePreferences(final int widgetId) {
-        WidgetPickConversationActivity.deleteConversationIdPref(widgetId);
+        WidgetConversationPrefs.deleteConversationIdPref(widgetId);
     }
 
     /**
@@ -309,7 +308,7 @@ public class WidgetConversationProvider extends BaseWidgetProvider {
      */
     public static boolean isWidgetConfigured(final int appWidgetId) {
         final String conversationId =
-                WidgetPickConversationActivity.getConversationIdPref(appWidgetId);
+                WidgetConversationPrefs.getConversationIdPref(appWidgetId);
         return !TextUtils.isEmpty(conversationId);
     }
 

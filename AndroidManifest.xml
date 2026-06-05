@@ -474,13 +474,20 @@
                  android:permission="android.permission.BIND_REMOTEVIEWS"
                  android:exported="false" />
 
-        <activity android:name=".ui.WidgetPickConversationActivity"
-            android:theme="@style/BugleTheme"
-            android:exported="true">
+        <activity android:name=".ui.shareintent.WidgetPickConversationActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="false"
+            android:theme="@style/Theme.Compose"
+            android:windowSoftInputMode="stateHidden|adjustResize" />
+
+        <activity-alias
+            android:name=".ui.WidgetPickConversationActivity"
+            android:exported="true"
+            android:targetActivity=".ui.shareintent.WidgetPickConversationActivity">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
-        </activity>
+        </activity-alias>
     </application>
 
 </manifest>

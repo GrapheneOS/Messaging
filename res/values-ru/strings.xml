@@ -472,7 +472,6 @@
     <string name="message_image_content_description" msgid="621604138442762130">"Изображение"</string>
     <string name="activity_not_found_message" msgid="2355153262520375529">"Подходящее приложение не найдено"</string>
     <string name="chips_delete_content_description" msgid="4655699207140895492">"Удалить получателя."</string>
-    <string name="share_new_message" msgid="2135955613694195483">"Новое сообщение"</string>
     <string name="share_cancel" msgid="6666929391961668469">"Отмена"</string>
     <string name="apn_edit" msgid="2134993966166435648">"Настройки точки доступа"</string>
     <string name="apn_not_set" msgid="463728018542184151">"Не настроено"</string>

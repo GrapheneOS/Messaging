@@ -420,7 +420,6 @@
     <string name="message_image_content_description" msgid="621604138442762130">"चित्र"</string>
     <string name="activity_not_found_message" msgid="2355153262520375529">"उपयुक्त ऐप्लिकेशन नहीं मिला"</string>
     <string name="chips_delete_content_description" msgid="4655699207140895492">"प्राप्तकर्ता को निकालें"</string>
-    <string name="share_new_message" msgid="2135955613694195483">"नया संदेश"</string>
     <string name="share_cancel" msgid="6666929391961668469">"अभी नहीं"</string>
     <string name="apn_edit" msgid="2134993966166435648">"पहुंच बिंदु संपादित करें"</string>
     <string name="apn_not_set" msgid="463728018542184151">"सेट नहीं है"</string>

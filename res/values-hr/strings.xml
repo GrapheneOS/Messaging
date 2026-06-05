@@ -446,7 +446,6 @@
     <string name="message_image_content_description" msgid="621604138442762130">"Slika"</string>
     <string name="activity_not_found_message" msgid="2355153262520375529">"Nije pronađena odgovarajuća aplikacija"</string>
     <string name="chips_delete_content_description" msgid="4655699207140895492">"Uklanjanje primatelja"</string>
-    <string name="share_new_message" msgid="2135955613694195483">"Nova poruka"</string>
     <string name="share_cancel" msgid="6666929391961668469">"Odustani"</string>
     <string name="apn_edit" msgid="2134993966166435648">"Uređivanje pristupne točke"</string>
     <string name="apn_not_set" msgid="463728018542184151">"Nije postavljeno"</string>

@@ -420,7 +420,6 @@
     <string name="message_image_content_description" msgid="621604138442762130">"圖片"</string>
     <string name="activity_not_found_message" msgid="2355153262520375529">"找不到適用的應用程式"</string>
     <string name="chips_delete_content_description" msgid="4655699207140895492">"移除收件者"</string>
-    <string name="share_new_message" msgid="2135955613694195483">"新訊息"</string>
     <string name="share_cancel" msgid="6666929391961668469">"取消"</string>
     <string name="apn_edit" msgid="2134993966166435648">"編輯存取點"</string>
     <string name="apn_not_set" msgid="463728018542184151">"未設定"</string>

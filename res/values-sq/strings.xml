@@ -420,7 +420,6 @@
     <string name="message_image_content_description" msgid="621604138442762130">"Imazh"</string>
     <string name="activity_not_found_message" msgid="2355153262520375529">"Nuk arriti të gjente një aplikacion të përshtatshëm"</string>
     <string name="chips_delete_content_description" msgid="4655699207140895492">"Hiq marrësin"</string>
-    <string name="share_new_message" msgid="2135955613694195483">"Mesazh i ri"</string>
     <string name="share_cancel" msgid="6666929391961668469">"Anulo"</string>
     <string name="apn_edit" msgid="2134993966166435648">"Redakto pikën e qasjes"</string>
     <string name="apn_not_set" msgid="463728018542184151">"Nuk është vendosur"</string>

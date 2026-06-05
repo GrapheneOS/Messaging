@@ -420,7 +420,6 @@
     <string name="message_image_content_description" msgid="621604138442762130">"სურათი"</string>
     <string name="activity_not_found_message" msgid="2355153262520375529">"შესაბამისი აპლიკაცია ვერ მოიძებნა"</string>
     <string name="chips_delete_content_description" msgid="4655699207140895492">"მიმღების ამოღება"</string>
-    <string name="share_new_message" msgid="2135955613694195483">"ახალი შეტყობინება"</string>
     <string name="share_cancel" msgid="6666929391961668469">"გაუქმება"</string>
     <string name="apn_edit" msgid="2134993966166435648">"წვდომის წერტილის რედაქტირება"</string>
     <string name="apn_not_set" msgid="463728018542184151">"არ არის დაყენებული"</string>

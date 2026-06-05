@@ -420,7 +420,6 @@
     <string name="message_image_content_description" msgid="621604138442762130">"تصویر"</string>
     <string name="activity_not_found_message" msgid="2355153262520375529">"ایک مناسب ایپلیکیشن تلاش نہیں کی جا سکی"</string>
     <string name="chips_delete_content_description" msgid="4655699207140895492">"وصول کنندہ کو ہٹائیں"</string>
-    <string name="share_new_message" msgid="2135955613694195483">"نیا پیغام"</string>
     <string name="share_cancel" msgid="6666929391961668469">"منسوخ کریں"</string>
     <string name="apn_edit" msgid="2134993966166435648">"رسائی کی جگہ میں ترمیم کریں"</string>
     <string name="apn_not_set" msgid="463728018542184151">"سیٹ نہیں ہے"</string>

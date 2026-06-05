@@ -422,7 +422,6 @@
     <string name="message_image_content_description" msgid="621604138442762130">"तस्बिर"</string>
     <string name="activity_not_found_message" msgid="2355153262520375529">"उपयुक्त अनुप्रयोग फेला पार्न सकिएन"</string>
     <string name="chips_delete_content_description" msgid="4655699207140895492">"प्राप्तकर्ता हटाउनुहोस्"</string>
-    <string name="share_new_message" msgid="2135955613694195483">"नयाँ सन्देश"</string>
     <string name="share_cancel" msgid="6666929391961668469">"रद्द गर्नुहोस्"</string>
     <string name="apn_edit" msgid="2134993966166435648">"पहुँच बिन्दु सम्पादन गर्नुहोस्"</string>
     <string name="apn_not_set" msgid="463728018542184151">"सेट गरेको छैन"</string>

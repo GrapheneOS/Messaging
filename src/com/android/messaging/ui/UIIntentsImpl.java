@@ -55,6 +55,7 @@ import com.android.messaging.ui.conversationsettings.ConversationSettingsActivit
 import com.android.messaging.ui.debug.DebugMmsConfigActivity;
 import com.android.messaging.ui.permissioncheck.PermissionCheckActivity;
 import com.android.messaging.ui.photoviewer.BuglePhotoViewActivity;
+import com.android.messaging.ui.shareintent.WidgetPickConversationActivity;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.ContentType;
 import com.android.messaging.util.ConversationIdSet;
