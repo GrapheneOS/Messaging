@@ -1,23 +1,22 @@
 package com.android.messaging.ui.conversation.messages.ui.message
 
 import android.net.Uri
-import android.util.Patterns
-import android.webkit.URLUtil
 import com.android.messaging.R
 import com.android.messaging.ui.conversation.messages.model.attachment.ConversationMessageAttachment
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageContent
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.ui.attachment.buildConversationAttachmentSections
-import com.android.messaging.util.YouTubeUtil
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
 internal fun buildConversationMessageContent(
     message: ConversationMessageUiModel,
     subjectText: String?,
 ): ConversationMessageContent {
-    val attachments = buildConversationMessageAttachments(message = message)
+    val attachments = message
+        .parts
+        .mapIndexedNotNull(::toConversationMessageAttachment)
+        .toImmutableList()
     val attachmentSections = buildConversationAttachmentSections(
         attachments = attachments,
         vCardSubtitleTextResIdOverride = vCardSubtitleTextResIdOverride(message),
@@ -45,31 +44,6 @@ private fun vCardSubtitleTextResIdOverride(message: ConversationMessageUiModel):
         message.canResendMessage -> R.string.message_status_send_failed
         else -> null
     }
-}
-
-private fun buildConversationMessageAttachments(
-    message: ConversationMessageUiModel,
-): ImmutableList<ConversationMessageAttachment> {
-    val attachmentItems = message
-        .parts
-        .mapIndexedNotNull(::toConversationMessageAttachment)
-        .toImmutableList()
-
-    val hasImageAttachment = attachmentItems.any { attachment ->
-        attachment is ConversationMessageAttachment.Media &&
-            attachment.part is ConversationMessagePartUiModel.Attachment.Image
-    }
-
-    if (hasImageAttachment) {
-        return attachmentItems
-    }
-
-    return message.text
-        ?.let(::findSingleYouTubePreview)
-        ?.let { youtubePreview ->
-            (attachmentItems + youtubePreview).toImmutableList()
-        }
-        ?: attachmentItems
 }
 
 private fun toConversationMessageAttachment(
@@ -144,39 +118,4 @@ private fun ConversationMessagePartUiModel.Attachment.isSupportedAttachment(): B
 
         is ConversationMessagePartUiModel.Attachment.File -> false
     }
-}
-
-private fun findSingleYouTubePreview(
-    text: String,
-): ConversationMessageAttachment.YouTubePreview? {
-    return extractConversationWebUrls(text)
-        .asSequence()
-        .mapNotNull { sourceUrl ->
-            val thumbnailUrl = YouTubeUtil
-                .getYoutubePreviewImageLink(sourceUrl)
-                ?: return@mapNotNull null
-
-            ConversationMessageAttachment.YouTubePreview(
-                key = "youtube:$sourceUrl",
-                sourceUrl = sourceUrl,
-                thumbnailUrl = thumbnailUrl,
-            )
-        }
-        .take(2)
-        .singleOrNull()
-}
-
-private fun extractConversationWebUrls(text: String): Set<String> {
-    val webUrlMatcher = Patterns.WEB_URL.matcher(text)
-    val urls = LinkedHashSet<String>()
-
-    while (webUrlMatcher.find()) {
-        webUrlMatcher
-            .group()
-            .takeIf { it.isNotBlank() }
-            ?.let(URLUtil::guessUrl)
-            ?.let(urls::add)
-    }
-
-    return urls
 }

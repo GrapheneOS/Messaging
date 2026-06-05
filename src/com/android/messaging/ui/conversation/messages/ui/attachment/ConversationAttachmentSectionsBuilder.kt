@@ -45,7 +45,6 @@ private fun isGalleryVisualAttachment(
             attachment.part is ConversationMessagePartUiModel.Attachment.Image
         }
 
-        is ConversationMessageAttachment.YouTubePreview -> true
         is ConversationMessageAttachment.Unsupported -> false
     }
 }
@@ -57,9 +56,7 @@ private fun isStandaloneVisualAttachment(
         is ConversationMessageAttachment.Media ->
             attachment.part is ConversationMessagePartUiModel.Attachment.Video
 
-        is ConversationMessageAttachment.Unsupported,
-        is ConversationMessageAttachment.YouTubePreview,
-        -> false
+        is ConversationMessageAttachment.Unsupported -> false
     }
 }
 
@@ -98,8 +95,6 @@ private fun isInlineAttachment(
         is ConversationMessageAttachment.Media,
         is ConversationMessageAttachment.Unsupported,
         -> true
-
-        else -> false
     }
 }
 
@@ -122,8 +117,6 @@ private fun toInlineAttachment(
                 openAction = attachment.toConversationAttachmentOpenActionOrNull(),
             )
         }
-
-        is ConversationMessageAttachment.YouTubePreview -> null
     }
 }
 

@@ -561,14 +561,6 @@ private fun ConversationMessageAttachmentContentPreview() {
             ),
             simDisplayName = "Work",
         )
-        ConversationMessagePreviewItem(
-            message = previewOutgoingMessage(
-                messageId = "outgoing-youtube-preview",
-                text = "Watch this: https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-                status = Status.Outgoing.Delivered,
-            ),
-            simDisplayName = "Personal",
-        )
     }
 }
 

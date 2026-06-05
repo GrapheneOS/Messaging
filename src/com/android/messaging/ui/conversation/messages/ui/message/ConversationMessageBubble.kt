@@ -660,15 +660,6 @@ private fun ConversationMessageBubbleAttachmentSurfacePreview() {
             isSelectionMode = true,
             simDisplayName = "Work",
         )
-        ConversationMessageBubblePreviewItem(
-            message = previewOutgoingMessage(
-                messageId = "bubble-outgoing-youtube",
-                text = "Watch this: https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-                status = Status.Outgoing.Delivered,
-            ),
-            bubbleLayoutMode = ConversationMessageBubbleLayoutMode.AttachmentsInSurface,
-            simDisplayName = "Personal",
-        )
     }
 }
 

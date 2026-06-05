@@ -561,16 +561,6 @@ private fun ConversationMessageRowsAttachmentPreview() {
             simDisplayName = "Work",
             metadataText = "18:11 \u2022 Failed",
         )
-
-        ConversationMessageRowsPreviewItem(
-            message = previewOutgoingMessage(
-                messageId = "rows-attachments-youtube-preview",
-                text = "Reference clip: https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-                status = Status.Outgoing.Delivered,
-            ),
-            simDisplayName = "Personal",
-            metadataText = "18:12 \u2022 Delivered",
-        )
     }
 }
 
