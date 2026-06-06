@@ -33,7 +33,10 @@ internal class SendSharedContentToConversationsImpl @Inject constructor(
             return
         }
 
-        val drafts = perConversationDrafts(draft, conversationIds.size)
+        val drafts = perConversationDrafts(
+            draft = draft,
+            count = conversationIds.size,
+        )
 
         conversationIds.forEachIndexed { index, conversationId ->
             sendToConversation(conversationId, drafts[index])
@@ -41,19 +44,19 @@ internal class SendSharedContentToConversationsImpl @Inject constructor(
     }
 
     private suspend fun perConversationDrafts(
-        template: ConversationDraft,
+        draft: ConversationDraft,
         count: Int,
     ): List<ConversationDraft> {
-        if (template.attachments.isEmpty()) {
-            return List(count) { template }
+        if (draft.attachments.isEmpty()) {
+            return List(count) { draft }
         }
 
         return withContext(ioDispatcher) {
             List(count) { index ->
                 when (index) {
-                    0 -> template
-                    else -> template.copy(
-                        attachments = copyAttachments(template.attachments),
+                    0 -> draft
+                    else -> draft.copy(
+                        attachments = copyAttachments(draft.attachments),
                     )
                 }
             }
@@ -64,12 +67,18 @@ internal class SendSharedContentToConversationsImpl @Inject constructor(
         attachments: ImmutableList<ConversationDraftAttachment>,
     ): ImmutableList<ConversationDraftAttachment> {
         return attachments.mapNotNull { attachment ->
-            val copyUri = UriUtil.persistContentToScratchSpace(attachment.contentUri.toUri())
-            copyUri?.let { attachment.copy(contentUri = it.toString()) }
+            UriUtil.persistContentToScratchSpace(
+                attachment.contentUri.toUri(),
+            )?.let {
+                attachment.copy(contentUri = it.toString())
+            }
         }.toImmutableList()
     }
 
-    private suspend fun sendToConversation(conversationId: String, draft: ConversationDraft) {
+    private suspend fun sendToConversation(
+        conversationId: String,
+        draft: ConversationDraft,
+    ) {
         try {
             sendConversationDraft(conversationId, draft).collect()
         } catch (exception: SendConversationDraftException) {

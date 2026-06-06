@@ -92,7 +92,7 @@ internal class SharedAttachmentRepositoryImpl @Inject constructor(
                     else -> null
                 }
             }
-        }.getOrNull()?.takeIf { name -> name.isNotBlank() }
+        }.getOrNull()?.takeIf(String::isNotBlank)
     }
 
     private companion object {

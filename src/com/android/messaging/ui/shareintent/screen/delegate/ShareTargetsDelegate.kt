@@ -5,8 +5,10 @@ import com.android.messaging.data.shareintent.model.ShareTargetConversation
 import com.android.messaging.data.shareintent.repository.ShareTargetsRepository
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.domain.contacts.usecase.IsReadContactsPermissionGranted
+import com.android.messaging.ui.shareintent.screen.mapper.ShareContactSectionMapper
 import com.android.messaging.ui.shareintent.screen.mapper.ShareContactUiStateMapper
 import com.android.messaging.ui.shareintent.screen.mapper.ShareTargetUiStateMapper
+import com.android.messaging.ui.shareintent.screen.model.ShareContactSection
 import com.android.messaging.ui.shareintent.screen.model.ShareTargetUiState
 import com.android.messaging.ui.shareintent.screen.model.ShareTargetsUiState
 import javax.inject.Inject
@@ -53,6 +55,7 @@ internal class ShareTargetsDelegateImpl @Inject constructor(
     private val contactsRepository: ContactsRepository,
     private val conversationMapper: ShareTargetUiStateMapper,
     private val contactMapper: ShareContactUiStateMapper,
+    private val contactSectionMapper: ShareContactSectionMapper,
     private val isReadContactsPermissionGranted: IsReadContactsPermissionGranted,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
@@ -177,7 +180,7 @@ internal class ShareTargetsDelegateImpl @Inject constructor(
         return ShareTargetsUiState(
             isLoading = false,
             recentTargets = recentTargets.targets,
-            contactTargets = contacts.contacts,
+            contactSections = contacts.sections,
             canLoadMoreRecent = recentTargets.canLoadMore,
             canCollapseRecent = recentTargets.canCollapse,
             hasContactsPermission = contacts.hasPermission,
@@ -197,22 +200,25 @@ internal class ShareTargetsDelegateImpl @Inject constructor(
             return RecentTargetsState(isLoading = true)
         }
 
-        if (query.isNotBlank()) {
-            val filteredTargets = conversationMapper.map(recentConversations)
-                .filterByQuery(query)
+        return when {
+            query.isNotBlank() -> {
+                RecentTargetsState(
+                    targets = conversationMapper.map(recentConversations).filterByQuery(query),
+                )
+            }
 
-            return RecentTargetsState(targets = filteredTargets)
+            else -> {
+                val visibleConversations = recentConversations
+                    .take(visibleLimit)
+                    .toImmutableList()
+
+                RecentTargetsState(
+                    targets = conversationMapper.map(visibleConversations),
+                    canLoadMore = visibleConversations.size < recentConversations.size,
+                    canCollapse = visibleLimit > INITIAL_RECENT_TARGET_COUNT,
+                )
+            }
         }
-
-        val visibleConversations = recentConversations
-            .take(visibleLimit)
-            .toImmutableList()
-
-        return RecentTargetsState(
-            targets = conversationMapper.map(visibleConversations),
-            canLoadMore = visibleConversations.size < recentConversations.size,
-            canCollapse = visibleLimit > INITIAL_RECENT_TARGET_COUNT,
-        )
     }
 
     private suspend fun loadInitialContacts(query: String) {
@@ -228,8 +234,11 @@ internal class ShareTargetsDelegateImpl @Inject constructor(
             offset = 0
         ).first()
 
+        val contacts = contactMapper.map(page.contacts)
+
         contactsState.value = ContactsState(
-            contacts = contactMapper.map(page.contacts),
+            contacts = contacts,
+            sections = contactSectionMapper.map(contacts),
             hasPermission = true,
             canLoadMore = page.nextOffset != null,
             nextOffset = page.nextOffset,
@@ -262,8 +271,11 @@ internal class ShareTargetsDelegateImpl @Inject constructor(
         val additional = contactMapper.map(page.contacts)
 
         contactsState.update { state ->
+            val mergedContacts = mergeContacts(state.contacts, additional)
+
             state.copy(
-                contacts = mergeContacts(state.contacts, additional),
+                contacts = mergedContacts,
+                sections = contactSectionMapper.map(mergedContacts),
                 canLoadMore = page.nextOffset != null,
                 nextOffset = page.nextOffset,
                 isLoadingMore = false,
@@ -329,10 +341,11 @@ internal class ShareTargetsDelegateImpl @Inject constructor(
 
     private data class ContactsState(
         val contacts: ImmutableList<ShareTargetUiState.Contact> = persistentListOf(),
+        val sections: ImmutableList<ShareContactSection> = persistentListOf(),
         val hasPermission: Boolean = true,
         val canLoadMore: Boolean = false,
         val isLoadingMore: Boolean = false,
-        val nextOffset: Int? = 0,
+        val nextOffset: Int? = null,
         val loadedQuery: String = "",
     )
 

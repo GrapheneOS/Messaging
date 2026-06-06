@@ -22,17 +22,13 @@ internal class ResolveShareTargetsToConversationIdsImpl @Inject constructor(
     private suspend fun resolveTarget(target: ShareSendTarget): String? {
         return when (target) {
             is ShareSendTarget.Conversation -> target.conversationId
-
-            is ShareSendTarget.Contact -> {
-                resolveContactConversationId(destination = target.destination)
-            }
+            is ShareSendTarget.Contact -> resolveContactConversationId(target.destination)
         }
     }
 
     private suspend fun resolveContactConversationId(destination: String): String? {
-        return when (val result = resolveConversationId(destinations = listOf(destination))) {
+        return when (val result = resolveConversationId(listOf(destination))) {
             is ResolveConversationIdResult.Resolved -> result.conversationId
-
             ResolveConversationIdResult.EmptyDestinations -> null
             ResolveConversationIdResult.NotResolved -> null
         }

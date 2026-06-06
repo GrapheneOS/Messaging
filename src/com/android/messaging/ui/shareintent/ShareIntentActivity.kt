@@ -47,8 +47,9 @@ class ShareIntentActivity : ComponentActivity() {
         setContent {
             AppTheme {
                 var isDraftLoading by remember { mutableStateOf(true) }
-
-                val conversationDraft by produceState<ConversationDraft?>(initialValue = null) {
+                val conversationDraft by produceState<ConversationDraft?>(
+                    initialValue = null
+                ) {
                     value = buildSharedConversationDraft(intent)
                     isDraftLoading = false
                 }
@@ -65,6 +66,7 @@ class ShareIntentActivity : ComponentActivity() {
                 ShareIntentScreen(
                     effectHandler = effectHandler,
                     onNavigateBack = ::finish,
+                    allowMultiSelect = true,
                     isInitialDraftLoading = isDraftLoading,
                     initialDraft = conversationDraft,
                 )

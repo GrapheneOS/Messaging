@@ -55,7 +55,6 @@ internal fun ConversationMessageAvatar(
         ),
         fallbackIconSize = CONVERSATION_MESSAGE_AVATAR_ICON_SIZE,
         fallbackIcon = Icons.Rounded.Person,
-        isSelected = false,
     )
 }
 

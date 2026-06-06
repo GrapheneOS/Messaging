@@ -464,10 +464,8 @@ private fun ConversationAvatar(
                 avatarUri = null,
                 size = CONVERSATION_TOP_APP_BAR_AVATAR_SIZE,
                 fallbackLabel = null,
-                colorSeedCode = null,
                 fallbackIconSize = CONVERSATION_TOP_APP_BAR_AVATAR_ICON_SIZE,
                 fallbackIcon = Icons.Rounded.Group,
-                isSelected = false,
             )
         }
 
@@ -481,7 +479,6 @@ private fun ConversationAvatar(
                 ),
                 fallbackIconSize = CONVERSATION_TOP_APP_BAR_AVATAR_ICON_SIZE,
                 fallbackIcon = Icons.Rounded.Person,
-                isSelected = false,
             )
         }
     }

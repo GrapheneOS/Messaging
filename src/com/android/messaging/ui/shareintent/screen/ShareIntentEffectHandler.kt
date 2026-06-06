@@ -24,7 +24,9 @@ internal class ShareIntentEffectHandlerImpl(
     private val sendSharedContentToTargets: SendSharedContentToTargets,
 ) : ShareIntentEffectHandler {
 
-    private val messageData: MessageData? by lazy { draft?.toMessageData() }
+    private val messageData: MessageData? by lazy {
+        draft?.let(::buildSharedMessageData)
+    }
 
     override fun handle(effect: Effect) {
         when (effect) {
@@ -56,9 +58,9 @@ internal class ShareIntentEffectHandlerImpl(
     }
 }
 
-private fun ConversationDraft.toMessageData(): MessageData {
-    return MessageData.createSharedMessage(messageText, subjectText).apply {
-        attachments
+private fun buildSharedMessageData(draft: ConversationDraft): MessageData {
+    return MessageData.createSharedMessage(draft.messageText, draft.subjectText).apply {
+        draft.attachments
             .filter { attachment ->
                 ContentType.isMediaType(attachment.contentType)
             }

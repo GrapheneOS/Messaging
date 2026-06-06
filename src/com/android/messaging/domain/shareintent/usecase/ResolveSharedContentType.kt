@@ -16,7 +16,10 @@ internal class ResolveSharedContentTypeImpl @Inject constructor(
     private val contentResolver: ContentResolver,
 ) : ResolveSharedContentType {
 
-    override fun invoke(uri: Uri?, fallbackType: String?): String? {
+    override fun invoke(
+        uri: Uri?,
+        fallbackType: String?,
+    ): String? {
         if (uri == null) {
             return fallbackType
         }
@@ -29,7 +32,10 @@ internal class ResolveSharedContentTypeImpl @Inject constructor(
         return contentResolver.getType(uri) ?: extractFromMetadata(uri, fallbackType)
     }
 
-    private fun extractFromMetadata(uri: Uri, fallbackType: String?): String? {
+    private fun extractFromMetadata(
+        uri: Uri,
+        fallbackType: String?,
+    ): String? {
         val retriever = MediaMetadataRetrieverWrapper()
 
         return try {

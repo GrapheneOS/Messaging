@@ -9,7 +9,7 @@ internal class WidgetPickEffectHandler(
     override fun handle(effect: Effect) {
         when (effect) {
             is Effect.OpenConversation -> onConversationPicked(effect.conversationId)
-            else -> Unit
+            is Effect.SendToSelected -> Unit
         }
     }
 }

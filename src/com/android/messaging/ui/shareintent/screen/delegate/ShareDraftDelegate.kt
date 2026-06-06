@@ -58,11 +58,14 @@ internal class ShareDraftDelegateImpl @Inject constructor(
             )
         }.flowOn(defaultDispatcher)
 
-    override fun bind(scope: CoroutineScope, selectedIds: StateFlow<ImmutableSet<String>>) {
+    override fun bind(
+        scope: CoroutineScope,
+        selectedIds: StateFlow<ImmutableSet<String>>,
+    ) {
         if (isBound) return
         isBound = true
 
-        scope.launch {
+        scope.launch(defaultDispatcher) {
             selectedIds.collect { selected ->
                 if (selected.isEmpty()) {
                     exitReview()

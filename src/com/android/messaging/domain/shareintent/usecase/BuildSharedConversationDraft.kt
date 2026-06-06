@@ -42,12 +42,20 @@ internal class BuildSharedConversationDraftImpl @Inject constructor(
 
         return when {
             ContentType.TEXT_PLAIN == contentType -> {
-                draftOrNull(intent.sharedMessageText(), subject, emptyList())
+                draftOrNull(
+                    messageText = intent.sharedMessageText(),
+                    subject = subject,
+                    attachments = emptyList()
+                )
             }
 
             ContentType.isMediaType(contentType) && contentUri != null -> {
                 val attachment = persistAttachment(contentUri, contentType)
-                draftOrNull(intent.sharedMessageText(), subject, listOfNotNull(attachment))
+                draftOrNull(
+                    messageText = intent.sharedMessageText(),
+                    subject = subject,
+                    attachments = listOfNotNull(attachment)
+                )
             }
 
             else -> null
@@ -69,10 +77,17 @@ internal class BuildSharedConversationDraftImpl @Inject constructor(
         ).orEmpty()
 
         val attachments = imageUris.mapNotNull { uri ->
-            persistAttachment(uri, resolveSharedContentType(uri, intent.type))
+            persistAttachment(
+                sourceUri = uri,
+                contentType = resolveSharedContentType(uri, intent.type)
+            )
         }
 
-        return draftOrNull(intent.sharedMessageText(), subject, attachments)
+        return draftOrNull(
+            messageText = intent.sharedMessageText(),
+            subject = subject,
+            attachments = attachments
+        )
     }
 
     private fun Intent.sharedMessageText(): String {

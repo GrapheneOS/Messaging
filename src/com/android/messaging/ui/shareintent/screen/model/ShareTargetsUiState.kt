@@ -10,7 +10,7 @@ import kotlinx.collections.immutable.persistentSetOf
 internal data class ShareTargetsUiState(
     val isLoading: Boolean = true,
     val recentTargets: ImmutableList<ShareTargetUiState> = persistentListOf(),
-    val contactTargets: ImmutableList<ShareTargetUiState> = persistentListOf(),
+    val contactSections: ImmutableList<ShareContactSection> = persistentListOf(),
     val canLoadMoreRecent: Boolean = false,
     val canCollapseRecent: Boolean = false,
     val hasContactsPermission: Boolean = true,

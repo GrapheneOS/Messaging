@@ -37,8 +37,12 @@ import com.android.messaging.R
 import com.android.messaging.ui.shareintent.common.ItemDividerHorizontalInset
 import com.android.messaging.ui.shareintent.common.ScreenContentPadding
 import com.android.messaging.ui.shareintent.common.ShareTargetItem
+import com.android.messaging.ui.shareintent.screen.model.ShareContactSection
 import com.android.messaging.ui.shareintent.screen.model.ShareIntentAction as Action
 import com.android.messaging.ui.shareintent.screen.model.ShareTargetUiState
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 private val SectionHeaderHorizontalPadding = 16.dp
 private val SectionHeaderVerticalPadding = 8.dp
@@ -50,13 +54,12 @@ private val ContactsPermissionIconSize = 32.dp
 private val ContactsPermissionButtonTopPadding = 4.dp
 private val ItemDividerThickness = 1.dp
 private const val LOAD_MORE_PREFETCH_DISTANCE = 10
-private const val CONTACTS_NON_LETTER_SECTION_LABEL = "#"
 
 @Composable
 internal fun ShareTargetList(
-    recentTargets: List<ShareTargetUiState>,
-    contactTargets: List<ShareTargetUiState>,
-    selectedIds: Set<String>,
+    recentTargets: ImmutableList<ShareTargetUiState>,
+    contactSections: ImmutableList<ShareContactSection>,
+    selectedIds: ImmutableSet<String>,
     inSelectionMode: Boolean,
     allowMultiSelect: Boolean,
     canLoadMoreRecent: Boolean,
@@ -96,7 +99,7 @@ internal fun ShareTargetList(
         )
 
         contactsSection(
-            contactTargets = contactTargets,
+            contactSections = contactSections,
             selectedIds = selectedIds,
             inSelectionMode = inSelectionMode,
             allowMultiSelect = allowMultiSelect,
@@ -108,8 +111,8 @@ internal fun ShareTargetList(
 }
 
 private fun LazyListScope.recentTargetsSection(
-    recentTargets: List<ShareTargetUiState>,
-    selectedIds: Set<String>,
+    recentTargets: ImmutableList<ShareTargetUiState>,
+    selectedIds: ImmutableSet<String>,
     inSelectionMode: Boolean,
     allowMultiSelect: Boolean,
     canLoadMoreRecent: Boolean,
@@ -136,7 +139,7 @@ private fun LazyListScope.recentTargetsSection(
 
             ShareTargetRow(
                 target = target,
-                selectedIds = selectedIds,
+                isSelected = target.selectionId in selectedIds,
                 inSelectionMode = inSelectionMode,
                 allowMultiSelect = allowMultiSelect,
                 onAction = onAction,
@@ -168,8 +171,8 @@ private fun LazyListScope.recentTargetsSection(
 }
 
 private fun LazyListScope.contactsSection(
-    contactTargets: List<ShareTargetUiState>,
-    selectedIds: Set<String>,
+    contactSections: ImmutableList<ShareContactSection>,
+    selectedIds: ImmutableSet<String>,
     inSelectionMode: Boolean,
     allowMultiSelect: Boolean,
     hasContactsPermission: Boolean,
@@ -186,32 +189,27 @@ private fun LazyListScope.contactsSection(
             }
         }
 
-        contactTargets.isNotEmpty() -> {
-            var previousSectionLabel: String? = null
-
-            contactTargets.forEach { target ->
-                val sectionLabel = contactSectionLabel(displayName = target.displayName)
-                val isNewSection = sectionLabel != previousSectionLabel
-                previousSectionLabel = sectionLabel
-
-                if (isNewSection) {
-                    item(key = "contacts_header_$sectionLabel") {
-                        ShareSectionHeader(
-                            text = sectionLabel,
-                            modifier = Modifier.animateItem(),
-                        )
-                    }
+        contactSections.isNotEmpty() -> {
+            contactSections.forEach { section ->
+                item(key = "contacts_header_${section.label}") {
+                    ShareSectionHeader(
+                        text = section.label,
+                        modifier = Modifier.animateItem(),
+                    )
                 }
 
-                item(key = target.key) {
+                itemsIndexed(
+                    items = section.targets,
+                    key = { _, target -> target.key },
+                ) { index, target ->
                     Column(modifier = Modifier.animateItem()) {
-                        if (!isNewSection) {
+                        if (index > 0) {
                             ItemDivider()
                         }
 
                         ShareTargetRow(
                             target = target,
-                            selectedIds = selectedIds,
+                            isSelected = target.selectionId in selectedIds,
                             inSelectionMode = inSelectionMode,
                             allowMultiSelect = allowMultiSelect,
                             onAction = onAction,
@@ -223,26 +221,17 @@ private fun LazyListScope.contactsSection(
     }
 }
 
-private fun contactSectionLabel(displayName: String): String {
-    val firstCharacter = displayName.trim().firstOrNull()?.uppercaseChar()
-
-    return when {
-        firstCharacter?.isLetter() == true -> firstCharacter.toString()
-        else -> CONTACTS_NON_LETTER_SECTION_LABEL
-    }
-}
-
 @Composable
 private fun ShareTargetRow(
     target: ShareTargetUiState,
-    selectedIds: Set<String>,
+    isSelected: Boolean,
     inSelectionMode: Boolean,
     allowMultiSelect: Boolean,
     onAction: (Action) -> Unit,
 ) {
     ShareTargetItem(
         target = target,
-        isSelected = target.selectionId in selectedIds,
+        isSelected = isSelected,
         onClick = {
             val action = when {
                 inSelectionMode -> Action.SelectionToggled(target)
@@ -340,14 +329,17 @@ private fun LoadMoreContactsOnScroll(
         snapshotFlow {
             val layoutInfo = listState.layoutInfo
             val lastVisibleIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-            lastVisibleIndex to layoutInfo.totalItemsCount
-        }.collect { (lastVisibleIndex, totalItemsCount) ->
-            if (totalItemsCount > 0 &&
-                lastVisibleIndex >= totalItemsCount - LOAD_MORE_PREFETCH_DISTANCE
-            ) {
-                currentOnLoadMore()
-            }
+            val totalItemsCount = layoutInfo.totalItemsCount
+            val prefetchThreshold = totalItemsCount - LOAD_MORE_PREFETCH_DISTANCE
+
+            totalItemsCount > 0 && lastVisibleIndex >= prefetchThreshold
         }
+            .distinctUntilChanged()
+            .collect { isNearEnd ->
+                if (isNearEnd) {
+                    currentOnLoadMore()
+                }
+            }
     }
 }
 

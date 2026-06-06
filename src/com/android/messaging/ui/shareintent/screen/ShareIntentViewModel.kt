@@ -176,14 +176,14 @@ internal class ShareIntentViewModel @Inject constructor(
             }
 
             is ShareTargetUiState.Contact -> {
-                openContactConversation(destination = target.destination)
+                openContactConversation(target.destination)
             }
         }
     }
 
     private fun openContactConversation(destination: String) {
         viewModelScope.launch {
-            val result = resolveConversationId(destinations = listOf(destination))
+            val result = resolveConversationId(listOf(destination))
 
             if (result is ResolveConversationIdResult.Resolved) {
                 _effects.tryEmit(Effect.OpenConversation(result.conversationId))
@@ -200,11 +200,11 @@ internal class ShareIntentViewModel @Inject constructor(
     private fun toSendTarget(target: ShareTargetUiState): ShareSendTarget {
         return when (target) {
             is ShareTargetUiState.Conversation -> {
-                ShareSendTarget.Conversation(conversationId = target.conversationId)
+                ShareSendTarget.Conversation(target.conversationId)
             }
 
             is ShareTargetUiState.Contact -> {
-                ShareSendTarget.Contact(destination = target.destination)
+                ShareSendTarget.Contact(target.destination)
             }
         }
     }

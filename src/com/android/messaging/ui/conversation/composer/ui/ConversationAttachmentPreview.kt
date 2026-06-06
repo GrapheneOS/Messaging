@@ -102,7 +102,9 @@ private fun ResolvedAttachmentPreviewItem(
     onAttachmentClick: () -> Unit,
     onRemoveClick: () -> Unit,
 ) {
-    val itemTestTag = conversationAttachmentPreviewItemTestTag(attachmentKey = attachment.key)
+    val itemTestTag = conversationAttachmentPreviewItemTestTag(
+        attachmentKey = attachment.key
+    )
     val removeTestTag = conversationAttachmentPreviewRemoveButtonTestTag(
         attachmentKey = attachment.key,
     )

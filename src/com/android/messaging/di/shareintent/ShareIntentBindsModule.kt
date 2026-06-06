@@ -14,6 +14,8 @@ import com.android.messaging.domain.shareintent.usecase.SendSharedContentToConve
 import com.android.messaging.domain.shareintent.usecase.SendSharedContentToConversationsImpl
 import com.android.messaging.domain.shareintent.usecase.SendSharedContentToTargets
 import com.android.messaging.domain.shareintent.usecase.SendSharedContentToTargetsImpl
+import com.android.messaging.ui.shareintent.screen.mapper.ShareContactSectionMapper
+import com.android.messaging.ui.shareintent.screen.mapper.ShareContactSectionMapperImpl
 import com.android.messaging.ui.shareintent.screen.mapper.ShareContactUiStateMapper
 import com.android.messaging.ui.shareintent.screen.mapper.ShareContactUiStateMapperImpl
 import com.android.messaging.ui.shareintent.screen.mapper.ShareTargetUiStateMapper
@@ -39,6 +41,12 @@ internal abstract class ShareIntentBindsModule {
     abstract fun bindShareContactUiStateMapper(
         impl: ShareContactUiStateMapperImpl,
     ): ShareContactUiStateMapper
+
+    @Binds
+    @Reusable
+    abstract fun bindShareContactSectionMapper(
+        impl: ShareContactSectionMapperImpl,
+    ): ShareContactSectionMapper
 
     @Binds
     @Reusable

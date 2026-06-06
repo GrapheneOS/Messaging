@@ -1,10 +1,9 @@
 package com.android.messaging.ui.shareintent.screen.mapper
 
 import androidx.core.net.toUri
-import androidx.core.text.BidiFormatter
-import androidx.core.text.TextDirectionHeuristicsCompat.LTR
 import com.android.messaging.data.contact.formatter.ContactDestinationFormatter
 import com.android.messaging.data.shareintent.model.ShareTargetConversation
+import com.android.messaging.ui.shareintent.screen.formatter.ShareTargetTextFormatter
 import com.android.messaging.ui.shareintent.screen.model.ShareTargetUiState
 import com.android.messaging.util.AvatarUriUtil
 import com.android.messaging.util.PhoneUtils
@@ -20,6 +19,7 @@ internal interface ShareTargetUiStateMapper {
 
 internal class ShareTargetUiStateMapperImpl @Inject constructor(
     private val contactDestinationFormatter: ContactDestinationFormatter,
+    private val textFormatter: ShareTargetTextFormatter,
 ) : ShareTargetUiStateMapper {
 
     override fun map(
@@ -33,7 +33,6 @@ internal class ShareTargetUiStateMapperImpl @Inject constructor(
     private fun toShareTargetUiState(
         conversation: ShareTargetConversation,
     ): ShareTargetUiState {
-        val formatter = BidiFormatter.getInstance()
         val name = conversation.name
 
         val otherParticipantDestination = conversation.normalizedDestination
@@ -41,17 +40,19 @@ internal class ShareTargetUiStateMapperImpl @Inject constructor(
 
         val formattedDestination = otherParticipantDestination
             ?.let { PhoneUtils.getDefault().formatForDisplay(it) }
-        val details = formattedDestination?.takeIf { it.isNotEmpty() && it != name }
 
         val canonicalDestination = otherParticipantDestination
-            ?.let { contactDestinationFormatter.canonicalize(value = it) }
+            ?.let(contactDestinationFormatter::canonicalize)
             ?.takeIf { it.isNotEmpty() }
 
         return ShareTargetUiState.Conversation(
             conversationId = conversation.conversationId,
             normalizedDestination = canonicalDestination,
-            displayName = formatter.unicodeWrap(name, LTR),
-            details = details?.let { formatter.unicodeWrap(it, LTR) },
+            displayName = textFormatter.wrap(name),
+            details = textFormatter.detailsOrNull(
+                name = name,
+                value = formattedDestination,
+            ),
             avatarUri = resolveAvatarUri(conversation.icon),
             isGroup = conversation.isGroup,
         )

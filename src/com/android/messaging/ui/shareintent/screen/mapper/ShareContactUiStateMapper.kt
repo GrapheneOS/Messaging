@@ -1,8 +1,7 @@
 package com.android.messaging.ui.shareintent.screen.mapper
 
-import androidx.core.text.BidiFormatter
-import androidx.core.text.TextDirectionHeuristicsCompat.LTR
 import com.android.messaging.data.contact.model.Contact
+import com.android.messaging.ui.shareintent.screen.formatter.ShareTargetTextFormatter
 import com.android.messaging.ui.shareintent.screen.model.ShareTargetUiState
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
@@ -12,7 +11,9 @@ internal interface ShareContactUiStateMapper {
     fun map(contacts: ImmutableList<Contact>): ImmutableList<ShareTargetUiState.Contact>
 }
 
-internal class ShareContactUiStateMapperImpl @Inject constructor() : ShareContactUiStateMapper {
+internal class ShareContactUiStateMapperImpl @Inject constructor(
+    private val textFormatter: ShareTargetTextFormatter,
+) : ShareContactUiStateMapper {
 
     override fun map(
         contacts: ImmutableList<Contact>,
@@ -24,17 +25,17 @@ internal class ShareContactUiStateMapperImpl @Inject constructor() : ShareContac
 
     private fun toContactUiState(contact: Contact): ShareTargetUiState.Contact? {
         val destination = contact.destinations.firstOrNull() ?: return null
-
-        val formatter = BidiFormatter.getInstance()
         val name = contact.displayName.ifBlank { destination.displayValue }
-        val details = destination.displayValue.takeIf { it.isNotEmpty() && it != name }
 
         return ShareTargetUiState.Contact(
             contactId = contact.id,
             destination = destination.value,
             normalizedDestination = destination.normalizedValue,
-            displayName = formatter.unicodeWrap(name, LTR),
-            details = details?.let { formatter.unicodeWrap(it, LTR) },
+            displayName = textFormatter.wrap(name),
+            details = textFormatter.detailsOrNull(
+                name = name,
+                value = destination.displayValue,
+            ),
             avatarUri = contact.photoUri,
         )
     }

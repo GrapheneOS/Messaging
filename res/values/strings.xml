@@ -902,8 +902,6 @@
     <string name="chips_delete_content_description">Remove recipient</string>
 
     <!-- Label for new message button in share intent dialog -->
-
-    <!-- Label for new message button in share intent dialog -->
     <string name="share_cancel">Cancel</string>
 
     <!-- Accessibility : Content description for the search action in the share conversation picker -->
