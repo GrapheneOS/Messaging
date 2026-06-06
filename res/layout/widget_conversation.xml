@@ -39,7 +39,7 @@
             android:freezesText="true" />
         <ImageView
             android:id="@+id/launcher_icon"
-            android:src="@drawable/ic_launcher"
+            android:src="@drawable/ic_launcher_widget"
             android:layout_height="wrap_content"
             android:layout_width="0dip"
             android:layout_weight = "1"
