@@ -12,7 +12,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.update
@@ -20,7 +19,7 @@ import kotlinx.coroutines.launch
 
 internal interface ShareDraftDelegate {
     val state: Flow<ShareDraftUiState>
-    fun bind(scope: CoroutineScope, selectedIds: StateFlow<ImmutableSet<String>>)
+    fun bind(scope: CoroutineScope, selectedIds: Flow<ImmutableSet<String>>)
     fun resolveDraft(draft: ConversationDraft?)
     fun setDraftText(text: String)
     fun clearDraftSubject()
@@ -60,7 +59,7 @@ internal class ShareDraftDelegateImpl @Inject constructor(
 
     override fun bind(
         scope: CoroutineScope,
-        selectedIds: StateFlow<ImmutableSet<String>>,
+        selectedIds: Flow<ImmutableSet<String>>,
     ) {
         if (isBound) return
         isBound = true
@@ -102,7 +101,9 @@ internal class ShareDraftDelegateImpl @Inject constructor(
         draft.update { current ->
             current.copy(
                 attachments = current.attachments
-                    .filterNot { attachment -> attachment.contentUri == id }
+                    .filterNot { attachment ->
+                        attachment.contentUri == id
+                    }
                     .toImmutableList(),
             )
         }

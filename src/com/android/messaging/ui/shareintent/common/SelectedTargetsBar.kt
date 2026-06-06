@@ -54,8 +54,8 @@ import kotlinx.collections.immutable.persistentListOf
 internal fun SelectedTargetsBar(
     targets: ImmutableList<ShareTargetUiState>,
     onRemove: (ShareTargetUiState) -> Unit,
-    onSend: () -> Unit,
-    showSendButton: Boolean,
+    onProceed: () -> Unit,
+    showProceedButton: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
@@ -96,15 +96,15 @@ internal fun SelectedTargetsBar(
             }
         }
 
-        if (showSendButton) {
-            SelectedTargetsSendButton(onSend = onSend)
+        if (showProceedButton) {
+            SelectedTargetsProceedButton(onProceed = onProceed)
         }
     }
 }
 
 @Composable
-private fun BoxScope.SelectedTargetsSendButton(
-    onSend: () -> Unit,
+private fun BoxScope.SelectedTargetsProceedButton(
+    onProceed: () -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -122,7 +122,7 @@ private fun BoxScope.SelectedTargetsSendButton(
     )
 
     FilledIconButton(
-        onClick = onSend,
+        onClick = onProceed,
         modifier = Modifier
             .align(Alignment.TopEnd)
             .padding(end = SelectedBarStartPadding)
@@ -241,8 +241,8 @@ private fun SelectedTargetsBarPreview() {
                 ),
             ),
             onRemove = {},
-            onSend = {},
-            showSendButton = true,
+            onProceed = {},
+            showProceedButton = true,
         )
     }
 }

@@ -6,6 +6,8 @@ import com.android.messaging.data.shareintent.repository.SharedAttachmentReposit
 import com.android.messaging.data.shareintent.repository.SharedAttachmentRepositoryImpl
 import com.android.messaging.domain.shareintent.usecase.BuildSharedConversationDraft
 import com.android.messaging.domain.shareintent.usecase.BuildSharedConversationDraftImpl
+import com.android.messaging.domain.shareintent.usecase.BuildSharedMessageData
+import com.android.messaging.domain.shareintent.usecase.BuildSharedMessageDataImpl
 import com.android.messaging.domain.shareintent.usecase.ResolveShareTargetsToConversationIds
 import com.android.messaging.domain.shareintent.usecase.ResolveShareTargetsToConversationIdsImpl
 import com.android.messaging.domain.shareintent.usecase.ResolveSharedContentType
@@ -71,6 +73,12 @@ internal abstract class ShareIntentBindsModule {
     abstract fun bindBuildSharedConversationDraft(
         impl: BuildSharedConversationDraftImpl,
     ): BuildSharedConversationDraft
+
+    @Binds
+    @Reusable
+    abstract fun bindBuildSharedMessageData(
+        impl: BuildSharedMessageDataImpl,
+    ): BuildSharedMessageData
 
     @Binds
     @Reusable

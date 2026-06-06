@@ -79,10 +79,6 @@ internal class ShareIntentViewModel @Inject constructor(
                 onTargetClicked(action.target)
             }
 
-            is Action.TargetLongPressed -> {
-                targetsDelegate.toggleSelection(action.target)
-            }
-
             is Action.SelectionToggled -> {
                 targetsDelegate.toggleSelection(action.target)
             }
@@ -91,7 +87,7 @@ internal class ShareIntentViewModel @Inject constructor(
                 targetsDelegate.clearSelection()
             }
 
-            Action.SendToSelectedClicked -> {
+            Action.ProceedToReviewClicked -> {
                 draftDelegate.enterReview()
             }
 
@@ -147,7 +143,7 @@ internal class ShareIntentViewModel @Inject constructor(
                 draftDelegate.exitReview()
             }
 
-            Action.ConfirmSendClicked -> {
+            Action.SendClicked -> {
                 _effects.tryEmit(
                     Effect.SendToSelected(
                         targets = currentSendTargets(),
@@ -166,7 +162,7 @@ internal class ShareIntentViewModel @Inject constructor(
             draft.subjectText.isNotBlank() ||
             draft.attachments.isNotEmpty()
 
-        return hasDraftContent && targets.selectedIds.isNotEmpty()
+        return hasDraftContent && targets.selection.selectedIds.isNotEmpty()
     }
 
     private fun onTargetClicked(target: ShareTargetUiState) {
