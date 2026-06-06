@@ -12,17 +12,13 @@ internal sealed interface ShareIntentAction {
         val target: ShareTargetUiState,
     ) : TargetsAction
 
-    data class TargetLongPressed(
-        val target: ShareTargetUiState,
-    ) : TargetsAction
-
     data class SelectionToggled(
         val target: ShareTargetUiState,
     ) : TargetsAction
 
     data object SelectionCleared : TargetsAction
 
-    data object SendToSelectedClicked : TargetsAction
+    data object ProceedToReviewClicked : TargetsAction
 
     data object SearchOpened : TargetsAction
 
@@ -56,5 +52,5 @@ internal sealed interface ShareIntentAction {
 
     data object ReviewDismissed : DraftAction
 
-    data object ConfirmSendClicked : DraftAction
+    data object SendClicked : DraftAction
 }

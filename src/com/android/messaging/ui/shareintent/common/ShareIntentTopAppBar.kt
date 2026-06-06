@@ -78,7 +78,7 @@ internal fun ShareIntentTopAppBar(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun ShareConfirmTopAppBar(
+internal fun ShareReviewTopAppBar(
     onBack: () -> Unit,
 ) {
     TopAppBar(

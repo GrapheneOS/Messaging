@@ -13,6 +13,7 @@ import androidx.compose.runtime.setValue
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.di.core.ApplicationCoroutineScope
 import com.android.messaging.domain.shareintent.usecase.BuildSharedConversationDraft
+import com.android.messaging.domain.shareintent.usecase.BuildSharedMessageData
 import com.android.messaging.domain.shareintent.usecase.SendSharedContentToTargets
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.core.AppTheme
@@ -34,6 +35,9 @@ class ShareIntentActivity : ComponentActivity() {
 
     @Inject
     internal lateinit var buildSharedConversationDraft: BuildSharedConversationDraft
+
+    @Inject
+    internal lateinit var buildSharedMessageData: BuildSharedMessageData
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,6 +64,7 @@ class ShareIntentActivity : ComponentActivity() {
                         activity = this,
                         draft = conversationDraft,
                         sendSharedContentToTargets = sendSharedContentToTargets,
+                        buildSharedMessageData = buildSharedMessageData,
                     )
                 }
 

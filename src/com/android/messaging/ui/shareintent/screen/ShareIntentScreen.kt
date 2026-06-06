@@ -38,7 +38,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
@@ -48,14 +49,17 @@ import com.android.messaging.ui.common.components.composer.MessageSendButton
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import com.android.messaging.ui.shareintent.common.SelectedTargetsBar
 import com.android.messaging.ui.shareintent.common.ShareAttachmentPreview
-import com.android.messaging.ui.shareintent.common.ShareConfirmTopAppBar
 import com.android.messaging.ui.shareintent.common.ShareIntentTopAppBar
+import com.android.messaging.ui.shareintent.common.ShareReviewTopAppBar
 import com.android.messaging.ui.shareintent.common.contentSurfaceShape
 import com.android.messaging.ui.shareintent.common.shareComposeSubjectSlot
+import com.android.messaging.ui.shareintent.screen.model.ContactTargetsUiState
+import com.android.messaging.ui.shareintent.screen.model.RecentTargetsUiState
 import com.android.messaging.ui.shareintent.screen.model.ShareContactSection
 import com.android.messaging.ui.shareintent.screen.model.ShareDraftUiState
 import com.android.messaging.ui.shareintent.screen.model.ShareIntentAction as Action
 import com.android.messaging.ui.shareintent.screen.model.ShareIntentUiState as State
+import com.android.messaging.ui.shareintent.screen.model.ShareSelectionUiState
 import com.android.messaging.ui.shareintent.screen.model.ShareTargetUiState
 import com.android.messaging.ui.shareintent.screen.model.ShareTargetsUiState
 import kotlinx.collections.immutable.persistentListOf
@@ -95,11 +99,10 @@ internal fun ShareIntentScreen(
         }
     }
 
-    LifecycleResumeEffect(context) {
+    LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
         if (isReadContactsPermissionGranted(context)) {
             screenModel.onAction(Action.ContactsPermissionGranted)
         }
-        onPauseOrDispose {}
     }
 
     ShareIntentContent(
@@ -146,7 +149,7 @@ private fun ShareIntentContent(
     )
 
     if (uiState.draft.isReviewing) {
-        ShareConfirmScreen(
+        ShareIntentReviewScaffold(
             uiState = uiState,
             onAction = onAction,
             modifier = modifier,
@@ -174,7 +177,10 @@ private fun ShareIntentBackHandlers(
         onAction(Action.ReviewDismissed)
     }
 
-    BackHandler(enabled = !uiState.draft.isReviewing && uiState.targets.selectedIds.isNotEmpty()) {
+    BackHandler(
+        enabled = !uiState.draft.isReviewing &&
+            uiState.targets.selection.selectedIds.isNotEmpty(),
+    ) {
         onAction(Action.SelectionCleared)
     }
 
@@ -194,7 +200,7 @@ private fun ShareIntentPickerScaffold(
     allowMultiSelect: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val inSelectionMode = uiState.targets.selectedIds.isNotEmpty()
+    val inSelectionMode = uiState.targets.selection.selectedIds.isNotEmpty()
 
     Scaffold(
         modifier = modifier,
@@ -225,15 +231,15 @@ private fun ShareIntentPickerScaffold(
 
                 else -> {
                     ShareTargetList(
-                        recentTargets = uiState.targets.recentTargets,
-                        contactSections = uiState.targets.contactSections,
-                        selectedIds = uiState.targets.selectedIds,
+                        recentTargets = uiState.targets.recent.targets,
+                        contactSections = uiState.targets.contacts.sections,
+                        selectedIds = uiState.targets.selection.selectedIds,
                         inSelectionMode = inSelectionMode,
                         allowMultiSelect = allowMultiSelect,
-                        canLoadMoreRecent = uiState.targets.canLoadMoreRecent,
-                        canCollapseRecent = uiState.targets.canCollapseRecent,
-                        hasContactsPermission = uiState.targets.hasContactsPermission,
-                        canLoadMoreContacts = uiState.targets.canLoadMoreContacts,
+                        canLoadMoreRecent = uiState.targets.recent.canLoadMore,
+                        canCollapseRecent = uiState.targets.recent.canCollapse,
+                        hasContactsPermission = uiState.targets.contacts.hasPermission,
+                        canLoadMoreContacts = uiState.targets.contacts.canLoadMore,
                         onAction = onAction,
                         onGrantContactsPermission = onGrantContactsPermission,
                         bottomPadding = contentPadding.calculateBottomPadding(),
@@ -258,7 +264,7 @@ private fun ShareIntentPickerTopBar(
         ShareIntentTopAppBar(
             isSearchActive = uiState.targets.isSearchActive,
             inSelectionMode = inSelectionMode,
-            selectedCount = uiState.targets.selectedIds.size,
+            selectedCount = uiState.targets.selection.selectedIds.size,
             searchState = searchState,
             onNavigateBack = onNavigateBack,
             onSearchOpen = { onAction(Action.SearchOpened) },
@@ -275,17 +281,17 @@ private fun ShareIntentPickerTopBar(
             exit = shrinkVertically() + fadeOut(),
         ) {
             SelectedTargetsBar(
-                targets = uiState.targets.selectedTargets,
+                targets = uiState.targets.selection.selectedTargets,
                 onRemove = { onAction(Action.SelectionToggled(it)) },
-                onSend = { onAction(Action.SendToSelectedClicked) },
-                showSendButton = true,
+                onProceed = { onAction(Action.ProceedToReviewClicked) },
+                showProceedButton = true,
             )
         }
     }
 }
 
 @Composable
-private fun ShareConfirmScreen(
+private fun ShareIntentReviewScaffold(
     uiState: State,
     onAction: (Action) -> Unit,
     modifier: Modifier = Modifier,
@@ -297,15 +303,15 @@ private fun ShareConfirmScreen(
             Column(
                 modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainer),
             ) {
-                ShareConfirmTopAppBar(
+                ShareReviewTopAppBar(
                     onBack = { onAction(Action.ReviewDismissed) },
                 )
 
                 SelectedTargetsBar(
-                    targets = uiState.targets.selectedTargets,
+                    targets = uiState.targets.selection.selectedTargets,
                     onRemove = { onAction(Action.SelectionToggled(it)) },
-                    onSend = {},
-                    showSendButton = false,
+                    onProceed = {},
+                    showProceedButton = false,
                 )
             }
         },
@@ -337,7 +343,7 @@ private fun ShareConfirmScreen(
                 sendAction = {
                     MessageSendButton(
                         enabled = uiState.isSendEnabled,
-                        onClick = { onAction(Action.ConfirmSendClicked) },
+                        onClick = { onAction(Action.SendClicked) },
                     )
                 },
                 attachmentsContent = {
@@ -359,69 +365,73 @@ private fun ShareIntentContentPreview() {
             uiState = State(
                 targets = ShareTargetsUiState(
                     isLoading = false,
-                    recentTargets = persistentListOf(
-                        ShareTargetUiState.Conversation(
-                            conversationId = "1",
-                            normalizedDestination = "+31612345678",
-                            displayName = "Jane Doe",
-                            details = "+31 6 1234 5678",
-                            avatarUri = null,
-                            isGroup = false,
-                        ),
-                        ShareTargetUiState.Conversation(
-                            conversationId = "2",
-                            normalizedDestination = null,
-                            displayName = "Project group",
-                            details = null,
-                            avatarUri = null,
-                            isGroup = true,
+                    recent = RecentTargetsUiState(
+                        targets = persistentListOf(
+                            ShareTargetUiState.Conversation(
+                                conversationId = "1",
+                                normalizedDestination = "+31612345678",
+                                displayName = "Jane Doe",
+                                details = "+31 6 1234 5678",
+                                avatarUri = null,
+                                isGroup = false,
+                            ),
+                            ShareTargetUiState.Conversation(
+                                conversationId = "2",
+                                normalizedDestination = null,
+                                displayName = "Project group",
+                                details = null,
+                                avatarUri = null,
+                                isGroup = true,
+                            ),
                         ),
                     ),
-                    contactSections = persistentListOf(
-                        ShareContactSection(
-                            label = "A",
-                            targets = persistentListOf(
-                                ShareTargetUiState.Contact(
-                                    contactId = 10L,
-                                    destination = "+31 6 9999 0000",
-                                    normalizedDestination = "+31699990000",
-                                    displayName = "Alex Appleseed",
-                                    details = "+31 6 9999 0000",
-                                    avatarUri = null,
-                                ),
-                                ShareTargetUiState.Contact(
-                                    contactId = 11L,
-                                    destination = "+31 6 1111 2222",
-                                    normalizedDestination = "+31611112222",
-                                    displayName = "Amelia Brown",
-                                    details = "+31 6 1111 2222",
-                                    avatarUri = null,
-                                ),
-                            ),
-                        ),
-                        ShareContactSection(
-                            label = "B",
-                            targets = persistentListOf(
-                                ShareTargetUiState.Contact(
-                                    contactId = 12L,
-                                    destination = "+31 6 3333 4444",
-                                    normalizedDestination = "+31633334444",
-                                    displayName = "Brian Cohen",
-                                    details = "+31 6 3333 4444",
-                                    avatarUri = null,
+                    contacts = ContactTargetsUiState(
+                        sections = persistentListOf(
+                            ShareContactSection(
+                                label = "A",
+                                targets = persistentListOf(
+                                    ShareTargetUiState.Contact(
+                                        contactId = 10L,
+                                        destination = "+31 6 9999 0000",
+                                        normalizedDestination = "+31699990000",
+                                        displayName = "Alex Appleseed",
+                                        details = "+31 6 9999 0000",
+                                        avatarUri = null,
+                                    ),
+                                    ShareTargetUiState.Contact(
+                                        contactId = 11L,
+                                        destination = "+31 6 1111 2222",
+                                        normalizedDestination = "+31611112222",
+                                        displayName = "Amelia Brown",
+                                        details = "+31 6 1111 2222",
+                                        avatarUri = null,
+                                    ),
                                 ),
                             ),
-                        ),
-                        ShareContactSection(
-                            label = "#",
-                            targets = persistentListOf(
-                                ShareTargetUiState.Contact(
-                                    contactId = 13L,
-                                    destination = "+1 555 0100",
-                                    normalizedDestination = "+15550100",
-                                    displayName = "+1 555 0100",
-                                    details = "+1 555 0100",
-                                    avatarUri = null,
+                            ShareContactSection(
+                                label = "B",
+                                targets = persistentListOf(
+                                    ShareTargetUiState.Contact(
+                                        contactId = 12L,
+                                        destination = "+31 6 3333 4444",
+                                        normalizedDestination = "+31633334444",
+                                        displayName = "Brian Cohen",
+                                        details = "+31 6 3333 4444",
+                                        avatarUri = null,
+                                    ),
+                                ),
+                            ),
+                            ShareContactSection(
+                                label = "#",
+                                targets = persistentListOf(
+                                    ShareTargetUiState.Contact(
+                                        contactId = 13L,
+                                        destination = "+1 555 0100",
+                                        normalizedDestination = "+15550100",
+                                        displayName = "+1 555 0100",
+                                        details = "+1 555 0100",
+                                        avatarUri = null,
+                                    ),
                                 ),
                             ),
                         ),
@@ -464,12 +474,14 @@ private fun ShareIntentSelectionPreview() {
             uiState = State(
                 targets = ShareTargetsUiState(
                     isLoading = false,
-                    recentTargets = targets,
-                    selectedIds = persistentSetOf(
-                        "dest:+31612345678",
-                        "conversation:2",
+                    recent = RecentTargetsUiState(targets = targets),
+                    selection = ShareSelectionUiState(
+                        selectedIds = persistentSetOf(
+                            "dest:+31612345678",
+                            "conversation:2",
+                        ),
+                        selectedTargets = targets,
                     ),
-                    selectedTargets = targets,
                 ),
                 draft = ShareDraftUiState(isLoading = false),
             ),
@@ -506,7 +518,7 @@ private fun ShareIntentContactsPermissionPreview() {
             uiState = State(
                 targets = ShareTargetsUiState(
                     isLoading = false,
-                    hasContactsPermission = false,
+                    contacts = ContactTargetsUiState(hasPermission = false),
                 ),
                 draft = ShareDraftUiState(isLoading = false),
             ),
