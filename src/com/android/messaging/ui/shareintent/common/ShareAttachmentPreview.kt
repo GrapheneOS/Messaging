@@ -12,16 +12,6 @@ import com.android.messaging.ui.common.components.attachment.VCardAttachmentCell
 import com.android.messaging.ui.shareintent.screen.model.ShareAttachmentUiModel
 import kotlinx.collections.immutable.ImmutableList
 
-internal const val SHARE_ATTACHMENT_PREVIEW_LIST_TEST_TAG = "share_attachment_preview_list"
-
-internal fun shareAttachmentItemTestTag(id: String): String {
-    return "share_attachment_preview_item_$id"
-}
-
-internal fun shareAttachmentRemoveButtonTestTag(id: String): String {
-    return "share_attachment_preview_remove_button_$id"
-}
-
 @Composable
 internal fun ShareAttachmentPreview(
     attachments: ImmutableList<ShareAttachmentUiModel>,
