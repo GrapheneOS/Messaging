@@ -26,6 +26,7 @@ import android.media.AudioManager;
 import android.net.Uri;
 import android.text.TextUtils;
 
+import androidx.annotation.VisibleForTesting;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationCompat.MessagingStyle;
 import androidx.core.app.NotificationManagerCompat;
@@ -63,7 +64,11 @@ import com.android.messaging.util.RingtoneUtil;
 import com.android.messaging.util.ThreadUtil;
 import com.android.messaging.util.UriUtil;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -91,6 +96,13 @@ public class BugleNotifications {
 
     private static final String SMS_NOTIFICATION_TAG = ":sms:";
     private static final String SMS_ERROR_NOTIFICATION_TAG = ":error:";
+
+    /**
+     * Upper bound on the number of {@link Person} entries attached to a conversation notification.
+     * (Android's MessagingStyle already auto-trims the displayed messages to its own maximum.)
+     */
+    @VisibleForTesting
+    public static final int MAX_NOTIFICATION_PEOPLE = 25;
 
     /**
      * This is the volume at which to play the observable-conversation notification sound,
@@ -243,6 +255,68 @@ public class BugleNotifications {
         return tag;
     }
 
+    /**
+     * Returns the message lines whose {@link Person} should be attached to a conversation
+     * notification, in newest-first order and bounded to {@link #MAX_NOTIFICATION_PEOPLE}.
+     *
+     * <p>Bug #102: {@link #processAndSend} calls {@code addPerson} once per message line, so a
+     * long-lived conversation would otherwise add the same sender hundreds/thousands of times to
+     * the notification's people list ({@code EXTRA_PEOPLE_LIST}). Unlike the MessagingStyle
+     * messages (which Android auto-caps at 25), that list is unbounded: it grows the notification's
+     * parcel until it exceeds the ~1 MB Binder limit, after which {@code NotificationManager.notify}
+     * throws {@link android.os.TransactionTooLargeException} on every update (receive / open /
+     * delete) and crashes the app. A participant only needs to be attached once, and selecting
+     * lines before creating {@link Person}s avoids doing avatar bitmap work for discarded entries.
+     */
+    @VisibleForTesting
+    static List<MessageNotificationState.MessageLineInfo> limitPeopleLineInfos(
+            final List<MessageNotificationState.MessageLineInfo> lineInfos) {
+        final Map<String, MessageNotificationState.MessageLineInfo> distinct = new LinkedHashMap<>();
+
+        for (final MessageNotificationState.MessageLineInfo lineInfo : lineInfos) {
+            if (lineInfo == null) {
+                continue;
+            }
+
+            distinct.putIfAbsent(personKey(lineInfo), lineInfo);
+
+            if (distinct.size() >= MAX_NOTIFICATION_PEOPLE) {
+                break;
+            }
+        }
+
+        return new ArrayList<>(distinct.values());
+    }
+
+    /** Stable identity for de-duplicating notification people (author, else contact, else name). */
+    private static String personKey(final MessageNotificationState.MessageLineInfo lineInfo) {
+        if (lineInfo.mAuthorId != null) {
+            return "author:" + lineInfo.mAuthorId;
+        }
+
+        if (lineInfo.mContactUriString != null) {
+            return "uri:" + lineInfo.mContactUriString;
+        }
+
+        return "name:" + (lineInfo.mName != null ? lineInfo.mName : "");
+    }
+
+    private static Person getOrCreatePerson(
+            final Map<String, Person> peopleByKey,
+            final MessageNotificationState.MessageLineInfo lineInfo) {
+        return peopleByKey.computeIfAbsent(personKey(lineInfo), key -> lineInfo.createPerson());
+    }
+
+    private static void addPeopleToNotification(
+            final NotificationCompat.Builder notifBuilder,
+            final List<MessageNotificationState.MessageLineInfo> lineInfos,
+            final Map<String, Person> peopleByKey) {
+        for (final MessageNotificationState.MessageLineInfo lineInfo :
+                limitPeopleLineInfos(lineInfos)) {
+            notifBuilder.addPerson(getOrCreatePerson(peopleByKey, lineInfo));
+        }
+    }
+
     private static void processAndSend(final MessageNotificationState state, final Conversation conversation) {
         final Context context = Factory.get().getApplicationContext();
         final String conversationId = conversation.mConversationId;
@@ -294,12 +368,10 @@ public class BugleNotifications {
         }
 
         Person latestPerson = null;
+        final Map<String, Person> peopleByKey = new HashMap<>();
+        final List<MessageNotificationState.MessageLineInfo> newLineInfos = new ArrayList<>();
         List<MessageNotificationState.MessageLineInfo> reversedLineInfos = conversation.mLineInfos.reversed();
         for (MessageNotificationState.MessageLineInfo messageLineInfo : reversedLineInfos) {
-            // Add people associated with this notification
-            Person currentPerson = messageLineInfo.createPerson();
-            notifBuilder.addPerson(currentPerson);
-
             // Don't repeat messages by checking the timestamp
             if (messageLineInfo.mTimestamp <= oldestExistingTimestamp) {
                 if (reversedLineInfos.getLast() == messageLineInfo) {
@@ -309,10 +381,26 @@ public class BugleNotifications {
                 continue;
             }
 
+            newLineInfos.add(messageLineInfo);
+        }
+
+        addPeopleToNotification(notifBuilder, conversation.mLineInfos, peopleByKey);
+
+        final int retainedMessageStart = Math.max(
+                0,
+                newLineInfos.size() - MessagingStyle.MAXIMUM_RETAINED_MESSAGES
+        );
+
+        for (int i = retainedMessageStart; i < newLineInfos.size(); i++) {
+            MessageNotificationState.MessageLineInfo messageLineInfo = newLineInfos.get(i);
+            Person currentPerson = getOrCreatePerson(peopleByKey, messageLineInfo);
             MessagingStyle.Message message = messageLineInfo.createStyledMessage(currentPerson);
             style.addMessage(message);
-            style.setGroupConversation(conversation.mIsGroup);
             latestPerson = currentPerson;
+        }
+
+        if (!newLineInfos.isEmpty()) {
+            style.setGroupConversation(conversation.mIsGroup);
         }
         notifBuilder.setWhen(conversation.mReceivedTimestamp);
 
@@ -565,4 +653,3 @@ public class BugleNotifications {
         return personBuilder.build();
     }
 }
-
