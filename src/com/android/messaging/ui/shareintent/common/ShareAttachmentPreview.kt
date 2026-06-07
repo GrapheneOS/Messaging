@@ -54,6 +54,7 @@ internal fun ShareAttachmentPreview(
                     modifier = Modifier.testTag(itemTestTag),
                     kind = attachment.kind,
                     avatarUri = null,
+                    avatarName = attachment.title,
                     title = attachment.title
                         ?: stringResource(id = R.string.mediapicker_contact_title),
                     subtitle = null,

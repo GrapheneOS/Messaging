@@ -133,6 +133,7 @@ internal fun AudioAttachmentCell(
 internal fun VCardAttachmentCell(
     kind: VCardAttachmentKind,
     avatarUri: String?,
+    avatarName: String?,
     title: String,
     subtitle: String?,
     onClick: () -> Unit,
@@ -154,6 +155,7 @@ internal fun VCardAttachmentCell(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             kind = kind,
             avatarUri = avatarUri,
+            avatarName = avatarName,
             title = title,
             subtitle = subtitle,
         )

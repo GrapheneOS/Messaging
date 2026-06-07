@@ -40,6 +40,7 @@ internal fun ConversationVCardAttachmentCardContent(
         modifier = modifier,
         kind = type.toVCardAttachmentKind(),
         avatarUri = avatarUri,
+        avatarName = titleText,
         title = resolveVCardText(
             text = titleText,
             textResId = titleTextResId,

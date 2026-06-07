@@ -69,7 +69,9 @@ internal fun ConversationAttachmentPreview(
     ) { attachment ->
         when (attachment) {
             is ComposerAttachmentUiModel.Pending.AudioFinalizing -> {
-                PendingAudioAttachmentPreviewItem()
+                PendingAudioAttachmentPreviewItem(
+                    attachmentKey = attachment.key,
+                )
             }
 
             is ComposerAttachmentUiModel.Pending.Generic -> {
@@ -115,6 +117,7 @@ private fun ResolvedAttachmentPreviewItem(
                 modifier = Modifier.testTag(itemTestTag),
                 kind = attachment.vCardUiModel.type.toVCardAttachmentKind(),
                 avatarUri = attachment.vCardUiModel.avatarUri,
+                avatarName = attachment.vCardUiModel.titleText,
                 title = resolveVCardText(
                     text = attachment.vCardUiModel.titleText,
                     textResId = attachment.vCardUiModel.titleTextResId,
@@ -201,11 +204,12 @@ private fun PendingAttachmentPreviewItem(
 }
 
 @Composable
-private fun PendingAudioAttachmentPreviewItem() {
+private fun PendingAudioAttachmentPreviewItem(attachmentKey: String) {
     AttachmentPreviewCard(
         modifier = Modifier
             .height(height = PENDING_AUDIO_CARD_HEIGHT)
-            .wrapContentWidth(),
+            .wrapContentWidth()
+            .testTag(conversationAttachmentPreviewItemTestTag(attachmentKey = attachmentKey)),
         onClick = {},
     ) {
         Row(

@@ -38,6 +38,7 @@ internal enum class VCardAttachmentKind {
 internal fun VCardAttachmentCard(
     kind: VCardAttachmentKind,
     avatarUri: String?,
+    avatarName: String?,
     title: String,
     subtitle: String?,
     modifier: Modifier = Modifier,
@@ -50,7 +51,7 @@ internal fun VCardAttachmentCard(
         VCardAttachmentLeadingVisual(
             kind = kind,
             avatarUri = avatarUri,
-            title = title,
+            avatarName = avatarName,
         )
 
         Column(
@@ -82,13 +83,13 @@ internal fun VCardAttachmentCard(
 private fun VCardAttachmentLeadingVisual(
     kind: VCardAttachmentKind,
     avatarUri: String?,
-    title: String,
+    avatarName: String?,
 ) {
     when (kind) {
         VCardAttachmentKind.Contact -> {
             VCardAttachmentAvatar(
                 avatarUri = avatarUri,
-                title = title,
+                avatarName = avatarName,
             )
         }
 
@@ -112,14 +113,14 @@ private fun VCardAttachmentLeadingVisual(
 @Composable
 private fun VCardAttachmentAvatar(
     avatarUri: String?,
-    title: String,
+    avatarName: String?,
 ) {
     val displayableAvatarUri = remember(avatarUri) {
         displayableVCardAvatarUri(avatarUri = avatarUri)
     }
 
-    val label = remember(title) {
-        vCardAvatarLabel(title = title)
+    val label = remember(avatarName) {
+        vCardAvatarLabel(avatarName = avatarName)
     }
 
     Box(
@@ -183,10 +184,10 @@ private fun displayableVCardAvatarUri(avatarUri: String?): String? {
         ?.toString()
 }
 
-private fun vCardAvatarLabel(title: String): String? {
-    return title
-        .trim()
-        .takeIf { it.isNotBlank() }
+private fun vCardAvatarLabel(avatarName: String?): String? {
+    return avatarName
+        ?.trim()
+        ?.takeIf { it.isNotBlank() }
         ?.first()
         ?.uppercaseChar()
         ?.toString()
