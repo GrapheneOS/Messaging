@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
@@ -31,6 +30,8 @@ import com.android.messaging.ui.conversation.messages.model.message.Conversation
 import com.android.messaging.ui.conversation.messages.ui.message.ConversationMessage
 import com.android.messaging.ui.subscription.mapper.resolveDisplayName
 
+private val MessageDetailsCardPadding = 16.dp
+
 @Composable
 internal fun MessageDetailsPreviewCard(
     preview: ConversationMessageUiModel,
@@ -41,7 +42,7 @@ internal fun MessageDetailsPreviewCard(
 
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(size = 24.dp),
+        shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surfaceContainer,
     ) {
         ConversationMessage(
@@ -159,7 +160,7 @@ internal fun MessageDetailsDebugSection(
         Surface(
             onClick = { isExpanded = !isExpanded },
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(size = 16.dp),
+            shape = MaterialTheme.shapes.medium,
             color = MaterialTheme.colorScheme.surfaceContainer,
         ) {
             Row(
@@ -212,6 +213,7 @@ private fun MessageDetailsCard(
     ) {
         title?.let { sectionTitle ->
             Text(
+                modifier = Modifier.padding(horizontal = MessageDetailsCardPadding),
                 text = sectionTitle,
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
@@ -220,12 +222,12 @@ private fun MessageDetailsCard(
 
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(size = 16.dp),
+            shape = MaterialTheme.shapes.medium,
             color = MaterialTheme.colorScheme.surfaceContainer,
         ) {
             Column(
-                modifier = Modifier.padding(all = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(space = 12.dp),
+                modifier = Modifier.padding(all = MessageDetailsCardPadding),
+                verticalArrangement = Arrangement.spacedBy(space = 8.dp),
             ) {
                 content()
             }
