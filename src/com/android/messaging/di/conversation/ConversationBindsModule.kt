@@ -8,8 +8,12 @@ import com.android.messaging.data.conversation.mapper.ConversationDraftMessageDa
 import com.android.messaging.data.conversation.mapper.ConversationDraftMessageDataMapperImpl
 import com.android.messaging.data.conversation.mapper.ConversationMessageDataDraftMapper
 import com.android.messaging.data.conversation.mapper.ConversationMessageDataDraftMapperImpl
+import com.android.messaging.data.conversation.mapper.ConversationMessageDetailsMapper
+import com.android.messaging.data.conversation.mapper.ConversationMessageDetailsMapperImpl
 import com.android.messaging.data.conversation.mapper.ConversationVCardMetadataMapper
 import com.android.messaging.data.conversation.mapper.ConversationVCardMetadataMapperImpl
+import com.android.messaging.data.conversation.platform.MessageDetailsPlatformSource
+import com.android.messaging.data.conversation.platform.MessageDetailsPlatformSourceImpl
 import com.android.messaging.data.conversation.repository.ConversationDraftsRepository
 import com.android.messaging.data.conversation.repository.ConversationDraftsRepositoryImpl
 import com.android.messaging.data.conversation.repository.ConversationParticipantsRepository
@@ -90,6 +94,18 @@ internal abstract class ConversationBindsModule {
     abstract fun bindConversationMessageDataDraftMapper(
         impl: ConversationMessageDataDraftMapperImpl,
     ): ConversationMessageDataDraftMapper
+
+    @Binds
+    @Reusable
+    abstract fun bindConversationMessageDetailsMapper(
+        impl: ConversationMessageDetailsMapperImpl,
+    ): ConversationMessageDetailsMapper
+
+    @Binds
+    @Reusable
+    abstract fun bindMessageDetailsPlatformSource(
+        impl: MessageDetailsPlatformSourceImpl,
+    ): MessageDetailsPlatformSource
 
     @Binds
     @Reusable

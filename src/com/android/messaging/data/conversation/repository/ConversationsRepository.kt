@@ -3,10 +3,13 @@ package com.android.messaging.data.conversation.repository
 import android.content.ContentResolver
 import android.database.ContentObserver
 import android.net.Uri
+import com.android.messaging.data.conversation.mapper.ConversationMessageDetailsMapper
+import com.android.messaging.data.conversation.model.message.ConversationMessageDetails
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetailsData
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
 import com.android.messaging.data.conversation.model.send.ConversationSendData
+import com.android.messaging.data.conversation.platform.MessageDetailsPlatformSource
 import com.android.messaging.data.conversation.store.ConversationSelfIdStore
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
@@ -59,6 +62,11 @@ internal interface ConversationsRepository {
         messageId: String,
     ): ConversationMessageDetailsData?
 
+    suspend fun getMessageDetails(
+        conversationId: String,
+        messageId: String,
+    ): ConversationMessageDetails?
+
     fun resendMessage(messageId: String)
 
     fun archiveConversation(conversationId: String)
@@ -72,6 +80,8 @@ internal interface ConversationsRepository {
 
 internal class ConversationsRepositoryImpl @Inject constructor(
     private val contentResolver: ContentResolver,
+    private val messageDetailsMapper: ConversationMessageDetailsMapper,
+    private val messageDetailsPlatformSource: MessageDetailsPlatformSource,
     private val conversationSelfIdStore: ConversationSelfIdStore,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
@@ -175,22 +185,30 @@ internal class ConversationsRepositoryImpl @Inject constructor(
         messageId: String,
     ): ConversationMessageDetailsData? {
         return withContext(context = messagingDbDispatcher) {
-            val message = getConversationMessageData(
+            loadMessageDetailsData(
+                conversationId = conversationId,
+                messageId = messageId,
+            )
+        }
+    }
+
+    override suspend fun getMessageDetails(
+        conversationId: String,
+        messageId: String,
+    ): ConversationMessageDetails? {
+        return withContext(context = messagingDbDispatcher) {
+            val data = loadMessageDetailsData(
                 conversationId = conversationId,
                 messageId = messageId,
             ) ?: return@withContext null
 
-            val participants = queryConversationParticipants(
-                conversationId = conversationId,
-            )
-            val selfParticipant = queryParticipant(
-                participantId = message.selfParticipantId,
-            )
-
-            ConversationMessageDetailsData(
-                message = message,
-                participants = participants,
-                selfParticipant = selfParticipant,
+            messageDetailsMapper.map(
+                data = data,
+                activeSubscriptionCount = messageDetailsPlatformSource.activeSubscriptionCount(),
+                cleansedSubject = messageDetailsPlatformSource.cleanseSubject(
+                    subject = data.message.mmsSubject,
+                ),
+                debug = messageDetailsPlatformSource.loadDebug(data.message),
             )
         }
     }
@@ -328,6 +346,29 @@ internal class ConversationsRepositoryImpl @Inject constructor(
                     sortTimestamp = cursor.getLong(ConversationColumns.SORT_TIMESTAMP),
                 )
             }
+    }
+
+    private fun loadMessageDetailsData(
+        conversationId: String,
+        messageId: String,
+    ): ConversationMessageDetailsData? {
+        val message = getConversationMessageData(
+            conversationId = conversationId,
+            messageId = messageId,
+        ) ?: return null
+
+        val participants = queryConversationParticipants(
+            conversationId = conversationId,
+        )
+        val selfParticipant = queryParticipant(
+            participantId = message.selfParticipantId,
+        )
+
+        return ConversationMessageDetailsData(
+            message = message,
+            participants = participants,
+            selfParticipant = selfParticipant,
+        )
     }
 
     private fun queryConversationOtherParticipant(uri: Uri): ParticipantData? {
