@@ -123,7 +123,7 @@ private fun MessageDetailsContent(
             .fillMaxSize()
             .verticalScroll(state = rememberScrollState())
             .padding(all = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(space = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(space = 16.dp),
     ) {
         MessageDetailsPreviewCard(
             preview = content.preview,
