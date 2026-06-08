@@ -56,6 +56,7 @@ internal class ConversationScreenEffectsTest {
                 screenModel = screenModel,
                 snackbarHostState = snackbarHostState,
                 hostBoundsState = hostBoundsState,
+                onNavigateToMessageDetails = {},
                 onNavigateBack = onNavigateBack,
             )
         }
@@ -114,6 +115,7 @@ internal class ConversationScreenEffectsTest {
                 screenModel = screenModel,
                 snackbarHostState = snackbarHostState,
                 hostBoundsState = hostBoundsState,
+                onNavigateToMessageDetails = {},
                 onNavigateBack = onNavigateBack,
             )
         }

@@ -13,6 +13,12 @@ internal interface ConversationNavigationReducer {
         conversationId: String,
     )
 
+    fun navigateToMessageDetails(
+        backStack: MutableList<NavKey>,
+        conversationId: String,
+        messageId: String,
+    )
+
     fun navigateToRecipientPicker(
         backStack: MutableList<NavKey>,
         mode: RecipientPickerMode,
@@ -55,6 +61,19 @@ internal class ConversationNavigationReducerImpl : ConversationNavigationReducer
         }
 
         backStack.add(destination)
+    }
+
+    override fun navigateToMessageDetails(
+        backStack: MutableList<NavKey>,
+        conversationId: String,
+        messageId: String,
+    ) {
+        MessageDetailsNavKey(
+            conversationId = conversationId,
+            messageId = messageId,
+        )
+            .takeIf { it != backStack.lastOrNull() }
+            ?.let(backStack::add)
     }
 
     override fun navigateToRecipientPicker(

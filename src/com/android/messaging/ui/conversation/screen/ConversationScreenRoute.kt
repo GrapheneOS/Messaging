@@ -95,6 +95,7 @@ internal fun ConversationScreenRouteEffects(
     hostBoundsState: State<ComposeRect?>,
     permissionState: ConversationMediaPickerPermissionState,
     screenModel: ConversationScreenModel,
+    onNavigateToMessageDetails: (messageId: String) -> Unit,
     onNavigateBack: () -> Unit,
     onPendingDraftConsumed: () -> Unit,
     onPendingSelfParticipantIdConsumed: () -> Unit,
@@ -130,6 +131,7 @@ internal fun ConversationScreenRouteEffects(
         screenModel = screenModel,
         snackbarHostState = snackbarHostState,
         hostBoundsState = hostBoundsState,
+        onNavigateToMessageDetails = onNavigateToMessageDetails,
         onNavigateBack = onNavigateBack,
     )
 }

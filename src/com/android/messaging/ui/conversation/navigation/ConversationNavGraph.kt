@@ -1,5 +1,7 @@
 package com.android.messaging.ui.conversation.navigation
 
+import androidx.compose.foundation.background
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
@@ -24,6 +26,7 @@ import com.android.messaging.ui.conversation.entry.NewChatScreen
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryLaunchRequest
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryStartupAttachment
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryUiState
+import com.android.messaging.ui.conversation.messagedetails.MessageDetailsScreen
 import com.android.messaging.ui.conversation.recipientpicker.RecipientPickerScreen
 import com.android.messaging.ui.conversation.screen.ConversationScreen
 
@@ -73,7 +76,7 @@ internal fun ConversationNavGraph(
 
     NavDisplay(
         backStack = backStack,
-        modifier = modifier,
+        modifier = modifier.background(color = MaterialTheme.colorScheme.background),
         onBack = {
             handleNavBack(
                 backStack = backStack,
@@ -98,6 +101,10 @@ private fun conversationNavEntryProvider(
         )
         entry<AddParticipantsNavKey>(
             content = addParticipantsRouteContent(routeState = routeState),
+        )
+        entry<MessageDetailsNavKey>(
+            metadata = messageDetailsTransitionMetadata(),
+            content = messageDetailsRouteContent(routeState = routeState),
         )
         entry<RecipientPickerNavKey> { navKey ->
             RecipientPickerScreen(mode = navKey.mode)
@@ -130,6 +137,13 @@ private fun conversationScreenRouteContent(
             },
             onConversationDetailsClick = {
                 routeState.onConversationDetailsClick.value(conversationId)
+            },
+            onNavigateToMessageDetails = { messageId ->
+                navigationReducer.navigateToMessageDetails(
+                    backStack = routeState.backStack,
+                    conversationId = conversationId,
+                    messageId = messageId,
+                )
             },
             onNavigateBack = {
                 popBackStackOrFinish(
@@ -203,6 +217,24 @@ private fun addParticipantsRouteContent(
                 routeState.navigationReducer.value.replaceCurrentConversation(
                     backStack = routeState.backStack,
                     conversationId = resolvedConversationId,
+                )
+            },
+        )
+    }
+}
+
+private fun messageDetailsRouteContent(
+    routeState: ConversationNavRouteState,
+): @Composable (MessageDetailsNavKey) -> Unit {
+    return { navKey ->
+        MessageDetailsScreen(
+            conversationId = navKey.conversationId,
+            messageId = navKey.messageId,
+            onNavigateBack = {
+                popBackStackOrFinish(
+                    backStack = routeState.backStack,
+                    navigationReducer = routeState.navigationReducer.value,
+                    onFinish = routeState.onFinish.value,
                 )
             },
         )

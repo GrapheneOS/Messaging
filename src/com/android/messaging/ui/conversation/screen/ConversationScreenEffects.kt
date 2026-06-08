@@ -31,7 +31,6 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.UIIntents
-import com.android.messaging.ui.conversation.MessageDetailsDialog
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
 import com.android.messaging.util.BuglePrefs
 import com.android.messaging.util.ContactUtil
@@ -46,6 +45,7 @@ internal fun ConversationScreenEffects(
     screenModel: ConversationScreenModel,
     snackbarHostState: SnackbarHostState,
     hostBoundsState: State<ComposeRect?>,
+    onNavigateToMessageDetails: (messageId: String) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -63,6 +63,7 @@ internal fun ConversationScreenEffects(
     val currentLaunchRoleRequest = rememberUpdatedState<(Intent) -> Unit>(
         defaultSmsRoleLauncher::launch,
     )
+    val currentOnNavigateToMessageDetails = rememberUpdatedState(onNavigateToMessageDetails)
     val currentOnNavigateBack = rememberUpdatedState(onNavigateBack)
 
     LaunchedEffect(screenModel) {
@@ -74,6 +75,7 @@ internal fun ConversationScreenEffects(
                 hostBoundsState = currentHostBoundsState.value,
                 effect = effect,
                 launchRoleRequest = currentLaunchRoleRequest.value,
+                onNavigateToMessageDetails = currentOnNavigateToMessageDetails.value,
                 onNavigateBack = currentOnNavigateBack.value,
                 onDraftSent = { draftSentTick.intValue++ },
             )
@@ -90,11 +92,17 @@ private suspend fun ConversationScreenModel.handleConversationScreenEffect(
     hostBoundsState: State<ComposeRect?>,
     effect: ConversationScreenEffect,
     launchRoleRequest: (Intent) -> Unit,
+    onNavigateToMessageDetails: (messageId: String) -> Unit,
     onNavigateBack: () -> Unit,
     onDraftSent: () -> Unit,
 ) {
     when (effect) {
         ConversationScreenEffect.CloseConversation -> onNavigateBack()
+
+        is ConversationScreenEffect.ShowMessageDetails -> {
+            onNavigateToMessageDetails(effect.message.messageId)
+        }
+
         is ConversationScreenEffect.RequestDefaultSmsRole -> {
             requestDefaultSmsRole(
                 context = context,
@@ -135,7 +143,6 @@ private suspend fun ConversationScreenModel.handleConversationScreenEffect(
         is ConversationScreenEffect.OpenExternalUri,
         is ConversationScreenEffect.PlacePhoneCall,
         is ConversationScreenEffect.ShowMessage,
-        is ConversationScreenEffect.ShowMessageDetails,
         is ConversationScreenEffect.ShowOrAddParticipantContact,
         is ConversationScreenEffect.ShowSaveAttachmentsResult,
         -> {
@@ -191,15 +198,6 @@ private fun handleImmediateConversationScreenEffect(
 
         is ConversationScreenEffect.ShowMessage -> {
             UiUtils.showToastAtBottom(effect.messageResId)
-        }
-
-        is ConversationScreenEffect.ShowMessageDetails -> {
-            MessageDetailsDialog.show(
-                context,
-                effect.message,
-                effect.participants,
-                effect.selfParticipant,
-            )
         }
 
         is ConversationScreenEffect.ShowOrAddParticipantContact -> {
