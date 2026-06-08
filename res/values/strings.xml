@@ -551,28 +551,14 @@
     <string name="message_details_priority_label">Priority</string>
     <!-- Section header above developer debug information on the message details screen. -->
     <string name="message_details_debug_label">Debug</string>
-    <!-- Label in "Message details" dialog -->
-    <string name="message_type_label">Type:\u0020</string>
     <!-- "Type" value in "Message details" dialog -->
     <string name="text_message">Text message</string>
     <!-- "Type" value in "Message details" dialog -->
     <string name="multimedia_message">Multimedia message</string>
-    <!-- Label in "Message details" dialog showing who sent the message. -->
-    <string name="from_label">From:\u0020</string>
     <!-- Label in "Message details" dialog -->
     <string name="to_address_label">To:\u0020</string>
     <!-- Label in "Message details" dialog -->
-    <string name="sent_label">Sent:\u0020</string>
-    <!-- Label in "Message details" dialog -->
-    <string name="received_label">Received:\u0020</string>
-    <!-- Label in "Message details" dialog -->
     <string name="subject_label">Subject:\u0020</string>
-    <!-- Label in "Message details" dialog -->
-    <string name="message_size_label">Size:\u0020</string>
-    <!-- Label in "Message details" dialog -->
-    <string name="priority_label">Priority:\u0020</string>
-    <!-- Label in "Message details" dialog -->
-    <string name="sim_label">SIM:\u0020</string>
     <!-- "Priority" value in "Message details" dialog -->
     <string name="priority_high">High</string>
     <!-- "Priority" value in "Message details" dialog -->
@@ -581,8 +567,6 @@
     <string name="priority_low">Low</string>
     <!-- SIM identified using the slot number. e.g. SIM 1 -->
     <string name="sim_slot_identifier">SIM <xliff:g id="sim_slot_number">%s</xliff:g></string>
-    <!-- Sender to be used if the sender address has been hidden -->
-    <string name="hidden_sender_address">Hidden sender address</string>
     <!-- Shows when the user attempts to send message while some attachment(s) haven't finished loading -->
     <string name="cant_send_message_while_loading_attachments">Can\'t send message while loading attachments.</string>
     <!-- Notifies the user when an attachment fails to load -->
