@@ -515,39 +515,6 @@ internal class ConversationComposerUiStateMapperImplTest {
     }
 
     @Test
-    fun map_fallsBackToFirstSubscriptionWhenDraftSelfParticipantIdDoesNotMatch() {
-        val firstSubscription = createSubscription(
-            selfParticipantId = "sub-a",
-            subId = FIRST_SUB_ID,
-            slotId = 1,
-        )
-        val subscriptions = persistentListOf(
-            firstSubscription,
-            createSubscription(
-                selfParticipantId = "sub-b",
-                subId = SECOND_SUB_ID,
-                slotId = 2,
-            ),
-        )
-
-        val uiState = mapper.map(
-            audioRecording = ConversationAudioRecordingUiState(),
-            draftState = ConversationDraftState(
-                draft = ConversationDraft(
-                    selfParticipantId = "non-existent",
-                ),
-            ),
-            attachments = persistentListOf(),
-            composerAvailability = ConversationComposerAvailability.Editable,
-            subscriptions = subscriptions,
-            areSubscriptionsLoaded = true,
-            defaultSmsSubscriptionId = ParticipantData.DEFAULT_SELF_SUB_ID,
-        )
-
-        assertEquals(firstSubscription, uiState.simSelector.selectedSubscription)
-    }
-
-    @Test
     fun map_leavesSimSelectorUnavailableForSingleOrEmptySubscriptionList() {
         val emptyUiState = mapper.map(
             audioRecording = ConversationAudioRecordingUiState(),

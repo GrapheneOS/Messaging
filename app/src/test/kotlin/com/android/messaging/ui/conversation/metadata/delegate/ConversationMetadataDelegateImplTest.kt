@@ -216,6 +216,18 @@ class ConversationMetadataDelegateImplTest {
                         false,
                         harness.delegate.isDeleteConversationConfirmationVisible.value,
                     )
+                    verify(exactly = 0) {
+                        harness.conversationsRepository.archiveConversation(
+                            conversationId = any(),
+                        )
+                        harness.conversationsRepository.unarchiveConversation(
+                            conversationId = any(),
+                        )
+                        harness.conversationsRepository.deleteConversation(
+                            conversationId = any(),
+                            cutoffTimestamp = any(),
+                        )
+                    }
                 } finally {
                     harness.cancel()
                 }

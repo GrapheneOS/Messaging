@@ -10,12 +10,17 @@ object ShellCommandHelper {
 
     fun setupSmsDefaultRole(): List<String> {
         val packageName = InstrumentationRegistry.getInstrumentation().targetContext.packageName
-        cancelScheduledSmsDefaultRoleRestore(packageName = packageName)
-
+        val persistedRoleHolders = readPersistedSmsRoleHolders(packageName = packageName)
         val currentRoleHolders = getSmsRoleHolders()
-        val previousRoleHolders = originalSmsRoleHolders ?: currentRoleHolders.also { roleHolders ->
-            originalSmsRoleHolders = roleHolders
-        }
+        val previousRoleHolders = originalSmsRoleHolders
+            ?: (persistedRoleHolders ?: currentRoleHolders).also { roleHolders ->
+                originalSmsRoleHolders = roleHolders
+            }
+        cancelScheduledSmsDefaultRoleRestore(
+            packageName = packageName,
+            previousRoleHolders = previousRoleHolders,
+        )
+
         if (packageName !in currentRoleHolders) {
             executeCheckedShellCommand(
                 command = "cmd role add-role-holder $SMS_ROLE_NAME $packageName",
@@ -35,17 +40,58 @@ object ShellCommandHelper {
         scheduleSmsDefaultRoleRestore(previousRoleHolders = previousRoleHolders)
     }
 
-    private fun cancelScheduledSmsDefaultRoleRestore(packageName: String) {
+    private fun cancelScheduledSmsDefaultRoleRestore(
+        packageName: String,
+        previousRoleHolders: List<String>,
+    ) {
         smsRoleRestoreGeneration += 1
+        writeSmsRoleRestoreState(
+            generationFilePath = smsRoleRestoreGenerationFilePath(packageName = packageName),
+            generation = smsRoleRestoreGeneration,
+            previousRoleHolders = previousRoleHolders,
+            failureMessage = "Failed to cancel pending SMS default role restore",
+        )
+    }
+
+    // State file format: first line is the cancellation generation, remaining lines are
+    // the original role holders to restore.
+    // Persisting the holders lets a later instrumentation run that starts before the delayed
+    // restore fires recover the device's true original SMS app instead of capturing the
+    // test package as the original holder.
+    private fun readPersistedSmsRoleHolders(packageName: String): List<String>? {
+        val generationFilePath = smsRoleRestoreGenerationFilePath(packageName = packageName)
+        val stateFileContent = executeShellCommand(
+            command = "sh -c ${shellSingleQuoted(value = "cat $generationFilePath 2>/dev/null")}",
+        )
+        val stateFileLines = stateFileContent
+            .lineSequence()
+            .map { line -> line.trim() }
+            .filter { line -> line.isNotEmpty() }
+            .toList()
+
+        return stateFileLines
+            .takeIf { it.isNotEmpty() }
+            ?.drop(1)
+    }
+
+    private fun writeSmsRoleRestoreState(
+        generationFilePath: String,
+        generation: Int,
+        previousRoleHolders: List<String>,
+        failureMessage: String,
+    ) {
+        val stateFileContent = (listOf(generation.toString()) + previousRoleHolders)
+            .joinToString(separator = "\n")
+
         executeCheckedShellCommand(
             command = "sh -c ${
                 shellSingleQuoted(
-                    value = "printf %s $smsRoleRestoreGeneration > ${
-                        smsRoleRestoreGenerationFilePath(packageName = packageName)
-                    }",
+                    value = "printf %s ${
+                        shellSingleQuoted(value = stateFileContent)
+                    } > $generationFilePath",
                 )
             }",
-            failureMessage = "Failed to cancel pending SMS default role restore",
+            failureMessage = failureMessage,
         )
     }
 
@@ -59,12 +105,10 @@ object ShellCommandHelper {
             generationFilePath = generationFilePath,
         )
 
-        executeCheckedShellCommand(
-            command = "sh -c ${
-                shellSingleQuoted(
-                    value = "printf %s $smsRoleRestoreGeneration > $generationFilePath",
-                )
-            }",
+        writeSmsRoleRestoreState(
+            generationFilePath = generationFilePath,
+            generation = smsRoleRestoreGeneration,
+            previousRoleHolders = previousRoleHolders,
             failureMessage = "Failed to prepare SMS default role restore",
         )
         executeCheckedShellCommand(
@@ -86,7 +130,7 @@ object ShellCommandHelper {
 
         return "{" +
             " sleep $SMS_ROLE_RESTORE_DELAY_SECONDS;" +
-            " if [ \"\$(cat ${shellWord(
+            " if [ \"\$(sed -n 1p ${shellWord(
                 value = generationFilePath
             )} 2>/dev/null)\" = \"$generation\" ]; then" +
             " cmd role clear-role-holders $SMS_ROLE_NAME;" +
