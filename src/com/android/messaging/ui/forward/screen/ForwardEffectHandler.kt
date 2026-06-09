@@ -7,9 +7,9 @@ import com.android.messaging.domain.shareintent.model.ShareSendTarget
 import com.android.messaging.domain.shareintent.usecase.SendSharedContentToTargets
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.shareintent.screen.ShareIntentEffectHandler
+import com.android.messaging.ui.shareintent.screen.model.ShareIntentScreenEffect as Effect
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import com.android.messaging.ui.shareintent.screen.model.ShareIntentScreenEffect as Effect
 
 internal class ForwardEffectHandler(
     private val applicationScope: CoroutineScope,

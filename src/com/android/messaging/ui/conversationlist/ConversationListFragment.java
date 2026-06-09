@@ -69,13 +69,11 @@ import java.util.List;
 public class ConversationListFragment extends Fragment implements ConversationListDataListener,
         ConversationListItemView.HostInterface {
     private static final String BUNDLE_ARCHIVED_MODE = "archived_mode";
-    private static final String BUNDLE_FORWARD_MESSAGE_MODE = "forward_message_mode";
     private static final boolean VERBOSE = false;
 
     private MenuItem mShowBlockedMenuItem;
     private boolean mArchiveMode;
     private boolean mBlockedAvailable;
-    private boolean mForwardMessageMode;
 
     public interface ConversationListFragmentHost {
         public void onConversationClick(final ConversationListData listData,
@@ -108,10 +106,6 @@ public class ConversationListFragment extends Fragment implements ConversationLi
         return createConversationListFragment(BUNDLE_ARCHIVED_MODE);
     }
 
-    public static ConversationListFragment createForwardMessageConversationListFragment() {
-        return createConversationListFragment(BUNDLE_FORWARD_MESSAGE_MODE);
-    }
-
     public static ConversationListFragment createConversationListFragment(String modeKeyName) {
         final ConversationListFragment fragment = new ConversationListFragment();
         final Bundle bundle = new Bundle();
@@ -142,7 +136,6 @@ public class ConversationListFragment extends Fragment implements ConversationLi
 
     public void setScrolledToNewestConversationIfNeeded() {
         if (!mArchiveMode
-                && !mForwardMessageMode
                 && isScrolledToFirstConversation()
                 && mHost.hasWindowFocus()) {
             mListBinding.getData().setScrolledToNewestConversation(true);
@@ -253,7 +246,6 @@ public class ConversationListFragment extends Fragment implements ConversationLi
         final Bundle arguments = getArguments();
         if (arguments != null) {
             mArchiveMode = arguments.getBoolean(BUNDLE_ARCHIVED_MODE, false);
-            mForwardMessageMode = arguments.getBoolean(BUNDLE_FORWARD_MESSAGE_MODE, false);
         }
         mListBinding.bind(DataModel.get().createConversationListData(activity, this, mArchiveMode));
     }

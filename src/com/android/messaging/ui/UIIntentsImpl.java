@@ -50,7 +50,7 @@ import com.android.messaging.ui.conversation.ConversationActivity;
 import com.android.messaging.ui.conversation.LaunchConversationActivity;
 import com.android.messaging.ui.conversationlist.ArchivedConversationListActivity;
 import com.android.messaging.ui.conversationlist.ConversationListActivity;
-import com.android.messaging.ui.conversationlist.ForwardMessageActivity;
+import com.android.messaging.ui.forward.ForwardMessageActivity;
 import com.android.messaging.ui.conversationsettings.ConversationSettingsActivity;
 import com.android.messaging.ui.debug.DebugMmsConfigActivity;
 import com.android.messaging.ui.permissioncheck.PermissionCheckActivity;

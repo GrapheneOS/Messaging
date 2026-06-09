@@ -247,12 +247,12 @@
 
         <!-- Message Forwarding -->
         <activity
-            android:name=".ui.conversationlist.ForwardMessageActivity"
+            android:name=".ui.forward.ForwardMessageActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:screenOrientation="user"
             android:label="@string/forward_message_activity_title"
-            android:theme="@style/BugleTheme.DialogActivity">
-        </activity>
+            android:theme="@style/Theme.Compose"
+            android:windowSoftInputMode="stateHidden|adjustResize" />
 
         <!-- Entry point for handling remote input/actions. Currently, this is only used by Android
              Wear to send voice replies. Since that uses PendingIntents, we don't need to export
