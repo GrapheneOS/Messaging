@@ -21,6 +21,9 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteException;
 import android.provider.Telephony.Mms;
 import android.provider.Telephony.Sms;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.collection.LongSparseArray;
 import android.text.TextUtils;
 
@@ -30,6 +33,8 @@ import com.android.messaging.datamodel.DatabaseWrapper;
 import com.android.messaging.datamodel.SyncManager;
 import com.android.messaging.datamodel.DatabaseHelper.MessageColumns;
 import com.android.messaging.datamodel.SyncManager.ThreadInfoCache;
+import com.android.messaging.datamodel.action.mms.IsMmsNotificationDownloadCountSynchronized;
+import com.android.messaging.datamodel.action.mms.MmsNotificationDownloadState;
 import com.android.messaging.datamodel.data.MessageData;
 import com.android.messaging.mmslib.SqliteWrapper;
 import com.android.messaging.sms.DatabaseMessages;
@@ -57,7 +62,7 @@ class SyncCursorPair {
     static final long SYNC_COMPLETE = -1L;
     static final long SYNC_STARTING = Long.MAX_VALUE;
 
-    private CursorIterator mLocalCursorIterator;
+    private LocalCursorIterator mLocalCursorIterator;
     private CursorIterator mRemoteCursorsIterator;
 
     private final String mLocalSelection;
@@ -152,7 +157,7 @@ class SyncCursorPair {
             final ArrayList<LocalDatabaseMessage> messagesToDelete,
             final SyncManager.ThreadInfoCache threadInfoCache) {
         // Set of local messages matched with the timestamp of a remote message
-        final Set<DatabaseMessage> matchedLocalMessages = Sets.newHashSet();
+        final Set<LocalDatabaseMessage> matchedLocalMessages = Sets.newHashSet();
         // Set of remote messages matched with the timestamp of a local message
         final Set<DatabaseMessage> matchedRemoteMessages = Sets.newHashSet();
         long lastTimestampMillis = SYNC_STARTING;
@@ -161,7 +166,7 @@ class SyncCursorPair {
         int remoteCount = 0;
         // Seed the initial values of remote and local messages for comparison
         DatabaseMessage remoteMessage = mRemoteCursorsIterator.next();
-        DatabaseMessage localMessage = mLocalCursorIterator.next();
+        LocalDatabaseMessage localMessage = mLocalCursorIterator.next();
         // Iterate through messages on both sides in reverse time order
         // Import messages in remote not in local, delete messages in local not in remote
         while (localCount + remoteCount < maxMessagesToScan && smsToAdd.size()
@@ -175,8 +180,7 @@ class SyncCursorPair {
                         localMessage.getTimestampInMillis()
                             > remoteMessage.getTimestampInMillis())) {
                 // Found a local message that is not in remote db
-                // Delete the local message
-                messagesToDelete.add((LocalDatabaseMessage) localMessage);
+                maybeDeleteLocalMessage(messagesToDelete, localMessage);
                 lastTimestampMillis = Math.min(lastTimestampMillis,
                         localMessage.getTimestampInMillis());
                 // Advance to next local message
@@ -200,7 +204,7 @@ class SyncCursorPair {
                 lastTimestampMillis = Math.min(lastTimestampMillis, matchedTimestamp);
                 // Get the next local and remote messages
                 final DatabaseMessage remoteMessagePeek = mRemoteCursorsIterator.next();
-                final DatabaseMessage localMessagePeek = mLocalCursorIterator.next();
+                final LocalDatabaseMessage localMessagePeek = mLocalCursorIterator.next();
                 // Check if only one message on each side matches the current timestamp
                 // by looking at the next messages on both sides. If they are either null
                 // (meaning no more messages) or having a different timestamp. We want
@@ -216,8 +220,7 @@ class SyncCursorPair {
                     // that matches the same timestamp
                     if (!remoteMessage.equals(localMessage)) {
                         // local != remote
-                        // Delete local message
-                        messagesToDelete.add((LocalDatabaseMessage) localMessage);
+                        maybeDeleteLocalMessage(messagesToDelete, localMessage);
                         // Add remote message
                         saveMessageToAdd(smsToAdd, mmsToAdd, remoteMessage, threadInfoCache);
                     }
@@ -250,7 +253,7 @@ class SyncCursorPair {
                             localMessage.getTimestampInMillis() == matchedTimestamp) {
                         if (matchedLocalMessages.contains(localMessage)) {
                             // Duplicate message is local database is deleted
-                            messagesToDelete.add((LocalDatabaseMessage) localMessage);
+                            messagesToDelete.add(localMessage);
                         } else {
                             matchedLocalMessages.add(localMessage);
                         }
@@ -258,9 +261,9 @@ class SyncCursorPair {
                         localMessage = mLocalCursorIterator.next();
                     }
                     // Delete messages local only
-                    for (final DatabaseMessage msg : Sets.difference(
+                    for (final LocalDatabaseMessage msg : Sets.difference(
                             matchedLocalMessages, matchedRemoteMessages)) {
-                        messagesToDelete.add((LocalDatabaseMessage) msg);
+                        maybeDeleteLocalMessage(messagesToDelete, msg);
                     }
                     // Add messages remote only
                     for (final DatabaseMessage msg : Sets.difference(
@@ -271,14 +274,6 @@ class SyncCursorPair {
             }
         }
         return lastTimestampMillis;
-    }
-
-    DatabaseMessage getLocalMessage() {
-        return mLocalCursorIterator.next();
-    }
-
-    DatabaseMessage getRemoteMessage() {
-        return mRemoteCursorsIterator.next();
     }
 
     int getLocalPosition() {
@@ -340,12 +335,16 @@ class SyncCursorPair {
                 MessageColumns.SMS_MESSAGE_URI,
                 MessageColumns.PROTOCOL,
                 MessageColumns.CONVERSATION_ID,
+                MessageColumns.STATUS,
+                MessageColumns.MMS_EXPIRY,
         };
         private static final int INDEX_MESSAGE_ID = 0;
         private static final int INDEX_MESSAGE_TIMESTAMP = 1;
         private static final int INDEX_SMS_MESSAGE_URI = 2;
         private static final int INDEX_MESSAGE_SMS_TYPE = 3;
         private static final int INDEX_CONVERSATION_ID = 4;
+        private static final int INDEX_MESSAGE_STATUS = 5;
+        private static final int INDEX_MESSAGE_MMS_EXPIRY = 6;
     }
 
     /**
@@ -360,7 +359,18 @@ class SyncCursorPair {
                 cursor.getInt(LocalMessageQuery.INDEX_MESSAGE_SMS_TYPE),
                 cursor.getString(LocalMessageQuery.INDEX_SMS_MESSAGE_URI),
                 cursor.getLong(LocalMessageQuery.INDEX_MESSAGE_TIMESTAMP),
-                cursor.getString(LocalMessageQuery.INDEX_CONVERSATION_ID));
+                cursor.getString(LocalMessageQuery.INDEX_CONVERSATION_ID),
+                cursor.getInt(LocalMessageQuery.INDEX_MESSAGE_STATUS),
+                cursor.getLong(LocalMessageQuery.INDEX_MESSAGE_MMS_EXPIRY));
+    }
+
+    private static void maybeDeleteLocalMessage(
+            @NonNull final ArrayList<LocalDatabaseMessage> messagesToDelete,
+            @NonNull final LocalDatabaseMessage localMessage
+    ) {
+        if (!MmsNotificationDownloadState.shouldProtectMmsNotificationDownload(localMessage)) {
+            messagesToDelete.add(localMessage);
+        }
     }
 
     /**
@@ -395,7 +405,8 @@ class SyncCursorPair {
         }
 
         @Override
-        public DatabaseMessage next() {
+        @Nullable
+        public LocalDatabaseMessage next() {
             if (mCursor != null && mCursor.moveToNext()) {
                 return getLocalDatabaseMessage(mCursor);
             }
@@ -681,17 +692,11 @@ class SyncCursorPair {
                     null/*orderBy*/);
             final int mmsCount = getCountFromCursor(remoteMmsCursor);
             final int remoteCount = smsCount + mmsCount;
-            final boolean isInSync = (localCount == remoteCount);
-            if (isInSync) {
-                if (LogUtil.isLoggable(TAG, LogUtil.DEBUG)) {
-                    LogUtil.d(TAG, "SyncCursorPair: Same # of local and remote messages = "
-                            + localCount);
-                }
-            } else {
-                LogUtil.i(TAG, "SyncCursorPair: Not in sync; # local messages = " + localCount
-                        + ", # remote message = " + remoteCount);
-            }
-            return isInSync;
+            final IsMmsNotificationDownloadCountSynchronized isMmsDownloadCountSynchronized =
+                    new IsMmsNotificationDownloadCountSynchronized(context, db);
+            return isMmsDownloadCountSynchronized.invoke(
+                    localCount, remoteCount, localSelection, localSelectionArgs,
+                    smsSelection, smsSelectionArgs, mmsSelection, mmsSelectionArgs);
         } catch (final Exception e) {
             LogUtil.e(TAG, "SyncCursorPair: failed to query local or remote message counts", e);
             // If something is wrong in querying database, assume we are synced so

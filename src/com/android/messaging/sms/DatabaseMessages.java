@@ -854,14 +854,19 @@ public class DatabaseMessages {
         private final long mTimestamp;
         private final long mLocalId;
         private final String mConversationId;
+        private final int mStatus;
+        private final long mMmsExpiry;
 
         public LocalDatabaseMessage(final long localId, final int protocol, final String uri,
-                final long timestamp, final String conversationId) {
+                final long timestamp, final String conversationId, final int status,
+                final long mmsExpiry) {
             mLocalId = localId;
             mProtocol = protocol;
             mUri = uri;
             mTimestamp = timestamp;
             mConversationId = conversationId;
+            mStatus = status;
+            mMmsExpiry = mmsExpiry;
         }
 
         @Override
@@ -887,6 +892,14 @@ public class DatabaseMessages {
             return mConversationId;
         }
 
+        public int getStatus() {
+            return mStatus;
+        }
+
+        public long getMmsExpiry() {
+            return mMmsExpiry;
+        }
+
         @Override
         public int describeContents() {
             return 0;
@@ -898,6 +911,8 @@ public class DatabaseMessages {
             mLocalId = in.readLong();
             mTimestamp = in.readLong();
             mProtocol = in.readInt();
+            mStatus = in.readInt();
+            mMmsExpiry = in.readLong();
         }
 
         public static final Parcelable.Creator<LocalDatabaseMessage> CREATOR
@@ -920,6 +935,8 @@ public class DatabaseMessages {
             out.writeLong(mLocalId);
             out.writeLong(mTimestamp);
             out.writeInt(mProtocol);
+            out.writeInt(mStatus);
+            out.writeLong(mMmsExpiry);
         }
     }
 

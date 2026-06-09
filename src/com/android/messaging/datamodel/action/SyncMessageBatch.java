@@ -30,6 +30,7 @@ import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns;
 import com.android.messaging.datamodel.DatabaseHelper.MessageColumns;
 import com.android.messaging.datamodel.DatabaseWrapper;
 import com.android.messaging.datamodel.SyncManager.ThreadInfoCache;
+import com.android.messaging.datamodel.action.mms.FindMmsNotificationToReplace;
 import com.android.messaging.datamodel.data.MessageData;
 import com.android.messaging.datamodel.data.ParticipantData;
 import com.android.messaging.mmslib.pdu.PduHeaders;
@@ -228,7 +229,7 @@ class SyncMessageBatch {
      * @param mms
      */
     private void storeMms(final DatabaseWrapper db, final MmsMessage mms) {
-        if (mms.mParts.size() < 1) {
+        if (mms.mParts.isEmpty()) {
             LogUtil.w(TAG, "SyncMessageBatch: MMS " + mms.mUri + " has no parts");
         }
 
@@ -236,6 +237,7 @@ class SyncMessageBatch {
         final boolean isOutgoing = mms.mType != Mms.MESSAGE_BOX_INBOX;
         final boolean isNotification = (mms.mMmsMessageType ==
                 PduHeaders.MESSAGE_TYPE_NOTIFICATION_IND);
+        final boolean canReplaceNotification = !isOutgoing && !isNotification;
 
         final String senderId = mms.mSender;
 
@@ -256,6 +258,12 @@ class SyncMessageBatch {
                 self : ParticipantData.getFromRawPhoneBySimLocale(senderId, mms.getSubId());
         final String participantId = (isOutgoing ? selfId :
                 BugleDatabaseOperations.getOrCreateParticipantInTransaction(db, sender));
+        MessageData notificationToReplace = null;
+        if (canReplaceNotification) {
+            final FindMmsNotificationToReplace findMmsNotificationToReplace =
+                    new FindMmsNotificationToReplace(db);
+            notificationToReplace = findMmsNotificationToReplace.invoke(mms, selfId, participantId);
+        }
 
         final int bugleStatus = MmsUtils.bugleStatusForMms(isOutgoing, isNotification, mms.mType);
 
@@ -270,7 +278,14 @@ class SyncMessageBatch {
 
         // Inserting mms content into messages table
         try {
-            BugleDatabaseOperations.insertNewMessageInTransaction(db, message);
+            if (notificationToReplace == null) {
+                BugleDatabaseOperations.insertNewMessageInTransaction(db, message);
+            } else {
+                message.updateMessageId(notificationToReplace.getMessageId());
+                BugleDatabaseOperations.updateMessageInTransaction(db, message);
+                removeMessageToDelete(notificationToReplace.getMessageId());
+                mConversationsToUpdate.add(notificationToReplace.getConversationId());
+            }
         } catch (SQLiteConstraintException e) {
             rethrowSQLiteConstraintExceptionWithDetails(e, db, mms.mUri, mms.mThreadId,
                     conversationId, selfId, participantId);
@@ -284,6 +299,14 @@ class SyncMessageBatch {
 
         // Keep track of updated conversation for later updating the conversation snippet, etc.
         mConversationsToUpdate.add(conversationId);
+    }
+
+    private void removeMessageToDelete(final String messageId) {
+        for (int i = mMessagesToDelete.size() - 1; i >= 0; i--) {
+            if (Long.toString(mMessagesToDelete.get(i).getLocalId()).equals(messageId)) {
+                mMessagesToDelete.remove(i);
+            }
+        }
     }
 
     // TODO: Remove this after we no longer see this crash (b/18375758)
