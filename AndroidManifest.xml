@@ -247,7 +247,7 @@
 
         <!-- Message Forwarding -->
         <activity
-            android:name=".ui.forward.ForwardMessageActivity"
+            android:name=".ui.conversationpicker.host.forward.ForwardMessageActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:screenOrientation="user"
             android:label="@string/forward_message_activity_title"
