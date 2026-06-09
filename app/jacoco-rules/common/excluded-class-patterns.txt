@@ -15,5 +15,5 @@
 # Kotlin compiler-generated classes.
 **/*$DefaultImpls*
 **/*$invokeSuspend$*
-**/*$serializer
+**/*$$serializer.class
 **/*$$inlined$*

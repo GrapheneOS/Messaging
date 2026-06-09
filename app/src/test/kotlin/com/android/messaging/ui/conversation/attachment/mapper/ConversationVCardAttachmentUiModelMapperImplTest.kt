@@ -1,9 +1,8 @@
-package com.android.messaging.ui.conversation.messages.mapper
+package com.android.messaging.ui.conversation.attachment.mapper
 
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentMetadata
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentType
-import com.android.messaging.ui.conversation.attachment.mapper.ConversationVCardAttachmentUiModelMapperImpl
 import com.android.messaging.ui.conversation.attachment.model.ConversationVCardAttachmentUiModel
 import org.junit.Assert.assertEquals
 import org.junit.Test
