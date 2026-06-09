@@ -1,4 +1,4 @@
-package com.android.messaging.ui.forward
+package com.android.messaging.ui.conversationpicker.host.forward
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -8,12 +8,11 @@ import androidx.compose.runtime.remember
 import androidx.core.content.IntentCompat
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.di.core.ApplicationCoroutineScope
+import com.android.messaging.domain.conversationpicker.usecase.SendContentToTargets
 import com.android.messaging.domain.forward.usecase.BuildForwardConversationDraft
-import com.android.messaging.domain.shareintent.usecase.SendSharedContentToTargets
 import com.android.messaging.ui.UIIntents
+import com.android.messaging.ui.conversationpicker.ConversationPickerScreen
 import com.android.messaging.ui.core.AppTheme
-import com.android.messaging.ui.forward.screen.ForwardEffectHandler
-import com.android.messaging.ui.shareintent.screen.ShareIntentScreen
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
@@ -26,7 +25,7 @@ class ForwardMessageActivity : ComponentActivity() {
     internal lateinit var applicationScope: CoroutineScope
 
     @Inject
-    internal lateinit var sendSharedContentToTargets: SendSharedContentToTargets
+    internal lateinit var sendContentToTargets: SendContentToTargets
 
     @Inject
     internal lateinit var buildForwardConversationDraft: BuildForwardConversationDraft
@@ -54,15 +53,15 @@ class ForwardMessageActivity : ComponentActivity() {
                 }
 
                 val effectHandler = remember(message) {
-                    ForwardEffectHandler(
+                    ForwardMessageHandler(
                         applicationScope = applicationScope,
                         activity = this,
                         message = message,
-                        sendSharedContentToTargets = sendSharedContentToTargets,
+                        sendContentToTargets = sendContentToTargets,
                     )
                 }
 
-                ShareIntentScreen(
+                ConversationPickerScreen(
                     effectHandler = effectHandler,
                     onNavigateBack = ::finish,
                     allowMultiSelect = true,
