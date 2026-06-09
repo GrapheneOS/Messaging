@@ -6,8 +6,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -41,6 +43,9 @@ internal fun ConversationNavGraph(
 ) {
     val entryUiState by entryModel.uiState.collectAsStateWithLifecycle()
     val backStack = rememberNavBackStack(initialNavKey(launchRequest))
+    val processedBackStackLaunchGeneration = rememberSaveable {
+        mutableStateOf<Int?>(value = null)
+    }
     val routeState = ConversationNavRouteState(
         backStack = backStack,
         entryModel = rememberUpdatedState(newValue = entryModel),
@@ -66,6 +71,12 @@ internal fun ConversationNavGraph(
         launchRequest = launchRequest,
         onLaunchRequest = entryModel::onLaunchRequest,
         onLaunchBackStackUpdate = { currentLaunchRequest ->
+            val launchGeneration = currentLaunchRequest?.launchGeneration
+            if (processedBackStackLaunchGeneration.value == launchGeneration) {
+                return@ConversationNavGraphEffects
+            }
+
+            processedBackStackLaunchGeneration.value = launchGeneration
             updateBackStackForLaunch(
                 backStack = backStack,
                 launchRequest = currentLaunchRequest,
