@@ -66,7 +66,10 @@ internal interface ConversationDraftDelegate : ConversationScreenDelegate<Conver
 
     fun confirmSubjectDialog(subjectText: String)
 
-    fun onSelfParticipantIdChanged(selfParticipantId: String)
+    fun onSelfParticipantIdChanged(
+        conversationId: String,
+        selfParticipantId: String,
+    )
 
     fun seedDraft(
         conversationId: String,
@@ -178,8 +181,12 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
         _isSubjectDialogVisible.value = false
     }
 
-    override fun onSelfParticipantIdChanged(selfParticipantId: String) {
+    override fun onSelfParticipantIdChanged(
+        conversationId: String,
+        selfParticipantId: String,
+    ) {
         conversationDraftEditorDelegate.onSelfParticipantIdChanged(
+            conversationId = conversationId,
             selfParticipantId = selfParticipantId,
         )
     }

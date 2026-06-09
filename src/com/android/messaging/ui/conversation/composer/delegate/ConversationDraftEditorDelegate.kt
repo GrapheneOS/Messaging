@@ -32,7 +32,10 @@ internal interface ConversationDraftEditorDelegate {
 
     fun onSubjectTextChanged(subjectText: String)
 
-    fun onSelfParticipantIdChanged(selfParticipantId: String)
+    fun onSelfParticipantIdChanged(
+        conversationId: String,
+        selfParticipantId: String,
+    )
 
     fun seedDraft(
         conversationId: String,
@@ -117,6 +120,7 @@ internal class ConversationDraftEditorDelegateImpl @Inject constructor(
         }
 
     private var pendingDraftSeed: PendingDraftSeed? = null
+    private var pendingSelfParticipantId: PendingSelfParticipantId? = null
 
     override fun onMessageTextChanged(messageText: String) {
         updateDraftEditorState { currentDraftEditorState ->
@@ -130,10 +134,15 @@ internal class ConversationDraftEditorDelegateImpl @Inject constructor(
         }
     }
 
-    override fun onSelfParticipantIdChanged(selfParticipantId: String) {
-        updateDraftEditorState { currentDraftEditorState ->
-            currentDraftEditorState.withSelfParticipantId(selfParticipantId = selfParticipantId)
-        }
+    override fun onSelfParticipantIdChanged(
+        conversationId: String,
+        selfParticipantId: String,
+    ) {
+        pendingSelfParticipantId = PendingSelfParticipantId(
+            conversationId = conversationId,
+            selfParticipantId = selfParticipantId,
+        )
+        applyPendingSelfParticipantIdIfPossible()
     }
 
     override fun seedDraft(
@@ -246,6 +255,9 @@ internal class ConversationDraftEditorDelegateImpl @Inject constructor(
             DraftEditorState(conversationId = conversationId)
         }
         applyPendingDraftSeedIfPossible()
+        // A seeded draft replaces all local edits wholesale, so the pending SIM
+        // selection must apply after it to survive.
+        applyPendingSelfParticipantIdIfPossible()
 
         return saveRequest
     }
@@ -430,6 +442,24 @@ internal class ConversationDraftEditorDelegateImpl @Inject constructor(
         }
     }
 
+    private fun applyPendingSelfParticipantIdIfPossible() {
+        val pendingSelfParticipantId = pendingSelfParticipantId ?: return
+
+        updateDraftEditorState { currentDraftEditorState ->
+            val isBoundToTargetConversation = currentDraftEditorState.conversationId ==
+                pendingSelfParticipantId.conversationId
+
+            if (!isBoundToTargetConversation) {
+                return@updateDraftEditorState currentDraftEditorState
+            }
+
+            this.pendingSelfParticipantId = null
+            currentDraftEditorState.withSelfParticipantId(
+                selfParticipantId = pendingSelfParticipantId.selfParticipantId,
+            )
+        }
+    }
+
     private companion object {
         private const val DRAFT_SEND_PROTOCOL_DEBOUNCE_MILLIS = 250L
     }
@@ -448,6 +478,11 @@ internal data class DraftPendingAttachmentResolution(
 private data class PendingDraftSeed(
     val conversationId: String,
     val draft: ConversationDraft,
+)
+
+private data class PendingSelfParticipantId(
+    val conversationId: String,
+    val selfParticipantId: String,
 )
 
 private data class PendingAttachmentResolutionState(

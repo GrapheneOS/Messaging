@@ -557,18 +557,16 @@ internal class ConversationViewModel @Inject constructor(
 
     override fun onSimSelected(selfParticipantId: String) {
         if (selfParticipantId.isBlank()) return
+        val conversationId = conversationIdFlow.value?.takeIf(String::isNotBlank) ?: return
 
         conversationDraftDelegate.onSelfParticipantIdChanged(
+            conversationId = conversationId,
             selfParticipantId = selfParticipantId,
         )
-        conversationIdFlow.value
-            ?.takeIf(String::isNotBlank)
-            ?.let { conversationId ->
-                simSelectionRepository.setSelectedSelfId(
-                    conversationId = conversationId,
-                    selfId = selfParticipantId,
-                )
-            }
+        simSelectionRepository.setSelectedSelfId(
+            conversationId = conversationId,
+            selfId = selfParticipantId,
+        )
     }
 
     override fun onExternalUriClicked(uri: String) {
