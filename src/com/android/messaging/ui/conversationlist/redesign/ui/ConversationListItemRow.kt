@@ -39,14 +39,10 @@ import com.android.messaging.ui.common.components.attachment.MediaThumbnail
 import com.android.messaging.ui.common.components.participant.ParticipantAvatar
 import com.android.messaging.ui.common.components.participant.participantAvatarLabel
 import com.android.messaging.ui.common.components.participant.participantColorSeed
-import com.android.messaging.ui.conversationlist.redesign.model.ConversationListAvatarUiModel
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListItemUiModel
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListPreviewUiModel
-import com.android.messaging.ui.conversationlist.redesign.model.ConversationListSnippetUiModel
 import com.android.messaging.ui.core.MessagingPreviewColumn
 import com.android.messaging.util.Dates
-
-private const val PREVIEW_TIMESTAMP_MILLIS = 1_806_240_000_000L
 
 @Composable
 internal fun ConversationListItemRow(
@@ -461,48 +457,4 @@ private fun ConversationListItemRowBadgesPreview() {
             )
         }
     }
-}
-
-private fun previewConversationListItem(
-    conversationId: String,
-    title: String,
-    snippetText: String?,
-    status: ConversationListMessageStatus = ConversationListMessageStatus.Normal,
-    preview: ConversationListPreviewUiModel? = null,
-    subject: String? = null,
-    isOutgoing: Boolean = false,
-    isUnread: Boolean = false,
-    isGroup: Boolean = false,
-    isEnterprise: Boolean = false,
-    isMuted: Boolean = false,
-    isDraft: Boolean = false,
-    isSelected: Boolean = false,
-): ConversationListItemUiModel {
-    return ConversationListItemUiModel(
-        conversationId = conversationId,
-        title = title,
-        avatar = ConversationListAvatarUiModel(
-            uri = null,
-            contactId = -1L,
-            lookupKey = null,
-            normalizedDestination = "+3161234$conversationId",
-            isGroup = isGroup,
-        ),
-        snippet = ConversationListSnippetUiModel(
-            text = snippetText,
-            senderName = null,
-            preview = preview,
-            isDraft = isDraft,
-        ),
-        subject = subject,
-        timestampMillis = PREVIEW_TIMESTAMP_MILLIS,
-        status = status,
-        isOutgoing = isOutgoing,
-        isUnread = isUnread,
-        isGroup = isGroup,
-        isEnterprise = isEnterprise,
-        isMuted = isMuted,
-        isArchived = false,
-        isSelected = isSelected,
-    )
 }

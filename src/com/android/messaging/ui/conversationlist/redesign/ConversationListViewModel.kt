@@ -93,8 +93,14 @@ internal class ConversationListViewModel @Inject constructor(
 
     private fun onDialogAction(action: Action.DialogAction) {
         when (action) {
+            is Action.AddContactConfirmed -> onAddContactConfirmed(action.destination)
             Action.BlockConfirmed -> onBlockConfirmed()
             Action.DeleteConfirmed -> onDeleteConfirmed()
+
+            is Action.ArchiveUndoClicked -> onArchiveUndoClicked(
+                conversationIds = action.conversationIds,
+                isArchived = action.isArchived,
+            )
         }
     }
 
@@ -122,6 +128,10 @@ internal class ConversationListViewModel @Inject constructor(
 
             Action.BlockedParticipantsClicked -> {
                 _effects.tryEmit(Effect.OpenBlockedParticipants)
+            }
+
+            Action.DebugOptionsClicked -> {
+                _effects.tryEmit(Effect.OpenDebugOptions)
             }
 
             Action.ScrollUpClicked -> {
@@ -185,8 +195,9 @@ internal class ConversationListViewModel @Inject constructor(
         }
 
         actionsDelegate.setArchived(
-            items = selectedItems,
+            conversationIds = selectedItems.map(ConversationListItem::conversationId),
             isArchived = isArchived,
+            shouldShowSnackbar = true
         )
         selectionDelegate.clear()
     }
@@ -195,6 +206,24 @@ internal class ConversationListViewModel @Inject constructor(
         val destination = singleSelectedDestination() ?: return
 
         _effects.tryEmit(Effect.ConfirmAddContact(destination))
+    }
+
+    private fun onAddContactConfirmed(destination: String) {
+        val resolvedDestination = destination.takeIf(String::isNotBlank) ?: return
+
+        _effects.tryEmit(Effect.OpenAddContact(resolvedDestination))
+        selectionDelegate.clear()
+    }
+
+    private fun onArchiveUndoClicked(
+        conversationIds: List<String>,
+        isArchived: Boolean,
+    ) {
+        actionsDelegate.setArchived(
+            conversationIds = conversationIds,
+            isArchived = !isArchived,
+            shouldShowSnackbar = false,
+        )
     }
 
     private fun onBlockClick() {

@@ -5,6 +5,7 @@ import com.android.messaging.data.conversation.repository.ConversationsRepositor
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListEffect
 import javax.inject.Inject
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -15,7 +16,11 @@ internal interface ConversationListActionsDelegate {
     val effects: Flow<ConversationListEffect>
 
     fun bind(scope: CoroutineScope)
-    fun setArchived(items: List<ConversationListItem>, isArchived: Boolean)
+    fun setArchived(
+        conversationIds: List<String>,
+        isArchived: Boolean,
+        shouldShowSnackbar: Boolean,
+    )
     fun delete(items: List<ConversationListItem>)
     fun block(item: ConversationListItem)
 }
@@ -39,23 +44,33 @@ internal class ConversationListActionsDelegateImpl @Inject constructor(
     }
 
     override fun setArchived(
-        items: List<ConversationListItem>,
+        conversationIds: List<String>,
         isArchived: Boolean,
+        shouldShowSnackbar: Boolean,
     ) {
-        if (items.isEmpty()) {
+        val resolvedConversationIds = conversationIds
+            .filter(String::isNotBlank)
+            .distinct()
+
+        if (resolvedConversationIds.isEmpty()) {
             return
         }
 
-        items.forEach { item ->
+        resolvedConversationIds.forEach { conversationId ->
             when {
-                isArchived -> conversationsRepository.archiveConversation(item.conversationId)
-                else -> conversationsRepository.unarchiveConversation(item.conversationId)
+                isArchived -> conversationsRepository.archiveConversation(conversationId)
+                else -> conversationsRepository.unarchiveConversation(conversationId)
             }
+        }
+
+        if (!shouldShowSnackbar) {
+            return
         }
 
         _effects.tryEmit(
             ConversationListEffect.ConversationsArchived(
-                count = items.size,
+                conversationIds = resolvedConversationIds.toImmutableList(),
+                count = resolvedConversationIds.size,
                 isArchived = isArchived,
             ),
         )

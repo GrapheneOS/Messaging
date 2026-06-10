@@ -1,13 +1,17 @@
 package com.android.messaging.ui.conversationlist.redesign.model
 
+import kotlinx.collections.immutable.ImmutableList
+
 internal sealed interface ConversationListEffect {
 
     data object StartChat : ConversationListEffect
     data object OpenArchivedConversations : ConversationListEffect
     data object OpenBlockedParticipants : ConversationListEffect
     data object OpenSettings : ConversationListEffect
+    data object OpenDebugOptions : ConversationListEffect
 
     data class ConversationsArchived(
+        val conversationIds: ImmutableList<String>,
         val count: Int,
         val isArchived: Boolean,
     ) : ConversationListEffect
@@ -17,6 +21,10 @@ internal sealed interface ConversationListEffect {
     ) : ConversationListEffect
 
     data class ConfirmAddContact(
+        val destination: String,
+    ) : ConversationListEffect
+
+    data class OpenAddContact(
         val destination: String,
     ) : ConversationListEffect
 

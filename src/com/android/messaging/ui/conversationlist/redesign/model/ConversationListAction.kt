@@ -1,5 +1,7 @@
 package com.android.messaging.ui.conversationlist.redesign.model
 
+import kotlinx.collections.immutable.ImmutableList
+
 internal sealed interface ConversationListAction {
 
     sealed interface DialogAction : ConversationListAction
@@ -22,6 +24,15 @@ internal sealed interface ConversationListAction {
         val isVisible: Boolean,
     ) : ListAction
 
+    data class AddContactConfirmed(
+        val destination: String,
+    ) : DialogAction
+
+    data class ArchiveUndoClicked(
+        val conversationIds: ImmutableList<String>,
+        val isArchived: Boolean,
+    ) : DialogAction
+
     data object AddContactClicked : SelectionAction
     data object ArchiveClicked : SelectionAction
     data object BlockClicked : SelectionAction
@@ -30,6 +41,7 @@ internal sealed interface ConversationListAction {
 
     data object ArchivedConversationsClicked : NavigationAction
     data object BlockedParticipantsClicked : NavigationAction
+    data object DebugOptionsClicked : NavigationAction
     data object ScrollUpClicked : NavigationAction
     data object SettingsClicked : NavigationAction
     data object StartChatClicked : NavigationAction

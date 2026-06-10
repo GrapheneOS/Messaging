@@ -757,6 +757,11 @@
     <!-- String to show in the conversation list view when we haven't synchronized the SMS database yet -->
     <string name="conversation_list_first_sync_text">Loading conversations&#8230;</string>
 
+    <!-- Label for the button that starts a new conversation from the conversation list. -->
+    <string name="conversation_list_start_chat">Start chat</string>
+    <!-- Accessibility label for the button that scrolls the conversation list back to the top. -->
+    <string name="conversation_list_scroll_to_top">Scroll to top</string>
+
     <!-- Shown in conversation as the snippet when there is no text and an attached picture. [CHAR LIMIT=25] -->
     <string name="conversation_list_snippet_picture">Picture</string>
     <!-- Shown in conversation as the snippet when there is no text and an attached audio clip. [CHAR LIMIT=25] -->
