@@ -69,10 +69,8 @@ internal class ConversationListUiStateMapperImpl @Inject constructor() :
         return ConversationListUiState(
             content = content,
             selection = selection,
-            isStartChatVisible = !selection.isActive,
             isScrollUpVisible = isScrollUpVisible,
             hasBlockedParticipants = snapshot.blockedDestinations.isNotEmpty(),
-            isSelectionMode = selection.isActive,
         )
     }
 
@@ -134,7 +132,6 @@ internal class ConversationListUiStateMapperImpl @Inject constructor() :
                 blockedDestinations = blockedDestinations,
             ),
             isActive = selectedConversations.isNotEmpty(),
-            count = selectedConversations.size,
         )
     }
 
@@ -143,13 +140,10 @@ internal class ConversationListUiStateMapperImpl @Inject constructor() :
     ): SelectedConversationUiModel {
         return SelectedConversationUiModel(
             conversationId = item.conversationId,
-            timestampMillis = item.latestMessage.timestamp,
-            icon = item.icon,
             normalizedDestination = item.participant.otherNormalizedDestination,
             participantLookupKey = item.participant.lookupKey,
             isGroup = item.participant.isGroup,
             isArchived = item.isArchived,
-            notificationEnabled = item.notification.isEnabled,
         )
     }
 

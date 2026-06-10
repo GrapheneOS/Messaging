@@ -9,19 +9,15 @@ internal data class ConversationListSelectionUiState(
     val selectedConversations: ImmutableList<SelectedConversationUiModel> = persistentListOf(),
     val actions: SelectionActionsUiState = SelectionActionsUiState(),
     val isActive: Boolean = false,
-    val count: Int = 0,
 )
 
 @Immutable
 internal data class SelectedConversationUiModel(
     val conversationId: String,
-    val timestampMillis: Long,
-    val icon: String?,
     val normalizedDestination: String?,
     val participantLookupKey: String?,
     val isGroup: Boolean,
     val isArchived: Boolean,
-    val notificationEnabled: Boolean,
 )
 
 @Immutable

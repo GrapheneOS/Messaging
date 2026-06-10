@@ -17,11 +17,12 @@ internal sealed interface ConversationListEffect {
     ) : ConversationListEffect
 
     data class ConfirmAddContact(
-        val selectedConversation: SelectedConversationUiModel,
+        val destination: String,
     ) : ConversationListEffect
 
     data class ConfirmBlock(
-        val selectedConversation: SelectedConversationUiModel,
+        val conversationId: String,
+        val destination: String,
     ) : ConversationListEffect
 
     data class ConversationBlocked(

@@ -2,20 +2,17 @@ package com.android.messaging.ui.conversationlist.redesign
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepository
-import com.android.messaging.data.conversation.repository.ConversationsRepository
+import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
+import com.android.messaging.ui.conversationlist.redesign.delegate.ConversationListActionsDelegate
+import com.android.messaging.ui.conversationlist.redesign.delegate.ConversationListSelectionDelegate
 import com.android.messaging.ui.conversationlist.redesign.mapper.ConversationListUiStateMapper
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListEffect as Effect
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListUiState as State
-import com.android.messaging.ui.conversationlist.redesign.model.SelectedConversationUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlinx.collections.immutable.PersistentSet
-import kotlinx.collections.immutable.persistentSetOf
-import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,10 +20,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 
 internal interface ConversationListScreenModel {
     val effects: Flow<Effect>
@@ -39,24 +35,30 @@ internal interface ConversationListScreenModel {
 internal class ConversationListViewModel @Inject constructor(
     private val repository: ConversationListRepository,
     private val uiStateMapper: ConversationListUiStateMapper,
-    private val conversationsRepository: ConversationsRepository,
-    private val blockedParticipantsRepository: BlockedParticipantsRepository,
+    private val selectionDelegate: ConversationListSelectionDelegate,
+    private val actionsDelegate: ConversationListActionsDelegate,
 ) : ViewModel(),
     ConversationListScreenModel {
 
-    private val selectedConversationIds = MutableStateFlow<PersistentSet<String>>(
-        persistentSetOf(),
-    )
     private val isScrollUpVisible = MutableStateFlow(false)
 
-    private var isNewestConversationVisible = true
+    private val snapshot: StateFlow<ConversationListSnapshot?> = repository
+        .observeInboxSnapshot()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Lazily,
+            initialValue = null,
+        )
 
     private val _effects = MutableSharedFlow<Effect>(extraBufferCapacity = 1)
-    override val effects: Flow<Effect> = _effects.asSharedFlow()
+    override val effects: Flow<Effect> = merge(
+        _effects.asSharedFlow(),
+        actionsDelegate.effects,
+    )
 
     override val uiState: StateFlow<State> = combine(
-        repository.observeInboxSnapshot().onEach(::pruneSelection),
-        selectedConversationIds,
+        snapshot.filterNotNull(),
+        selectionDelegate.selectedIds,
         isScrollUpVisible,
     ) { snapshot, selectedIds, isScrollUpVisible ->
         uiStateMapper.map(
@@ -71,6 +73,14 @@ internal class ConversationListViewModel @Inject constructor(
         ),
         initialValue = State(),
     )
+
+    init {
+        selectionDelegate.bind(
+            scope = viewModelScope,
+            snapshotFlow = snapshot,
+        )
+        actionsDelegate.bind(scope = viewModelScope)
+    }
 
     override fun onAction(action: Action) {
         when (action) {
@@ -106,21 +116,35 @@ internal class ConversationListViewModel @Inject constructor(
 
     private fun onNavigationAction(action: Action.NavigationAction) {
         when (action) {
-            Action.ArchivedConversationsClicked -> onArchivedConversationsClick()
-            Action.BlockedParticipantsClicked -> onBlockedParticipantsClick()
-            Action.ScrollUpClicked -> onScrollUpClick()
-            Action.SettingsClicked -> onSettingsClick()
-            Action.StartChatClicked -> onStartChatClick()
+            Action.ArchivedConversationsClicked -> {
+                _effects.tryEmit(Effect.OpenArchivedConversations)
+            }
+
+            Action.BlockedParticipantsClicked -> {
+                _effects.tryEmit(Effect.OpenBlockedParticipants)
+            }
+
+            Action.ScrollUpClicked -> {
+                _effects.tryEmit(Effect.ScrollToTop)
+            }
+
+            Action.SettingsClicked -> {
+                _effects.tryEmit(Effect.OpenSettings)
+            }
+
+            Action.StartChatClicked -> {
+                _effects.tryEmit(Effect.StartChat)
+            }
         }
     }
 
     private fun onSelectionAction(action: Action.SelectionAction) {
         when (action) {
             Action.AddContactClicked -> onAddContactClick()
-            Action.ArchiveClicked -> onArchiveClick()
+            Action.ArchiveClicked -> onArchiveClick(isArchived = true)
+            Action.UnarchiveClicked -> onArchiveClick(isArchived = false)
             Action.BlockClicked -> onBlockClick()
-            Action.SelectionCleared -> onSelectionCleared()
-            Action.UnarchiveClicked -> onUnarchiveClick()
+            Action.SelectionCleared -> selectionDelegate.clear()
         }
     }
 
@@ -128,8 +152,8 @@ internal class ConversationListViewModel @Inject constructor(
         val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
 
         when {
-            uiState.value.isSelectionMode -> {
-                toggleSelection(resolvedConversationId)
+            selectionDelegate.isSelectionActive() -> {
+                selectionDelegate.toggle(resolvedConversationId)
             }
 
             else -> {
@@ -141,159 +165,77 @@ internal class ConversationListViewModel @Inject constructor(
     private fun onConversationLongClick(conversationId: String) {
         val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
 
-        toggleSelection(resolvedConversationId)
-    }
-
-    private fun onSelectionCleared() {
-        selectedConversationIds.value = persistentSetOf()
-    }
-
-    private fun onStartChatClick() {
-        _effects.tryEmit(Effect.StartChat)
-    }
-
-    private fun onArchivedConversationsClick() {
-        _effects.tryEmit(Effect.OpenArchivedConversations)
-    }
-
-    private fun onBlockedParticipantsClick() {
-        _effects.tryEmit(Effect.OpenBlockedParticipants)
-    }
-
-    private fun onSettingsClick() {
-        _effects.tryEmit(Effect.OpenSettings)
-    }
-
-    private fun onScrollUpClick() {
-        _effects.tryEmit(Effect.ScrollToTop)
+        selectionDelegate.toggle(resolvedConversationId)
     }
 
     private fun onNewestConversationVisibilityChanged(isVisible: Boolean) {
-        if (isNewestConversationVisible == isVisible) {
+        if (isScrollUpVisible.value == !isVisible) {
             return
         }
 
-        isNewestConversationVisible = isVisible
         isScrollUpVisible.value = !isVisible
         repository.setNewestConversationVisible(isVisible)
     }
 
-    private fun onAddContactClick() {
-        val selectedConversation = singleSelectedConversation() ?: return
+    private fun onArchiveClick(isArchived: Boolean) {
+        val selectedItems = selectionDelegate.currentSelectedItems()
 
-        _effects.tryEmit(Effect.ConfirmAddContact(selectedConversation))
+        if (selectedItems.isEmpty()) {
+            return
+        }
+
+        actionsDelegate.setArchived(
+            items = selectedItems,
+            isArchived = isArchived,
+        )
+        selectionDelegate.clear()
+    }
+
+    private fun onAddContactClick() {
+        val destination = singleSelectedDestination() ?: return
+
+        _effects.tryEmit(Effect.ConfirmAddContact(destination))
     }
 
     private fun onBlockClick() {
-        val selectedConversation = singleSelectedConversation() ?: return
+        val selectedItem = singleSelectedItem() ?: return
+        val destination = singleSelectedDestination() ?: return
 
-        _effects.tryEmit(Effect.ConfirmBlock(selectedConversation))
-    }
-
-    private fun onArchiveClick() {
-        updateSelectedArchiveStatus(isArchived = true)
-    }
-
-    private fun onUnarchiveClick() {
-        updateSelectedArchiveStatus(isArchived = false)
-    }
-
-    private fun onDeleteConfirmed() {
-        val selectedConversations = uiState.value.selection.selectedConversations
-
-        if (selectedConversations.isEmpty()) {
-            return
-        }
-
-        selectedConversations.forEach { conversation ->
-            conversationsRepository.deleteConversation(
-                conversationId = conversation.conversationId,
-                cutoffTimestamp = conversation.timestampMillis,
-            )
-        }
-
-        onSelectionCleared()
+        _effects.tryEmit(
+            Effect.ConfirmBlock(
+                conversationId = selectedItem.conversationId,
+                destination = destination,
+            ),
+        )
     }
 
     private fun onBlockConfirmed() {
-        val selectedConversation = singleSelectedConversation() ?: return
-        val destination = selectedConversation.normalizedDestination ?: return
+        val selectedItem = singleSelectedItem() ?: return
 
-        viewModelScope.launch {
-            val success = blockedParticipantsRepository.setDestinationBlocked(
-                destination = destination,
-                conversationId = selectedConversation.conversationId,
-                isBlocked = true,
-            )
-
-            _effects.emit(
-                Effect.ConversationBlocked(
-                    destination = destination,
-                    success = success,
-                ),
-            )
-
-            onSelectionCleared()
-        }
+        actionsDelegate.block(selectedItem)
+        selectionDelegate.clear()
     }
 
-    private fun updateSelectedArchiveStatus(isArchived: Boolean) {
-        val selectedConversations = uiState.value.selection.selectedConversations
-        val conversationIds = selectedConversations
-            .map { conversation ->
-                conversation.conversationId
-            }
-            .toSet()
+    private fun onDeleteConfirmed() {
+        val selectedItems = selectionDelegate.currentSelectedItems()
 
-        if (conversationIds.isEmpty()) {
+        if (selectedItems.isEmpty()) {
             return
         }
 
-        conversationIds.forEach { conversationId ->
-            when {
-                isArchived -> conversationsRepository.archiveConversation(conversationId)
-                else -> conversationsRepository.unarchiveConversation(conversationId)
-            }
-        }
-
-        _effects.tryEmit(
-            Effect.ConversationsArchived(
-                count = conversationIds.size,
-                isArchived = isArchived,
-            ),
-        )
-
-        onSelectionCleared()
+        actionsDelegate.delete(selectedItems)
+        selectionDelegate.clear()
     }
 
-    private fun toggleSelection(conversationId: String) {
-        selectedConversationIds.update { currentSelectedIds ->
-            when {
-                conversationId in currentSelectedIds -> currentSelectedIds.remove(conversationId)
-                else -> currentSelectedIds.add(conversationId)
-            }
-        }
+    private fun singleSelectedItem(): ConversationListItem? {
+        return selectionDelegate.currentSelectedItems().singleOrNull()
     }
 
-    private fun pruneSelection(snapshot: ConversationListSnapshot) {
-        val visibleConversationIds = snapshot.items
-            .asSequence()
-            .map { item ->
-                item.conversationId
-            }
-            .toSet()
-
-        selectedConversationIds.update { currentSelectedIds ->
-            currentSelectedIds
-                .filter { conversationId ->
-                    conversationId in visibleConversationIds
-                }
-                .toPersistentSet()
-        }
-    }
-
-    private fun singleSelectedConversation(): SelectedConversationUiModel? {
-        return uiState.value.selection.selectedConversations.singleOrNull()
+    private fun singleSelectedDestination(): String? {
+        return singleSelectedItem()
+            ?.participant
+            ?.otherNormalizedDestination
+            ?.takeIf(String::isNotBlank)
     }
 
     private companion object {
