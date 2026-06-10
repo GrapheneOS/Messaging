@@ -34,6 +34,7 @@ internal sealed interface ConversationListEffect {
     ) : ConversationListEffect
 
     data class ConversationBlocked(
+        val conversationId: String,
         val destination: String,
         val success: Boolean,
     ) : ConversationListEffect

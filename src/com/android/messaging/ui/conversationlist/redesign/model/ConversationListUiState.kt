@@ -9,6 +9,7 @@ internal data class ConversationListUiState(
     val selection: ConversationListSelectionUiState = ConversationListSelectionUiState(),
     val isScrollUpVisible: Boolean = false,
     val hasBlockedParticipants: Boolean = false,
+    val isDebugEnabled: Boolean = false,
 )
 
 @Immutable

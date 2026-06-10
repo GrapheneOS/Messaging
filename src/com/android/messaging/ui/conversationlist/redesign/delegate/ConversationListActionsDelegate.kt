@@ -21,8 +21,10 @@ internal interface ConversationListActionsDelegate {
         isArchived: Boolean,
         shouldShowSnackbar: Boolean,
     )
+
     fun delete(items: List<ConversationListItem>)
     fun block(item: ConversationListItem)
+    fun unblock(conversationId: String, destination: String)
 }
 
 internal class ConversationListActionsDelegateImpl @Inject constructor(
@@ -101,9 +103,25 @@ internal class ConversationListActionsDelegateImpl @Inject constructor(
 
             _effects.emit(
                 ConversationListEffect.ConversationBlocked(
+                    conversationId = item.conversationId,
                     destination = destination,
                     success = success,
                 ),
+            )
+        }
+    }
+
+    override fun unblock(
+        conversationId: String,
+        destination: String,
+    ) {
+        val resolvedDestination = destination.takeIf(String::isNotBlank) ?: return
+
+        boundScope?.launch {
+            blockedParticipantsRepository.setDestinationBlocked(
+                destination = resolvedDestination,
+                conversationId = conversationId.takeIf(String::isNotBlank),
+                isBlocked = false,
             )
         }
     }

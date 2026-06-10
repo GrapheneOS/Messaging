@@ -6,6 +6,8 @@ internal sealed interface ConversationListAction {
 
     sealed interface DialogAction : ConversationListAction
 
+    sealed interface LifecycleAction : ConversationListAction
+
     sealed interface ListAction : ConversationListAction
 
     sealed interface NavigationAction : ConversationListAction
@@ -33,6 +35,11 @@ internal sealed interface ConversationListAction {
         val isArchived: Boolean,
     ) : DialogAction
 
+    data class BlockUndoClicked(
+        val conversationId: String,
+        val destination: String,
+    ) : DialogAction
+
     data object AddContactClicked : SelectionAction
     data object ArchiveClicked : SelectionAction
     data object BlockClicked : SelectionAction
@@ -48,4 +55,6 @@ internal sealed interface ConversationListAction {
 
     data object BlockConfirmed : DialogAction
     data object DeleteConfirmed : DialogAction
+
+    data object ScreenResumed : LifecycleAction
 }

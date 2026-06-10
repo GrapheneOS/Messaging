@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationlist.redesign.ui
 
+import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -45,6 +46,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
@@ -56,6 +59,7 @@ import com.android.messaging.ui.conversationlist.redesign.model.ConversationList
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListEffect as Effect
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListUiState as State
 import com.android.messaging.ui.core.MessagingPreviewTheme
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
@@ -66,7 +70,6 @@ private val StartChatIconSpacing = 8.dp
 @Composable
 internal fun ConversationListScreen(
     effectHandler: ConversationListEffectHandler,
-    isDebugEnabled: Boolean,
     modifier: Modifier = Modifier,
     screenModel: ConversationListScreenModel = viewModel<ConversationListViewModel>(),
 ) {
@@ -90,7 +93,6 @@ internal fun ConversationListScreen(
 
     ConversationListScaffold(
         uiState = uiState,
-        isDebugEnabled = isDebugEnabled,
         listState = listState,
         snackbarHostState = snackbarHostState,
         onAction = screenModel::onAction,
@@ -152,6 +154,10 @@ private fun ConversationListEffects(
     val currentOnConfirmAddContact by rememberUpdatedState(onConfirmAddContact)
     val currentOnConfirmBlock by rememberUpdatedState(onConfirmBlock)
 
+    LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
+        screenModel.onAction(Action.ScreenResumed)
+    }
+
     LaunchedEffect(screenModel) {
         screenModel.effects.collect { effect ->
             when (effect) {
@@ -164,24 +170,23 @@ private fun ConversationListEffects(
                 }
 
                 is Effect.ConversationsArchived -> {
-                    snackbarScope.launch {
-                        showArchivedSnackbar(
-                            snackbarHostState = snackbarHostState,
-                            message = currentContext.getString(
-                                archivedSnackbarMessageResId(isArchived = effect.isArchived),
-                                effect.count,
-                            ),
-                            undoLabel = currentUndoLabel,
-                            onUndo = {
-                                screenModel.onAction(
-                                    Action.ArchiveUndoClicked(
-                                        conversationIds = effect.conversationIds,
-                                        isArchived = effect.isArchived,
-                                    ),
-                                )
-                            },
-                        )
-                    }
+                    snackbarScope.launchArchivedSnackbar(
+                        snackbarHostState = snackbarHostState,
+                        context = currentContext,
+                        undoLabel = currentUndoLabel,
+                        effect = effect,
+                        onAction = screenModel::onAction,
+                    )
+                }
+
+                is Effect.ConversationBlocked -> {
+                    snackbarScope.launchBlockedSnackbar(
+                        snackbarHostState = snackbarHostState,
+                        context = currentContext,
+                        undoLabel = currentUndoLabel,
+                        effect = effect,
+                        onAction = screenModel::onAction,
+                    )
                 }
 
                 Effect.ScrollToTop -> {
@@ -194,14 +199,64 @@ private fun ConversationListEffects(
     }
 }
 
-private fun archivedSnackbarMessageResId(isArchived: Boolean): Int {
-    return when {
-        isArchived -> R.string.archived_toast_message
+private fun CoroutineScope.launchArchivedSnackbar(
+    snackbarHostState: SnackbarHostState,
+    context: Context,
+    undoLabel: String,
+    effect: Effect.ConversationsArchived,
+    onAction: (Action) -> Unit,
+) {
+    val messageResId = when {
+        effect.isArchived -> R.string.archived_toast_message
         else -> R.string.unarchived_toast_message
+    }
+
+    launch {
+        showUndoableSnackbar(
+            snackbarHostState = snackbarHostState,
+            message = context.getString(messageResId, effect.count),
+            undoLabel = undoLabel,
+            onUndo = {
+                onAction(
+                    Action.ArchiveUndoClicked(
+                        conversationIds = effect.conversationIds,
+                        isArchived = effect.isArchived,
+                    ),
+                )
+            },
+        )
     }
 }
 
-private suspend fun showArchivedSnackbar(
+private fun CoroutineScope.launchBlockedSnackbar(
+    snackbarHostState: SnackbarHostState,
+    context: Context,
+    undoLabel: String,
+    effect: Effect.ConversationBlocked,
+    onAction: (Action) -> Unit,
+) {
+    if (!effect.success) {
+        return
+    }
+
+    launch {
+        showUndoableSnackbar(
+            snackbarHostState = snackbarHostState,
+            message = context.getString(R.string.update_destination_blocked),
+            undoLabel = undoLabel,
+            onUndo = {
+                onAction(
+                    Action.BlockUndoClicked(
+                        conversationId = effect.conversationId,
+                        destination = effect.destination,
+                    ),
+                )
+            },
+        )
+    }
+}
+
+private suspend fun showUndoableSnackbar(
     snackbarHostState: SnackbarHostState,
     message: String,
     undoLabel: String,
@@ -220,7 +275,6 @@ private suspend fun showArchivedSnackbar(
 @Composable
 private fun ConversationListScaffold(
     uiState: State,
-    isDebugEnabled: Boolean,
     listState: LazyListState,
     snackbarHostState: SnackbarHostState,
     onAction: (Action) -> Unit,
@@ -245,7 +299,6 @@ private fun ConversationListScaffold(
             ConversationListTopBar(
                 uiState = uiState,
                 isSelectionMode = isSelectionMode,
-                isDebugEnabled = isDebugEnabled,
                 onAction = onAction,
                 onDeleteClick = onDeleteClick,
             )
@@ -283,7 +336,6 @@ private fun ConversationListScaffold(
 private fun ConversationListTopBar(
     uiState: State,
     isSelectionMode: Boolean,
-    isDebugEnabled: Boolean,
     onAction: (Action) -> Unit,
     onDeleteClick: () -> Unit,
 ) {
@@ -300,7 +352,7 @@ private fun ConversationListTopBar(
         else -> {
             ConversationListTopAppBar(
                 hasBlockedParticipants = uiState.hasBlockedParticipants,
-                isDebugEnabled = isDebugEnabled,
+                isDebugEnabled = uiState.isDebugEnabled,
                 onAction = onAction,
             )
         }
@@ -388,7 +440,6 @@ private fun ConversationListScaffoldItemsPreview() {
                     items = previewConversationListItems(),
                 ),
             ),
-            isDebugEnabled = false,
             listState = rememberLazyListState(),
             snackbarHostState = remember { SnackbarHostState() },
             onAction = {},
@@ -403,8 +454,10 @@ private fun ConversationListScaffoldItemsPreview() {
 private fun ConversationListScaffoldEmptyPreview() {
     MessagingPreviewTheme {
         ConversationListScaffold(
-            uiState = State(content = ConversationListContentUiState.Empty),
-            isDebugEnabled = true,
+            uiState = State(
+                content = ConversationListContentUiState.Empty,
+                isDebugEnabled = true,
+            ),
             listState = rememberLazyListState(),
             snackbarHostState = remember { SnackbarHostState() },
             onAction = {},
