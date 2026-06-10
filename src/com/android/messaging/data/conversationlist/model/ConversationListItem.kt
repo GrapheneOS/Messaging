@@ -29,8 +29,8 @@ internal data class ConversationListLatestMessage(
     val snippetText: String?,
     val previewUri: String?,
     val previewContentType: String?,
-    val status: Int,
-    val rawTelephonyStatus: Int,
+    val status: ConversationListMessageStatus,
+    val isIncoming: Boolean,
     val senderName: String?,
 )
 

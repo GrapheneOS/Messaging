@@ -1,7 +1,7 @@
 package com.android.messaging.ui.conversationlist.redesign.model
 
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.Stable
+import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
 
 @Immutable
 internal data class ConversationListItemUiModel(
@@ -72,16 +72,4 @@ internal sealed interface ConversationListPreviewUiModel {
         override val contentUri: String,
         override val contentType: String,
     ) : ConversationListPreviewUiModel
-}
-
-@Stable
-internal sealed interface ConversationListMessageStatus {
-    data object Unknown : ConversationListMessageStatus
-    data object Normal : ConversationListMessageStatus
-    data object Sending : ConversationListMessageStatus
-    data object Draft : ConversationListMessageStatus
-
-    data class Failed(
-        val rawTelephonyStatus: Int,
-    ) : ConversationListMessageStatus
 }

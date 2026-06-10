@@ -9,6 +9,9 @@ import com.android.messaging.domain.conversationlist.usecase.DeleteConversations
 import com.android.messaging.domain.conversationlist.usecase.SetConversationArchived
 import com.android.messaging.domain.conversationlist.usecase.SetConversationBlocked
 import com.android.messaging.ui.conversationlist.redesign.mapper.ConversationListUiStateMapper
+import com.android.messaging.ui.conversationlist.redesign.model.ConversationListAction as Action
+import com.android.messaging.ui.conversationlist.redesign.model.ConversationListEffect as Effect
+import com.android.messaging.ui.conversationlist.redesign.model.ConversationListUiState as State
 import com.android.messaging.ui.conversationlist.redesign.model.SelectedConversationUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -26,9 +29,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import com.android.messaging.ui.conversationlist.redesign.model.ConversationListAction as Action
-import com.android.messaging.ui.conversationlist.redesign.model.ConversationListEffect as Effect
-import com.android.messaging.ui.conversationlist.redesign.model.ConversationListUiState as State
 
 internal interface ConversationListScreenModel {
     val effects: Flow<Effect>

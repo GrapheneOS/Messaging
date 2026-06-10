@@ -2,11 +2,11 @@ package com.android.messaging.domain.conversationlist.usecase
 
 import com.android.messaging.datamodel.action.UpdateDestinationBlockedAction
 import com.android.messaging.di.core.MainDispatcher
+import javax.inject.Inject
+import kotlin.coroutines.resume
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
-import kotlin.coroutines.resume
 
 internal interface SetConversationBlocked {
     suspend operator fun invoke(

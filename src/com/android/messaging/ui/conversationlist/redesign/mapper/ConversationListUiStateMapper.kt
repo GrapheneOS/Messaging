@@ -2,12 +2,11 @@ package com.android.messaging.ui.conversationlist.redesign.mapper
 
 import androidx.core.net.toUri
 import com.android.messaging.data.conversationlist.model.ConversationListItem
+import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
-import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListAvatarUiModel
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListContentUiState
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListItemUiModel
-import com.android.messaging.ui.conversationlist.redesign.model.ConversationListMessageStatus
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListPreviewUiModel
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListSelectionUiState
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListSnippetUiModel
@@ -16,9 +15,9 @@ import com.android.messaging.ui.conversationlist.redesign.model.SelectedConversa
 import com.android.messaging.ui.conversationlist.redesign.model.SelectionActionsUiState
 import com.android.messaging.util.AvatarUriUtil
 import com.android.messaging.util.ContentType
+import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.toImmutableList
-import javax.inject.Inject
 
 internal interface ConversationListUiStateMapper {
     fun map(
@@ -83,7 +82,7 @@ internal class ConversationListUiStateMapperImpl @Inject constructor() :
     ): ConversationListItemUiModel {
         val preview = item.activePreview()
         val isDraft = item.draft.isVisible
-        val isOutgoing = isDraft || !MessageData.getIsIncoming(item.latestMessage.status)
+        val isOutgoing = isDraft || !item.latestMessage.isIncoming
 
         return ConversationListItemUiModel(
             conversationId = item.conversationId,
@@ -264,47 +263,8 @@ internal class ConversationListUiStateMapperImpl @Inject constructor() :
         item: ConversationListItem,
     ): ConversationListMessageStatus {
         return when {
-            item.draft.isVisible -> {
-                ConversationListMessageStatus.Draft
-            }
-
-            item.latestMessage.status == MessageData.BUGLE_STATUS_OUTGOING_DRAFT -> {
-                ConversationListMessageStatus.Draft
-            }
-
-            item.latestMessage.status == MessageData.BUGLE_STATUS_UNKNOWN -> {
-                ConversationListMessageStatus.Unknown
-            }
-
-            item.isSendRequested() -> {
-                ConversationListMessageStatus.Sending
-            }
-
-            item.isFailedStatus() -> {
-                ConversationListMessageStatus.Failed(item.latestMessage.rawTelephonyStatus)
-            }
-
-            else -> ConversationListMessageStatus.Normal
-        }
-    }
-
-    private fun ConversationListItem.isFailedStatus(): Boolean {
-        return when (latestMessage.status) {
-            MessageData.BUGLE_STATUS_OUTGOING_FAILED -> true
-            MessageData.BUGLE_STATUS_OUTGOING_FAILED_EMERGENCY_NUMBER -> true
-            MessageData.BUGLE_STATUS_INCOMING_DOWNLOAD_FAILED -> true
-            MessageData.BUGLE_STATUS_INCOMING_EXPIRED_OR_NOT_AVAILABLE -> true
-            else -> false
-        }
-    }
-
-    private fun ConversationListItem.isSendRequested(): Boolean {
-        return when (latestMessage.status) {
-            MessageData.BUGLE_STATUS_OUTGOING_YET_TO_SEND -> true
-            MessageData.BUGLE_STATUS_OUTGOING_AWAITING_RETRY -> true
-            MessageData.BUGLE_STATUS_OUTGOING_SENDING -> true
-            MessageData.BUGLE_STATUS_OUTGOING_RESENDING -> true
-            else -> false
+            item.draft.isVisible -> ConversationListMessageStatus.Draft
+            else -> item.latestMessage.status
         }
     }
 

@@ -6,6 +6,7 @@ import android.net.Uri
 import com.android.messaging.data.conversationlist.model.ConversationListDraft
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListLatestMessage
+import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
 import com.android.messaging.data.conversationlist.model.ConversationListNotification
 import com.android.messaging.data.conversationlist.model.ConversationListParticipant
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
@@ -14,9 +15,9 @@ import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.data.ConversationListData
 import com.android.messaging.datamodel.data.ConversationListItemData
+import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.di.core.MessagingDbDispatcher
 import com.android.messaging.util.db.ext.getStringOrNull
-import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentListOf
@@ -28,8 +29,10 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
 internal interface ConversationListRepository {
     fun observeInboxSnapshot(): Flow<ConversationListSnapshot>
@@ -44,13 +47,13 @@ internal class ConversationListRepositoryImpl @Inject constructor(
 ) : ConversationListRepository {
 
     override fun observeInboxSnapshot(): Flow<ConversationListSnapshot> {
-        val itemsFlow = observeUri(
-            uri = MessagingContentProvider.CONVERSATIONS_URI,
-        ).map { queryInboxConversations() }
+        val itemsFlow = observeUri(MessagingContentProvider.CONVERSATIONS_URI)
+            .conflate()
+            .map { queryInboxConversations() }
 
-        val blockedDestinationsFlow = observeUri(
-            uri = MessagingContentProvider.PARTICIPANTS_URI,
-        ).map { queryBlockedParticipantDestinations() }
+        val blockedDestinationsFlow = observeUri(MessagingContentProvider.PARTICIPANTS_URI)
+            .conflate()
+            .map { queryBlockedParticipantDestinations() }
 
         return combine(
             itemsFlow,
@@ -167,10 +170,46 @@ internal class ConversationListRepositoryImpl @Inject constructor(
             snippetText = snippetText,
             previewUri = previewUri?.toString(),
             previewContentType = previewContentType,
-            status = messageStatus,
-            rawTelephonyStatus = messageRawTelephonyStatus,
+            status = mapMessageStatus(
+                status = messageStatus,
+                rawTelephonyStatus = messageRawTelephonyStatus,
+            ),
+            isIncoming = MessageData.getIsIncoming(messageStatus),
             senderName = snippetSenderName,
         )
+    }
+
+    private fun mapMessageStatus(
+        status: Int,
+        rawTelephonyStatus: Int,
+    ): ConversationListMessageStatus {
+        return when (status) {
+            MessageData.BUGLE_STATUS_OUTGOING_DRAFT -> {
+                ConversationListMessageStatus.Draft
+            }
+
+            MessageData.BUGLE_STATUS_UNKNOWN -> {
+                ConversationListMessageStatus.Unknown
+            }
+
+            MessageData.BUGLE_STATUS_OUTGOING_YET_TO_SEND,
+            MessageData.BUGLE_STATUS_OUTGOING_AWAITING_RETRY,
+            MessageData.BUGLE_STATUS_OUTGOING_SENDING,
+            MessageData.BUGLE_STATUS_OUTGOING_RESENDING,
+                -> {
+                ConversationListMessageStatus.Sending
+            }
+
+            MessageData.BUGLE_STATUS_OUTGOING_FAILED,
+            MessageData.BUGLE_STATUS_OUTGOING_FAILED_EMERGENCY_NUMBER,
+            MessageData.BUGLE_STATUS_INCOMING_DOWNLOAD_FAILED,
+            MessageData.BUGLE_STATUS_INCOMING_EXPIRED_OR_NOT_AVAILABLE,
+                -> {
+                ConversationListMessageStatus.Failed(rawTelephonyStatus)
+            }
+
+            else -> ConversationListMessageStatus.Normal
+        }
     }
 
     private fun ConversationListItemData.toDraft(): ConversationListDraft {
