@@ -24,6 +24,7 @@ internal interface ConversationListUiStateMapper {
         snapshot: ConversationListSnapshot,
         selectedConversationIds: ImmutableSet<String>,
         isScrollUpVisible: Boolean,
+        isDebugEnabled: Boolean,
     ): ConversationListUiState
 }
 
@@ -34,6 +35,7 @@ internal class ConversationListUiStateMapperImpl @Inject constructor() :
         snapshot: ConversationListSnapshot,
         selectedConversationIds: ImmutableSet<String>,
         isScrollUpVisible: Boolean,
+        isDebugEnabled: Boolean,
     ): ConversationListUiState {
         val items = snapshot.items
             .map { item ->
@@ -71,6 +73,7 @@ internal class ConversationListUiStateMapperImpl @Inject constructor() :
             selection = selection,
             isScrollUpVisible = isScrollUpVisible,
             hasBlockedParticipants = snapshot.blockedDestinations.isNotEmpty(),
+            isDebugEnabled = isDebugEnabled,
         )
     }
 

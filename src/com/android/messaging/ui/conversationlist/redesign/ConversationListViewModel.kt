@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
+import com.android.messaging.data.debug.DebugFeaturesProvider
 import com.android.messaging.ui.conversationlist.redesign.delegate.ConversationListActionsDelegate
 import com.android.messaging.ui.conversationlist.redesign.delegate.ConversationListSelectionDelegate
 import com.android.messaging.ui.conversationlist.redesign.mapper.ConversationListUiStateMapper
@@ -37,10 +38,12 @@ internal class ConversationListViewModel @Inject constructor(
     private val uiStateMapper: ConversationListUiStateMapper,
     private val selectionDelegate: ConversationListSelectionDelegate,
     private val actionsDelegate: ConversationListActionsDelegate,
+    private val debugFeaturesProvider: DebugFeaturesProvider,
 ) : ViewModel(),
     ConversationListScreenModel {
 
     private val isScrollUpVisible = MutableStateFlow(false)
+    private val isDebugEnabled = MutableStateFlow(debugFeaturesProvider.isEnabled())
 
     private val snapshot: StateFlow<ConversationListSnapshot?> = repository
         .observeInboxSnapshot()
@@ -60,11 +63,13 @@ internal class ConversationListViewModel @Inject constructor(
         snapshot.filterNotNull(),
         selectionDelegate.selectedIds,
         isScrollUpVisible,
-    ) { snapshot, selectedIds, isScrollUpVisible ->
+        isDebugEnabled,
+    ) { snapshot, selectedIds, isScrollUpVisible, isDebugEnabled ->
         uiStateMapper.map(
             snapshot = snapshot,
             selectedConversationIds = selectedIds,
             isScrollUpVisible = isScrollUpVisible,
+            isDebugEnabled = isDebugEnabled,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -85,6 +90,7 @@ internal class ConversationListViewModel @Inject constructor(
     override fun onAction(action: Action) {
         when (action) {
             is Action.DialogAction -> onDialogAction(action)
+            is Action.LifecycleAction -> onLifecycleAction(action)
             is Action.ListAction -> onListAction(action)
             is Action.NavigationAction -> onNavigationAction(action)
             is Action.SelectionAction -> onSelectionAction(action)
@@ -101,6 +107,19 @@ internal class ConversationListViewModel @Inject constructor(
                 conversationIds = action.conversationIds,
                 isArchived = action.isArchived,
             )
+
+            is Action.BlockUndoClicked -> actionsDelegate.unblock(
+                conversationId = action.conversationId,
+                destination = action.destination,
+            )
+        }
+    }
+
+    private fun onLifecycleAction(action: Action.LifecycleAction) {
+        when (action) {
+            Action.ScreenResumed -> {
+                isDebugEnabled.value = debugFeaturesProvider.isEnabled()
+            }
         }
     }
 
