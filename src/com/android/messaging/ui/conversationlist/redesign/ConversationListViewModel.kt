@@ -2,12 +2,10 @@ package com.android.messaging.ui.conversationlist.redesign
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepository
+import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
-import com.android.messaging.domain.conversationlist.model.ConversationListActionTarget
-import com.android.messaging.domain.conversationlist.usecase.DeleteConversations
-import com.android.messaging.domain.conversationlist.usecase.SetConversationArchived
-import com.android.messaging.domain.conversationlist.usecase.SetConversationBlocked
 import com.android.messaging.ui.conversationlist.redesign.mapper.ConversationListUiStateMapper
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListEffect as Effect
@@ -41,9 +39,8 @@ internal interface ConversationListScreenModel {
 internal class ConversationListViewModel @Inject constructor(
     private val repository: ConversationListRepository,
     private val uiStateMapper: ConversationListUiStateMapper,
-    private val deleteConversations: DeleteConversations,
-    private val setConversationArchived: SetConversationArchived,
-    private val setConversationBlocked: SetConversationBlocked,
+    private val conversationsRepository: ConversationsRepository,
+    private val blockedParticipantsRepository: BlockedParticipantsRepository,
 ) : ViewModel(),
     ConversationListScreenModel {
 
@@ -208,14 +205,12 @@ internal class ConversationListViewModel @Inject constructor(
             return
         }
 
-        deleteConversations(
-            selectedConversations.map { conversation ->
-                ConversationListActionTarget(
-                    conversationId = conversation.conversationId,
-                    cutoffTimestampMillis = conversation.timestampMillis,
-                )
-            },
-        )
+        selectedConversations.forEach { conversation ->
+            conversationsRepository.deleteConversation(
+                conversationId = conversation.conversationId,
+                cutoffTimestamp = conversation.timestampMillis,
+            )
+        }
 
         onSelectionCleared()
     }
@@ -225,7 +220,7 @@ internal class ConversationListViewModel @Inject constructor(
         val destination = selectedConversation.normalizedDestination ?: return
 
         viewModelScope.launch {
-            val success = setConversationBlocked(
+            val success = blockedParticipantsRepository.setDestinationBlocked(
                 destination = destination,
                 conversationId = selectedConversation.conversationId,
                 isBlocked = true,
@@ -254,10 +249,12 @@ internal class ConversationListViewModel @Inject constructor(
             return
         }
 
-        setConversationArchived(
-            conversationIds = conversationIds,
-            isArchived = isArchived,
-        )
+        conversationIds.forEach { conversationId ->
+            when {
+                isArchived -> conversationsRepository.archiveConversation(conversationId)
+                else -> conversationsRepository.unarchiveConversation(conversationId)
+            }
+        }
 
         _effects.tryEmit(
             Effect.ConversationsArchived(
