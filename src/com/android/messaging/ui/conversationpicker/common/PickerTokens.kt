@@ -13,7 +13,7 @@ internal val ItemDividerHorizontalInset = 40.dp
 
 internal val AvatarSize = 48.dp
 
-internal val FallbackIconSize = 20.dp
+internal val FallbackSize = 20.dp
 
 internal val SelectedBarBottomPadding = 8.dp
 

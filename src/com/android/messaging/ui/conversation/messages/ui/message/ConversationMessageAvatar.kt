@@ -25,7 +25,7 @@ internal val CONVERSATION_MESSAGE_AVATAR_GAP = 8.dp
 internal val CONVERSATION_MESSAGE_AVATAR_GUTTER_WIDTH =
     CONVERSATION_MESSAGE_AVATAR_SIZE + CONVERSATION_MESSAGE_AVATAR_GAP
 
-private val CONVERSATION_MESSAGE_AVATAR_ICON_SIZE = 18.dp
+private val CONVERSATION_MESSAGE_AVATAR_FALLBACK_SIZE = 18.dp
 
 @Composable
 internal fun ConversationMessageAvatar(
@@ -53,7 +53,7 @@ internal fun ConversationMessageAvatar(
         colorSeedCode = participantColorSeed(
             normalizedDestination = message.senderNormalizedDestination,
         ),
-        fallbackIconSize = CONVERSATION_MESSAGE_AVATAR_ICON_SIZE,
+        fallbackSize = CONVERSATION_MESSAGE_AVATAR_FALLBACK_SIZE,
         fallbackIcon = Icons.Rounded.Person,
     )
 }

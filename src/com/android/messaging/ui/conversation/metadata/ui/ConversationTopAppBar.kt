@@ -77,7 +77,7 @@ import com.android.messaging.util.AccessibilityUtil
 
 private val CONVERSATION_TOP_APP_BAR_TITLE_SPACING = 12.dp
 private val CONVERSATION_TOP_APP_BAR_AVATAR_SIZE = 36.dp
-private val CONVERSATION_TOP_APP_BAR_AVATAR_ICON_SIZE = 20.dp
+private val CONVERSATION_TOP_APP_BAR_AVATAR_FALLBACK_SIZE = 20.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -464,7 +464,7 @@ private fun ConversationAvatar(
                 avatarUri = null,
                 size = CONVERSATION_TOP_APP_BAR_AVATAR_SIZE,
                 fallbackLabel = null,
-                fallbackIconSize = CONVERSATION_TOP_APP_BAR_AVATAR_ICON_SIZE,
+                fallbackSize = CONVERSATION_TOP_APP_BAR_AVATAR_FALLBACK_SIZE,
                 fallbackIcon = Icons.Rounded.Group,
             )
         }
@@ -477,7 +477,7 @@ private fun ConversationAvatar(
                 colorSeedCode = participantColorSeed(
                     normalizedDestination = avatar.normalizedDestination,
                 ),
-                fallbackIconSize = CONVERSATION_TOP_APP_BAR_AVATAR_ICON_SIZE,
+                fallbackSize = CONVERSATION_TOP_APP_BAR_AVATAR_FALLBACK_SIZE,
                 fallbackIcon = Icons.Rounded.Person,
             )
         }

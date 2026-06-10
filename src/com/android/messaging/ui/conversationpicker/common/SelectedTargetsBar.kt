@@ -190,7 +190,7 @@ private fun SelectedTargetChipAvatar(
                 size = SelectedChipAvatarSize,
                 fallbackLabel = avatarContent.fallbackLabel,
                 colorSeedCode = avatarContent.colorSeedCode,
-                fallbackIconSize = FallbackIconSize,
+                fallbackSize = FallbackSize,
                 fallbackIcon = avatarContent.fallbackIcon,
             )
         }

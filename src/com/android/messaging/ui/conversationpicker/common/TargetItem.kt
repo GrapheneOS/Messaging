@@ -65,7 +65,7 @@ private fun TargetRow(
                 size = AvatarSize,
                 fallbackLabel = fallbackLabel,
                 colorSeedCode = colorSeedCode,
-                fallbackIconSize = FallbackIconSize,
+                fallbackSize = FallbackSize,
                 fallbackIcon = fallbackIcon,
                 isSelected = isSelected,
             )

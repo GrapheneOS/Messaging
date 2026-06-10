@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.common.components.ParticipantAvatar
 import com.android.messaging.ui.common.components.ParticipantQuickActionsPopup
+import com.android.messaging.ui.common.components.participantAvatarLabel
 import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
 import com.android.messaging.ui.core.MessagingPreviewColumn
 
@@ -72,7 +73,10 @@ internal fun ConversationHeader(
                 participant == null -> Icons.Default.Group
                 else -> Icons.Default.Person
             },
-            fallbackIconSize = 64.dp,
+            fallbackSize = 64.dp,
+            fallbackLabel = participantAvatarLabel(
+                source = participant?.displayName
+            ).takeUnless { isBlocked },
         )
 
         if (title.isNotEmpty()) {
@@ -150,11 +154,15 @@ internal fun ParticipantItem(
     val fallbackIcon = if (isBlocked) Icons.Default.Block else Icons.Default.Person
     val avatarUri = participant.avatarUri.takeUnless { isBlocked }
     val dismissPopup = { showQuickActions = false }
+    val fallbackLabel = participantAvatarLabel(
+        source = participant.displayName
+    ).takeUnless { isBlocked }
 
     ParticipantRow(
         participant = participant,
         avatarUri = avatarUri,
         fallbackIcon = fallbackIcon,
+        fallbackLabel = fallbackLabel,
         onRowClick = { showQuickActions = true },
         onLongClick = onLongClick,
         onAction = onAction,
@@ -172,6 +180,7 @@ private fun ParticipantRow(
     participant: ParticipantUiState,
     avatarUri: String?,
     fallbackIcon: ImageVector,
+    fallbackLabel: String?,
     onRowClick: () -> Unit,
     onLongClick: () -> Unit,
     onAction: (() -> Unit)?,
@@ -201,6 +210,7 @@ private fun ParticipantRow(
             participant = participant,
             avatarUri = avatarUri,
             fallbackIcon = fallbackIcon,
+            fallbackLabel = fallbackLabel,
             quickActionsVisible = quickActionsVisible,
             onDismissQuickActions = onDismissQuickActions,
             onMessageClick = onMessageClick,
@@ -228,6 +238,7 @@ private fun ParticipantQuickActions(
     participant: ParticipantUiState,
     avatarUri: String?,
     fallbackIcon: ImageVector,
+    fallbackLabel: String?,
     onDismiss: () -> Unit,
     onMessageClick: () -> Unit,
     onCallClick: (() -> Unit)?,
@@ -239,6 +250,7 @@ private fun ParticipantQuickActions(
         displayName = participant.displayName,
         subtitle = participant.details,
         fallbackIcon = fallbackIcon,
+        fallbackLabel = fallbackLabel,
         onDismiss = onDismiss,
         onMessageClick = {
             onMessageClick()
@@ -261,6 +273,7 @@ private fun ParticipantAvatarWithQuickActions(
     participant: ParticipantUiState,
     avatarUri: String?,
     fallbackIcon: ImageVector,
+    fallbackLabel: String?,
     quickActionsVisible: Boolean,
     onDismissQuickActions: () -> Unit,
     onMessageClick: () -> Unit,
@@ -271,7 +284,8 @@ private fun ParticipantAvatarWithQuickActions(
         ParticipantAvatar(
             avatarUri = avatarUri,
             fallbackIcon = fallbackIcon,
-            fallbackIconSize = 24.dp,
+            fallbackSize = 24.dp,
+            fallbackLabel = fallbackLabel,
             modifier = Modifier.matchParentSize(),
         )
 
@@ -280,6 +294,7 @@ private fun ParticipantAvatarWithQuickActions(
             participant = participant,
             avatarUri = avatarUri,
             fallbackIcon = fallbackIcon,
+            fallbackLabel = fallbackLabel,
             onDismiss = onDismissQuickActions,
             onMessageClick = onMessageClick,
             onCallClick = onCallClick,

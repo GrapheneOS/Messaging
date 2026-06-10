@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import coil3.compose.AsyncImage
 import com.android.messaging.sms.MmsSmsUtils
@@ -48,7 +49,7 @@ private const val DARK_THEME_AVATAR_CONTENT_LIGHTNESS = 0.88f
 internal fun ParticipantAvatar(
     avatarUri: String?,
     fallbackIcon: ImageVector,
-    fallbackIconSize: Dp,
+    fallbackSize: Dp,
     fallbackLabel: String?,
     modifier: Modifier = Modifier,
     colorSeedCode: String? = null,
@@ -85,7 +86,7 @@ internal fun ParticipantAvatar(
                 Icon(
                     imageVector = Icons.Default.Check,
                     contentDescription = null,
-                    modifier = Modifier.size(fallbackIconSize),
+                    modifier = Modifier.size(fallbackSize),
                     tint = fallbackColors.content,
                 )
             }
@@ -100,9 +101,13 @@ internal fun ParticipantAvatar(
             }
 
             !fallbackLabel.isNullOrBlank() -> {
+                val fontSize = with(LocalDensity.current) { fallbackSize.toSp() }
+
                 Text(
                     text = fallbackLabel,
                     style = MaterialTheme.typography.titleMedium,
+                    fontSize = fontSize,
+                    lineHeight = fontSize,
                     color = fallbackColors.content,
                 )
             }
@@ -111,7 +116,7 @@ internal fun ParticipantAvatar(
                 Icon(
                     imageVector = fallbackIcon,
                     contentDescription = null,
-                    modifier = Modifier.size(fallbackIconSize),
+                    modifier = Modifier.size(fallbackSize),
                     tint = fallbackColors.content,
                 )
             }
@@ -126,7 +131,7 @@ internal fun ParticipantAvatar(
     fallbackLabel: String?,
     modifier: Modifier = Modifier,
     colorSeedCode: String? = null,
-    fallbackIconSize: Dp = size / 2,
+    fallbackSize: Dp = size / 2,
     fallbackIcon: ImageVector = Icons.Default.Person,
     shape: Shape = CircleShape,
     isSelected: Boolean = false,
@@ -134,7 +139,7 @@ internal fun ParticipantAvatar(
     ParticipantAvatar(
         avatarUri = avatarUri,
         fallbackIcon = fallbackIcon,
-        fallbackIconSize = fallbackIconSize,
+        fallbackSize = fallbackSize,
         fallbackLabel = fallbackLabel,
         modifier = modifier.size(size),
         colorSeedCode = colorSeedCode,

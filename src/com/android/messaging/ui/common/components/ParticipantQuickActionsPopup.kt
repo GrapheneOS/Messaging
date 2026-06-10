@@ -58,7 +58,7 @@ private val ContentTopPadding = 4.dp
 private val ContentBottomPadding = 10.dp
 private val AvatarSubtitleSpacing = 10.dp
 private val PopupAnchorGap = 16.dp
-private val AvatarFallbackIconSize = 60.dp
+private val AvatarFallbackSize = 60.dp
 private val IconInsidePadding = 2.dp
 private val ShadowPadding = 16.dp
 
@@ -69,6 +69,7 @@ internal fun ParticipantQuickActionsPopup(
     displayName: String,
     subtitle: String?,
     fallbackIcon: ImageVector,
+    fallbackLabel: String?,
     onDismiss: () -> Unit,
     onMessageClick: (() -> Unit)?,
     onCallClick: (() -> Unit)?,
@@ -123,6 +124,7 @@ internal fun ParticipantQuickActionsPopup(
                 displayName = displayName,
                 subtitle = subtitle,
                 fallbackIcon = fallbackIcon,
+                fallbackLabel = fallbackLabel,
                 onMessageClick = onMessageClick,
                 onCallClick = onCallClick,
                 onContactClick = onContactClick,
@@ -138,6 +140,7 @@ private fun QuickActionsCard(
     displayName: String,
     subtitle: String?,
     fallbackIcon: ImageVector,
+    fallbackLabel: String?,
     onMessageClick: (() -> Unit)?,
     onCallClick: (() -> Unit)?,
     onContactClick: (() -> Unit)?,
@@ -159,6 +162,7 @@ private fun QuickActionsCard(
             AvatarHeader(
                 avatarUri = avatarUri,
                 fallbackIcon = fallbackIcon,
+                fallbackLabel = fallbackLabel,
                 fadeColor = cardColor,
             )
 
@@ -198,6 +202,7 @@ private fun QuickActionsCard(
 private fun AvatarHeader(
     avatarUri: String?,
     fallbackIcon: ImageVector,
+    fallbackLabel: String?,
     fadeColor: Color,
 ) {
     Box(
@@ -208,7 +213,8 @@ private fun AvatarHeader(
         ParticipantAvatar(
             avatarUri = avatarUri,
             fallbackIcon = fallbackIcon,
-            fallbackIconSize = AvatarFallbackIconSize,
+            fallbackSize = AvatarFallbackSize,
+            fallbackLabel = fallbackLabel,
             shape = RectangleShape,
             modifier = Modifier.fillMaxSize(),
         )
@@ -312,6 +318,7 @@ private fun ParticipantQuickActionsPopupPreview() {
             displayName = "This is my best friend with the longest name ever",
             subtitle = "+1 555 000 0000000 (Mobile, USA)",
             fallbackIcon = Icons.Default.Person,
+            fallbackLabel = "T",
             onMessageClick = {},
             onCallClick = {},
             onContactClick = {},

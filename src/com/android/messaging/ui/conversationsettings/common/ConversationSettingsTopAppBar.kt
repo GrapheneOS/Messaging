@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.common.components.ParticipantAvatar
+import com.android.messaging.ui.common.components.participantAvatarLabel
 import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,7 +59,10 @@ internal fun ConversationSettingsTopAppBar(
                         participant == null -> Icons.Default.Group
                         else -> Icons.Default.Person
                     },
-                    fallbackIconSize = 20.dp,
+                    fallbackSize = 20.dp,
+                    fallbackLabel = participantAvatarLabel(
+                        source = participant?.displayName,
+                    ).takeUnless { isBlocked },
                 )
 
                 Spacer(modifier = Modifier.width(12.dp))
