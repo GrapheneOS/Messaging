@@ -18,6 +18,7 @@ import com.android.messaging.datamodel.data.ConversationListItemData
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.di.core.MessagingDbDispatcher
 import com.android.messaging.util.db.ext.getStringOrNull
+import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentListOf
@@ -32,7 +33,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
 
 internal interface ConversationListRepository {
     fun observeInboxSnapshot(): Flow<ConversationListSnapshot>
@@ -196,7 +196,7 @@ internal class ConversationListRepositoryImpl @Inject constructor(
             MessageData.BUGLE_STATUS_OUTGOING_AWAITING_RETRY,
             MessageData.BUGLE_STATUS_OUTGOING_SENDING,
             MessageData.BUGLE_STATUS_OUTGOING_RESENDING,
-                -> {
+            -> {
                 ConversationListMessageStatus.Sending
             }
 
@@ -204,7 +204,7 @@ internal class ConversationListRepositoryImpl @Inject constructor(
             MessageData.BUGLE_STATUS_OUTGOING_FAILED_EMERGENCY_NUMBER,
             MessageData.BUGLE_STATUS_INCOMING_DOWNLOAD_FAILED,
             MessageData.BUGLE_STATUS_INCOMING_EXPIRED_OR_NOT_AVAILABLE,
-                -> {
+            -> {
                 ConversationListMessageStatus.Failed(rawTelephonyStatus)
             }
 
