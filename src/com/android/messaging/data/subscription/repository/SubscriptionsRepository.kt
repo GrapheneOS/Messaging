@@ -1,8 +1,14 @@
 package com.android.messaging.data.subscription.repository
 
+import android.Manifest.permission.MODIFY_PHONE_STATE
+import android.content.BroadcastReceiver
 import android.content.ContentResolver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.database.ContentObserver
 import android.net.Uri
+import android.telephony.SubscriptionManager
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
@@ -18,6 +24,7 @@ import com.android.messaging.util.BugleGservicesKeys
 import com.android.messaging.util.LogUtil
 import com.android.messaging.util.PhoneUtils
 import com.android.messaging.util.core.extension.typedFlow
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -30,11 +37,14 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 
 internal interface SubscriptionsRepository {
     fun observeActiveSubscriptions(): Flow<ImmutableList<Subscription>>
+
+    fun observeDefaultSmsSubscriptionId(): Flow<Int>
 
     fun getDefaultSmsSubscriptionId(): Int
 
@@ -44,7 +54,10 @@ internal interface SubscriptionsRepository {
 }
 
 internal class SubscriptionsRepositoryImpl @Inject constructor(
+    @param:ApplicationContext
+    private val context: Context,
     private val contentResolver: ContentResolver,
+    private val subscriptionManager: SubscriptionManager,
     private val debugSimEmulationSource: DebugSimEmulationSource,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
@@ -72,6 +85,44 @@ internal class SubscriptionsRepositoryImpl @Inject constructor(
                 mode = emulationMode,
             )
         }
+    }
+
+    override fun observeDefaultSmsSubscriptionId(): Flow<Int> {
+        return callbackFlow {
+            val receiver = object : BroadcastReceiver() {
+                override fun onReceive(context: Context, intent: Intent) {
+                    if (
+                        intent.action ==
+                        SubscriptionManager.ACTION_DEFAULT_SMS_SUBSCRIPTION_CHANGED
+                    ) {
+                        trySend(Unit)
+                    }
+                }
+            }
+            val listener = object : SubscriptionManager.OnSubscriptionsChangedListener() {
+                override fun onSubscriptionsChanged() {
+                    trySend(Unit)
+                }
+            }
+
+            context.registerReceiver(
+                receiver,
+                IntentFilter(SubscriptionManager.ACTION_DEFAULT_SMS_SUBSCRIPTION_CHANGED),
+                MODIFY_PHONE_STATE,
+                null,
+                Context.RECEIVER_EXPORTED,
+            )
+            subscriptionManager.addOnSubscriptionsChangedListener(context.mainExecutor, listener)
+            trySend(Unit)
+
+            awaitClose {
+                context.unregisterReceiver(receiver)
+                subscriptionManager.removeOnSubscriptionsChangedListener(listener)
+            }
+        }
+            .map { getDefaultSmsSubscriptionId() }
+            .distinctUntilChanged()
+            .flowOn(defaultDispatcher)
     }
 
     override fun getDefaultSmsSubscriptionId(): Int {

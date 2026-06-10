@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.composer.mapper
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.subscription.model.Subscription
+import com.android.messaging.data.subscription.resolveSelectedSubscription
 import com.android.messaging.datamodel.MessageTextStats
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
@@ -24,6 +25,7 @@ internal interface ConversationComposerUiStateMapper {
         composerAvailability: ConversationComposerAvailability,
         subscriptions: ImmutableList<Subscription>,
         areSubscriptionsLoaded: Boolean,
+        defaultSmsSubscriptionId: Int,
     ): ConversationComposerUiState
 }
 
@@ -37,6 +39,7 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
         composerAvailability: ConversationComposerAvailability,
         subscriptions: ImmutableList<Subscription>,
         areSubscriptionsLoaded: Boolean,
+        defaultSmsSubscriptionId: Int,
     ): ConversationComposerUiState {
         val draft = draftState.draft
         val hasWorkingDraft = draft.hasContent
@@ -57,6 +60,7 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
             subscriptions = subscriptions,
             selfParticipantId = draft.selfParticipantId,
             areSubscriptionsLoaded = areSubscriptionsLoaded,
+            defaultSmsSubscriptionId = defaultSmsSubscriptionId,
         )
 
         return ConversationComposerUiState(
@@ -128,10 +132,13 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
         subscriptions: ImmutableList<Subscription>,
         selfParticipantId: String,
         areSubscriptionsLoaded: Boolean,
+        defaultSmsSubscriptionId: Int,
     ): ConversationSimSelectorUiState {
-        val selected = subscriptions
-            .firstOrNull { it.selfParticipantId == selfParticipantId }
-            ?: subscriptions.firstOrNull()
+        val selected = resolveSelectedSubscription(
+            subscriptions = subscriptions,
+            selectedSelfParticipantId = selfParticipantId,
+            defaultSmsSubscriptionId = defaultSmsSubscriptionId,
+        )
 
         return ConversationSimSelectorUiState(
             subscriptions = subscriptions,
