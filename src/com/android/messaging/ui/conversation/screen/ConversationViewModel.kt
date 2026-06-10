@@ -7,9 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.media.model.ConversationCapturedMedia
-import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
-import com.android.messaging.data.subscription.repository.SubscriptionsRepository
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.domain.conversation.usecase.action.CreateDefaultSmsRoleRequest
@@ -19,6 +17,7 @@ import com.android.messaging.domain.conversation.usecase.telephony.IsEmergencyPh
 import com.android.messaging.ui.conversation.audio.delegate.ConversationAudioRecordingDelegate
 import com.android.messaging.ui.conversation.composer.delegate.ConversationComposerAttachmentsDelegate
 import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftDelegate
+import com.android.messaging.ui.conversation.composer.delegate.ConversationSubscriptionSelectionDelegate
 import com.android.messaging.ui.conversation.composer.mapper.ConversationComposerUiStateMapper
 import com.android.messaging.ui.conversation.composer.model.ComposerAttachmentUiModel
 import com.android.messaging.ui.conversation.composer.model.ConversationComposerUiState
@@ -38,8 +37,6 @@ import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffe
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaffoldUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -47,7 +44,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -144,8 +140,9 @@ internal class ConversationViewModel @Inject constructor(
     private val conversationMediaPickerDelegate: ConversationMediaPickerDelegate,
     private val conversationMetadataDelegate: ConversationMetadataDelegate,
     private val conversationFocusDelegate: ConversationFocusDelegate,
+    private val conversationSubscriptionSelectionDelegate:
+    ConversationSubscriptionSelectionDelegate,
     private val conversationComposerUiStateMapper: ConversationComposerUiStateMapper,
-    private val subscriptionsRepository: SubscriptionsRepository,
     private val simSelectionRepository: ConversationSimSelectionRepository,
     private val canAddMoreConversationParticipants: CanAddMoreConversationParticipants,
     private val createDefaultSmsRoleRequest: CreateDefaultSmsRoleRequest,
@@ -167,22 +164,6 @@ internal class ConversationViewModel @Inject constructor(
 
     override val effects = _effects.asSharedFlow()
 
-    private val subscriptionsStateFlow: StateFlow<ConversationSubscriptionsState> =
-        subscriptionsRepository
-            .observeActiveSubscriptions()
-            .map { subscriptions ->
-                ConversationSubscriptionsState.Present(
-                    subscriptions = subscriptions,
-                ) as ConversationSubscriptionsState
-            }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(
-                    stopTimeoutMillis = STATEFLOW_STOP_TIMEOUT_MILLIS,
-                ),
-                initialValue = ConversationSubscriptionsState.Loading,
-            )
-
     init {
         initializeDelegates()
     }
@@ -192,29 +173,36 @@ internal class ConversationViewModel @Inject constructor(
         conversationMetadataDelegate.state,
         conversationDraftDelegate.state,
         conversationComposerAttachmentsDelegate.state,
-        subscriptionsStateFlow,
-    ) { audioRecordingState, metadataState, draftState, attachments, subscriptionsState ->
+        conversationSubscriptionSelectionDelegate.state,
+    ) { audioRecordingState, metadataState, draftState, attachments, subscriptionSelectionState ->
         conversationComposerUiStateMapper.map(
             audioRecording = audioRecordingState,
             draftState = draftState,
             attachments = attachments,
             composerAvailability = metadataState.composerAvailability,
-            subscriptions = subscriptionsState.subscriptions,
-            areSubscriptionsLoaded = subscriptionsState.isLoaded,
+            subscriptions = subscriptionSelectionState.subscriptions,
+            areSubscriptionsLoaded = subscriptionSelectionState.areSubscriptionsLoaded,
+            defaultSmsSubscriptionId = subscriptionSelectionState.defaultSmsSubscriptionId,
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(
             stopTimeoutMillis = STATEFLOW_STOP_TIMEOUT_MILLIS,
         ),
-        initialValue = conversationComposerUiStateMapper.map(
-            audioRecording = conversationAudioRecordingDelegate.state.value,
-            draftState = conversationDraftDelegate.state.value,
-            attachments = conversationComposerAttachmentsDelegate.state.value,
-            composerAvailability = conversationMetadataDelegate.state.value.composerAvailability,
-            subscriptions = subscriptionsStateFlow.value.subscriptions,
-            areSubscriptionsLoaded = subscriptionsStateFlow.value.isLoaded,
-        ),
+        initialValue = run {
+            val subscriptionSelectionState = conversationSubscriptionSelectionDelegate.state.value
+
+            conversationComposerUiStateMapper.map(
+                audioRecording = conversationAudioRecordingDelegate.state.value,
+                draftState = conversationDraftDelegate.state.value,
+                attachments = conversationComposerAttachmentsDelegate.state.value,
+                composerAvailability = conversationMetadataDelegate
+                    .state.value.composerAvailability,
+                subscriptions = subscriptionSelectionState.subscriptions,
+                areSubscriptionsLoaded = subscriptionSelectionState.areSubscriptionsLoaded,
+                defaultSmsSubscriptionId = subscriptionSelectionState.defaultSmsSubscriptionId,
+            )
+        },
     )
 
     private val dialogUiState = combine(
@@ -357,6 +345,7 @@ internal class ConversationViewModel @Inject constructor(
             scope = viewModelScope,
             conversationIdFlow = conversationIdFlow,
         )
+        conversationSubscriptionSelectionDelegate.bind(scope = viewModelScope)
         bindDelegateEffects()
     }
 
@@ -830,19 +819,3 @@ private data class ConversationScreenDialogUiState(
     val isDeleteConversationConfirmationVisible: Boolean,
     val isSubjectDialogVisible: Boolean,
 )
-
-private sealed interface ConversationSubscriptionsState {
-    val subscriptions: ImmutableList<Subscription>
-    val isLoaded: Boolean
-
-    data object Loading : ConversationSubscriptionsState {
-        override val subscriptions: ImmutableList<Subscription> = persistentListOf()
-        override val isLoaded: Boolean = false
-    }
-
-    data class Present(
-        override val subscriptions: ImmutableList<Subscription>,
-    ) : ConversationSubscriptionsState {
-        override val isLoaded: Boolean = true
-    }
-}

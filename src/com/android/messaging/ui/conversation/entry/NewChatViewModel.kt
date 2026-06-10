@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.android.messaging.R
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
-import com.android.messaging.datamodel.data.ParticipantData
+import com.android.messaging.data.subscription.resolveSelectedSubscription
 import com.android.messaging.di.core.MainDispatcher
 import com.android.messaging.domain.conversation.usecase.participant.IsConversationRecipientLimitExceeded
 import com.android.messaging.ui.conversation.composer.model.ConversationSimSelectorUiState
@@ -348,32 +348,11 @@ internal class NewChatViewModel @Inject constructor(
         subscriptions: ImmutableList<Subscription>,
         persistedSelfParticipantId: String?,
     ): Subscription? {
-        val persistedMatch = subscriptions.firstOrNull { subscription ->
-            subscription.selfParticipantId == persistedSelfParticipantId
-        }
-
-        return when {
-            persistedMatch != null -> persistedMatch
-            else -> resolveDefaultSubscription(subscriptions = subscriptions)
-        }
-    }
-
-    private fun resolveDefaultSubscription(
-        subscriptions: ImmutableList<Subscription>,
-    ): Subscription? {
-        val defaultSubId = subscriptionsRepository.getDefaultSmsSubscriptionId()
-
-        val matchingBySubId = when {
-            defaultSubId == ParticipantData.DEFAULT_SELF_SUB_ID -> null
-
-            else -> {
-                subscriptions.firstOrNull { subscription ->
-                    subscription.subId == defaultSubId
-                }
-            }
-        }
-
-        return matchingBySubId ?: subscriptions.firstOrNull()
+        return resolveSelectedSubscription(
+            subscriptions = subscriptions,
+            selectedSelfParticipantId = persistedSelfParticipantId,
+            defaultSmsSubscriptionId = subscriptionsRepository.getDefaultSmsSubscriptionId(),
+        )
     }
 
     private fun selectedSelfParticipantId(): String? {

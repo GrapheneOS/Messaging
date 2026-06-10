@@ -12,6 +12,8 @@ import com.android.messaging.ui.conversation.composer.delegate.ConversationDraft
 import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftDelegateImpl
 import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftEditorDelegate
 import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftEditorDelegateImpl
+import com.android.messaging.ui.conversation.composer.delegate.ConversationSubscriptionSelectionDelegate
+import com.android.messaging.ui.conversation.composer.delegate.ConversationSubscriptionSelectionDelegateImpl
 import com.android.messaging.ui.conversation.focus.delegate.ConversationFocusDelegate
 import com.android.messaging.ui.conversation.focus.delegate.ConversationFocusDelegateImpl
 import com.android.messaging.ui.conversation.mediapicker.delegate.ConversationMediaPickerDelegate
@@ -103,6 +105,12 @@ internal abstract class ConversationViewModelBindsModule {
     abstract fun bindConversationFocusDelegate(
         impl: ConversationFocusDelegateImpl,
     ): ConversationFocusDelegate
+
+    @Binds
+    @ViewModelScoped
+    abstract fun bindConversationSubscriptionSelectionDelegate(
+        impl: ConversationSubscriptionSelectionDelegateImpl,
+    ): ConversationSubscriptionSelectionDelegate
 
     @Binds
     @ViewModelScoped
