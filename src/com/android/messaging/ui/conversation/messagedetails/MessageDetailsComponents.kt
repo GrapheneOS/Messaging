@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.messagedetails
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -58,6 +59,7 @@ internal fun MessageDetailsPreviewCard(
 internal fun MessageDetailsStatusSection(
     sentTimestamp: Long?,
     receivedTimestamp: Long?,
+    onCopy: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     MessageDetailsCard(
@@ -68,6 +70,7 @@ internal fun MessageDetailsStatusSection(
             MessageDetailsRow(
                 label = stringResource(id = R.string.message_details_received_label),
                 value = formatMessageDetailsTimestamp(timestampMillis = timestamp),
+                onCopy = onCopy,
             )
         }
 
@@ -75,6 +78,7 @@ internal fun MessageDetailsStatusSection(
             MessageDetailsRow(
                 label = stringResource(id = R.string.message_details_sent_label),
                 value = formatMessageDetailsTimestamp(timestampMillis = timestamp),
+                onCopy = onCopy,
             )
         }
     }
@@ -83,6 +87,7 @@ internal fun MessageDetailsStatusSection(
 @Composable
 internal fun MessageDetailsMessageFields(
     details: ConversationMessageDetails,
+    onCopy: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     MessageDetailsCard(
@@ -92,12 +97,14 @@ internal fun MessageDetailsMessageFields(
         MessageDetailsRow(
             label = stringResource(id = R.string.message_details_type_label),
             value = messageDetailsTypeText(details.type),
+            onCopy = null,
         )
 
         details.sender?.let { sender ->
             MessageDetailsRow(
                 label = stringResource(id = R.string.message_details_from_label),
                 value = sender,
+                onCopy = onCopy,
             )
         }
 
@@ -105,6 +112,7 @@ internal fun MessageDetailsMessageFields(
             MessageDetailsRow(
                 label = stringResource(id = R.string.message_details_to_label),
                 value = recipients.joinToString(separator = ", "),
+                onCopy = onCopy,
             )
         }
     }
@@ -113,6 +121,7 @@ internal fun MessageDetailsMessageFields(
 @Composable
 internal fun MessageDetailsDeliveryFields(
     details: ConversationMessageDetails,
+    onCopy: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -131,6 +140,7 @@ internal fun MessageDetailsDeliveryFields(
             MessageDetailsRow(
                 label = stringResource(id = R.string.message_details_priority_label),
                 value = messageDetailsPriorityText(priority),
+                onCopy = null,
             )
         }
 
@@ -141,6 +151,7 @@ internal fun MessageDetailsDeliveryFields(
                     context = context,
                     sizeBytes = sizeBytes,
                 ),
+                onCopy = onCopy,
             )
         }
     }
@@ -149,6 +160,7 @@ internal fun MessageDetailsDeliveryFields(
 @Composable
 internal fun MessageDetailsDebugSection(
     debug: ConversationMessageDetails.Debug,
+    onCopy: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var isExpanded by rememberSaveable { mutableStateOf(value = false) }
@@ -166,7 +178,7 @@ internal fun MessageDetailsDebugSection(
             Row(
                 modifier = Modifier.padding(
                     horizontal = 16.dp,
-                    vertical = 12.dp
+                    vertical = 12.dp,
                 ),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
@@ -194,6 +206,7 @@ internal fun MessageDetailsDebugSection(
                     MessageDetailsDebugField(
                         label = entry.first,
                         value = entry.second,
+                        onCopy = onCopy,
                     )
                 }
             }
@@ -225,10 +238,7 @@ private fun MessageDetailsCard(
             shape = MaterialTheme.shapes.medium,
             color = MaterialTheme.colorScheme.surfaceContainer,
         ) {
-            Column(
-                modifier = Modifier.padding(all = MessageDetailsCardPadding),
-                verticalArrangement = Arrangement.spacedBy(space = 8.dp),
-            ) {
+            Column {
                 content()
             }
         }
@@ -239,10 +249,17 @@ private fun MessageDetailsCard(
 private fun MessageDetailsRow(
     label: String,
     value: String,
+    onCopy: ((String) -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .copyOnLongPress(
+                value = value,
+                onCopy = onCopy,
+            )
+            .padding(MessageDetailsCardPadding),
         horizontalArrangement = Arrangement.spacedBy(space = 16.dp),
     ) {
         Text(
@@ -262,13 +279,37 @@ private fun MessageDetailsRow(
 }
 
 @Composable
+private fun Modifier.copyOnLongPress(
+    value: String,
+    onCopy: ((String) -> Unit)?,
+): Modifier {
+    if (onCopy == null) {
+        return this
+    }
+
+    val copyLabel = stringResource(R.string.copy_to_clipboard)
+    return combinedClickable(
+        onClick = {},
+        onLongClickLabel = copyLabel,
+        onLongClick = { onCopy(value) },
+    )
+}
+
+@Composable
 private fun MessageDetailsDebugField(
     label: String,
     value: String,
+    onCopy: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .copyOnLongPress(
+                value = value,
+                onCopy = onCopy,
+            )
+            .padding(MessageDetailsCardPadding),
         verticalArrangement = Arrangement.spacedBy(space = 2.dp),
     ) {
         Text(

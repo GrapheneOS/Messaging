@@ -1,5 +1,7 @@
 package com.android.messaging.ui.conversation.messagedetails
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -19,12 +21,15 @@ internal interface MessageDetailsScreenModel {
     val uiState: StateFlow<State>
 
     fun onArguments(conversationId: String, messageId: String)
+
+    fun onCopy(value: String)
 }
 
 @HiltViewModel
 internal class MessageDetailsViewModel @Inject constructor(
     private val conversationsRepository: ConversationsRepository,
     private val messageDetailsUiStateMapper: MessageDetailsUiStateMapper,
+    private val clipboardManager: ClipboardManager,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel(),
     MessageDetailsScreenModel {
@@ -67,6 +72,10 @@ internal class MessageDetailsViewModel @Inject constructor(
         if (messageIdFlow.value != messageId) {
             savedStateHandle[MESSAGE_ID_KEY] = messageId
         }
+    }
+
+    override fun onCopy(value: String) {
+        clipboardManager.setPrimaryClip(ClipData.newPlainText(null, value))
     }
 
     private suspend fun loadMessageDetails(arguments: MessageDetailsArguments): State {
