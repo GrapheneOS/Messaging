@@ -57,12 +57,14 @@ internal fun MessageDetailsScreen(
         uiState = uiState,
         modifier = modifier,
         onNavigateBack = onNavigateBack,
+        onCopy = screenModel::onCopy,
     )
 }
 
 @Composable
 private fun MessageDetailsScaffold(
     uiState: MessageDetailsUiState,
+    onCopy: (String) -> Unit,
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit = {},
 ) {
@@ -104,6 +106,7 @@ private fun MessageDetailsScaffold(
             is MessageDetailsUiState.Content -> {
                 MessageDetailsContent(
                     content = uiState,
+                    onCopy = onCopy,
                     modifier = Modifier.padding(contentPadding),
                 )
             }
@@ -114,6 +117,7 @@ private fun MessageDetailsScaffold(
 @Composable
 private fun MessageDetailsContent(
     content: MessageDetailsUiState.Content,
+    onCopy: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val details = content.details
@@ -130,19 +134,29 @@ private fun MessageDetailsContent(
             details = details,
         )
 
-        MessageDetailsMessageFields(details = details)
+        MessageDetailsMessageFields(
+            details = details,
+            onCopy = onCopy,
+        )
 
         if (details.sentTimestamp != null || details.receivedTimestamp != null) {
             MessageDetailsStatusSection(
                 sentTimestamp = details.sentTimestamp,
                 receivedTimestamp = details.receivedTimestamp,
+                onCopy = onCopy,
             )
         }
 
-        MessageDetailsDeliveryFields(details = details)
+        MessageDetailsDeliveryFields(
+            details = details,
+            onCopy = onCopy,
+        )
 
         details.debug?.let { debug ->
-            MessageDetailsDebugSection(debug = debug)
+            MessageDetailsDebugSection(
+                debug = debug,
+                onCopy = onCopy,
+            )
         }
     }
 }
@@ -179,6 +193,7 @@ private fun MessageDetailsContentPreview() {
                     debug = null,
                 ),
             ),
+            onCopy = {},
         )
     }
 }
