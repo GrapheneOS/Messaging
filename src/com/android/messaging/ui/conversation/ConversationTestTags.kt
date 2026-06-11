@@ -95,6 +95,10 @@ internal fun conversationMessageSelectionActionButtonTestTag(action: String): St
     return "conversation_message_selection_action_${action.lowercase()}"
 }
 
+internal fun conversationSettingsParticipantRowTestTag(participantId: String): String {
+    return "conversation_settings_participant_row_$participantId"
+}
+
 internal fun conversationAttachmentPreviewItemTestTag(attachmentKey: String): String {
     return "conversation_attachment_preview_item_$attachmentKey"
 }
