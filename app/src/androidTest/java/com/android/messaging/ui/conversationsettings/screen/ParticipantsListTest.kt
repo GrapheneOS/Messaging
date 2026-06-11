@@ -13,6 +13,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
 import com.android.messaging.R
+import com.android.messaging.testutil.TEST_WAIT_TIMEOUT_MILLIS
 import com.android.messaging.ui.conversation.conversationSettingsParticipantRowTestTag
 import com.android.messaging.ui.conversationsettings.screen.model.ParticipantConversationSettingsAction as ParticipantAction
 import com.android.messaging.ui.conversationsettings.screen.support.ConversationSettingsTestBase
