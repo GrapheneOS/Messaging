@@ -72,6 +72,10 @@ internal fun conversationMessageItemTestTag(messageId: String): String {
     return "conversation_message_item_$messageId"
 }
 
+internal fun conversationSettingsParticipantRowTestTag(participantId: String): String {
+    return "conversation_settings_participant_row_$participantId"
+}
+
 internal fun conversationAttachmentPreviewItemTestTag(attachmentKey: String): String {
     return "conversation_attachment_preview_item_$attachmentKey"
 }
