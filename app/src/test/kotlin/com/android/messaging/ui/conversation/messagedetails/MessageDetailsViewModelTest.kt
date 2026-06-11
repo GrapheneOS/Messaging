@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.messagedetails
 import android.content.ClipboardManager
 import androidx.lifecycle.SavedStateHandle
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetails
+import com.android.messaging.data.conversation.model.message.ConversationMessageDetailsResult
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.testutil.MainDispatcherRule
@@ -38,24 +39,20 @@ internal class MessageDetailsViewModelTest {
     }
 
     @Test
-    fun onArguments_loadsMessageAndDetailsAndExposesMappedState() = runTest {
+    fun onArguments_loadsMessageDetailsAndExposesMappedState() = runTest {
         val message = mockk<ConversationMessageData>()
         val details = mockk<ConversationMessageDetails>()
         val content = mockk<MessageDetailsUiState.Content>()
-
-        coEvery {
-            conversationsRepository.getConversationMessage(
-                conversationId = "c",
-                messageId = "m",
-            )
-        } returns message
 
         coEvery {
             conversationsRepository.getMessageDetails(
                 conversationId = "c",
                 messageId = "m",
             )
-        } returns details
+        } returns ConversationMessageDetailsResult(
+            message = message,
+            details = details,
+        )
 
         every {
             messageDetailsUiStateMapper.map(
@@ -73,10 +70,6 @@ internal class MessageDetailsViewModelTest {
 
         assertEquals(content, viewModel.uiState.value)
         coVerify {
-            conversationsRepository.getConversationMessage(
-                conversationId = "c",
-                messageId = "m",
-            )
             conversationsRepository.getMessageDetails(
                 conversationId = "c",
                 messageId = "m",
@@ -92,13 +85,6 @@ internal class MessageDetailsViewModelTest {
 
     @Test
     fun onArguments_whenMapperReturnsUnavailable_exposesUnavailable() = runTest {
-        coEvery {
-            conversationsRepository.getConversationMessage(
-                conversationId = "c",
-                messageId = "m",
-            )
-        } returns null
-
         coEvery {
             conversationsRepository.getMessageDetails(
                 conversationId = "c",

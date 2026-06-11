@@ -86,18 +86,14 @@ internal class MessageDetailsViewModel @Inject constructor(
             return State.Loading
         }
 
-        val message = conversationsRepository.getConversationMessage(
-            conversationId = conversationId,
-            messageId = messageId,
-        )
-        val details = conversationsRepository.getMessageDetails(
+        val result = conversationsRepository.getMessageDetails(
             conversationId = conversationId,
             messageId = messageId,
         )
 
         return messageDetailsUiStateMapper.map(
-            message = message,
-            details = details,
+            message = result?.message,
+            details = result?.details,
         )
     }
 

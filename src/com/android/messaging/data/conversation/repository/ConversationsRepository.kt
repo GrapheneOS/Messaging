@@ -4,8 +4,8 @@ import android.content.ContentResolver
 import android.database.ContentObserver
 import android.net.Uri
 import com.android.messaging.data.conversation.mapper.ConversationMessageDetailsMapper
-import com.android.messaging.data.conversation.model.message.ConversationMessageDetails
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetailsData
+import com.android.messaging.data.conversation.model.message.ConversationMessageDetailsResult
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
 import com.android.messaging.data.conversation.model.send.ConversationSendData
@@ -60,7 +60,7 @@ internal interface ConversationsRepository {
     suspend fun getMessageDetails(
         conversationId: String,
         messageId: String,
-    ): ConversationMessageDetails?
+    ): ConversationMessageDetailsResult?
 
     fun resendMessage(messageId: String)
 
@@ -178,17 +178,21 @@ internal class ConversationsRepositoryImpl @Inject constructor(
     override suspend fun getMessageDetails(
         conversationId: String,
         messageId: String,
-    ): ConversationMessageDetails? {
+    ): ConversationMessageDetailsResult? {
         return withContext(context = messagingDbDispatcher) {
             val data = loadMessageDetailsData(
                 conversationId = conversationId,
                 messageId = messageId,
             ) ?: return@withContext null
 
-            messageDetailsMapper.map(
+            val details = messageDetailsMapper.map(
                 data = data,
                 activeSubscriptionCount = messageDetailsPlatformSource.activeSubscriptionCount(),
                 debug = messageDetailsPlatformSource.loadDebug(data.message),
+            )
+            ConversationMessageDetailsResult(
+                message = data.message,
+                details = details,
             )
         }
     }
