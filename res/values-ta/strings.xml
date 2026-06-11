@@ -281,7 +281,6 @@
     <string name="priority_normal" msgid="8918221917628753075">"இயல்பு"</string>
     <string name="priority_low" msgid="7398724779026801851">"குறைந்த தரம்"</string>
     <string name="sim_slot_identifier" msgid="5934005977415016295">"SIM <xliff:g id="SIM_SLOT_NUMBER">%s</xliff:g>"</string>
-    <string name="hidden_sender_address" msgid="5054789216911282696">"மறைவிலிருக்கும் அனுப்புநர் முகவரி"</string>
     <string name="cant_send_message_while_loading_attachments" msgid="4301887223941009907">"இணைப்புகளை ஏற்றும் போது செய்தியை அனுப்ப முடியாது."</string>
     <string name="fail_to_load_attachment" msgid="412233184776827353">"இணைப்பை ஏற்ற முடியவில்லை. மீண்டும் முயலவும்."</string>
     <string name="cant_send_message_without_active_subscription" msgid="7130532514190813716">"நெட்வொர்க் தயாராக இல்லை. மீண்டும் முயற்சிக்கவும்."</string>

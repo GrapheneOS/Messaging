@@ -281,7 +281,6 @@
     <string name="priority_normal" msgid="8918221917628753075">"​ປານ​ກາງ"</string>
     <string name="priority_low" msgid="7398724779026801851">"​ຕ່ຳ"</string>
     <string name="sim_slot_identifier" msgid="5934005977415016295">"​ຊິມ <xliff:g id="SIM_SLOT_NUMBER">%s</xliff:g>"</string>
-    <string name="hidden_sender_address" msgid="5054789216911282696">"​​ເຊື່ອງ​ທີ່​ຢູ່​ຜູ່​ສົ່ງ"</string>
     <string name="cant_send_message_while_loading_attachments" msgid="4301887223941009907">"​ບໍ່​ສາ​ມາດ​ສົ່ງ​ຂໍ້​ຄວາມ​ໄດ້​ໃນ​ຂະ​ນະ​ທີ່​ໂຫຼດ​ໄຟລ໌​ແນບ."</string>
     <string name="fail_to_load_attachment" msgid="412233184776827353">"ບໍ່​ສາ​ມາດ​ໂຫລດ​ໄຟລ໌​ແນບ​ໄດ້. ​ລອງ​ໃໝ່​ອີກ​ຄັ້ງ."</string>
     <string name="cant_send_message_without_active_subscription" msgid="7130532514190813716">"ເຄືອ​ຂ່າຍ​ບໍ່​ພ້ອມ. ລອງ​ໃໝ່​ອີກ."</string>

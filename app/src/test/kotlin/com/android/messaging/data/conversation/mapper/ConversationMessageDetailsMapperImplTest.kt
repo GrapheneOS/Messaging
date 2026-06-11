@@ -30,7 +30,6 @@ internal class ConversationMessageDetailsMapperImplTest {
         val result = mapper.map(
             data = detailsData(message),
             activeSubscriptionCount = 1,
-            cleansedSubject = null,
             debug = null,
         )
 
@@ -38,7 +37,6 @@ internal class ConversationMessageDetailsMapperImplTest {
         assertEquals("+15550100", result.sender)
         assertEquals(1_000L, result.sentTimestamp)
         assertEquals(2_000L, result.receivedTimestamp)
-        assertNull(result.subject)
         assertNull(result.priority)
         assertNull(result.sizeBytes)
     }
@@ -55,7 +53,6 @@ internal class ConversationMessageDetailsMapperImplTest {
         val result = mapper.map(
             data = detailsData(message),
             activeSubscriptionCount = 1,
-            cleansedSubject = null,
             debug = null,
         )
 
@@ -75,7 +72,6 @@ internal class ConversationMessageDetailsMapperImplTest {
         val result = mapper.map(
             data = detailsData(message),
             activeSubscriptionCount = 1,
-            cleansedSubject = null,
             debug = null,
         )
 
@@ -94,7 +90,6 @@ internal class ConversationMessageDetailsMapperImplTest {
         val result = mapper.map(
             data = detailsData(message),
             activeSubscriptionCount = 1,
-            cleansedSubject = null,
             debug = null,
         )
 
@@ -103,7 +98,7 @@ internal class ConversationMessageDetailsMapperImplTest {
     }
 
     @Test
-    fun map_mms_mapsSubjectPriorityAndSize() {
+    fun map_mms_mapsPriorityAndSize() {
         val message = message(
             isSms = false,
             smsPriority = PduHeaders.PRIORITY_HIGH,
@@ -113,12 +108,10 @@ internal class ConversationMessageDetailsMapperImplTest {
         val result = mapper.map(
             data = detailsData(message),
             activeSubscriptionCount = 1,
-            cleansedSubject = "Trip photos",
             debug = null,
         )
 
         assertEquals(ConversationMessageDetails.Type.MMS, result.type)
-        assertEquals("Trip photos", result.subject)
         assertEquals(ConversationMessageDetails.Priority.HIGH, result.priority)
         assertEquals(2_048L, result.sizeBytes)
     }
@@ -133,7 +126,6 @@ internal class ConversationMessageDetailsMapperImplTest {
         val result = mapper.map(
             data = detailsData(message),
             activeSubscriptionCount = 1,
-            cleansedSubject = null,
             debug = null,
         )
 
@@ -154,13 +146,11 @@ internal class ConversationMessageDetailsMapperImplTest {
         val lowResult = mapper.map(
             data = detailsData(lowMessage),
             activeSubscriptionCount = 1,
-            cleansedSubject = null,
             debug = null,
         )
         val normalResult = mapper.map(
             data = detailsData(normalMessage),
             activeSubscriptionCount = 1,
-            cleansedSubject = null,
             debug = null,
         )
 
@@ -198,7 +188,6 @@ internal class ConversationMessageDetailsMapperImplTest {
                 participants = participants,
             ),
             activeSubscriptionCount = 1,
-            cleansedSubject = null,
             debug = null,
         )
 
@@ -224,7 +213,6 @@ internal class ConversationMessageDetailsMapperImplTest {
                 participants = participants,
             ),
             activeSubscriptionCount = 1,
-            cleansedSubject = null,
             debug = null,
         )
 
@@ -242,7 +230,6 @@ internal class ConversationMessageDetailsMapperImplTest {
                 ),
             ),
             activeSubscriptionCount = 1,
-            cleansedSubject = null,
             debug = null,
         )
 
@@ -265,7 +252,6 @@ internal class ConversationMessageDetailsMapperImplTest {
                 selfParticipant = self,
             ),
             activeSubscriptionCount = 2,
-            cleansedSubject = null,
             debug = null,
         )
 
@@ -289,7 +275,6 @@ internal class ConversationMessageDetailsMapperImplTest {
                 selfParticipant = self,
             ),
             activeSubscriptionCount = 2,
-            cleansedSubject = null,
             debug = null,
         )
 
@@ -312,7 +297,6 @@ internal class ConversationMessageDetailsMapperImplTest {
                 selfParticipant = self,
             ),
             activeSubscriptionCount = 2,
-            cleansedSubject = null,
             debug = null,
         )
 
@@ -336,7 +320,6 @@ internal class ConversationMessageDetailsMapperImplTest {
         val result = mapper.map(
             data = detailsData(message(isSms = true)),
             activeSubscriptionCount = 1,
-            cleansedSubject = null,
             debug = debug,
         )
 

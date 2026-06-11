@@ -281,7 +281,6 @@
     <string name="priority_normal" msgid="8918221917628753075">"ပုံမှန်"</string>
     <string name="priority_low" msgid="7398724779026801851">"နိမ့်"</string>
     <string name="sim_slot_identifier" msgid="5934005977415016295">"ဆင်းမ် <xliff:g id="SIM_SLOT_NUMBER">%s</xliff:g>"</string>
-    <string name="hidden_sender_address" msgid="5054789216911282696">"ဝှက်ထားသော စာပို့သူ လိပ်စာ"</string>
     <string name="cant_send_message_while_loading_attachments" msgid="4301887223941009907">"ပူးတွဲချက်များဖွင့်စဉ် စာပို့၍မရပါ။"</string>
     <string name="fail_to_load_attachment" msgid="412233184776827353">"ပူးတွဲဖိုင် မရယူနိုင်ပါ။ ထပ်မံကြိုးစားပါ။"</string>
     <string name="cant_send_message_without_active_subscription" msgid="7130532514190813716">"ကွန်ရက်အဆင်သင့် မဖြစ်သေးပါ။ ထပ်မံကြိုးစားပါ။"</string>

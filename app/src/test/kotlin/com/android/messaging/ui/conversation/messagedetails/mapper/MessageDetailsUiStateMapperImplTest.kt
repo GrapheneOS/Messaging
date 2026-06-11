@@ -63,7 +63,6 @@ internal class MessageDetailsUiStateMapperImplTest {
             recipients = persistentListOf(),
             sentTimestamp = null,
             receivedTimestamp = null,
-            subject = null,
             priority = null,
             sizeBytes = null,
             subscriptionLabel = null,

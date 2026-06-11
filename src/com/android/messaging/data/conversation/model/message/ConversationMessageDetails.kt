@@ -9,7 +9,6 @@ internal data class ConversationMessageDetails(
     val recipients: ImmutableList<String>,
     val sentTimestamp: Long?,
     val receivedTimestamp: Long?,
-    val subject: String?,
     val priority: Priority?,
     val sizeBytes: Long?,
     val subscriptionLabel: ConversationSubscriptionLabel?,

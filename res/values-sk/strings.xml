@@ -317,7 +317,6 @@
     <string name="priority_normal" msgid="8918221917628753075">"Normálna"</string>
     <string name="priority_low" msgid="7398724779026801851">"Nízka"</string>
     <string name="sim_slot_identifier" msgid="5934005977415016295">"Slot SIM <xliff:g id="SIM_SLOT_NUMBER">%s</xliff:g>"</string>
-    <string name="hidden_sender_address" msgid="5054789216911282696">"Skrytá adresa odosielateľa"</string>
     <string name="cant_send_message_while_loading_attachments" msgid="4301887223941009907">"Počas načítavania príloh nie je možné odoslať správu."</string>
     <string name="fail_to_load_attachment" msgid="412233184776827353">"Nie je možné načítať prílohu. Skúste to znova."</string>
     <string name="cant_send_message_without_active_subscription" msgid="7130532514190813716">"Sieť nie je pripravená. Skúste to znova."</string>

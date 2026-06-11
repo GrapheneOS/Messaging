@@ -15,7 +15,6 @@ internal interface ConversationMessageDetailsMapper {
     fun map(
         data: ConversationMessageDetailsData,
         activeSubscriptionCount: Int,
-        cleansedSubject: String?,
         debug: ConversationMessageDetails.Debug?,
     ): ConversationMessageDetails
 }
@@ -26,7 +25,6 @@ internal class ConversationMessageDetailsMapperImpl @Inject constructor() :
     override fun map(
         data: ConversationMessageDetailsData,
         activeSubscriptionCount: Int,
-        cleansedSubject: String?,
         debug: ConversationMessageDetails.Debug?,
     ): ConversationMessageDetails {
         val message = data.message
@@ -43,10 +41,6 @@ internal class ConversationMessageDetailsMapperImpl @Inject constructor() :
             recipients = recipients(data),
             sentTimestamp = sentTimestamp(message),
             receivedTimestamp = receivedTimestamp(message),
-            subject = when (type) {
-                ConversationMessageDetails.Type.MMS -> cleansedSubject
-                ConversationMessageDetails.Type.SMS -> null
-            },
             priority = when (type) {
                 ConversationMessageDetails.Type.MMS -> priority(value = message.smsPriority)
                 ConversationMessageDetails.Type.SMS -> null

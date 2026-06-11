@@ -188,9 +188,6 @@ internal class ConversationsRepositoryImpl @Inject constructor(
             messageDetailsMapper.map(
                 data = data,
                 activeSubscriptionCount = messageDetailsPlatformSource.activeSubscriptionCount(),
-                cleansedSubject = messageDetailsPlatformSource.cleanseSubject(
-                    subject = data.message.mmsSubject,
-                ),
                 debug = messageDetailsPlatformSource.loadDebug(data.message),
             )
         }

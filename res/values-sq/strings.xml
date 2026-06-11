@@ -281,7 +281,6 @@
     <string name="priority_normal" msgid="8918221917628753075">"Normale"</string>
     <string name="priority_low" msgid="7398724779026801851">"E ulët"</string>
     <string name="sim_slot_identifier" msgid="5934005977415016295">"Numri i kartës SIM: <xliff:g id="SIM_SLOT_NUMBER">%s</xliff:g>"</string>
-    <string name="hidden_sender_address" msgid="5054789216911282696">"Adresë e fshehur e dërguesit"</string>
     <string name="cant_send_message_while_loading_attachments" msgid="4301887223941009907">"Nuk mund të dërgojë mesazh kur ngarkon bashkëngjitje."</string>
     <string name="fail_to_load_attachment" msgid="412233184776827353">"Nuk mund ta ngarkojë bashkëngjitjen. Provo sërish."</string>
     <string name="cant_send_message_without_active_subscription" msgid="7130532514190813716">"Rrjeti nuk është gati. Provo përsëri."</string>

@@ -173,7 +173,6 @@ private fun MessageDetailsContentPreview() {
                     recipients = persistentListOf("+1 555-0199"),
                     sentTimestamp = PREVIEW_SENT_TIMESTAMP,
                     receivedTimestamp = PREVIEW_RECEIVED_TIMESTAMP,
-                    subject = null,
                     priority = null,
                     sizeBytes = null,
                     subscriptionLabel = null,
