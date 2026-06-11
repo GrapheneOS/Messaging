@@ -30,20 +30,18 @@ internal sealed interface TargetUiState {
 
     @Immutable
     data class Contact(
-        val contactId: Long,
         val destination: String,
         override val normalizedDestination: String,
         override val displayName: String,
         override val details: String?,
         override val avatarUri: String?,
     ) : TargetUiState {
-        override val key: String = "$CONTACT_KEY_PREFIX$contactId"
-        override val selectionId: String = "$DESTINATION_SELECTION_PREFIX$normalizedDestination"
+        override val key: String = "$DESTINATION_SELECTION_PREFIX$normalizedDestination"
+        override val selectionId: String = key
     }
 
     private companion object {
         private const val CONVERSATION_KEY_PREFIX = "conversation:"
-        private const val CONTACT_KEY_PREFIX = "contact:"
         private const val DESTINATION_SELECTION_PREFIX = "dest:"
     }
 }

@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationpicker.viewmodel
 
 import app.cash.turbine.test
+import com.android.messaging.testutil.conversationTarget
 import com.android.messaging.ui.conversationpicker.model.AttachmentUiModel
 import com.android.messaging.ui.conversationpicker.model.DraftUiState
 import com.android.messaging.ui.conversationpicker.model.TargetsUiState

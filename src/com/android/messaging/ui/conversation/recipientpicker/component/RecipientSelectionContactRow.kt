@@ -31,6 +31,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -187,7 +188,8 @@ private fun SingleDestinationContactRow(
             .fillMaxWidth()
             .testTag(rowDecorators.recipientRowTestTag(item))
             .semantics { selected = isSelected }
-            .background(color = containerColor, shape = shape)
+            .clip(shape = shape)
+            .background(color = containerColor)
             .combinedClickable(
                 enabled = enabled,
                 onClick = {
@@ -254,7 +256,8 @@ private fun SyntheticPhoneRow(
             .fillMaxWidth()
             .testTag(rowDecorators.recipientRowTestTag(item))
             .semantics { selected = isSelected }
-            .background(color = containerColor, shape = shape)
+            .clip(shape = shape)
+            .background(color = containerColor)
             .combinedClickable(
                 enabled = enabled,
                 onClick = {

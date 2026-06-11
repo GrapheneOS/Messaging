@@ -10,10 +10,8 @@ import com.android.messaging.domain.conversationpicker.usecase.SendContentToConv
 import com.android.messaging.domain.conversationpicker.usecase.SendContentToConversationsImpl
 import com.android.messaging.domain.conversationpicker.usecase.SendContentToTargets
 import com.android.messaging.domain.conversationpicker.usecase.SendContentToTargetsImpl
-import com.android.messaging.ui.conversationpicker.mapper.ContactSectionMapper
-import com.android.messaging.ui.conversationpicker.mapper.ContactSectionMapperImpl
-import com.android.messaging.ui.conversationpicker.mapper.ContactUiStateMapper
-import com.android.messaging.ui.conversationpicker.mapper.ContactUiStateMapperImpl
+import com.android.messaging.ui.conversationpicker.mapper.ContactTargetMapper
+import com.android.messaging.ui.conversationpicker.mapper.ContactTargetMapperImpl
 import com.android.messaging.ui.conversationpicker.mapper.TargetUiStateMapper
 import com.android.messaging.ui.conversationpicker.mapper.TargetUiStateMapperImpl
 import dagger.Binds
@@ -34,15 +32,9 @@ internal abstract class ConversationPickerBindsModule {
 
     @Binds
     @Reusable
-    abstract fun bindContactUiStateMapper(
-        impl: ContactUiStateMapperImpl,
-    ): ContactUiStateMapper
-
-    @Binds
-    @Reusable
-    abstract fun bindContactSectionMapper(
-        impl: ContactSectionMapperImpl,
-    ): ContactSectionMapper
+    abstract fun bindContactTargetMapper(
+        impl: ContactTargetMapperImpl,
+    ): ContactTargetMapper
 
     @Binds
     @Reusable

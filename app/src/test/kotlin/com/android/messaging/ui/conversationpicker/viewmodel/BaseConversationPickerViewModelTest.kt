@@ -4,9 +4,15 @@ import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.domain.conversation.usecase.participant.ResolveConversationId
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveConversationIdResult
 import com.android.messaging.testutil.MainDispatcherRule
+import com.android.messaging.testutil.TEST_CONTACT_DESTINATION
+import com.android.messaging.testutil.TEST_RESOLVED_CONVERSATION_ID
+import com.android.messaging.ui.conversation.recipientpicker.delegate.RecipientPickerDelegate
+import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerUiState
 import com.android.messaging.ui.conversationpicker.ConversationPickerViewModel
 import com.android.messaging.ui.conversationpicker.delegate.DraftDelegate
 import com.android.messaging.ui.conversationpicker.delegate.TargetsDelegate
+import com.android.messaging.ui.conversationpicker.formatter.TargetTextFormatter
+import com.android.messaging.ui.conversationpicker.mapper.ContactTargetMapperImpl
 import com.android.messaging.ui.conversationpicker.model.DraftUiState
 import com.android.messaging.ui.conversationpicker.model.SelectionUiState
 import com.android.messaging.ui.conversationpicker.model.TargetUiState
@@ -29,6 +35,7 @@ internal abstract class BaseConversationPickerViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     protected val targetsState = MutableStateFlow(TargetsUiState())
+    protected val contactsState = MutableStateFlow(RecipientPickerUiState())
     protected val draftState = MutableStateFlow(DraftUiState())
     protected val selectedIds = MutableStateFlow(persistentSetOf<String>())
 
@@ -40,6 +47,17 @@ internal abstract class BaseConversationPickerViewModelTest {
         every { currentSelectedTargets() } returns persistentListOf()
     }
 
+    protected val recipientPickerDelegate = mockk<RecipientPickerDelegate>(relaxed = true) {
+        every { state } returns contactsState
+    }
+
+    protected val textFormatter = mockk<TargetTextFormatter> {
+        every { wrap(any()) } answers { firstArg() }
+        every { detailsOrNull(any(), any()) } answers { secondArg() }
+    }
+
+    protected val contactTargetMapper = ContactTargetMapperImpl(textFormatter)
+
     protected val draftDelegate = mockk<DraftDelegate>(relaxed = true) {
         every { state } returns draftState
         every { currentDraft() } returns ConversationDraft()
@@ -50,8 +68,10 @@ internal abstract class BaseConversationPickerViewModelTest {
     protected fun createViewModel(): ConversationPickerViewModel {
         return ConversationPickerViewModel(
             targetsDelegate = targetsDelegate,
+            recipientPickerDelegate = recipientPickerDelegate,
             draftDelegate = draftDelegate,
             resolveConversationId = resolveConversationId,
+            contactTargetMapper = contactTargetMapper,
         )
     }
 
@@ -63,15 +83,15 @@ internal abstract class BaseConversationPickerViewModelTest {
     }
 
     protected fun givenResolvedConversation(
-        destination: String,
-        conversationId: String,
+        destination: String = TEST_CONTACT_DESTINATION,
+        conversationId: String = TEST_RESOLVED_CONVERSATION_ID,
     ) {
         coEvery { resolveConversationId(listOf(destination)) } returns
             ResolveConversationIdResult.Resolved(conversationId)
     }
 
     protected fun givenUnresolvedConversation(
-        destination: String,
+        destination: String = TEST_CONTACT_DESTINATION,
         result: ResolveConversationIdResult = ResolveConversationIdResult.NotResolved,
     ) {
         coEvery { resolveConversationId(listOf(destination)) } returns result
@@ -85,34 +105,6 @@ internal abstract class BaseConversationPickerViewModelTest {
                     .let { persistentSetOf<String>().addAll(it) },
                 selectedTargets = selectedTargets.toImmutableList(),
             ),
-        )
-    }
-
-    protected fun conversationTarget(
-        conversationId: String,
-        normalizedDestination: String? = null,
-    ): TargetUiState.Conversation {
-        return TargetUiState.Conversation(
-            conversationId = conversationId,
-            normalizedDestination = normalizedDestination,
-            displayName = "Conversation $conversationId",
-            details = null,
-            avatarUri = null,
-            isGroup = false,
-        )
-    }
-
-    protected fun contactTarget(
-        contactId: Long,
-        destination: String,
-    ): TargetUiState.Contact {
-        return TargetUiState.Contact(
-            contactId = contactId,
-            destination = destination,
-            normalizedDestination = destination,
-            displayName = "Contact $contactId",
-            details = null,
-            avatarUri = null,
         )
     }
 }

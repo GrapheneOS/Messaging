@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationpicker.model
 
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
+import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerListItem
 
 internal sealed interface ConversationPickerAction {
 
@@ -14,6 +15,16 @@ internal sealed interface ConversationPickerAction {
 
     data class SelectionToggled(
         val target: TargetUiState,
+    ) : TargetsAction
+
+    data class ContactDestinationClicked(
+        val item: RecipientPickerListItem,
+        val destination: String,
+    ) : TargetsAction
+
+    data class ContactDestinationToggled(
+        val item: RecipientPickerListItem,
+        val destination: String,
     ) : TargetsAction
 
     data object SelectionCleared : TargetsAction

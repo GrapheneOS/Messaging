@@ -5,8 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.android.messaging.domain.conversation.usecase.participant.ResolveConversationId
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveConversationIdResult
 import com.android.messaging.domain.conversationpicker.model.SendTarget
+import com.android.messaging.ui.conversation.recipientpicker.delegate.RecipientPickerDelegate
 import com.android.messaging.ui.conversationpicker.delegate.DraftDelegate
 import com.android.messaging.ui.conversationpicker.delegate.TargetsDelegate
+import com.android.messaging.ui.conversationpicker.mapper.ContactTargetMapper
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerAction as Action
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerEffect as Effect
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerUiState as State
@@ -36,8 +38,10 @@ internal interface ConversationPickerScreenModel {
 @HiltViewModel
 internal class ConversationPickerViewModel @Inject constructor(
     private val targetsDelegate: TargetsDelegate,
+    private val recipientPickerDelegate: RecipientPickerDelegate,
     private val draftDelegate: DraftDelegate,
     private val resolveConversationId: ResolveConversationId,
+    private val contactTargetMapper: ContactTargetMapper,
 ) : ViewModel(),
     ConversationPickerScreenModel {
 
@@ -46,10 +50,12 @@ internal class ConversationPickerViewModel @Inject constructor(
 
     override val uiState: StateFlow<State> = combine(
         targetsDelegate.state,
+        recipientPickerDelegate.state,
         draftDelegate.state,
-    ) { targetsState, draftState ->
+    ) { targetsState, contactsState, draftState ->
         State(
             targets = targetsState,
+            contacts = contactsState,
             draft = draftState,
             isSendEnabled = isSendEnabled(targetsState, draftState),
         )
@@ -63,6 +69,7 @@ internal class ConversationPickerViewModel @Inject constructor(
 
     init {
         targetsDelegate.bind(viewModelScope)
+        recipientPickerDelegate.bind(viewModelScope)
         draftDelegate.bind(viewModelScope, targetsDelegate.selectedIds)
     }
 
@@ -83,6 +90,18 @@ internal class ConversationPickerViewModel @Inject constructor(
                 targetsDelegate.toggleSelection(action.target)
             }
 
+            is Action.ContactDestinationClicked -> {
+                openContactConversation(action.destination)
+            }
+
+            is Action.ContactDestinationToggled -> {
+                val target = contactTargetMapper.map(
+                    item = action.item,
+                    destination = action.destination,
+                )
+                targetsDelegate.toggleSelection(target)
+            }
+
             Action.SelectionCleared -> {
                 targetsDelegate.clearSelection()
             }
@@ -97,14 +116,16 @@ internal class ConversationPickerViewModel @Inject constructor(
 
             Action.SearchClosed -> {
                 targetsDelegate.setSearchActive(false)
+                recipientPickerDelegate.clearQuery()
             }
 
             is Action.SearchQueryChanged -> {
                 targetsDelegate.setSearchQuery(action.query)
+                recipientPickerDelegate.onQueryChanged(action.query)
             }
 
             Action.LoadMoreContacts -> {
-                targetsDelegate.loadMoreContacts()
+                recipientPickerDelegate.onLoadMore()
             }
 
             Action.LoadMoreRecent -> {
@@ -116,7 +137,7 @@ internal class ConversationPickerViewModel @Inject constructor(
             }
 
             Action.ContactsPermissionGranted -> {
-                targetsDelegate.onContactsPermissionGranted()
+                recipientPickerDelegate.refresh()
             }
         }
     }

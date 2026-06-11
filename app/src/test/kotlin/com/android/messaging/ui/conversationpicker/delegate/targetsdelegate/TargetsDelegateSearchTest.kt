@@ -1,8 +1,8 @@
 package com.android.messaging.ui.conversationpicker.delegate.targetsdelegate
 
 import com.android.messaging.data.conversationpicker.model.TargetConversation
-import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -16,10 +16,10 @@ internal class TargetsDelegateSearchTest : BaseTargetsDelegateTest() {
     fun setSearchActive_isReflectedInState() = runTest {
         val delegate = createDelegate()
         delegate.bind(backgroundScope)
-        settle()
+        runCurrent()
 
         delegate.setSearchActive(true)
-        settle()
+        runCurrent()
 
         assertTrue(delegate.state.value.isSearchActive)
     }
@@ -28,18 +28,24 @@ internal class TargetsDelegateSearchTest : BaseTargetsDelegateTest() {
     fun setSearchQuery_filtersRecentsByDisplayName() = runTest {
         givenRecents(
             listOf(
-                shareTargetConversation(conversationId = "1", name = "Alice"),
-                shareTargetConversation(conversationId = "2", name = "Bob"),
+                shareTargetConversation(
+                    conversationId = "1",
+                    name = "Alice",
+                ),
+                shareTargetConversation(
+                    conversationId = "2",
+                    name = "Bob",
+                ),
             ),
         )
 
         val delegate = createDelegate()
         delegate.bind(backgroundScope)
-        settle()
+        runCurrent()
 
         delegate.setSearchActive(true)
         delegate.setSearchQuery("ali")
-        settle()
+        runCurrent()
 
         val recents = delegate.state.value.recent.targets
         assertEquals(listOf("Alice"), recents.map { it.displayName })
@@ -64,11 +70,11 @@ internal class TargetsDelegateSearchTest : BaseTargetsDelegateTest() {
 
         val delegate = createDelegate()
         delegate.bind(backgroundScope)
-        settle()
+        runCurrent()
 
         delegate.setSearchActive(true)
         delegate.setSearchQuery("1234")
-        settle()
+        runCurrent()
 
         val recents = delegate.state.value.recent.targets
         assertEquals(listOf("Alice"), recents.map { it.displayName })
@@ -76,15 +82,15 @@ internal class TargetsDelegateSearchTest : BaseTargetsDelegateTest() {
 
     @Test
     fun setSearchQuery_hidesLoadMoreAndCollapseAffordances() = runTest {
-        givenRecents(recents(count = 8))
+        givenRecents(recents(count = 9))
 
         val delegate = createDelegate()
         delegate.bind(backgroundScope)
-        settle()
+        runCurrent()
 
         delegate.setSearchActive(true)
         delegate.setSearchQuery("Conversation")
-        settle()
+        runCurrent()
 
         val state = delegate.state.value
         assertFalse(state.recent.canLoadMore)
@@ -93,38 +99,23 @@ internal class TargetsDelegateSearchTest : BaseTargetsDelegateTest() {
 
     @Test
     fun setSearchActiveFalse_clearsQueryAndRestoresLimitedRecents() = runTest {
-        givenRecents(recents(count = 8))
+        givenRecents(recents(count = 12))
 
         val delegate = createDelegate()
         delegate.bind(backgroundScope)
-        settle()
+        runCurrent()
 
         delegate.setSearchActive(true)
-        delegate.setSearchQuery("Conversation 7")
-        settle()
+        delegate.setSearchQuery("Conversation 12")
+        runCurrent()
 
         delegate.setSearchActive(false)
-        settle()
+        runCurrent()
 
         val state = delegate.state.value
         assertFalse(state.isSearchActive)
         assertEquals(5, state.recent.targets.size)
         assertTrue(state.recent.canLoadMore)
-    }
-
-    @Test
-    fun setSearchQuery_requeriesContactsWithQuery() = runTest {
-        val delegate = createDelegate()
-        delegate.bind(backgroundScope)
-        settle()
-
-        delegate.setSearchActive(true)
-        delegate.setSearchQuery("alex")
-        settle()
-
-        verify {
-            contactsRepository.searchContacts(query = "alex", offset = 0)
-        }
     }
 
     private fun recents(count: Int): List<TargetConversation> {

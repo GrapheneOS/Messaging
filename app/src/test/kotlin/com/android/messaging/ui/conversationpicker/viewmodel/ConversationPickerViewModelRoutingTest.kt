@@ -1,7 +1,13 @@
 package com.android.messaging.ui.conversationpicker.viewmodel
 
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
+import com.android.messaging.testutil.TEST_CONTACT_DESTINATION
+import com.android.messaging.testutil.TEST_CONTACT_DISPLAY_NAME
+import com.android.messaging.testutil.TEST_CONTACT_SECONDARY_TEXT
+import com.android.messaging.testutil.conversationTarget
+import com.android.messaging.testutil.syntheticPhoneItem
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerAction as Action
+import com.android.messaging.ui.conversationpicker.model.TargetUiState
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.junit.Test
@@ -44,6 +50,7 @@ internal class ConversationPickerViewModelRoutingTest : BaseConversationPickerVi
         viewModel.onAction(Action.SearchClosed)
 
         verify { targetsDelegate.setSearchActive(false) }
+        verify { recipientPickerDelegate.clearQuery() }
     }
 
     @Test
@@ -53,6 +60,32 @@ internal class ConversationPickerViewModelRoutingTest : BaseConversationPickerVi
         viewModel.onAction(Action.SearchQueryChanged("alex"))
 
         verify { targetsDelegate.setSearchQuery("alex") }
+        verify { recipientPickerDelegate.onQueryChanged("alex") }
+    }
+
+    @Test
+    fun contactDestinationToggled_mapsAndTogglesSelection() {
+        val viewModel = createViewModel()
+        val item = syntheticPhoneItem()
+
+        viewModel.onAction(
+            Action.ContactDestinationToggled(
+                item = item,
+                destination = TEST_CONTACT_DESTINATION,
+            ),
+        )
+
+        verify {
+            targetsDelegate.toggleSelection(
+                TargetUiState.Contact(
+                    destination = TEST_CONTACT_DESTINATION,
+                    normalizedDestination = TEST_CONTACT_DESTINATION,
+                    displayName = TEST_CONTACT_DISPLAY_NAME,
+                    details = TEST_CONTACT_SECONDARY_TEXT,
+                    avatarUri = null,
+                ),
+            )
+        }
     }
 
     @Test
@@ -61,7 +94,7 @@ internal class ConversationPickerViewModelRoutingTest : BaseConversationPickerVi
 
         viewModel.onAction(Action.LoadMoreContacts)
 
-        verify { targetsDelegate.loadMoreContacts() }
+        verify { recipientPickerDelegate.onLoadMore() }
     }
 
     @Test
@@ -88,7 +121,7 @@ internal class ConversationPickerViewModelRoutingTest : BaseConversationPickerVi
 
         viewModel.onAction(Action.ContactsPermissionGranted)
 
-        verify { targetsDelegate.onContactsPermissionGranted() }
+        verify { recipientPickerDelegate.refresh() }
     }
 
     @Test

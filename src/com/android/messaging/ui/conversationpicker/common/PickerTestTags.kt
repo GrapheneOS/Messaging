@@ -11,3 +11,7 @@ internal fun attachmentItemTestTag(id: String): String {
 internal fun attachmentRemoveButtonTestTag(id: String): String {
     return "share_attachment_preview_remove_button_$id"
 }
+
+internal fun pickerContactRowTestTag(id: String): String {
+    return "share_contact_row_$id"
+}

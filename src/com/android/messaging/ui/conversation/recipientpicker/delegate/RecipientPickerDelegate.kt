@@ -46,6 +46,8 @@ internal interface RecipientPickerDelegate {
     fun onQueryChanged(query: String)
 
     fun clearQuery()
+
+    fun refresh()
 }
 
 internal class RecipientPickerDelegateImpl @Inject constructor(
@@ -64,6 +66,7 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
     private val excludedDestinationsFlow = MutableStateFlow<Set<String>>(
         value = emptySet(),
     )
+    private val refreshTrigger = MutableStateFlow(0)
 
     private val _state = MutableStateFlow(
         value = RecipientPickerUiState(
@@ -95,7 +98,8 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
             combine(
                 queryFlow,
                 excludedDestinationsFlow,
-            ) { query, excludedDestinations ->
+                refreshTrigger,
+            ) { query, excludedDestinations, _ ->
                 SearchInputs(
                     query = query,
                     excludedDestinations = excludedDestinations,
@@ -136,6 +140,10 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
         if (queryFlow.value.isNotEmpty()) {
             onQueryChanged(query = "")
         }
+    }
+
+    override fun refresh() {
+        refreshTrigger.update { it + 1 }
     }
 
     private suspend fun handleSearchInputsChanged(searchInputs: SearchInputs) {

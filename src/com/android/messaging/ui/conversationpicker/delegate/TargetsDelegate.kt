@@ -1,21 +1,14 @@
 package com.android.messaging.ui.conversationpicker.delegate
 
-import com.android.messaging.data.contact.repository.ContactsRepository
 import com.android.messaging.data.conversationpicker.model.TargetConversation
 import com.android.messaging.data.conversationpicker.repository.TargetsRepository
 import com.android.messaging.di.core.DefaultDispatcher
-import com.android.messaging.domain.contacts.usecase.IsReadContactsPermissionGranted
-import com.android.messaging.ui.conversationpicker.mapper.ContactSectionMapper
-import com.android.messaging.ui.conversationpicker.mapper.ContactUiStateMapper
 import com.android.messaging.ui.conversationpicker.mapper.TargetUiStateMapper
-import com.android.messaging.ui.conversationpicker.model.ContactSection
-import com.android.messaging.ui.conversationpicker.model.ContactTargetsUiState
 import com.android.messaging.ui.conversationpicker.model.RecentTargetsUiState
 import com.android.messaging.ui.conversationpicker.model.SelectionUiState
 import com.android.messaging.ui.conversationpicker.model.TargetUiState
 import com.android.messaging.ui.conversationpicker.model.TargetsUiState
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.PersistentList
@@ -24,14 +17,11 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -46,28 +36,20 @@ internal interface TargetsDelegate {
     fun clearSelection()
     fun loadMoreRecent()
     fun collapseRecent()
-    fun loadMoreContacts()
-    fun onContactsPermissionGranted()
     fun currentSelectedTargets(): ImmutableList<TargetUiState>
 }
 
 internal class TargetsDelegateImpl @Inject constructor(
     private val repository: TargetsRepository,
-    private val contactsRepository: ContactsRepository,
     private val conversationMapper: TargetUiStateMapper,
-    private val contactMapper: ContactUiStateMapper,
-    private val contactSectionMapper: ContactSectionMapper,
-    private val isReadContactsPermissionGranted: IsReadContactsPermissionGranted,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
 ) : TargetsDelegate {
 
     private val recents = MutableStateFlow<ImmutableList<TargetConversation>?>(null)
-    private val contactsState = MutableStateFlow(ContactsState())
     private val searchQuery = MutableStateFlow("")
     private val isSearchActive = MutableStateFlow(false)
     private val visibleRecentLimit = MutableStateFlow(INITIAL_RECENT_TARGET_COUNT)
-    private val contactsReloadTrigger = MutableStateFlow(0)
     private val selectedTargetsList = MutableStateFlow<PersistentList<TargetUiState>>(
         persistentListOf(),
     )
@@ -88,13 +70,11 @@ internal class TargetsDelegateImpl @Inject constructor(
         scope.launch(defaultDispatcher) {
             combine(
                 combine(recents, searchQuery, visibleRecentLimit, ::buildRecentTargets),
-                contactsState,
                 isSearchActive,
                 selectedTargetsList,
-            ) { recentTargets, contacts, active, selectedTargets ->
+            ) { recentTargets, active, selectedTargets ->
                 buildState(
                     recentTargets = recentTargets,
-                    contacts = contacts,
                     isSearchActive = active,
                     selectedTargets = selectedTargets,
                 )
@@ -109,14 +89,6 @@ internal class TargetsDelegateImpl @Inject constructor(
                     recents.value = conversations
                     pruneSelection(conversations)
                 }
-        }
-
-        scope.launch(defaultDispatcher) {
-            combine(
-                searchQuery,
-                contactsReloadTrigger
-            ) { query, _ -> query }
-                .collectLatest(::loadInitialContacts)
         }
     }
 
@@ -154,25 +126,12 @@ internal class TargetsDelegateImpl @Inject constructor(
         visibleRecentLimit.value = INITIAL_RECENT_TARGET_COUNT
     }
 
-    override fun loadMoreContacts() {
-        boundScope?.launch(defaultDispatcher) {
-            loadMoreContactsPage()
-        }
-    }
-
-    override fun onContactsPermissionGranted() {
-        if (!contactsState.value.hasPermission) {
-            contactsReloadTrigger.update { it + 1 }
-        }
-    }
-
     override fun currentSelectedTargets(): ImmutableList<TargetUiState> {
         return selectedTargetsList.value
     }
 
     private fun buildState(
         recentTargets: RecentTargetsState,
-        contacts: ContactsState,
         isSearchActive: Boolean,
         selectedTargets: PersistentList<TargetUiState>,
     ): TargetsUiState {
@@ -185,7 +144,6 @@ internal class TargetsDelegateImpl @Inject constructor(
             return TargetsUiState(
                 isLoading = true,
                 isSearchActive = isSearchActive,
-                contacts = ContactTargetsUiState(hasPermission = contacts.hasPermission),
                 selection = selection,
             )
         }
@@ -197,11 +155,6 @@ internal class TargetsDelegateImpl @Inject constructor(
                 targets = recentTargets.targets,
                 canLoadMore = recentTargets.canLoadMore,
                 canCollapse = recentTargets.canCollapse,
-            ),
-            contacts = ContactTargetsUiState(
-                sections = contacts.sections,
-                hasPermission = contacts.hasPermission,
-                canLoadMore = contacts.canLoadMore,
             ),
             selection = selection,
         )
@@ -235,82 +188,6 @@ internal class TargetsDelegateImpl @Inject constructor(
                 )
             }
         }
-    }
-
-    private suspend fun loadInitialContacts(query: String) {
-        if (!isReadContactsPermissionGranted()) {
-            contactsState.value = ContactsState(hasPermission = false)
-            return
-        }
-
-        delay(SEARCH_DEBOUNCE)
-
-        val page = contactsRepository.searchContacts(
-            query = query,
-            offset = 0
-        ).first()
-
-        val contacts = contactMapper.map(page.contacts)
-
-        contactsState.value = ContactsState(
-            contacts = contacts,
-            sections = contactSectionMapper.map(contacts),
-            hasPermission = true,
-            canLoadMore = page.nextOffset != null,
-            nextOffset = page.nextOffset,
-            loadedQuery = query,
-        )
-    }
-
-    private suspend fun loadMoreContactsPage() {
-        val current = contactsState.value
-        val nextOffset = current.nextOffset
-
-        if (!current.hasPermission || current.isLoadingMore || nextOffset == null) {
-            return
-        }
-
-        contactsState.update {
-            it.copy(isLoadingMore = true)
-        }
-
-        val page = contactsRepository
-            .searchContacts(
-                query = current.loadedQuery,
-                offset = nextOffset
-            )
-            .first()
-
-        if (searchQuery.value != current.loadedQuery) {
-            contactsState.update {
-                it.copy(isLoadingMore = false)
-            }
-            return
-        }
-
-        val additional = contactMapper.map(page.contacts)
-
-        contactsState.update { state ->
-            val mergedContacts = mergeContacts(state.contacts, additional)
-
-            state.copy(
-                contacts = mergedContacts,
-                sections = contactSectionMapper.map(mergedContacts),
-                canLoadMore = page.nextOffset != null,
-                nextOffset = page.nextOffset,
-                isLoadingMore = false,
-            )
-        }
-    }
-
-    private fun mergeContacts(
-        existing: ImmutableList<TargetUiState.Contact>,
-        additional: ImmutableList<TargetUiState.Contact>,
-    ): ImmutableList<TargetUiState.Contact> {
-        val seenKeys = existing.mapTo(HashSet()) { it.key }
-
-        return (existing + additional.filter { seenKeys.add(it.key) })
-            .toImmutableList()
     }
 
     private fun pruneSelection(availableRecents: ImmutableList<TargetConversation>) {
@@ -356,19 +233,8 @@ internal class TargetsDelegateImpl @Inject constructor(
         val isLoading: Boolean = false,
     )
 
-    private data class ContactsState(
-        val contacts: ImmutableList<TargetUiState.Contact> = persistentListOf(),
-        val sections: ImmutableList<ContactSection> = persistentListOf(),
-        val hasPermission: Boolean = true,
-        val canLoadMore: Boolean = false,
-        val isLoadingMore: Boolean = false,
-        val nextOffset: Int? = null,
-        val loadedQuery: String = "",
-    )
-
     private companion object {
         private const val INITIAL_RECENT_TARGET_COUNT = 5
         private const val RECENT_TARGET_LOAD_MORE_COUNT = 15
-        private val SEARCH_DEBOUNCE = 150L.milliseconds
     }
 }

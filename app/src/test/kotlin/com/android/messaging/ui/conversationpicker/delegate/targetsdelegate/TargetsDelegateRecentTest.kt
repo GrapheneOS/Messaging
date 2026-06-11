@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversationpicker.delegate.targetsdelegate
 
 import com.android.messaging.data.conversationpicker.model.TargetConversation
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -24,7 +25,7 @@ internal class TargetsDelegateRecentTest : BaseTargetsDelegateTest() {
 
         val delegate = createDelegate()
         delegate.bind(backgroundScope)
-        settle()
+        runCurrent()
 
         val state = delegate.state.value
         assertFalse(state.isLoading)
@@ -39,7 +40,7 @@ internal class TargetsDelegateRecentTest : BaseTargetsDelegateTest() {
 
         val delegate = createDelegate()
         delegate.bind(backgroundScope)
-        settle()
+        runCurrent()
 
         val state = delegate.state.value
         assertEquals(3, state.recent.targets.size)
@@ -53,10 +54,10 @@ internal class TargetsDelegateRecentTest : BaseTargetsDelegateTest() {
 
         val delegate = createDelegate()
         delegate.bind(backgroundScope)
-        settle()
+        runCurrent()
 
         delegate.loadMoreRecent()
-        settle()
+        runCurrent()
 
         val state = delegate.state.value
         assertEquals(10, state.recent.targets.size)
@@ -70,10 +71,10 @@ internal class TargetsDelegateRecentTest : BaseTargetsDelegateTest() {
 
         val delegate = createDelegate()
         delegate.bind(backgroundScope)
-        settle()
+        runCurrent()
 
         delegate.loadMoreRecent()
-        settle()
+        runCurrent()
 
         val state = delegate.state.value
         assertEquals(20, state.recent.targets.size)
@@ -87,13 +88,13 @@ internal class TargetsDelegateRecentTest : BaseTargetsDelegateTest() {
 
         val delegate = createDelegate()
         delegate.bind(backgroundScope)
-        settle()
+        runCurrent()
 
         delegate.loadMoreRecent()
-        settle()
+        runCurrent()
 
         delegate.collapseRecent()
-        settle()
+        runCurrent()
 
         val state = delegate.state.value
         assertEquals(5, state.recent.targets.size)

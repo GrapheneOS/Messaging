@@ -14,6 +14,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.ime
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -37,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.Dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -46,14 +49,20 @@ import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.common.components.composer.MESSAGE_COMPOSE_FIELD_TEST_TAG
 import com.android.messaging.ui.common.components.composer.MessageComposeBar
 import com.android.messaging.ui.common.components.composer.MessageSendButton
+import com.android.messaging.ui.conversation.recipientpicker.component.RecipientSelectionContactsContent
+import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerListItem
+import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerUiState
+import com.android.messaging.ui.conversation.recipientpicker.model.picker.SelectedRecipient
+import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionContentUiState
+import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionRowDecorators
 import com.android.messaging.ui.conversationpicker.common.AttachmentPreview
 import com.android.messaging.ui.conversationpicker.common.PickerReviewTopAppBar
 import com.android.messaging.ui.conversationpicker.common.PickerTopAppBar
+import com.android.messaging.ui.conversationpicker.common.ScreenContentPadding
 import com.android.messaging.ui.conversationpicker.common.SelectedTargetsBar
 import com.android.messaging.ui.conversationpicker.common.composeSubjectSlot
 import com.android.messaging.ui.conversationpicker.common.contentSurfaceShape
-import com.android.messaging.ui.conversationpicker.model.ContactSection
-import com.android.messaging.ui.conversationpicker.model.ContactTargetsUiState
+import com.android.messaging.ui.conversationpicker.common.pickerContactRowTestTag
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerAction as Action
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerUiState as State
 import com.android.messaging.ui.conversationpicker.model.DraftUiState
@@ -64,6 +73,7 @@ import com.android.messaging.ui.conversationpicker.model.TargetsUiState
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 internal fun ConversationPickerScreen(
@@ -230,16 +240,10 @@ private fun PickerScaffold(
                 }
 
                 else -> {
-                    TargetList(
-                        recentTargets = uiState.targets.recent.targets,
-                        contactSections = uiState.targets.contacts.sections,
-                        selectedIds = uiState.targets.selection.selectedIds,
+                    PickerTargetsContent(
+                        uiState = uiState,
                         inSelectionMode = inSelectionMode,
                         allowMultiSelect = allowMultiSelect,
-                        canLoadMoreRecent = uiState.targets.recent.canLoadMore,
-                        canCollapseRecent = uiState.targets.recent.canCollapse,
-                        hasContactsPermission = uiState.targets.contacts.hasPermission,
-                        canLoadMoreContacts = uiState.targets.contacts.canLoadMore,
                         onAction = onAction,
                         onGrantContactsPermission = onGrantContactsPermission,
                         bottomPadding = contentPadding.calculateBottomPadding(),
@@ -247,6 +251,192 @@ private fun PickerScaffold(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun PickerTargetsContent(
+    uiState: State,
+    inSelectionMode: Boolean,
+    allowMultiSelect: Boolean,
+    onAction: (Action) -> Unit,
+    onGrantContactsPermission: () -> Unit,
+    bottomPadding: Dp,
+    modifier: Modifier = Modifier,
+) {
+    if (!uiState.contacts.hasContactsPermission) {
+        PickerRecentTargetsOnlyContent(
+            uiState = uiState,
+            inSelectionMode = inSelectionMode,
+            allowMultiSelect = allowMultiSelect,
+            onAction = onAction,
+            onGrantContactsPermission = onGrantContactsPermission,
+            bottomPadding = bottomPadding,
+            modifier = modifier,
+        )
+        return
+    }
+
+    RecipientSelectionContactsContent(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(
+                start = ScreenContentPadding,
+                top = ScreenContentPadding,
+                end = ScreenContentPadding,
+                bottom = bottomPadding,
+            ),
+        uiState = conversationPickerRecipientSelectionContentUiState(uiState),
+        rowDecorators = conversationPickerRecipientSelectionRowDecorators(),
+        onLoadMore = { onAction(Action.LoadMoreContacts) },
+        onPrimaryActionClick = {},
+        onRecipientDestinationClick = { item, destination ->
+            onAction(
+                contactDestinationAction(
+                    item = item,
+                    destination = destination,
+                    inSelectionMode = inSelectionMode,
+                ),
+            )
+        },
+        onRecipientDestinationLongClick = when {
+            allowMultiSelect -> {
+                { item, destination ->
+                    onAction(Action.ContactDestinationToggled(item, destination))
+                }
+            }
+
+            else -> null
+        },
+        topListContent = {
+            RecentTargetsSection(
+                recentTargets = uiState.targets.recent.targets,
+                selectedIds = uiState.targets.selection.selectedIds,
+                inSelectionMode = inSelectionMode,
+                allowMultiSelect = allowMultiSelect,
+                canLoadMoreRecent = uiState.targets.recent.canLoadMore,
+                canCollapseRecent = uiState.targets.recent.canCollapse,
+                hasContactsPermission = uiState.contacts.hasContactsPermission,
+                onAction = onAction,
+                onGrantContactsPermission = onGrantContactsPermission,
+                modifier = Modifier.padding(bottom = ScreenContentPadding),
+            )
+        },
+    )
+}
+
+@Composable
+private fun PickerRecentTargetsOnlyContent(
+    uiState: State,
+    inSelectionMode: Boolean,
+    allowMultiSelect: Boolean,
+    onAction: (Action) -> Unit,
+    onGrantContactsPermission: () -> Unit,
+    bottomPadding: Dp,
+    modifier: Modifier = Modifier,
+) {
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(
+            start = ScreenContentPadding,
+            top = ScreenContentPadding,
+            end = ScreenContentPadding,
+            bottom = ScreenContentPadding + bottomPadding,
+        ),
+    ) {
+        item(key = "recent_targets") {
+            RecentTargetsSection(
+                recentTargets = uiState.targets.recent.targets,
+                selectedIds = uiState.targets.selection.selectedIds,
+                inSelectionMode = inSelectionMode,
+                allowMultiSelect = allowMultiSelect,
+                canLoadMoreRecent = uiState.targets.recent.canLoadMore,
+                canCollapseRecent = uiState.targets.recent.canCollapse,
+                hasContactsPermission = uiState.contacts.hasContactsPermission,
+                onAction = onAction,
+                onGrantContactsPermission = onGrantContactsPermission,
+                modifier = Modifier.animateItem(),
+            )
+        }
+    }
+}
+
+private fun conversationPickerRecipientSelectionContentUiState(
+    uiState: State,
+): RecipientSelectionContentUiState {
+    return RecipientSelectionContentUiState(
+        picker = uiState.contacts,
+        selectedRecipients = uiState.targets.selection.selectedTargets
+            .mapNotNull(TargetUiState::toSelectedRecipient)
+            .toImmutableList(),
+    )
+}
+
+private fun TargetUiState.toSelectedRecipient(): SelectedRecipient? {
+    val destination = normalizedDestination ?: return null
+
+    return SelectedRecipient(
+        destination = destination,
+        label = displayName,
+        displayDestination = details.orEmpty(),
+        photoUri = avatarUri,
+    )
+}
+
+private fun conversationPickerRecipientSelectionRowDecorators(): RecipientSelectionRowDecorators {
+    return RecipientSelectionRowDecorators(
+        recipientRowTestTag = { item ->
+            pickerContactRowTestTag(item.primaryTestTagKey())
+        },
+        destinationRowTestTag = { item, destination ->
+            pickerContactRowTestTag(
+                item.destinationTestTagKey(destination = destination),
+            )
+        },
+    )
+}
+
+private fun RecipientPickerListItem.primaryTestTagKey(): String {
+    return when (this) {
+        is RecipientPickerListItem.Contact -> {
+            val singleDestination = destinations.singleOrNull()
+
+            when {
+                singleDestination != null -> "$id:${singleDestination.dataId}"
+                else -> id
+            }
+        }
+
+        is RecipientPickerListItem.SyntheticPhone -> id
+    }
+}
+
+private fun RecipientPickerListItem.destinationTestTagKey(destination: String): String {
+    return when (this) {
+        is RecipientPickerListItem.Contact -> {
+            val matchingDestination = destinations.firstOrNull { contactDestination ->
+                contactDestination.value == destination ||
+                    contactDestination.normalizedValue == destination
+            }
+
+            when {
+                matchingDestination != null -> "$id:${matchingDestination.dataId}"
+                else -> "$id:$destination"
+            }
+        }
+
+        is RecipientPickerListItem.SyntheticPhone -> id
+    }
+}
+
+private fun contactDestinationAction(
+    item: RecipientPickerListItem,
+    destination: String,
+    inSelectionMode: Boolean,
+): Action {
+    return when {
+        inSelectionMode -> Action.ContactDestinationToggled(item, destination)
+        else -> Action.ContactDestinationClicked(item, destination)
     }
 }
 
@@ -360,82 +550,31 @@ private fun PickerReviewScaffold(
 @PreviewLightDark
 @Composable
 private fun PickerContentPreview() {
+    val targets = persistentListOf(
+        TargetUiState.Conversation(
+            conversationId = "1",
+            normalizedDestination = "+31612345678",
+            displayName = "Jane Doe",
+            details = "+31 6 1234 5678",
+            avatarUri = null,
+            isGroup = false,
+        ),
+        TargetUiState.Conversation(
+            conversationId = "2",
+            normalizedDestination = null,
+            displayName = "Project group",
+            details = null,
+            avatarUri = null,
+            isGroup = true,
+        ),
+    )
+
     MessagingPreviewTheme {
         PickerContent(
             uiState = State(
                 targets = TargetsUiState(
                     isLoading = false,
-                    recent = RecentTargetsUiState(
-                        targets = persistentListOf(
-                            TargetUiState.Conversation(
-                                conversationId = "1",
-                                normalizedDestination = "+31612345678",
-                                displayName = "Jane Doe",
-                                details = "+31 6 1234 5678",
-                                avatarUri = null,
-                                isGroup = false,
-                            ),
-                            TargetUiState.Conversation(
-                                conversationId = "2",
-                                normalizedDestination = null,
-                                displayName = "Project group",
-                                details = null,
-                                avatarUri = null,
-                                isGroup = true,
-                            ),
-                        ),
-                    ),
-                    contacts = ContactTargetsUiState(
-                        sections = persistentListOf(
-                            ContactSection(
-                                label = "A",
-                                targets = persistentListOf(
-                                    TargetUiState.Contact(
-                                        contactId = 10L,
-                                        destination = "+31 6 9999 0000",
-                                        normalizedDestination = "+31699990000",
-                                        displayName = "Alex Appleseed",
-                                        details = "+31 6 9999 0000",
-                                        avatarUri = null,
-                                    ),
-                                    TargetUiState.Contact(
-                                        contactId = 11L,
-                                        destination = "+31 6 1111 2222",
-                                        normalizedDestination = "+31611112222",
-                                        displayName = "Amelia Brown",
-                                        details = "+31 6 1111 2222",
-                                        avatarUri = null,
-                                    ),
-                                ),
-                            ),
-                            ContactSection(
-                                label = "B",
-                                targets = persistentListOf(
-                                    TargetUiState.Contact(
-                                        contactId = 12L,
-                                        destination = "+31 6 3333 4444",
-                                        normalizedDestination = "+31633334444",
-                                        displayName = "Brian Cohen",
-                                        details = "+31 6 3333 4444",
-                                        avatarUri = null,
-                                    ),
-                                ),
-                            ),
-                            ContactSection(
-                                label = "#",
-                                targets = persistentListOf(
-                                    TargetUiState.Contact(
-                                        contactId = 13L,
-                                        destination = "+1 555 0100",
-                                        normalizedDestination = "+15550100",
-                                        displayName = "+1 555 0100",
-                                        details = "+1 555 0100",
-                                        avatarUri = null,
-                                    ),
-                                ),
-                            ),
-                        ),
-                    ),
+                    recent = RecentTargetsUiState(targets = targets),
                 ),
                 draft = DraftUiState(isLoading = false),
             ),
@@ -516,10 +655,8 @@ private fun PickerContactsPermissionPreview() {
     MessagingPreviewTheme {
         PickerContent(
             uiState = State(
-                targets = TargetsUiState(
-                    isLoading = false,
-                    contacts = ContactTargetsUiState(hasPermission = false),
-                ),
+                targets = TargetsUiState(isLoading = false),
+                contacts = RecipientPickerUiState(hasContactsPermission = false),
                 draft = DraftUiState(isLoading = false),
             ),
             onAction = {},

@@ -3,6 +3,9 @@ package com.android.messaging.ui.conversationpicker.viewmodel
 import app.cash.turbine.test
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.domain.conversationpicker.model.SendTarget
+import com.android.messaging.testutil.TEST_RESOLVED_CONVERSATION_ID
+import com.android.messaging.testutil.contactTarget
+import com.android.messaging.testutil.conversationTarget
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerAction as Action
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerEffect as Effect
 import io.mockk.every
@@ -33,19 +36,19 @@ internal class ConversationPickerViewModelEffectTest : BaseConversationPickerVie
     @Test
     fun targetClicked_contact_whenResolved_emitsOpenConversation() =
         runTest(mainDispatcherRule.testDispatcher) {
-            givenResolvedConversation(
-                destination = "+15550001",
-                conversationId = "99",
-            )
+            givenResolvedConversation()
 
             val viewModel = createViewModel()
             viewModel.effects.test {
                 viewModel.onAction(
                     Action.TargetClicked(
-                        contactTarget(contactId = 1L, destination = "+15550001"),
+                        contactTarget(),
                     ),
                 )
-                assertEquals(Effect.OpenConversation("99"), awaitItem())
+                assertEquals(
+                    Effect.OpenConversation(TEST_RESOLVED_CONVERSATION_ID),
+                    awaitItem(),
+                )
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -53,13 +56,13 @@ internal class ConversationPickerViewModelEffectTest : BaseConversationPickerVie
     @Test
     fun targetClicked_contact_whenNotResolved_emitsNoEffect() =
         runTest(mainDispatcherRule.testDispatcher) {
-            givenUnresolvedConversation(destination = "+15550001")
+            givenUnresolvedConversation()
 
             val viewModel = createViewModel()
             viewModel.effects.test {
                 viewModel.onAction(
                     Action.TargetClicked(
-                        contactTarget(contactId = 1L, destination = "+15550001"),
+                        contactTarget(),
                     ),
                 )
                 expectNoEvents()

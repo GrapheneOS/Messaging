@@ -7,6 +7,5 @@ internal data class TargetsUiState(
     val isLoading: Boolean = true,
     val isSearchActive: Boolean = false,
     val recent: RecentTargetsUiState = RecentTargetsUiState(),
-    val contacts: ContactTargetsUiState = ContactTargetsUiState(),
     val selection: SelectionUiState = SelectionUiState(),
 )
