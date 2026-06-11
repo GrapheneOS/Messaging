@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.messagedetails
 
+import android.content.ClipboardManager
 import androidx.lifecycle.SavedStateHandle
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetails
 import com.android.messaging.data.conversation.repository.ConversationsRepository
@@ -27,6 +28,7 @@ internal class MessageDetailsViewModelTest {
 
     private val conversationsRepository = mockk<ConversationsRepository>()
     private val messageDetailsUiStateMapper = mockk<MessageDetailsUiStateMapper>()
+    private val clipboardManager = mockk<ClipboardManager>()
 
     @Test
     fun uiState_initialValue_isLoading() {
@@ -141,6 +143,7 @@ internal class MessageDetailsViewModelTest {
         return MessageDetailsViewModel(
             conversationsRepository = conversationsRepository,
             messageDetailsUiStateMapper = messageDetailsUiStateMapper,
+            clipboardManager = clipboardManager,
             savedStateHandle = savedStateHandle,
         )
     }
