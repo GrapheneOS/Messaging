@@ -25,7 +25,7 @@ internal interface BlockedParticipantsDelegate : BlockedParticipantsScreenDelega
     fun toggleSelection(participantId: String)
     fun clearSelection()
     fun unblock(normalizedDestination: String)
-    suspend fun deleteSelectedChats()
+    fun deleteSelectedChats()
 }
 
 internal class BlockedParticipantsDelegateImpl @Inject constructor(
@@ -84,22 +84,22 @@ internal class BlockedParticipantsDelegateImpl @Inject constructor(
         )
     }
 
-    override suspend fun deleteSelectedChats() {
-        val destinations = _state.value.destinationsForSelection()
+    override fun deleteSelectedChats() {
+        val conversationIds = _state.value.conversationIdsForSelection()
 
         _state.update { current ->
             current.copy(selectedParticipantIds = persistentSetOf())
         }
 
-        if (destinations.isEmpty()) return
+        if (conversationIds.isEmpty()) return
 
-        deleteDirectChats(destinations)
+        deleteDirectChats(conversationIds)
     }
 
-    private fun State.destinationsForSelection(): List<String> {
+    private fun State.conversationIdsForSelection(): List<String> {
         return participants.asSequence()
             .filter { it.participantId in selectedParticipantIds }
-            .mapNotNull { it.normalizedDestination?.takeIf(String::isNotEmpty) }
+            .map { it.conversationId }
             .toList()
     }
 

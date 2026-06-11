@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.launch
 
 internal interface BlockedParticipantsScreenModel {
     val effects: Flow<Effect>
@@ -69,9 +68,7 @@ internal class BlockedParticipantsViewModel @Inject constructor(
             }
 
             Action.DeleteSelectedConfirmed -> {
-                viewModelScope.launch {
-                    delegate.deleteSelectedChats()
-                }
+                delegate.deleteSelectedChats()
             }
 
             Action.ClearSelectionClicked -> {

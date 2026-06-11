@@ -22,11 +22,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withContext
 
 internal interface BlockedParticipantsRepository {
     fun observeBlockedParticipants(): Flow<ImmutableList<BlockedDirectChat>>
-    suspend fun findDirectConversationIds(normalizedDestinations: List<String>): List<String>
 }
 
 internal class BlockedParticipantsRepositoryImpl @Inject constructor(
@@ -45,19 +43,6 @@ internal class BlockedParticipantsRepositoryImpl @Inject constructor(
         return observeUris(uris)
             .map { queryBlockedDirectChats() }
             .flowOn(messagingDbDispatcher)
-    }
-
-    override suspend fun findDirectConversationIds(
-        normalizedDestinations: List<String>,
-    ): List<String> {
-        return withContext(messagingDbDispatcher) {
-            normalizedDestinations.mapNotNull { destination ->
-                BugleDatabaseOperations.getConversationFromOtherParticipantDestination(
-                    dataModel.database,
-                    destination,
-                )
-            }
-        }
     }
 
     // Returns only blocked participants that have an existing 1 on 1 conversation.
