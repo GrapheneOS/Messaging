@@ -1,20 +1,18 @@
-package com.android.messaging.ui.conversation.recipientpicker.component.row
+package com.android.messaging.ui.recipientselection.component.row
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.unit.dp
-import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
-import com.android.messaging.ui.conversation.recipientpicker.component.MultiDestinationContactRow
-import com.android.messaging.ui.conversation.recipientpicker.component.RecipientSelectionContactRow
-import com.android.messaging.ui.conversation.recipientpicker.component.RecipientSelectionContent
-import com.android.messaging.ui.conversation.recipientpicker.component.recipientSelectionContactRowShape
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerListItem
-import com.android.messaging.ui.conversation.recipientpicker.model.selection.OnRecipientDestinationAction
-import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionContentUiState
-import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionRowDecorators
-import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionStrings
 import com.android.messaging.ui.core.AppTheme
+import com.android.messaging.ui.recipientselection.component.MultiDestinationContactRow
+import com.android.messaging.ui.recipientselection.component.RecipientSelectionContactRow
+import com.android.messaging.ui.recipientselection.component.RecipientSelectionContactsContent
+import com.android.messaging.ui.recipientselection.component.recipientSelectionContactRowShape
+import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
+import com.android.messaging.ui.recipientselection.model.selection.OnRecipientDestinationAction
+import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionContentUiState
+import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionRowDecorators
 import io.mockk.clearAllMocks
 import io.mockk.mockk
 import kotlinx.collections.immutable.ImmutableSet
@@ -93,20 +91,14 @@ internal abstract class BaseRecipientSelectionContactRowTest {
     ) {
         composeTestRule.setContent {
             AppTheme {
-                RecipientSelectionContent(
+                RecipientSelectionContactsContent(
                     uiState = uiState,
-                    strings = RecipientSelectionStrings(
-                        queryPrefixText = targetContext.getString(R.string.to_address_label),
-                        queryPlaceholderText = targetContext.getString(
-                            R.string.new_chat_query_hint,
-                        ),
-                    ),
                     rowDecorators = rowDecorators,
                     onRecipientDestinationClick = onContentDestinationClick,
                     onLoadMore = onLoadMore,
                     onPrimaryActionClick = onPrimaryActionClick,
-                    onQueryChanged = {},
                     onRecipientDestinationLongClick = onRecipientDestinationLongClick,
+                    emptyStateText = R.string.contact_list_empty_text,
                 )
             }
         }

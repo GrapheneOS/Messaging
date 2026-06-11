@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.metadata.delegate
 
 import app.cash.turbine.test
+import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepository
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
 import com.android.messaging.data.conversation.repository.ConversationsRepository
@@ -10,6 +11,7 @@ import com.android.messaging.testutil.TEST_CALL_ACTION_PHONE_NUMBER
 import com.android.messaging.ui.conversation.metadata.mapper.ConversationMetadataUiStateMapper
 import com.android.messaging.ui.conversation.metadata.model.ConversationMetadataUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -43,7 +45,7 @@ class ConversationMetadataDelegateImplTest {
                     cancelAndIgnoreRemainingEvents()
                 }
 
-                verify(exactly = 1) {
+                coVerify(exactly = 1) {
                     harness.conversationsRepository
                         .archiveConversation(conversationId = "conversation-42")
                 }
@@ -67,7 +69,7 @@ class ConversationMetadataDelegateImplTest {
                     cancelAndIgnoreRemainingEvents()
                 }
 
-                verify(exactly = 1) {
+                coVerify(exactly = 1) {
                     harness.conversationsRepository
                         .unarchiveConversation(conversationId = "conversation-42")
                 }
@@ -216,7 +218,7 @@ class ConversationMetadataDelegateImplTest {
                         false,
                         harness.delegate.isDeleteConversationConfirmationVisible.value,
                     )
-                    verify(exactly = 0) {
+                    coVerify(exactly = 0) {
                         harness.conversationsRepository.archiveConversation(
                             conversationId = any(),
                         )
@@ -255,12 +257,15 @@ class ConversationMetadataDelegateImplTest {
                 selfParticipantId = "self-1",
                 avatar = ConversationMetadataUiState.Avatar.Single(
                     photoUri = metadata.otherParticipantPhotoUri,
+                    normalizedDestination = metadata.otherParticipantNormalizedDestination,
+                    displayName = metadata.conversationName,
                 ),
                 participantCount = 2,
                 otherParticipantDisplayDestination = metadata.otherParticipantDisplayDestination,
                 otherParticipantPhoneNumber = metadata.otherParticipantNormalizedDestination,
                 otherParticipantContactLookupKey = null,
                 isArchived = false,
+                isBlocked = false,
                 composerAvailability = ConversationComposerAvailability.Editable,
             )
         }
@@ -271,6 +276,7 @@ class ConversationMetadataDelegateImplTest {
             },
             conversationsRepository = conversationsRepository,
             conversationMetadataUiStateMapper = mapper,
+            blockedParticipantsRepository = mockk<BlockedParticipantsRepository>(relaxed = true),
             defaultDispatcher = dispatcher,
         )
         delegate.bind(

@@ -2,6 +2,8 @@ package com.android.messaging.data.conversation.repository.conversations
 
 import android.database.Cursor
 import android.database.MatrixCursor
+import com.android.messaging.data.conversation.model.message.ConversationMessageDetails
+import com.android.messaging.data.conversation.model.message.ConversationMessageDetailsData
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.DatabaseHelper.MessageColumns
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
@@ -14,6 +16,7 @@ import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.testutil.createParticipantsCursor
 import com.android.messaging.testutil.participantRow
 import io.mockk.every
+import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -179,7 +182,7 @@ internal class ConversationsRepositoryDirectLookupTest : BaseConversationsReposi
     }
 
     @Test
-    fun getMessageDetailsData_returnsMessageParticipantsAndSelfParticipant() {
+    fun getMessageDetails_mapsMessageParticipantsAndSelfParticipant() {
         runTest(
             context = mainDispatcherRule.testDispatcher,
         ) {
@@ -241,24 +244,35 @@ internal class ConversationsRepositoryDirectLookupTest : BaseConversationsReposi
                 ),
             )
 
-            val result = createRepository().getMessageDetailsData(
+            val capturedData = slot<ConversationMessageDetailsData>()
+            val expectedDetails = mockk<ConversationMessageDetails>()
+            every {
+                messageDetailsMapper.map(
+                    data = capture(capturedData),
+                    activeSubscriptionCount = any(),
+                    debug = any(),
+                )
+            } returns expectedDetails
+
+            val result = createRepository().getMessageDetails(
                 conversationId = CONVERSATION_ID,
                 messageId = "message-1",
             )
 
             assertEquals("message-1", result?.message?.messageId)
             assertEquals("Hello", result?.message?.text)
-            assertTrue(requireNotNull(result).participants.isLoaded)
-            assertEquals("self-1", result.selfParticipant?.id)
+            assertEquals(expectedDetails, result?.details)
+            assertTrue(capturedData.captured.participants.isLoaded)
+            assertEquals("self-1", capturedData.captured.selfParticipant?.id)
         }
     }
 
     @Test
-    fun getMessageDetailsData_returnsNullWhenMessageCannotBeResolved() {
+    fun getMessageDetails_returnsNullWhenMessageCannotBeResolved() {
         runTest(
             context = mainDispatcherRule.testDispatcher,
         ) {
-            val result = createRepository().getMessageDetailsData(
+            val result = createRepository().getMessageDetails(
                 conversationId = "",
                 messageId = "message-1",
             )

@@ -65,10 +65,10 @@ internal class ConversationScreenInteractionTest : BaseConversationScreenTest() 
                 screenModel.model.tryStartAddingAttachment()
             }
             verify(exactly = 1) {
-                screenModel.model.onAudioRecordingStart()
+                screenModel.model.onAudioRecordingStart(isLocked = false)
             }
             verify(exactly = 0) {
-                screenModel.model.onLockedAudioRecordingStart()
+                screenModel.model.onAudioRecordingStart(isLocked = true)
             }
         }
     }
@@ -110,10 +110,10 @@ internal class ConversationScreenInteractionTest : BaseConversationScreenTest() 
                 screenModel.model.tryStartAddingAttachment()
             }
             verify(exactly = 0) {
-                screenModel.model.onAudioRecordingStart()
+                screenModel.model.onAudioRecordingStart(isLocked = false)
             }
             verify(exactly = 1) {
-                screenModel.model.onLockedAudioRecordingStart()
+                screenModel.model.onAudioRecordingStart(isLocked = true)
             }
         }
     }

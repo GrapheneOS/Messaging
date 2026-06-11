@@ -1,4 +1,4 @@
-package com.android.messaging.ui.recipientselection.component
+package com.android.messaging.ui.conversation.recipientpicker.component
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -14,8 +14,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
-import com.android.messaging.ui.recipientselection.model.picker.SelectedRecipient
 import com.android.messaging.ui.core.AppTheme
+import com.android.messaging.ui.recipientselection.model.picker.SelectedRecipient
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.collections.immutable.ImmutableList

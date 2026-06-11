@@ -1,11 +1,11 @@
-package com.android.messaging.ui.conversation.recipientpicker.component.row
+package com.android.messaging.ui.recipientselection.component.row
 
 import android.provider.ContactsContract.CommonDataKinds.Email
 import android.provider.ContactsContract.CommonDataKinds.Phone
 import com.android.messaging.ui.contact.model.ContactDestinationUiModel
 import com.android.messaging.ui.contact.model.ContactUiModel
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerListItem
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.SelectedRecipient
+import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
+import com.android.messaging.ui.recipientselection.model.picker.SelectedRecipient
 import kotlinx.collections.immutable.persistentListOf
 
 internal const val CONTACT_DISPLAY_NAME = "Ada Lovelace"

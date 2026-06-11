@@ -1,9 +1,9 @@
-package com.android.messaging.ui.recipientselection.delegate.conversationresolutiondelegate
+package com.android.messaging.ui.conversation.recipientpicker.delegate.conversationresolutiondelegate
 
 import com.android.messaging.domain.conversation.usecase.participant.ResolveConversationId
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveConversationIdResult
 import com.android.messaging.testutil.MainDispatcherRule
-import com.android.messaging.ui.recipientselection.delegate.ConversationResolutionDelegateImpl
+import com.android.messaging.ui.conversation.recipientpicker.delegate.ConversationResolutionDelegateImpl
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred

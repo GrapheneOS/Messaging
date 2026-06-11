@@ -10,13 +10,13 @@ import com.android.messaging.domain.conversation.usecase.participant.IsConversat
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsEffect
-import com.android.messaging.ui.recipientselection.delegate.ConversationResolutionDelegate
+import com.android.messaging.ui.conversation.recipientpicker.delegate.ConversationResolutionDelegate
+import com.android.messaging.ui.conversation.recipientpicker.delegate.SelectedRecipientsDelegate
+import com.android.messaging.ui.conversation.recipientpicker.model.picker.ConversationResolutionOutcome
+import com.android.messaging.ui.conversation.recipientpicker.model.picker.ConversationResolutionState
+import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientToggleOutcome
 import com.android.messaging.ui.recipientselection.delegate.RecipientPickerDelegate
-import com.android.messaging.ui.recipientselection.delegate.SelectedRecipientsDelegate
-import com.android.messaging.ui.recipientselection.model.picker.ConversationResolutionOutcome
-import com.android.messaging.ui.recipientselection.model.picker.ConversationResolutionState
 import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerUiState
-import com.android.messaging.ui.recipientselection.model.picker.RecipientToggleOutcome
 import com.android.messaging.ui.recipientselection.model.picker.SelectedRecipient
 import io.mockk.every
 import io.mockk.just

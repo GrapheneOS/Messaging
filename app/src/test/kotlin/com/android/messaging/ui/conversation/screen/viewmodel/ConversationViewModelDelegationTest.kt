@@ -63,8 +63,8 @@ internal class ConversationViewModelDelegationTest : BaseConversationViewModelTe
                 action = ConversationMessageSelectionAction.Delete,
             )
             viewModel.onMessageTextChanged(text = "Hello")
-            viewModel.onAudioRecordingStart()
-            viewModel.onLockedAudioRecordingStart()
+            viewModel.onAudioRecordingStart(isLocked = false)
+            viewModel.onAudioRecordingStart(isLocked = true)
             viewModel.onAudioRecordingFinish()
             viewModel.onAudioRecordingCancel()
             viewModel.onPhotoPickerMediaSelected(contentUris = listOf("content://picker/1"))

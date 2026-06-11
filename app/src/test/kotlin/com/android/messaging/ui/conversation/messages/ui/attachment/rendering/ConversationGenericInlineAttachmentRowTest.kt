@@ -60,7 +60,7 @@ internal class ConversationGenericInlineAttachmentRowTest :
                 onExternalUriClick.invoke(YOUTUBE_SOURCE_URI)
             }
             verify(exactly = 0) {
-                onAttachmentClick.invoke(any(), any())
+                onAttachmentClick.invoke(any(), any(), any())
             }
         }
     }
@@ -75,7 +75,7 @@ internal class ConversationGenericInlineAttachmentRowTest :
 
         composeTestRule.runOnIdle {
             verify(exactly = 0) {
-                onAttachmentClick.invoke(any(), any())
+                onAttachmentClick.invoke(any(), any(), any())
             }
             verify(exactly = 0) {
                 onExternalUriClick.invoke(any())
@@ -96,7 +96,7 @@ internal class ConversationGenericInlineAttachmentRowTest :
                 onMessageLongClick.invoke()
             }
             verify(exactly = 0) {
-                onAttachmentClick.invoke(any(), any())
+                onAttachmentClick.invoke(any(), any(), any())
             }
             verify(exactly = 0) {
                 onExternalUriClick.invoke(any())

@@ -107,9 +107,10 @@ class ConversationComposerAttachmentsDelegateImplTest {
             )
             val loadedMetadata = ConversationVCardAttachmentMetadata.Loaded(
                 type = ConversationVCardAttachmentType.CONTACT,
-                avatarUri = null,
-                displayName = "Sam Rivera",
-                details = "555-000-8901",
+                avatarPhoto = null,
+                entryCount = 1,
+                singleDisplayName = "Sam Rivera",
+                normalizedDestination = "555-000-8901",
                 locationAddress = null,
             )
             val loadedUiModel = ConversationVCardAttachmentUiModel(
@@ -129,6 +130,7 @@ class ConversationComposerAttachmentsDelegateImplTest {
             every {
                 metadataRepository.observeAttachmentMetadata(
                     contentUri = "content://attachments/vcard/1",
+                    refreshes = any(),
                 )
             } returns flowOf(loadedMetadata)
             every {
@@ -256,6 +258,7 @@ class ConversationComposerAttachmentsDelegateImplTest {
             every {
                 metadataRepository.observeAttachmentMetadata(
                     contentUri = "content://attachments/vcard/1",
+                    refreshes = any(),
                 )
             } returns flowOf(ConversationVCardAttachmentMetadata.Loading)
             every {
@@ -299,6 +302,7 @@ class ConversationComposerAttachmentsDelegateImplTest {
                     @Suppress("UnusedFlow")
                     metadataRepository.observeAttachmentMetadata(
                         contentUri = "content://attachments/vcard/1",
+                        refreshes = any(),
                     )
                 }
             } finally {

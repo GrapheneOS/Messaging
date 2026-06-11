@@ -2,11 +2,8 @@ package com.android.messaging.ui.conversation.messages.delegate.selection
 
 import android.content.ClipData
 import app.cash.turbine.test
-import com.android.messaging.data.conversation.model.message.ConversationMessageDetailsData
 import com.android.messaging.datamodel.data.ConversationMessageData
-import com.android.messaging.datamodel.data.ConversationParticipantsData
 import com.android.messaging.datamodel.data.MessageData
-import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
@@ -156,20 +153,6 @@ internal class ConversationMessageSelectionDelegateMessageActionsTest :
     fun detailsAction_emitsDetailsEffectAndClearsSelection() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val harness = createHarness()
-            val messageDetails = mockk<ConversationMessageData>()
-            val participants = mockk<ConversationParticipantsData>()
-            val selfParticipant = mockk<ParticipantData>()
-            coEvery {
-                harness.conversationsRepository.getMessageDetailsData(
-                    conversationId = CONVERSATION_ID,
-                    messageId = "message-1",
-                )
-            } returns ConversationMessageDetailsData(
-                message = messageDetails,
-                participants = participants,
-                selfParticipant = selfParticipant,
-            )
-
             try {
                 harness.messagesStateFlow.value = createMessagesUiState(
                     createMessageUiModel(messageId = "message-1"),
@@ -185,10 +168,8 @@ internal class ConversationMessageSelectionDelegateMessageActionsTest :
                     advanceUntilIdle()
 
                     assertEquals(
-                        ConversationScreenEffect.ShowMessageDetails(
-                            message = messageDetails,
-                            participants = participants,
-                            selfParticipant = selfParticipant,
+                        ConversationScreenEffect.NavigateToMessageDetails(
+                            messageId = "message-1",
                         ),
                         awaitItem(),
                     )

@@ -90,6 +90,7 @@ internal class ConversationAttachmentPreviewEffectTest {
                     Uri.parse("content://media/image/1"),
                     capture(boundsSlot),
                     Uri.parse("content://media/images"),
+                    0,
                 )
             }
             assertEquals(Rect(1, 3, 7, 9), boundsSlot.captured)

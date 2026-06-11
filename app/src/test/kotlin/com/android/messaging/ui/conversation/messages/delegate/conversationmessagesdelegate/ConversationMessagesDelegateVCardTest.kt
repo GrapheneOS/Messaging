@@ -47,7 +47,10 @@ internal class ConversationMessagesDelegateVCardTest : BaseConversationMessagesD
             )
             verify(exactly = 1) {
                 @Suppress("UnusedFlow")
-                vCardMetadataRepository.observeAttachmentMetadata(contentUri = contentUri)
+                vCardMetadataRepository.observeAttachmentMetadata(
+                    contentUri = contentUri,
+                    refreshes = any(),
+                )
             }
         }
     }
@@ -86,7 +89,10 @@ internal class ConversationMessagesDelegateVCardTest : BaseConversationMessagesD
             )
             verify(exactly = 1) {
                 @Suppress("UnusedFlow")
-                vCardMetadataRepository.observeAttachmentMetadata(contentUri = contentUri)
+                vCardMetadataRepository.observeAttachmentMetadata(
+                    contentUri = contentUri,
+                    refreshes = any(),
+                )
             }
         }
     }
@@ -129,11 +135,17 @@ internal class ConversationMessagesDelegateVCardTest : BaseConversationMessagesD
             )
             verify(exactly = 1) {
                 @Suppress("UnusedFlow")
-                vCardMetadataRepository.observeAttachmentMetadata(contentUri = firstUri)
+                vCardMetadataRepository.observeAttachmentMetadata(
+                    contentUri = firstUri,
+                    refreshes = any(),
+                )
             }
             verify(exactly = 1) {
                 @Suppress("UnusedFlow")
-                vCardMetadataRepository.observeAttachmentMetadata(contentUri = secondUri)
+                vCardMetadataRepository.observeAttachmentMetadata(
+                    contentUri = secondUri,
+                    refreshes = any(),
+                )
             }
         }
     }
@@ -201,7 +213,10 @@ internal class ConversationMessagesDelegateVCardTest : BaseConversationMessagesD
             )
             verify(exactly = 0) {
                 @Suppress("UnusedFlow")
-                vCardMetadataRepository.observeAttachmentMetadata(contentUri = any())
+                vCardMetadataRepository.observeAttachmentMetadata(
+                    contentUri = any(),
+                    refreshes = any(),
+                )
             }
             verify(exactly = 0) {
                 vCardUiModelMapper.map(metadata = any())

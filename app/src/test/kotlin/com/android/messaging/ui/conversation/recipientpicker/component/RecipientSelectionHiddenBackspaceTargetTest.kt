@@ -1,10 +1,10 @@
-package com.android.messaging.ui.recipientselection.component
+package com.android.messaging.ui.conversation.recipientpicker.component
 
 import android.view.KeyEvent as AndroidKeyEvent
 import androidx.compose.ui.input.key.KeyEvent as ComposeKeyEvent
 import androidx.compose.ui.text.TextRange
+import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionQueryFieldUiState
 import com.android.messaging.ui.recipientselection.model.picker.SelectedRecipient
-import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionQueryFieldUiState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.Assert.assertEquals

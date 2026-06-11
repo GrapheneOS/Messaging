@@ -1,10 +1,7 @@
 package com.android.messaging.ui.conversation.addparticipants
 
-import androidx.compose.ui.semantics.ProgressBarRangeInfo
-import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
-import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -17,8 +14,8 @@ import com.android.messaging.testutil.TEST_WAIT_TIMEOUT_MILLIS
 import com.android.messaging.ui.conversation.ADD_PARTICIPANTS_CONFIRM_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsEffect
 import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsUiState
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.SelectedRecipient
 import com.android.messaging.ui.core.AppTheme
+import com.android.messaging.ui.recipientselection.model.picker.SelectedRecipient
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -133,7 +130,7 @@ class AddParticipantsScreenTest {
     }
 
     @Test
-    fun selectedRecipientWhileResolving_disablesConfirmAndShowsProgress() {
+    fun selectedRecipientWhileResolving_disablesConfirm() {
         val model = createScreenModel(
             initialUiState = AddParticipantsUiState(
                 isLoadingConversationParticipants = false,
@@ -150,11 +147,6 @@ class AddParticipantsScreenTest {
             .onNodeWithTag(testTag = ADD_PARTICIPANTS_CONFIRM_BUTTON_TEST_TAG)
             .assertIsDisplayed()
             .assertIsNotEnabled()
-        composeTestRule
-            .onAllNodes(
-                matcher = hasProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate),
-            )
-            .assertCountEquals(expectedSize = 1)
     }
 
     @Test

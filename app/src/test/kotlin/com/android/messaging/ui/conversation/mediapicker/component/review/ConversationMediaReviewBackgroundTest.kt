@@ -11,12 +11,15 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithTag
 import com.android.common.test.helpers.targetContext
+import com.android.messaging.ui.common.components.mediapreview.MediaPreviewBackground
 import com.android.messaging.ui.conversation.composer.model.ComposerAttachmentUiModel
+import com.android.messaging.ui.conversation.composer.model.toMediaPreviewItem
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import kotlin.math.roundToInt
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -65,12 +68,14 @@ internal class ConversationMediaReviewBackgroundTest : BaseConversationMediaPick
                     pageCount = { maxOf(attachments.size, 1) },
                 )
 
-                ConversationMediaReviewBackground(
+                MediaPreviewBackground(
                     modifier = Modifier
                         .fillMaxSize()
                         .testTag(tag = BACKGROUND_TAG),
                     pagerState = pagerState,
-                    attachments = attachments,
+                    items = attachments.map { attachment ->
+                        attachment.toMediaPreviewItem()
+                    }.toImmutableList(),
                 )
             }
         }

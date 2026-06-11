@@ -80,6 +80,7 @@ internal class ConversationViewModelAttachmentPreviewTest : BaseConversationView
                 viewModel.onMessageAttachmentClicked(
                     contentType = "image/png",
                     contentUri = "content://media/image/2",
+                    partId = "part-1",
                 )
                 advanceUntilIdle()
                 assertEquals(

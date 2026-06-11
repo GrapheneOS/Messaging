@@ -4,8 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.android.messaging.R
 import com.android.messaging.ui.conversation.entry.model.NewChatEffect
-import com.android.messaging.ui.recipientselection.model.picker.ConversationResolutionState
-import com.android.messaging.ui.recipientselection.model.picker.RecipientToggleOutcome
+import com.android.messaging.ui.conversation.recipientpicker.model.picker.ConversationResolutionState
+import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientToggleOutcome
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle

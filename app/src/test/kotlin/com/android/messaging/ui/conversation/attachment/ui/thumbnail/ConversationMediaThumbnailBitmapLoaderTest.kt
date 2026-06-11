@@ -5,7 +5,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Size
 import androidx.compose.ui.unit.IntSize
-import com.android.messaging.ui.conversation.attachment.ui.loadConversationMediaThumbnailBitmap
+import com.android.messaging.ui.common.components.attachment.loadMediaThumbnailBitmap
 import com.android.messaging.util.MediaMetadataRetrieverWrapper
 import io.mockk.every
 import io.mockk.just
@@ -48,7 +48,7 @@ internal class ConversationMediaThumbnailBitmapLoaderTest {
                 contentResolver.loadThumbnail(contentUri, capture(capturedSize), null)
             } returns platformBitmap
 
-            val result = loadConversationMediaThumbnailBitmap(
+            val result = loadMediaThumbnailBitmap(
                 contentResolver = contentResolver,
                 contentUri = contentUri,
                 contentType = "image/png",
@@ -79,7 +79,7 @@ internal class ConversationMediaThumbnailBitmapLoaderTest {
                 ByteArrayInputStream(imageBytes)
             }
 
-            val result = loadConversationMediaThumbnailBitmap(
+            val result = loadMediaThumbnailBitmap(
                 contentResolver = contentResolver,
                 contentUri = contentUri,
                 contentType = "image/png",
@@ -116,7 +116,7 @@ internal class ConversationMediaThumbnailBitmapLoaderTest {
                 anyConstructed<MediaMetadataRetrieverWrapper>().release()
             } just runs
 
-            val result = loadConversationMediaThumbnailBitmap(
+            val result = loadMediaThumbnailBitmap(
                 contentResolver = contentResolver,
                 contentUri = contentUri,
                 contentType = "video/mp4",
@@ -142,7 +142,7 @@ internal class ConversationMediaThumbnailBitmapLoaderTest {
                 contentResolver.loadThumbnail(contentUri, any(), null)
             } throws IOException("thumbnail unavailable")
 
-            val result = loadConversationMediaThumbnailBitmap(
+            val result = loadMediaThumbnailBitmap(
                 contentResolver = contentResolver,
                 contentUri = contentUri,
                 contentType = "application/pdf",
@@ -167,7 +167,7 @@ internal class ConversationMediaThumbnailBitmapLoaderTest {
                 contentResolver.loadThumbnail(contentUri, any(), null)
             } returns platformBitmap
 
-            val result = loadConversationMediaThumbnailBitmap(
+            val result = loadMediaThumbnailBitmap(
                 contentResolver = contentResolver,
                 contentUri = contentUri,
                 contentType = "image/png",

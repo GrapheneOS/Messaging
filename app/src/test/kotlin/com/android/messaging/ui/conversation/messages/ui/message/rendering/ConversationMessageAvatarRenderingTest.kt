@@ -82,7 +82,7 @@ internal class ConversationMessageAvatarRenderingTest : BaseConversationMessageR
     }
 
     @Test
-    fun avatarUri_keepsFallbackInitialWhileImageLoads() {
+    fun avatarUri_usesImageInsteadOfFallbackInitial() {
         setAvatarContent(
             message = message(
                 isIncoming = true,
@@ -93,7 +93,7 @@ internal class ConversationMessageAvatarRenderingTest : BaseConversationMessageR
 
         composeTestRule
             .onNodeWithText(text = "M")
-            .assertIsDisplayed()
+            .assertDoesNotExist()
     }
 
     @Test

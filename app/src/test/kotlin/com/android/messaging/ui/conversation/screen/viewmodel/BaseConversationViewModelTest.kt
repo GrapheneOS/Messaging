@@ -5,12 +5,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
-import com.android.messaging.data.subscription.model.Subscription
-import com.android.messaging.data.subscription.repository.SubscriptionsRepository
+import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
+import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.domain.conversation.usecase.action.CreateDefaultSmsRoleRequest
+import com.android.messaging.domain.conversation.usecase.participant.CanAddContact
 import com.android.messaging.domain.conversation.usecase.participant.CanAddMoreConversationParticipants
-import com.android.messaging.domain.conversation.usecase.telephony.IsDeviceVoiceCapable
-import com.android.messaging.domain.conversation.usecase.telephony.IsEmergencyPhoneNumber
+import com.android.messaging.domain.conversation.usecase.telephony.CanPlacePhoneCall
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.testutil.TEST_CALL_ACTION_PHONE_NUMBER
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
@@ -18,10 +18,12 @@ import com.android.messaging.ui.conversation.audio.delegate.ConversationAudioRec
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingUiState
 import com.android.messaging.ui.conversation.composer.delegate.ConversationComposerAttachmentsDelegate
 import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftDelegate
+import com.android.messaging.ui.conversation.composer.delegate.ConversationSubscriptionSelectionDelegate
 import com.android.messaging.ui.conversation.composer.mapper.ConversationComposerUiStateMapper
 import com.android.messaging.ui.conversation.composer.model.ComposerAttachmentUiModel
 import com.android.messaging.ui.conversation.composer.model.ConversationComposerUiState
 import com.android.messaging.ui.conversation.composer.model.ConversationDraftState
+import com.android.messaging.ui.conversation.composer.model.ConversationSubscriptionSelectionState
 import com.android.messaging.ui.conversation.focus.delegate.ConversationFocusDelegate
 import com.android.messaging.ui.conversation.mediapicker.delegate.ConversationMediaPickerDelegate
 import com.android.messaging.ui.conversation.messages.delegate.ConversationMessageSelectionDelegate
@@ -71,12 +73,13 @@ internal abstract class BaseConversationViewModelTest {
         createDefaultSmsRoleRequest: CreateDefaultSmsRoleRequest = CreateDefaultSmsRoleRequest {
             null
         },
-        isDeviceVoiceCapable: IsDeviceVoiceCapable = IsDeviceVoiceCapable { false },
-        isEmergencyPhoneNumber: IsEmergencyPhoneNumber = IsEmergencyPhoneNumber { false },
+        canAddContact: CanAddContact = CanAddContact { _, _, _ -> false },
+        canPlacePhoneCall: CanPlacePhoneCall = CanPlacePhoneCall { false },
         composerUiStateMapper: ConversationComposerUiStateMapper =
             createComposerUiStateMapperMock(mappedUiState = ConversationComposerUiState()),
-        subscriptionsRepository: SubscriptionsRepository =
-            createSubscriptionsRepositoryMock(subscriptions = persistentListOf()),
+        subscriptionSelectionDelegate: ConversationSubscriptionSelectionDelegate =
+            createSubscriptionSelectionDelegateMock().mock,
+        simSelectionRepository: ConversationSimSelectionRepository = mockk(relaxed = true),
     ): ConversationViewModel {
         return ConversationViewModel(
             conversationAudioRecordingDelegate = audioRecordingDelegate,
@@ -87,12 +90,13 @@ internal abstract class BaseConversationViewModelTest {
             conversationMediaPickerDelegate = mediaPickerDelegate,
             conversationMetadataDelegate = metadataDelegate,
             conversationFocusDelegate = focusDelegate,
+            conversationSubscriptionSelectionDelegate = subscriptionSelectionDelegate,
             conversationComposerUiStateMapper = composerUiStateMapper,
-            subscriptionsRepository = subscriptionsRepository,
+            simSelectionRepository = simSelectionRepository,
             canAddMoreConversationParticipants = canAddMoreConversationParticipants,
             createDefaultSmsRoleRequest = createDefaultSmsRoleRequest,
-            isDeviceVoiceCapable = isDeviceVoiceCapable,
-            isEmergencyPhoneNumber = isEmergencyPhoneNumber,
+            canAddContact = canAddContact,
+            canPlacePhoneCall = canPlacePhoneCall,
             defaultDispatcher = mainDispatcherRule.testDispatcher,
             savedStateHandle = SavedStateHandle(),
         )
@@ -119,12 +123,17 @@ internal abstract class BaseConversationViewModelTest {
         return ConversationMetadataUiState.Present(
             title = "Alice",
             selfParticipantId = "self-1",
-            avatar = ConversationMetadataUiState.Avatar.Single(photoUri = null),
+            avatar = ConversationMetadataUiState.Avatar.Single(
+                photoUri = null,
+                normalizedDestination = phoneNumber,
+                displayName = "Alice",
+            ),
             participantCount = 1,
             otherParticipantDisplayDestination = phoneNumber,
             otherParticipantPhoneNumber = phoneNumber,
             otherParticipantContactLookupKey = null,
             isArchived = false,
+            isBlocked = false,
             composerAvailability = ConversationComposerAvailability.Editable,
         )
     }
@@ -171,14 +180,20 @@ internal abstract class BaseConversationViewModelTest {
         )
     }
 
-    protected fun createSubscriptionsRepositoryMock(
-        subscriptions: ImmutableList<Subscription>,
-    ): SubscriptionsRepository {
-        val repository = mockk<SubscriptionsRepository>()
-        every {
-            repository.observeActiveSubscriptions()
-        } returns MutableStateFlow(subscriptions)
-        return repository
+    protected fun createSubscriptionSelectionDelegateMock(
+        state: ConversationSubscriptionSelectionState = ConversationSubscriptionSelectionState(
+            subscriptions = persistentListOf(),
+            areSubscriptionsLoaded = false,
+            defaultSmsSubscriptionId = ParticipantData.DEFAULT_SELF_SUB_ID,
+        ),
+    ): SubscriptionSelectionDelegateMock {
+        val stateFlow = MutableStateFlow(state)
+        val mock = mockk<ConversationSubscriptionSelectionDelegate>(relaxed = true)
+        every { mock.state } returns stateFlow
+        return SubscriptionSelectionDelegateMock(
+            mock = mock,
+            stateFlow = stateFlow,
+        )
     }
 
     protected fun createDraftDelegateMock(): DraftDelegateMock {
@@ -243,8 +258,11 @@ internal abstract class BaseConversationViewModelTest {
         val stateFlow = MutableStateFlow<ConversationMessagesUiState>(
             ConversationMessagesUiState.Loading,
         )
-        val mock = mockk<ConversationMessagesDelegate>()
+        val mock = mockk<ConversationMessagesDelegate>(relaxed = true)
         every { mock.state } returns stateFlow
+        every {
+            mock.resolvePhotoViewerInitialOccurrenceIndex(any(), any(), any())
+        } returns 0
         every {
             mock.bind(any(), any())
         } answers {
@@ -335,7 +353,7 @@ internal abstract class BaseConversationViewModelTest {
     ): ConversationComposerUiStateMapper {
         val mapper = mockk<ConversationComposerUiStateMapper>()
         every {
-            mapper.map(any(), any(), any(), any(), any(), any())
+            mapper.map(any(), any(), any(), any(), any(), any(), any())
         } returns mappedUiState
         return mapper
     }
@@ -398,6 +416,11 @@ internal abstract class BaseConversationViewModelTest {
         val mock: ConversationAudioRecordingDelegate,
         val stateFlow: MutableStateFlow<ConversationAudioRecordingUiState>,
         val bindCalls: List<BindCall>,
+    )
+
+    protected data class SubscriptionSelectionDelegateMock(
+        val mock: ConversationSubscriptionSelectionDelegate,
+        val stateFlow: MutableStateFlow<ConversationSubscriptionSelectionState>,
     )
 
     protected data class MediaPickerDelegateMock(

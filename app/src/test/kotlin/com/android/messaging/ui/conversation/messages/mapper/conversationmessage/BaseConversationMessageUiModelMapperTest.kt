@@ -92,6 +92,7 @@ internal abstract class BaseConversationMessageUiModelMapperTest {
         contentType: String? = "text/plain",
         text: String? = null,
         contentUri: Uri? = null,
+        partId: String? = null,
         width: Int = 0,
         height: Int = 0,
     ): MessagePartData {
@@ -99,6 +100,7 @@ internal abstract class BaseConversationMessageUiModelMapperTest {
         every { mock.contentType } returns contentType
         every { mock.text } returns text
         every { mock.contentUri } returns contentUri
+        every { mock.partId } returns partId
         every { mock.width } returns width
         every { mock.height } returns height
         return mock

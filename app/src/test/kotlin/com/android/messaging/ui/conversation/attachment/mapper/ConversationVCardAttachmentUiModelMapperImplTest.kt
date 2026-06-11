@@ -1,15 +1,21 @@
 package com.android.messaging.ui.conversation.attachment.mapper
 
+import androidx.test.core.app.ApplicationProvider
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentMetadata
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentType
 import com.android.messaging.ui.conversation.attachment.model.ConversationVCardAttachmentUiModel
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class ConversationVCardAttachmentUiModelMapperImplTest {
 
-    private val mapper = ConversationVCardAttachmentUiModelMapperImpl()
+    private val mapper = ConversationVCardAttachmentUiModelMapperImpl(
+        context = ApplicationProvider.getApplicationContext(),
+    )
 
     @Test
     fun map_loading_returnsDefaultContactLoadingUiModel() {
@@ -34,9 +40,10 @@ class ConversationVCardAttachmentUiModelMapperImplTest {
         val uiModel = mapper.map(
             metadata = ConversationVCardAttachmentMetadata.Loaded(
                 type = ConversationVCardAttachmentType.CONTACT,
-                avatarUri = null,
-                displayName = "Sam Rivera",
-                details = null,
+                avatarPhoto = null,
+                entryCount = 1,
+                singleDisplayName = "Sam Rivera",
+                normalizedDestination = null,
                 locationAddress = null,
             ),
         )
@@ -58,9 +65,10 @@ class ConversationVCardAttachmentUiModelMapperImplTest {
         val uiModel = mapper.map(
             metadata = ConversationVCardAttachmentMetadata.Loaded(
                 type = ConversationVCardAttachmentType.LOCATION,
-                avatarUri = null,
-                displayName = null,
-                details = "New York",
+                avatarPhoto = null,
+                entryCount = 1,
+                singleDisplayName = null,
+                normalizedDestination = null,
                 locationAddress = "25 11th Ave New York NY 10011 United States",
             ),
         )

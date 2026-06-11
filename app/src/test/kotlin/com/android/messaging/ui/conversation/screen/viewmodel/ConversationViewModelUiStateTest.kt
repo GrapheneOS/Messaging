@@ -53,12 +53,15 @@ internal class ConversationViewModelUiStateTest : BaseConversationViewModelTest(
                 selfParticipantId = "self-1",
                 avatar = ConversationMetadataUiState.Avatar.Single(
                     photoUri = null,
+                    normalizedDestination = null,
+                    displayName = "Alice",
                 ),
                 participantCount = 2,
                 otherParticipantDisplayDestination = null,
                 otherParticipantPhoneNumber = null,
                 otherParticipantContactLookupKey = null,
                 isArchived = false,
+                isBlocked = false,
                 composerAvailability = ConversationComposerAvailability.Editable,
             )
             val messagesState = ConversationMessagesUiState.Present(
@@ -136,12 +139,15 @@ internal class ConversationViewModelUiStateTest : BaseConversationViewModelTest(
                     selfParticipantId = "self-1",
                     avatar = ConversationMetadataUiState.Avatar.Single(
                         photoUri = null,
+                        normalizedDestination = null,
+                        displayName = "Alice",
                     ),
                     participantCount = 2,
                     otherParticipantDisplayDestination = null,
                     otherParticipantPhoneNumber = null,
                     otherParticipantContactLookupKey = null,
                     isArchived = false,
+                    isBlocked = false,
                     composerAvailability = ConversationComposerAvailability.Editable,
                 )
 
@@ -179,6 +185,7 @@ internal class ConversationViewModelUiStateTest : BaseConversationViewModelTest(
                 otherParticipantPhoneNumber = null,
                 otherParticipantContactLookupKey = null,
                 isArchived = false,
+                isBlocked = false,
                 composerAvailability = ConversationComposerAvailability.Editable,
             )
             viewModel.scaffoldUiState.test {
@@ -212,6 +219,7 @@ internal class ConversationViewModelUiStateTest : BaseConversationViewModelTest(
                 otherParticipantPhoneNumber = null,
                 otherParticipantContactLookupKey = null,
                 isArchived = false,
+                isBlocked = false,
                 composerAvailability = ConversationComposerAvailability.Editable,
             )
             viewModel.scaffoldUiState.test {

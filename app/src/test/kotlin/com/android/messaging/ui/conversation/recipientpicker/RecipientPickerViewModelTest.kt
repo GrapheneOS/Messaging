@@ -1,4 +1,4 @@
-package com.android.messaging.ui.recipientselection
+package com.android.messaging.ui.conversation.recipientpicker
 
 import com.android.messaging.ui.recipientselection.delegate.RecipientPickerDelegate
 import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerUiState

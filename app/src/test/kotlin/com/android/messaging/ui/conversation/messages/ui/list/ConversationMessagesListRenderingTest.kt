@@ -44,7 +44,7 @@ internal class ConversationMessagesListRenderingTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private val onAttachmentClick = mockk<(String, String) -> Unit>(relaxed = true)
+    private val onAttachmentClick = mockk<(String, String, String) -> Unit>(relaxed = true)
     private val onExternalUriClick = mockk<(String) -> Unit>(relaxed = true)
     private val onMessageAvatarClick = mockk<(String) -> Unit>(relaxed = true)
     private val onMessageClick = mockk<(String) -> Unit>(relaxed = true)

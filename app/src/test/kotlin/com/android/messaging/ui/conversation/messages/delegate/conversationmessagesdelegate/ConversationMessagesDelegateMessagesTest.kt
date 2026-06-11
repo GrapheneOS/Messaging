@@ -54,7 +54,10 @@ internal class ConversationMessagesDelegateMessagesTest : BaseConversationMessag
             )
             verify(exactly = 0) {
                 @Suppress("UnusedFlow")
-                vCardMetadataRepository.observeAttachmentMetadata(contentUri = any())
+                vCardMetadataRepository.observeAttachmentMetadata(
+                    contentUri = any(),
+                    refreshes = any(),
+                )
             }
         }
     }

@@ -1,9 +1,9 @@
-package com.android.messaging.ui.recipientselection.delegate.conversationresolutiondelegate
+package com.android.messaging.ui.conversation.recipientpicker.delegate.conversationresolutiondelegate
 
 import app.cash.turbine.test
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveConversationIdResult
-import com.android.messaging.ui.recipientselection.model.picker.ConversationResolutionOutcome
-import com.android.messaging.ui.recipientselection.model.picker.ConversationResolutionState
+import com.android.messaging.ui.conversation.recipientpicker.model.picker.ConversationResolutionOutcome
+import com.android.messaging.ui.conversation.recipientpicker.model.picker.ConversationResolutionState
 import io.mockk.coEvery
 import io.mockk.slot
 import kotlinx.coroutines.ExperimentalCoroutinesApi

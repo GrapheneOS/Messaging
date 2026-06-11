@@ -1,4 +1,4 @@
-package com.android.messaging.ui.recipientselection.component.simselector
+package com.android.messaging.ui.conversation.recipientpicker.component.simselector
 
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
@@ -10,15 +10,15 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
-import com.android.messaging.ui.conversation.NEW_CHAT_SIM_SELECTOR_CHIP_TEST_TAG
-import com.android.messaging.ui.conversation.NEW_CHAT_SIM_SELECTOR_DROPDOWN_TEST_TAG
 import com.android.messaging.ui.conversation.TEST_ATT_SUBSCRIPTION_NAME
 import com.android.messaging.ui.conversation.TEST_VERIZON_SUBSCRIPTION_NAME
 import com.android.messaging.ui.conversation.composer.model.ConversationSimSelectorUiState
-import com.android.messaging.ui.conversation.newChatSimSelectorItemTestTag
 import com.android.messaging.ui.conversation.testAttSubscription
 import com.android.messaging.ui.conversation.testVerizonSubscription
 import com.android.messaging.ui.core.AppTheme
+import com.android.messaging.ui.subscription.component.SIM_SELECTOR_CHIP_TEST_TAG
+import com.android.messaging.ui.subscription.component.SIM_SELECTOR_DROPDOWN_TEST_TAG
+import com.android.messaging.ui.subscription.component.simSelectorItemTestTag
 import io.mockk.clearAllMocks
 import io.mockk.mockk
 import io.mockk.verify
@@ -53,7 +53,7 @@ internal class NewChatSimSelectorRowTest {
         )
 
         composeTestRule
-            .onNodeWithTag(NEW_CHAT_SIM_SELECTOR_CHIP_TEST_TAG)
+            .onNodeWithTag(SIM_SELECTOR_CHIP_TEST_TAG)
             .assertDoesNotExist()
     }
 
@@ -67,7 +67,7 @@ internal class NewChatSimSelectorRowTest {
         )
 
         composeTestRule
-            .onNodeWithTag(NEW_CHAT_SIM_SELECTOR_CHIP_TEST_TAG)
+            .onNodeWithTag(SIM_SELECTOR_CHIP_TEST_TAG)
             .assertDoesNotExist()
     }
 
@@ -81,7 +81,7 @@ internal class NewChatSimSelectorRowTest {
         )
 
         composeTestRule
-            .onNodeWithTag(NEW_CHAT_SIM_SELECTOR_CHIP_TEST_TAG)
+            .onNodeWithTag(SIM_SELECTOR_CHIP_TEST_TAG)
             .assertDoesNotExist()
     }
 
@@ -97,7 +97,7 @@ internal class NewChatSimSelectorRowTest {
 
         composeTestRule.onNodeWithText(prefix).assertIsDisplayed()
         composeTestRule
-            .onNodeWithTag(NEW_CHAT_SIM_SELECTOR_CHIP_TEST_TAG)
+            .onNodeWithTag(SIM_SELECTOR_CHIP_TEST_TAG)
             .assertIsDisplayed()
         composeTestRule.onNodeWithText(TEST_VERIZON_SUBSCRIPTION_NAME).assertIsDisplayed()
         composeTestRule.onNodeWithContentDescription(chipDescription).assertIsDisplayed()
@@ -110,19 +110,19 @@ internal class NewChatSimSelectorRowTest {
         openDropdown()
 
         composeTestRule
-            .onNodeWithTag(NEW_CHAT_SIM_SELECTOR_DROPDOWN_TEST_TAG)
+            .onNodeWithTag(SIM_SELECTOR_DROPDOWN_TEST_TAG)
             .assertIsDisplayed()
         composeTestRule
             .onNodeWithTag(
-                newChatSimSelectorItemTestTag(
-                    selfParticipantId = testVerizonSubscription.selfParticipantId,
+                simSelectorItemTestTag(
+                    id = testVerizonSubscription.selfParticipantId,
                 ),
             )
             .assertIsDisplayed()
         composeTestRule
             .onNodeWithTag(
-                newChatSimSelectorItemTestTag(
-                    selfParticipantId = testAttSubscription.selfParticipantId,
+                simSelectorItemTestTag(
+                    id = testAttSubscription.selfParticipantId,
                 ),
             )
             .assertIsDisplayed()
@@ -184,8 +184,8 @@ internal class NewChatSimSelectorRowTest {
         openDropdown()
         composeTestRule
             .onNodeWithTag(
-                newChatSimSelectorItemTestTag(
-                    selfParticipantId = testAttSubscription.selfParticipantId,
+                simSelectorItemTestTag(
+                    id = testAttSubscription.selfParticipantId,
                 ),
             )
             .performClick()
@@ -196,7 +196,7 @@ internal class NewChatSimSelectorRowTest {
             onSimSelected.invoke(testAttSubscription.selfParticipantId)
         }
         composeTestRule
-            .onNodeWithTag(NEW_CHAT_SIM_SELECTOR_DROPDOWN_TEST_TAG)
+            .onNodeWithTag(SIM_SELECTOR_DROPDOWN_TEST_TAG)
             .assertDoesNotExist()
     }
 
@@ -218,7 +218,7 @@ internal class NewChatSimSelectorRowTest {
 
     private fun openDropdown() {
         composeTestRule
-            .onNodeWithTag(NEW_CHAT_SIM_SELECTOR_CHIP_TEST_TAG)
+            .onNodeWithTag(SIM_SELECTOR_CHIP_TEST_TAG)
             .performClick()
     }
 }

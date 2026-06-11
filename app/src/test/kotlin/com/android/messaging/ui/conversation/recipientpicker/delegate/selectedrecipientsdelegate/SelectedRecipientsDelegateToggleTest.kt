@@ -1,6 +1,6 @@
-package com.android.messaging.ui.recipientselection.delegate.selectedrecipientsdelegate
+package com.android.messaging.ui.conversation.recipientpicker.delegate.selectedrecipientsdelegate
 
-import com.android.messaging.ui.recipientselection.model.picker.RecipientToggleOutcome
+import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientToggleOutcome
 import com.android.messaging.ui.recipientselection.model.picker.SelectedRecipient
 import io.mockk.every
 import io.mockk.mockk

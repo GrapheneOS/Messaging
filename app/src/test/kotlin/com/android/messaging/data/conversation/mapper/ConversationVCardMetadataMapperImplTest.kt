@@ -1,124 +1,88 @@
 package com.android.messaging.data.conversation.mapper
 
-import android.net.Uri
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentMetadata
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentType
-import com.android.messaging.datamodel.data.VCardContactItemData
-import com.android.messaging.datamodel.media.VCardResource
-import com.android.messaging.datamodel.media.VCardResourceEntry
+import com.android.messaging.data.vcard.mapper.VCardEntrySummarizer
+import com.android.messaging.datamodel.media.CustomVCardEntry
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
-class ConversationVCardMetadataMapperImplTest {
+internal class ConversationVCardMetadataMapperImplTest {
 
-    private val mapper = ConversationVCardMetadataMapperImpl()
+    private val entrySummarizer = mockk<VCardEntrySummarizer>()
+    private val mapper = ConversationVCardMetadataMapperImpl(
+        entrySummarizer = entrySummarizer,
+    )
 
     @Test
-    fun map_contactEntry_returnsContactMetadata() {
-        val vCardContactItemData = mockk<VCardContactItemData> {
-            every { getDisplayName() } returns "Sam Rivera"
-            every { avatarUri } returns Uri.parse("content://avatar/sam")
-            every { details } returns "sam@example.com"
-            every { vCardResource } returns vCardResource(
-                entry = vCardResourceEntry(
-                    kind = null,
-                    displayAddress = null,
-                ),
-            )
-        }
-
-        val metadata = mapper.map(
-            vCardContactItemData = vCardContactItemData,
+    fun map_emptyEntries_returnsFailedMetadata() {
+        assertEquals(
+            ConversationVCardAttachmentMetadata.Failed,
+            mapper.map(entries = emptyList()),
         )
+    }
+
+    @Test
+    fun map_singleContact_returnsSummarizedContactMetadata() {
+        val entry = mockk<CustomVCardEntry>()
+        every { entrySummarizer.isLocation(entry) } returns false
+        every { entrySummarizer.avatarPhoto(entry) } returns null
+        every { entrySummarizer.displayName(entry) } returns "Sam Rivera"
+        every { entrySummarizer.normalizedDestination(entry) } returns "sam@example.com"
+        every { entrySummarizer.firstPostalAddress(entry) } returns null
 
         assertEquals(
             ConversationVCardAttachmentMetadata.Loaded(
                 type = ConversationVCardAttachmentType.CONTACT,
-                avatarUri = "content://avatar/sam",
-                displayName = "Sam Rivera",
-                details = "sam@example.com",
+                avatarPhoto = null,
+                entryCount = 1,
+                singleDisplayName = "Sam Rivera",
+                normalizedDestination = "sam@example.com",
                 locationAddress = null,
             ),
-            metadata,
+            mapper.map(entries = listOf(entry)),
         )
     }
 
     @Test
-    fun map_locationEntry_returnsLocationMetadata() {
-        val vCardContactItemData = mockk<VCardContactItemData> {
-            every { getDisplayName() } returns null
-            every { avatarUri } returns null
-            every { details } returns "New York"
-            every { vCardResource } returns vCardResource(
-                entry = vCardResourceEntry(
-                    kind = "LoCaTiOn",
-                    displayAddress = "25 11th Ave New York NY 10011 United States",
-                ),
-            )
-        }
-
-        val metadata = mapper.map(
-            vCardContactItemData = vCardContactItemData,
-        )
+    fun map_singleLocation_returnsLocationMetadata() {
+        val entry = mockk<CustomVCardEntry>()
+        every { entrySummarizer.isLocation(entry) } returns true
+        every { entrySummarizer.avatarPhoto(entry) } returns null
+        every { entrySummarizer.displayName(entry) } returns null
+        every { entrySummarizer.normalizedDestination(entry) } returns null
+        every { entrySummarizer.firstPostalAddress(entry) } returns
+            "25 11th Ave New York NY 10011 United States"
 
         assertEquals(
             ConversationVCardAttachmentMetadata.Loaded(
                 type = ConversationVCardAttachmentType.LOCATION,
-                avatarUri = null,
-                displayName = null,
-                details = "New York",
+                avatarPhoto = null,
+                entryCount = 1,
+                singleDisplayName = null,
+                normalizedDestination = null,
                 locationAddress = "25 11th Ave New York NY 10011 United States",
             ),
-            metadata,
+            mapper.map(entries = listOf(entry)),
         )
     }
 
     @Test
-    fun map_blankStrings_returnsNullFields() {
-        val vCardContactItemData = mockk<VCardContactItemData> {
-            every { getDisplayName() } returns "   "
-            every { avatarUri } returns Uri.parse(" ")
-            every { details } returns ""
-            every { vCardResource } returns vCardResource(
-                entry = vCardResourceEntry(
-                    kind = null,
-                    displayAddress = " ",
-                ),
-            )
-        }
+    fun map_multipleEntries_returnsContactMetadataWithoutSingleEntrySummary() {
+        val entries = listOf(mockk<CustomVCardEntry>(), mockk<CustomVCardEntry>())
 
-        val metadata = mapper.map(
-            vCardContactItemData = vCardContactItemData,
-        ) as ConversationVCardAttachmentMetadata.Loaded
-
-        assertEquals(ConversationVCardAttachmentType.CONTACT, metadata.type)
-        assertNull(metadata.avatarUri)
-        assertNull(metadata.displayName)
-        assertNull(metadata.details)
-        assertNull(metadata.locationAddress)
-    }
-
-    private fun vCardResource(
-        entry: VCardResourceEntry,
-    ): VCardResource {
-        return mockk<VCardResource> {
-            every { vCards } returns listOf(entry)
-        }
-    }
-
-    private fun vCardResourceEntry(
-        kind: String?,
-        displayAddress: String?,
-    ): VCardResourceEntry {
-        return mockk<VCardResourceEntry> {
-            every { getKind() } returns kind
-            every { getDisplayAddress() } returns displayAddress
-        }
+        assertEquals(
+            ConversationVCardAttachmentMetadata.Loaded(
+                type = ConversationVCardAttachmentType.CONTACT,
+                avatarPhoto = null,
+                entryCount = 2,
+                singleDisplayName = null,
+                normalizedDestination = null,
+                locationAddress = null,
+            ),
+            mapper.map(entries = entries),
+        )
     }
 }

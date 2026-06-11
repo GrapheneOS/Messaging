@@ -6,6 +6,7 @@ import com.android.messaging.data.conversation.model.attachment.ConversationVCar
 import com.android.messaging.data.conversation.repository.ConversationVCardMetadataRepository
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.datamodel.data.ConversationMessageData
+import com.android.messaging.domain.photoviewer.usecase.ResolveConversationPhotoViewerInitialOccurrenceIndex
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.attachment.mapper.ConversationVCardAttachmentUiModelMapper
@@ -37,6 +38,8 @@ internal abstract class BaseConversationMessagesDelegateTest {
     protected fun createDelegate(): ConversationMessagesDelegateImpl {
         return ConversationMessagesDelegateImpl(
             conversationsRepository = conversationsRepository,
+            resolveInitialPhotoOccurrenceIndex =
+                mockk<ResolveConversationPhotoViewerInitialOccurrenceIndex>(relaxed = true),
             conversationMessageUiModelMapper = messageUiModelMapper,
             conversationVCardAttachmentUiModelMapper = vCardUiModelMapper,
             conversationVCardMetadataRepository = vCardMetadataRepository,
@@ -66,7 +69,10 @@ internal abstract class BaseConversationMessagesDelegateTest {
         metadata: Flow<ConversationVCardAttachmentMetadata>,
     ) {
         every {
-            vCardMetadataRepository.observeAttachmentMetadata(contentUri = contentUri)
+            vCardMetadataRepository.observeAttachmentMetadata(
+                contentUri = contentUri,
+                refreshes = any(),
+            )
         } returns metadata
     }
 

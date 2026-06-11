@@ -1,4 +1,4 @@
-package com.android.messaging.ui.recipientselection
+package com.android.messaging.ui.conversation.recipientpicker
 
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsActions
@@ -14,7 +14,8 @@ import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performSemanticsAction
 import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
-import com.android.messaging.ui.recipientselection.component.RecipientSelectionContent
+import com.android.messaging.ui.conversation.recipientpicker.component.RecipientSelectionContent
+import com.android.messaging.ui.core.AppTheme
 import com.android.messaging.ui.recipientselection.component.row.contactItem
 import com.android.messaging.ui.recipientselection.component.row.recipientRowTestTag
 import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerUiState
@@ -23,7 +24,6 @@ import com.android.messaging.ui.recipientselection.model.selection.RecipientSele
 import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionPrimaryActionUiState
 import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionRowDecorators
 import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionStrings
-import com.android.messaging.ui.core.AppTheme
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.Assert.assertEquals
 import org.junit.Rule

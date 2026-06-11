@@ -58,10 +58,10 @@ internal class ConversationScreenRouteCallbackTest : BaseConversationScreenTest(
                 screenModel.tryStartAddingAttachment()
             }
             verify(exactly = 1) {
-                screenModel.onAudioRecordingStart()
+                screenModel.onAudioRecordingStart(isLocked = false)
             }
             verify(exactly = 1) {
-                screenModel.onLockedAudioRecordingStart()
+                screenModel.onAudioRecordingStart(isLocked = true)
             }
         }
     }
@@ -84,10 +84,10 @@ internal class ConversationScreenRouteCallbackTest : BaseConversationScreenTest(
                 screenModel.tryStartAddingAttachment()
             }
             verify(exactly = 0) {
-                screenModel.onAudioRecordingStart()
+                screenModel.onAudioRecordingStart(isLocked = false)
             }
             verify(exactly = 0) {
-                screenModel.onLockedAudioRecordingStart()
+                screenModel.onAudioRecordingStart(isLocked = true)
             }
         }
     }
@@ -123,7 +123,7 @@ internal class ConversationScreenRouteCallbackTest : BaseConversationScreenTest(
                 permissionLauncher.launch(Manifest.permission.RECORD_AUDIO, null)
             }
             verify(exactly = 0) {
-                screenModel.onAudioRecordingStart()
+                screenModel.onAudioRecordingStart(isLocked = false)
             }
             permissionCallbackSlot.captured.onActivityResult(true)
         }
@@ -137,7 +137,7 @@ internal class ConversationScreenRouteCallbackTest : BaseConversationScreenTest(
                 screenModel.tryStartAddingAttachment()
             }
             verify(exactly = 1) {
-                screenModel.onAudioRecordingStart()
+                screenModel.onAudioRecordingStart(isLocked = false)
             }
         }
     }

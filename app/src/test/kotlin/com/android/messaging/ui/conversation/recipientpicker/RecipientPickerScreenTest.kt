@@ -1,4 +1,4 @@
-package com.android.messaging.ui.recipientselection
+package com.android.messaging.ui.conversation.recipientpicker
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule

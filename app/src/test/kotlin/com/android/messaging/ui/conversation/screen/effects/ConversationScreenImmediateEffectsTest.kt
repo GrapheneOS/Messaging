@@ -1,16 +1,11 @@
 package com.android.messaging.ui.conversation.screen.effects
 
-import android.content.Context
 import android.graphics.Point
 import android.net.Uri
 import android.view.View
-import com.android.messaging.datamodel.data.ConversationMessageData
-import com.android.messaging.datamodel.data.ConversationParticipantsData
 import com.android.messaging.datamodel.data.MessageData
-import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.testutil.TEST_WAIT_TIMEOUT_MILLIS
 import com.android.messaging.ui.UIIntents
-import com.android.messaging.ui.conversation.MessageDetailsDialog
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
 import com.android.messaging.util.ContactUtil
 import com.android.messaging.util.ContentType
@@ -191,37 +186,19 @@ internal class ConversationScreenImmediateEffectsTest : BaseConversationScreenEf
     }
 
     @Test
-    fun showMessageDetails_forwardsMessageAndParticipants() {
-        val message = mockk<ConversationMessageData>()
-        val participants = mockk<ConversationParticipantsData>()
-        val selfParticipant = mockk<ParticipantData>()
-        mockkStatic(MessageDetailsDialog::class)
-        every {
-            MessageDetailsDialog.show(
-                any<Context>(),
-                message,
-                participants,
-                selfParticipant,
-            )
-        } just runs
-        setEffectsContent()
+    fun navigateToMessageDetails_forwardsMessageId() {
+        var navigatedMessageId: String? = null
+        setEffectsContent(
+            onNavigateToMessageDetails = { messageId -> navigatedMessageId = messageId },
+        )
 
         emitEffect(
-            ConversationScreenEffect.ShowMessageDetails(
-                message = message,
-                participants = participants,
-                selfParticipant = selfParticipant,
+            ConversationScreenEffect.NavigateToMessageDetails(
+                messageId = "message-1",
             ),
         )
 
-        verify(timeout = TEST_WAIT_TIMEOUT_MILLIS, exactly = 1) {
-            MessageDetailsDialog.show(
-                any<Context>(),
-                message,
-                participants,
-                selfParticipant,
-            )
-        }
+        assertEquals("message-1", navigatedMessageId)
     }
 
     private companion object {

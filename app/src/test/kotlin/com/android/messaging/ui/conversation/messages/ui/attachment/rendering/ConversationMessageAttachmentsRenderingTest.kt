@@ -61,7 +61,7 @@ internal class ConversationMessageAttachmentsRenderingTest :
 
         composeTestRule.runOnIdle {
             verify(exactly = 1) {
-                onAttachmentClick.invoke(IMAGE_CONTENT_TYPE, IMAGE_CONTENT_URI)
+                onAttachmentClick.invoke(IMAGE_CONTENT_TYPE, IMAGE_CONTENT_URI, "")
             }
             verify(exactly = 0) {
                 onExternalUriClick.invoke(any())
@@ -81,7 +81,7 @@ internal class ConversationMessageAttachmentsRenderingTest :
 
         composeTestRule.runOnIdle {
             verify(exactly = 1) {
-                onAttachmentClick.invoke(VIDEO_CONTENT_TYPE, VIDEO_CONTENT_URI)
+                onAttachmentClick.invoke(VIDEO_CONTENT_TYPE, VIDEO_CONTENT_URI, "")
             }
             verify(exactly = 0) {
                 onExternalUriClick.invoke(any())
@@ -101,7 +101,7 @@ internal class ConversationMessageAttachmentsRenderingTest :
 
         composeTestRule.runOnIdle {
             verify(exactly = 1) {
-                onAttachmentClick.invoke(FILE_CONTENT_TYPE, FILE_CONTENT_URI)
+                onAttachmentClick.invoke(FILE_CONTENT_TYPE, FILE_CONTENT_URI, "")
             }
             verify(exactly = 0) {
                 onExternalUriClick.invoke(any())
@@ -124,7 +124,7 @@ internal class ConversationMessageAttachmentsRenderingTest :
                 onMessageLongClick.invoke()
             }
             verify(exactly = 0) {
-                onAttachmentClick.invoke(any(), any())
+                onAttachmentClick.invoke(any(), any(), any())
             }
             verify(exactly = 0) {
                 onExternalUriClick.invoke(any())

@@ -1,8 +1,7 @@
 package com.android.messaging.ui.conversation.screen.viewmodel
 
 import app.cash.turbine.test
-import com.android.messaging.domain.conversation.usecase.telephony.IsDeviceVoiceCapable
-import com.android.messaging.domain.conversation.usecase.telephony.IsEmergencyPhoneNumber
+import com.android.messaging.domain.conversation.usecase.telephony.CanPlacePhoneCall
 import com.android.messaging.testutil.TEST_CALL_ACTION_PHONE_NUMBER
 import com.android.messaging.ui.conversation.metadata.model.ConversationMetadataUiState
 import com.android.messaging.ui.conversation.screen.ConversationViewModel
@@ -74,14 +73,13 @@ internal class ConversationViewModelCallActionTest : BaseConversationViewModelTe
     fun scaffoldUiState_checksEmergencyPhoneNumberBeforeEnablingCallAction() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val metadataDelegate = createMetadataDelegateMock()
-            val isEmergencyPhoneNumber = mockk<IsEmergencyPhoneNumber>()
+            val canPlacePhoneCall = mockk<CanPlacePhoneCall>()
             every {
-                isEmergencyPhoneNumber.invoke(phoneNumber = TEST_CALL_ACTION_PHONE_NUMBER)
-            } returns false
+                canPlacePhoneCall.invoke(destination = TEST_CALL_ACTION_PHONE_NUMBER)
+            } returns true
             val viewModel = createViewModel(
                 metadataDelegate = metadataDelegate.mock,
-                isDeviceVoiceCapable = IsDeviceVoiceCapable { true },
-                isEmergencyPhoneNumber = isEmergencyPhoneNumber,
+                canPlacePhoneCall = canPlacePhoneCall,
             )
 
             metadataDelegate.stateFlow.value = createOneOnOneMetadataState()
@@ -94,7 +92,7 @@ internal class ConversationViewModelCallActionTest : BaseConversationViewModelTe
             }
 
             verify(atLeast = 1) {
-                isEmergencyPhoneNumber.invoke(phoneNumber = TEST_CALL_ACTION_PHONE_NUMBER)
+                canPlacePhoneCall.invoke(destination = TEST_CALL_ACTION_PHONE_NUMBER)
             }
         }
     }
@@ -147,13 +145,13 @@ internal class ConversationViewModelCallActionTest : BaseConversationViewModelTe
         runTest(context = mainDispatcherRule.testDispatcher) {
             val metadataDelegate = createMetadataDelegateMock()
             metadataDelegate.stateFlow.value = createOneOnOneMetadataState()
-            val isEmergencyPhoneNumber = mockk<IsEmergencyPhoneNumber>()
+            val canPlacePhoneCall = mockk<CanPlacePhoneCall>()
             every {
-                isEmergencyPhoneNumber.invoke(phoneNumber = TEST_CALL_ACTION_PHONE_NUMBER)
-            } returns false
+                canPlacePhoneCall.invoke(destination = TEST_CALL_ACTION_PHONE_NUMBER)
+            } returns true
             val viewModel = createViewModel(
                 metadataDelegate = metadataDelegate.mock,
-                isEmergencyPhoneNumber = isEmergencyPhoneNumber,
+                canPlacePhoneCall = canPlacePhoneCall,
             )
 
             viewModel.effects.test {
@@ -170,7 +168,7 @@ internal class ConversationViewModelCallActionTest : BaseConversationViewModelTe
             }
 
             verify(atLeast = 1) {
-                isEmergencyPhoneNumber.invoke(phoneNumber = TEST_CALL_ACTION_PHONE_NUMBER)
+                canPlacePhoneCall.invoke(destination = TEST_CALL_ACTION_PHONE_NUMBER)
             }
         }
     }
@@ -183,11 +181,8 @@ internal class ConversationViewModelCallActionTest : BaseConversationViewModelTe
         metadataDelegate.stateFlow.value = metadataState
         return createViewModel(
             metadataDelegate = metadataDelegate.mock,
-            isDeviceVoiceCapable = IsDeviceVoiceCapable {
-                isDeviceVoiceCapable
-            },
-            isEmergencyPhoneNumber = IsEmergencyPhoneNumber { phoneNumber ->
-                phoneNumber == EMERGENCY_PHONE_NUMBER
+            canPlacePhoneCall = CanPlacePhoneCall { destination ->
+                isDeviceVoiceCapable && destination != EMERGENCY_PHONE_NUMBER
             },
         )
     }

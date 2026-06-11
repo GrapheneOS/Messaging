@@ -2,6 +2,7 @@
 
 package com.android.messaging.ui.conversation.recipientpicker.component
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -114,7 +115,9 @@ private fun RecipientSelectionContentLayout(
             queryArea()
 
             Spacer(modifier = Modifier.height(12.dp))
-            contactsArea()
+            Box(modifier = Modifier.weight(weight = 1f)) {
+                contactsArea()
+            }
         }
     }
 }

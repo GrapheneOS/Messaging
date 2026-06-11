@@ -65,6 +65,7 @@ internal abstract class BaseConversationScreenTest {
                     cancelIncomingNotification = cancelIncomingNotification,
                     onAddPeopleClick = onAddPeopleClick,
                     onConversationDetailsClick = {},
+                    onNavigateToMessageDetails = {},
                     onNavigateBack = {},
                     pendingDraft = pendingDraft,
                     pendingSelfParticipantId = pendingSelfParticipantId,
@@ -116,12 +117,15 @@ internal abstract class BaseConversationScreenTest {
                 selfParticipantId = "self-1",
                 avatar = ConversationMetadataUiState.Avatar.Single(
                     photoUri = null,
+                    normalizedDestination = null,
+                    displayName = null,
                 ),
                 participantCount = 2,
                 otherParticipantDisplayDestination = null,
                 otherParticipantPhoneNumber = otherParticipantPhoneNumber,
                 otherParticipantContactLookupKey = otherParticipantContactLookupKey,
                 isArchived = isArchived,
+                isBlocked = false,
                 composerAvailability = ConversationComposerAvailability.Editable,
             ),
             messages = ConversationMessagesUiState.Present(

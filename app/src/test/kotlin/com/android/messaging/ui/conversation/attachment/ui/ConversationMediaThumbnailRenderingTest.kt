@@ -18,6 +18,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.android.common.test.helpers.targetContext
+import com.android.messaging.ui.common.components.attachment.MediaThumbnail
 import com.android.messaging.ui.core.AppTheme
 import java.io.ByteArrayInputStream
 import kotlin.math.abs
@@ -87,7 +88,7 @@ internal class ConversationMediaThumbnailRenderingTest {
 
         composeTestRule.setContent {
             AppTheme {
-                ConversationMediaThumbnail(
+                MediaThumbnail(
                     modifier = Modifier
                         .size(size = THUMBNAIL_SIZE_DP.dp)
                         .testTag(tag = THUMBNAIL_TAG),

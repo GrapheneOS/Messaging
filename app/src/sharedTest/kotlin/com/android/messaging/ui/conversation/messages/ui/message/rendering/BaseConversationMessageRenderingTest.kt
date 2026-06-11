@@ -32,7 +32,7 @@ internal abstract class BaseConversationMessageRenderingTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    protected val onAttachmentClick = mockk<(String, String) -> Unit>(relaxed = true)
+    protected val onAttachmentClick = mockk<(String, String, String) -> Unit>(relaxed = true)
     protected val onAvatarClick = mockk<() -> Unit>(relaxed = true)
     protected val onDownloadClick = mockk<() -> Unit>(relaxed = true)
     protected val onExternalUriClick = mockk<(String) -> Unit>(relaxed = true)

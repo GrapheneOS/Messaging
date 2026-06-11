@@ -17,6 +17,10 @@ internal fun NewChatSimSelectorRow(
     onSimSelected: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    if (!uiState.isAvailable) {
+        return
+    }
+
     val simSelectorUiState = rememberSimSelectorUiState(
         subscriptions = uiState.subscriptions,
         selectedSelfParticipantId = uiState.selectedSubscription?.selfParticipantId,

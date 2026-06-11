@@ -1,4 +1,4 @@
-package com.android.messaging.ui.recipientselection.component
+package com.android.messaging.ui.conversation.recipientpicker.component
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -10,9 +10,9 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.requestFocus
 import com.android.messaging.ui.conversation.RECIPIENT_SELECTION_QUERY_FIELD_TEST_TAG
-import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionQueryCardUiState
-import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionQueryChipsUiState
-import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionQueryTextUiState
+import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionQueryCardUiState
+import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionQueryChipsUiState
+import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionQueryTextUiState
 import com.android.messaging.ui.core.AppTheme
 import com.android.messaging.ui.recipientselection.model.picker.SelectedRecipient
 import kotlinx.collections.immutable.persistentListOf

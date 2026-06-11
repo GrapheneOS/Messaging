@@ -11,6 +11,7 @@ import io.mockk.mockkStatic
 import io.mockk.runs
 import io.mockk.unmockkAll
 import io.mockk.verify
+import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -85,24 +86,22 @@ internal class ConversationsRepositoryActionsTest : BaseConversationsRepositoryT
 
     @Test
     fun archiveActions_skipBlankIdsAndDelegateNonBlankIds() {
-        val repository = createRepository()
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val repository = createRepository()
 
-        repository.archiveConversation(conversationId = "")
-        repository.archiveConversation(conversationId = "conversation-archive")
-        repository.unarchiveConversation(conversationId = " ")
-        repository.unarchiveConversation(conversationId = "conversation-unarchive")
+            repository.archiveConversation(conversationId = "")
+            repository.archiveConversation(conversationId = "conversation-archive")
+            repository.unarchiveConversation(conversationId = " ")
+            repository.unarchiveConversation(conversationId = "conversation-unarchive")
 
-        verify(exactly = 0) {
-            UpdateConversationArchiveStatusAction.archiveConversation("")
-        }
-        verify(exactly = 1) {
-            UpdateConversationArchiveStatusAction.archiveConversation("conversation-archive")
-        }
-        verify(exactly = 0) {
-            UpdateConversationArchiveStatusAction.unarchiveConversation(" ")
-        }
-        verify(exactly = 1) {
-            UpdateConversationArchiveStatusAction.unarchiveConversation("conversation-unarchive")
+            io.mockk.coVerify(exactly = 0) { conversationArchiveStore.archiveConversation("") }
+            io.mockk.coVerify(exactly = 1) {
+                conversationArchiveStore.archiveConversation("conversation-archive")
+            }
+            io.mockk.coVerify(exactly = 0) { conversationArchiveStore.unarchiveConversation(" ") }
+            io.mockk.coVerify(exactly = 1) {
+                conversationArchiveStore.unarchiveConversation("conversation-unarchive")
+            }
         }
     }
 

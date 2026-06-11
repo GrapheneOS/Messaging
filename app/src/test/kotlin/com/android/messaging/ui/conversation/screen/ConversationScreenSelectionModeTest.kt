@@ -167,9 +167,8 @@ internal class ConversationScreenSelectionModeTest : BaseConversationScreenTest(
 
         composeTestRule
             .onNodeWithText(
-                targetContext.resources.getQuantityString(
-                    R.plurals.conversation_message_selection_title,
-                    2,
+                targetContext.getString(
+                    R.string.conversation_message_selection_title,
                     2,
                 ),
             )

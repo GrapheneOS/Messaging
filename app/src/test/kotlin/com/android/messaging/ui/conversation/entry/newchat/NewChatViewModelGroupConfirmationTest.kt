@@ -3,7 +3,7 @@ package com.android.messaging.ui.conversation.entry.newchat
 import app.cash.turbine.test
 import com.android.messaging.R
 import com.android.messaging.ui.conversation.entry.model.NewChatEffect
-import com.android.messaging.ui.recipientselection.model.picker.ConversationResolutionState
+import com.android.messaging.ui.conversation.recipientpicker.model.picker.ConversationResolutionState
 import io.mockk.verify
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi

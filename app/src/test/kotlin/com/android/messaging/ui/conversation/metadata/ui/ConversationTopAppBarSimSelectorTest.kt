@@ -147,6 +147,7 @@ class ConversationTopAppBarSimSelectorTest {
                 otherParticipantPhoneNumber = null,
                 otherParticipantContactLookupKey = null,
                 isArchived = false,
+                isBlocked = false,
                 composerAvailability = ConversationComposerAvailability.Editable,
             ),
         )
@@ -189,12 +190,15 @@ class ConversationTopAppBarSimSelectorTest {
             selfParticipantId = "self-1",
             avatar = ConversationMetadataUiState.Avatar.Single(
                 photoUri = null,
+                normalizedDestination = TEST_CALL_ACTION_PHONE_NUMBER,
+                displayName = "Alice",
             ),
             participantCount = 1,
             otherParticipantDisplayDestination = "(555) 123-4567",
             otherParticipantPhoneNumber = TEST_CALL_ACTION_PHONE_NUMBER,
             otherParticipantContactLookupKey = null,
             isArchived = false,
+            isBlocked = false,
             composerAvailability = ConversationComposerAvailability.Editable,
         )
     }

@@ -26,10 +26,10 @@ internal class ConversationVisualAttachmentsInteractionTest :
 
         composeTestRule.runOnIdle {
             verify(exactly = 1) {
-                onAttachmentClick.invoke(IMAGE_CONTENT_TYPE, IMAGE_CONTENT_URI)
+                onAttachmentClick.invoke(IMAGE_CONTENT_TYPE, IMAGE_CONTENT_URI, "")
             }
             verify(exactly = 1) {
-                onAttachmentClick.invoke(IMAGE_CONTENT_TYPE, SECOND_IMAGE_CONTENT_URI)
+                onAttachmentClick.invoke(IMAGE_CONTENT_TYPE, SECOND_IMAGE_CONTENT_URI, "")
             }
         }
     }
@@ -59,13 +59,13 @@ internal class ConversationVisualAttachmentsInteractionTest :
 
         composeTestRule.runOnIdle {
             verify(exactly = 1) {
-                onAttachmentClick.invoke(IMAGE_CONTENT_TYPE, IMAGE_CONTENT_URI)
+                onAttachmentClick.invoke(IMAGE_CONTENT_TYPE, IMAGE_CONTENT_URI, "")
             }
             verify(exactly = 1) {
-                onAttachmentClick.invoke(IMAGE_CONTENT_TYPE, SECOND_IMAGE_CONTENT_URI)
+                onAttachmentClick.invoke(IMAGE_CONTENT_TYPE, SECOND_IMAGE_CONTENT_URI, "")
             }
             verify(exactly = 1) {
-                onAttachmentClick.invoke(IMAGE_CONTENT_TYPE, THIRD_IMAGE_CONTENT_URI)
+                onAttachmentClick.invoke(IMAGE_CONTENT_TYPE, THIRD_IMAGE_CONTENT_URI, "")
             }
             verify(exactly = 0) {
                 onExternalUriClick.invoke(any())
@@ -86,7 +86,7 @@ internal class ConversationVisualAttachmentsInteractionTest :
                 onExternalUriClick.invoke(YOUTUBE_SOURCE_URI)
             }
             verify(exactly = 0) {
-                onAttachmentClick.invoke(any(), any())
+                onAttachmentClick.invoke(any(), any(), any())
             }
         }
     }
@@ -103,7 +103,7 @@ internal class ConversationVisualAttachmentsInteractionTest :
 
         composeTestRule.runOnIdle {
             verify(exactly = 1) {
-                onAttachmentClick.invoke(UNSUPPORTED_CONTENT_TYPE, UNSUPPORTED_CONTENT_URI)
+                onAttachmentClick.invoke(UNSUPPORTED_CONTENT_TYPE, UNSUPPORTED_CONTENT_URI, "")
             }
         }
     }
@@ -123,7 +123,7 @@ internal class ConversationVisualAttachmentsInteractionTest :
 
         composeTestRule.runOnIdle {
             verify(exactly = 1) {
-                onAttachmentClick.invoke(IMAGE_CONTENT_TYPE, IMAGE_CONTENT_URI)
+                onAttachmentClick.invoke(IMAGE_CONTENT_TYPE, IMAGE_CONTENT_URI, "")
             }
         }
     }
@@ -141,7 +141,7 @@ internal class ConversationVisualAttachmentsInteractionTest :
 
         composeTestRule.runOnIdle {
             verify(exactly = 1) {
-                onAttachmentClick.invoke(VIDEO_CONTENT_TYPE, VIDEO_CONTENT_URI)
+                onAttachmentClick.invoke(VIDEO_CONTENT_TYPE, VIDEO_CONTENT_URI, "")
             }
         }
     }
@@ -157,7 +157,7 @@ internal class ConversationVisualAttachmentsInteractionTest :
                 onMessageLongClick.invoke()
             }
             verify(exactly = 0) {
-                onAttachmentClick.invoke(any(), any())
+                onAttachmentClick.invoke(any(), any(), any())
             }
             verify(exactly = 0) {
                 onExternalUriClick.invoke(any())

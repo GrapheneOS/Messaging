@@ -19,12 +19,12 @@ import com.android.messaging.ui.conversation.NEW_CHAT_CREATE_GROUP_BUTTON_TEST_T
 import com.android.messaging.ui.conversation.NEW_CHAT_CREATE_GROUP_NEXT_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.entry.model.NewChatUiState
 import com.android.messaging.ui.conversation.newChatContactRowTestTag
-import com.android.messaging.ui.conversation.recipientpicker.component.row.CONTACT_ID
-import com.android.messaging.ui.conversation.recipientpicker.component.row.MOBILE_NORMALIZED_DESTINATION
-import com.android.messaging.ui.conversation.recipientpicker.component.row.contactItem
-import com.android.messaging.ui.conversation.recipientpicker.component.row.selectedRecipient
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerUiState
 import com.android.messaging.ui.core.AppTheme
+import com.android.messaging.ui.recipientselection.component.row.CONTACT_ID
+import com.android.messaging.ui.recipientselection.component.row.MOBILE_NORMALIZED_DESTINATION
+import com.android.messaging.ui.recipientselection.component.row.contactItem
+import com.android.messaging.ui.recipientselection.component.row.selectedRecipient
+import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerUiState
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

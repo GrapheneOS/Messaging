@@ -24,6 +24,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.ui.core.MessagingPreviewColumn
@@ -66,9 +67,9 @@ internal fun PrimaryActionButton(
             .primaryActionButtonAccessibility(
                 text = text,
                 isInteractionEnabled = isInteractionEnabled,
+                testTag = testTag,
                 onClick = onClick,
-            )
-            .optionalTestTag(testTag),
+            ),
         onClick = {
             if (isInteractionEnabled) {
                 onClick()
@@ -98,11 +99,13 @@ internal fun PrimaryActionButton(
 private fun Modifier.primaryActionButtonAccessibility(
     text: String,
     isInteractionEnabled: Boolean,
+    testTag: String?,
     onClick: () -> Unit,
 ): Modifier {
     return clearAndSetSemantics {
         contentDescription = text
         role = Role.Button
+        testTag?.let { tag -> this.testTag = tag }
 
         if (isInteractionEnabled) {
             onClick(label = text) {

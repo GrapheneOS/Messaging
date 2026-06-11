@@ -6,6 +6,7 @@ import androidx.compose.ui.test.onNodeWithText
 import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentType
+import com.android.messaging.data.vcard.model.VCardAvatarPhoto
 import com.android.messaging.ui.core.AppTheme
 import org.junit.Rule
 import org.junit.Test
@@ -22,7 +23,7 @@ internal class ConversationVCardAttachmentCardContentTest {
     fun contactTitle_rendersFallbackInitialAndSubtitle() {
         setContent(
             type = ConversationVCardAttachmentType.CONTACT,
-            avatarUri = null,
+            avatarPhoto = null,
             titleText = CONTACT_TITLE,
             titleTextResId = null,
             subtitleText = CONTACT_SUBTITLE,
@@ -46,7 +47,7 @@ internal class ConversationVCardAttachmentCardContentTest {
 
         setContent(
             type = ConversationVCardAttachmentType.CONTACT,
-            avatarUri = null,
+            avatarPhoto = null,
             titleText = null,
             titleTextResId = R.string.notification_vcard,
             subtitleText = null,
@@ -62,10 +63,10 @@ internal class ConversationVCardAttachmentCardContentTest {
     }
 
     @Test
-    fun remoteAvatarUri_keepsTextFallbackInitial() {
+    fun missingAvatar_keepsTextFallbackInitial() {
         setContent(
             type = ConversationVCardAttachmentType.CONTACT,
-            avatarUri = REMOTE_AVATAR_URI,
+            avatarPhoto = null,
             titleText = REMOTE_CONTACT_TITLE,
             titleTextResId = null,
             subtitleText = null,
@@ -87,7 +88,7 @@ internal class ConversationVCardAttachmentCardContentTest {
     fun locationContent_usesLocationTitleAndSubtitleResources() {
         setContent(
             type = ConversationVCardAttachmentType.LOCATION,
-            avatarUri = null,
+            avatarPhoto = null,
             titleText = null,
             titleTextResId = R.string.notification_location,
             subtitleText = null,
@@ -104,7 +105,7 @@ internal class ConversationVCardAttachmentCardContentTest {
 
     private fun setContent(
         type: ConversationVCardAttachmentType,
-        avatarUri: String?,
+        avatarPhoto: VCardAvatarPhoto?,
         titleText: String?,
         titleTextResId: Int?,
         subtitleText: String?,
@@ -114,9 +115,10 @@ internal class ConversationVCardAttachmentCardContentTest {
             AppTheme {
                 ConversationVCardAttachmentCardContent(
                     type = type,
-                    avatarUri = avatarUri,
+                    avatarPhoto = avatarPhoto,
                     titleText = titleText,
                     titleTextResId = titleTextResId,
+                    normalizedDestination = null,
                     subtitleText = subtitleText,
                     subtitleTextResId = subtitleTextResId,
                 )
@@ -128,7 +130,6 @@ internal class ConversationVCardAttachmentCardContentTest {
         private const val CONTACT_INITIAL = "S"
         private const val CONTACT_SUBTITLE = "sam@example.com"
         private const val CONTACT_TITLE = "Sam Rivera"
-        private const val REMOTE_AVATAR_URI = "https://example.com/avatar.jpg"
         private const val REMOTE_CONTACT_INITIAL = "R"
         private const val REMOTE_CONTACT_TITLE = "Remote Person"
     }

@@ -1,8 +1,8 @@
-package com.android.messaging.ui.recipientselection.delegate.conversationresolutiondelegate
+package com.android.messaging.ui.conversation.recipientpicker.delegate.conversationresolutiondelegate
 
 import app.cash.turbine.test
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveConversationIdResult
-import com.android.messaging.ui.recipientselection.model.picker.ConversationResolutionState
+import com.android.messaging.ui.conversation.recipientpicker.model.picker.ConversationResolutionState
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceTimeBy

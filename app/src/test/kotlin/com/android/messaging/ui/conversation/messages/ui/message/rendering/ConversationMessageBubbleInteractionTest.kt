@@ -41,7 +41,7 @@ internal class ConversationMessageBubbleInteractionTest :
                 onResendClick.invoke()
             }
             verify(exactly = 0) {
-                onAttachmentClick.invoke(any(), any())
+                onAttachmentClick.invoke(any(), any(), any())
             }
         }
     }
@@ -116,7 +116,7 @@ internal class ConversationMessageBubbleInteractionTest :
 
         composeTestRule.runOnIdle {
             verify(exactly = 1) {
-                onAttachmentClick.invoke(IMAGE_CONTENT_TYPE, IMAGE_CONTENT_URI)
+                onAttachmentClick.invoke(IMAGE_CONTENT_TYPE, IMAGE_CONTENT_URI, "")
             }
             verify(exactly = 0) {
                 onMessageClick.invoke()
@@ -154,7 +154,7 @@ internal class ConversationMessageBubbleInteractionTest :
                 onMessageClick.invoke()
             }
             verify(exactly = 0) {
-                onAttachmentClick.invoke(any(), any())
+                onAttachmentClick.invoke(any(), any(), any())
             }
         }
     }

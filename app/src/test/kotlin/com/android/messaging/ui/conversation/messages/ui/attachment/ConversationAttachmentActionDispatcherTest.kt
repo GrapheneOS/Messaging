@@ -24,7 +24,7 @@ internal class ConversationAttachmentActionDispatcherTest {
                 contentType = "image/jpeg",
                 contentUri = CONTENT_URI,
             ),
-            onAttachmentClick = { contentType, contentUri ->
+            onAttachmentClick = { contentType, contentUri, _ ->
                 openedContentType = contentType
                 openedContentUri = contentUri
             },
@@ -43,7 +43,7 @@ internal class ConversationAttachmentActionDispatcherTest {
 
         dispatchConversationAttachmentOpenAction(
             action = ConversationAttachmentOpenAction.OpenExternal(uri = EXTERNAL_URI),
-            onAttachmentClick = { _, contentUri -> openedContentUri = contentUri },
+            onAttachmentClick = { _, contentUri, _ -> openedContentUri = contentUri },
             onExternalUriClick = { uri -> externalUri = uri },
         )
 

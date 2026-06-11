@@ -6,6 +6,7 @@ import com.android.messaging.Factory
 import com.android.messaging.R
 import com.android.messaging.data.appsettings.model.AppBooleanPref
 import com.android.messaging.data.appsettings.repository.AppSettingsRepositoryImpl
+import com.android.messaging.data.debug.DebugFeaturesProvider
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.util.BugleGservices
 import com.android.messaging.util.BuglePrefs
@@ -38,6 +39,7 @@ internal class AppSettingsRepositoryImplTest {
     private lateinit var appPrefs: BuglePrefs
     private lateinit var bugleGservices: BugleGservices
     private lateinit var context: Context
+    private lateinit var debugFeaturesProvider: DebugFeaturesProvider
     private lateinit var phoneUtils: PhoneUtils
     private lateinit var resources: Resources
 
@@ -47,6 +49,7 @@ internal class AppSettingsRepositoryImplTest {
         appPrefs = mockk()
         bugleGservices = mockk()
         context = mockk()
+        debugFeaturesProvider = mockk()
         phoneUtils = mockk()
         resources = mockk()
 
@@ -76,7 +79,7 @@ internal class AppSettingsRepositoryImplTest {
         runTest {
             every { phoneUtils.isDefaultSmsApp } returns true
             every { phoneUtils.defaultSmsAppLabel } returns DEFAULT_SMS_APP_LABEL
-            every { bugleGservices.getBoolean(any(), any()) } returns true
+            every { debugFeaturesProvider.isEnabled() } returns true
             every { appPrefs.getBoolean(SEND_SOUND_PREF_KEY, SEND_SOUND_DEFAULT) } returns false
             every { appPrefs.getBoolean(DUMP_SMS_PREF_KEY, DUMP_SMS_DEFAULT) } returns true
             every { appPrefs.getBoolean(DUMP_MMS_PREF_KEY, DUMP_MMS_DEFAULT) } returns false
@@ -141,6 +144,7 @@ internal class AppSettingsRepositoryImplTest {
         return AppSettingsRepositoryImpl(
             context = context,
             ioDispatcher = ioDispatcher,
+            debugFeaturesProvider = debugFeaturesProvider,
         )
     }
 

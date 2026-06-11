@@ -123,6 +123,8 @@ class ConversationTopAppBarTest {
             metadata = presentMetadata.copy(
                 avatar = ConversationMetadataUiState.Avatar.Single(
                     photoUri = "content://conversation/avatar",
+                    normalizedDestination = null,
+                    displayName = "Alex",
                 ),
             ),
         )
@@ -359,12 +361,17 @@ class ConversationTopAppBarTest {
         private val presentMetadata = ConversationMetadataUiState.Present(
             title = "Carol",
             selfParticipantId = "self-participant-id",
-            avatar = ConversationMetadataUiState.Avatar.Single(photoUri = null),
+            avatar = ConversationMetadataUiState.Avatar.Single(
+                photoUri = null,
+                normalizedDestination = "+37254400024",
+                displayName = "Alex",
+            ),
             participantCount = 1,
             otherParticipantDisplayDestination = "+372 5440 0024",
             otherParticipantPhoneNumber = "+37254400024",
             otherParticipantContactLookupKey = null,
             isArchived = false,
+            isBlocked = false,
             composerAvailability = ConversationComposerAvailability.Editable,
         )
     }

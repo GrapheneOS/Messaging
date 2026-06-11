@@ -1,4 +1,4 @@
-package com.android.messaging.ui.recipientselection.component
+package com.android.messaging.ui.conversation.recipientpicker.component
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.ui.focus.FocusRequester
@@ -10,7 +10,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.requestFocus
 import com.android.messaging.ui.conversation.RECIPIENT_SELECTION_QUERY_FIELD_TEST_TAG
-import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionQueryFieldUiState
+import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionQueryFieldUiState
 import com.android.messaging.ui.core.AppTheme
 import com.android.messaging.ui.recipientselection.model.picker.SelectedRecipient
 import kotlinx.collections.immutable.toPersistentList
