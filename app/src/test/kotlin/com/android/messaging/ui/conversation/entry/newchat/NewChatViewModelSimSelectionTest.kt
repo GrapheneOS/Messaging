@@ -170,6 +170,7 @@ internal class NewChatViewModelSimSelectionTest : BaseNewChatViewModelTest() {
             }
         }
     }
+
     @Test
     fun simSelection_withStalePersistedSelection_fallsBackToDefaultSmsSubscription() {
         runTest(context = mainDispatcherRule.testDispatcher) {

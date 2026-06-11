@@ -1,9 +1,11 @@
 package com.android.messaging.data.subscription.repository
 
 import android.content.ContentResolver
+import android.content.Context
 import android.database.ContentObserver
 import android.database.MatrixCursor
 import android.net.Uri
+import android.telephony.SubscriptionManager
 import app.cash.turbine.test
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
 import com.android.messaging.data.subscription.model.Subscription
@@ -555,7 +557,9 @@ class SubscriptionsRepositoryImplTest {
 
     private fun createRepository(): SubscriptionsRepositoryImpl {
         return SubscriptionsRepositoryImpl(
+            context = mockk<Context>(),
             contentResolver = contentResolver,
+            subscriptionManager = mockk<SubscriptionManager>(),
             debugSimEmulationSource = emulationSource,
             defaultDispatcher = mainDispatcherRule.testDispatcher,
             messagingDbDispatcher = mainDispatcherRule.testDispatcher,

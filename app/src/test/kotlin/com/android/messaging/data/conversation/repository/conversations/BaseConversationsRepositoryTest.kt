@@ -5,6 +5,7 @@ import android.database.ContentObserver
 import android.database.Cursor
 import android.net.Uri
 import com.android.messaging.data.conversation.repository.ConversationsRepositoryImpl
+import com.android.messaging.data.conversation.store.ConversationSelfIdStore
 import com.android.messaging.testutil.MainDispatcherRule
 import io.mockk.every
 import io.mockk.just
@@ -30,6 +31,7 @@ internal abstract class BaseConversationsRepositoryTest {
     protected fun createRepository(): ConversationsRepositoryImpl {
         return ConversationsRepositoryImpl(
             contentResolver = contentResolver,
+            conversationSelfIdStore = mockk<ConversationSelfIdStore>(relaxed = true),
             defaultDispatcher = mainDispatcherRule.testDispatcher,
             messagingDbDispatcher = mainDispatcherRule.testDispatcher,
         )
