@@ -6,9 +6,12 @@ import androidx.core.content.IntentCompat
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.data.shareintent.repository.SharedAttachmentRepository
+import com.android.messaging.di.core.IoDispatcher
 import com.android.messaging.util.ContentType
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.withContext
 
 internal interface BuildSharedConversationDraft {
     suspend operator fun invoke(intent: Intent): ConversationDraft?
@@ -17,15 +20,19 @@ internal interface BuildSharedConversationDraft {
 internal class BuildSharedConversationDraftImpl @Inject constructor(
     private val resolveSharedContentType: ResolveSharedContentType,
     private val sharedAttachmentRepository: SharedAttachmentRepository,
+    @param:IoDispatcher
+    private val ioDispatcher: CoroutineDispatcher,
 ) : BuildSharedConversationDraft {
 
     override suspend fun invoke(intent: Intent): ConversationDraft? {
         val subject = intent.getStringExtra(Intent.EXTRA_SUBJECT).orEmpty()
 
-        return when (intent.action) {
-            Intent.ACTION_SEND -> buildFromSend(intent, subject)
-            Intent.ACTION_SEND_MULTIPLE -> buildFromSendMultiple(intent, subject)
-            else -> null
+        return withContext(ioDispatcher) {
+            when (intent.action) {
+                Intent.ACTION_SEND -> buildFromSend(intent, subject)
+                Intent.ACTION_SEND_MULTIPLE -> buildFromSendMultiple(intent, subject)
+                else -> null
+            }
         }
     }
 
