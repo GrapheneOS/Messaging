@@ -23,9 +23,17 @@ internal const val CONVERSATION_DELETE_CONVERSATION_BUTTON_TEST_TAG =
     "conversation_delete_conversation_button"
 internal const val CONVERSATION_LOADING_INDICATOR_TEST_TAG = "conversation_loading_indicator"
 internal const val CONVERSATION_MESSAGES_LIST_TEST_TAG = "conversation_messages_list"
+internal const val CONVERSATION_MEDIA_CAPTURE_SHUTTER_BUTTON_TEST_TAG =
+    "conversation_media_capture_shutter_button"
 internal const val CONVERSATION_MEDIA_PICKER_OVERLAY_TEST_TAG = "conversation_media_picker_overlay"
 internal const val CONVERSATION_MMS_INDICATOR_TEST_TAG = "conversation_mms_indicator"
 internal const val CONVERSATION_SEGMENT_COUNTER_TEST_TAG = "conversation_segment_counter"
+internal const val CONVERSATION_SELECTION_OVERFLOW_BUTTON_TEST_TAG =
+    "conversation_selection_overflow_button"
+internal const val CONVERSATION_DELETE_MESSAGES_CONFIRM_BUTTON_TEST_TAG =
+    "conversation_delete_messages_confirm_button"
+internal const val CONVERSATION_DELETE_MESSAGES_DISMISS_BUTTON_TEST_TAG =
+    "conversation_delete_messages_dismiss_button"
 internal const val CONVERSATION_INLINE_AUDIO_ATTACHMENT_PLAY_BUTTON_TEST_TAG =
     "conversation_inline_audio_attachment_play_button"
 internal const val CONVERSATION_INLINE_AUDIO_ATTACHMENT_PROGRESS_TEST_TAG =
@@ -36,11 +44,14 @@ internal const val CONVERSATION_AUDIO_RECORDING_CANCEL_BUTTON_TEST_TAG =
 internal const val CONVERSATION_AUDIO_RECORDING_LOCK_AFFORDANCE_TEST_TAG =
     "conversation_audio_recording_lock_affordance"
 internal const val ADD_PARTICIPANTS_CONFIRM_BUTTON_TEST_TAG = "add_participants_confirm_button"
+internal const val NEW_CHAT_CREATE_GROUP_BUTTON_TEST_TAG = "new_chat_create_group_button"
 internal const val NEW_CHAT_CREATE_GROUP_NEXT_BUTTON_TEST_TAG = "new_chat_create_group_next_button"
 internal const val NEW_CHAT_CONTACT_RESOLVING_INDICATOR_TEST_TAG =
     "new_chat_contact_resolving_indicator"
+internal const val NEW_CHAT_NAVIGATE_BACK_BUTTON_TEST_TAG = "new_chat_navigate_back_button"
 internal const val NEW_CHAT_SIM_SELECTOR_CHIP_TEST_TAG = "new_chat_sim_selector_chip"
 internal const val NEW_CHAT_SIM_SELECTOR_DROPDOWN_TEST_TAG = "new_chat_sim_selector_dropdown"
+internal const val NEW_CHAT_TOP_APP_BAR_TITLE_TEST_TAG = "new_chat_top_app_bar_title"
 internal const val RECIPIENT_SELECTION_QUERY_FIELD_TEST_TAG = "recipient_selection_query_field"
 internal const val CONVERSATION_SEND_BUTTON_SHAPE_CIRCLE = "circle"
 internal const val CONVERSATION_SEND_BUTTON_TEST_TAG = "conversation_send_button"
@@ -72,6 +83,22 @@ internal fun conversationMessageItemTestTag(messageId: String): String {
     return "conversation_message_item_$messageId"
 }
 
+internal fun conversationMessageBubbleTestTag(messageId: String): String {
+    return "conversation_message_bubble_$messageId"
+}
+
+internal fun conversationMessageSelectionRowTestTag(messageId: String): String {
+    return "conversation_message_selection_row_$messageId"
+}
+
+internal fun conversationMessageSelectionActionButtonTestTag(action: String): String {
+    return "conversation_message_selection_action_${action.lowercase()}"
+}
+
+internal fun conversationSettingsParticipantRowTestTag(participantId: String): String {
+    return "conversation_settings_participant_row_$participantId"
+}
+
 internal fun conversationAttachmentPreviewItemTestTag(attachmentKey: String): String {
     return "conversation_attachment_preview_item_$attachmentKey"
 }
@@ -80,6 +107,10 @@ internal fun conversationAttachmentPreviewRemoveButtonTestTag(
     attachmentKey: String,
 ): String {
     return "conversation_attachment_preview_remove_button_$attachmentKey"
+}
+
+internal fun conversationMediaReviewPreviewTestTag(contentUri: String): String {
+    return "conversation_media_review_preview_$contentUri"
 }
 
 internal fun newChatContactRowTestTag(contactId: String): String {

@@ -15,6 +15,10 @@ internal const val FINISH_RESULT_CODE = 1
 internal const val MOTHER_NAME = "Mother"
 internal const val FATHER_NAME = "Father"
 
+internal const val MOTHER_PARTICIPANT_ID = "mother"
+internal const val FATHER_PARTICIPANT_ID = "father"
+internal const val TEST_PARTICIPANT_ID = "test_participant"
+
 internal const val ONE_TO_ONE_TITLE = MOTHER_NAME
 internal const val GROUP_TITLE = "Family"
 
@@ -63,12 +67,12 @@ internal fun groupState(): ConversationSettingsUiState {
         conversationTitle = GROUP_TITLE,
         participants = persistentListOf(
             participant(
-                id = "mother",
+                id = MOTHER_PARTICIPANT_ID,
                 displayName = MOTHER_NAME,
                 displayDestination = MOTHER_DESTINATION,
             ),
             participant(
-                id = "father",
+                id = FATHER_PARTICIPANT_ID,
                 displayName = FATHER_NAME,
                 displayDestination = FATHER_DESTINATION,
             ),
@@ -80,7 +84,7 @@ internal fun groupState(): ConversationSettingsUiState {
 }
 
 internal fun participant(
-    id: String = "test_participant",
+    id: String = TEST_PARTICIPANT_ID,
     displayName: String = MOTHER_NAME,
     displayDestination: String = TEST_DESTINATION,
     isBlocked: Boolean = false,

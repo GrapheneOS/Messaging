@@ -53,6 +53,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -64,6 +65,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
 import com.android.messaging.ui.conversation.ConversationActivity
+import com.android.messaging.ui.conversation.conversationSettingsParticipantRowTestTag
 import com.android.messaging.ui.conversationsettings.common.ConversationHeader
 import com.android.messaging.ui.conversationsettings.common.ConversationSettingsItem
 import com.android.messaging.ui.conversationsettings.common.ConversationSettingsTopAppBar
@@ -611,6 +613,12 @@ private fun ParticipantsCard(
                         onAction = {
                             onAction(ParticipantAction.ParticipantActionPressed(destination))
                         }.takeIf { hasDestination && isGroup },
+                        modifier = Modifier
+                            .testTag(
+                                tag = conversationSettingsParticipantRowTestTag(
+                                    participant.id,
+                                ),
+                            ),
                     )
                 }
             }
