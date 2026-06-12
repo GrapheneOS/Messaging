@@ -14,7 +14,6 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.ime
@@ -22,7 +21,6 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -49,12 +47,9 @@ import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.common.components.composer.MESSAGE_COMPOSE_FIELD_TEST_TAG
 import com.android.messaging.ui.common.components.composer.MessageComposeBar
 import com.android.messaging.ui.common.components.composer.MessageSendButton
+import com.android.messaging.ui.common.components.selection.SelectionListContent
 import com.android.messaging.ui.conversation.recipientpicker.component.RecipientSelectionContactsContent
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerListItem
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerUiState
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.SelectedRecipient
-import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionContentUiState
-import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionRowDecorators
 import com.android.messaging.ui.conversationpicker.common.AttachmentPreview
 import com.android.messaging.ui.conversationpicker.common.PickerReviewTopAppBar
 import com.android.messaging.ui.conversationpicker.common.PickerTopAppBar
@@ -62,7 +57,6 @@ import com.android.messaging.ui.conversationpicker.common.ScreenContentPadding
 import com.android.messaging.ui.conversationpicker.common.SelectedTargetsBar
 import com.android.messaging.ui.conversationpicker.common.composeSubjectSlot
 import com.android.messaging.ui.conversationpicker.common.contentSurfaceShape
-import com.android.messaging.ui.conversationpicker.common.pickerContactRowTestTag
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerAction as Action
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerUiState as State
 import com.android.messaging.ui.conversationpicker.model.DraftUiState
@@ -73,7 +67,6 @@ import com.android.messaging.ui.conversationpicker.model.TargetsUiState
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
-import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 internal fun ConversationPickerScreen(
@@ -265,7 +258,7 @@ private fun PickerTargetsContent(
     modifier: Modifier = Modifier,
 ) {
     if (!uiState.contacts.hasContactsPermission) {
-        PickerRecentTargetsOnlyContent(
+        PickerRecentTargetsContent(
             uiState = uiState,
             inSelectionMode = inSelectionMode,
             allowMultiSelect = allowMultiSelect,
@@ -277,6 +270,69 @@ private fun PickerTargetsContent(
         return
     }
 
+    PickerContactsTargetsContent(
+        uiState = uiState,
+        inSelectionMode = inSelectionMode,
+        allowMultiSelect = allowMultiSelect,
+        onAction = onAction,
+        onGrantContactsPermission = onGrantContactsPermission,
+        bottomPadding = bottomPadding,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun PickerRecentTargetsContent(
+    uiState: State,
+    inSelectionMode: Boolean,
+    allowMultiSelect: Boolean,
+    onAction: (Action) -> Unit,
+    onGrantContactsPermission: () -> Unit,
+    bottomPadding: Dp,
+    modifier: Modifier = Modifier,
+) {
+    SelectionListContent(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(
+                start = ScreenContentPadding,
+                top = ScreenContentPadding,
+                end = ScreenContentPadding,
+                bottom = bottomPadding,
+            ),
+        canLoadMore = false,
+        isLoading = false,
+        isLoadingMore = false,
+        loadMoreItemCount = 0,
+        onLoadMore = {},
+    ) {
+        item(key = "recent_targets") {
+            RecentTargetsSection(
+                recentTargets = uiState.targets.recent.targets,
+                selectedIds = uiState.targets.selection.selectedIds,
+                inSelectionMode = inSelectionMode,
+                allowMultiSelect = allowMultiSelect,
+                canLoadMoreRecent = uiState.targets.recent.canLoadMore,
+                canCollapseRecent = uiState.targets.recent.canCollapse,
+                hasContactsPermission = uiState.contacts.hasContactsPermission,
+                onAction = onAction,
+                onGrantContactsPermission = onGrantContactsPermission,
+                modifier = Modifier.animateItem(),
+            )
+        }
+    }
+}
+
+@Composable
+private fun PickerContactsTargetsContent(
+    uiState: State,
+    inSelectionMode: Boolean,
+    allowMultiSelect: Boolean,
+    onAction: (Action) -> Unit,
+    onGrantContactsPermission: () -> Unit,
+    bottomPadding: Dp,
+    modifier: Modifier = Modifier,
+) {
     RecipientSelectionContactsContent(
         modifier = modifier
             .fillMaxSize()
@@ -286,8 +342,8 @@ private fun PickerTargetsContent(
                 end = ScreenContentPadding,
                 bottom = bottomPadding,
             ),
-        uiState = conversationPickerRecipientSelectionContentUiState(uiState),
-        rowDecorators = conversationPickerRecipientSelectionRowDecorators(),
+        uiState = uiState.asRecipientSelectionState(),
+        rowDecorators = pickerContactRowDecorators,
         onLoadMore = { onAction(Action.LoadMoreContacts) },
         onPrimaryActionClick = {},
         onRecipientDestinationClick = { item, destination ->
@@ -323,121 +379,6 @@ private fun PickerTargetsContent(
             )
         },
     )
-}
-
-@Composable
-private fun PickerRecentTargetsOnlyContent(
-    uiState: State,
-    inSelectionMode: Boolean,
-    allowMultiSelect: Boolean,
-    onAction: (Action) -> Unit,
-    onGrantContactsPermission: () -> Unit,
-    bottomPadding: Dp,
-    modifier: Modifier = Modifier,
-) {
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
-            start = ScreenContentPadding,
-            top = ScreenContentPadding,
-            end = ScreenContentPadding,
-            bottom = ScreenContentPadding + bottomPadding,
-        ),
-    ) {
-        item(key = "recent_targets") {
-            RecentTargetsSection(
-                recentTargets = uiState.targets.recent.targets,
-                selectedIds = uiState.targets.selection.selectedIds,
-                inSelectionMode = inSelectionMode,
-                allowMultiSelect = allowMultiSelect,
-                canLoadMoreRecent = uiState.targets.recent.canLoadMore,
-                canCollapseRecent = uiState.targets.recent.canCollapse,
-                hasContactsPermission = uiState.contacts.hasContactsPermission,
-                onAction = onAction,
-                onGrantContactsPermission = onGrantContactsPermission,
-                modifier = Modifier.animateItem(),
-            )
-        }
-    }
-}
-
-private fun conversationPickerRecipientSelectionContentUiState(
-    uiState: State,
-): RecipientSelectionContentUiState {
-    return RecipientSelectionContentUiState(
-        picker = uiState.contacts,
-        selectedRecipients = uiState.targets.selection.selectedTargets
-            .mapNotNull(TargetUiState::toSelectedRecipient)
-            .toImmutableList(),
-    )
-}
-
-private fun TargetUiState.toSelectedRecipient(): SelectedRecipient? {
-    val destination = normalizedDestination ?: return null
-
-    return SelectedRecipient(
-        destination = destination,
-        label = displayName,
-        displayDestination = details.orEmpty(),
-        photoUri = avatarUri,
-    )
-}
-
-private fun conversationPickerRecipientSelectionRowDecorators(): RecipientSelectionRowDecorators {
-    return RecipientSelectionRowDecorators(
-        recipientRowTestTag = { item ->
-            pickerContactRowTestTag(item.primaryTestTagKey())
-        },
-        destinationRowTestTag = { item, destination ->
-            pickerContactRowTestTag(
-                item.destinationTestTagKey(destination = destination),
-            )
-        },
-    )
-}
-
-private fun RecipientPickerListItem.primaryTestTagKey(): String {
-    return when (this) {
-        is RecipientPickerListItem.Contact -> {
-            val singleDestination = destinations.singleOrNull()
-
-            when {
-                singleDestination != null -> "$id:${singleDestination.dataId}"
-                else -> id
-            }
-        }
-
-        is RecipientPickerListItem.SyntheticPhone -> id
-    }
-}
-
-private fun RecipientPickerListItem.destinationTestTagKey(destination: String): String {
-    return when (this) {
-        is RecipientPickerListItem.Contact -> {
-            val matchingDestination = destinations.firstOrNull { contactDestination ->
-                contactDestination.value == destination ||
-                    contactDestination.normalizedValue == destination
-            }
-
-            when {
-                matchingDestination != null -> "$id:${matchingDestination.dataId}"
-                else -> "$id:$destination"
-            }
-        }
-
-        is RecipientPickerListItem.SyntheticPhone -> id
-    }
-}
-
-private fun contactDestinationAction(
-    item: RecipientPickerListItem,
-    destination: String,
-    inSelectionMode: Boolean,
-): Action {
-    return when {
-        inSelectionMode -> Action.ContactDestinationToggled(item, destination)
-        else -> Action.ContactDestinationClicked(item, destination)
-    }
 }
 
 @Composable

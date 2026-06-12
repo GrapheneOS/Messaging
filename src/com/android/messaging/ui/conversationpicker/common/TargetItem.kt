@@ -1,14 +1,42 @@
 package com.android.messaging.ui.conversationpicker.common
 
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.android.messaging.ui.common.components.TwoLineListItem
-import com.android.messaging.ui.common.components.participant.ParticipantAvatar
+import androidx.compose.ui.unit.dp
+import com.android.messaging.ui.common.components.selection.SelectionListAvatar
+import com.android.messaging.ui.common.components.selection.SelectionListItem
+import com.android.messaging.ui.common.components.selection.SelectionListItemTokens
+import com.android.messaging.ui.common.components.selection.SelectionListTrailingIndicator
 import com.android.messaging.ui.conversationpicker.model.TargetUiState
 import com.android.messaging.ui.core.MessagingPreviewColumn
+
+private val SectionHeaderHorizontalPadding = 16.dp
+private val SectionHeaderVerticalPadding = 8.dp
+
+@Composable
+internal fun SectionHeader(
+    text: String,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = text,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(
+                horizontal = SectionHeaderHorizontalPadding,
+                vertical = SectionHeaderVerticalPadding,
+            ),
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.primary,
+    )
+}
 
 @Composable
 internal fun TargetItem(
@@ -17,6 +45,7 @@ internal fun TargetItem(
     onClick: () -> Unit,
     onLongClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    shape: RoundedCornerShape = SelectionListItemTokens.singleShape,
 ) {
     val avatarContent = target.avatarContent()
 
@@ -31,6 +60,7 @@ internal fun TargetItem(
         onClick = onClick,
         onLongClick = onLongClick,
         modifier = modifier,
+        shape = shape,
     )
 }
 
@@ -45,29 +75,31 @@ private fun TargetRow(
     isSelected: Boolean,
     onClick: () -> Unit,
     onLongClick: (() -> Unit)?,
+    shape: RoundedCornerShape,
     modifier: Modifier = Modifier,
 ) {
-    val backgroundColor = when {
-        isSelected -> MaterialTheme.colorScheme.surfaceContainerLow
-        else -> MaterialTheme.colorScheme.background
-    }
-
-    TwoLineListItem(
-        title = title,
-        subtitle = subtitle,
-        onClick = onClick,
+    SelectionListItem(
         modifier = modifier,
+        primaryText = title,
+        secondaryText = subtitle,
+        isSelected = isSelected,
+        enabled = true,
+        shape = shape,
+        onClick = onClick,
         onLongClick = onLongClick,
-        color = backgroundColor,
         leadingContent = {
-            ParticipantAvatar(
+            SelectionListAvatar(
                 avatarUri = avatarUri,
-                size = AvatarSize,
                 fallbackLabel = fallbackLabel,
                 colorSeedCode = colorSeedCode,
-                fallbackSize = FallbackSize,
                 fallbackIcon = fallbackIcon,
                 isSelected = isSelected,
+            )
+        },
+        trailingContent = {
+            SelectionListTrailingIndicator(
+                visible = false,
+                testTag = null,
             )
         },
     )

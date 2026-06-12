@@ -53,6 +53,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import com.android.messaging.ui.common.components.selection.SelectionListTrailingIndicator
+import com.android.messaging.ui.common.components.selection.animateSelectionContainerColor
+import com.android.messaging.ui.common.components.selection.animateSelectionPrimaryTextColor
+import com.android.messaging.ui.common.components.selection.animateSelectionSecondaryTextColor
 import com.android.messaging.ui.contact.model.ContactDestinationUiModel
 import com.android.messaging.ui.conversation.preview.previewRecipientPickerUiState
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerListItem
@@ -181,9 +185,9 @@ private fun MultiDestinationMiniRow(
         label = "recipientSelectionContactDestinationSelection",
     )
 
-    val containerColor by selectionTransition.animateContainerColor()
-    val primaryTextColor by selectionTransition.animatePrimaryTextColor()
-    val secondaryTextColor by selectionTransition.animateSecondaryTextColor()
+    val containerColor by selectionTransition.animateSelectionContainerColor()
+    val primaryTextColor by selectionTransition.animateSelectionPrimaryTextColor()
+    val secondaryTextColor by selectionTransition.animateSelectionSecondaryTextColor()
     val highlightShape = rememberDestinationHighlightShape(
         isPrevSelected = isPrevSelected,
         isNextSelected = isNextSelected,
@@ -263,7 +267,7 @@ private fun RowScope.MultiDestinationMiniRowContent(
         color = secondaryTextColor,
     )
 
-    RecipientSelectionTrailingIndicator(
+    SelectionListTrailingIndicator(
         visible = rowDecorators.showRecipientTrailingIndicator(
             item,
             destination.normalizedValue,

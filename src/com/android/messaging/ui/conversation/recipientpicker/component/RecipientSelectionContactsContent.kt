@@ -1,10 +1,8 @@
 package com.android.messaging.ui.conversation.recipientpicker.component
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -14,34 +12,26 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.ui.common.components.selection.SelectionListContent
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerListItem
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerUiState
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.OnRecipientDestinationAction
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionContentUiState
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionRowDecorators
@@ -49,7 +39,6 @@ import com.android.messaging.ui.core.MessagingPreviewColumn
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.toImmutableSet
 
-private const val CONTACTS_LOAD_MORE_THRESHOLD = 10
 private const val RECIPIENT_CONTACT_CONTENT_TYPE = "recipient_contact"
 
 @Composable
@@ -64,23 +53,25 @@ internal fun RecipientSelectionContactsContent(
     topListContent: (@Composable () -> Unit)? = null,
 ) {
     val primaryAction = uiState.primaryAction
+    val pickerUiState = uiState.picker
 
-    Box(modifier = modifier) {
-        RecipientSelectionContactsList(
-            uiState = uiState,
-            rowDecorators = rowDecorators,
-            onLoadMore = onLoadMore,
-            onRecipientDestinationClick = onRecipientDestinationClick,
-            onRecipientDestinationLongClick = onRecipientDestinationLongClick,
-            topListContent = topListContent,
-        )
+    val selectedDestinations = remember(uiState.selectedRecipients) {
+        uiState.selectedRecipients
+            .map { recipient -> recipient.destination }
+            .toImmutableSet()
+    }
 
-        AnimatedVisibility(
-            modifier = Modifier.align(alignment = Alignment.BottomEnd),
-            visible = primaryAction != null,
-            enter = recipientSelectionPrimaryActionEnterTransition(),
-            exit = recipientSelectionPrimaryActionExitTransition(),
-        ) {
+    SelectionListContent(
+        modifier = modifier,
+        canLoadMore = pickerUiState.canLoadMore,
+        isLoading = pickerUiState.isLoading,
+        isLoadingMore = pickerUiState.isLoadingMore,
+        loadMoreItemCount = pickerUiState.items.size,
+        onLoadMore = onLoadMore,
+        isFloatingActionVisible = primaryAction != null,
+        floatingActionEnterTransition = recipientSelectionPrimaryActionEnterTransition(),
+        floatingActionExitTransition = recipientSelectionPrimaryActionExitTransition(),
+        floatingActionContent = {
             RecipientSelectionPrimaryActionButton(
                 modifier = Modifier
                     .navigationBarsPadding()
@@ -91,50 +82,7 @@ internal fun RecipientSelectionContactsContent(
                 testTag = primaryAction?.testTag,
                 onClick = onPrimaryActionClick,
             )
-        }
-    }
-}
-
-@Composable
-private fun RecipientSelectionContactsList(
-    uiState: RecipientSelectionContentUiState,
-    rowDecorators: RecipientSelectionRowDecorators,
-    onLoadMore: () -> Unit,
-    onRecipientDestinationClick: OnRecipientDestinationAction,
-    onRecipientDestinationLongClick: OnRecipientDestinationAction?,
-    topListContent: (@Composable () -> Unit)?,
-) {
-    val pickerUiState = uiState.picker
-    val listState = rememberLazyListState()
-
-    val selectedDestinations = remember(uiState.selectedRecipients) {
-        uiState.selectedRecipients
-            .map { recipient -> recipient.destination }
-            .toImmutableSet()
-    }
-
-    val animatedListBottomPadding by animateDpAsState(
-        targetValue = when {
-            uiState.primaryAction != null -> 100.dp
-            else -> 16.dp
         },
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioNoBouncy,
-            stiffness = Spring.StiffnessMediumLow,
-        ),
-        label = "recipientSelectionListBottomPadding",
-    )
-
-    RecipientSelectionLoadMoreEffect(
-        listState = listState,
-        pickerUiState = pickerUiState,
-        onLoadMore = onLoadMore,
-    )
-
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        state = listState,
-        contentPadding = PaddingValues(bottom = animatedListBottomPadding),
     ) {
         topListContent?.let {
             item {
@@ -235,51 +183,6 @@ private fun RecipientSelectionContactItem(
             totalCount = uiState.picker.items.size,
         ),
     )
-}
-
-@Composable
-private fun RecipientSelectionLoadMoreEffect(
-    listState: LazyListState,
-    pickerUiState: RecipientPickerUiState,
-    onLoadMore: () -> Unit,
-) {
-    LaunchedEffect(
-        listState,
-        pickerUiState.canLoadMore,
-        pickerUiState.isLoading,
-        pickerUiState.isLoadingMore,
-        pickerUiState.items.size,
-    ) {
-        snapshotFlow {
-            val lastVisibleIndex = listState
-                .layoutInfo
-                .visibleItemsInfo
-                .lastOrNull()
-                ?.index
-                ?: -1
-
-            lastVisibleIndex >= pickerUiState.items.lastIndex - CONTACTS_LOAD_MORE_THRESHOLD
-        }.collect { isNearEnd ->
-            if (
-                shouldRequestRecipientSelectionLoadMore(
-                    isNearEnd = isNearEnd,
-                    pickerUiState = pickerUiState,
-                )
-            ) {
-                onLoadMore()
-            }
-        }
-    }
-}
-
-private fun shouldRequestRecipientSelectionLoadMore(
-    isNearEnd: Boolean,
-    pickerUiState: RecipientPickerUiState,
-): Boolean {
-    return isNearEnd &&
-        pickerUiState.canLoadMore &&
-        !pickerUiState.isLoading &&
-        !pickerUiState.isLoadingMore
 }
 
 private fun recipientSelectionPrimaryActionEnterTransition(): EnterTransition {
