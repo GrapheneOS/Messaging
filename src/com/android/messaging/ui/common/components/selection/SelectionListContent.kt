@@ -1,6 +1,5 @@
 package com.android.messaging.ui.common.components.selection
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.Spring
@@ -69,7 +68,7 @@ internal fun SelectionListContent(
             content = content,
         )
 
-        AnimatedVisibility(
+        SelectionAnimatedVisibility(
             modifier = Modifier.align(alignment = Alignment.BottomEnd),
             visible = isFloatingActionVisible,
             enter = floatingActionEnterTransition,

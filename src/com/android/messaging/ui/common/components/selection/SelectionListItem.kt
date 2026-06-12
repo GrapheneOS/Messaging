@@ -13,7 +13,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -92,6 +94,23 @@ internal fun SelectionListItem(
         )
 
         trailingContent()
+    }
+}
+
+@Composable
+internal fun SelectionListTrailingIndicator(
+    visible: Boolean,
+    testTag: String?,
+) {
+    SelectionAnimatedVisibility(
+        visible = visible,
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier
+                .size(size = 20.dp)
+                .optionalTestTag(testTag),
+            strokeWidth = 2.dp,
+        )
     }
 }
 

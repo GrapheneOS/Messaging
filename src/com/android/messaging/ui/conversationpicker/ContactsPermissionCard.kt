@@ -20,7 +20,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
-import com.android.messaging.ui.conversationpicker.common.ItemDividerHorizontalInset
 
 private val ContactsPermissionCardVerticalMargin = 8.dp
 private val ContactsPermissionCardCornerRadius = 20.dp
@@ -37,10 +36,7 @@ internal fun ContactsPermissionCard(
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .padding(
-                horizontal = ItemDividerHorizontalInset,
-                vertical = ContactsPermissionCardVerticalMargin,
-            ),
+            .padding(vertical = ContactsPermissionCardVerticalMargin),
         shape = RoundedCornerShape(ContactsPermissionCardCornerRadius),
         color = MaterialTheme.colorScheme.secondaryContainer,
         contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
