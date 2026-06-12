@@ -177,20 +177,19 @@ private fun PickerBackHandlers(
     searchState: TextFieldState,
     onAction: (Action) -> Unit,
 ) {
-    BackHandler(enabled = uiState.draft.isReviewing) {
-        onAction(Action.ReviewDismissed)
-    }
+    val isReviewing = uiState.draft.isReviewing
+    val inSelectionMode = uiState.targets.selection.selectedIds.isNotEmpty()
+    val isSearchActive = uiState.targets.isSearchActive
 
-    BackHandler(
-        enabled = !uiState.draft.isReviewing &&
-            uiState.targets.selection.selectedIds.isNotEmpty(),
-    ) {
-        onAction(Action.SelectionCleared)
-    }
-
-    BackHandler(enabled = !uiState.draft.isReviewing && uiState.targets.isSearchActive) {
-        searchState.clearText()
-        onAction(Action.SearchClosed)
+    BackHandler(enabled = isReviewing || inSelectionMode || isSearchActive) {
+        when {
+            isReviewing -> onAction(Action.ReviewDismissed)
+            inSelectionMode -> onAction(Action.SelectionCleared)
+            isSearchActive -> {
+                searchState.clearText()
+                onAction(Action.SearchClosed)
+            }
+        }
     }
 }
 
