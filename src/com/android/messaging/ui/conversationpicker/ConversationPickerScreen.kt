@@ -14,6 +14,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.ime
@@ -292,14 +293,13 @@ private fun PickerRecentTargetsContent(
     modifier: Modifier = Modifier,
 ) {
     SelectionListContent(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(
-                start = ScreenContentPadding,
-                top = ScreenContentPadding,
-                end = ScreenContentPadding,
-                bottom = bottomPadding,
-            ),
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(
+            start = ScreenContentPadding,
+            top = ScreenContentPadding,
+            end = ScreenContentPadding,
+            bottom = bottomPadding,
+        ),
         canLoadMore = false,
         isLoading = false,
         isLoadingMore = false,
@@ -334,14 +334,13 @@ private fun PickerContactsTargetsContent(
     modifier: Modifier = Modifier,
 ) {
     RecipientSelectionContactsContent(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(
-                start = ScreenContentPadding,
-                top = ScreenContentPadding,
-                end = ScreenContentPadding,
-                bottom = bottomPadding,
-            ),
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(
+            start = ScreenContentPadding,
+            top = ScreenContentPadding,
+            end = ScreenContentPadding,
+            bottom = bottomPadding,
+        ),
         uiState = uiState.asRecipientSelectionState(),
         rowDecorators = pickerContactRowDecorators,
         onLoadMore = { onAction(Action.LoadMoreContacts) },

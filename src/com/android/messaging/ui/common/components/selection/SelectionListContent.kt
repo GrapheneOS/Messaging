@@ -7,6 +7,8 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -19,6 +21,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 
 private const val LOAD_MORE_THRESHOLD = 10
@@ -31,12 +34,15 @@ internal fun SelectionListContent(
     loadMoreItemCount: Int,
     onLoadMore: () -> Unit,
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(),
     isFloatingActionVisible: Boolean = false,
     floatingActionEnterTransition: EnterTransition = EnterTransition.None,
     floatingActionExitTransition: ExitTransition = ExitTransition.None,
     floatingActionContent: @Composable () -> Unit = {},
     content: LazyListScope.() -> Unit,
 ) {
+    val layoutDirection = LocalLayoutDirection.current
+
     val listState = rememberLazyListState()
 
     val animatedListBottomPadding by animateDpAsState(
@@ -64,7 +70,12 @@ internal fun SelectionListContent(
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             state = listState,
-            contentPadding = PaddingValues(bottom = animatedListBottomPadding),
+            contentPadding = PaddingValues(
+                start = contentPadding.calculateStartPadding(layoutDirection),
+                top = contentPadding.calculateTopPadding(),
+                end = contentPadding.calculateEndPadding(layoutDirection),
+                bottom = contentPadding.calculateBottomPadding() + animatedListBottomPadding,
+            ),
             content = content,
         )
 

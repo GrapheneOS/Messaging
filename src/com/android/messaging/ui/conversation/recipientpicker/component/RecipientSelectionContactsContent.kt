@@ -12,6 +12,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -50,6 +51,7 @@ internal fun RecipientSelectionContactsContent(
     onRecipientDestinationClick: OnRecipientDestinationAction,
     onRecipientDestinationLongClick: OnRecipientDestinationAction?,
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(),
     topListContent: (@Composable () -> Unit)? = null,
 ) {
     val primaryAction = uiState.primaryAction
@@ -68,6 +70,7 @@ internal fun RecipientSelectionContactsContent(
         isLoadingMore = pickerUiState.isLoadingMore,
         loadMoreItemCount = pickerUiState.items.size,
         onLoadMore = onLoadMore,
+        contentPadding = contentPadding,
         isFloatingActionVisible = primaryAction != null,
         floatingActionEnterTransition = recipientSelectionPrimaryActionEnterTransition(),
         floatingActionExitTransition = recipientSelectionPrimaryActionExitTransition(),
