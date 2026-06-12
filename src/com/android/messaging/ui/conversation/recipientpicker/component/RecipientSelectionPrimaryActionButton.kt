@@ -25,9 +25,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import com.android.messaging.ui.common.components.optionalTestTag
 import com.android.messaging.ui.core.MessagingPreviewColumn
 
 @Composable
@@ -39,13 +39,9 @@ internal fun RecipientSelectionPrimaryActionButton(
     modifier: Modifier = Modifier,
     testTag: String? = null,
 ) {
-    val taggedModifier = when {
-        testTag != null -> modifier.testTag(testTag)
-        else -> modifier
-    }
-
     Button(
-        modifier = taggedModifier
+        modifier = modifier
+            .optionalTestTag(testTag)
             .animateContentSize(
                 animationSpec = spring(
                     dampingRatio = Spring.DampingRatioNoBouncy,

@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
-import com.android.messaging.ui.conversationpicker.common.ItemDivider
+import com.android.messaging.ui.common.components.selection.SelectionListItemTokens
 import com.android.messaging.ui.conversationpicker.common.SectionHeader
 import com.android.messaging.ui.conversationpicker.common.TargetItem
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerAction as Action
@@ -19,6 +19,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
 
 private val PermissionCardTopPadding = 8.dp
+private val RecentTargetItemBottomPadding = 2.dp
 
 @Composable
 internal fun RecentTargetsSection(
@@ -41,11 +42,13 @@ internal fun RecentTargetsSection(
         }
 
         recentTargets.forEachIndexed { index, target ->
-            if (index > 0) {
-                ItemDivider()
-            }
-
             TargetItem(
+                modifier = Modifier.padding(
+                    bottom = when {
+                        index == recentTargets.lastIndex -> 0.dp
+                        else -> RecentTargetItemBottomPadding
+                    },
+                ),
                 target = target,
                 isSelected = target.selectionId in selectedIds,
                 onClick = {
@@ -58,6 +61,10 @@ internal fun RecentTargetsSection(
                 onLongClick = {
                     onAction(Action.SelectionToggled(target))
                 }.takeIf { allowMultiSelect },
+                shape = SelectionListItemTokens.shape(
+                    index = index,
+                    totalCount = recentTargets.size,
+                ),
             )
         }
 

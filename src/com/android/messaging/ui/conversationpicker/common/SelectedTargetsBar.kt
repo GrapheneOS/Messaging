@@ -43,12 +43,38 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.common.components.participant.ParticipantAvatar
+import com.android.messaging.ui.common.components.selection.SelectionListItemTokens
 import com.android.messaging.ui.conversationpicker.model.TargetUiState
 import com.android.messaging.ui.core.MessagingPreviewColumn
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+
+private val SelectedBarBottomPadding = 8.dp
+private val SelectedChipSpacing = 8.dp
+private val SelectedChipAvatarSize = 56.dp
+private val SelectedChipAvatarFallbackSize = 20.dp
+private val SelectedChipLabelSpacing = 4.dp
+private val SelectedChipLabelHeight = 16.dp
+private val SelectedChipRemoveBadgeSize = 18.dp
+private val SelectedChipRemoveIconSize = 12.dp
+private val SelectedProceedButtonSize = 56.dp
+private val SelectedProceedButtonCornerRadius = 18.dp
+
+private val SelectedBarStartPadding = ScreenContentPadding +
+    SelectionListItemTokens.rowHorizontalPadding +
+    (SelectionListItemTokens.avatarSize - SelectedChipAvatarSize) / 2
+
+private val SelectedBarEndPadding = SelectedBarStartPadding +
+    SelectedProceedButtonSize +
+    SelectedChipSpacing
+
+private val SelectedBarHeight = SelectedChipAvatarSize +
+    SelectedChipLabelSpacing +
+    SelectedChipLabelHeight +
+    SelectedBarBottomPadding
 
 @Composable
 internal fun SelectedTargetsBar(
@@ -62,10 +88,12 @@ internal fun SelectedTargetsBar(
     var previousCount by remember { mutableIntStateOf(targets.size) }
 
     LaunchedEffect(targets.size) {
-        if (targets.size > previousCount) {
+        val shouldScrollToLastItem = targets.size > previousCount
+        previousCount = targets.size
+
+        if (shouldScrollToLastItem) {
             listState.animateScrollToItem(targets.lastIndex)
         }
-        previousCount = targets.size
     }
 
     Box(
@@ -78,10 +106,15 @@ internal fun SelectedTargetsBar(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
                 start = SelectedBarStartPadding,
-                end = SelectedBarEndPadding,
+                end = when {
+                    showProceedButton -> SelectedBarEndPadding
+                    else -> SelectedBarStartPadding
+                },
                 bottom = SelectedBarBottomPadding,
             ),
-            horizontalArrangement = Arrangement.spacedBy(SelectedChipSpacing),
+            horizontalArrangement = Arrangement.spacedBy(
+                SelectedChipSpacing,
+            ),
             verticalAlignment = Alignment.Top,
         ) {
             items(
@@ -97,7 +130,9 @@ internal fun SelectedTargetsBar(
         }
 
         if (showProceedButton) {
-            SelectedTargetsProceedButton(onProceed = onProceed)
+            SelectedTargetsProceedButton(
+                onProceed = onProceed,
+            )
         }
     }
 }
@@ -126,8 +161,10 @@ private fun BoxScope.SelectedTargetsProceedButton(
         modifier = Modifier
             .align(Alignment.TopEnd)
             .padding(end = SelectedBarStartPadding)
-            .size(SelectedSendButtonSize),
-        shape = RoundedCornerShape(SelectedSendButtonCornerRadius),
+            .size(SelectedProceedButtonSize),
+        shape = RoundedCornerShape(
+            SelectedProceedButtonCornerRadius,
+        ),
         colors = IconButtonDefaults.filledIconButtonColors(
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -190,7 +227,7 @@ private fun SelectedTargetChipAvatar(
                 size = SelectedChipAvatarSize,
                 fallbackLabel = avatarContent.fallbackLabel,
                 colorSeedCode = avatarContent.colorSeedCode,
-                fallbackSize = FallbackSize,
+                fallbackSize = SelectedChipAvatarFallbackSize,
                 fallbackIcon = avatarContent.fallbackIcon,
             )
         }
