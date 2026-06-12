@@ -63,6 +63,7 @@ internal fun PickerTopAppBar(
         actions = {
             PickerTopAppBarActions(
                 isSearchActive = isSearchActive,
+                inSelectionMode = inSelectionMode,
                 searchState = searchState,
                 onSearchOpen = onSearchOpen,
             )
@@ -176,10 +177,13 @@ private fun PickerNavigationIcon(
 @Composable
 private fun PickerTopAppBarActions(
     isSearchActive: Boolean,
+    inSelectionMode: Boolean,
     searchState: TextFieldState,
     onSearchOpen: () -> Unit,
 ) {
     when {
+        inSelectionMode -> Unit
+
         isSearchActive && searchState.text.isNotEmpty() -> {
             IconButton(onClick = { searchState.clearText() }) {
                 Icon(
