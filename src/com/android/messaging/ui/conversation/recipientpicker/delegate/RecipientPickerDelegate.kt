@@ -3,7 +3,6 @@ package com.android.messaging.ui.conversation.recipientpicker.delegate
 import androidx.lifecycle.SavedStateHandle
 import com.android.messaging.data.contact.formatter.ContactDestinationFormatter
 import com.android.messaging.data.contact.model.Contact
-import com.android.messaging.data.contact.model.ContactDestination
 import com.android.messaging.data.contact.model.ContactsPage
 import com.android.messaging.data.contact.repository.ContactsRepository
 import com.android.messaging.di.core.DefaultDispatcher
@@ -23,12 +22,14 @@ import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -66,7 +67,7 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
     private val excludedDestinationsFlow = MutableStateFlow<Set<String>>(
         value = emptySet(),
     )
-    private val refreshTrigger = MutableStateFlow(0)
+    private val refreshTriggers = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     private val _state = MutableStateFlow(
         value = RecipientPickerUiState(
@@ -98,7 +99,7 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
             combine(
                 queryFlow,
                 excludedDestinationsFlow,
-                refreshTrigger,
+                refreshTriggers.onStart { emit(Unit) },
             ) { query, excludedDestinations, _ ->
                 SearchInputs(
                     query = query,
@@ -143,7 +144,7 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
     }
 
     override fun refresh() {
-        refreshTrigger.update { it + 1 }
+        refreshTriggers.tryEmit(Unit)
     }
 
     private suspend fun handleSearchInputsChanged(searchInputs: SearchInputs) {

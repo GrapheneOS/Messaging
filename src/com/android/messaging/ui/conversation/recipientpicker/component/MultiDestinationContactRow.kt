@@ -2,17 +2,10 @@ package com.android.messaging.ui.conversation.recipientpicker.component
 
 import android.provider.ContactsContract.CommonDataKinds.Email
 import android.provider.ContactsContract.CommonDataKinds.Phone
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -53,6 +46,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import com.android.messaging.ui.common.components.selection.SelectionAnimatedVisibility
 import com.android.messaging.ui.common.components.selection.SelectionListTrailingIndicator
 import com.android.messaging.ui.common.components.selection.animateSelectionContainerColor
 import com.android.messaging.ui.common.components.selection.animateSelectionPrimaryTextColor
@@ -285,27 +279,9 @@ private fun DestinationCheckSlot(
             .width(width = avatarSize)
             .fillMaxHeight(),
     ) {
-        AnimatedVisibility(
+        SelectionAnimatedVisibility(
             modifier = Modifier.matchParentSize(),
             visible = isSelected,
-            enter = fadeIn(
-                animationSpec = tween(durationMillis = 200),
-            ) + scaleIn(
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioNoBouncy,
-                    stiffness = Spring.StiffnessMediumLow,
-                ),
-                initialScale = 0.8f,
-            ),
-            exit = fadeOut(
-                animationSpec = tween(durationMillis = 150),
-            ) + scaleOut(
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioNoBouncy,
-                    stiffness = Spring.StiffnessMediumLow,
-                ),
-                targetScale = 0.8f,
-            ),
         ) {
             Box(
                 modifier = Modifier.fillMaxSize(),

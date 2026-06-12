@@ -9,8 +9,6 @@ import androidx.compose.ui.unit.dp
 
 internal val ScreenContentPadding = 8.dp
 
-internal val ItemDividerHorizontalInset = 40.dp
-
 private val ZeroCornerSize = CornerSize(0.dp)
 
 internal val MaterialTheme.contentSurfaceShape: CornerBasedShape
