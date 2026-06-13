@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversation.recipientpicker.component
+package com.android.messaging.ui.recipientselection.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -10,9 +10,9 @@ import com.android.messaging.R
 import com.android.messaging.ui.common.components.participant.participantAvatarLabel
 import com.android.messaging.ui.common.components.participant.participantColorSeed
 import com.android.messaging.ui.common.components.selection.SelectionListAvatar
-import com.android.messaging.ui.conversation.preview.previewRecipientPickerUiState
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerListItem
 import com.android.messaging.ui.core.MessagingPreviewColumn
+import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
+import com.android.messaging.ui.recipientselection.preview.previewRecipientPickerUiState
 
 @Composable
 internal fun RecipientSelectionContactAvatar(

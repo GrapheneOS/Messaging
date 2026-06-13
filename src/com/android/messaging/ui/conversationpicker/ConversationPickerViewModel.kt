@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.android.messaging.domain.conversation.usecase.participant.ResolveConversationId
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveConversationIdResult
 import com.android.messaging.domain.conversationpicker.model.SendTarget
-import com.android.messaging.ui.conversation.recipientpicker.delegate.RecipientPickerDelegate
 import com.android.messaging.ui.conversationpicker.delegate.DraftDelegate
 import com.android.messaging.ui.conversationpicker.delegate.TargetsDelegate
 import com.android.messaging.ui.conversationpicker.mapper.ContactTargetMapper
@@ -15,6 +14,7 @@ import com.android.messaging.ui.conversationpicker.model.ConversationPickerUiSta
 import com.android.messaging.ui.conversationpicker.model.DraftUiState
 import com.android.messaging.ui.conversationpicker.model.TargetUiState
 import com.android.messaging.ui.conversationpicker.model.TargetsUiState
+import com.android.messaging.ui.recipientselection.delegate.RecipientPickerDelegate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableSet

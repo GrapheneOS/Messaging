@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversation.recipientpicker.component
+package com.android.messaging.ui.recipientselection.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,9 +12,9 @@ import com.android.messaging.ui.common.components.selection.SelectionListItem
 import com.android.messaging.ui.common.components.selection.SelectionListItemTokens
 import com.android.messaging.ui.common.components.selection.SelectionListTrailingIndicator
 import com.android.messaging.ui.contact.model.ContactDestinationUiModel
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerListItem
-import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionRowDecorators
 import com.android.messaging.ui.core.MessagingPreviewColumn
+import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
+import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionRowDecorators
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentSetOf
 

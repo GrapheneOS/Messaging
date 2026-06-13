@@ -30,15 +30,15 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import com.android.messaging.ui.conversation.preview.previewRecipientSelectionContentUiState
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.SelectedRecipient
-import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionContentUiState
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionQueryCardUiState
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionQueryChipsUiState
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionQueryFieldUiState
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionQueryTextUiState
-import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionStrings
 import com.android.messaging.ui.core.MessagingPreviewColumn
+import com.android.messaging.ui.recipientselection.model.picker.SelectedRecipient
+import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionContentUiState
+import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionStrings
+import com.android.messaging.ui.recipientselection.preview.previewRecipientSelectionContentUiState
 import kotlinx.collections.immutable.ImmutableList
 
 private val recipientSelectionInputRowMinHeight = 32.dp

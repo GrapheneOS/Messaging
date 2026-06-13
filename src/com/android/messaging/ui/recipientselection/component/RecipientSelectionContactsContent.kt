@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversation.recipientpicker.component
+package com.android.messaging.ui.recipientselection.component
 
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -32,11 +32,11 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.common.components.selection.SelectionListContent
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerListItem
-import com.android.messaging.ui.conversation.recipientpicker.model.selection.OnRecipientDestinationAction
-import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionContentUiState
-import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionRowDecorators
 import com.android.messaging.ui.core.MessagingPreviewColumn
+import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
+import com.android.messaging.ui.recipientselection.model.selection.OnRecipientDestinationAction
+import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionContentUiState
+import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionRowDecorators
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.toImmutableSet
 

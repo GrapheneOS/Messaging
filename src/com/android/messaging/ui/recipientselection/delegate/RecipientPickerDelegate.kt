@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversation.recipientpicker.delegate
+package com.android.messaging.ui.recipientselection.delegate
 
 import androidx.lifecycle.SavedStateHandle
 import com.android.messaging.data.contact.formatter.ContactDestinationFormatter
@@ -10,8 +10,8 @@ import com.android.messaging.domain.contacts.usecase.IsReadContactsPermissionGra
 import com.android.messaging.ui.contact.mapper.ContactUiModelMapper
 import com.android.messaging.ui.contact.model.ContactDestinationUiModel
 import com.android.messaging.ui.contact.model.ContactUiModel
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerListItem
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerUiState
+import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
+import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerUiState
 import com.android.messaging.util.PhoneUtils
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds

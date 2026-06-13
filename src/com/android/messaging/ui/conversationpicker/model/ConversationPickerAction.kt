@@ -1,7 +1,7 @@
 package com.android.messaging.ui.conversationpicker.model
 
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerListItem
+import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
 
 internal sealed interface ConversationPickerAction {
 

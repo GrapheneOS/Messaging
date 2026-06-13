@@ -1,13 +1,13 @@
 package com.android.messaging.ui.conversationpicker
 
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerListItem
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.SelectedRecipient
-import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionContentUiState
-import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionRowDecorators
 import com.android.messaging.ui.conversationpicker.common.pickerContactRowTestTag
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerAction as Action
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerUiState as State
 import com.android.messaging.ui.conversationpicker.model.TargetUiState
+import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
+import com.android.messaging.ui.recipientselection.model.picker.SelectedRecipient
+import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionContentUiState
+import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionRowDecorators
 import kotlinx.collections.immutable.toImmutableList
 
 internal val pickerContactRowDecorators = RecipientSelectionRowDecorators(

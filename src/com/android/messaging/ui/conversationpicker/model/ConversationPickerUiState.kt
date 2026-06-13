@@ -1,7 +1,7 @@
 package com.android.messaging.ui.conversationpicker.model
 
 import androidx.compose.runtime.Immutable
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerUiState
+import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerUiState
 
 @Immutable
 internal data class ConversationPickerUiState(

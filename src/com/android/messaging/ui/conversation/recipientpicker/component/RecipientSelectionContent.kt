@@ -23,12 +23,19 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.ui.conversation.preview.previewSimSelectorUiState
 import com.android.messaging.ui.conversation.recipientpicker.component.simselector.NewChatSimSelectorRow
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.SelectedRecipient
-import com.android.messaging.ui.conversation.recipientpicker.model.selection.OnRecipientDestinationAction
-import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionContentUiState
-import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionRowDecorators
-import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionStrings
 import com.android.messaging.ui.core.MessagingPreviewTheme
+import com.android.messaging.ui.recipientselection.component.PreviewRecipientSelectionContactsTopListContent
+import com.android.messaging.ui.recipientselection.component.RecipientSelectionContactsContent
+import com.android.messaging.ui.recipientselection.component.previewRecipientSelectionContactsEmptyState
+import com.android.messaging.ui.recipientselection.component.previewRecipientSelectionContactsLoadedState
+import com.android.messaging.ui.recipientselection.component.previewRecipientSelectionContactsLoadingState
+import com.android.messaging.ui.recipientselection.component.previewRecipientSelectionContactsPrimaryActionLoadingState
+import com.android.messaging.ui.recipientselection.component.previewRecipientSelectionContactsTopContentState
+import com.android.messaging.ui.recipientselection.model.picker.SelectedRecipient
+import com.android.messaging.ui.recipientselection.model.selection.OnRecipientDestinationAction
+import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionContentUiState
+import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionRowDecorators
+import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionStrings
 
 @Composable
 internal fun RecipientSelectionContent(

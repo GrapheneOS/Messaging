@@ -1,7 +1,7 @@
 package com.android.messaging.testutil
 
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerListItem
 import com.android.messaging.ui.conversationpicker.model.TargetUiState
+import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
 
 internal const val TEST_CONTACT_DESTINATION = "+15550001"
 internal const val TEST_CONTACT_DISPLAY_NAME = "Alex"

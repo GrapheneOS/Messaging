@@ -31,17 +31,17 @@ import com.android.messaging.ui.conversation.addParticipantsContactDestinationRo
 import com.android.messaging.ui.conversation.addParticipantsContactRowTestTag
 import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsEffect
 import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsUiState
-import com.android.messaging.ui.conversation.preview.previewRecipientPickerUiState
-import com.android.messaging.ui.conversation.preview.previewSelectedRecipient
 import com.android.messaging.ui.conversation.recipientpicker.component.RecipientSelectionContent
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerListItem
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.SelectedRecipient
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.toSelectedRecipient
-import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionContentUiState
-import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionPrimaryActionUiState
-import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionRowDecorators
-import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionStrings
 import com.android.messaging.ui.core.MessagingPreviewTheme
+import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
+import com.android.messaging.ui.recipientselection.model.picker.SelectedRecipient
+import com.android.messaging.ui.recipientselection.model.picker.toSelectedRecipient
+import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionContentUiState
+import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionPrimaryActionUiState
+import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionRowDecorators
+import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionStrings
+import com.android.messaging.ui.recipientselection.preview.previewRecipientPickerUiState
+import com.android.messaging.ui.recipientselection.preview.previewSelectedRecipient
 import com.android.messaging.util.UiUtils
 import kotlinx.collections.immutable.persistentListOf
 

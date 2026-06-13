@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversation.recipientpicker.component
+package com.android.messaging.ui.recipientselection.component
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ContentTransform

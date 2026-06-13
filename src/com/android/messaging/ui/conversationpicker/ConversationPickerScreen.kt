@@ -49,8 +49,6 @@ import com.android.messaging.ui.common.components.composer.MESSAGE_COMPOSE_FIELD
 import com.android.messaging.ui.common.components.composer.MessageComposeBar
 import com.android.messaging.ui.common.components.composer.MessageSendButton
 import com.android.messaging.ui.common.components.selection.SelectionListContent
-import com.android.messaging.ui.conversation.recipientpicker.component.RecipientSelectionContactsContent
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerUiState
 import com.android.messaging.ui.conversationpicker.common.AttachmentPreview
 import com.android.messaging.ui.conversationpicker.common.PickerReviewTopAppBar
 import com.android.messaging.ui.conversationpicker.common.PickerTopAppBar
@@ -66,6 +64,8 @@ import com.android.messaging.ui.conversationpicker.model.SelectionUiState
 import com.android.messaging.ui.conversationpicker.model.TargetUiState
 import com.android.messaging.ui.conversationpicker.model.TargetsUiState
 import com.android.messaging.ui.core.MessagingPreviewTheme
+import com.android.messaging.ui.recipientselection.component.RecipientSelectionContactsContent
+import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerUiState
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 
