@@ -1,18 +1,19 @@
 @file:Suppress("TooManyFunctions")
 
-package com.android.messaging.ui.conversation.recipientpicker.component
+package com.android.messaging.ui.recipientselection.component
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerListItem
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerUiState
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.SelectedRecipient
-import com.android.messaging.ui.conversation.recipientpicker.model.selection.OnRecipientDestinationAction
-import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionContentUiState
-import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionPrimaryActionUiState
-import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionRowDecorators
+import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
+import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerUiState
+import com.android.messaging.ui.recipientselection.model.picker.SelectedRecipient
+import com.android.messaging.ui.recipientselection.model.selection.OnRecipientDestinationAction
+import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionContentUiState
+import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionPrimaryActionUiState
+import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionRowDecorators
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -43,12 +44,10 @@ internal fun PreviewRecipientSelectionContactsContent(
 
 @Composable
 internal fun PreviewRecipientSelectionContactsTopListContent() {
-    RecipientSelectionSelectedRecipientChips(
+    Text(
         modifier = Modifier.padding(bottom = 12.dp),
-        recipients = previewRecipientSelectionContactsSelectedRecipients(),
-        armedRecipientDestination = RECIPIENT_ROW_PREVIEW_PRIMARY_DESTINATION,
-        enabled = true,
-        onRecipientClick = { _ -> },
+        text = previewRecipientSelectionContactsSelectedRecipients()
+            .joinToString { recipient -> recipient.label },
     )
 }
 

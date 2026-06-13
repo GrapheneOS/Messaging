@@ -2,7 +2,7 @@ package com.android.messaging.ui.conversation.recipientpicker.delegate
 
 import androidx.lifecycle.SavedStateHandle
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientToggleOutcome
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.SelectedRecipient
+import com.android.messaging.ui.recipientselection.model.picker.SelectedRecipient
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf

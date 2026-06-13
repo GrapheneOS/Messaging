@@ -1,9 +1,9 @@
-package com.android.messaging.ui.conversation.recipientpicker.model.selection
+package com.android.messaging.ui.recipientselection.model.selection
 
 import androidx.compose.runtime.Immutable
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerListItem
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerUiState
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.SelectedRecipient
+import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
+import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerUiState
+import com.android.messaging.ui.recipientselection.model.picker.SelectedRecipient
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 

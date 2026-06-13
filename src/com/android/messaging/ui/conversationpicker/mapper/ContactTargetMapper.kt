@@ -1,8 +1,8 @@
 package com.android.messaging.ui.conversationpicker.mapper
 
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerListItem
 import com.android.messaging.ui.conversationpicker.formatter.TargetTextFormatter
 import com.android.messaging.ui.conversationpicker.model.TargetUiState
+import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
 import javax.inject.Inject
 
 internal interface ContactTargetMapper {

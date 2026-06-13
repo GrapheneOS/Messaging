@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversation.recipientpicker.model.picker
+package com.android.messaging.ui.recipientselection.model.picker
 
 import android.os.Parcelable
 import androidx.compose.runtime.Immutable

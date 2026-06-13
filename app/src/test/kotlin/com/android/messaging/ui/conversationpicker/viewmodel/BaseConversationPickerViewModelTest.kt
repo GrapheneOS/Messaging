@@ -6,8 +6,6 @@ import com.android.messaging.domain.conversation.usecase.participant.model.Resol
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.testutil.TEST_CONTACT_DESTINATION
 import com.android.messaging.testutil.TEST_RESOLVED_CONVERSATION_ID
-import com.android.messaging.ui.conversation.recipientpicker.delegate.RecipientPickerDelegate
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerUiState
 import com.android.messaging.ui.conversationpicker.ConversationPickerViewModel
 import com.android.messaging.ui.conversationpicker.delegate.DraftDelegate
 import com.android.messaging.ui.conversationpicker.delegate.TargetsDelegate
@@ -17,6 +15,8 @@ import com.android.messaging.ui.conversationpicker.model.DraftUiState
 import com.android.messaging.ui.conversationpicker.model.SelectionUiState
 import com.android.messaging.ui.conversationpicker.model.TargetUiState
 import com.android.messaging.ui.conversationpicker.model.TargetsUiState
+import com.android.messaging.ui.recipientselection.delegate.RecipientPickerDelegate
+import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerUiState
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk

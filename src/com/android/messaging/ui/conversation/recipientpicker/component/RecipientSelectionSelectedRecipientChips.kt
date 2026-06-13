@@ -54,9 +54,9 @@ import com.android.messaging.R
 import com.android.messaging.ui.common.components.participant.ParticipantAvatar
 import com.android.messaging.ui.common.components.participant.participantAvatarLabel
 import com.android.messaging.ui.common.components.participant.participantColorSeed
-import com.android.messaging.ui.conversation.preview.previewSelectedRecipient
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.SelectedRecipient
 import com.android.messaging.ui.core.MessagingPreviewColumn
+import com.android.messaging.ui.recipientselection.model.picker.SelectedRecipient
+import com.android.messaging.ui.recipientselection.preview.previewSelectedRecipient
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 

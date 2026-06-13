@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversation.recipientpicker.component
+package com.android.messaging.ui.recipientselection.component
 
 import android.provider.ContactsContract.CommonDataKinds.Email
 import android.provider.ContactsContract.CommonDataKinds.Phone
@@ -52,10 +52,10 @@ import com.android.messaging.ui.common.components.selection.animateSelectionCont
 import com.android.messaging.ui.common.components.selection.animateSelectionPrimaryTextColor
 import com.android.messaging.ui.common.components.selection.animateSelectionSecondaryTextColor
 import com.android.messaging.ui.contact.model.ContactDestinationUiModel
-import com.android.messaging.ui.conversation.preview.previewRecipientPickerUiState
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerListItem
-import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionRowDecorators
 import com.android.messaging.ui.core.MessagingPreviewColumn
+import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
+import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionRowDecorators
+import com.android.messaging.ui.recipientselection.preview.previewRecipientPickerUiState
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf

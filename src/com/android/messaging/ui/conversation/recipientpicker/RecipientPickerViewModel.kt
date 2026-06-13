@@ -2,8 +2,8 @@ package com.android.messaging.ui.conversation.recipientpicker
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.android.messaging.ui.conversation.recipientpicker.delegate.RecipientPickerDelegate
-import com.android.messaging.ui.conversation.recipientpicker.model.picker.RecipientPickerUiState
+import com.android.messaging.ui.recipientselection.delegate.RecipientPickerDelegate
+import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.StateFlow
