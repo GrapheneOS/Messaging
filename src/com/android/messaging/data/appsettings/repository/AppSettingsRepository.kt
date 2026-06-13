@@ -3,6 +3,7 @@ package com.android.messaging.data.appsettings.repository
 import android.content.Context
 import com.android.messaging.R
 import com.android.messaging.data.appsettings.model.AppBooleanPref
+import com.android.messaging.data.appsettings.model.AppColorScheme
 import com.android.messaging.data.appsettings.model.AppSettings
 import com.android.messaging.di.core.IoDispatcher
 import com.android.messaging.util.BuglePrefs
@@ -16,6 +17,7 @@ import kotlinx.coroutines.withContext
 internal interface AppSettingsRepository {
     suspend fun getAppSettings(): AppSettings
     suspend fun setBooleanPref(pref: AppBooleanPref, enabled: Boolean)
+    suspend fun setColorScheme(colorScheme: AppColorScheme)
 }
 
 internal class AppSettingsRepositoryImpl @Inject constructor(
@@ -45,6 +47,9 @@ internal class AppSettingsRepositoryImpl @Inject constructor(
                     context.getString(R.string.dump_mms_pref_key),
                     resources.getBoolean(R.bool.dump_mms_pref_default),
                 ),
+                colorScheme = AppColorScheme.fromPrefValue(
+                    appPrefs.getString(context.getString(R.string.color_scheme_pref_key), null),
+                ),
             )
         }
     }
@@ -57,6 +62,15 @@ internal class AppSettingsRepositoryImpl @Inject constructor(
             BuglePrefs.getApplicationPrefs().putBoolean(
                 context.getString(pref.keyResId),
                 enabled,
+            )
+        }
+    }
+
+    override suspend fun setColorScheme(colorScheme: AppColorScheme) {
+        withContext(ioDispatcher) {
+            BuglePrefs.getApplicationPrefs().putString(
+                context.getString(R.string.color_scheme_pref_key),
+                colorScheme.name,
             )
         }
     }

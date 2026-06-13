@@ -30,6 +30,7 @@
     <string name="sms_enabled_pref_key" translatable="false">sms_enabled</string>
     <string name="send_sound_pref_key" translatable="false">send_sound</string>
     <bool name="send_sound_pref_default" translatable="false">true</bool>
+    <string name="color_scheme_pref_key" translatable="false">color_scheme</string>
     <string name="advanced_pref_key" translatable="false">advanced_prefs</string>
 
     <!-- Subscription-specific settings. The values of these pref keys must be prefixed with

@@ -1,5 +1,7 @@
 package com.android.messaging.ui.appsettings.screen.model
 
+import com.android.messaging.data.appsettings.model.AppColorScheme
+
 internal sealed interface SettingsAction {
 
     data class AutoRetrieveMmsChanged(
@@ -41,6 +43,10 @@ internal sealed interface SettingsAction {
 
     data class SendSoundChanged(
         val enabled: Boolean,
+    ) : SettingsAction
+
+    data class ColorSchemeChanged(
+        val colorScheme: AppColorScheme,
     ) : SettingsAction
 
     data class DefaultSmsAppClicked(

@@ -26,6 +26,7 @@ internal class AppSettingsUiStateMapperImpl @Inject constructor(
             isDebugEnabled = appSettings.isDebugEnabled,
             dumpSmsEnabled = appSettings.dumpSmsEnabled,
             dumpMmsEnabled = appSettings.dumpMmsEnabled,
+            colorScheme = appSettings.colorScheme,
         )
     }
 }

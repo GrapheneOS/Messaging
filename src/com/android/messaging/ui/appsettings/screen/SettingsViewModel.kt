@@ -71,74 +71,45 @@ internal class SettingsViewModel @Inject constructor(
 
     override fun onAction(action: Action) {
         when (action) {
-            is Action.AutoRetrieveMmsChanged -> {
-                subscriptionSettingsDelegate.onAutoRetrieveMmsChanged(
-                    subId = action.subId,
-                    enabled = action.enabled,
-                )
-            }
+            is Action.AutoRetrieveMmsChanged ->
+                subscriptionSettingsDelegate.onAutoRetrieveMmsChanged(action.subId, action.enabled)
 
-            is Action.AutoRetrieveMmsWhenRoamingChanged -> {
+            is Action.AutoRetrieveMmsWhenRoamingChanged ->
                 subscriptionSettingsDelegate.onAutoRetrieveMmsWhenRoamingChanged(
                     subId = action.subId,
                     enabled = action.enabled,
                 )
-            }
 
-            is Action.DeliveryReportsChanged -> {
-                subscriptionSettingsDelegate.onDeliveryReportsChanged(
-                    subId = action.subId,
-                    enabled = action.enabled,
-                )
-            }
+            is Action.DeliveryReportsChanged ->
+                subscriptionSettingsDelegate.onDeliveryReportsChanged(action.subId, action.enabled)
 
-            is Action.GroupMmsChanged -> {
-                subscriptionSettingsDelegate.onGroupMmsChanged(
-                    subId = action.subId,
-                    enabled = action.enabled,
-                )
-            }
+            is Action.GroupMmsChanged ->
+                subscriptionSettingsDelegate.onGroupMmsChanged(action.subId, action.enabled)
 
-            is Action.PhoneNumberChanged -> {
-                subscriptionSettingsDelegate.onPhoneNumberChanged(
-                    subId = action.subId,
-                    phoneNumber = action.phoneNumber,
-                )
-            }
+            is Action.PhoneNumberChanged ->
+                subscriptionSettingsDelegate.onPhoneNumberChanged(action.subId, action.phoneNumber)
 
-            is Action.WirelessAlertsClicked -> {
-                emitEffect(Effect.OpenWirelessAlerts(action.subId))
-            }
+            is Action.WirelessAlertsClicked -> emitEffect(Effect.OpenWirelessAlerts(action.subId))
+            is Action.DumpMmsChanged -> appSettingsDelegate.onDumpMmsChanged(action.enabled)
+            is Action.DumpSmsChanged -> appSettingsDelegate.onDumpSmsChanged(action.enabled)
+            is Action.SendSoundChanged -> appSettingsDelegate.onSendSoundChanged(action.enabled)
 
-            is Action.DumpMmsChanged -> {
-                appSettingsDelegate.onDumpMmsChanged(action.enabled)
-            }
+            is Action.ColorSchemeChanged ->
+                appSettingsDelegate.onColorSchemeChanged(action.colorScheme)
 
-            is Action.DumpSmsChanged -> {
-                appSettingsDelegate.onDumpSmsChanged(action.enabled)
-            }
-
-            is Action.SendSoundChanged -> {
-                appSettingsDelegate.onSendSoundChanged(action.enabled)
-            }
-
-            is Action.DefaultSmsAppClicked -> {
-                val effect = if (action.isCurrentlyDefault) {
-                    Effect.OpenManageDefaultApps
-                } else {
-                    Effect.RequestDefaultSmsApp
-                }
-                emitEffect(effect)
-            }
-
-            is Action.NotificationsClicked -> {
-                emitEffect(Effect.OpenNotificationSettings)
-            }
-
-            is Action.LicensesClicked -> {
-                emitEffect(Effect.OpenLicenses)
-            }
+            is Action.DefaultSmsAppClicked -> onDefaultSmsAppClicked(action.isCurrentlyDefault)
+            is Action.NotificationsClicked -> emitEffect(Effect.OpenNotificationSettings)
+            is Action.LicensesClicked -> emitEffect(Effect.OpenLicenses)
         }
+    }
+
+    private fun onDefaultSmsAppClicked(isCurrentlyDefault: Boolean) {
+        val effect = if (isCurrentlyDefault) {
+            Effect.OpenManageDefaultApps
+        } else {
+            Effect.RequestDefaultSmsApp
+        }
+        emitEffect(effect)
     }
 
     private fun emitEffect(effect: Effect) {

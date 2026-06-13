@@ -1,6 +1,7 @@
 package com.android.messaging.ui.appsettings.general.delegate
 
 import com.android.messaging.data.appsettings.model.AppBooleanPref
+import com.android.messaging.data.appsettings.model.AppColorScheme
 import com.android.messaging.data.appsettings.repository.AppSettingsRepository
 import com.android.messaging.ui.appsettings.common.SettingsScreenDelegate
 import com.android.messaging.ui.appsettings.general.mapper.AppSettingsUiStateMapper
@@ -20,6 +21,7 @@ internal interface AppSettingsDelegate : SettingsScreenDelegate<AppSettingsUiSta
     fun onSendSoundChanged(enabled: Boolean)
     fun onDumpSmsChanged(enabled: Boolean)
     fun onDumpMmsChanged(enabled: Boolean)
+    fun onColorSchemeChanged(colorScheme: AppColorScheme)
 }
 
 internal class AppSettingsDelegateImpl @Inject constructor(
@@ -75,6 +77,13 @@ internal class AppSettingsDelegateImpl @Inject constructor(
             pref = AppBooleanPref.DUMP_MMS,
             enabled = enabled,
         )
+    }
+
+    override fun onColorSchemeChanged(colorScheme: AppColorScheme) {
+        boundScope?.launch {
+            repository.setColorScheme(colorScheme)
+            refresh()
+        }
     }
 
     private fun setBooleanPref(

@@ -7,4 +7,5 @@ internal data class AppSettings(
     val isDebugEnabled: Boolean,
     val dumpSmsEnabled: Boolean,
     val dumpMmsEnabled: Boolean,
+    val colorScheme: AppColorScheme,
 )
