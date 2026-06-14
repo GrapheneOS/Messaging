@@ -187,11 +187,11 @@ private fun PickerBackHandlers(
     BackHandler(enabled = isReviewing || inSelectionMode || isSearchActive) {
         when {
             isReviewing -> onAction(Action.ReviewDismissed)
-            inSelectionMode -> onAction(Action.SelectionCleared)
             isSearchActive -> {
                 searchState.clearText()
                 onAction(Action.SearchClosed)
             }
+            inSelectionMode -> onAction(Action.SelectionCleared)
         }
     }
 }

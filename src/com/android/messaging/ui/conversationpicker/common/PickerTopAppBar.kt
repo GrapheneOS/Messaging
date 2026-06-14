@@ -116,6 +116,10 @@ private fun PickerTopAppBarTitle(
     searchState: TextFieldState,
 ) {
     when {
+        isSearchActive -> {
+            PickerSearchField(state = searchState)
+        }
+
         inSelectionMode -> {
             Text(
                 text = stringResource(R.string.share_selection_count, selectedCount),
@@ -124,10 +128,6 @@ private fun PickerTopAppBarTitle(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-        }
-
-        isSearchActive -> {
-            PickerSearchField(state = searchState)
         }
 
         else -> {
@@ -151,8 +151,8 @@ private fun PickerNavigationIcon(
     onSelectionClear: () -> Unit,
 ) {
     val onClick = when {
-        inSelectionMode -> onSelectionClear
         isSearchActive -> onSearchClose
+        inSelectionMode -> onSelectionClear
         else -> onNavigateBack
     }
 
@@ -182,8 +182,6 @@ private fun PickerTopAppBarActions(
     onSearchOpen: () -> Unit,
 ) {
     when {
-        inSelectionMode -> Unit
-
         isSearchActive && searchState.text.isNotEmpty() -> {
             IconButton(onClick = { searchState.clearText() }) {
                 Icon(
@@ -193,7 +191,11 @@ private fun PickerTopAppBarActions(
             }
         }
 
-        !isSearchActive -> {
+        isSearchActive -> Unit
+
+        inSelectionMode -> Unit
+
+        else -> {
             IconButton(onClick = onSearchOpen) {
                 Icon(
                     imageVector = Icons.Default.Search,
@@ -232,6 +234,8 @@ private fun PickerSearchField(
                         text = stringResource(R.string.share_search_hint),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
                 innerTextField()
