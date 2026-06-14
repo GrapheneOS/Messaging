@@ -53,21 +53,29 @@ internal class ContactsRepositoryImpl @Inject constructor(
         offset: Int,
     ): ContactsPage {
         return when {
-            query.isBlank() -> queryAllContactsByDefaultPhoneOrder(offset = offset)
+            query.isBlank() -> queryAllContacts(offset = offset)
             else -> queryMatchedContacts(query = query, offset = offset)
         }
     }
 
-    private fun queryAllContactsByDefaultPhoneOrder(offset: Int): ContactsPage {
+    private fun queryAllContacts(offset: Int): ContactsPage {
         val phoneRows = readDestinationRows(
             uri = createDefaultPhoneQueryUri(),
             kind = ContactDestination.Kind.PHONE,
             sortOrder = SORT_BY_SORT_KEY_PRIMARY_ASC,
         )
 
+        val emailRows = readDestinationRows(
+            uri = createDefaultEmailQueryUri(),
+            kind = ContactDestination.Kind.EMAIL,
+            sortOrder = SORT_BY_SORT_KEY_PRIMARY_ASC,
+        )
+
+        val mergedRows = (phoneRows + emailRows).sortedBy { row -> row.sortKey }
+
         val contactGroups = when {
-            phoneRows.isEmpty() -> emptyList()
-            else -> groupRowsByContactPreservingOrder(rows = phoneRows)
+            mergedRows.isEmpty() -> emptyList()
+            else -> groupRowsByContactPreservingOrder(rows = mergedRows)
         }
 
         return paginateAndBuildContacts(
@@ -466,6 +474,16 @@ internal class ContactsRepositoryImpl @Inject constructor(
 
     private fun createDefaultPhoneQueryUri(): Uri {
         return Phone.CONTENT_URI
+            .buildUpon()
+            .appendQueryParameter(
+                ContactsContract.DIRECTORY_PARAM_KEY,
+                Directory.DEFAULT.toString(),
+            )
+            .build()
+    }
+
+    private fun createDefaultEmailQueryUri(): Uri {
+        return Email.CONTENT_URI
             .buildUpon()
             .appendQueryParameter(
                 ContactsContract.DIRECTORY_PARAM_KEY,

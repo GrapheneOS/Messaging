@@ -298,6 +298,7 @@ internal class ContactsRepositoryImplTest {
             )
         }
         stubDefaultPhoneCursor(rows = rows)
+        stubDefaultEmailCursor(rows = emptyList())
         stubExpansionPhoneCursor(
             rows = rows,
         )
@@ -313,6 +314,52 @@ internal class ContactsRepositoryImplTest {
         Assert.assertEquals(200, firstPage.nextOffset)
         Assert.assertEquals(50, secondPage.contacts.size)
         Assert.assertNull(secondPage.nextOffset)
+    }
+
+    @Test
+    fun browseIncludesEmailDestinationsAndEmailOnlyContacts() = runTest {
+        stubDefaultPhoneCursor(
+            rows = listOf(
+                phoneRow(
+                    contactId = 1L,
+                    sortKey = "Ada",
+                    number = "+15550001",
+                    type = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
+                ),
+            ),
+        )
+        stubDefaultEmailCursor(
+            rows = listOf(
+                emailRow(
+                    contactId = 1L,
+                    sortKey = "Ada",
+                    address = "ada@example.com",
+                    type = ContactsContract.CommonDataKinds.Email.TYPE_HOME,
+                ),
+                emailRow(
+                    contactId = 2L,
+                    sortKey = "Bea",
+                    address = "bea@example.com",
+                    type = ContactsContract.CommonDataKinds.Email.TYPE_WORK,
+                ),
+            ),
+        )
+
+        val repo = createRepository()
+        val page = repo.searchContacts(
+            query = "",
+            offset = 0,
+        ).first()
+
+        Assert.assertEquals(listOf(1L, 2L), page.contacts.map(Contact::id))
+        Assert.assertEquals(
+            listOf(ContactDestination.Kind.PHONE, ContactDestination.Kind.EMAIL),
+            page.contacts.first { it.id == 1L }.destinations.map(ContactDestination::kind),
+        )
+        Assert.assertEquals(
+            ContactDestination.Kind.EMAIL,
+            page.contacts.first { it.id == 2L }.destinations.single().kind,
+        )
     }
 
     @Test
@@ -491,6 +538,18 @@ internal class ContactsRepositoryImplTest {
         } answers { phoneCursor(rows = rows) }
     }
 
+    private fun stubDefaultEmailCursor(rows: List<RawRow>) {
+        every {
+            contentResolver.query(
+                match { uri -> isDefaultEmailUri(uri = uri) },
+                any(),
+                isNull(),
+                isNull(),
+                any(),
+            )
+        } answers { emailCursor(rows = rows) }
+    }
+
     private fun stubExpansionPhoneCursor(rows: List<RawRow>) {
         every {
             contentResolver.query(
@@ -545,6 +604,11 @@ internal class ContactsRepositoryImplTest {
 
     private fun isDefaultPhoneUri(uri: Uri): Boolean {
         return uri.path == ContactsContract.CommonDataKinds.Phone.CONTENT_URI.path &&
+            uri.getQueryParameter("directory") != null
+    }
+
+    private fun isDefaultEmailUri(uri: Uri): Boolean {
+        return uri.path == ContactsContract.CommonDataKinds.Email.CONTENT_URI.path &&
             uri.getQueryParameter("directory") != null
     }
 
