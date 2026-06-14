@@ -51,6 +51,7 @@ import com.android.messaging.ui.common.components.selection.SelectionListTrailin
 import com.android.messaging.ui.common.components.selection.animateSelectionContainerColor
 import com.android.messaging.ui.common.components.selection.animateSelectionPrimaryTextColor
 import com.android.messaging.ui.common.components.selection.animateSelectionSecondaryTextColor
+import com.android.messaging.ui.common.components.selection.currentSelectionListItemColors
 import com.android.messaging.ui.contact.model.ContactDestinationUiModel
 import com.android.messaging.ui.core.MessagingPreviewColumn
 import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
@@ -179,9 +180,10 @@ private fun MultiDestinationMiniRow(
         label = "recipientSelectionContactDestinationSelection",
     )
 
-    val containerColor by selectionTransition.animateSelectionContainerColor()
-    val primaryTextColor by selectionTransition.animateSelectionPrimaryTextColor()
-    val secondaryTextColor by selectionTransition.animateSelectionSecondaryTextColor()
+    val colors = currentSelectionListItemColors()
+    val containerColor by selectionTransition.animateSelectionContainerColor(colors)
+    val primaryTextColor by selectionTransition.animateSelectionPrimaryTextColor(colors)
+    val secondaryTextColor by selectionTransition.animateSelectionSecondaryTextColor(colors)
     val highlightShape = rememberDestinationHighlightShape(
         isSelected = isSelected,
         isPrevSelected = isPrevSelected,

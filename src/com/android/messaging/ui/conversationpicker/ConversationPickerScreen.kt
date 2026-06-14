@@ -29,6 +29,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
@@ -48,7 +49,9 @@ import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.common.components.composer.MESSAGE_COMPOSE_FIELD_TEST_TAG
 import com.android.messaging.ui.common.components.composer.MessageComposeBar
 import com.android.messaging.ui.common.components.composer.MessageSendButton
+import com.android.messaging.ui.common.components.selection.LocalSelectionListItemColors
 import com.android.messaging.ui.common.components.selection.SelectionListContent
+import com.android.messaging.ui.common.components.selection.selectionListItemColors
 import com.android.messaging.ui.conversationpicker.common.AttachmentPreview
 import com.android.messaging.ui.conversationpicker.common.PickerReviewTopAppBar
 import com.android.messaging.ui.conversationpicker.common.PickerTopAppBar
@@ -218,29 +221,35 @@ private fun PickerScaffold(
             )
         },
     ) { contentPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = contentPadding.calculateTopPadding())
-                .clip(MaterialTheme.contentSurfaceShape)
-                .background(MaterialTheme.colorScheme.background),
+        CompositionLocalProvider(
+            LocalSelectionListItemColors provides selectionListItemColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            ),
         ) {
-            when {
-                uiState.isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                    )
-                }
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = contentPadding.calculateTopPadding())
+                    .clip(MaterialTheme.contentSurfaceShape)
+                    .background(MaterialTheme.colorScheme.surfaceContainerLow),
+            ) {
+                when {
+                    uiState.isLoading -> {
+                        CircularProgressIndicator(
+                            modifier = Modifier.align(Alignment.Center),
+                        )
+                    }
 
-                else -> {
-                    PickerTargetsContent(
-                        uiState = uiState,
-                        inSelectionMode = inSelectionMode,
-                        allowMultiSelect = allowMultiSelect,
-                        onAction = onAction,
-                        onGrantContactsPermission = onGrantContactsPermission,
-                        bottomPadding = contentPadding.calculateBottomPadding(),
-                    )
+                    else -> {
+                        PickerTargetsContent(
+                            uiState = uiState,
+                            inSelectionMode = inSelectionMode,
+                            allowMultiSelect = allowMultiSelect,
+                            onAction = onAction,
+                            onGrantContactsPermission = onGrantContactsPermission,
+                            bottomPadding = contentPadding.calculateBottomPadding(),
+                        )
+                    }
                 }
             }
         }

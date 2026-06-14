@@ -53,9 +53,10 @@ internal fun SelectionListItem(
         label = "selectionListItemSelection",
     )
 
-    val containerColor by selectionTransition.animateSelectionContainerColor()
-    val primaryTextColor by selectionTransition.animateSelectionPrimaryTextColor()
-    val secondaryTextColor by selectionTransition.animateSelectionSecondaryTextColor()
+    val colors = currentSelectionListItemColors()
+    val containerColor by selectionTransition.animateSelectionContainerColor(colors)
+    val primaryTextColor by selectionTransition.animateSelectionPrimaryTextColor(colors)
+    val secondaryTextColor by selectionTransition.animateSelectionSecondaryTextColor(colors)
 
     Row(
         modifier = Modifier
@@ -148,7 +149,9 @@ private fun RowScope.SelectionListItemText(
 }
 
 @Composable
-internal fun Transition<Boolean>.animateSelectionContainerColor(): State<Color> {
+internal fun Transition<Boolean>.animateSelectionContainerColor(
+    colors: SelectionListItemColors,
+): State<Color> {
     return animateColor(
         transitionSpec = {
             tween(
@@ -159,15 +162,17 @@ internal fun Transition<Boolean>.animateSelectionContainerColor(): State<Color> 
         label = "selectionListItemContainerColor",
         targetValueByState = { isItemSelected ->
             when {
-                isItemSelected -> MaterialTheme.colorScheme.secondaryContainer
-                else -> MaterialTheme.colorScheme.background
+                isItemSelected -> colors.selectedContainerColor
+                else -> colors.containerColor
             }
         },
     )
 }
 
 @Composable
-internal fun Transition<Boolean>.animateSelectionPrimaryTextColor(): State<Color> {
+internal fun Transition<Boolean>.animateSelectionPrimaryTextColor(
+    colors: SelectionListItemColors,
+): State<Color> {
     return animateColor(
         transitionSpec = {
             tween(
@@ -178,15 +183,17 @@ internal fun Transition<Boolean>.animateSelectionPrimaryTextColor(): State<Color
         label = "selectionListItemPrimaryTextColor",
         targetValueByState = { isItemSelected ->
             when {
-                isItemSelected -> MaterialTheme.colorScheme.onSecondaryContainer
-                else -> MaterialTheme.colorScheme.onSurface
+                isItemSelected -> colors.selectedPrimaryTextColor
+                else -> colors.primaryTextColor
             }
         },
     )
 }
 
 @Composable
-internal fun Transition<Boolean>.animateSelectionSecondaryTextColor(): State<Color> {
+internal fun Transition<Boolean>.animateSelectionSecondaryTextColor(
+    colors: SelectionListItemColors,
+): State<Color> {
     return animateColor(
         transitionSpec = {
             tween(
@@ -197,11 +204,8 @@ internal fun Transition<Boolean>.animateSelectionSecondaryTextColor(): State<Col
         label = "selectionListItemSecondaryTextColor",
         targetValueByState = { isItemSelected ->
             when {
-                isItemSelected -> {
-                    MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
-                }
-
-                else -> MaterialTheme.colorScheme.onSurfaceVariant
+                isItemSelected -> colors.selectedSecondaryTextColor
+                else -> colors.secondaryTextColor
             }
         },
     )
