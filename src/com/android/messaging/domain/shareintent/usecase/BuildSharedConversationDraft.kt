@@ -86,20 +86,20 @@ internal class BuildSharedConversationDraftImpl @Inject constructor(
         subject: String,
         caller: ComponentCaller,
     ): ConversationDraft? {
-        if (!ContentType.isImageType(intent.type)) {
-            return null
-        }
-
-        val imageUris = IntentCompat.getParcelableArrayListExtra(
+        val sharedUris = IntentCompat.getParcelableArrayListExtra(
             intent,
             Intent.EXTRA_STREAM,
             Uri::class.java,
         ).orEmpty()
 
-        val attachments = imageUris.mapNotNull { uri ->
+        val attachments = sharedUris.mapNotNull { uri ->
+            val contentType = resolveSharedContentType(uri, intent.type)
+            if (!ContentType.isMediaType(contentType)) {
+                return@mapNotNull null
+            }
             persistAttachment(
                 sourceUri = uri,
-                contentType = resolveSharedContentType(uri, intent.type),
+                contentType = contentType,
                 caller = caller,
             )
         }

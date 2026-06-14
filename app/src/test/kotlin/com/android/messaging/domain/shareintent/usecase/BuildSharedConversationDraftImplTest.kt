@@ -98,6 +98,55 @@ internal class BuildSharedConversationDraftImplTest {
         coVerify(exactly = 0) { sharedAttachmentRepository.persistToScratchSpace(any(), any()) }
     }
 
+    @Test
+    fun invoke_sendMultipleWithNonImageTopLevelType_persistsMediaUris() = runTest(testDispatcher) {
+        every { resolveSharedContentType(IMAGE_URI, any()) } returns ContentType.IMAGE_JPEG
+        every { resolveSharedContentType(VIDEO_URI, any()) } returns "video/mp4"
+        coEvery { sharedAttachmentRepository.persistToScratchSpace(IMAGE_URI, any()) } returns
+            ATTACHMENT
+        coEvery { sharedAttachmentRepository.persistToScratchSpace(VIDEO_URI, any()) } returns
+            VIDEO_ATTACHMENT
+
+        val draft = buildSharedConversationDraft(
+            multipleIntent(
+                type = "*/*",
+                uris = arrayListOf(IMAGE_URI, VIDEO_URI),
+            ),
+            grantingCaller,
+        )
+
+        assertEquals(listOf(ATTACHMENT, VIDEO_ATTACHMENT), draft?.attachments?.toList())
+    }
+
+    @Test
+    fun invoke_sendMultiple_dropsNonMediaUris() = runTest(testDispatcher) {
+        every { resolveSharedContentType(IMAGE_URI, any()) } returns ContentType.IMAGE_JPEG
+        every { resolveSharedContentType(TEXT_URI, any()) } returns ContentType.TEXT_PLAIN
+        coEvery { sharedAttachmentRepository.persistToScratchSpace(IMAGE_URI, any()) } returns
+            ATTACHMENT
+
+        val draft = buildSharedConversationDraft(
+            multipleIntent(
+                type = "*/*",
+                uris = arrayListOf(IMAGE_URI, TEXT_URI),
+            ),
+            grantingCaller,
+        )
+
+        assertEquals(listOf(ATTACHMENT), draft?.attachments?.toList())
+        coVerify(exactly = 0) { sharedAttachmentRepository.persistToScratchSpace(TEXT_URI, any()) }
+    }
+
+    private fun multipleIntent(
+        type: String,
+        uris: ArrayList<Uri>
+    ): Intent {
+        return Intent(Intent.ACTION_SEND_MULTIPLE).apply {
+            this.type = type
+            putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
+        }
+    }
+
     private fun textIntent(): Intent {
         return Intent(Intent.ACTION_SEND).apply {
             type = ContentType.TEXT_PLAIN
@@ -115,9 +164,15 @@ internal class BuildSharedConversationDraftImplTest {
 
     private companion object {
         private val IMAGE_URI: Uri = Uri.parse("content://media/external/images/1")
+        private val VIDEO_URI: Uri = Uri.parse("content://media/external/video/1")
+        private val TEXT_URI: Uri = Uri.parse("content://media/external/text/1")
         private val ATTACHMENT = ConversationDraftAttachment(
             contentType = ContentType.IMAGE_JPEG,
             contentUri = "content://scratch/1",
+        )
+        private val VIDEO_ATTACHMENT = ConversationDraftAttachment(
+            contentType = "video/mp4",
+            contentUri = "content://scratch/2",
         )
     }
 }
