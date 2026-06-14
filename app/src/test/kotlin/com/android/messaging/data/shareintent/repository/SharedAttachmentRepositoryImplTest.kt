@@ -17,6 +17,7 @@ import io.mockk.mockkConstructor
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.verify
+import java.io.ByteArrayInputStream
 import java.io.IOException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -161,6 +162,55 @@ internal class SharedAttachmentRepositoryImplTest {
 
         assertEquals(AUDIO_TYPE, result?.contentType)
         assertNull(result?.durationMillis)
+    }
+
+    @Test
+    fun readTextContent_returnsStreamText() = runTest(testDispatcher) {
+        every { contentResolver.openInputStream(SOURCE_URI) } returns
+            ByteArrayInputStream("line one\nline two".toByteArray())
+
+        val result = repository.readTextContent(SOURCE_URI)
+
+        assertEquals("line one\nline two", result)
+    }
+
+    @Test
+    fun readTextContent_fileUri_returnsNull() = runTest(testDispatcher) {
+        val sourceUri = Uri.parse("file:///sdcard/note.txt")
+        every { UriUtil.isFileUri(sourceUri) } returns true
+
+        val result = repository.readTextContent(sourceUri)
+
+        assertNull(result)
+        verify(exactly = 0) { contentResolver.openInputStream(any()) }
+    }
+
+    @Test
+    fun readTextContent_blankText_returnsNull() = runTest(testDispatcher) {
+        every { contentResolver.openInputStream(SOURCE_URI) } returns
+            ByteArrayInputStream("   ".toByteArray())
+
+        val result = repository.readTextContent(SOURCE_URI)
+
+        assertNull(result)
+    }
+
+    @Test
+    fun readTextContent_nullStream_returnsNull() = runTest(testDispatcher) {
+        every { contentResolver.openInputStream(SOURCE_URI) } returns null
+
+        val result = repository.readTextContent(SOURCE_URI)
+
+        assertNull(result)
+    }
+
+    @Test
+    fun readTextContent_whenOpenThrows_returnsNull() = runTest(testDispatcher) {
+        every { contentResolver.openInputStream(SOURCE_URI) } throws IOException("boom")
+
+        val result = repository.readTextContent(SOURCE_URI)
+
+        assertNull(result)
     }
 
     private fun stubQuery(cursor: Cursor?) {

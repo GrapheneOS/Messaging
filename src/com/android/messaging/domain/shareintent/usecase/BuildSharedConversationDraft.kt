@@ -56,8 +56,11 @@ internal class BuildSharedConversationDraftImpl @Inject constructor(
 
         return when {
             ContentType.TEXT_PLAIN == contentType -> {
+                val messageText = intent.sharedMessageText()
+                    .ifBlank { sharedTextFromContent(contentUri, caller).orEmpty() }
+
                 draftOrNull(
-                    messageText = intent.sharedMessageText(),
+                    messageText = messageText,
                     subject = subject,
                     attachments = emptyList(),
                 )
@@ -67,7 +70,7 @@ internal class BuildSharedConversationDraftImpl @Inject constructor(
                 val attachment = persistAttachment(
                     sourceUri = contentUri,
                     contentType = contentType,
-                    caller = caller
+                    caller = caller,
                 )
 
                 draftOrNull(
@@ -111,6 +114,26 @@ internal class BuildSharedConversationDraftImpl @Inject constructor(
         )
     }
 
+    private suspend fun sharedTextFromContent(
+        uri: Uri?,
+        caller: ComponentCaller,
+    ): String? {
+        if (uri == null) {
+            return null
+        }
+
+        return when {
+            caller.canReadContent(uri) -> {
+                sharedAttachmentRepository.readTextContent(uri)
+            }
+
+            else -> {
+                LogUtil.w(TAG, "Ignoring shared text without caller read permission")
+                null
+            }
+        }
+    }
+
     private fun Intent.sharedSubject(): String {
         return (getStringExtra(Intent.EXTRA_SUBJECT) ?: getStringExtra(Intent.EXTRA_TITLE))
             .orEmpty()
@@ -145,12 +168,16 @@ internal class BuildSharedConversationDraftImpl @Inject constructor(
             return null
         }
 
-        if (!caller.canReadContent(sourceUri)) {
-            LogUtil.w(TAG, "Ignoring shared attachment without caller read permission")
-            return null
-        }
+        return when {
+            caller.canReadContent(sourceUri) -> {
+                sharedAttachmentRepository.persistToScratchSpace(sourceUri, contentType)
+            }
 
-        return sharedAttachmentRepository.persistToScratchSpace(sourceUri, contentType)
+            else -> {
+                LogUtil.w(TAG, "Ignoring shared attachment without caller read permission")
+                null
+            }
+        }
     }
 
     private fun ComponentCaller.canReadContent(uri: Uri): Boolean {

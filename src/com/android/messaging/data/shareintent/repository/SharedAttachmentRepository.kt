@@ -20,6 +20,8 @@ internal interface SharedAttachmentRepository {
         sourceUri: Uri,
         contentType: String,
     ): ConversationDraftAttachment?
+
+    suspend fun readTextContent(sourceUri: Uri): String?
 }
 
 internal class SharedAttachmentRepositoryImpl @Inject constructor(
@@ -54,6 +56,23 @@ internal class SharedAttachmentRepositoryImpl @Inject constructor(
                     durationMillis = durationMillis,
                 )
             }
+        }
+    }
+
+    override suspend fun readTextContent(sourceUri: Uri): String? {
+        return withContext(ioDispatcher) {
+            if (UriUtil.isFileUri(sourceUri)) {
+                LogUtil.i(TAG, "Ignoring shared text from an unsupported file URI")
+                return@withContext null
+            }
+
+            runCatching {
+                contentResolver.openInputStream(sourceUri)?.use { stream ->
+                    stream.bufferedReader().readText()
+                }
+            }.onFailure {
+                LogUtil.w(TAG, "Could not read shared text from $sourceUri", it)
+            }.getOrNull()?.takeIf(String::isNotBlank)
         }
     }
 

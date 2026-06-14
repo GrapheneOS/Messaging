@@ -15,6 +15,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -99,6 +100,37 @@ internal class BuildSharedConversationDraftImplTest {
     }
 
     @Test
+    fun invoke_textWithoutExtraText_readsFromContentUri() = runTest(testDispatcher) {
+        every { resolveSharedContentType(any(), any()) } returns ContentType.TEXT_PLAIN
+        coEvery { sharedAttachmentRepository.readTextContent(TEXT_URI) } returns "file text"
+
+        val draft = buildSharedConversationDraft(textContentIntent(), grantingCaller)
+
+        assertEquals("file text", draft?.messageText)
+    }
+
+    @Test
+    fun invoke_textWithoutExtraText_callerDenied_dropsText() = runTest(testDispatcher) {
+        every { resolveSharedContentType(any(), any()) } returns ContentType.TEXT_PLAIN
+
+        val draft = buildSharedConversationDraft(textContentIntent(), denyingCaller)
+
+        assertNull(draft)
+        coVerify(exactly = 0) { sharedAttachmentRepository.readTextContent(any()) }
+    }
+
+    @Test
+    fun invoke_textWithExtraText_skipsContentUri() = runTest(testDispatcher) {
+        every { resolveSharedContentType(any(), any()) } returns ContentType.TEXT_PLAIN
+        val intent = textContentIntent().apply { putExtra(Intent.EXTRA_TEXT, "inline") }
+
+        val draft = buildSharedConversationDraft(intent, grantingCaller)
+
+        assertEquals("inline", draft?.messageText)
+        coVerify(exactly = 0) { sharedAttachmentRepository.readTextContent(any()) }
+    }
+
+    @Test
     fun invoke_sendMultipleWithNonImageTopLevelType_persistsMediaUris() = runTest(testDispatcher) {
         every { resolveSharedContentType(IMAGE_URI, any()) } returns ContentType.IMAGE_JPEG
         every { resolveSharedContentType(VIDEO_URI, any()) } returns "video/mp4"
@@ -139,7 +171,7 @@ internal class BuildSharedConversationDraftImplTest {
 
     private fun multipleIntent(
         type: String,
-        uris: ArrayList<Uri>
+        uris: ArrayList<Uri>,
     ): Intent {
         return Intent(Intent.ACTION_SEND_MULTIPLE).apply {
             this.type = type
@@ -151,6 +183,13 @@ internal class BuildSharedConversationDraftImplTest {
         return Intent(Intent.ACTION_SEND).apply {
             type = ContentType.TEXT_PLAIN
             putExtra(Intent.EXTRA_TEXT, "shared text")
+        }
+    }
+
+    private fun textContentIntent(): Intent {
+        return Intent(Intent.ACTION_SEND).apply {
+            type = ContentType.TEXT_PLAIN
+            putExtra(Intent.EXTRA_STREAM, TEXT_URI)
         }
     }
 
