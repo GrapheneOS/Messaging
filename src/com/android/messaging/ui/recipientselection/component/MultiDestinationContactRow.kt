@@ -183,6 +183,7 @@ private fun MultiDestinationMiniRow(
     val primaryTextColor by selectionTransition.animateSelectionPrimaryTextColor()
     val secondaryTextColor by selectionTransition.animateSelectionSecondaryTextColor()
     val highlightShape = rememberDestinationHighlightShape(
+        isSelected = isSelected,
         isPrevSelected = isPrevSelected,
         isNextSelected = isNextSelected,
     )
@@ -339,12 +340,13 @@ private fun rememberDestinationLabel(
 
 @Composable
 private fun rememberDestinationHighlightShape(
+    isSelected: Boolean,
     isPrevSelected: Boolean,
     isNextSelected: Boolean,
 ): RoundedCornerShape {
     val topCornerRadius by animateDpAsState(
         targetValue = when {
-            isPrevSelected -> contactMiddleCornerRadius
+            isSelected && isPrevSelected -> contactMiddleCornerRadius
             else -> contactCornerRadius
         },
         animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
@@ -352,7 +354,7 @@ private fun rememberDestinationHighlightShape(
     )
     val bottomCornerRadius by animateDpAsState(
         targetValue = when {
-            isNextSelected -> contactMiddleCornerRadius
+            isSelected && isNextSelected -> contactMiddleCornerRadius
             else -> contactCornerRadius
         },
         animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
