@@ -1,6 +1,8 @@
 package com.android.messaging.domain.shareintent.usecase
 
+import android.app.ComponentCaller
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.core.content.IntentCompat
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
@@ -8,13 +10,14 @@ import com.android.messaging.data.conversation.model.draft.ConversationDraftAtta
 import com.android.messaging.data.shareintent.repository.SharedAttachmentRepository
 import com.android.messaging.di.core.IoDispatcher
 import com.android.messaging.util.ContentType
+import com.android.messaging.util.LogUtil
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 
 internal interface BuildSharedConversationDraft {
-    suspend operator fun invoke(intent: Intent): ConversationDraft?
+    suspend operator fun invoke(intent: Intent, caller: ComponentCaller): ConversationDraft?
 }
 
 internal class BuildSharedConversationDraftImpl @Inject constructor(
@@ -24,14 +27,16 @@ internal class BuildSharedConversationDraftImpl @Inject constructor(
     private val ioDispatcher: CoroutineDispatcher,
 ) : BuildSharedConversationDraft {
 
-    override suspend fun invoke(intent: Intent): ConversationDraft? {
-        val subject = (intent.getStringExtra(Intent.EXTRA_SUBJECT)
-            ?: intent.getStringExtra(Intent.EXTRA_TITLE)).orEmpty()
+    override suspend fun invoke(
+        intent: Intent,
+        caller: ComponentCaller,
+    ): ConversationDraft? {
+        val subject = intent.sharedSubject()
 
         return withContext(ioDispatcher) {
             when (intent.action) {
-                Intent.ACTION_SEND -> buildFromSend(intent, subject)
-                Intent.ACTION_SEND_MULTIPLE -> buildFromSendMultiple(intent, subject)
+                Intent.ACTION_SEND -> buildFromSend(intent, subject, caller)
+                Intent.ACTION_SEND_MULTIPLE -> buildFromSendMultiple(intent, subject, caller)
                 else -> null
             }
         }
@@ -40,6 +45,7 @@ internal class BuildSharedConversationDraftImpl @Inject constructor(
     private suspend fun buildFromSend(
         intent: Intent,
         subject: String,
+        caller: ComponentCaller,
     ): ConversationDraft? {
         val contentUri = IntentCompat.getParcelableExtra(
             intent,
@@ -53,16 +59,21 @@ internal class BuildSharedConversationDraftImpl @Inject constructor(
                 draftOrNull(
                     messageText = intent.sharedMessageText(),
                     subject = subject,
-                    attachments = emptyList()
+                    attachments = emptyList(),
                 )
             }
 
             ContentType.isMediaType(contentType) && contentUri != null -> {
-                val attachment = persistAttachment(contentUri, contentType)
+                val attachment = persistAttachment(
+                    sourceUri = contentUri,
+                    contentType = contentType,
+                    caller = caller
+                )
+
                 draftOrNull(
                     messageText = intent.sharedMessageText(),
                     subject = subject,
-                    attachments = listOfNotNull(attachment)
+                    attachments = listOfNotNull(attachment),
                 )
             }
 
@@ -73,6 +84,7 @@ internal class BuildSharedConversationDraftImpl @Inject constructor(
     private suspend fun buildFromSendMultiple(
         intent: Intent,
         subject: String,
+        caller: ComponentCaller,
     ): ConversationDraft? {
         if (!ContentType.isImageType(intent.type)) {
             return null
@@ -87,15 +99,21 @@ internal class BuildSharedConversationDraftImpl @Inject constructor(
         val attachments = imageUris.mapNotNull { uri ->
             persistAttachment(
                 sourceUri = uri,
-                contentType = resolveSharedContentType(uri, intent.type)
+                contentType = resolveSharedContentType(uri, intent.type),
+                caller = caller,
             )
         }
 
         return draftOrNull(
             messageText = intent.sharedMessageText(),
             subject = subject,
-            attachments = attachments
+            attachments = attachments,
         )
+    }
+
+    private fun Intent.sharedSubject(): String {
+        return (getStringExtra(Intent.EXTRA_SUBJECT) ?: getStringExtra(Intent.EXTRA_TITLE))
+            .orEmpty()
     }
 
     private fun Intent.sharedMessageText(): String {
@@ -121,11 +139,30 @@ internal class BuildSharedConversationDraftImpl @Inject constructor(
     private suspend fun persistAttachment(
         sourceUri: Uri,
         contentType: String?,
+        caller: ComponentCaller,
     ): ConversationDraftAttachment? {
         if (contentType.isNullOrBlank()) {
             return null
         }
 
+        if (!caller.canReadContent(sourceUri)) {
+            LogUtil.w(TAG, "Ignoring shared attachment without caller read permission")
+            return null
+        }
+
         return sharedAttachmentRepository.persistToScratchSpace(sourceUri, contentType)
+    }
+
+    private fun ComponentCaller.canReadContent(uri: Uri): Boolean {
+        return runCatching {
+            checkContentUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION,
+            ) == PackageManager.PERMISSION_GRANTED
+        }.getOrDefault(false)
+    }
+
+    private companion object {
+        private const val TAG = "BuildSharedDraft"
     }
 }

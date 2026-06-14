@@ -7,7 +7,6 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.provider.OpenableColumns
 import com.android.messaging.util.ContentType
-import com.android.messaging.util.FileUtil
 import com.android.messaging.util.MediaMetadataRetrieverWrapper
 import com.android.messaging.util.UriUtil
 import io.mockk.Runs
@@ -45,9 +44,7 @@ internal class SharedAttachmentRepositoryImplTest {
     @Before
     fun setUp() {
         mockkStatic(UriUtil::class)
-        mockkStatic(FileUtil::class)
         every { UriUtil.isFileUri(any()) } returns false
-        every { FileUtil.isInPrivateDir(any()) } returns false
         every { UriUtil.persistContentToScratchSpace(any<Uri>()) } returns PERSISTED_URI
         stubQuery(cursor = null)
     }
@@ -61,19 +58,6 @@ internal class SharedAttachmentRepositoryImplTest {
     fun persistToScratchSpace_fileUri_returnsNullWithoutPersisting() = runTest(testDispatcher) {
         val sourceUri = Uri.parse("file:///sdcard/photo.jpg")
         every { UriUtil.isFileUri(sourceUri) } returns true
-
-        val result = repository.persistToScratchSpace(sourceUri, IMAGE_TYPE)
-
-        assertNull(result)
-        verify(exactly = 0) { UriUtil.persistContentToScratchSpace(any<Uri>()) }
-    }
-
-    @Test
-    fun persistToScratchSpace_privateDirUri_returnsNullWithoutPersisting() = runTest(
-        testDispatcher,
-    ) {
-        val sourceUri = Uri.parse("content://com.android.messaging/private/photo.jpg")
-        every { FileUtil.isInPrivateDir(sourceUri) } returns true
 
         val result = repository.persistToScratchSpace(sourceUri, IMAGE_TYPE)
 

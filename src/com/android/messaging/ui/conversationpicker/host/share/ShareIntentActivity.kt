@@ -51,9 +51,9 @@ class ShareIntentActivity : ComponentActivity() {
             AppTheme {
                 var isDraftLoading by remember { mutableStateOf(true) }
                 val conversationDraft by produceState<ConversationDraft?>(
-                    initialValue = null
+                    initialValue = null,
                 ) {
-                    value = buildSharedConversationDraft(intent)
+                    value = buildSharedConversationDraft(intent, initialCaller)
                     isDraftLoading = false
                 }
 

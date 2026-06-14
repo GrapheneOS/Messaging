@@ -7,7 +7,6 @@ import android.provider.OpenableColumns
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.di.core.IoDispatcher
 import com.android.messaging.util.ContentType
-import com.android.messaging.util.FileUtil
 import com.android.messaging.util.LogUtil
 import com.android.messaging.util.MediaMetadataRetrieverWrapper
 import com.android.messaging.util.UriUtil
@@ -36,10 +35,6 @@ internal class SharedAttachmentRepositoryImpl @Inject constructor(
         return withContext(ioDispatcher) {
             if (UriUtil.isFileUri(sourceUri)) {
                 LogUtil.i(TAG, "Ignoring shared attachment from an unsupported file URI")
-                return@withContext null
-            }
-            if (FileUtil.isInPrivateDir(sourceUri)) {
-                LogUtil.w(TAG, "Ignoring shared attachment from a private file URI")
                 return@withContext null
             }
 
