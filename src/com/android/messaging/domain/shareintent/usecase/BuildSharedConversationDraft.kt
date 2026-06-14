@@ -25,7 +25,8 @@ internal class BuildSharedConversationDraftImpl @Inject constructor(
 ) : BuildSharedConversationDraft {
 
     override suspend fun invoke(intent: Intent): ConversationDraft? {
-        val subject = intent.getStringExtra(Intent.EXTRA_SUBJECT).orEmpty()
+        val subject = (intent.getStringExtra(Intent.EXTRA_SUBJECT)
+            ?: intent.getStringExtra(Intent.EXTRA_TITLE)).orEmpty()
 
         return withContext(ioDispatcher) {
             when (intent.action) {
