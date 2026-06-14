@@ -23,9 +23,10 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantUiState
-import com.android.messaging.ui.common.components.ParticipantAvatar
-import com.android.messaging.ui.common.components.ParticipantQuickActionsPopup
 import com.android.messaging.ui.common.components.TwoLineListItem
+import com.android.messaging.ui.common.components.participant.ParticipantAvatar
+import com.android.messaging.ui.common.components.participant.ParticipantQuickActionsPopup
+import com.android.messaging.ui.common.components.participant.participantAvatarLabel
 import com.android.messaging.ui.core.MessagingPreviewColumn
 
 @Composable
@@ -134,6 +135,7 @@ private fun BlockedParticipantQuickActions(
         displayName = participant.displayName,
         subtitle = participant.details,
         fallbackIcon = fallbackIcon,
+        fallbackLabel = participantAvatarLabel(source = participant.displayName),
         onDismiss = onDismiss,
         onMessageClick = {
             onMessageClick()
@@ -168,6 +170,7 @@ private fun BlockedParticipantAvatarWithQuickActions(
         ParticipantAvatar(
             avatarUri = participant.avatarUri,
             size = 48.dp,
+            fallbackLabel = participantAvatarLabel(source = participant.displayName),
             fallbackIcon = fallbackIcon,
             isSelected = isSelected,
             modifier = Modifier

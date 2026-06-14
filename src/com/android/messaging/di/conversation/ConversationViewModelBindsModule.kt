@@ -26,8 +26,6 @@ import com.android.messaging.ui.conversation.metadata.delegate.ConversationMetad
 import com.android.messaging.ui.conversation.metadata.delegate.ConversationMetadataDelegateImpl
 import com.android.messaging.ui.conversation.recipientpicker.delegate.ConversationResolutionDelegate
 import com.android.messaging.ui.conversation.recipientpicker.delegate.ConversationResolutionDelegateImpl
-import com.android.messaging.ui.conversation.recipientpicker.delegate.RecipientPickerDelegate
-import com.android.messaging.ui.conversation.recipientpicker.delegate.RecipientPickerDelegateImpl
 import com.android.messaging.ui.conversation.recipientpicker.delegate.SelectedRecipientsDelegate
 import com.android.messaging.ui.conversation.recipientpicker.delegate.SelectedRecipientsDelegateImpl
 import dagger.Binds
@@ -111,12 +109,6 @@ internal abstract class ConversationViewModelBindsModule {
     abstract fun bindConversationSubscriptionSelectionDelegate(
         impl: ConversationSubscriptionSelectionDelegateImpl,
     ): ConversationSubscriptionSelectionDelegate
-
-    @Binds
-    @ViewModelScoped
-    abstract fun bindRecipientPickerDelegate(
-        impl: RecipientPickerDelegateImpl,
-    ): RecipientPickerDelegate
 
     @Binds
     @ViewModelScoped
