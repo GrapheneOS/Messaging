@@ -371,19 +371,23 @@ private fun PickerContactsTargetsContent(
 
             else -> null
         },
-        topListContent = {
-            RecentTargetsSection(
-                recentTargets = uiState.targets.recent.targets,
-                selectedIds = uiState.targets.selection.selectedIds,
-                inSelectionMode = inSelectionMode,
-                allowMultiSelect = allowMultiSelect,
-                canLoadMoreRecent = uiState.targets.recent.canLoadMore,
-                canCollapseRecent = uiState.targets.recent.canCollapse,
-                hasContactsPermission = uiState.contacts.hasContactsPermission,
-                onAction = onAction,
-                onGrantContactsPermission = onGrantContactsPermission,
-                modifier = Modifier.padding(bottom = ScreenContentPadding),
-            )
+        topListContent = when {
+            uiState.targets.isSearchActive -> null
+            else -> {
+                {
+                    RecentTargetsSection(
+                        recentTargets = uiState.targets.recent.targets,
+                        selectedIds = uiState.targets.selection.selectedIds,
+                        inSelectionMode = inSelectionMode,
+                        allowMultiSelect = allowMultiSelect,
+                        canLoadMoreRecent = uiState.targets.recent.canLoadMore,
+                        canCollapseRecent = uiState.targets.recent.canCollapse,
+                        hasContactsPermission = uiState.contacts.hasContactsPermission,
+                        onAction = onAction,
+                        onGrantContactsPermission = onGrantContactsPermission,
+                    )
+                }
+            }
         },
     )
 }
