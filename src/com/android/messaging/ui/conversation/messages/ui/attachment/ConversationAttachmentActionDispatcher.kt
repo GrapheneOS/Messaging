@@ -40,11 +40,5 @@ internal fun ConversationMessageAttachment.toConversationAttachmentOpenActionOrN
                 )
             }
         }
-
-        is ConversationMessageAttachment.YouTubePreview -> {
-            ConversationAttachmentOpenAction.OpenExternal(
-                uri = sourceUrl,
-            )
-        }
     }
 }

@@ -18,11 +18,4 @@ internal sealed interface ConversationMessageAttachment {
         override val key: String,
         val part: ConversationMessagePartUiModel.Attachment,
     ) : ConversationMessageAttachment
-
-    @Immutable
-    data class YouTubePreview(
-        override val key: String,
-        val sourceUrl: String,
-        val thumbnailUrl: String,
-    ) : ConversationMessageAttachment
 }

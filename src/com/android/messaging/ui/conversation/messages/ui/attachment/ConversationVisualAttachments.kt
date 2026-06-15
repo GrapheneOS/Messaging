@@ -37,7 +37,6 @@ import com.android.messaging.ui.conversation.messages.model.attachment.Conversat
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
 import com.android.messaging.ui.conversation.preview.previewMessageAttachments
 import com.android.messaging.ui.core.MessagingPreviewColumn
-import com.android.messaging.util.ContentType
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -278,16 +277,6 @@ private fun ConversationAttachmentThumbnail(
             )
         }
 
-        is ConversationMessageAttachment.YouTubePreview -> {
-            ConversationMediaThumbnail(
-                modifier = modifier,
-                contentUri = attachment.thumbnailUrl,
-                contentType = ContentType.IMAGE_JPEG,
-                size = thumbnailSize,
-                contentScale = contentScale,
-            )
-        }
-
         is ConversationMessageAttachment.Unsupported -> {
             Box(
                 modifier = modifier.background(
@@ -356,7 +345,6 @@ private fun ConversationMessageAttachment.requiresPlaybackAffordance(): Boolean 
         is ConversationMessageAttachment.Media -> {
             part is ConversationMessagePartUiModel.Attachment.Video
         }
-        is ConversationMessageAttachment.YouTubePreview -> true
         is ConversationMessageAttachment.Unsupported -> false
     }
 }
@@ -367,10 +355,6 @@ private fun resolveAttachmentAspectRatio(
     val preferredAspectRatio = when (attachment) {
         is ConversationMessageAttachment.Media -> {
             resolvePartAspectRatio(part = attachment.part)
-        }
-
-        is ConversationMessageAttachment.YouTubePreview -> {
-            MESSAGE_ATTACHMENT_DEFAULT_VIDEO_ASPECT_RATIO
         }
 
         is ConversationMessageAttachment.Unsupported -> {
