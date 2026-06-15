@@ -35,8 +35,8 @@ import com.android.messaging.ui.conversation.messages.ui.message.formatDateSepar
 import com.android.messaging.ui.conversation.messages.ui.message.resolveConversationMessageSimDisplayName
 import com.android.messaging.ui.conversation.preview.previewMessages
 import com.android.messaging.ui.conversation.preview.previewSubscriptions
-import com.android.messaging.ui.conversation.resolveDisplayName
 import com.android.messaging.ui.core.MessagingPreviewTheme
+import com.android.messaging.ui.subscription.mapper.resolveDisplayName
 import java.util.TimeZone
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap

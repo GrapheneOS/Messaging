@@ -40,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.core.content.ContextCompat
@@ -47,6 +48,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.messaging.R
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.common.components.composer.MESSAGE_COMPOSE_FIELD_TEST_TAG
 import com.android.messaging.ui.common.components.composer.MessageComposeBar
@@ -72,6 +74,9 @@ import com.android.messaging.ui.conversationpicker.model.TargetsUiState
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import com.android.messaging.ui.recipientselection.component.RecipientSelectionContactsContent
 import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerUiState
+import com.android.messaging.ui.subscription.component.SimSelectorRow
+import com.android.messaging.ui.subscription.mapper.rememberSimSelectorUiState
+import com.android.messaging.ui.subscription.model.SimSelectionUiState
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 
@@ -510,6 +515,11 @@ private fun PickerReviewContent(
                 )
             }
 
+            PickerReviewSimSelector(
+                sim = uiState.sim,
+                onSimSelected = { onAction(Action.SimSelected(it)) },
+            )
+
             PickerReviewComposeBar(
                 uiState = uiState,
                 onAction = onAction,
@@ -519,6 +529,37 @@ private fun PickerReviewContent(
             )
         }
     }
+}
+
+@Composable
+private fun PickerReviewSimSelector(
+    sim: SimSelectionUiState,
+    onSimSelected: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val simSelectorUiState = rememberSimSelectorUiState(
+        subscriptions = sim.subscriptions,
+        selectedSelfParticipantId = sim.selectedSelfParticipantId,
+    )
+
+    if (!simSelectorUiState.isAvailable) {
+        return
+    }
+
+    val selectedLabel = simSelectorUiState.selectedOption?.label.orEmpty()
+
+    SimSelectorRow(
+        modifier = modifier,
+        uiState = simSelectorUiState,
+        prefixText = stringResource(id = R.string.new_chat_sim_selector_prefix),
+        chipContentDescription = stringResource(
+            id = R.string.new_chat_sim_selector_chip_content_description,
+            selectedLabel,
+        ),
+        selectedContentDescription = stringResource(id = R.string.sim_selector_item_selected),
+        onSimSelected = onSimSelected,
+        showDestination = true,
+    )
 }
 
 @Composable

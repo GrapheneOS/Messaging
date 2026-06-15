@@ -4,6 +4,8 @@ import com.android.messaging.ui.conversationpicker.delegate.DraftDelegate
 import com.android.messaging.ui.conversationpicker.delegate.DraftDelegateImpl
 import com.android.messaging.ui.conversationpicker.delegate.TargetsDelegate
 import com.android.messaging.ui.conversationpicker.delegate.TargetsDelegateImpl
+import com.android.messaging.ui.subscription.delegate.SimSelectionDelegate
+import com.android.messaging.ui.subscription.delegate.SimSelectionDelegateImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -25,4 +27,10 @@ internal abstract class ConversationPickerViewModelBindsModule {
     abstract fun bindDraftDelegate(
         impl: DraftDelegateImpl,
     ): DraftDelegate
+
+    @Binds
+    @ViewModelScoped
+    abstract fun bindSimSelectionDelegate(
+        impl: SimSelectionDelegateImpl,
+    ): SimSelectionDelegate
 }

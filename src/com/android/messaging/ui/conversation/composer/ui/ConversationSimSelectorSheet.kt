@@ -31,8 +31,9 @@ import com.android.messaging.ui.conversation.CONVERSATION_SIM_SELECTOR_SHEET_TES
 import com.android.messaging.ui.conversation.composer.model.ConversationSimSelectorUiState
 import com.android.messaging.ui.conversation.conversationSimSelectorItemTestTag
 import com.android.messaging.ui.conversation.preview.previewSimSelectorUiState
-import com.android.messaging.ui.conversation.resolveDisplayName
 import com.android.messaging.ui.core.MessagingPreviewTheme
+import com.android.messaging.ui.subscription.component.SubscriptionSimAvatar
+import com.android.messaging.ui.subscription.mapper.resolveDisplayName
 
 private val SHEET_VERTICAL_PADDING = 8.dp
 
@@ -123,7 +124,7 @@ private fun ConversationSimSelectorRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(space = 16.dp),
     ) {
-        ConversationSimAvatar(subscription = subscription)
+        SubscriptionSimAvatar(subscription = subscription)
 
         Column(modifier = Modifier.weight(weight = 1f)) {
             Text(

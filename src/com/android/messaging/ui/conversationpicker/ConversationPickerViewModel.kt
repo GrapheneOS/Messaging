@@ -15,6 +15,7 @@ import com.android.messaging.ui.conversationpicker.model.DraftUiState
 import com.android.messaging.ui.conversationpicker.model.TargetUiState
 import com.android.messaging.ui.conversationpicker.model.TargetsUiState
 import com.android.messaging.ui.recipientselection.delegate.RecipientPickerDelegate
+import com.android.messaging.ui.subscription.delegate.SimSelectionDelegate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableSet
@@ -40,6 +41,7 @@ internal class ConversationPickerViewModel @Inject constructor(
     private val targetsDelegate: TargetsDelegate,
     private val recipientPickerDelegate: RecipientPickerDelegate,
     private val draftDelegate: DraftDelegate,
+    private val simSelectionDelegate: SimSelectionDelegate,
     private val resolveConversationId: ResolveConversationId,
     private val contactTargetMapper: ContactTargetMapper,
 ) : ViewModel(),
@@ -52,11 +54,13 @@ internal class ConversationPickerViewModel @Inject constructor(
         targetsDelegate.state,
         recipientPickerDelegate.state,
         draftDelegate.state,
-    ) { targetsState, contactsState, draftState ->
+        simSelectionDelegate.state,
+    ) { targetsState, contactsState, draftState, simState ->
         State(
             targets = targetsState,
             contacts = contactsState,
             draft = draftState,
+            sim = simState,
             isSendEnabled = isSendEnabled(targetsState, draftState),
         )
     }.stateIn(
@@ -71,12 +75,14 @@ internal class ConversationPickerViewModel @Inject constructor(
         targetsDelegate.bind(viewModelScope)
         recipientPickerDelegate.bind(viewModelScope)
         draftDelegate.bind(viewModelScope, targetsDelegate.selectedIds)
+        simSelectionDelegate.bind(viewModelScope)
     }
 
     override fun onAction(action: Action) {
         when (action) {
             is Action.TargetsAction -> onTargetsAction(action)
             is Action.DraftAction -> onDraftAction(action)
+            is Action.SimSelected -> simSelectionDelegate.select(action.selfParticipantId)
         }
     }
 
@@ -169,10 +175,16 @@ internal class ConversationPickerViewModel @Inject constructor(
             }
 
             Action.SendClicked -> {
+                val selfParticipantId = simSelectionDelegate
+                    .currentSelectedSelfParticipantId()
+                    .orEmpty()
+
                 _effects.tryEmit(
                     Effect.SendToSelected(
                         targets = currentSendTargets(),
-                        draft = draftDelegate.currentDraft(),
+                        draft = draftDelegate.currentDraft().copy(
+                            selfParticipantId = selfParticipantId,
+                        ),
                     ),
                 )
             }

@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversation.composer.ui
+package com.android.messaging.ui.subscription.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -9,61 +9,64 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.android.messaging.data.subscription.model.Subscription
-import com.android.messaging.ui.conversation.preview.previewSubscriptions
 import com.android.messaging.ui.core.MessagingPreviewColumn
 
-internal val ConversationSimAvatarDefaultSize: Dp = 40.dp
+internal val SimAvatarDefaultSize: Dp = 40.dp
 
 @Composable
-internal fun ConversationSimAvatar(
-    subscription: Subscription,
+internal fun SimAvatar(
+    slotLabel: String,
+    accentColor: Color?,
     modifier: Modifier = Modifier,
-    size: Dp = ConversationSimAvatarDefaultSize,
+    size: Dp = SimAvatarDefaultSize,
 ) {
     Box(
         modifier = modifier
             .size(size = size)
             .clip(shape = CircleShape)
             .background(
-                color = subscription.resolveAccentColor(),
+                color = accentColor ?: MaterialTheme.colorScheme.primary,
             ),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = subscription.displaySlotId.toString(),
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.SemiBold,
+        val density = LocalDensity.current
+        CompositionLocalProvider(
+            LocalDensity provides Density(
+                density = density.density,
+                fontScale = 1f,
             ),
-            color = Color.White,
-        )
-    }
-}
-
-@Composable
-private fun Subscription.resolveAccentColor(): Color {
-    return when (color) {
-        0 -> MaterialTheme.colorScheme.primary
-        else -> Color(color = color)
+        ) {
+            Text(
+                text = slotLabel,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                ),
+                color = Color.White,
+                maxLines = 1,
+                softWrap = false,
+            )
+        }
     }
 }
 
 @PreviewLightDark
 @Composable
-private fun ConversationSimAvatarPreview() {
+private fun SimAvatarPreview() {
     MessagingPreviewColumn {
         Row(horizontalArrangement = Arrangement.spacedBy(space = 12.dp)) {
-            previewSubscriptions().forEach { subscription ->
-                ConversationSimAvatar(subscription = subscription)
-            }
+            SimAvatar(slotLabel = "1", accentColor = null)
+            SimAvatar(slotLabel = "2", accentColor = Color(color = 0xFF2E7D32))
         }
     }
 }

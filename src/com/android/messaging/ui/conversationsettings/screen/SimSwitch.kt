@@ -32,12 +32,12 @@ import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
 import com.android.messaging.data.subscription.model.Subscription
-import com.android.messaging.ui.conversationsettings.common.ConversationSimAvatar
-import com.android.messaging.ui.conversationsettings.common.resolveDisplayName
 import com.android.messaging.ui.conversationsettings.common.settingsCardShape
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsAction as Action
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState as State
 import com.android.messaging.ui.core.MessagingPreviewColumn
+import com.android.messaging.ui.subscription.component.SubscriptionSimAvatar
+import com.android.messaging.ui.subscription.mapper.resolveDisplayName
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -192,7 +192,10 @@ private fun SimSelectorRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(space = 16.dp),
     ) {
-        ConversationSimAvatar(subscription = subscription)
+        SubscriptionSimAvatar(
+            subscription = subscription,
+            size = 24.dp,
+        )
 
         Column(modifier = Modifier.weight(weight = 1f)) {
             Text(

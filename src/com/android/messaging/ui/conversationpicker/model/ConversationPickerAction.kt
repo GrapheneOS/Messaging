@@ -9,6 +9,10 @@ internal sealed interface ConversationPickerAction {
 
     sealed interface DraftAction : ConversationPickerAction
 
+    data class SimSelected(
+        val selfParticipantId: String,
+    ) : ConversationPickerAction
+
     data class TargetClicked(
         val target: TargetUiState,
     ) : TargetsAction

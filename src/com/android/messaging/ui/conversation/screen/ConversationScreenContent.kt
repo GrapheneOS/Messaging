@@ -36,8 +36,8 @@ import com.android.messaging.ui.conversation.messages.model.message.Conversation
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagesUiState
 import com.android.messaging.ui.conversation.messages.ui.ConversationMessages
 import com.android.messaging.ui.conversation.metadata.model.ConversationMetadataUiState
-import com.android.messaging.ui.conversation.resolveDisplayName
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaffoldUiState
+import com.android.messaging.ui.subscription.mapper.resolveDisplayName
 import kotlinx.collections.immutable.ImmutableList
 
 private const val SMOOTH_SCROLL_JUMP_THRESHOLD = 15
