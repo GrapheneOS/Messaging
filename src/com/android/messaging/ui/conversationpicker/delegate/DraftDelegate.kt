@@ -5,6 +5,7 @@ import com.android.messaging.data.conversation.model.draft.ConversationDraftAtta
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.ui.conversationpicker.model.DraftUiState
 import com.android.messaging.ui.conversationpicker.model.toAttachmentUiModel
+import com.android.messaging.ui.conversationpicker.model.toMediaPreviewItem
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.toImmutableList
@@ -64,6 +65,9 @@ internal class DraftDelegateImpl @Inject constructor(
                     subjectText = current.subjectText,
                     attachments = current.attachments
                         .map(ConversationDraftAttachment::toAttachmentUiModel)
+                        .toImmutableList(),
+                    backgroundItems = current.attachments
+                        .map(ConversationDraftAttachment::toMediaPreviewItem)
                         .toImmutableList(),
                 )
             }.collect { state ->

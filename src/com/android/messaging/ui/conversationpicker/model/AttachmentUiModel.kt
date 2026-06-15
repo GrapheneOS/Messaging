@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversationpicker.model
 import androidx.compose.runtime.Immutable
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.ui.common.components.attachment.VCardAttachmentKind
+import com.android.messaging.ui.common.components.mediapreview.MediaPreviewItem
 import com.android.messaging.util.ContentType
 
 @Immutable
@@ -55,4 +56,12 @@ internal fun ConversationDraftAttachment.toAttachmentUiModel(): AttachmentUiMode
             isVideo = false,
         )
     }
+}
+
+internal fun ConversationDraftAttachment.toMediaPreviewItem(): MediaPreviewItem {
+    return MediaPreviewItem(
+        contentUri = contentUri,
+        contentType = contentType,
+        isVideo = ContentType.isVideoType(contentType),
+    )
 }

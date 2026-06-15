@@ -17,11 +17,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -49,10 +51,11 @@ import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.common.components.composer.MESSAGE_COMPOSE_FIELD_TEST_TAG
 import com.android.messaging.ui.common.components.composer.MessageComposeBar
 import com.android.messaging.ui.common.components.composer.MessageSendButton
+import com.android.messaging.ui.common.components.mediapreview.MediaPreviewBackground
 import com.android.messaging.ui.common.components.selection.LocalSelectionListItemColors
 import com.android.messaging.ui.common.components.selection.SelectionListContent
 import com.android.messaging.ui.common.components.selection.selectionListItemColors
-import com.android.messaging.ui.conversationpicker.common.AttachmentPreview
+import com.android.messaging.ui.conversationpicker.common.PickerReviewAttachments
 import com.android.messaging.ui.conversationpicker.common.PickerReviewTopAppBar
 import com.android.messaging.ui.conversationpicker.common.PickerTopAppBar
 import com.android.messaging.ui.conversationpicker.common.ScreenContentPadding
@@ -458,21 +461,61 @@ private fun PickerReviewScaffold(
             }
         },
     ) { contentPadding ->
-        Box(
+        PickerReviewContent(
+            uiState = uiState,
+            onAction = onAction,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = contentPadding.calculateTopPadding())
                 .clip(MaterialTheme.contentSurfaceShape)
                 .background(MaterialTheme.colorScheme.background),
+        )
+    }
+}
+
+@Composable
+private fun PickerReviewContent(
+    uiState: State,
+    onAction: (Action) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val attachments = uiState.draft.attachments
+    val pagerState = rememberPagerState(pageCount = { attachments.size })
+
+    Box(
+        modifier = modifier,
+    ) {
+        if (attachments.isNotEmpty()) {
+            MediaPreviewBackground(
+                modifier = Modifier.matchParentSize(),
+                items = uiState.draft.backgroundItems,
+                pagerState = pagerState,
+            )
+        }
+
+        Column(
+            modifier = Modifier.fillMaxSize(),
         ) {
+            Box(
+                modifier = Modifier
+                    .weight(weight = 1f)
+                    .fillMaxWidth(),
+            ) {
+                PickerReviewAttachments(
+                    attachments = attachments,
+                    pagerState = pagerState,
+                    onAttachmentClick = { onAction(Action.DraftAttachmentClicked(it)) },
+                    onAttachmentRemove = { onAction(Action.DraftAttachmentRemoved(it)) },
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+
             PickerReviewComposeBar(
                 uiState = uiState,
                 onAction = onAction,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .windowInsetsPadding(
-                        WindowInsets.ime.union(WindowInsets.navigationBars),
-                    ),
+                modifier = Modifier.windowInsetsPadding(
+                    WindowInsets.ime.union(WindowInsets.navigationBars),
+                ),
             )
         }
     }
@@ -501,13 +544,6 @@ private fun PickerReviewComposeBar(
             MessageSendButton(
                 enabled = uiState.isSendEnabled,
                 onClick = { onAction(Action.SendClicked) },
-            )
-        },
-        attachmentsContent = {
-            AttachmentPreview(
-                attachments = uiState.draft.attachments,
-                onRemove = { onAction(Action.DraftAttachmentRemoved(it)) },
-                onClick = { onAction(Action.DraftAttachmentClicked(it)) },
             )
         },
     )
