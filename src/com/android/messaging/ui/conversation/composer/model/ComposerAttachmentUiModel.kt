@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.composer.model
 
 import androidx.compose.runtime.Immutable
+import com.android.messaging.ui.common.components.mediapreview.MediaPreviewItem
 import com.android.messaging.ui.conversation.attachment.model.ConversationVCardAttachmentUiModel
 
 @Immutable
@@ -83,4 +84,12 @@ internal sealed interface ComposerAttachmentUiModel {
             val vCardUiModel: ConversationVCardAttachmentUiModel,
         ) : Resolved
     }
+}
+
+internal fun ComposerAttachmentUiModel.Resolved.VisualMedia.toMediaPreviewItem(): MediaPreviewItem {
+    return MediaPreviewItem(
+        contentUri = contentUri,
+        contentType = contentType,
+        isVideo = this is ComposerAttachmentUiModel.Resolved.VisualMedia.Video,
+    )
 }

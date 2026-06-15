@@ -44,8 +44,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.ui.common.components.mediapreview.MediaPreviewBackground
 import com.android.messaging.ui.conversation.composer.model.ComposerAttachmentUiModel
 import com.android.messaging.ui.conversation.composer.model.ConversationSendActionButtonMode
+import com.android.messaging.ui.conversation.composer.model.toMediaPreviewItem
 import com.android.messaging.ui.conversation.composer.ui.ConversationSendActionButton
 import com.android.messaging.ui.conversation.mediapicker.component.PickerOverlayIconButton
 import com.android.messaging.ui.conversation.mediapicker.component.pickerOverlayContentColor
@@ -56,6 +58,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.toImmutableList
 
 private const val PICKER_REVIEW_PAGE_ASPECT_RATIO = 0.8f
 private const val PICKER_REVIEW_PAGE_MAX_HEIGHT_FRACTION = 0.95f
@@ -132,13 +135,19 @@ private fun ConversationMediaReviewSceneContent(
     onCloseClick: () -> Unit,
     onSendClick: () -> Unit,
 ) {
+    val backgroundItems = remember(attachments) {
+        attachments
+            .map { attachment -> attachment.toMediaPreviewItem() }
+            .toImmutableList()
+    }
+
     Box(
         modifier = modifier,
     ) {
-        ConversationMediaReviewBackground(
+        MediaPreviewBackground(
             modifier = Modifier.fillMaxSize(),
+            items = backgroundItems,
             pagerState = reviewPagerState.pagerState,
-            attachments = attachments,
         )
 
         Column(

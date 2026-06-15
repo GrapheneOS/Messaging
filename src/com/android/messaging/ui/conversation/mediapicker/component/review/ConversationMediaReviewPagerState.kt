@@ -6,6 +6,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import com.android.messaging.ui.common.components.mediapreview.mediaReviewVisibleDeleteChipPage
 import com.android.messaging.ui.conversation.composer.model.ComposerAttachmentUiModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
@@ -71,9 +72,9 @@ internal fun rememberConversationMediaReviewPagerState(
             pagerState = pagerState,
         )
     }
-    val visibleDeleteChipPage = resolveVisibleDeleteChipPage(
-        attachments = attachments,
+    val visibleDeleteChipPage = mediaReviewVisibleDeleteChipPage(
         pagerState = pagerState,
+        pageCount = attachments.size,
     )
 
     return ConversationMediaReviewPagerState(
@@ -183,25 +184,4 @@ private fun clampAttachmentPage(
         minimumValue = 0,
         maximumValue = attachments.lastIndex,
     )
-}
-
-private fun resolveVisibleDeleteChipPage(
-    attachments: List<ComposerAttachmentUiModel.Resolved.VisualMedia>,
-    pagerState: PagerState,
-): Int? {
-    val clampedCurrentPage = clampAttachmentPage(
-        page = pagerState.currentPage,
-        attachments = attachments,
-    )
-
-    val clampedSettledPage = clampAttachmentPage(
-        page = pagerState.settledPage,
-        attachments = attachments,
-    )
-
-    return when {
-        !pagerState.isScrollInProgress -> clampedCurrentPage
-        clampedCurrentPage == clampedSettledPage -> null
-        else -> clampedCurrentPage
-    }
 }
