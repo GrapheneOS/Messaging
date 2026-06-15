@@ -2,9 +2,12 @@ package com.android.messaging.ui.appsettings.general.ui
 
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import com.android.messaging.R
 import com.android.messaging.ui.appsettings.general.model.AppSettingsUiState
 import com.android.messaging.ui.appsettings.screen.SettingsScreenModel
@@ -116,6 +119,7 @@ class AppSettingsScreenTest {
         composeTestRule.onNodeWithText(dumpSmsTitle).assertIsDisplayed()
 
         val dumpMmsTitle = composeTestRule.activity.getString(R.string.dump_mms_pref_title)
+        scrollToText(text = dumpMmsTitle)
         composeTestRule.onNodeWithText(dumpMmsTitle).assertIsDisplayed()
     }
 
@@ -146,6 +150,7 @@ class AppSettingsScreenTest {
         setContent(appSettings = appSettings)
 
         val title = composeTestRule.activity.getString(R.string.dump_mms_pref_title)
+        scrollToText(text = title)
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
@@ -206,6 +211,10 @@ class AppSettingsScreenTest {
 
         val advancedTitle = composeTestRule.activity.getString(R.string.advanced_settings)
         composeTestRule.onNodeWithText(advancedTitle).assertDoesNotExist()
+    }
+
+    private fun scrollToText(text: String) {
+        composeTestRule.onNode(hasScrollAction()).performScrollToNode(hasText(text))
     }
 
     private fun setContent(

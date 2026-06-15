@@ -1,13 +1,10 @@
 package com.android.messaging.ui.conversationsettings.screen.model
 
-import com.android.messaging.data.conversationsettings.model.LegacyConversationNotificationPrefs
-
 internal sealed interface ConversationSettingsScreenEffect {
 
     data class OpenNotificationChannelSettings(
         val conversationId: String,
         val conversationTitle: String,
-        val legacyPrefs: LegacyConversationNotificationPrefs,
     ) : ConversationSettingsScreenEffect
 
     data class OpenParticipantChat(

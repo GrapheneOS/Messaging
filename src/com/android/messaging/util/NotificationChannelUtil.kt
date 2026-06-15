@@ -5,7 +5,6 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.media.AudioAttributes
-import android.net.Uri
 import androidx.core.content.pm.ShortcutManagerCompat
 import com.android.messaging.Factory
 import com.android.messaging.R
@@ -25,50 +24,65 @@ object NotificationChannelUtil {
             NotificationChannel(
                 INCOMING_MESSAGES,
                 context.getString(R.string.incoming_messages_channel),
-                NotificationManager.IMPORTANCE_HIGH
-            )
+                NotificationManager.IMPORTANCE_HIGH,
+            ),
         )
         notificationManager.createNotificationChannel(
             NotificationChannel(
                 ALERTS_CHANNEL,
                 context.getString(R.string.alerts_channel),
-                NotificationManager.IMPORTANCE_HIGH
-            )
+                NotificationManager.IMPORTANCE_HIGH,
+            ),
         )
     }
 
-    /**
-     * Creates a notification channel with the user's old preferences.
-     * @param conversationId The id of the conversation channel.
-     * @param conversationTitle The title of the conversation channel.
-     * @param legacyNotificationsEnabled Whether notifications are enabled in the channel. Pulled
-     * from the old notifications system.
-     * @param legacyRingtoneString The [Uri] of the ringtone to use for notifications. Pulled from the
-     * old notifications system.
-     * @param legacyVibrationEnabled Whether vibration is enabled in the channel. Pulled from the
-     * old notifications system.
-     */
-    fun createConversationChannel(
+    // Migrate this and related functions to a use-case when BugleNotifications refactored
+    fun createConversationChannelForRuntime(
         conversationId: String,
         conversationTitle: String,
-        legacyNotificationsEnabled: Boolean = true,
-        legacyRingtoneString: String? = null,
-        legacyVibrationEnabled: Boolean = false,
     ): NotificationChannel {
         val notificationManager = getNotificationManager()
-        val defaultNotificationChannel =
-            notificationManager.getNotificationChannel(INCOMING_MESSAGES)
         val existingChannel = getConversationChannel(conversationId)
-        val channel = existingChannel
-            ?: NotificationChannel(
-                conversationId,
-                conversationTitle,
-                if (legacyNotificationsEnabled) {
-                    defaultNotificationChannel.importance
-                } else {
-                    NotificationManager.IMPORTANCE_NONE
-                }
-            )
+        if (existingChannel != null) {
+            return existingChannel
+        }
+
+        val parentChannel = getOrCreateIncomingMessagesChannel(notificationManager)
+        val channel = NotificationChannel(
+            conversationId,
+            conversationTitle,
+            parentChannel.importance,
+        )
+        channel.setSound(parentChannel.sound, parentChannel.audioAttributes)
+        channel.enableVibration(parentChannel.shouldVibrate())
+        channel.setConversationId(INCOMING_MESSAGES, conversationId)
+        notificationManager.createNotificationChannel(channel)
+        return channel
+    }
+
+    fun createConversationChannelFromLegacy(
+        conversationId: String,
+        conversationTitle: String,
+        legacyNotificationsEnabled: Boolean,
+        legacyRingtoneString: String? = null,
+        legacyVibrationEnabled: Boolean,
+    ): NotificationChannel {
+        val notificationManager = getNotificationManager()
+        val existingChannel = getConversationChannel(conversationId)
+        if (existingChannel != null) {
+            return existingChannel
+        }
+
+        val parentChannel = getOrCreateIncomingMessagesChannel(notificationManager)
+        val channel = NotificationChannel(
+            conversationId,
+            conversationTitle,
+            if (legacyNotificationsEnabled) {
+                parentChannel.importance
+            } else {
+                NotificationManager.IMPORTANCE_NONE
+            },
+        )
         val ringtoneUri =
             RingtoneUtil.getNotificationRingtoneUri(conversationId, legacyRingtoneString)
         val audioAttributes = AudioAttributes.Builder()
@@ -76,14 +90,7 @@ object NotificationChannelUtil {
             .setUsage(AudioAttributes.USAGE_NOTIFICATION)
             .build()
         channel.setSound(ringtoneUri, audioAttributes)
-        channel.enableVibration(
-            if (legacyVibrationEnabled) {
-                // Only return false if there is no existing channel
-                existingChannel?.shouldVibrate() == true
-            } else {
-                defaultNotificationChannel.shouldVibrate()
-            }
-        )
+        channel.enableVibration(legacyVibrationEnabled)
         channel.setConversationId(INCOMING_MESSAGES, conversationId)
         notificationManager.createNotificationChannel(channel)
         return channel
@@ -103,6 +110,27 @@ object NotificationChannelUtil {
         return null
     }
 
+    private fun getOrCreateIncomingMessagesChannel(
+        notificationManager: NotificationManager,
+    ): NotificationChannel {
+        val existingChannel = notificationManager.getNotificationChannel(INCOMING_MESSAGES)
+        if (existingChannel != null) {
+            return existingChannel
+        }
+
+        val context = Factory.get().applicationContext
+        val channel = NotificationChannel(
+            INCOMING_MESSAGES,
+            context.getString(R.string.incoming_messages_channel),
+            NotificationManager.IMPORTANCE_HIGH,
+        )
+        notificationManager.createNotificationChannel(channel)
+
+        return notificationManager
+            .getNotificationChannel(INCOMING_MESSAGES)
+            ?: channel
+    }
+
     /**
      * Deletes a notification channel.
      * @param id The id of the channel to delete.
@@ -112,7 +140,7 @@ object NotificationChannelUtil {
         val notificationManager = getNotificationManager()
         ShortcutManagerCompat.removeDynamicShortcuts(
             Factory.get().getApplicationContext(),
-            listOf(id)
+            listOf(id),
         )
         notificationManager.deleteNotificationChannel(id)
     }
