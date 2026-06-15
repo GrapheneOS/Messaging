@@ -465,38 +465,52 @@ private fun PickerReviewScaffold(
                 .clip(MaterialTheme.contentSurfaceShape)
                 .background(MaterialTheme.colorScheme.background),
         ) {
-            MessageComposeBar(
+            PickerReviewComposeBar(
+                uiState = uiState,
+                onAction = onAction,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .windowInsetsPadding(
                         WindowInsets.ime.union(WindowInsets.navigationBars),
                     ),
-                text = uiState.draft.text,
-                onTextChange = { onAction(Action.DraftTextChanged(it)) },
-                isFieldEnabled = true,
-                isFieldContentHidden = false,
-                fieldFocusRequester = null,
-                fieldStateDescription = null,
-                fieldTestTag = MESSAGE_COMPOSE_FIELD_TEST_TAG,
-                topContent = composeSubjectSlot(
-                    subjectText = uiState.draft.subjectText,
-                    onClear = { onAction(Action.DraftSubjectCleared) },
-                ),
-                sendAction = {
-                    MessageSendButton(
-                        enabled = uiState.isSendEnabled,
-                        onClick = { onAction(Action.SendClicked) },
-                    )
-                },
-                attachmentsContent = {
-                    AttachmentPreview(
-                        attachments = uiState.draft.attachments,
-                        onRemove = { onAction(Action.DraftAttachmentRemoved(it)) },
-                    )
-                },
             )
         }
     }
+}
+
+@Composable
+private fun PickerReviewComposeBar(
+    uiState: State,
+    onAction: (Action) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    MessageComposeBar(
+        modifier = modifier,
+        text = uiState.draft.text,
+        onTextChange = { onAction(Action.DraftTextChanged(it)) },
+        isFieldEnabled = true,
+        isFieldContentHidden = false,
+        fieldFocusRequester = null,
+        fieldStateDescription = null,
+        fieldTestTag = MESSAGE_COMPOSE_FIELD_TEST_TAG,
+        topContent = composeSubjectSlot(
+            subjectText = uiState.draft.subjectText,
+            onClear = { onAction(Action.DraftSubjectCleared) },
+        ),
+        sendAction = {
+            MessageSendButton(
+                enabled = uiState.isSendEnabled,
+                onClick = { onAction(Action.SendClicked) },
+            )
+        },
+        attachmentsContent = {
+            AttachmentPreview(
+                attachments = uiState.draft.attachments,
+                onRemove = { onAction(Action.DraftAttachmentRemoved(it)) },
+                onClick = { onAction(Action.DraftAttachmentClicked(it)) },
+            )
+        },
+    )
 }
 
 @PreviewLightDark

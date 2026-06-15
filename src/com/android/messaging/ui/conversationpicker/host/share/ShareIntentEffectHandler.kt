@@ -9,6 +9,7 @@ import com.android.messaging.domain.conversationpicker.model.SendTarget
 import com.android.messaging.domain.conversationpicker.usecase.BuildMessageDataFromDraft
 import com.android.messaging.domain.conversationpicker.usecase.SendContentToTargets
 import com.android.messaging.ui.UIIntents
+import com.android.messaging.ui.common.components.attachment.openAttachmentPreview
 import com.android.messaging.ui.conversationpicker.ConversationPickerEffectHandler
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerEffect as Effect
 import com.android.messaging.util.UiUtils
@@ -39,6 +40,23 @@ internal class ShareIntentEffectHandler(
             is Effect.SendToSelected -> {
                 sendToSelected(effect.targets, effect.draft)
             }
+
+            is Effect.OpenAttachmentPreview -> {
+                openPreview(effect.contentUri, effect.contentType)
+            }
+        }
+    }
+
+    private fun openPreview(
+        contentUri: String,
+        contentType: String,
+    ) {
+        applicationScope.launch(mainDispatcher) {
+            openAttachmentPreview(
+                context = activity,
+                contentUri = contentUri,
+                contentType = contentType,
+            )
         }
     }
 

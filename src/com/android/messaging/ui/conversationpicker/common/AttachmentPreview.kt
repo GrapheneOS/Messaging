@@ -16,6 +16,7 @@ import kotlinx.collections.immutable.ImmutableList
 internal fun AttachmentPreview(
     attachments: ImmutableList<AttachmentUiModel>,
     onRemove: (String) -> Unit,
+    onClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     AttachmentPreviewRow(
@@ -33,7 +34,7 @@ internal fun AttachmentPreview(
                     contentUri = attachment.id,
                     contentType = attachment.contentType,
                     isVideo = attachment.isVideo,
-                    onClick = {},
+                    onClick = { onClick(attachment.id) },
                     onRemove = { onRemove(attachment.id) },
                     removeButtonTestTag = removeTestTag,
                 )
@@ -43,7 +44,7 @@ internal fun AttachmentPreview(
                 AudioAttachmentCell(
                     modifier = Modifier.testTag(itemTestTag),
                     durationMillis = attachment.durationMillis,
-                    onClick = {},
+                    onClick = { onClick(attachment.id) },
                     onRemove = { onRemove(attachment.id) },
                     removeButtonTestTag = removeTestTag,
                 )
@@ -58,7 +59,7 @@ internal fun AttachmentPreview(
                     title = attachment.title
                         ?: stringResource(id = R.string.mediapicker_contact_title),
                     subtitle = null,
-                    onClick = {},
+                    onClick = { onClick(attachment.id) },
                     onRemove = { onRemove(attachment.id) },
                     removeButtonTestTag = removeTestTag,
                 )
