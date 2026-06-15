@@ -21,6 +21,7 @@ internal class WidgetPickEffectHandler(
             }
 
             is Effect.SendToSelected -> Unit
+            is Effect.OpenAttachmentPreview -> Unit
         }
     }
 

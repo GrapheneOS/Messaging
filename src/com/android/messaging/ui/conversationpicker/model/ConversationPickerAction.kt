@@ -59,6 +59,10 @@ internal sealed interface ConversationPickerAction {
         val id: String,
     ) : DraftAction
 
+    data class DraftAttachmentClicked(
+        val id: String,
+    ) : DraftAction
+
     data object DraftSubjectCleared : DraftAction
 
     data object ReviewDismissed : DraftAction

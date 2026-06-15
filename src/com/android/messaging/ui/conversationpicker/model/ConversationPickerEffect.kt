@@ -14,4 +14,9 @@ internal sealed interface ConversationPickerEffect {
         val targets: ImmutableSet<SendTarget>,
         val draft: ConversationDraft,
     ) : ConversationPickerEffect
+
+    data class OpenAttachmentPreview(
+        val contentUri: String,
+        val contentType: String,
+    ) : ConversationPickerEffect
 }

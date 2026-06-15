@@ -156,6 +156,10 @@ internal class ConversationPickerViewModel @Inject constructor(
                 draftDelegate.removeDraftAttachment(action.id)
             }
 
+            is Action.DraftAttachmentClicked -> {
+                openAttachmentPreview(action.id)
+            }
+
             Action.DraftSubjectCleared -> {
                 draftDelegate.clearDraftSubject()
             }
@@ -173,6 +177,19 @@ internal class ConversationPickerViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    private fun openAttachmentPreview(id: String) {
+        val attachment = draftDelegate.currentDraft().attachments
+            .firstOrNull { attachment -> attachment.contentUri == id }
+            ?: return
+
+        _effects.tryEmit(
+            Effect.OpenAttachmentPreview(
+                contentUri = attachment.contentUri,
+                contentType = attachment.contentType,
+            ),
+        )
     }
 
     private fun isSendEnabled(
