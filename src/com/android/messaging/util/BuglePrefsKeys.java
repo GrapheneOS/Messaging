@@ -55,6 +55,13 @@ public final class BuglePrefsKeys {
         = "latest_notification_message_timestamp";
 
     /**
+     * Whether legacy per-conversation notification settings have been migrated to
+     * conversation notification channels.
+     */
+    public static final String CONVERSATION_NOTIFICATION_CHANNELS_MIGRATED
+            = "conversation_notification_channels_migrated_v1";
+
+    /**
      * The last selected chooser index in the media picker.
      */
     public static final String SELECTED_MEDIA_PICKER_CHOOSER_INDEX

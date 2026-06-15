@@ -29,15 +29,12 @@ internal class ConversationSettingsEffectHandlerImpl(
             is Effect.OpenNotificationChannelSettings -> {
                 val intent = Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
                     .putExtra(Settings.EXTRA_APP_PACKAGE, activity.packageName)
-                    .putExtra(Settings.EXTRA_CHANNEL_ID, effect.conversationId)
+                    .putExtra(Settings.EXTRA_CHANNEL_ID, NotificationChannelUtil.INCOMING_MESSAGES)
                     .putExtra(Settings.EXTRA_CONVERSATION_ID, effect.conversationId)
 
-                NotificationChannelUtil.createConversationChannel(
+                NotificationChannelUtil.createConversationChannelForRuntime(
                     conversationId = effect.conversationId,
                     conversationTitle = effect.conversationTitle,
-                    legacyNotificationsEnabled = effect.legacyPrefs.notificationsEnabled,
-                    legacyRingtoneString = effect.legacyPrefs.ringtoneString,
-                    legacyVibrationEnabled = effect.legacyPrefs.vibrationEnabled,
                 )
 
                 activity.startActivity(intent)

@@ -1,6 +1,5 @@
 package com.android.messaging.ui.conversationsettings.screen.delegate
 
-import com.android.messaging.data.conversationsettings.model.LegacyConversationNotificationPrefs
 import com.android.messaging.data.conversationsettings.model.SnoozeOption
 import com.android.messaging.data.conversationsettings.repository.ConversationNotificationRepository
 import com.android.messaging.data.conversationsettings.repository.ConversationSettingsRepository
@@ -35,9 +34,6 @@ internal interface ConversationSettingsDelegate :
     fun setDestinationBlocked(blocked: Boolean)
     fun setArchived(archived: Boolean)
     fun setSelfParticipantId(selfParticipantId: String)
-    suspend fun getLegacyNotificationPrefs(
-        conversationId: String,
-    ): LegacyConversationNotificationPrefs
     fun snooze(option: SnoozeOption)
     fun unsnooze()
 }
@@ -135,13 +131,6 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
                 selfParticipantId = selfParticipantId,
             )
         }
-    }
-
-    override suspend fun getLegacyNotificationPrefs(
-        conversationId: String,
-    ): LegacyConversationNotificationPrefs {
-        if (conversationId.isBlank()) return LegacyConversationNotificationPrefs.Default
-        return notificationRepository.getLegacyNotificationPrefs(conversationId)
     }
 
     override fun snooze(option: SnoozeOption) {
