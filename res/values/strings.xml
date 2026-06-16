@@ -22,6 +22,8 @@
     <string name="share_intent_label">Messaging</string>
     <!-- The title when selecting a conversation to share to -->
     <string name="share_intent_activity_label">Select conversation</string>
+    <!-- Shown when a tapped contact cannot be resolved to a conversation -->
+    <string name="conversation_picker_open_failed">Couldn\'t open conversation. Try again.</string>
 
     <string name="action_settings">Settings</string>
     <string name="sendButtonContentDescription">Send Message</string>

@@ -6,6 +6,8 @@ import kotlinx.collections.immutable.ImmutableSet
 
 internal sealed interface ConversationPickerEffect {
 
+    data object OpenConversationFailed : ConversationPickerEffect
+
     data class OpenConversation(
         val conversationId: String,
     ) : ConversationPickerEffect
