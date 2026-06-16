@@ -40,7 +40,7 @@ internal class PickerTopAppBarTest {
     }
 
     @Test
-    fun clearSearchActionHiddenWhenSelectingFromSearch() {
+    fun clearSearchActionVisibleWhenSelectingFromSearch() {
         composeTopAppBar(
             isSearchActive = true,
             inSelectionMode = true,
@@ -49,7 +49,7 @@ internal class PickerTopAppBarTest {
 
         composeRule
             .onNodeWithContentDescription(string(R.string.share_search_clear))
-            .assertDoesNotExist()
+            .assertIsDisplayed()
     }
 
     private fun composeTopAppBar(
