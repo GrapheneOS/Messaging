@@ -54,7 +54,7 @@ internal class ConversationPickerViewModelEffectTest : BaseConversationPickerVie
         }
 
     @Test
-    fun targetClicked_contact_whenNotResolved_emitsNoEffect() =
+    fun targetClicked_contact_whenNotResolved_emitsOpenConversationFailed() =
         runTest(mainDispatcherRule.testDispatcher) {
             givenUnresolvedConversation()
 
@@ -65,7 +65,8 @@ internal class ConversationPickerViewModelEffectTest : BaseConversationPickerVie
                         contactTarget(),
                     ),
                 )
-                expectNoEvents()
+                assertEquals(Effect.OpenConversationFailed, awaitItem())
+                cancelAndIgnoreRemainingEvents()
             }
         }
 

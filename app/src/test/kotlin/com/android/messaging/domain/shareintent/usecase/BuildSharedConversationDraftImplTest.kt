@@ -151,11 +151,12 @@ internal class BuildSharedConversationDraftImplTest {
     }
 
     @Test
-    fun invoke_sendMultiple_dropsNonMediaUris() = runTest(testDispatcher) {
+    fun invoke_sendMultiple_readsTextUrisAndPersistsMediaUris() = runTest(testDispatcher) {
         every { resolveSharedContentType(IMAGE_URI, any()) } returns ContentType.IMAGE_JPEG
         every { resolveSharedContentType(TEXT_URI, any()) } returns ContentType.TEXT_PLAIN
         coEvery { sharedAttachmentRepository.persistToScratchSpace(IMAGE_URI, any()) } returns
             ATTACHMENT
+        coEvery { sharedAttachmentRepository.readTextContent(TEXT_URI) } returns "file text"
 
         val draft = buildSharedConversationDraft(
             multipleIntent(
@@ -166,7 +167,39 @@ internal class BuildSharedConversationDraftImplTest {
         )
 
         assertEquals(listOf(ATTACHMENT), draft?.attachments?.toList())
+        assertEquals("file text", draft?.messageText)
         coVerify(exactly = 0) { sharedAttachmentRepository.persistToScratchSpace(TEXT_URI, any()) }
+    }
+
+    @Test
+    fun invoke_sendMultiple_combinesExtraTextAndTextUris() = runTest(testDispatcher) {
+        every { resolveSharedContentType(TEXT_URI, any()) } returns ContentType.TEXT_PLAIN
+        coEvery { sharedAttachmentRepository.readTextContent(TEXT_URI) } returns "file text"
+
+        val intent = multipleIntent(
+            type = ContentType.TEXT_PLAIN,
+            uris = arrayListOf(TEXT_URI),
+        ).apply { putExtra(Intent.EXTRA_TEXT, "inline") }
+
+        val draft = buildSharedConversationDraft(intent, grantingCaller)
+
+        assertEquals("inline\nfile text", draft?.messageText)
+    }
+
+    @Test
+    fun invoke_sendMultiple_callerDenied_dropsTextUris() = runTest(testDispatcher) {
+        every { resolveSharedContentType(TEXT_URI, any()) } returns ContentType.TEXT_PLAIN
+
+        val draft = buildSharedConversationDraft(
+            multipleIntent(
+                type = ContentType.TEXT_PLAIN,
+                uris = arrayListOf(TEXT_URI),
+            ),
+            denyingCaller,
+        )
+
+        assertNull(draft)
+        coVerify(exactly = 0) { sharedAttachmentRepository.readTextContent(any()) }
     }
 
     private fun multipleIntent(
