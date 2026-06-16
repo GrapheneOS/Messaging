@@ -17,6 +17,8 @@ import com.android.messaging.ui.conversationpicker.model.TargetUiState
 import com.android.messaging.ui.conversationpicker.model.TargetsUiState
 import com.android.messaging.ui.recipientselection.delegate.RecipientPickerDelegate
 import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerUiState
+import com.android.messaging.ui.subscription.delegate.SimSelectionDelegate
+import com.android.messaging.ui.subscription.model.SimSelectionUiState
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -37,6 +39,7 @@ internal abstract class BaseConversationPickerViewModelTest {
     protected val targetsState = MutableStateFlow(TargetsUiState())
     protected val contactsState = MutableStateFlow(RecipientPickerUiState())
     protected val draftState = MutableStateFlow(DraftUiState())
+    protected val simSelectionState = MutableStateFlow(SimSelectionUiState())
     protected val selectedIds = MutableStateFlow(persistentSetOf<String>())
 
     protected val targetsDelegate = mockk<TargetsDelegate>(relaxed = true) {
@@ -63,6 +66,11 @@ internal abstract class BaseConversationPickerViewModelTest {
         every { currentDraft() } returns ConversationDraft()
     }
 
+    protected val simSelectionDelegate = mockk<SimSelectionDelegate>(relaxed = true) {
+        every { state } returns simSelectionState
+    }
+
+
     protected val resolveConversationId = mockk<ResolveConversationId>()
 
     protected fun createViewModel(): ConversationPickerViewModel {
@@ -70,6 +78,7 @@ internal abstract class BaseConversationPickerViewModelTest {
             targetsDelegate = targetsDelegate,
             recipientPickerDelegate = recipientPickerDelegate,
             draftDelegate = draftDelegate,
+            simSelectionDelegate = simSelectionDelegate,
             resolveConversationId = resolveConversationId,
             contactTargetMapper = contactTargetMapper,
         )
