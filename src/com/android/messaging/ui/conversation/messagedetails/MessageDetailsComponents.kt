@@ -1,7 +1,7 @@
 package com.android.messaging.ui.conversation.messagedetails
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,8 +21,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
@@ -288,11 +292,18 @@ private fun Modifier.copyOnLongPress(
     }
 
     val copyLabel = stringResource(R.string.copy_to_clipboard)
-    return combinedClickable(
-        onClick = {},
-        onLongClickLabel = copyLabel,
-        onLongClick = { onCopy(value) },
-    )
+    return this
+        .pointerInput(value) {
+            detectTapGestures(onLongPress = { onCopy(value) })
+        }
+        .semantics {
+            customActions = listOf(
+                CustomAccessibilityAction(label = copyLabel) {
+                    onCopy(value)
+                    true
+                },
+            )
+        }
 }
 
 @Composable
