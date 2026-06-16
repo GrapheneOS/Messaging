@@ -229,11 +229,15 @@ internal class ConversationPickerViewModel @Inject constructor(
 
     private fun openContactConversation(destination: String) {
         viewModelScope.launch {
-            val result = resolveConversationId(listOf(destination))
+            val effect = when (val result = resolveConversationId(listOf(destination))) {
+                is ResolveConversationIdResult.Resolved -> {
+                    Effect.OpenConversation(result.conversationId)
+                }
 
-            if (result is ResolveConversationIdResult.Resolved) {
-                _effects.tryEmit(Effect.OpenConversation(result.conversationId))
+                else -> Effect.OpenConversationFailed
             }
+
+            _effects.tryEmit(effect)
         }
     }
 

@@ -37,6 +37,10 @@ internal class ShareIntentEffectHandler(
                 openConversation(effect.conversationId)
             }
 
+            is Effect.OpenConversationFailed -> {
+                UiUtils.showToastAtBottom(R.string.conversation_picker_open_failed)
+            }
+
             is Effect.SendToSelected -> {
                 sendToSelected(effect.targets, effect.draft)
             }

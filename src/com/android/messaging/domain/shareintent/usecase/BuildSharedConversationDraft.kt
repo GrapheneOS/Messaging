@@ -95,20 +95,34 @@ internal class BuildSharedConversationDraftImpl @Inject constructor(
             Uri::class.java,
         ).orEmpty()
 
-        val attachments = sharedUris.mapNotNull { uri ->
+        val attachments = mutableListOf<ConversationDraftAttachment>()
+        val sharedTexts = mutableListOf<String>()
+
+        sharedUris.forEach { uri ->
             val contentType = resolveSharedContentType(uri, intent.type)
-            if (!ContentType.isMediaType(contentType)) {
-                return@mapNotNull null
+            when {
+                ContentType.TEXT_PLAIN == contentType -> {
+                    sharedTextFromContent(uri, caller)
+                        ?.let(sharedTexts::add)
+                }
+
+                ContentType.isMediaType(contentType) -> {
+                    persistAttachment(
+                        sourceUri = uri,
+                        contentType = contentType,
+                        caller = caller,
+                    )?.let(attachments::add)
+                }
             }
-            persistAttachment(
-                sourceUri = uri,
-                contentType = contentType,
-                caller = caller,
-            )
         }
 
+        val messageText = buildList {
+            intent.sharedMessageText().takeIf(String::isNotBlank)?.let(::add)
+            addAll(sharedTexts)
+        }.joinToString(separator = "\n")
+
         return draftOrNull(
-            messageText = intent.sharedMessageText(),
+            messageText = messageText,
             subject = subject,
             attachments = attachments,
         )
