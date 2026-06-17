@@ -932,6 +932,10 @@
     <string name="share_contacts_permission_rationale">Give access to your contacts to quickly find and message the people you know.</string>
     <!-- Button that requests contacts access in the share conversation picker -->
     <string name="share_contacts_permission_action">Allow access</string>
+    <!-- Toast shown when one or more pieces of shared content could not be added -->
+    <string name="share_dropped_content">Some shared content couldn\'t be added</string>
+    <!-- Toast shown when nothing in the share could be used and the screen closes -->
+    <string name="share_no_shareable_content">Couldn\'t share content</string>
 
     <!-- Screen title after user selects APNs setting option -->
     <string name="apn_edit">Edit access point</string>

@@ -5,6 +5,7 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.provider.OpenableColumns
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
+import com.android.messaging.data.shareintent.model.SharedTextContentResult
 import com.android.messaging.di.core.IoDispatcher
 import com.android.messaging.util.ContentType
 import com.android.messaging.util.LogUtil
@@ -21,7 +22,7 @@ internal interface SharedAttachmentRepository {
         contentType: String,
     ): ConversationDraftAttachment?
 
-    suspend fun readTextContent(sourceUri: Uri): String?
+    suspend fun readTextContent(sourceUri: Uri): SharedTextContentResult
 }
 
 internal class SharedAttachmentRepositoryImpl @Inject constructor(
@@ -35,11 +36,6 @@ internal class SharedAttachmentRepositoryImpl @Inject constructor(
         contentType: String,
     ): ConversationDraftAttachment? {
         return withContext(ioDispatcher) {
-            if (UriUtil.isFileUri(sourceUri)) {
-                LogUtil.i(TAG, "Ignoring shared attachment from an unsupported file URI")
-                return@withContext null
-            }
-
             val displayName = queryDisplayName(sourceUri)
             val durationMillis = audioDurationMillis(sourceUri, contentType)
 
@@ -59,20 +55,26 @@ internal class SharedAttachmentRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun readTextContent(sourceUri: Uri): String? {
+    override suspend fun readTextContent(sourceUri: Uri): SharedTextContentResult {
         return withContext(ioDispatcher) {
-            if (UriUtil.isFileUri(sourceUri)) {
-                LogUtil.i(TAG, "Ignoring shared text from an unsupported file URI")
-                return@withContext null
-            }
-
             runCatching {
                 contentResolver.openInputStream(sourceUri)?.use { stream ->
                     stream.bufferedReader().readBounded(MAX_SHARED_TEXT_CHARS)
                 }
             }.onFailure {
                 LogUtil.w(TAG, "Could not read shared text from $sourceUri", it)
-            }.getOrNull()?.takeIf(String::isNotBlank)
+            }.fold(
+                onSuccess = { text ->
+                    when {
+                        text == null -> SharedTextContentResult.Failed
+                        text.isBlank() -> SharedTextContentResult.Empty
+                        else -> SharedTextContentResult.Read(text)
+                    }
+                },
+                onFailure = {
+                    SharedTextContentResult.Failed
+                },
+            )
         }
     }
 

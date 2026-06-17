@@ -6,6 +6,7 @@ import android.database.MatrixCursor
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.provider.OpenableColumns
+import com.android.messaging.data.shareintent.model.SharedTextContentResult
 import com.android.messaging.util.ContentType
 import com.android.messaging.util.MediaMetadataRetrieverWrapper
 import com.android.messaging.util.UriUtil
@@ -16,7 +17,6 @@ import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
-import io.mockk.verify
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -45,7 +45,6 @@ internal class SharedAttachmentRepositoryImplTest {
     @Before
     fun setUp() {
         mockkStatic(UriUtil::class)
-        every { UriUtil.isFileUri(any()) } returns false
         every { UriUtil.persistContentToScratchSpace(any<Uri>()) } returns PERSISTED_URI
         stubQuery(cursor = null)
     }
@@ -53,17 +52,6 @@ internal class SharedAttachmentRepositoryImplTest {
     @After
     fun tearDown() {
         unmockkAll()
-    }
-
-    @Test
-    fun persistToScratchSpace_fileUri_returnsNullWithoutPersisting() = runTest(testDispatcher) {
-        val sourceUri = Uri.parse("file:///sdcard/photo.jpg")
-        every { UriUtil.isFileUri(sourceUri) } returns true
-
-        val result = repository.persistToScratchSpace(sourceUri, IMAGE_TYPE)
-
-        assertNull(result)
-        verify(exactly = 0) { UriUtil.persistContentToScratchSpace(any<Uri>()) }
     }
 
     @Test
@@ -171,46 +159,35 @@ internal class SharedAttachmentRepositoryImplTest {
 
         val result = repository.readTextContent(SOURCE_URI)
 
-        assertEquals("line one\nline two", result)
+        assertEquals(SharedTextContentResult.Read("line one\nline two"), result)
     }
 
     @Test
-    fun readTextContent_fileUri_returnsNull() = runTest(testDispatcher) {
-        val sourceUri = Uri.parse("file:///sdcard/note.txt")
-        every { UriUtil.isFileUri(sourceUri) } returns true
-
-        val result = repository.readTextContent(sourceUri)
-
-        assertNull(result)
-        verify(exactly = 0) { contentResolver.openInputStream(any()) }
-    }
-
-    @Test
-    fun readTextContent_blankText_returnsNull() = runTest(testDispatcher) {
+    fun readTextContent_blankText_returnsEmpty() = runTest(testDispatcher) {
         every { contentResolver.openInputStream(SOURCE_URI) } returns
             ByteArrayInputStream("   ".toByteArray())
 
         val result = repository.readTextContent(SOURCE_URI)
 
-        assertNull(result)
+        assertEquals(SharedTextContentResult.Empty, result)
     }
 
     @Test
-    fun readTextContent_nullStream_returnsNull() = runTest(testDispatcher) {
+    fun readTextContent_nullStream_returnsFailed() = runTest(testDispatcher) {
         every { contentResolver.openInputStream(SOURCE_URI) } returns null
 
         val result = repository.readTextContent(SOURCE_URI)
 
-        assertNull(result)
+        assertEquals(SharedTextContentResult.Failed, result)
     }
 
     @Test
-    fun readTextContent_whenOpenThrows_returnsNull() = runTest(testDispatcher) {
+    fun readTextContent_whenOpenThrows_returnsFailed() = runTest(testDispatcher) {
         every { contentResolver.openInputStream(SOURCE_URI) } throws IOException("boom")
 
         val result = repository.readTextContent(SOURCE_URI)
 
-        assertNull(result)
+        assertEquals(SharedTextContentResult.Failed, result)
     }
 
     private fun stubQuery(cursor: Cursor?) {

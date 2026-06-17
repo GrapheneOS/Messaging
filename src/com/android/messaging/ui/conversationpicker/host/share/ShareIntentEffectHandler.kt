@@ -51,6 +51,14 @@ internal class ShareIntentEffectHandler(
         }
     }
 
+    fun showNoShareableContentNotice() {
+        UiUtils.showToastAtBottom(R.string.share_no_shareable_content)
+    }
+
+    fun showDroppedContentNotice() {
+        UiUtils.showToastAtBottom(R.string.share_dropped_content)
+    }
+
     private fun openPreview(
         contentUri: String,
         contentType: String,

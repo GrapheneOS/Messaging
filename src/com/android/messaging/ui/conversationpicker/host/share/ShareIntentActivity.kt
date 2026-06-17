@@ -5,16 +5,17 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.di.core.ApplicationCoroutineScope
 import com.android.messaging.di.core.MainDispatcher
 import com.android.messaging.domain.conversationpicker.usecase.BuildMessageDataFromDraft
 import com.android.messaging.domain.conversationpicker.usecase.SendContentToTargets
+import com.android.messaging.domain.shareintent.model.SharedConversationDraftResult
 import com.android.messaging.domain.shareintent.usecase.BuildSharedConversationDraft
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversationpicker.ConversationPickerScreen
@@ -55,33 +56,65 @@ class ShareIntentActivity : ComponentActivity() {
 
         setContent {
             AppTheme {
-                var isDraftLoading by remember { mutableStateOf(true) }
-                val conversationDraft by produceState<ConversationDraft?>(
-                    initialValue = null,
-                ) {
-                    value = buildSharedConversationDraft(intent, initialCaller)
-                    isDraftLoading = false
-                }
+                val shareDraft = rememberShareDraftState()
+                val effectHandler = rememberShareIntentEffectHandler(shareDraft.draft)
 
-                val effectHandler = remember(conversationDraft) {
-                    ShareIntentEffectHandler(
-                        applicationScope = applicationScope,
-                        mainDispatcher = mainDispatcher,
-                        activity = this,
-                        draft = conversationDraft,
-                        sendContentToTargets = sendContentToTargets,
-                        buildMessageDataFromDraft = buildMessageDataFromDraft,
-                    )
+                LaunchedEffect(shareDraft) {
+                    if (shareDraft.isLoading) {
+                        return@LaunchedEffect
+                    }
+
+                    when {
+                        shareDraft.draft == null -> {
+                            effectHandler.showNoShareableContentNotice()
+                            finish()
+                        }
+
+                        shareDraft.hasDroppedContent -> {
+                            effectHandler.showDroppedContentNotice()
+                        }
+                    }
                 }
 
                 ConversationPickerScreen(
                     effectHandler = effectHandler,
                     onNavigateBack = ::finish,
                     allowMultiSelect = true,
-                    isInitialDraftLoading = isDraftLoading,
-                    initialDraft = conversationDraft,
+                    isInitialDraftLoading = shareDraft.isLoading,
+                    initialDraft = shareDraft.draft,
                 )
             }
+        }
+    }
+
+    @Composable
+    private fun rememberShareDraftState(): ShareDraftState {
+        val draftResult by produceState<SharedConversationDraftResult?>(
+            initialValue = null,
+        ) {
+            value = buildSharedConversationDraft(intent)
+        }
+
+        return ShareDraftState(
+            draft = draftResult?.draft,
+            isLoading = draftResult == null,
+            hasDroppedContent = draftResult?.hasDroppedContent == true,
+        )
+    }
+
+    @Composable
+    private fun rememberShareIntentEffectHandler(
+        draft: ConversationDraft?,
+    ): ShareIntentEffectHandler {
+        return remember(draft) {
+            ShareIntentEffectHandler(
+                applicationScope = applicationScope,
+                mainDispatcher = mainDispatcher,
+                activity = this,
+                draft = draft,
+                sendContentToTargets = sendContentToTargets,
+                buildMessageDataFromDraft = buildMessageDataFromDraft,
+            )
         }
     }
 
@@ -102,6 +135,12 @@ class ShareIntentActivity : ComponentActivity() {
         finish()
         return true
     }
+
+    private data class ShareDraftState(
+        val draft: ConversationDraft?,
+        val isLoading: Boolean,
+        val hasDroppedContent: Boolean,
+    )
 
     private companion object {
         private const val EXTRA_ADDRESS = "address"
