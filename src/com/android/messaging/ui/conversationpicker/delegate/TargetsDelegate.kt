@@ -29,6 +29,7 @@ import kotlinx.coroutines.launch
 internal interface TargetsDelegate {
     val state: StateFlow<TargetsUiState>
     val selectedIds: Flow<ImmutableSet<String>>
+    val currentSelectedTargets: ImmutableList<TargetUiState>
     fun bind(scope: CoroutineScope)
     fun setSearchActive(active: Boolean)
     fun setSearchQuery(query: String)
@@ -36,7 +37,6 @@ internal interface TargetsDelegate {
     fun clearSelection()
     fun loadMoreRecent()
     fun collapseRecent()
-    fun currentSelectedTargets(): ImmutableList<TargetUiState>
 }
 
 internal class TargetsDelegateImpl @Inject constructor(
@@ -62,6 +62,9 @@ internal class TargetsDelegateImpl @Inject constructor(
     override val selectedIds: Flow<ImmutableSet<String>> = selectedTargetsList.map {
         it.toSelectionIds()
     }
+
+    override val currentSelectedTargets: ImmutableList<TargetUiState>
+        get() = selectedTargetsList.value
 
     override fun bind(scope: CoroutineScope) {
         if (boundScope != null) return
@@ -124,10 +127,6 @@ internal class TargetsDelegateImpl @Inject constructor(
 
     override fun collapseRecent() {
         visibleRecentLimit.value = INITIAL_RECENT_TARGET_COUNT
-    }
-
-    override fun currentSelectedTargets(): ImmutableList<TargetUiState> {
-        return selectedTargetsList.value
     }
 
     private fun buildState(

@@ -14,10 +14,10 @@ internal class TargetTextFormatter @Inject constructor() {
         name: String,
         value: String?,
     ): String? {
-        val details = value?.takeIf {
-            it.isNotEmpty() && it != name
-        } ?: return null
-
-        return wrap(details)
+        return value
+            ?.takeIf {
+                it.isNotEmpty() && it != name
+            }
+            ?.let(::wrap)
     }
 }

@@ -47,7 +47,7 @@ internal abstract class BaseConversationPickerViewModelTest {
         every {
             this@mockk.selectedIds
         } returns this@BaseConversationPickerViewModelTest.selectedIds
-        every { currentSelectedTargets() } returns persistentListOf()
+        every { currentSelectedTargets } returns persistentListOf()
     }
 
     protected val recipientPickerDelegate = mockk<RecipientPickerDelegate>(relaxed = true) {
@@ -84,7 +84,7 @@ internal abstract class BaseConversationPickerViewModelTest {
     }
 
     protected fun givenSelectedTargets(targets: List<TargetUiState>) {
-        every { targetsDelegate.currentSelectedTargets() } returns targets.toImmutableList()
+        every { targetsDelegate.currentSelectedTargets } returns targets.toImmutableList()
         selectedIds.value = targets.map { it.selectionId }.toImmutableSet().let {
             persistentSetOf<String>().addAll(it)
         }

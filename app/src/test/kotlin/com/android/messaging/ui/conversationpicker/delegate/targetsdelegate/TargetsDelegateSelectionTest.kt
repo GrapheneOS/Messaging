@@ -40,11 +40,11 @@ internal class TargetsDelegateSelectionTest : BaseTargetsDelegateTest() {
         )
 
         delegate.toggleSelection(target)
-        assertEquals(listOf(target), delegate.currentSelectedTargets())
+        assertEquals(listOf(target), delegate.currentSelectedTargets)
 
         delegate.toggleSelection(target)
 
-        assertTrue(delegate.currentSelectedTargets().isEmpty())
+        assertTrue(delegate.currentSelectedTargets.isEmpty())
     }
 
     @Test
@@ -58,7 +58,7 @@ internal class TargetsDelegateSelectionTest : BaseTargetsDelegateTest() {
         )
         delegate.toggleSelection(contactTarget())
 
-        assertTrue(delegate.currentSelectedTargets().isEmpty())
+        assertTrue(delegate.currentSelectedTargets.isEmpty())
     }
 
     @Test
@@ -88,7 +88,7 @@ internal class TargetsDelegateSelectionTest : BaseTargetsDelegateTest() {
         )
         delegate.clearSelection()
 
-        assertTrue(delegate.currentSelectedTargets().isEmpty())
+        assertTrue(delegate.currentSelectedTargets.isEmpty())
     }
 
     @Test
@@ -100,7 +100,7 @@ internal class TargetsDelegateSelectionTest : BaseTargetsDelegateTest() {
 
         delegate.toggleSelection(target)
 
-        assertEquals(listOf(target), delegate.currentSelectedTargets())
+        assertEquals(listOf(target), delegate.currentSelectedTargets)
     }
 
     @Test

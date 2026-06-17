@@ -242,7 +242,7 @@ internal class ConversationPickerViewModel @Inject constructor(
     }
 
     private fun currentSendTargets(): ImmutableSet<SendTarget> {
-        return targetsDelegate.currentSelectedTargets()
+        return targetsDelegate.currentSelectedTargets
             .map(::toSendTarget)
             .toImmutableSet()
     }
