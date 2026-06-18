@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.android.messaging.R
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListAction as Action
@@ -66,6 +67,8 @@ private fun ConversationListSelectionTitle(selectedCount: Int) {
             count = selectedCount,
             selectedCount,
         ),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
     )
 }
 

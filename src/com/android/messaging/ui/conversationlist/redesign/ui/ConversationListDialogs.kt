@@ -8,7 +8,53 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.android.messaging.R
+import com.android.messaging.ui.conversationlist.redesign.model.ConversationListAction as Action
 import com.android.messaging.ui.core.MessagingPreviewTheme
+
+@Composable
+internal fun ConversationListDialogs(
+    selectedCount: Int,
+    addContactDestination: String?,
+    isDeleteVisible: Boolean,
+    blockDestination: String?,
+    onAction: (Action) -> Unit,
+    onDismissAddContact: () -> Unit,
+    onDismissDelete: () -> Unit,
+    onDismissBlock: () -> Unit,
+) {
+    addContactDestination?.let { destination ->
+        ConversationListAddContactDialog(
+            destination = destination,
+            onConfirm = {
+                onDismissAddContact()
+                onAction(Action.AddContactConfirmed(destination))
+            },
+            onDismiss = onDismissAddContact,
+        )
+    }
+
+    if (isDeleteVisible) {
+        ConversationListDeleteDialog(
+            selectedCount = selectedCount,
+            onConfirm = {
+                onDismissDelete()
+                onAction(Action.DeleteConfirmed)
+            },
+            onDismiss = onDismissDelete,
+        )
+    }
+
+    blockDestination?.let { destination ->
+        ConversationListBlockDialog(
+            destination = destination,
+            onConfirm = {
+                onDismissBlock()
+                onAction(Action.BlockConfirmed)
+            },
+            onDismiss = onDismissBlock,
+        )
+    }
+}
 
 @Composable
 internal fun ConversationListAddContactDialog(
