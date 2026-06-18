@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListAction as Action
@@ -42,6 +43,7 @@ internal fun ConversationListContent(
     onAction: (Action) -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
+    bottomReserve: Dp = 0.dp,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         when (content) {
@@ -67,6 +69,7 @@ internal fun ConversationListContent(
                     listState = listState,
                     onAction = onAction,
                     contentPadding = contentPadding,
+                    bottomReserve = bottomReserve,
                 )
             }
         }
@@ -79,6 +82,7 @@ private fun ConversationListItems(
     listState: LazyListState,
     onAction: (Action) -> Unit,
     contentPadding: PaddingValues,
+    bottomReserve: Dp,
 ) {
     LazyColumn(
         modifier = Modifier
@@ -89,7 +93,7 @@ private fun ConversationListItems(
             start = ListContentPadding,
             end = ListContentPadding,
             top = ListContentPadding,
-            bottom = contentPadding.calculateBottomPadding() + ListContentPadding,
+            bottom = contentPadding.calculateBottomPadding() + ListContentPadding + bottomReserve,
         ),
         verticalArrangement = Arrangement.spacedBy(ListVerticalSpacing),
     ) {

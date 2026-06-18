@@ -7,21 +7,21 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.Chat
 import androidx.compose.material.icons.rounded.ArrowUpward
-import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material3.Button
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -42,6 +42,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -64,8 +66,12 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 private val FabSpacing = 16.dp
-private val StartChatButtonHeight = 56.dp
-private val StartChatIconSpacing = 8.dp
+private val FabBottomReserve = 72.dp
+private val FabShape = RoundedCornerShape(16.dp)
+private val ContentCornerShape = RoundedCornerShape(
+    topStart = 28.dp,
+    topEnd = 28.dp,
+)
 
 @Composable
 internal fun ConversationListScreen(
@@ -101,38 +107,16 @@ internal fun ConversationListScreen(
         modifier = modifier,
     )
 
-    pendingAddContactDestination?.let { destination ->
-        ConversationListAddContactDialog(
-            destination = destination,
-            onConfirm = {
-                pendingAddContactDestination = null
-                screenModel.onAction(Action.AddContactConfirmed(destination))
-            },
-            onDismiss = { pendingAddContactDestination = null },
-        )
-    }
-
-    if (pendingDelete) {
-        ConversationListDeleteDialog(
-            selectedCount = uiState.selection.selectedConversations.size,
-            onConfirm = {
-                pendingDelete = false
-                screenModel.onAction(Action.DeleteConfirmed)
-            },
-            onDismiss = { pendingDelete = false },
-        )
-    }
-
-    pendingBlockDestination?.let { destination ->
-        ConversationListBlockDialog(
-            destination = destination,
-            onConfirm = {
-                pendingBlockDestination = null
-                screenModel.onAction(Action.BlockConfirmed)
-            },
-            onDismiss = { pendingBlockDestination = null },
-        )
-    }
+    ConversationListDialogs(
+        selectedCount = uiState.selection.selectedConversations.size,
+        addContactDestination = pendingAddContactDestination,
+        isDeleteVisible = pendingDelete,
+        blockDestination = pendingBlockDestination,
+        onAction = screenModel::onAction,
+        onDismissAddContact = { pendingAddContactDestination = null },
+        onDismissDelete = { pendingDelete = false },
+        onDismissBlock = { pendingBlockDestination = null },
+    )
 }
 
 @Composable
@@ -283,6 +267,7 @@ private fun ConversationListScaffold(
     modifier: Modifier = Modifier,
 ) {
     val isSelectionMode = uiState.selection.isActive
+    val backdropColor = conversationListBackdropColor(isSelectionMode)
 
     BackHandler(enabled = isSelectionMode) {
         onAction(Action.SelectionCleared)
@@ -295,6 +280,7 @@ private fun ConversationListScaffold(
 
     Scaffold(
         modifier = modifier,
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
         topBar = {
             ConversationListTopBar(
                 uiState = uiState,
@@ -310,25 +296,46 @@ private fun ConversationListScaffold(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = contentPadding.calculateTopPadding()),
+                .padding(top = contentPadding.calculateTopPadding())
+                .background(backdropColor)
+                .clip(ContentCornerShape)
+                .background(MaterialTheme.colorScheme.background),
         ) {
             ConversationListContent(
                 content = uiState.content,
                 listState = listState,
                 onAction = onAction,
                 contentPadding = contentPadding,
+                bottomReserve = FabBottomReserve,
             )
 
-            ConversationListFabs(
-                isStartChatVisible = !isSelectionMode,
-                isScrollUpVisible = uiState.isScrollUpVisible,
-                onStartChatClick = { onAction(Action.StartChatClicked) },
-                onScrollToTopClick = onScrollToTop,
+            ScrollToTopFab(
+                visible = uiState.isScrollUpVisible,
+                onClick = onScrollToTop,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .padding(bottom = FabSpacing),
+            )
+
+            StartChatFab(
+                visible = !isSelectionMode,
+                expanded = !uiState.isScrollUpVisible,
+                onClick = { onAction(Action.StartChatClicked) },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
+                    .windowInsetsPadding(WindowInsets.navigationBars)
                     .padding(FabSpacing),
             )
         }
+    }
+}
+
+@Composable
+private fun conversationListBackdropColor(isSelectionMode: Boolean): Color {
+    return when {
+        isSelectionMode -> MaterialTheme.colorScheme.secondaryContainer
+        else -> MaterialTheme.colorScheme.surfaceContainer
     }
 }
 
@@ -377,56 +384,57 @@ private fun ConversationListScrollReporter(
 }
 
 @Composable
-private fun ConversationListFabs(
-    isStartChatVisible: Boolean,
-    isScrollUpVisible: Boolean,
-    onStartChatClick: () -> Unit,
-    onScrollToTopClick: () -> Unit,
+private fun ScrollToTopFab(
+    visible: Boolean,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
+    AnimatedVisibility(
         modifier = modifier,
-        horizontalAlignment = Alignment.End,
-        verticalArrangement = Arrangement.spacedBy(space = FabSpacing),
+        visible = visible,
+        enter = scaleIn() + fadeIn(),
+        exit = scaleOut() + fadeOut(),
     ) {
-        AnimatedVisibility(
-            visible = isScrollUpVisible,
-            enter = scaleIn() + fadeIn(),
-            exit = scaleOut() + fadeOut(),
+        SmallFloatingActionButton(
+            onClick = onClick,
+            shape = CircleShape,
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
         ) {
-            SmallFloatingActionButton(
-                onClick = onScrollToTopClick,
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.ArrowUpward,
-                    contentDescription = stringResource(R.string.conversation_list_scroll_to_top),
-                )
-            }
+            Icon(
+                imageVector = Icons.Rounded.ArrowUpward,
+                contentDescription = stringResource(R.string.conversation_list_scroll_to_top),
+            )
         }
+    }
+}
 
-        AnimatedVisibility(
-            visible = isStartChatVisible,
-            enter = scaleIn() + fadeIn(),
-            exit = scaleOut() + fadeOut(),
-        ) {
-            Button(
-                modifier = Modifier.height(StartChatButtonHeight),
-                onClick = onStartChatClick,
-                shape = MaterialTheme.shapes.small,
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Edit,
-                        contentDescription = null,
-                    )
-                    Spacer(modifier = Modifier.size(StartChatIconSpacing))
-                    Text(text = stringResource(R.string.conversation_list_start_chat))
-                }
-            }
-        }
+@Composable
+private fun StartChatFab(
+    visible: Boolean,
+    expanded: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    AnimatedVisibility(
+        modifier = modifier,
+        visible = visible,
+        enter = scaleIn() + fadeIn(),
+        exit = scaleOut() + fadeOut(),
+    ) {
+        ExtendedFloatingActionButton(
+            onClick = onClick,
+            expanded = expanded,
+            shape = FabShape,
+            icon = {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.Chat,
+                    contentDescription = stringResource(R.string.conversation_list_start_chat),
+                )
+            },
+            text = {
+                Text(text = stringResource(R.string.conversation_list_start_chat))
+            },
+        )
     }
 }
 
