@@ -1,0 +1,46 @@
+name: Bug report
+description: Report a problem with the Messaging app
+type: Bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this! The more detail you can give us, the faster we can help. If you're short on time, clear reproduction steps and what you expected vs. what happened are the most useful.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the problem — what you did, what you expected, and what happened instead.
+      placeholder: |
+        When I open a conversation and tap ..., I expected ... but instead ...
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: App version
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: |
+        Paste relevant logcat output here, or drag and drop a log file into this field to attach it.
+
+        To get app logs:
+
+        - Long press the Messaging app icon, tap App info, scroll down, and tap View logs.
+        - Alternatively, go to Settings > Apps > All apps, search for Messaging, tap Messaging, and then tap View logs.
+
+        To get system logs:
+
+        - Go to Settings > System > View logs while signed in as the Owner user.
+
+        Privacy:
+
+        - This is a messaging app, so please scrub phone numbers, contact names, and message bodies first.
+        - If the logs contain sensitive data you'd rather not post publicly, email them to logs@grapheneos.org instead and mention that here.
