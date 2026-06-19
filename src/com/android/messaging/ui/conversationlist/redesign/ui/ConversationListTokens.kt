@@ -11,7 +11,7 @@ internal val ItemHeaderSpacing = 8.dp
 
 internal val ItemBadgeIconSize = 16.dp
 
-internal val ItemUnreadDotSize = 8.dp
+internal val ItemUnreadDotSize = 12.dp
 
 internal val ItemPreviewThumbnailSize = 44.dp
 

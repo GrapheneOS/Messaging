@@ -1,13 +1,13 @@
 package com.android.messaging.ui.conversationlist
 
-import androidx.activity.ComponentActivity
+import android.app.Activity
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversationlist.redesign.ConversationListEffectHandler
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListEffect as Effect
 import com.android.messaging.util.DebugUtils
 
 internal class ConversationListActivityEffectHandler(
-    private val activity: ComponentActivity,
+    private val activity: Activity,
 ) : ConversationListEffectHandler {
 
     override fun handle(effect: Effect) {
@@ -15,7 +15,7 @@ internal class ConversationListActivityEffectHandler(
             Effect.StartChat -> {
                 UIIntents.get().launchCreateNewConversationActivity(
                     activity,
-                    null
+                    null,
                 )
             }
 

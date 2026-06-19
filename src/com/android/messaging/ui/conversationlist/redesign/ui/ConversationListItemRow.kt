@@ -8,9 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.NotificationsOff
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -32,13 +30,8 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
-import com.android.messaging.datamodel.data.MessageData
-import com.android.messaging.sms.MmsUtils
 import com.android.messaging.ui.common.components.TwoLineListItem
 import com.android.messaging.ui.common.components.attachment.MediaThumbnail
-import com.android.messaging.ui.common.components.participant.ParticipantAvatar
-import com.android.messaging.ui.common.components.participant.participantAvatarLabel
-import com.android.messaging.ui.common.components.participant.participantColorSeed
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListItemUiModel
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListPreviewUiModel
 import com.android.messaging.ui.core.MessagingPreviewColumn
@@ -50,11 +43,16 @@ internal fun ConversationListItemRow(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
+    isSelectionMode: Boolean = false,
 ) {
     TwoLineListItem(
         onClick = onClick,
         leadingContent = {
-            ConversationListItemAvatar(item)
+            ConversationListItemAvatar(
+                item = item,
+                isSelectionMode = isSelectionMode,
+                onToggleSelection = onClick,
+            )
         },
         titleContent = {
             ConversationListItemHeader(item)
@@ -70,26 +68,6 @@ internal fun ConversationListItemRow(
         trailingContent = {
             ConversationListItemTrailing(item)
         },
-    )
-}
-
-@Composable
-private fun ConversationListItemAvatar(item: ConversationListItemUiModel) {
-    val fallbackIcon = when {
-        item.avatar.isGroup -> Icons.Default.Group
-        else -> Icons.Default.Person
-    }
-
-    ParticipantAvatar(
-        avatarUri = item.avatar.uri,
-        size = ItemAvatarSize,
-        fallbackLabel = participantAvatarLabel(source = item.title),
-        colorSeedCode = participantColorSeed(
-            normalizedDestination = item.avatar.normalizedDestination,
-        ),
-        fallbackSize = ItemAvatarFallbackSize,
-        fallbackIcon = fallbackIcon,
-        isSelected = item.isSelected,
     )
 }
 
@@ -221,12 +199,7 @@ private fun ConversationListItemStatusLabel(item: ConversationListItemUiModel) {
         }
 
         is ConversationListMessageStatus.Failed -> {
-            stringResource(
-                itemFailedStatusResId(
-                    item = item,
-                    status = status,
-                ),
-            )
+            stringResource(itemFailedStatusResId(item))
         }
 
         ConversationListMessageStatus.Normal -> {
@@ -250,19 +223,10 @@ private fun ConversationListItemStatusLabel(item: ConversationListItemUiModel) {
     )
 }
 
-private fun itemFailedStatusResId(
-    item: ConversationListItemUiModel,
-    status: ConversationListMessageStatus.Failed,
-): Int {
+private fun itemFailedStatusResId(item: ConversationListItemUiModel): Int {
     return when {
-        item.isOutgoing -> {
-            MmsUtils.mapRawStatusToErrorResourceId(
-                MessageData.BUGLE_STATUS_OUTGOING_FAILED,
-                status.rawTelephonyStatus,
-            )
-        }
-
-        else -> R.string.message_status_download_failed
+        item.isOutgoing -> R.string.conversation_list_status_not_sent
+        else -> R.string.conversation_list_status_not_downloaded
     }
 }
 

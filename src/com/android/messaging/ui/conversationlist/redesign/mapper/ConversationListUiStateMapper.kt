@@ -88,13 +88,7 @@ internal class ConversationListUiStateMapperImpl @Inject constructor() :
         return ConversationListItemUiModel(
             conversationId = item.conversationId,
             title = item.title,
-            avatar = ConversationListAvatarUiModel(
-                uri = resolveAvatarUri(item.icon),
-                contactId = item.participant.contactId,
-                lookupKey = item.participant.lookupKey,
-                normalizedDestination = item.participant.otherNormalizedDestination,
-                isGroup = item.participant.isGroup,
-            ),
+            avatar = item.toAvatar(),
             snippet = ConversationListSnippetUiModel(
                 text = item.activeSnippetText(),
                 senderName = item.latestMessage.senderName,
@@ -111,6 +105,18 @@ internal class ConversationListUiStateMapperImpl @Inject constructor() :
             isMuted = !item.notification.isEnabled,
             isArchived = item.isArchived,
             isSelected = isSelected,
+        )
+    }
+
+    private fun ConversationListItem.toAvatar(): ConversationListAvatarUiModel {
+        val destination = participant.otherNormalizedDestination?.takeIf(String::isNotBlank)
+
+        return ConversationListAvatarUiModel(
+            uri = resolveAvatarUri(icon),
+            contactId = participant.contactId,
+            lookupKey = participant.lookupKey,
+            normalizedDestination = destination,
+            isGroup = participant.isGroup,
         )
     }
 

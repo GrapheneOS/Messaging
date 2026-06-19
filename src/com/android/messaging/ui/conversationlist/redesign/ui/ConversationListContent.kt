@@ -43,6 +43,7 @@ internal fun ConversationListContent(
     onAction: (Action) -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
+    isSelectionMode: Boolean = false,
     bottomReserve: Dp = 0.dp,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -69,6 +70,7 @@ internal fun ConversationListContent(
                     listState = listState,
                     onAction = onAction,
                     contentPadding = contentPadding,
+                    isSelectionMode = isSelectionMode,
                     bottomReserve = bottomReserve,
                 )
             }
@@ -82,6 +84,7 @@ private fun ConversationListItems(
     listState: LazyListState,
     onAction: (Action) -> Unit,
     contentPadding: PaddingValues,
+    isSelectionMode: Boolean,
     bottomReserve: Dp,
 ) {
     LazyColumn(
@@ -110,6 +113,8 @@ private fun ConversationListItems(
                 onLongClick = {
                     onAction(Action.ConversationLongClicked(item.conversationId))
                 },
+                modifier = Modifier.animateItem(),
+                isSelectionMode = isSelectionMode,
             )
         }
     }

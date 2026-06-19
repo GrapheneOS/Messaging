@@ -761,6 +761,10 @@
     <string name="conversation_list_start_chat">Start chat</string>
     <!-- Accessibility label for the button that scrolls the conversation list back to the top. -->
     <string name="conversation_list_scroll_to_top">Scroll to top</string>
+    <!-- Conversation list row status for an outgoing message that failed to send. -->
+    <string name="conversation_list_status_not_sent">Not sent</string>
+    <!-- Conversation list row status for an incoming message that failed to download. -->
+    <string name="conversation_list_status_not_downloaded">Not downloaded</string>
 
     <!-- Shown in conversation as the snippet when there is no text and an attached picture. [CHAR LIMIT=25] -->
     <string name="conversation_list_snippet_picture">Picture</string>

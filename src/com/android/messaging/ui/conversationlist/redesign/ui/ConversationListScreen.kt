@@ -9,6 +9,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
@@ -288,29 +289,45 @@ private fun ConversationListScaffold(
                 listState = listState,
                 onAction = onAction,
                 contentPadding = contentPadding,
+                isSelectionMode = isSelectionMode,
                 bottomReserve = FabBottomReserve,
             )
 
-            ScrollToTopFab(
-                visible = uiState.isScrollUpVisible,
-                onClick = onScrollToTop,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .windowInsetsPadding(WindowInsets.navigationBars)
-                    .padding(bottom = FabSpacing),
-            )
-
-            StartChatFab(
-                visible = !isSelectionMode,
-                expanded = !uiState.isScrollUpVisible,
-                onClick = { onAction(Action.StartChatClicked) },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .windowInsetsPadding(WindowInsets.navigationBars)
-                    .padding(FabSpacing),
+            ConversationListFabs(
+                uiState = uiState,
+                isSelectionMode = isSelectionMode,
+                onAction = onAction,
+                onScrollToTop = onScrollToTop,
             )
         }
     }
+}
+
+@Composable
+private fun BoxScope.ConversationListFabs(
+    uiState: State,
+    isSelectionMode: Boolean,
+    onAction: (Action) -> Unit,
+    onScrollToTop: () -> Unit,
+) {
+    ScrollToTopFab(
+        visible = uiState.isScrollUpVisible,
+        onClick = onScrollToTop,
+        modifier = Modifier
+            .align(Alignment.BottomCenter)
+            .windowInsetsPadding(WindowInsets.navigationBars)
+            .padding(bottom = FabSpacing),
+    )
+
+    StartChatFab(
+        visible = !isSelectionMode,
+        expanded = !uiState.isScrollUpVisible,
+        onClick = { onAction(Action.StartChatClicked) },
+        modifier = Modifier
+            .align(Alignment.BottomEnd)
+            .windowInsetsPadding(WindowInsets.navigationBars)
+            .padding(FabSpacing),
+    )
 }
 
 @Composable

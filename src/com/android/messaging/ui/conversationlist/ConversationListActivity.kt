@@ -18,12 +18,12 @@ class ConversationListActivity : ComponentActivity() {
 
         enableEdgeToEdge()
 
-        val effectHandler = ConversationListActivityEffectHandler(
-            activity = this,
-        )
-
         setContent {
             AppTheme {
+                val effectHandler = ConversationListActivityEffectHandler(
+                    activity = this,
+                )
+
                 ConversationListScreen(
                     effectHandler = effectHandler,
                     modifier = Modifier.fillMaxSize(),
