@@ -1,11 +1,12 @@
 package com.android.messaging.ui.blockedparticipants.screen.mapper
 
-import android.telephony.PhoneNumberUtils
 import androidx.core.text.BidiFormatter
 import androidx.core.text.TextDirectionHeuristicsCompat.LTR
 import com.android.messaging.data.blockedparticipants.model.BlockedDirectChat
+import com.android.messaging.domain.conversation.usecase.participant.CanShowOrAddContact
+import com.android.messaging.domain.conversation.usecase.participant.IsContactSaved
+import com.android.messaging.domain.conversation.usecase.telephony.CanPlacePhoneCall
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantUiState
-import com.android.messaging.util.PhoneUtils
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -16,8 +17,11 @@ internal interface BlockedParticipantsUiStateMapper {
     ): ImmutableList<BlockedParticipantUiState>
 }
 
-internal class BlockedParticipantsUiStateMapperImpl @Inject constructor() :
-    BlockedParticipantsUiStateMapper {
+internal class BlockedParticipantsUiStateMapperImpl @Inject constructor(
+    private val canPlacePhoneCall: CanPlacePhoneCall,
+    private val canShowOrAddContact: CanShowOrAddContact,
+    private val isContactSavedUseCase: IsContactSaved,
+) : BlockedParticipantsUiStateMapper {
 
     override fun map(
         chats: ImmutableList<BlockedDirectChat>,
@@ -40,11 +44,19 @@ internal class BlockedParticipantsUiStateMapperImpl @Inject constructor() :
             contactName != null && !participant.isUnknownSender -> sendDestination
             else -> null
         }
+
         val normalizedDestination = participant.normalizedDestination
-        val canCall = !normalizedDestination.isNullOrBlank() &&
-            PhoneNumberUtils.isWellFormedSmsAddress(normalizedDestination) &&
-            PhoneUtils.getDefault().isVoiceCapable
-        val isContactSaved = participant.contactId > 0 && !participant.lookupKey.isNullOrBlank()
+        val canCall = canPlacePhoneCall(normalizedDestination)
+        val canShowContact = canShowOrAddContact(
+            isGroup = false,
+            contactId = participant.contactId,
+            lookupKey = participant.lookupKey,
+            destination = normalizedDestination,
+        )
+        val isContactSaved = isContactSavedUseCase(
+            contactId = participant.contactId,
+            lookupKey = participant.lookupKey,
+        )
 
         return BlockedParticipantUiState(
             participantId = participant.id,
@@ -56,6 +68,7 @@ internal class BlockedParticipantsUiStateMapperImpl @Inject constructor() :
             lookupKey = participant.lookupKey,
             normalizedDestination = normalizedDestination,
             canCall = canCall,
+            canShowContact = canShowContact,
             isContactSaved = isContactSaved,
         )
     }

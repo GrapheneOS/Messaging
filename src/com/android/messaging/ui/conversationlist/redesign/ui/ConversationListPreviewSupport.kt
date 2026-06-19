@@ -25,6 +25,8 @@ internal fun previewConversationListItem(
     isDraft: Boolean = false,
     isSelected: Boolean = false,
 ): ConversationListItemUiModel {
+    val normalizedDestination = "+3161234$conversationId".takeUnless { isGroup }
+
     return ConversationListItemUiModel(
         conversationId = conversationId,
         title = title,
@@ -32,8 +34,12 @@ internal fun previewConversationListItem(
             uri = null,
             contactId = -1L,
             lookupKey = null,
-            normalizedDestination = "+3161234$conversationId",
+            normalizedDestination = normalizedDestination,
             isGroup = isGroup,
+            details = normalizedDestination,
+            canCall = !isGroup,
+            canShowContact = !isGroup,
+            isContactSaved = false,
         ),
         snippet = ConversationListSnippetUiModel(
             text = snippetText,

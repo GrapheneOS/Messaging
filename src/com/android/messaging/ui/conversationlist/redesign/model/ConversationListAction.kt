@@ -26,6 +26,18 @@ internal sealed interface ConversationListAction {
         val isVisible: Boolean,
     ) : ListAction
 
+    data class AvatarMessageClicked(
+        val conversationId: String,
+    ) : ListAction
+
+    data class AvatarCallClicked(
+        val destination: String,
+    ) : ListAction
+
+    data class AvatarContactClicked(
+        val avatar: ConversationListAvatarUiModel,
+    ) : ListAction
+
     data class AddContactConfirmed(
         val destination: String,
     ) : DialogAction

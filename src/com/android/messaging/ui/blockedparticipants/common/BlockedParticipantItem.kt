@@ -219,6 +219,7 @@ private fun BlockedParticipantItemPreview() {
                 lookupKey = null,
                 normalizedDestination = "+31612345678",
                 canCall = true,
+                canShowContact = true,
                 isContactSaved = true,
             ),
             isSelected = false,

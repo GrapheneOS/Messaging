@@ -1,9 +1,13 @@
 package com.android.messaging.ui.conversationlist.redesign.mapper
 
-import androidx.core.net.toUri
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
+import com.android.messaging.domain.conversation.usecase.avatar.ResolveAvatarUri
+import com.android.messaging.domain.conversation.usecase.participant.CanAddContact
+import com.android.messaging.domain.conversation.usecase.participant.CanShowOrAddContact
+import com.android.messaging.domain.conversation.usecase.participant.IsContactSaved
+import com.android.messaging.domain.conversation.usecase.telephony.CanPlacePhoneCall
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListAvatarUiModel
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListContentUiState
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListItemUiModel
@@ -13,7 +17,6 @@ import com.android.messaging.ui.conversationlist.redesign.model.ConversationList
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListUiState
 import com.android.messaging.ui.conversationlist.redesign.model.SelectedConversationUiModel
 import com.android.messaging.ui.conversationlist.redesign.model.SelectionActionsUiState
-import com.android.messaging.util.AvatarUriUtil
 import com.android.messaging.util.ContentType
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableSet
@@ -28,8 +31,13 @@ internal interface ConversationListUiStateMapper {
     ): ConversationListUiState
 }
 
-internal class ConversationListUiStateMapperImpl @Inject constructor() :
-    ConversationListUiStateMapper {
+internal class ConversationListUiStateMapperImpl @Inject constructor(
+    private val canAddContact: CanAddContact,
+    private val canPlacePhoneCall: CanPlacePhoneCall,
+    private val canShowOrAddContact: CanShowOrAddContact,
+    private val isContactSavedUseCase: IsContactSaved,
+    private val resolveAvatarUri: ResolveAvatarUri,
+) : ConversationListUiStateMapper {
 
     override fun map(
         snapshot: ConversationListSnapshot,
@@ -40,11 +48,7 @@ internal class ConversationListUiStateMapperImpl @Inject constructor() :
         val items = snapshot.items
             .map { item ->
                 val isSelected = item.conversationId in selectedConversationIds
-
-                mapItem(
-                    item = item,
-                    isSelected = isSelected,
-                )
+                item.toConversationListUiState(isSelected)
             }
             .toImmutableList()
 
@@ -77,39 +81,48 @@ internal class ConversationListUiStateMapperImpl @Inject constructor() :
         )
     }
 
-    private fun mapItem(
-        item: ConversationListItem,
+    private fun ConversationListItem.toConversationListUiState(
         isSelected: Boolean,
     ): ConversationListItemUiModel {
-        val preview = item.activePreview()
-        val isDraft = item.draft.isVisible
-        val isOutgoing = isDraft || !item.latestMessage.isIncoming
+        val isDraft = draft.isVisible
+        val isOutgoing = isDraft || !latestMessage.isIncoming
 
         return ConversationListItemUiModel(
-            conversationId = item.conversationId,
-            title = item.title,
-            avatar = item.toAvatar(),
+            conversationId = conversationId,
+            title = title,
+            avatar = toAvatar(),
             snippet = ConversationListSnippetUiModel(
-                text = item.activeSnippetText(),
-                senderName = item.latestMessage.senderName,
-                preview = preview,
+                text = activeSnippetText(),
+                senderName = latestMessage.senderName,
+                preview = activePreview(),
                 isDraft = isDraft,
             ),
-            subject = item.activeSubject(),
-            timestampMillis = item.latestMessage.timestamp,
-            status = mapStatus(item),
+            subject = activeSubject(),
+            timestampMillis = latestMessage.timestamp,
+            status = toStatus(),
             isOutgoing = isOutgoing,
-            isUnread = !item.latestMessage.isRead && !isDraft,
-            isGroup = item.participant.isGroup,
-            isEnterprise = item.participant.isEnterprise,
-            isMuted = !item.notification.isEnabled,
-            isArchived = item.isArchived,
+            isUnread = !latestMessage.isRead && !isDraft,
+            isGroup = participant.isGroup,
+            isEnterprise = participant.isEnterprise,
+            isMuted = !notification.isEnabled,
+            isArchived = isArchived,
             isSelected = isSelected,
         )
     }
 
     private fun ConversationListItem.toAvatar(): ConversationListAvatarUiModel {
+        val isOneOnOne = !participant.isGroup
         val destination = participant.otherNormalizedDestination?.takeIf(String::isNotBlank)
+        val canShowContact = canShowOrAddContact(
+            isGroup = participant.isGroup,
+            contactId = participant.contactId,
+            lookupKey = participant.lookupKey,
+            destination = destination,
+        )
+        val isContactSaved = isContactSavedUseCase(
+            contactId = participant.contactId,
+            lookupKey = participant.lookupKey,
+        )
 
         return ConversationListAvatarUiModel(
             uri = resolveAvatarUri(icon),
@@ -117,7 +130,18 @@ internal class ConversationListUiStateMapperImpl @Inject constructor() :
             lookupKey = participant.lookupKey,
             normalizedDestination = destination,
             isGroup = participant.isGroup,
+            details = destination.takeIf { isOneOnOne },
+            canCall = isOneOnOne && canPlacePhoneCall(destination),
+            canShowContact = canShowContact,
+            isContactSaved = isContactSaved,
         )
+    }
+
+    private fun ConversationListItem.toStatus(): ConversationListMessageStatus {
+        return when {
+            draft.isVisible -> ConversationListMessageStatus.Draft
+            else -> latestMessage.status
+        }
     }
 
     private fun mapSelectionState(
@@ -161,26 +185,36 @@ internal class ConversationListUiStateMapperImpl @Inject constructor() :
         blockedDestinations: ImmutableSet<String>,
     ): SelectionActionsUiState {
         val singleSelection = selectedConversations.singleOrNull()
+        val canAddContact = singleSelection?.let { conversation ->
+            canAddContact(
+                isGroup = conversation.isGroup,
+                lookupKey = conversation.participantLookupKey,
+                destination = conversation.normalizedDestination,
+            )
+        }
+        val canBlock = singleSelection?.let { conversation ->
+            canBlock(
+                destination = conversation.normalizedDestination,
+                blockedDestinations = blockedDestinations,
+            )
+        }
 
         return SelectionActionsUiState(
             canArchive = selectedConversations.any { !it.isArchived },
             canUnarchive = selectedConversations.any { it.isArchived },
             canDelete = selectedConversations.isNotEmpty(),
-            canAddContact = singleSelection?.canAddContact() == true,
-            canBlock = singleSelection?.canBlock(blockedDestinations) == true,
+            canAddContact = canAddContact == true,
+            canBlock = canBlock == true,
         )
     }
 
-    private fun SelectedConversationUiModel.canAddContact(): Boolean {
-        return !isGroup && participantLookupKey.isNullOrBlank()
-    }
-
-    private fun SelectedConversationUiModel.canBlock(
+    private fun canBlock(
+        destination: String?,
         blockedDestinations: ImmutableSet<String>,
     ): Boolean {
-        val destination = normalizedDestination?.takeIf(String::isNotBlank) ?: return false
+        val resolvedDestination = destination?.takeIf(String::isNotBlank) ?: return false
 
-        return destination !in blockedDestinations
+        return resolvedDestination !in blockedDestinations
     }
 
     private fun ConversationListItem.activeSnippetText(): String? {
@@ -259,27 +293,6 @@ internal class ConversationListUiStateMapperImpl @Inject constructor() :
                     contentType = contentType,
                 )
             }
-        }
-    }
-
-    private fun mapStatus(
-        item: ConversationListItem,
-    ): ConversationListMessageStatus {
-        return when {
-            item.draft.isVisible -> ConversationListMessageStatus.Draft
-            else -> item.latestMessage.status
-        }
-    }
-
-    private fun resolveAvatarUri(
-        icon: String?,
-    ): String? {
-        val iconUriString = icon?.takeIf(String::isNotBlank) ?: return null
-        val iconUri = iconUriString.toUri()
-
-        return when {
-            AvatarUriUtil.isAvatarUri(iconUri) -> AvatarUriUtil.getPrimaryUri(iconUri)?.toString()
-            else -> iconUriString
         }
     }
 }

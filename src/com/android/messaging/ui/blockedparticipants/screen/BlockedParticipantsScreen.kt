@@ -201,7 +201,7 @@ private fun BlockedParticipantsList(
                     }.takeIf { participant.canCall },
                     onContactClick = {
                         onAction(Action.ParticipantContactInfoClicked(participant))
-                    }.takeIf { hasDestination },
+                    }.takeIf { participant.canShowContact },
                 )
             }
         }
@@ -257,6 +257,7 @@ private fun BlockedParticipantsContentPreview() {
                         lookupKey = null,
                         normalizedDestination = "+31612345678",
                         canCall = true,
+                        canShowContact = true,
                         isContactSaved = true,
                     ),
                     BlockedParticipantUiState(
@@ -269,6 +270,7 @@ private fun BlockedParticipantsContentPreview() {
                         lookupKey = null,
                         normalizedDestination = "+31600001111",
                         canCall = true,
+                        canShowContact = true,
                         isContactSaved = false,
                     ),
                 ),
