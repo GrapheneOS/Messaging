@@ -1,12 +1,13 @@
 package com.android.messaging.ui.conversationsettings.screen.mapper
 
-import android.telephony.PhoneNumberUtils
-import android.telephony.TelephonyManager
 import androidx.core.text.BidiFormatter
 import androidx.core.text.TextDirectionHeuristicsCompat.LTR
 import com.android.messaging.data.conversationsettings.model.ConversationSettingsData
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.datamodel.data.ParticipantData
+import com.android.messaging.domain.conversation.usecase.participant.CanShowOrAddContact
+import com.android.messaging.domain.conversation.usecase.participant.IsContactSaved
+import com.android.messaging.domain.conversation.usecase.telephony.CanPlacePhoneCall
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState
 import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
 import javax.inject.Inject
@@ -23,7 +24,9 @@ internal interface ConversationSettingsUiStateMapper {
 }
 
 internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
-    private val telephonyManager: TelephonyManager,
+    private val canPlacePhoneCall: CanPlacePhoneCall,
+    private val canShowOrAddContact: CanShowOrAddContact,
+    private val isContactSavedUseCase: IsContactSaved,
 ) : ConversationSettingsUiStateMapper {
 
     override fun map(
@@ -32,12 +35,7 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
         selfIdOverride: String?,
     ): ConversationSettingsUiState {
         val participants = data.participants
-            .map { participant ->
-                toParticipantUiState(
-                    participant = participant,
-                    isVoiceCapable = data.isVoiceCapable,
-                )
-            }
+            .map(::toParticipantUiState)
             .toImmutableList()
         val otherParticipant = participants.singleOrNull()
 
@@ -48,6 +46,15 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
         val selectedSubscription = subscriptions
             .firstOrNull { it.selfParticipantId == effectiveSelfId }
             ?: subscriptions.firstOrNull()
+
+        val canShowContact = otherParticipant?.let { participant ->
+            canShowOrAddContact(
+                isGroup = false,
+                contactId = participant.contactId,
+                lookupKey = participant.lookupKey,
+                destination = participant.normalizedDestination,
+            )
+        }
 
         return ConversationSettingsUiState(
             conversationId = data.conversationId,
@@ -61,24 +68,13 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
             selectedSubscription = selectedSubscription,
             isSimSwitchAvailable = subscriptions.size > 1,
             canCall = otherParticipant?.canCall == true,
-            canShowContact = !otherParticipant?.normalizedDestination.isNullOrBlank(),
+            canShowContact = canShowContact == true,
             isContactSaved = otherParticipant?.isContactSaved == true,
         )
     }
 
-    private fun canCall(
-        destination: String?,
-        isVoiceCapable: Boolean,
-    ): Boolean {
-        return isVoiceCapable &&
-            !destination.isNullOrBlank() &&
-            PhoneNumberUtils.isWellFormedSmsAddress(destination) &&
-            !telephonyManager.isEmergencyNumber(destination)
-    }
-
     private fun toParticipantUiState(
         participant: ParticipantData,
-        isVoiceCapable: Boolean,
     ): ParticipantUiState {
         val bidiFormatter = BidiFormatter.getInstance()
         val fullName = participant.fullName
@@ -94,7 +90,11 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
                 bidiFormatter.unicodeWrap(it, LTR)
             }
         }
-        val isContactSaved = participant.contactId > 0 && !participant.lookupKey.isNullOrBlank()
+        val canCall = canPlacePhoneCall(participant.normalizedDestination)
+        val isContactSaved = isContactSavedUseCase(
+            contactId = participant.contactId,
+            lookupKey = participant.lookupKey,
+        )
 
         return ParticipantUiState(
             id = participant.id,
@@ -108,10 +108,7 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
             displayDestination = participant.displayDestination?.let {
                 bidiFormatter.unicodeWrap(it, LTR)
             },
-            canCall = canCall(
-                destination = participant.normalizedDestination,
-                isVoiceCapable = isVoiceCapable,
-            ),
+            canCall = canCall,
             isContactSaved = isContactSaved,
         )
     }

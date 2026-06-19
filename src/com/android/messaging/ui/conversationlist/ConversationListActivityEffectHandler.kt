@@ -1,13 +1,18 @@
 package com.android.messaging.ui.conversationlist
 
 import android.app.Activity
+import android.graphics.Point
+import android.view.View
+import androidx.core.net.toUri
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversationlist.redesign.ConversationListEffectHandler
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListEffect as Effect
+import com.android.messaging.util.ContactUtil
 import com.android.messaging.util.DebugUtils
 
 internal class ConversationListActivityEffectHandler(
     private val activity: Activity,
+    private val hostView: View,
 ) : ConversationListEffectHandler {
 
     override fun handle(effect: Effect) {
@@ -46,6 +51,24 @@ internal class ConversationListActivityEffectHandler(
             is Effect.OpenAddContact -> {
                 UIIntents.get().launchAddContactActivity(
                     activity,
+                    effect.destination,
+                )
+            }
+
+            is Effect.PlaceCall -> {
+                UIIntents.get().launchPhoneCallActivity(
+                    activity,
+                    effect.destination,
+                    Point(0, 0),
+                )
+            }
+
+            is Effect.ShowOrAddContact -> {
+                ContactUtil.showOrAddContact(
+                    hostView,
+                    effect.contactId,
+                    effect.lookupKey,
+                    effect.avatarUri?.toUri(),
                     effect.destination,
                 )
             }

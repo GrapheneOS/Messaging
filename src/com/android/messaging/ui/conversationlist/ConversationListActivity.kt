@@ -5,7 +5,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
 import com.android.messaging.ui.conversationlist.redesign.ui.ConversationListScreen
 import com.android.messaging.ui.core.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -20,9 +22,13 @@ class ConversationListActivity : ComponentActivity() {
 
         setContent {
             AppTheme {
-                val effectHandler = ConversationListActivityEffectHandler(
-                    activity = this,
-                )
+                val hostView = LocalView.current
+                val effectHandler = remember(hostView) {
+                    ConversationListActivityEffectHandler(
+                        activity = this,
+                        hostView = hostView,
+                    )
+                }
 
                 ConversationListScreen(
                     effectHandler = effectHandler,

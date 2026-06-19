@@ -105,6 +105,8 @@ private fun ConversationListItems(
             key = { item -> item.conversationId },
             contentType = { CONVERSATION_ROW_CONTENT_TYPE },
         ) { item ->
+            val destination = item.avatar.normalizedDestination
+
             ConversationListItemRow(
                 item = item,
                 onClick = {
@@ -115,6 +117,17 @@ private fun ConversationListItems(
                 },
                 modifier = Modifier.animateItem(),
                 isSelectionMode = isSelectionMode,
+                onAvatarMessageClick = {
+                    onAction(Action.AvatarMessageClicked(item.conversationId))
+                },
+                onAvatarCallClick = {
+                    if (destination != null) {
+                        onAction(Action.AvatarCallClicked(destination))
+                    }
+                }.takeIf { item.avatar.canCall },
+                onAvatarContactClick = {
+                    onAction(Action.AvatarContactClicked(item.avatar))
+                }.takeIf { item.avatar.canShowContact },
             )
         }
     }

@@ -28,6 +28,10 @@ internal data class ConversationListAvatarUiModel(
     val lookupKey: String?,
     val normalizedDestination: String?,
     val isGroup: Boolean,
+    val details: String?,
+    val canCall: Boolean,
+    val canShowContact: Boolean,
+    val isContactSaved: Boolean,
 )
 
 @Immutable

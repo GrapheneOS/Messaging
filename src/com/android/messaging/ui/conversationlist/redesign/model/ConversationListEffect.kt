@@ -20,6 +20,17 @@ internal sealed interface ConversationListEffect {
         val conversationId: String,
     ) : ConversationListEffect
 
+    data class PlaceCall(
+        val destination: String,
+    ) : ConversationListEffect
+
+    data class ShowOrAddContact(
+        val contactId: Long,
+        val lookupKey: String?,
+        val avatarUri: String?,
+        val destination: String?,
+    ) : ConversationListEffect
+
     data class ConfirmAddContact(
         val destination: String,
     ) : ConversationListEffect

@@ -11,7 +11,6 @@ import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.data.ConversationParticipantsData
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.di.core.MessagingDbDispatcher
-import com.android.messaging.util.PhoneUtils
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineDispatcher
@@ -80,7 +79,6 @@ internal class ConversationSettingsRepositoryImpl @Inject constructor(
     private suspend fun loadConversationSettings(
         conversationId: String,
     ): ConversationSettingsData {
-        val phoneUtils = PhoneUtils.getDefault()
         val participants = queryOtherParticipants(conversationId)
         val metadata = conversationsRepository.getConversationMetadataSnapshot(
             conversationId = conversationId,
@@ -91,7 +89,6 @@ internal class ConversationSettingsRepositoryImpl @Inject constructor(
             conversationTitle = metadata?.conversationName.orEmpty(),
             isArchived = metadata?.isArchived ?: false,
             isSnoozed = notificationRepository.isSnoozed(conversationId),
-            isVoiceCapable = phoneUtils.isVoiceCapable,
             participants = participants.toImmutableList(),
             dbSelfParticipantId = metadata?.selfParticipantId.orEmpty(),
         )

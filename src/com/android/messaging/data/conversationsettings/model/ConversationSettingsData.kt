@@ -9,7 +9,6 @@ internal data class ConversationSettingsData(
     val conversationTitle: String = "",
     val isArchived: Boolean = false,
     val isSnoozed: Boolean = false,
-    val isVoiceCapable: Boolean = false,
     val participants: ImmutableList<ParticipantData> = persistentListOf(),
     val dbSelfParticipantId: String = "",
 )

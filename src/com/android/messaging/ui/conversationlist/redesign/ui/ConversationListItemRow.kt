@@ -44,6 +44,9 @@ internal fun ConversationListItemRow(
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
     isSelectionMode: Boolean = false,
+    onAvatarMessageClick: () -> Unit = {},
+    onAvatarCallClick: (() -> Unit)? = null,
+    onAvatarContactClick: (() -> Unit)? = null,
 ) {
     TwoLineListItem(
         onClick = onClick,
@@ -52,6 +55,9 @@ internal fun ConversationListItemRow(
                 item = item,
                 isSelectionMode = isSelectionMode,
                 onToggleSelection = onClick,
+                onMessageClick = onAvatarMessageClick,
+                onCallClick = onAvatarCallClick,
+                onContactClick = onAvatarContactClick,
             )
         },
         titleContent = {

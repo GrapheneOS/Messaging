@@ -10,6 +10,7 @@ import com.android.messaging.ui.conversationlist.redesign.delegate.ConversationL
 import com.android.messaging.ui.conversationlist.redesign.delegate.ConversationListSelectionDelegate
 import com.android.messaging.ui.conversationlist.redesign.mapper.ConversationListUiStateMapper
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListAction as Action
+import com.android.messaging.ui.conversationlist.redesign.model.ConversationListAvatarUiModel
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListEffect as Effect
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListUiState as State
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -136,7 +137,30 @@ internal class ConversationListViewModel @Inject constructor(
             is Action.NewestConversationVisibilityChanged -> {
                 onNewestConversationVisibilityChanged(action.isVisible)
             }
+
+            is Action.AvatarMessageClicked -> {
+                _effects.tryEmit(Effect.OpenConversation(action.conversationId))
+            }
+
+            is Action.AvatarCallClicked -> {
+                _effects.tryEmit(Effect.PlaceCall(action.destination))
+            }
+
+            is Action.AvatarContactClicked -> {
+                onAvatarContactClick(action.avatar)
+            }
         }
+    }
+
+    private fun onAvatarContactClick(avatar: ConversationListAvatarUiModel) {
+        _effects.tryEmit(
+            Effect.ShowOrAddContact(
+                contactId = avatar.contactId,
+                lookupKey = avatar.lookupKey,
+                avatarUri = avatar.uri,
+                destination = avatar.normalizedDestination,
+            ),
+        )
     }
 
     private fun onNavigationAction(action: Action.NavigationAction) {
