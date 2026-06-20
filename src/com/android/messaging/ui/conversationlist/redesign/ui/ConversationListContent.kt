@@ -107,28 +107,39 @@ private fun ConversationListItems(
         ) { item ->
             val destination = item.avatar.normalizedDestination
 
-            ConversationListItemRow(
+            SwipeableConversationListItem(
                 item = item,
-                onClick = {
-                    onAction(Action.ConversationClicked(item.conversationId))
+                isSelectionMode = isSelectionMode,
+                onArchive = {
+                    onAction(Action.ConversationSwipedToArchive(item.conversationId))
                 },
-                onLongClick = {
-                    onAction(Action.ConversationLongClicked(item.conversationId))
+                onToggleRead = {
+                    onAction(Action.ConversationSwipedToToggleRead(item.conversationId))
                 },
                 modifier = Modifier.animateItem(),
-                isSelectionMode = isSelectionMode,
-                onAvatarMessageClick = {
-                    onAction(Action.AvatarMessageClicked(item.conversationId))
-                },
-                onAvatarCallClick = {
-                    if (destination != null) {
-                        onAction(Action.AvatarCallClicked(destination))
-                    }
-                }.takeIf { item.avatar.canCall },
-                onAvatarContactClick = {
-                    onAction(Action.AvatarContactClicked(item.avatar))
-                }.takeIf { item.avatar.canShowContact },
-            )
+            ) {
+                ConversationListItemRow(
+                    item = item,
+                    onClick = {
+                        onAction(Action.ConversationClicked(item.conversationId))
+                    },
+                    onLongClick = {
+                        onAction(Action.ConversationLongClicked(item.conversationId))
+                    },
+                    isSelectionMode = isSelectionMode,
+                    onAvatarMessageClick = {
+                        onAction(Action.AvatarMessageClicked(item.conversationId))
+                    },
+                    onAvatarCallClick = {
+                        if (destination != null) {
+                            onAction(Action.AvatarCallClicked(destination))
+                        }
+                    }.takeIf { item.avatar.canCall },
+                    onAvatarContactClick = {
+                        onAction(Action.AvatarContactClicked(item.avatar))
+                    }.takeIf { item.avatar.canShowContact },
+                )
+            }
         }
     }
 }

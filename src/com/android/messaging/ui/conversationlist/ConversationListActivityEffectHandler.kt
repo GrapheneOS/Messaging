@@ -77,7 +77,7 @@ internal class ConversationListActivityEffectHandler(
             is Effect.ConfirmAddContact,
             is Effect.ConfirmBlock,
             is Effect.ConversationsArchived,
-            Effect.ScrollToTop,
+            is Effect.ScrollToTop,
             -> Unit
         }
     }

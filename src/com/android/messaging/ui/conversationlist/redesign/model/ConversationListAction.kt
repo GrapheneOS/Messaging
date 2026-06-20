@@ -39,6 +39,14 @@ internal sealed interface ConversationListAction {
         val avatar: ConversationListAvatarUiModel,
     ) : ListAction
 
+    data class ConversationSwipedToArchive(
+        val conversationId: String,
+    ) : ListAction
+
+    data class ConversationSwipedToToggleRead(
+        val conversationId: String,
+    ) : ListAction
+
     data class AddContactConfirmed(
         val destination: String,
     ) : DialogAction

@@ -24,8 +24,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 internal interface ConversationListScreenModel {
     val effects: Flow<Effect>
@@ -151,6 +153,14 @@ internal class ConversationListViewModel @Inject constructor(
             is Action.AvatarContactClicked -> {
                 onAvatarContactClick(action.avatar)
             }
+
+            is Action.ConversationSwipedToArchive -> {
+                onConversationSwipedToArchive(action.conversationId)
+            }
+
+            is Action.ConversationSwipedToToggleRead -> {
+                onConversationSwipedToToggleRead(action.conversationId)
+            }
         }
     }
 
@@ -163,6 +173,30 @@ internal class ConversationListViewModel @Inject constructor(
                 destination = avatar.normalizedDestination,
             ),
         )
+    }
+
+    private fun onConversationSwipedToArchive(conversationId: String) {
+        val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
+
+        actionsDelegate.setArchived(
+            conversationIds = listOf(resolvedConversationId),
+            isArchived = true,
+            shouldShowSnackbar = true,
+        )
+    }
+
+    private fun onConversationSwipedToToggleRead(conversationId: String) {
+        val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
+
+        val item = snapshot.value
+            ?.items
+            ?.firstOrNull { it.conversationId == resolvedConversationId }
+            ?: return
+
+        when {
+            item.latestMessage.isRead -> actionsDelegate.markUnread(resolvedConversationId)
+            else -> actionsDelegate.markRead(resolvedConversationId)
+        }
     }
 
     private fun onNavigationAction(action: Action.NavigationAction) {
@@ -299,6 +333,18 @@ internal class ConversationListViewModel @Inject constructor(
             isArchived = !isArchived,
             shouldShowSnackbar = false,
         )
+
+        if (!isArchived || isScrollUpVisible.value) {
+            return
+        }
+
+        viewModelScope.launch {
+            snapshot.filterNotNull().first { restoredSnapshot ->
+                restoredSnapshot.items.any { item -> item.conversationId in conversationIds }
+            }
+
+            _effects.tryEmit(Effect.ScrollToTop)
+        }
     }
 
     private fun onBlockClick() {

@@ -10,6 +10,7 @@ import com.android.messaging.data.conversation.model.metadata.ConversationCompos
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
 import com.android.messaging.data.conversation.model.send.ConversationSendData
 import com.android.messaging.data.conversation.platform.MessageDetailsPlatformSource
+import com.android.messaging.data.conversation.store.ConversationReadStore
 import com.android.messaging.data.conversation.store.ConversationSelfIdStore
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
@@ -68,6 +69,10 @@ internal interface ConversationsRepository {
 
     fun unarchiveConversation(conversationId: String)
 
+    suspend fun markConversationRead(conversationId: String)
+
+    suspend fun markConversationUnread(conversationId: String)
+
     fun deleteConversation(conversationId: String, cutoffTimestamp: Long)
 
     suspend fun setConversationSelfId(conversationId: String, selfId: String)
@@ -78,6 +83,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
     private val messageDetailsMapper: ConversationMessageDetailsMapper,
     private val messageDetailsPlatformSource: MessageDetailsPlatformSource,
     private val conversationSelfIdStore: ConversationSelfIdStore,
+    private val conversationReadStore: ConversationReadStore,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
     @param:MessagingDbDispatcher
@@ -213,6 +219,22 @@ internal class ConversationsRepositoryImpl @Inject constructor(
         conversationId
             .takeIf { it.isNotBlank() }
             ?.let(UpdateConversationArchiveStatusAction::unarchiveConversation)
+    }
+
+    override suspend fun markConversationRead(conversationId: String) {
+        val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
+
+        withContext(messagingDbDispatcher) {
+            conversationReadStore.markConversationRead(resolvedConversationId)
+        }
+    }
+
+    override suspend fun markConversationUnread(conversationId: String) {
+        val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
+
+        withContext(messagingDbDispatcher) {
+            conversationReadStore.markConversationUnread(resolvedConversationId)
+        }
     }
 
     override fun deleteConversation(conversationId: String, cutoffTimestamp: Long) {

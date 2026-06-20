@@ -279,7 +279,10 @@ private fun ConversationListScaffold(
             )
         },
         snackbarHost = {
-            SnackbarHost(snackbarHostState)
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.padding(bottom = FabBottomReserve),
+            )
         },
     ) { contentPadding ->
         Box(

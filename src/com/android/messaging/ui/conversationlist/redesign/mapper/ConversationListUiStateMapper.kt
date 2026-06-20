@@ -101,7 +101,7 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
             timestampMillis = latestMessage.timestamp,
             status = toStatus(),
             isOutgoing = isOutgoing,
-            isUnread = !latestMessage.isRead && !isDraft,
+            isUnread = !latestMessage.isRead,
             isGroup = participant.isGroup,
             isEnterprise = participant.isEnterprise,
             isMuted = !notification.isEnabled,

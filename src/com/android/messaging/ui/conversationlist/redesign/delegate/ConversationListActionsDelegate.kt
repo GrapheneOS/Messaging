@@ -22,6 +22,8 @@ internal interface ConversationListActionsDelegate {
         shouldShowSnackbar: Boolean,
     )
 
+    fun markRead(conversationId: String)
+    fun markUnread(conversationId: String)
     fun delete(items: List<ConversationListItem>)
     fun block(item: ConversationListItem)
     fun unblock(conversationId: String, destination: String)
@@ -76,6 +78,22 @@ internal class ConversationListActionsDelegateImpl @Inject constructor(
                 isArchived = isArchived,
             ),
         )
+    }
+
+    override fun markRead(conversationId: String) {
+        val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
+
+        boundScope?.launch {
+            conversationsRepository.markConversationRead(resolvedConversationId)
+        }
+    }
+
+    override fun markUnread(conversationId: String) {
+        val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
+
+        boundScope?.launch {
+            conversationsRepository.markConversationUnread(resolvedConversationId)
+        }
     }
 
     override fun delete(items: List<ConversationListItem>) {

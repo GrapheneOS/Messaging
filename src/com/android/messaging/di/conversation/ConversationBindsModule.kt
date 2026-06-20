@@ -24,6 +24,8 @@ import com.android.messaging.data.conversation.repository.ConversationsRepositor
 import com.android.messaging.data.conversation.repository.ConversationsRepositoryImpl
 import com.android.messaging.data.conversation.store.ConversationDraftStore
 import com.android.messaging.data.conversation.store.ConversationDraftStoreImpl
+import com.android.messaging.data.conversation.store.ConversationReadStore
+import com.android.messaging.data.conversation.store.ConversationReadStoreImpl
 import com.android.messaging.data.conversation.store.ConversationSelfIdStore
 import com.android.messaging.data.conversation.store.ConversationSelfIdStoreImpl
 import com.android.messaging.data.media.repository.ConversationAttachmentsRepository
@@ -124,6 +126,12 @@ internal abstract class ConversationBindsModule {
     abstract fun bindConversationDraftStore(
         impl: ConversationDraftStoreImpl,
     ): ConversationDraftStore
+
+    @Binds
+    @Reusable
+    abstract fun bindConversationReadStore(
+        impl: ConversationReadStoreImpl,
+    ): ConversationReadStore
 
     @Binds
     @Reusable
