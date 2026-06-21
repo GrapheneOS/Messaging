@@ -68,6 +68,8 @@ internal sealed interface ConversationListAction {
     data object AddContactClicked : SelectionAction
     data object ArchiveClicked : SelectionAction
     data object BlockClicked : SelectionAction
+    data object MarkReadClicked : SelectionAction
+    data object MarkUnreadClicked : SelectionAction
     data object SelectionCleared : SelectionAction
     data object UnarchiveClicked : SelectionAction
     data object UnsnoozeClicked : SelectionAction

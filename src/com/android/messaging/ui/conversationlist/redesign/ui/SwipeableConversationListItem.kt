@@ -1,8 +1,10 @@
 package com.android.messaging.ui.conversationlist.redesign.ui
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -11,27 +13,37 @@ import androidx.compose.material.icons.filled.MarkChatRead
 import androidx.compose.material.icons.filled.MarkChatUnread
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxDefaults
-import androidx.compose.material3.SwipeToDismissBoxState
-import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListItemUiModel
+import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 
 private val SwipeBackgroundShape = RoundedCornerShape(percent = 50)
 
 private val SwipeBackgroundHorizontalPadding = 24.dp
+
+private val SwipeActionThreshold = 88.dp
+
+private enum class ConversationSwipeAction {
+    Archive,
+    ToggleRead,
+    None,
+}
 
 @Composable
 internal fun SwipeableConversationListItem(
@@ -42,61 +54,84 @@ internal fun SwipeableConversationListItem(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
+    val density = LocalDensity.current
     val currentOnArchive by rememberUpdatedState(onArchive)
     val currentOnToggleRead by rememberUpdatedState(onToggleRead)
     val coroutineScope = rememberCoroutineScope()
 
-    val positionalThreshold = SwipeToDismissBoxDefaults.positionalThreshold
-    val dismissState = remember {
-        SwipeToDismissBoxState(
-            initialValue = SwipeToDismissBoxValue.Settled,
-            positionalThreshold = positionalThreshold,
-        )
-    }
+    val offsetX = remember { Animatable(0f) }
+    val draggedOffsetX = remember { mutableFloatStateOf(0f) }
+    val backgroundAction by remember { derivedStateOf { swipeAction(offsetX.value) } }
 
-    val onDismiss = remember(dismissState, coroutineScope) {
-        { direction: SwipeToDismissBoxValue ->
-            when (direction) {
-                SwipeToDismissBoxValue.StartToEnd -> {
-                    currentOnToggleRead()
-                    coroutineScope.launch { dismissState.reset() }
-                    Unit
-                }
+    val thresholdPx = with(density) { SwipeActionThreshold.toPx() }
 
-                SwipeToDismissBoxValue.EndToStart -> currentOnArchive()
+    val gestureModifier = when {
+        isSelectionMode -> Modifier
 
-                SwipeToDismissBoxValue.Settled -> Unit
-            }
+        else -> Modifier.pointerInput(Unit) {
+            detectHorizontalDragGestures(
+                onHorizontalDrag = { change, dragAmount ->
+                    change.consume()
+                    draggedOffsetX.floatValue += dragAmount
+                    coroutineScope.launch { offsetX.snapTo(draggedOffsetX.floatValue) }
+                },
+                onDragEnd = {
+                    when {
+                        draggedOffsetX.floatValue <= -thresholdPx -> currentOnArchive()
+                        draggedOffsetX.floatValue >= thresholdPx -> currentOnToggleRead()
+                    }
+
+                    draggedOffsetX.floatValue = 0f
+                    coroutineScope.launch { offsetX.animateTo(0f) }
+                },
+                onDragCancel = {
+                    draggedOffsetX.floatValue = 0f
+                    coroutineScope.launch { offsetX.animateTo(0f) }
+                },
+            )
         }
     }
 
-    SwipeToDismissBox(
-        state = dismissState,
-        modifier = modifier,
-        enableDismissFromStartToEnd = !isSelectionMode,
-        enableDismissFromEndToStart = !isSelectionMode,
-        onDismiss = onDismiss,
-        backgroundContent = {
-            ConversationListSwipeBackground(
-                direction = dismissState.dismissDirection,
-                isUnread = item.isUnread,
-            )
-        },
-        content = { content() },
-    )
+    Box(modifier = modifier.then(gestureModifier)) {
+        ConversationListSwipeBackground(
+            action = backgroundAction,
+            isUnread = item.isUnread,
+            modifier = Modifier.matchParentSize(),
+        )
+
+        Box(
+            modifier = Modifier.offset {
+                IntOffset(
+                    x = offsetX.value.roundToInt(),
+                    y = 0,
+                )
+            },
+        ) {
+            content()
+        }
+    }
+}
+
+private fun swipeAction(offset: Float): ConversationSwipeAction {
+    return when {
+        offset > 0f -> ConversationSwipeAction.ToggleRead
+        offset < 0f -> ConversationSwipeAction.Archive
+        else -> ConversationSwipeAction.None
+    }
 }
 
 @Composable
 private fun ConversationListSwipeBackground(
-    direction: SwipeToDismissBoxValue,
+    action: ConversationSwipeAction,
     isUnread: Boolean,
+    modifier: Modifier = Modifier,
 ) {
-    if (direction == SwipeToDismissBoxValue.Settled) {
-        Box(modifier = Modifier.fillMaxSize())
+    if (action == ConversationSwipeAction.None) {
+        Box(modifier = modifier)
         return
     }
 
-    val isArchive = direction == SwipeToDismissBoxValue.EndToStart
+    val isArchive = action == ConversationSwipeAction.Archive
 
     val containerColor = when {
         isArchive -> MaterialTheme.colorScheme.secondaryContainer
@@ -126,8 +161,7 @@ private fun ConversationListSwipeBackground(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = modifier
             .clip(SwipeBackgroundShape)
             .background(containerColor)
             .padding(horizontal = SwipeBackgroundHorizontalPadding),

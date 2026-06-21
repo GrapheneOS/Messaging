@@ -233,10 +233,29 @@ internal class ConversationListViewModel @Inject constructor(
             Action.ArchiveClicked -> onArchiveClick(isArchived = true)
             Action.UnarchiveClicked -> onArchiveClick(isArchived = false)
             Action.BlockClicked -> onBlockClick()
+            Action.MarkReadClicked -> onMarkRead(isRead = true)
+            Action.MarkUnreadClicked -> onMarkRead(isRead = false)
             Action.SelectionCleared -> selectionDelegate.clear()
             Action.UnsnoozeClicked -> onUnsnoozeClick()
             is Action.SnoozeOptionSelected -> onSnoozeOptionSelected(action.option)
         }
+    }
+
+    private fun onMarkRead(isRead: Boolean) {
+        val selectedItems = selectionDelegate.currentSelectedItems()
+
+        if (selectedItems.isEmpty()) {
+            return
+        }
+
+        selectedItems.forEach { item ->
+            when {
+                isRead -> actionsDelegate.markRead(item.conversationId)
+                else -> actionsDelegate.markUnread(item.conversationId)
+            }
+        }
+
+        selectionDelegate.clear()
     }
 
     private fun onUnsnoozeClick() {

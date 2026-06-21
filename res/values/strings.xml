@@ -57,10 +57,7 @@
     <string name="contact_list_send_to_text">Send to <xliff:g id="destination">%s</xliff:g></string>
 
     <string name="mediapicker_gallery_title">Choose media</string>
-    <plurals name="conversation_message_selection_title">
-        <item quantity="one">%d selected</item>
-        <item quantity="other">%d selected</item>
-    </plurals>
+    <string name="conversation_message_selection_title">%d</string>
     <string name="mediapicker_audio_title">Record audio</string>
     <string name="mediapicker_contact_title">Choose a contact</string>
     <string name="conversation_media_picker_add_selection">Add (<xliff:g id="count">%1$d</xliff:g>)</string>

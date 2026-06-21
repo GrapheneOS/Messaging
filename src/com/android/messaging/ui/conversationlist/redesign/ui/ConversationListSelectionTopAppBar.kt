@@ -2,13 +2,14 @@ package com.android.messaging.ui.conversationlist.redesign.ui
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Archive
-import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.NotificationsActive
-import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Snooze
 import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -18,8 +19,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -66,9 +70,8 @@ internal fun ConversationListSelectionTopAppBar(
 @Composable
 private fun ConversationListSelectionTitle(selectedCount: Int) {
     Text(
-        text = pluralStringResource(
-            id = R.plurals.conversation_message_selection_title,
-            count = selectedCount,
+        text = stringResource(
+            R.string.conversation_message_selection_title,
             selectedCount,
         ),
         maxLines = 1,
@@ -115,22 +118,6 @@ private fun ConversationListSelectionActions(
         )
     }
 
-    if (actions.canAddContact) {
-        SelectionActionButton(
-            imageVector = Icons.Default.PersonAdd,
-            labelResId = R.string.action_add_contact,
-            onClick = { onAction(Action.AddContactClicked) },
-        )
-    }
-
-    if (actions.canBlock) {
-        SelectionActionButton(
-            imageVector = Icons.Default.Block,
-            labelResId = R.string.action_block,
-            onClick = { onAction(Action.BlockClicked) },
-        )
-    }
-
     if (actions.canDelete) {
         SelectionActionButton(
             imageVector = Icons.Default.Delete,
@@ -138,6 +125,83 @@ private fun ConversationListSelectionActions(
             onClick = onDeleteClick,
         )
     }
+
+    SelectionOverflowMenu(
+        actions = actions,
+        onAction = onAction,
+    )
+}
+
+@Composable
+private fun SelectionOverflowMenu(
+    actions: SelectionActionsUiState,
+    onAction: (Action) -> Unit,
+) {
+    var isExpanded by remember {
+        mutableStateOf(value = false)
+    }
+
+    IconButton(onClick = { isExpanded = true }) {
+        Icon(
+            imageVector = Icons.Rounded.MoreVert,
+            contentDescription = stringResource(R.string.more_options),
+        )
+    }
+
+    DropdownMenu(
+        expanded = isExpanded,
+        onDismissRequest = { isExpanded = false },
+    ) {
+        actions.isFirstSelectedUnread?.let { isUnread ->
+            SelectionMenuItem(
+                labelResId = when {
+                    isUnread -> R.string.mark_as_read
+                    else -> R.string.mark_as_unread
+                },
+                onClick = {
+                    val action = when {
+                        isUnread -> Action.MarkReadClicked
+                        else -> Action.MarkUnreadClicked
+                    }
+                    onAction(action)
+                    isExpanded = false
+                },
+            )
+        }
+
+        if (actions.canAddContact) {
+            SelectionMenuItem(
+                labelResId = R.string.action_add_contact,
+                onClick = {
+                    onAction(Action.AddContactClicked)
+                    isExpanded = false
+                },
+            )
+        }
+
+        if (actions.canBlock) {
+            SelectionMenuItem(
+                labelResId = R.string.action_block,
+                onClick = {
+                    onAction(Action.BlockClicked)
+                    isExpanded = false
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun SelectionMenuItem(
+    labelResId: Int,
+    onClick: () -> Unit,
+) {
+    DropdownMenuItem(
+        text = {
+            Text(text = stringResource(labelResId))
+        },
+        onClick = onClick,
+    )
 }
 
 @Composable
@@ -176,6 +240,7 @@ private fun ConversationListSelectionTopAppBarPreview() {
                 canAddContact = true,
                 canBlock = true,
                 canSnooze = true,
+                isFirstSelectedUnread = true,
             ),
             onAction = {},
             onDeleteClick = {},

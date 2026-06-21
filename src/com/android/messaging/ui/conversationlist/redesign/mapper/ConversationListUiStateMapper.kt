@@ -19,13 +19,14 @@ import com.android.messaging.ui.conversationlist.redesign.model.SelectedConversa
 import com.android.messaging.ui.conversationlist.redesign.model.SelectionActionsUiState
 import com.android.messaging.util.ContentType
 import javax.inject.Inject
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.toImmutableList
 
 internal interface ConversationListUiStateMapper {
     fun map(
         snapshot: ConversationListSnapshot,
-        selectedConversationIds: ImmutableSet<String>,
+        selectedConversationIds: ImmutableList<String>,
         isScrollUpVisible: Boolean,
         isDebugEnabled: Boolean,
     ): ConversationListUiState
@@ -41,7 +42,7 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
 
     override fun map(
         snapshot: ConversationListSnapshot,
-        selectedConversationIds: ImmutableSet<String>,
+        selectedConversationIds: ImmutableList<String>,
         isScrollUpVisible: Boolean,
         isDebugEnabled: Boolean,
     ): ConversationListUiState {
@@ -147,16 +148,14 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
 
     private fun mapSelectionState(
         items: List<ConversationListItem>,
-        selectedConversationIds: ImmutableSet<String>,
+        selectedConversationIds: ImmutableList<String>,
         blockedDestinations: ImmutableSet<String>,
     ): ConversationListSelectionUiState {
-        val selectedConversations = items
-            .asSequence()
-            .filter { item ->
-                item.conversationId in selectedConversationIds
+        val itemsById = items.associateBy(ConversationListItem::conversationId)
+        val selectedConversations = selectedConversationIds
+            .mapNotNull { conversationId ->
+                itemsById[conversationId]?.let(::toSelectedConversation)
             }
-            .map(::toSelectedConversation)
-            .toList()
             .toImmutableList()
 
         return ConversationListSelectionUiState(
@@ -179,6 +178,7 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
             isGroup = item.participant.isGroup,
             isArchived = item.isArchived,
             isSnoozed = item.notification.isSnoozed,
+            isUnread = !item.latestMessage.isRead,
         )
     }
 
@@ -187,6 +187,7 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
         blockedDestinations: ImmutableSet<String>,
     ): SelectionActionsUiState {
         val singleSelection = selectedConversations.singleOrNull()
+        val firstSelected = selectedConversations.firstOrNull()
         val canAddContact = singleSelection?.let { conversation ->
             canAddContact(
                 isGroup = conversation.isGroup,
@@ -209,6 +210,7 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
             canBlock = canBlock == true,
             canSnooze = selectedConversations.any { !it.isSnoozed },
             canUnsnooze = selectedConversations.any { it.isSnoozed },
+            isFirstSelectedUnread = firstSelected?.isUnread,
         )
     }
 

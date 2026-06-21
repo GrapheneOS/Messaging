@@ -4,11 +4,10 @@ import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.PersistentSet
+import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.collections.immutable.toPersistentSet
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +17,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal interface ConversationListSelectionDelegate {
-    val selectedIds: StateFlow<PersistentSet<String>>
+    val selectedIds: StateFlow<PersistentList<String>>
 
     fun bind(scope: CoroutineScope, snapshotFlow: StateFlow<ConversationListSnapshot?>)
     fun toggle(conversationId: String)
@@ -30,8 +29,8 @@ internal interface ConversationListSelectionDelegate {
 internal class ConversationListSelectionDelegateImpl @Inject constructor() :
     ConversationListSelectionDelegate {
 
-    private val _selectedIds = MutableStateFlow<PersistentSet<String>>(persistentSetOf())
-    override val selectedIds: StateFlow<PersistentSet<String>> = _selectedIds.asStateFlow()
+    private val _selectedIds = MutableStateFlow<PersistentList<String>>(persistentListOf())
+    override val selectedIds: StateFlow<PersistentList<String>> = _selectedIds.asStateFlow()
 
     private var boundSnapshotFlow: StateFlow<ConversationListSnapshot?>? = null
 
@@ -64,7 +63,7 @@ internal class ConversationListSelectionDelegateImpl @Inject constructor() :
     }
 
     override fun clear() {
-        _selectedIds.value = persistentSetOf()
+        _selectedIds.value = persistentListOf()
     }
 
     override fun isSelectionActive(): Boolean {
@@ -98,7 +97,7 @@ internal class ConversationListSelectionDelegateImpl @Inject constructor() :
                 .filter { conversationId ->
                     conversationId in visibleConversationIds
                 }
-                .toPersistentSet()
+                .toPersistentList()
         }
     }
 }

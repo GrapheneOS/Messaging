@@ -19,6 +19,7 @@ internal data class SelectedConversationUiModel(
     val isGroup: Boolean,
     val isArchived: Boolean,
     val isSnoozed: Boolean,
+    val isUnread: Boolean,
 )
 
 @Immutable
@@ -30,4 +31,5 @@ internal data class SelectionActionsUiState(
     val canBlock: Boolean = false,
     val canSnooze: Boolean = false,
     val canUnsnooze: Boolean = false,
+    val isFirstSelectedUnread: Boolean? = null,
 )
