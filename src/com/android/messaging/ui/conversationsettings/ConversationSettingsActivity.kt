@@ -2,11 +2,11 @@ package com.android.messaging.ui.conversationsettings
 
 import android.content.ClipboardManager
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalView
+import com.android.messaging.ui.BugleComponentActivity
 import com.android.messaging.ui.conversationsettings.screen.ConversationSettingsEffectHandlerImpl
 import com.android.messaging.ui.conversationsettings.screen.ConversationSettingsScreen
 import com.android.messaging.ui.core.AppTheme
@@ -14,13 +14,17 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class ConversationSettingsActivity : ComponentActivity() {
+class ConversationSettingsActivity : BugleComponentActivity() {
 
     @Inject
     internal lateinit var clipboardManager: ClipboardManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (isFinishing) {
+            return
+        }
 
         enableEdgeToEdge()
 
