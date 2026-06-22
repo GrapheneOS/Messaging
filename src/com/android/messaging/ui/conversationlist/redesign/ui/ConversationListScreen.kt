@@ -42,6 +42,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -52,6 +54,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
 import com.android.messaging.ui.common.components.PrimaryActionButton
+import com.android.messaging.ui.common.components.reorder.OverlayReorderAnimation
+import com.android.messaging.ui.common.components.reorder.OverlayReorderAnimationController
+import com.android.messaging.ui.common.components.reorder.rememberOverlayReorderAnimationController
 import com.android.messaging.ui.common.components.showActionSnackbar
 import com.android.messaging.ui.conversationlist.redesign.ConversationListEffectHandler
 import com.android.messaging.ui.conversationlist.redesign.ConversationListScreenModel
@@ -59,9 +64,11 @@ import com.android.messaging.ui.conversationlist.redesign.ConversationListViewMo
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListContentUiState
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListEffect as Effect
+import com.android.messaging.ui.conversationlist.redesign.model.ConversationListItemUiModel
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListUiState as State
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
@@ -82,6 +89,10 @@ internal fun ConversationListScreen(
 
     val listState = rememberLazyListState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val pinAnimationController = rememberOverlayReorderAnimationController(
+        key = ConversationListItemUiModel::conversationId,
+        isSettled = { item, anchorToTop -> item.isPinned == anchorToTop },
+    )
 
     var pendingAddContactDestination by rememberSaveable { mutableStateOf<String?>(null) }
     var pendingDelete by rememberSaveable { mutableStateOf(false) }
@@ -89,24 +100,37 @@ internal fun ConversationListScreen(
     var pendingSnooze by rememberSaveable { mutableStateOf(false) }
 
     ConversationListEffects(
-        screenModel = screenModel,
+        effects = screenModel.effects,
         effectHandler = effectHandler,
         listState = listState,
         snackbarHostState = snackbarHostState,
+        pinAnimationController = pinAnimationController,
+        onAction = screenModel::onAction,
         onConfirmAddContact = { pendingAddContactDestination = it },
         onConfirmBlock = { pendingBlockDestination = it },
     )
 
-    ConversationListScaffold(
-        uiState = uiState,
-        listState = listState,
-        snackbarHostState = snackbarHostState,
-        onAction = screenModel::onAction,
-        onDeleteClick = { pendingDelete = true },
-        onSnoozeClick = { pendingSnooze = true },
-        onScrollToTop = { screenModel.onAction(Action.ScrollUpClicked) },
-        modifier = modifier,
-    )
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .onGloballyPositioned { coordinates ->
+                pinAnimationController.updateContainerBounds(coordinates.boundsInRoot())
+            },
+    ) {
+        ConversationListScaffold(
+            uiState = uiState,
+            listState = listState,
+            snackbarHostState = snackbarHostState,
+            pinAnimationController = pinAnimationController,
+            onAction = screenModel::onAction,
+            onDeleteClick = { pendingDelete = true },
+            onSnoozeClick = { pendingSnooze = true },
+            onScrollToTop = { screenModel.onAction(Action.ScrollUpClicked) },
+            modifier = Modifier.fillMaxSize(),
+        )
+
+        ConversationListPinOverlay(pinAnimationController)
+    }
 
     ConversationListDialogs(
         selectedCount = uiState.selection.selectedConversations.size,
@@ -123,11 +147,26 @@ internal fun ConversationListScreen(
 }
 
 @Composable
+private fun ConversationListPinOverlay(
+    controller: OverlayReorderAnimationController<ConversationListItemUiModel, String>,
+) {
+    OverlayReorderAnimation(controller = controller) { item ->
+        ConversationListItemRow(
+            item = item,
+            onClick = {},
+            onLongClick = {},
+        )
+    }
+}
+
+@Composable
 private fun ConversationListEffects(
-    screenModel: ConversationListScreenModel,
+    effects: Flow<Effect>,
     effectHandler: ConversationListEffectHandler,
     listState: LazyListState,
     snackbarHostState: SnackbarHostState,
+    pinAnimationController: OverlayReorderAnimationController<ConversationListItemUiModel, String>,
+    onAction: (Action) -> Unit,
     onConfirmAddContact: (String) -> Unit,
     onConfirmBlock: (String) -> Unit,
 ) {
@@ -138,15 +177,16 @@ private fun ConversationListEffects(
     val currentContext by rememberUpdatedState(context)
     val currentEffectHandler by rememberUpdatedState(effectHandler)
     val currentUndoLabel by rememberUpdatedState(undoLabel)
+    val currentOnAction by rememberUpdatedState(onAction)
     val currentOnConfirmAddContact by rememberUpdatedState(onConfirmAddContact)
     val currentOnConfirmBlock by rememberUpdatedState(onConfirmBlock)
 
     LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
-        screenModel.onAction(Action.ScreenResumed)
+        currentOnAction(Action.ScreenResumed)
     }
 
-    LaunchedEffect(screenModel) {
-        screenModel.effects.collect { effect ->
+    LaunchedEffect(effects) {
+        effects.collect { effect ->
             when (effect) {
                 is Effect.ConfirmAddContact -> {
                     currentOnConfirmAddContact(effect.destination)
@@ -162,7 +202,7 @@ private fun ConversationListEffects(
                         context = currentContext,
                         undoLabel = currentUndoLabel,
                         effect = effect,
-                        onAction = screenModel::onAction,
+                        onAction = currentOnAction,
                     )
                 }
 
@@ -172,7 +212,15 @@ private fun ConversationListEffects(
                         context = currentContext,
                         undoLabel = currentUndoLabel,
                         effect = effect,
-                        onAction = screenModel::onAction,
+                        onAction = currentOnAction,
+                    )
+                }
+
+                is Effect.PreparePinAnimation -> {
+                    preparePinAnimation(
+                        controller = pinAnimationController,
+                        effect = effect,
+                        onAction = currentOnAction,
                     )
                 }
 
@@ -184,6 +232,32 @@ private fun ConversationListEffects(
             }
         }
     }
+}
+
+private fun preparePinAnimation(
+    controller: OverlayReorderAnimationController<ConversationListItemUiModel, String>,
+    effect: Effect.PreparePinAnimation,
+    onAction: (Action) -> Unit,
+) {
+    controller.prepare(
+        keys = effect.conversationIds,
+        anchorToTop = effect.isPinned,
+        transform = { item ->
+            item.copy(
+                isPinned = effect.isPinned,
+                isSelected = false,
+            )
+        },
+    )
+
+    onAction(
+        Action.PinAnimationPrepared(
+            conversationIds = effect.conversationIds,
+            isPinned = effect.isPinned,
+        ),
+    )
+
+    controller.markCommitted()
 }
 
 private fun CoroutineScope.launchArchivedSnackbar(
@@ -248,6 +322,7 @@ private fun ConversationListScaffold(
     uiState: State,
     listState: LazyListState,
     snackbarHostState: SnackbarHostState,
+    pinAnimationController: OverlayReorderAnimationController<ConversationListItemUiModel, String>?,
     onAction: (Action) -> Unit,
     onDeleteClick: () -> Unit,
     onSnoozeClick: () -> Unit,
@@ -289,6 +364,9 @@ private fun ConversationListScaffold(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = contentPadding.calculateTopPadding())
+                .onGloballyPositioned { coordinates ->
+                    pinAnimationController?.updateContentTop(coordinates.boundsInRoot().top)
+                }
                 .background(backdropColor)
                 .clip(ContentCornerShape)
                 .background(MaterialTheme.colorScheme.background),
@@ -300,6 +378,7 @@ private fun ConversationListScaffold(
                 contentPadding = contentPadding,
                 isSelectionMode = isSelectionMode,
                 bottomReserve = FabBottomReserve,
+                pinAnimationController = pinAnimationController,
             )
 
             ConversationListFabs(
@@ -452,6 +531,7 @@ private fun ConversationListScaffoldItemsPreview() {
             ),
             listState = rememberLazyListState(),
             snackbarHostState = remember { SnackbarHostState() },
+            pinAnimationController = null,
             onAction = {},
             onDeleteClick = {},
             onSnoozeClick = {},
@@ -471,6 +551,7 @@ private fun ConversationListScaffoldEmptyPreview() {
             ),
             listState = rememberLazyListState(),
             snackbarHostState = remember { SnackbarHostState() },
+            pinAnimationController = null,
             onAction = {},
             onDeleteClick = {},
             onSnoozeClick = {},

@@ -15,6 +15,30 @@ internal sealed interface ConversationListAction {
 
     sealed interface SelectionAction : ConversationListAction
 
+    // region DialogAction
+    data object BlockConfirmed : DialogAction
+    data object DeleteConfirmed : DialogAction
+
+    data class AddContactConfirmed(
+        val destination: String,
+    ) : DialogAction
+
+    data class ArchiveUndoClicked(
+        val conversationIds: ImmutableList<String>,
+        val isArchived: Boolean,
+    ) : DialogAction
+
+    data class BlockUndoClicked(
+        val conversationId: String,
+        val destination: String,
+    ) : DialogAction
+    // endregion
+
+    // region LifecycleAction
+    data object ScreenResumed : LifecycleAction
+    // endregion
+
+    // region ListAction
     data class ConversationClicked(
         val conversationId: String,
     ) : ListAction
@@ -46,25 +70,18 @@ internal sealed interface ConversationListAction {
     data class ConversationSwipedToToggleRead(
         val conversationId: String,
     ) : ListAction
+    // endregion
 
-    data class AddContactConfirmed(
-        val destination: String,
-    ) : DialogAction
+    // region NavigationAction
+    data object ArchivedConversationsClicked : NavigationAction
+    data object BlockedParticipantsClicked : NavigationAction
+    data object DebugOptionsClicked : NavigationAction
+    data object ScrollUpClicked : NavigationAction
+    data object SettingsClicked : NavigationAction
+    data object StartChatClicked : NavigationAction
+    // endregion
 
-    data class ArchiveUndoClicked(
-        val conversationIds: ImmutableList<String>,
-        val isArchived: Boolean,
-    ) : DialogAction
-
-    data class BlockUndoClicked(
-        val conversationId: String,
-        val destination: String,
-    ) : DialogAction
-
-    data class SnoozeOptionSelected(
-        val option: SnoozeOption,
-    ) : SelectionAction
-
+    // region SelectionAction
     data object AddContactClicked : SelectionAction
     data object ArchiveClicked : SelectionAction
     data object BlockClicked : SelectionAction
@@ -75,15 +92,13 @@ internal sealed interface ConversationListAction {
     data object UnpinClicked : SelectionAction
     data object UnsnoozeClicked : SelectionAction
 
-    data object ArchivedConversationsClicked : NavigationAction
-    data object BlockedParticipantsClicked : NavigationAction
-    data object DebugOptionsClicked : NavigationAction
-    data object ScrollUpClicked : NavigationAction
-    data object SettingsClicked : NavigationAction
-    data object StartChatClicked : NavigationAction
+    data class SnoozeOptionSelected(
+        val option: SnoozeOption,
+    ) : SelectionAction
 
-    data object BlockConfirmed : DialogAction
-    data object DeleteConfirmed : DialogAction
-
-    data object ScreenResumed : LifecycleAction
+    data class PinAnimationPrepared(
+        val conversationIds: ImmutableList<String>,
+        val isPinned: Boolean,
+    ) : SelectionAction
+    // endregion
 }

@@ -9,11 +9,17 @@ internal sealed interface ConversationListEffect {
     data object OpenBlockedParticipants : ConversationListEffect
     data object OpenSettings : ConversationListEffect
     data object OpenDebugOptions : ConversationListEffect
+    data object ScrollToTop : ConversationListEffect
 
     data class ConversationsArchived(
         val conversationIds: ImmutableList<String>,
         val count: Int,
         val isArchived: Boolean,
+    ) : ConversationListEffect
+
+    data class PreparePinAnimation(
+        val conversationIds: ImmutableList<String>,
+        val isPinned: Boolean,
     ) : ConversationListEffect
 
     data class OpenConversation(
@@ -49,6 +55,4 @@ internal sealed interface ConversationListEffect {
         val destination: String,
         val success: Boolean,
     ) : ConversationListEffect
-
-    data object ScrollToTop : ConversationListEffect
 }

@@ -77,6 +77,7 @@ internal class ConversationListActivityEffectHandler(
             is Effect.ConfirmAddContact,
             is Effect.ConfirmBlock,
             is Effect.ConversationsArchived,
+            is Effect.PreparePinAnimation,
             is Effect.ScrollToTop,
             -> Unit
         }
