@@ -2,6 +2,8 @@ package com.android.messaging.di.conversationlist
 
 import com.android.messaging.ui.conversationlist.redesign.delegate.ConversationListActionsDelegate
 import com.android.messaging.ui.conversationlist.redesign.delegate.ConversationListActionsDelegateImpl
+import com.android.messaging.ui.conversationlist.redesign.delegate.ConversationListOptimisticSnapshotDelegate
+import com.android.messaging.ui.conversationlist.redesign.delegate.ConversationListOptimisticSnapshotDelegateImpl
 import com.android.messaging.ui.conversationlist.redesign.delegate.ConversationListSelectionDelegate
 import com.android.messaging.ui.conversationlist.redesign.delegate.ConversationListSelectionDelegateImpl
 import dagger.Binds
@@ -25,4 +27,10 @@ internal abstract class ConversationListViewModelBindsModule {
     abstract fun bindConversationListActionsDelegate(
         impl: ConversationListActionsDelegateImpl,
     ): ConversationListActionsDelegate
+
+    @Binds
+    @ViewModelScoped
+    abstract fun bindConversationListOptimisticSnapshotDelegate(
+        impl: ConversationListOptimisticSnapshotDelegateImpl,
+    ): ConversationListOptimisticSnapshotDelegate
 }
