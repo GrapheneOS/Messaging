@@ -47,6 +47,8 @@ import kotlinx.coroutines.launch
 
 private val SwipeBackgroundShape = RoundedCornerShape(percent = 50)
 
+private val SwipeBackgroundOuterHorizontalPadding = 8.dp
+
 private val SwipeBackgroundHorizontalPadding = 24.dp
 
 private val SwipeActionThreshold = 88.dp
@@ -144,7 +146,9 @@ internal fun SwipeableConversationListItem(
         ConversationListSwipeBackground(
             action = backgroundAction,
             isUnread = item.isUnread,
-            modifier = Modifier.matchParentSize(),
+            modifier = Modifier
+                .matchParentSize()
+                .padding(horizontal = SwipeBackgroundOuterHorizontalPadding),
         )
 
         Box(

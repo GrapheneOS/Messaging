@@ -211,6 +211,10 @@ internal class ConversationListViewModel @Inject constructor(
                 onAvatarContactClick(action.avatar)
             }
 
+            is Action.AvatarInfoClicked -> {
+                _effects.tryEmit(Effect.OpenConversationSettings(action.conversationId))
+            }
+
             is Action.ConversationSwipedToArchive -> {
                 onConversationSwipedToArchive(action.conversationId)
             }

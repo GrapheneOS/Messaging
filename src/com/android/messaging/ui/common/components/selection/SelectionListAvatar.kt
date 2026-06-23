@@ -19,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.Dp
 import com.android.messaging.ui.common.components.participant.ParticipantAvatar
 
 @Composable
@@ -29,6 +30,7 @@ internal fun SelectionListAvatar(
     isSelected: Boolean,
     modifier: Modifier = Modifier,
     fallbackIcon: ImageVector = Icons.Default.Person,
+    size: Dp = SelectionListItemTokens.avatarSize,
 ) {
     val avatarScale by rememberSelectionListAvatarScale(isSelected = isSelected)
 
@@ -61,7 +63,7 @@ internal fun SelectionListAvatar(
     ) { isSelectedState ->
         ParticipantAvatar(
             avatarUri = avatarUri,
-            size = SelectionListItemTokens.avatarSize,
+            size = size,
             fallbackLabel = fallbackLabel,
             fallbackSize = SelectionListItemTokens.avatarFallbackSize,
             fallbackIcon = fallbackIcon,

@@ -270,6 +270,7 @@ private fun ParticipantQuickActions(
             onContactClick?.invoke()
             onDismiss()
         }.takeIf { onContactClick != null },
+        onInfoClick = null,
         isContactSaved = participant.isContactSaved,
     )
 }

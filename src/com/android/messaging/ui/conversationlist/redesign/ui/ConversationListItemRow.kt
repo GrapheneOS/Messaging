@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.NotificationsPaused
 import androidx.compose.material.icons.filled.PushPin
@@ -26,8 +27,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -53,6 +52,7 @@ internal fun ConversationListItemRow(
     onAvatarMessageClick: () -> Unit = {},
     onAvatarCallClick: (() -> Unit)? = null,
     onAvatarContactClick: (() -> Unit)? = null,
+    onAvatarInfoClick: () -> Unit = {},
 ) {
     TwoLineListItem(
         onClick = onClick,
@@ -64,6 +64,7 @@ internal fun ConversationListItemRow(
                 onMessageClick = onAvatarMessageClick,
                 onCallClick = onAvatarCallClick,
                 onContactClick = onAvatarContactClick,
+                onInfoClick = onAvatarInfoClick,
             )
         },
         titleContent = {
@@ -91,7 +92,7 @@ private fun ConversationListItemHeader(item: ConversationListItemUiModel) {
     ) {
         Row(
             modifier = Modifier.weight(1f),
-            horizontalArrangement = Arrangement.spacedBy(ItemHeaderSpacing),
+            horizontalArrangement = Arrangement.spacedBy(ItemBadgeSpacing),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
@@ -107,21 +108,40 @@ private fun ConversationListItemHeader(item: ConversationListItemUiModel) {
                 overflow = TextOverflow.Ellipsis,
             )
 
-            if (item.isPinned) {
-                ConversationListItemBadgeIcon(Icons.Default.PushPin)
-            }
-
-            if (item.isEnterprise) {
-                ConversationListItemBadgeIcon(Icons.Default.Work)
-            }
-
-            when {
-                item.isMuted -> ConversationListItemBadgeIcon(Icons.Default.NotificationsOff)
-                item.isSnoozed -> ConversationListItemBadgeIcon(Icons.Default.NotificationsPaused)
-            }
+            ConversationListItemBadges(item)
         }
 
-        ConversationListItemStatusLabel(item)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(ItemBadgeSpacing),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            ConversationListItemStatusLabel(item)
+
+            if (item.isUnread) {
+                ConversationListItemStatusDot(color = MaterialTheme.colorScheme.primary)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ConversationListItemBadges(item: ConversationListItemUiModel) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(ItemBadgeSpacing),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (item.isEnterprise) {
+            ConversationListItemBadgeIcon(Icons.Default.Work)
+        }
+
+        when {
+            item.isMuted -> ConversationListItemBadgeIcon(Icons.Default.NotificationsOff)
+            item.isSnoozed -> ConversationListItemBadgeIcon(Icons.Default.NotificationsPaused)
+        }
+
+        if (item.isPinned) {
+            ConversationListItemBadgeIcon(Icons.Default.PushPin)
+        }
     }
 }
 
@@ -138,15 +158,24 @@ private fun ConversationListItemBody(item: ConversationListItemUiModel) {
     }
 
     itemSnippetText(item)?.let { snippetText ->
-        Text(
-            text = snippetText,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = itemUnreadFontWeight(item),
-            fontStyle = FontStyle.Italic.takeIf { item.snippet.isDraft },
-            color = itemSnippetColor(item),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(ItemBadgeSpacing),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (item.status is ConversationListMessageStatus.Failed) {
+                ConversationListItemFailedIcon(item)
+            }
+
+            Text(
+                text = snippetText,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = itemUnreadFontWeight(item),
+                fontStyle = FontStyle.Italic.takeIf { item.snippet.isDraft },
+                color = itemSnippetColor(item),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 
@@ -158,32 +187,19 @@ private fun ConversationListItemTrailing(item: ConversationListItemUiModel) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         ConversationListItemPreviewThumbnail(item.snippet.preview)
-
-        when {
-            item.status is ConversationListMessageStatus.Failed -> {
-                ConversationListItemFailedDot(item)
-            }
-
-            item.isUnread -> {
-                ConversationListItemUnreadDot()
-            }
-        }
     }
 }
 
 @Composable
-private fun ConversationListItemFailedDot(item: ConversationListItemUiModel) {
+private fun ConversationListItemFailedIcon(item: ConversationListItemUiModel) {
     val description = stringResource(itemFailedStatusResId(item))
 
-    ConversationListItemStatusDot(
-        color = MaterialTheme.colorScheme.error,
-        modifier = Modifier.semantics { contentDescription = description },
+    Icon(
+        imageVector = Icons.Default.Error,
+        contentDescription = description,
+        modifier = Modifier.size(ItemBadgeIconSize),
+        tint = MaterialTheme.colorScheme.error,
     )
-}
-
-@Composable
-private fun ConversationListItemUnreadDot() {
-    ConversationListItemStatusDot(color = MaterialTheme.colorScheme.primary)
 }
 
 @Composable
@@ -325,6 +341,7 @@ private fun itemUnreadFontWeight(item: ConversationListItemUiModel): FontWeight 
 @Composable
 private fun itemSnippetColor(item: ConversationListItemUiModel): Color {
     return when {
+        item.status is ConversationListMessageStatus.Failed -> MaterialTheme.colorScheme.error
         item.isUnread -> MaterialTheme.colorScheme.onSurface
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }

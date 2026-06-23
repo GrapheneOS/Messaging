@@ -30,7 +30,7 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.UIIntents
-import com.android.messaging.ui.common.components.showActionSnackbar
+import com.android.messaging.ui.common.components.snackbar.showActionSnackbar
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
 import com.android.messaging.util.BuglePrefs
 import com.android.messaging.util.ContactUtil

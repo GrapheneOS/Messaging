@@ -15,10 +15,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.android.messaging.ui.common.components.participant.ParticipantAvatar
 import com.android.messaging.ui.common.components.participant.ParticipantQuickActionsPopup
 import com.android.messaging.ui.common.components.participant.participantAvatarLabel
 import com.android.messaging.ui.common.components.participant.participantColorSeed
+import com.android.messaging.ui.common.components.selection.SelectionListAvatar
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListItemUiModel
 
 @Composable
@@ -29,6 +29,7 @@ internal fun ConversationListItemAvatar(
     onMessageClick: () -> Unit,
     onCallClick: (() -> Unit)?,
     onContactClick: (() -> Unit)?,
+    onInfoClick: () -> Unit,
 ) {
     val fallbackIcon = when {
         item.avatar.isGroup -> Icons.Default.Group
@@ -47,12 +48,11 @@ internal fun ConversationListItemAvatar(
     var showQuickActions by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.size(ItemAvatarSize)) {
-        ParticipantAvatar(
+        SelectionListAvatar(
             avatarUri = item.avatar.uri,
             size = ItemAvatarSize,
             fallbackLabel = fallbackLabel,
             colorSeedCode = colorSeedCode,
-            fallbackSize = ItemAvatarFallbackSize,
             fallbackIcon = fallbackIcon,
             isSelected = item.isSelected,
             modifier = Modifier
@@ -76,6 +76,7 @@ internal fun ConversationListItemAvatar(
             onMessageClick = onMessageClick,
             onCallClick = onCallClick,
             onContactClick = onContactClick,
+            onInfoClick = onInfoClick,
         )
     }
 }
@@ -91,6 +92,7 @@ private fun ConversationListAvatarQuickActions(
     onMessageClick: () -> Unit,
     onCallClick: (() -> Unit)?,
     onContactClick: (() -> Unit)?,
+    onInfoClick: () -> Unit,
 ) {
     ParticipantQuickActionsPopup(
         visible = visible,
@@ -113,6 +115,10 @@ private fun ConversationListAvatarQuickActions(
             onContactClick?.invoke()
             onDismiss()
         }.takeIf { item.avatar.canShowContact && onContactClick != null },
+        onInfoClick = {
+            onInfoClick()
+            onDismiss()
+        },
         isContactSaved = item.avatar.isContactSaved,
     )
 }

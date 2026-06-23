@@ -32,6 +32,13 @@ internal class ConversationListActivityEffectHandler(
                 )
             }
 
+            is Effect.OpenConversationSettings -> {
+                UIIntents.get().launchPeopleAndOptionsActivity(
+                    activity,
+                    effect.conversationId,
+                )
+            }
+
             Effect.OpenArchivedConversations -> {
                 UIIntents.get().launchArchivedConversationsActivity(activity)
             }
@@ -73,13 +80,7 @@ internal class ConversationListActivityEffectHandler(
                 )
             }
 
-            is Effect.ConversationBlocked,
-            is Effect.ConfirmAddContact,
-            is Effect.ConfirmBlock,
-            is Effect.ConversationsArchived,
-            is Effect.PreparePinAnimation,
-            is Effect.ScrollToTop,
-            -> Unit
+            else -> Unit
         }
     }
 }

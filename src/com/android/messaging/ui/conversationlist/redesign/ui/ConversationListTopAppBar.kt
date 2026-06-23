@@ -2,6 +2,8 @@ package com.android.messaging.ui.conversationlist.redesign.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.DropdownMenu
@@ -22,9 +24,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListAction as Action
 import com.android.messaging.ui.core.MessagingPreviewTheme
+
+private val OverflowMenuWidth = 220.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,55 +73,56 @@ private fun ConversationListOverflowMenu(
     isDebugEnabled: Boolean,
     onAction: (Action) -> Unit,
 ) {
-    var isExpanded by remember {
-        mutableStateOf(value = false)
-    }
+    var isExpanded by remember { mutableStateOf(false) }
 
-    IconButton(onClick = { isExpanded = true }) {
-        Icon(
-            imageVector = Icons.Rounded.MoreVert,
-            contentDescription = stringResource(R.string.more_options),
-        )
-    }
-
-    DropdownMenu(
-        expanded = isExpanded,
-        onDismissRequest = { isExpanded = false },
-    ) {
-        ConversationListMenuItem(
-            labelResId = R.string.action_menu_show_archived,
-            onClick = {
-                isExpanded = false
-                onAction(Action.ArchivedConversationsClicked)
-            },
-        )
-
-        if (hasBlockedParticipants) {
-            ConversationListMenuItem(
-                labelResId = R.string.blocked_contacts_title,
-                onClick = {
-                    isExpanded = false
-                    onAction(Action.BlockedParticipantsClicked)
-                },
+    Box {
+        IconButton(onClick = { isExpanded = true }) {
+            Icon(
+                imageVector = Icons.Rounded.MoreVert,
+                contentDescription = stringResource(R.string.more_options),
             )
         }
 
-        ConversationListMenuItem(
-            labelResId = R.string.action_settings,
-            onClick = {
-                isExpanded = false
-                onAction(Action.SettingsClicked)
-            },
-        )
-
-        if (isDebugEnabled) {
+        DropdownMenu(
+            modifier = Modifier.width(OverflowMenuWidth),
+            expanded = isExpanded,
+            onDismissRequest = { isExpanded = false },
+        ) {
             ConversationListMenuItem(
-                labelResId = R.string.action_debug_options,
+                labelResId = R.string.action_menu_show_archived,
                 onClick = {
                     isExpanded = false
-                    onAction(Action.DebugOptionsClicked)
+                    onAction(Action.ArchivedConversationsClicked)
                 },
             )
+
+            if (hasBlockedParticipants) {
+                ConversationListMenuItem(
+                    labelResId = R.string.blocked_contacts_title,
+                    onClick = {
+                        isExpanded = false
+                        onAction(Action.BlockedParticipantsClicked)
+                    },
+                )
+            }
+
+            ConversationListMenuItem(
+                labelResId = R.string.action_settings,
+                onClick = {
+                    isExpanded = false
+                    onAction(Action.SettingsClicked)
+                },
+            )
+
+            if (isDebugEnabled) {
+                ConversationListMenuItem(
+                    labelResId = R.string.action_debug_options,
+                    onClick = {
+                        isExpanded = false
+                        onAction(Action.DebugOptionsClicked)
+                    },
+                )
+            }
         }
     }
 }

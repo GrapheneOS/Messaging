@@ -4,9 +4,9 @@ import androidx.compose.ui.unit.dp
 
 internal val ItemAvatarSize = 48.dp
 
-internal val ItemAvatarFallbackSize = 20.dp
-
 internal val ItemHeaderSpacing = 8.dp
+
+internal val ItemBadgeSpacing = 4.dp
 
 internal val ItemBadgeIconSize = 16.dp
 

@@ -1,5 +1,7 @@
 package com.android.messaging.ui.conversationlist.redesign.ui
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Delete
@@ -28,10 +30,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.conversationlist.redesign.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.redesign.model.SelectionActionsUiState
 import com.android.messaging.ui.core.MessagingPreviewTheme
+
+private val OverflowMenuWidth = 220.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -106,13 +111,13 @@ private fun ConversationListSelectionActions(
     actions.isFirstSelectedPinned?.let { isPinned ->
         when {
             isPinned -> SelectionActionButton(
-                imageVector = Icons.Filled.PushPin,
+                imageVector = Icons.Outlined.PushPin,
                 labelResId = R.string.action_unpin,
                 onClick = { onAction(Action.UnpinClicked) },
             )
 
             else -> SelectionActionButton(
-                imageVector = Icons.Outlined.PushPin,
+                imageVector = Icons.Filled.PushPin,
                 labelResId = R.string.action_pin,
                 onClick = { onAction(Action.PinClicked) },
             )
@@ -150,52 +155,55 @@ private fun SelectionOverflowMenu(
         mutableStateOf(value = false)
     }
 
-    IconButton(onClick = { isExpanded = true }) {
-        Icon(
-            imageVector = Icons.Rounded.MoreVert,
-            contentDescription = stringResource(R.string.more_options),
-        )
-    }
-
-    DropdownMenu(
-        expanded = isExpanded,
-        onDismissRequest = { isExpanded = false },
-    ) {
-        actions.isFirstSelectedUnread?.let { isUnread ->
-            SelectionMenuItem(
-                labelResId = when {
-                    isUnread -> R.string.mark_as_read
-                    else -> R.string.mark_as_unread
-                },
-                onClick = {
-                    val action = when {
-                        isUnread -> Action.MarkReadClicked
-                        else -> Action.MarkUnreadClicked
-                    }
-                    onAction(action)
-                    isExpanded = false
-                },
+    Box {
+        IconButton(onClick = { isExpanded = true }) {
+            Icon(
+                imageVector = Icons.Rounded.MoreVert,
+                contentDescription = stringResource(R.string.more_options),
             )
         }
 
-        if (actions.canAddContact) {
-            SelectionMenuItem(
-                labelResId = R.string.action_add_contact,
-                onClick = {
-                    onAction(Action.AddContactClicked)
-                    isExpanded = false
-                },
-            )
-        }
+        DropdownMenu(
+            modifier = Modifier.width(OverflowMenuWidth),
+            expanded = isExpanded,
+            onDismissRequest = { isExpanded = false },
+        ) {
+            actions.isFirstSelectedUnread?.let { isUnread ->
+                SelectionMenuItem(
+                    labelResId = when {
+                        isUnread -> R.string.mark_as_read
+                        else -> R.string.mark_as_unread
+                    },
+                    onClick = {
+                        val action = when {
+                            isUnread -> Action.MarkReadClicked
+                            else -> Action.MarkUnreadClicked
+                        }
+                        onAction(action)
+                        isExpanded = false
+                    },
+                )
+            }
 
-        if (actions.canBlock) {
-            SelectionMenuItem(
-                labelResId = R.string.action_block,
-                onClick = {
-                    onAction(Action.BlockClicked)
-                    isExpanded = false
-                },
-            )
+            if (actions.canAddContact) {
+                SelectionMenuItem(
+                    labelResId = R.string.action_add_contact,
+                    onClick = {
+                        onAction(Action.AddContactClicked)
+                        isExpanded = false
+                    },
+                )
+            }
+
+            if (actions.canBlock) {
+                SelectionMenuItem(
+                    labelResId = R.string.action_block,
+                    onClick = {
+                        onAction(Action.BlockClicked)
+                        isExpanded = false
+                    },
+                )
+            }
         }
     }
 }

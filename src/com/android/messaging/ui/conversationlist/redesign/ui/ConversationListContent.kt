@@ -142,8 +142,6 @@ private fun ConversationListItems(
             .testTag(CONVERSATION_LIST_TEST_TAG),
         state = listState,
         contentPadding = PaddingValues(
-            start = ListContentPadding,
-            end = ListContentPadding,
             top = ListContentPadding,
             bottom = contentPadding.calculateBottomPadding() + ListContentPadding + bottomReserve,
         ),
@@ -222,6 +220,7 @@ private fun LazyItemScope.ConversationListRow(
     ) {
         ConversationListItemRow(
             item = item,
+            modifier = Modifier.padding(horizontal = ListContentPadding),
             onClick = {
                 onAction(Action.ConversationClicked(item.conversationId))
             },
@@ -240,6 +239,9 @@ private fun LazyItemScope.ConversationListRow(
             onAvatarContactClick = {
                 onAction(Action.AvatarContactClicked(item.avatar))
             }.takeIf { item.avatar.canShowContact },
+            onAvatarInfoClick = {
+                onAction(Action.AvatarInfoClicked(item.conversationId))
+            },
         )
     }
 }

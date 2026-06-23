@@ -26,6 +26,10 @@ internal sealed interface ConversationListEffect {
         val conversationId: String,
     ) : ConversationListEffect
 
+    data class OpenConversationSettings(
+        val conversationId: String,
+    ) : ConversationListEffect
+
     data class PlaceCall(
         val destination: String,
     ) : ConversationListEffect

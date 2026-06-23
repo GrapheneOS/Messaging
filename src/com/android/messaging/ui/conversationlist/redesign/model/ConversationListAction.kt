@@ -63,6 +63,10 @@ internal sealed interface ConversationListAction {
         val avatar: ConversationListAvatarUiModel,
     ) : ListAction
 
+    data class AvatarInfoClicked(
+        val conversationId: String,
+    ) : ListAction
+
     data class ConversationSwipedToArchive(
         val conversationId: String,
     ) : ListAction

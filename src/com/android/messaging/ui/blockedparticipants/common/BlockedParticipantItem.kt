@@ -152,6 +152,7 @@ private fun BlockedParticipantQuickActions(
             onContactClick?.invoke()
             onDismiss()
         }.takeIf { onContactClick != null },
+        onInfoClick = null,
         isContactSaved = participant.isContactSaved,
     )
 }

@@ -1,4 +1,4 @@
-package com.android.messaging.ui.common.components
+package com.android.messaging.ui.common.components.snackbar
 
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState

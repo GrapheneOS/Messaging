@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.Icon
@@ -76,6 +77,7 @@ internal fun ParticipantQuickActionsPopup(
     onMessageClick: (() -> Unit)?,
     onCallClick: (() -> Unit)?,
     onContactClick: (() -> Unit)?,
+    onInfoClick: (() -> Unit)?,
     colorSeedCode: String?,
     isContactSaved: Boolean = true,
 ) {
@@ -132,6 +134,7 @@ internal fun ParticipantQuickActionsPopup(
                 onMessageClick = onMessageClick,
                 onCallClick = onCallClick,
                 onContactClick = onContactClick,
+                onInfoClick = onInfoClick,
                 isContactSaved = isContactSaved,
             )
         }
@@ -149,6 +152,7 @@ private fun QuickActionsCard(
     onMessageClick: (() -> Unit)?,
     onCallClick: (() -> Unit)?,
     onContactClick: (() -> Unit)?,
+    onInfoClick: (() -> Unit)?,
     isContactSaved: Boolean,
 ) {
     val cardShape = MaterialTheme.shapes.medium
@@ -196,6 +200,7 @@ private fun QuickActionsCard(
                 onMessageClick = onMessageClick,
                 onCallClick = onCallClick,
                 onContactClick = onContactClick,
+                onInfoClick = onInfoClick,
                 isContactSaved = isContactSaved,
             )
 
@@ -242,9 +247,14 @@ private fun QuickActionsRow(
     onMessageClick: (() -> Unit)?,
     onCallClick: (() -> Unit)?,
     onContactClick: (() -> Unit)?,
+    onInfoClick: (() -> Unit)?,
     isContactSaved: Boolean,
 ) {
-    if (onMessageClick == null && onCallClick == null && onContactClick == null) return
+    val actions = listOfNotNull(onMessageClick, onCallClick, onContactClick, onInfoClick)
+
+    if (actions.isEmpty()) {
+        return
+    }
 
     Row(
         modifier = Modifier
@@ -290,6 +300,15 @@ private fun QuickActionsRow(
                 modifier = buttonModifier,
             )
         }
+
+        onInfoClick?.let {
+            QuickActionButton(
+                icon = Icons.Default.Info,
+                contentDescription = stringResource(R.string.action_people_and_options),
+                onClick = it,
+                modifier = buttonModifier,
+            )
+        }
     }
 }
 
@@ -331,6 +350,7 @@ private fun ParticipantQuickActionsPopupPreview() {
             onMessageClick = {},
             onCallClick = {},
             onContactClick = {},
+            onInfoClick = {},
             isContactSaved = false,
         )
     }

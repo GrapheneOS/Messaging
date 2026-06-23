@@ -26,7 +26,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SmallFloatingActionButton
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -57,7 +56,8 @@ import com.android.messaging.ui.common.components.PrimaryActionButton
 import com.android.messaging.ui.common.components.reorder.OverlayReorderAnimation
 import com.android.messaging.ui.common.components.reorder.OverlayReorderAnimationController
 import com.android.messaging.ui.common.components.reorder.rememberOverlayReorderAnimationController
-import com.android.messaging.ui.common.components.showActionSnackbar
+import com.android.messaging.ui.common.components.snackbar.MessagingSnackbarHost
+import com.android.messaging.ui.common.components.snackbar.showActionSnackbar
 import com.android.messaging.ui.conversationlist.redesign.ConversationListEffectHandler
 import com.android.messaging.ui.conversationlist.redesign.ConversationListScreenModel
 import com.android.messaging.ui.conversationlist.redesign.ConversationListViewModel
@@ -354,7 +354,7 @@ private fun ConversationListScaffold(
             )
         },
         snackbarHost = {
-            SnackbarHost(
+            MessagingSnackbarHost(
                 hostState = snackbarHostState,
                 modifier = Modifier.padding(bottom = FabBottomReserve),
             )
