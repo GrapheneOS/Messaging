@@ -60,6 +60,14 @@
         <item name="android:background">@android:color/white</item>
     </style>
 
+    <!-- Class 0 is a Compose dialog hosted by a dialog-themed Activity.
+         Keep the host window transparent and titleless so only the Material dialog surface is visible -->
+    <style name="BugleTheme.ClassZeroActivity" parent="@style/BugleTheme.DialogActivity">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+
     <style name="BugleTheme.ConversationListActivity" parent="BugleTheme">
         <item name="android:windowBackground">@android:color/background_light</item>
     </style>
