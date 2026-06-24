@@ -17,7 +17,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class ConversationListOptimisticSnapshotDelegateImplTest {
+internal class ConversationListOptimisticSnapshotDelegateImplTest {
 
     @Test
     fun archive_removesItemFromEffectiveSnapshot() = runTest {
@@ -113,19 +113,18 @@ class ConversationListOptimisticSnapshotDelegateImplTest {
     }
 
     @Test
-    fun discardArchived_afterDatabaseRemovesItem_keepsItemHidden() =
-        runTest {
-            val rawSnapshot = MutableStateFlow(snapshotOfIds("a", "b"))
-            val delegate = bindDelegate(rawSnapshot)
+    fun discardArchived_afterDatabaseRemovesItem_keepsItemHidden() = runTest {
+        val rawSnapshot = MutableStateFlow(snapshotOfIds("a", "b"))
+        val delegate = bindDelegate(rawSnapshot)
 
-            delegate.archive(listOf("a"))
-            rawSnapshot.value = snapshotOfIds("b")
-            runCurrent()
+        delegate.archive(listOf("a"))
+        rawSnapshot.value = snapshotOfIds("b")
+        runCurrent()
 
-            delegate.discardArchived(listOf("a"))
+        delegate.discardArchived(listOf("a"))
 
-            assertEquals(listOf("b"), delegate.conversationIds())
-        }
+        assertEquals(listOf("b"), delegate.conversationIds())
+    }
 
     @Test
     fun restoreThenDiscard_keepsRestoredItemVisible() = runTest {

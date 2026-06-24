@@ -19,7 +19,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class ConversationListActionsDelegateImplTest {
+internal class ConversationListActionsDelegateImplTest {
 
     @Test
     fun setPinned_pinsEachDistinctNonBlankConversation() = runTest {

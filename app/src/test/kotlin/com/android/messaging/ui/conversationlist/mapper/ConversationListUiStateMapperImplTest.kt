@@ -17,25 +17,31 @@ import com.android.messaging.domain.conversation.usecase.telephony.CanPlacePhone
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
 import com.android.messaging.ui.conversationlist.model.ConversationListUiState
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
-import kotlinx.collections.immutable.toImmutableList
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class ConversationListUiStateMapperImplTest {
+internal class ConversationListUiStateMapperImplTest {
+
+    private val canAddContact = mockk<CanAddContact>(relaxed = true)
+    private val canPlacePhoneCall = mockk<CanPlacePhoneCall>(relaxed = true)
+    private val canShowOrAddContact = mockk<CanShowOrAddContact>(relaxed = true)
+    private val isContactSaved = mockk<IsContactSaved>(relaxed = true)
+    private val resolveAvatarUri = mockk<ResolveAvatarUri>(relaxed = true)
 
     private val mapper = ConversationListUiStateMapperImpl(
         context = mockk<Context>(relaxed = true),
-        canAddContact = mockk<CanAddContact>(relaxed = true),
-        canPlacePhoneCall = mockk<CanPlacePhoneCall>(relaxed = true),
-        canShowOrAddContact = mockk<CanShowOrAddContact>(relaxed = true),
-        isContactSaved = mockk<IsContactSaved>(relaxed = true),
-        resolveAvatarUri = mockk<ResolveAvatarUri>(relaxed = true),
+        canAddContact = canAddContact,
+        canPlacePhoneCall = canPlacePhoneCall,
+        canShowOrAddContact = canShowOrAddContact,
+        isContactSaved = isContactSaved,
+        resolveAvatarUri = resolveAvatarUri,
     )
 
     @Test
@@ -105,9 +111,9 @@ class ConversationListUiStateMapperImplTest {
         )
 
         val actions = state.selection.actions
-        assertEquals(true, actions.firstSelectedIsPinned)
-        assertEquals(true, actions.firstSelectedIsSnoozed)
-        assertEquals(true, actions.firstSelectedIsUnread)
+        assertTrue(requireNotNull(actions.firstSelectedIsPinned))
+        assertTrue(requireNotNull(actions.firstSelectedIsSnoozed))
+        assertTrue(requireNotNull(actions.firstSelectedIsUnread))
     }
 
     @Test
@@ -131,8 +137,8 @@ class ConversationListUiStateMapperImplTest {
         )
 
         val actions = state.selection.actions
-        assertEquals(false, actions.firstSelectedIsPinned)
-        assertEquals(false, actions.firstSelectedIsSnoozed)
+        assertFalse(requireNotNull(actions.firstSelectedIsPinned))
+        assertFalse(requireNotNull(actions.firstSelectedIsSnoozed))
     }
 
     @Test
@@ -167,6 +173,116 @@ class ConversationListUiStateMapperImplTest {
         assertEquals("Jane", singleItem(state).snippet.senderName)
     }
 
+    @Test
+    fun map_itemsPresent_producesContentItems() {
+        val state = mapper.map(
+            snapshot = snapshotOf(conversationItem(conversationId = "a")),
+            selectedConversationIds = persistentListOf(),
+            isScrollToTopVisible = false,
+            isDebugEnabled = false,
+        )
+
+        assertTrue(state.content is ConversationListContentUiState.Items)
+    }
+
+    @Test
+    fun map_emptyAfterFirstSync_producesEmptyContent() {
+        val state = mapper.map(
+            snapshot = snapshotOf(),
+            selectedConversationIds = persistentListOf(),
+            isScrollToTopVisible = false,
+            isDebugEnabled = false,
+        )
+
+        assertEquals(ConversationListContentUiState.Empty, state.content)
+    }
+
+    @Test
+    fun map_emptyBeforeFirstSync_producesWaitingForSync() {
+        val state = mapper.map(
+            snapshot = ConversationListSnapshot(
+                items = persistentListOf(),
+                blockedDestinations = persistentSetOf(),
+                hasFirstSyncCompleted = false,
+            ),
+            selectedConversationIds = persistentListOf(),
+            isScrollToTopVisible = false,
+            isDebugEnabled = false,
+        )
+
+        assertEquals(ConversationListContentUiState.WaitingForSync, state.content)
+    }
+
+    @Test
+    fun map_visibleDraft_takesPrecedenceOverLatestMessage() {
+        val state = mapper.map(
+            snapshot = snapshotOf(
+                conversationItem(
+                    conversationId = "a",
+                    isDraftVisible = true,
+                    draftSnippet = "Draft body",
+                    draftSubject = "Draft subject",
+                ),
+            ),
+            selectedConversationIds = persistentListOf(),
+            isScrollToTopVisible = false,
+            isDebugEnabled = false,
+        )
+
+        val item = singleItem(state)
+        assertTrue(item.snippet.isDraft)
+        assertEquals("Draft body", item.snippet.text)
+        assertEquals("Draft subject", item.subject)
+        assertEquals(ConversationListMessageStatus.Draft, item.status)
+        assertTrue(item.isOutgoing)
+    }
+
+    @Test
+    fun map_callableSavedContact_populatesAvatarCapabilities() {
+        every { canPlacePhoneCall(any()) } returns true
+        every { canShowOrAddContact(any(), any(), any(), any()) } returns true
+        every { isContactSaved(any(), any()) } returns true
+
+        val state = mapper.map(
+            snapshot = snapshotOf(
+                conversationItem(
+                    conversationId = "a",
+                    contactId = 42L,
+                    lookupKey = "lookup",
+                ),
+            ),
+            selectedConversationIds = persistentListOf(),
+            isScrollToTopVisible = false,
+            isDebugEnabled = false,
+        )
+
+        val avatar = singleItem(state).avatar
+        assertTrue(avatar.canCall)
+        assertTrue(avatar.canShowContact)
+        assertTrue(avatar.isContactSaved)
+        assertEquals("+1555000a", avatar.normalizedDestination)
+    }
+
+    @Test
+    fun map_selectedBlockedConversation_propagatesScreenState() {
+        val state = mapper.map(
+            snapshot = ConversationListSnapshot(
+                items = persistentListOf(conversationItem(conversationId = "a")),
+                blockedDestinations = persistentSetOf("+1555000a"),
+                hasFirstSyncCompleted = true,
+            ),
+            selectedConversationIds = persistentListOf("a"),
+            isScrollToTopVisible = true,
+            isDebugEnabled = true,
+        )
+
+        assertTrue(singleItem(state).isSelected)
+        assertTrue(state.isScrollToTopVisible)
+        assertTrue(state.hasBlockedParticipants)
+        assertTrue(state.isDebugEnabled)
+        assertFalse(state.selection.actions.canBlock)
+    }
+
     private fun singleItem(
         state: ConversationListUiState,
     ): ConversationListItemUiModel {
@@ -175,7 +291,7 @@ class ConversationListUiStateMapperImplTest {
 
     private fun snapshotOf(vararg items: ConversationListItem): ConversationListSnapshot {
         return ConversationListSnapshot(
-            items = items.toList().toImmutableList(),
+            items = persistentListOf(*items),
             blockedDestinations = persistentSetOf(),
             hasFirstSyncCompleted = true,
         )
@@ -187,6 +303,11 @@ class ConversationListUiStateMapperImplTest {
         isSnoozed: Boolean = false,
         isRead: Boolean = true,
         senderName: String? = null,
+        contactId: Long = -1L,
+        lookupKey: String? = null,
+        isDraftVisible: Boolean = false,
+        draftSnippet: String? = null,
+        draftSubject: String? = null,
     ): ConversationListItem {
         return ConversationListItem(
             conversationId = conversationId,
@@ -196,8 +317,8 @@ class ConversationListUiStateMapperImplTest {
             isArchived = false,
             isPinned = isPinned,
             participant = ConversationListParticipant(
-                contactId = -1L,
-                lookupKey = null,
+                contactId = contactId,
+                lookupKey = lookupKey,
                 otherNormalizedDestination = "+1555000$conversationId",
                 isGroup = false,
                 isEnterprise = false,
@@ -213,11 +334,11 @@ class ConversationListUiStateMapperImplTest {
                 senderName = senderName,
             ),
             draft = ConversationListDraft(
-                isVisible = false,
-                snippetText = null,
+                isVisible = isDraftVisible,
+                snippetText = draftSnippet,
                 previewUri = null,
                 previewContentType = null,
-                subject = null,
+                subject = draftSubject,
             ),
             notification = ConversationListNotification(
                 isEnabled = true,
