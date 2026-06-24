@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationlist.mapper
 
+import android.content.Context
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
@@ -8,6 +9,7 @@ import com.android.messaging.domain.conversation.usecase.participant.CanAddConta
 import com.android.messaging.domain.conversation.usecase.participant.CanShowOrAddContact
 import com.android.messaging.domain.conversation.usecase.participant.IsContactSaved
 import com.android.messaging.domain.conversation.usecase.telephony.CanPlacePhoneCall
+import com.android.messaging.sms.cleanseMmsSubject
 import com.android.messaging.ui.conversationlist.model.ConversationListAvatarUiModel
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
@@ -17,6 +19,7 @@ import com.android.messaging.ui.conversationlist.model.ConversationListSnippetUi
 import com.android.messaging.ui.conversationlist.model.ConversationListUiState
 import com.android.messaging.ui.conversationlist.model.SelectionActionsUiState
 import com.android.messaging.util.ContentType
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
@@ -32,10 +35,11 @@ internal interface ConversationListUiStateMapper {
 }
 
 internal class ConversationListUiStateMapperImpl @Inject constructor(
+    @param:ApplicationContext private val context: Context,
     private val canAddContact: CanAddContact,
     private val canPlacePhoneCall: CanPlacePhoneCall,
     private val canShowOrAddContact: CanShowOrAddContact,
-    private val isContactSavedUseCase: IsContactSaved,
+    private val isContactSaved: IsContactSaved,
     private val resolveAvatarUri: ResolveAvatarUri,
 ) : ConversationListUiStateMapper {
 
@@ -48,7 +52,7 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
         val items = snapshot.items
             .map { item ->
                 val isSelected = item.conversationId in selectedConversationIds
-                item.toConversationListUiState(isSelected)
+                item.toItemUiModel(isSelected)
             }
             .toImmutableList()
 
@@ -81,7 +85,7 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
         )
     }
 
-    private fun ConversationListItem.toConversationListUiState(
+    private fun ConversationListItem.toItemUiModel(
         isSelected: Boolean,
     ): ConversationListItemUiModel {
         val isDraft = draft.isVisible
@@ -119,10 +123,6 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
             lookupKey = participant.lookupKey,
             destination = destination,
         )
-        val isContactSaved = isContactSavedUseCase(
-            contactId = participant.contactId,
-            lookupKey = participant.lookupKey,
-        )
 
         return ConversationListAvatarUiModel(
             uri = resolveAvatarUri(icon),
@@ -133,7 +133,10 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
             subtitle = destination.takeIf { isOneOnOne },
             canCall = isOneOnOne && canPlacePhoneCall(destination),
             canShowContact = canShowContact,
-            isContactSaved = isContactSaved,
+            isContactSaved = isContactSaved(
+                contactId = participant.contactId,
+                lookupKey = participant.lookupKey,
+            ),
         )
     }
 
@@ -170,14 +173,14 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
     ): SelectionActionsUiState {
         val singleSelection = selectedItems.singleOrNull()
         val firstSelected = selectedItems.firstOrNull()
-        val canAddContact = singleSelection?.participant?.let { participant ->
+        val canAddSelectedContact = singleSelection?.participant?.let { participant ->
             canAddContact(
                 isGroup = participant.isGroup,
                 lookupKey = participant.lookupKey,
                 destination = participant.otherNormalizedDestination,
             )
         }
-        val canBlock = singleSelection?.let { item ->
+        val canBlockSelected = singleSelection?.let { item ->
             canBlock(
                 destination = item.participant.otherNormalizedDestination,
                 blockedDestinations = blockedDestinations,
@@ -185,8 +188,8 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
         }
 
         return SelectionActionsUiState(
-            canAddContact = canAddContact == true,
-            canBlock = canBlock == true,
+            canAddContact = canAddSelectedContact == true,
+            canBlock = canBlockSelected == true,
             firstSelectedIsPinned = firstSelected?.isPinned,
             firstSelectedIsSnoozed = firstSelected?.notification?.isSnoozed,
             firstSelectedIsUnread = firstSelected?.latestMessage?.isRead?.not(),
@@ -212,7 +215,10 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
     private fun ConversationListItem.activeSubject(): String? {
         return when {
             draft.isVisible -> draft.subject
-            else -> subject
+            else -> cleanseMmsSubject(
+                resources = context.resources,
+                subject = subject,
+            )
         }?.takeIf(String::isNotBlank)
     }
 

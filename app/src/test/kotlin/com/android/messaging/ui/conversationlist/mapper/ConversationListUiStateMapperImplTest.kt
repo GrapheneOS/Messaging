@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationlist.mapper
 
+import android.content.Context
 import com.android.messaging.data.conversationlist.model.ConversationListDraft
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListLatestMessage
@@ -29,10 +30,11 @@ import org.junit.Test
 class ConversationListUiStateMapperImplTest {
 
     private val mapper = ConversationListUiStateMapperImpl(
+        context = mockk<Context>(relaxed = true),
         canAddContact = mockk<CanAddContact>(relaxed = true),
         canPlacePhoneCall = mockk<CanPlacePhoneCall>(relaxed = true),
         canShowOrAddContact = mockk<CanShowOrAddContact>(relaxed = true),
-        isContactSavedUseCase = mockk<IsContactSaved>(relaxed = true),
+        isContactSaved = mockk<IsContactSaved>(relaxed = true),
         resolveAvatarUri = mockk<ResolveAvatarUri>(relaxed = true),
     )
 
