@@ -1,9 +1,8 @@
 package com.android.messaging.ui.conversationlist.delegate
 
 import com.android.messaging.data.conversationlist.model.ConversationListItem
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
-import kotlinx.collections.immutable.persistentSetOf
-import kotlinx.collections.immutable.toImmutableList
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -14,11 +13,11 @@ internal class ConversationListOptimisticReducerTest {
     private val reducer = ConversationListOptimisticReducer()
 
     @Test
-    fun apply_emptyOverrides_returnsSameItems() {
-        val items = listOf(
+    fun apply_emptyOverrides_returnsItemsUnchanged() {
+        val items = persistentListOf(
             conversationItem("a"),
             conversationItem("b"),
-        ).toImmutableList()
+        )
 
         val result = reducer.apply(
             items = items,
@@ -29,30 +28,31 @@ internal class ConversationListOptimisticReducerTest {
     }
 
     @Test
-    fun apply_archivedId_removesItem() {
-        val items = listOf(
-            conversationItem("a"),
+    fun apply_archivedOverride_removesItem() {
+        val archivedItem = conversationItem("a")
+        val items = persistentListOf(
+            archivedItem,
             conversationItem("b"),
-        ).toImmutableList()
+        )
 
         val result = reducer.apply(
             items = items,
             overrides = ConversationListOptimisticOverrides(
-                archivedIds = persistentSetOf("a"),
+                archiveById = persistentMapOf(
+                    "a" to ConversationArchiveOverride.Archived(archivedItem),
+                ),
             ),
         )
 
-        assertEquals(listOf("b"), result.map { it.conversationId })
+        assertEquals(listOf("b"), result.conversationIds())
     }
 
     @Test
-    fun apply_readOverride_overridesReadState() {
-        val items = listOf(
-            conversationItem(
-                conversationId = "a",
-                isRead = false,
-            ),
-        ).toImmutableList()
+    fun apply_readOverride_updatesStateWithoutReordering() {
+        val items = persistentListOf(
+            conversationItem("a", isRead = false, timestamp = 1_000L),
+            conversationItem("b", timestamp = 2_000L),
+        )
 
         val result = reducer.apply(
             items = items,
@@ -61,16 +61,17 @@ internal class ConversationListOptimisticReducerTest {
             ),
         )
 
-        assertTrue(result.single().latestMessage.isRead)
+        assertEquals(listOf("a", "b"), result.conversationIds())
+        assertTrue(result.first().latestMessage.isRead)
     }
 
     @Test
-    fun apply_pinOverride_pinsAndReordersToTop() {
-        val items = listOf(
+    fun apply_pinOverride_reordersByPinThenTimestamp() {
+        val items = persistentListOf(
             conversationItem("a", timestamp = 3_000L),
-            conversationItem("b", timestamp = 2_000L),
+            conversationItem("b", isPinned = true, timestamp = 2_000L),
             conversationItem("c", timestamp = 1_000L),
-        ).toImmutableList()
+        )
 
         val result = reducer.apply(
             items = items,
@@ -79,210 +80,172 @@ internal class ConversationListOptimisticReducerTest {
             ),
         )
 
-        assertEquals(listOf("c", "a", "b"), result.map { it.conversationId })
-        assertTrue(result.first().isPinned)
+        assertEquals(listOf("b", "c", "a"), result.conversationIds())
+        assertTrue(result.first { it.conversationId == "c" }.isPinned)
     }
 
     @Test
-    fun apply_restoringItemMissingFromDatabase_keepsItemVisible() {
-        val item = conversationItem(
-            conversationId = "a",
-            isRead = false,
+    fun apply_unpinOverride_movesItemIntoTimestampOrder() {
+        val items = persistentListOf(
+            conversationItem("a", isPinned = true, timestamp = 1_000L),
+            conversationItem("b", timestamp = 3_000L),
         )
 
         val result = reducer.apply(
-            items = emptyList<ConversationListItem>().toImmutableList(),
+            items = items,
             overrides = ConversationListOptimisticOverrides(
-                restoringById = persistentMapOf(
-                    "a" to RestoringConversation(
-                        item = item,
-                        hasObservedArchivedSnapshot = true,
-                    ),
-                ),
-                readById = persistentMapOf("a" to true),
+                pinnedById = persistentMapOf("a" to false),
             ),
         )
 
-        assertEquals(listOf("a"), result.map(ConversationListItem::conversationId))
-        assertTrue(result.single().latestMessage.isRead)
+        assertEquals(listOf("b", "a"), result.conversationIds())
+        assertFalse(result.last().isPinned)
     }
 
     @Test
-    fun apply_restoringItemAlongsideExistingItems_reordersByPinThenTimestamp() {
-        val present = listOf(
-            conversationItem("a", timestamp = 3_000L),
-            conversationItem("b", timestamp = 1_000L),
-        ).toImmutableList()
-
-        val restoring = conversationItem(
+    fun apply_restoringItemMissingFromRawSnapshot_keepsItVisibleAndOrdered() {
+        val restoringItem = conversationItem(
             conversationId = "c",
             isPinned = true,
+            isRead = false,
             timestamp = 2_000L,
         )
 
         val result = reducer.apply(
-            items = present,
+            items = persistentListOf(
+                conversationItem("a", timestamp = 3_000L),
+                conversationItem("b", timestamp = 1_000L),
+            ),
             overrides = ConversationListOptimisticOverrides(
-                restoringById = persistentMapOf(
-                    "c" to RestoringConversation(
-                        item = restoring,
-                        hasObservedArchivedSnapshot = true,
+                archiveById = persistentMapOf(
+                    "c" to ConversationArchiveOverride.Restoring(
+                        item = restoringItem,
+                        awaitingRemoval = false,
+                    ),
+                ),
+                readById = persistentMapOf("c" to true),
+            ),
+        )
+
+        assertEquals(listOf("c", "a", "b"), result.conversationIds())
+        assertTrue(result.first().latestMessage.isRead)
+    }
+
+    @Test
+    fun apply_restoringItemAlreadyInRawSnapshot_doesNotDuplicateCachedItem() {
+        val cachedItem = conversationItem("a", isRead = false)
+        val rawItem = conversationItem("a", isRead = true)
+
+        val result = reducer.apply(
+            items = persistentListOf(rawItem),
+            overrides = ConversationListOptimisticOverrides(
+                archiveById = persistentMapOf(
+                    "a" to ConversationArchiveOverride.Restoring(
+                        item = cachedItem,
+                        awaitingRemoval = false,
                     ),
                 ),
             ),
         )
 
-        assertEquals(listOf("c", "a", "b"), result.map { it.conversationId })
+        assertEquals(listOf("a"), result.conversationIds())
+        assertTrue(result.single().latestMessage.isRead)
     }
 
     @Test
-    fun prune_dropsArchivedId_whenItemNoLongerPresent() {
-        val raw = listOf(conversationItem("b")).toImmutableList()
+    fun prune_archivedItemMissingFromRawSnapshot_keepsItForUndo() {
+        val archivedItem = conversationItem("a")
+        val archivedOverride = ConversationArchiveOverride.Archived(archivedItem)
 
         val pruned = reducer.prune(
-            items = raw,
+            items = persistentListOf(),
             overrides = ConversationListOptimisticOverrides(
-                archivedIds = persistentSetOf("a"),
+                archiveById = persistentMapOf("a" to archivedOverride),
+            ),
+        )
+
+        assertEquals(archivedOverride, pruned.archiveById["a"])
+    }
+
+    @Test
+    fun prune_restoreRace_retainsOverridesUntilRawSnapshotCatchesUp() {
+        val cachedItem = conversationItem(
+            conversationId = "a",
+            isPinned = false,
+            isRead = false,
+        )
+        var overrides = ConversationListOptimisticOverrides(
+            archiveById = persistentMapOf(
+                "a" to ConversationArchiveOverride.Restoring(
+                    item = cachedItem,
+                    awaitingRemoval = true,
+                ),
+            ),
+            readById = persistentMapOf("a" to true),
+            pinnedById = persistentMapOf("a" to true),
+        )
+
+        overrides = reducer.prune(
+            items = persistentListOf(cachedItem),
+            overrides = overrides,
+        )
+        assertEquals(
+            ConversationArchiveOverride.Restoring(
+                item = cachedItem,
+                awaitingRemoval = true,
+            ),
+            overrides.archiveById["a"],
+        )
+
+        overrides = reducer.prune(
+            items = persistentListOf(),
+            overrides = overrides,
+        )
+        assertEquals(
+            ConversationArchiveOverride.Restoring(
+                item = cachedItem,
+                awaitingRemoval = false,
+            ),
+            overrides.archiveById["a"],
+        )
+        assertTrue(overrides.readById.getValue("a"))
+        assertTrue(overrides.pinnedById.getValue("a"))
+
+        overrides = reducer.prune(
+            items = persistentListOf(cachedItem),
+            overrides = overrides,
+        )
+        assertFalse("a" in overrides.archiveById)
+        assertTrue(overrides.readById.getValue("a"))
+        assertTrue(overrides.pinnedById.getValue("a"))
+
+        overrides = reducer.prune(
+            items = persistentListOf(
+                conversationItem(
+                    conversationId = "a",
+                    isPinned = true,
+                    isRead = true,
+                ),
+            ),
+            overrides = overrides,
+        )
+        assertTrue(overrides.isEmpty)
+    }
+
+    @Test
+    fun prune_itemMissingAndNotRestoring_dropsReadAndPinOverrides() {
+        val pruned = reducer.prune(
+            items = persistentListOf(),
+            overrides = ConversationListOptimisticOverrides(
+                readById = persistentMapOf("a" to true),
+                pinnedById = persistentMapOf("a" to true),
             ),
         )
 
         assertTrue(pruned.isEmpty)
     }
 
-    @Test
-    fun prune_keepsArchivedId_whilePresent() {
-        val raw = listOf(conversationItem("a")).toImmutableList()
-
-        val pruned = reducer.prune(
-            items = raw,
-            overrides = ConversationListOptimisticOverrides(
-                archivedIds = persistentSetOf("a"),
-            ),
-        )
-
-        assertTrue("a" in pruned.archivedIds)
-    }
-
-    @Test
-    fun prune_dropsReadOverride_whenDatabaseMatches() {
-        val raw = listOf(
-            conversationItem(
-                conversationId = "a",
-                isRead = true,
-            ),
-        ).toImmutableList()
-
-        val pruned = reducer.prune(
-            items = raw,
-            overrides = ConversationListOptimisticOverrides(
-                readById = persistentMapOf("a" to true),
-            ),
-        )
-
-        assertFalse("a" in pruned.readById)
-    }
-
-    @Test
-    fun prune_keepsReadOverride_whileDatabaseDiffers() {
-        val raw = listOf(
-            conversationItem(
-                conversationId = "a",
-                isRead = false,
-            ),
-        ).toImmutableList()
-
-        val pruned = reducer.prune(
-            items = raw,
-            overrides = ConversationListOptimisticOverrides(
-                readById = persistentMapOf("a" to true),
-            ),
-        )
-
-        assertEquals(true, pruned.readById["a"])
-    }
-
-    @Test
-    fun archiveUndoThenRead_keepsItemAndReadOverrideThroughDatabaseRace() {
-        val unreadItem = conversationItem(
-            conversationId = "a",
-            isRead = false,
-        )
-        var overrides = ConversationListOptimisticOverrides(
-            archivedItemsById = persistentMapOf("a" to unreadItem),
-            restoringById = persistentMapOf(
-                "a" to RestoringConversation(
-                    item = unreadItem,
-                    hasObservedArchivedSnapshot = false,
-                ),
-            ),
-            readById = persistentMapOf("a" to true),
-        )
-
-        overrides = reducer.prune(
-            items = emptyList<ConversationListItem>().toImmutableList(),
-            overrides = overrides,
-        )
-
-        val whileArchiveSnapshotIsVisible = reducer.apply(
-            items = emptyList<ConversationListItem>().toImmutableList(),
-            overrides = overrides,
-        )
-
-        assertEquals(listOf("a"), whileArchiveSnapshotIsVisible.map { it.conversationId })
-        assertTrue(whileArchiveSnapshotIsVisible.single().latestMessage.isRead)
-        assertTrue(overrides.restoringById.getValue("a").hasObservedArchivedSnapshot)
-        assertEquals(true, overrides.readById["a"])
-
-        overrides = reducer.prune(
-            items = listOf(unreadItem).toImmutableList(),
-            overrides = overrides,
-        )
-
-        val afterUnarchiveSnapshot = reducer.apply(
-            items = listOf(unreadItem).toImmutableList(),
-            overrides = overrides,
-        )
-
-        assertFalse("a" in overrides.restoringById)
-        assertTrue(afterUnarchiveSnapshot.single().latestMessage.isRead)
-        assertEquals(true, overrides.readById["a"])
-    }
-
-    @Test
-    fun prune_dropsPinOverride_whenDatabaseMatches() {
-        val raw = listOf(
-            conversationItem(
-                conversationId = "a",
-                isPinned = true,
-            ),
-        ).toImmutableList()
-
-        val pruned = reducer.prune(
-            items = raw,
-            overrides = ConversationListOptimisticOverrides(
-                pinnedById = persistentMapOf("a" to true),
-            ),
-        )
-
-        assertFalse("a" in pruned.pinnedById)
-    }
-
-    @Test
-    fun prune_keepsPinOverride_whileDatabaseDiffers() {
-        val raw = listOf(
-            conversationItem(
-                conversationId = "a",
-                isPinned = false,
-            ),
-        ).toImmutableList()
-
-        val pruned = reducer.prune(
-            items = raw,
-            overrides = ConversationListOptimisticOverrides(
-                pinnedById = persistentMapOf("a" to true),
-            ),
-        )
-
-        assertEquals(true, pruned.pinnedById["a"])
+    private fun List<ConversationListItem>.conversationIds(): List<String> {
+        return map(ConversationListItem::conversationId)
     }
 }
