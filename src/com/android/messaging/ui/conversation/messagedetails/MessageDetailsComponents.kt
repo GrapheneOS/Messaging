@@ -33,7 +33,7 @@ import com.android.messaging.R
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetails
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.ui.message.ConversationMessage
-import com.android.messaging.ui.conversation.resolveDisplayName
+import com.android.messaging.ui.subscription.mapper.resolveDisplayName
 
 private val MessageDetailsCardPadding = 16.dp
 
