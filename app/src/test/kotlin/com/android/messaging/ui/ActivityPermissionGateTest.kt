@@ -1,6 +1,5 @@
 package com.android.messaging.ui
 
-import com.android.messaging.ui.blockedparticipants.BlockedParticipantsActivity
 import com.android.messaging.ui.conversation.LaunchConversationActivity
 import com.android.messaging.ui.license.LicenseActivity
 import com.android.messaging.ui.permissioncheck.PermissionCheckActivity

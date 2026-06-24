@@ -13,6 +13,8 @@ import io.mockk.unmockkAll
 import io.mockk.verify
 import io.mockk.verifyOrder
 import org.junit.After
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertThrows
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -78,6 +80,26 @@ class ConversationPinStoreTest {
                 CONVERSATION_ID,
                 false,
             )
+        }
+    }
+
+    @Test
+    fun pinConversation_updateFails_endsTransactionWithoutNotifying() {
+        val failure = IllegalStateException("update failed")
+        every {
+            BugleDatabaseOperations.updateConversationPinStatusInTransaction(any(), any(), any())
+        } throws failure
+
+        val thrown = assertThrows(IllegalStateException::class.java) {
+            store.pinConversation(CONVERSATION_ID)
+        }
+
+        assertSame(failure, thrown)
+        verify(exactly = 1) { databaseWrapper.endTransaction() }
+        verify(exactly = 0) { databaseWrapper.setTransactionSuccessful() }
+        verify(exactly = 0) { MessagingContentProvider.notifyConversationListChanged() }
+        verify(exactly = 0) {
+            MessagingContentProvider.notifyConversationMetadataChanged(any())
         }
     }
 
