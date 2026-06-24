@@ -72,6 +72,42 @@ class OverlayReorderGeometryTest {
     }
 
     @Test
+    fun isAcceptableTarget_movesDownButShiftWithinEpsilon_isRejected() {
+        assertFalse(
+            isAcceptableTarget(
+                sourceIndex = 0,
+                sourceTop = 0f,
+                candidateTop = TARGET_POSITION_EPSILON_PX,
+                targetIndex = 4,
+            ),
+        )
+    }
+
+    @Test
+    fun isAcceptableTarget_movesDownJustBeyondEpsilon_isAccepted() {
+        assertTrue(
+            isAcceptableTarget(
+                sourceIndex = 0,
+                sourceTop = 0f,
+                candidateTop = TARGET_POSITION_EPSILON_PX + 0.5f,
+                targetIndex = 4,
+            ),
+        )
+    }
+
+    @Test
+    fun isAcceptableTarget_movesUpButShiftWithinEpsilon_isRejected() {
+        assertFalse(
+            isAcceptableTarget(
+                sourceIndex = 3,
+                sourceTop = 300f,
+                candidateTop = 300f - TARGET_POSITION_EPSILON_PX,
+                targetIndex = 0,
+            ),
+        )
+    }
+
+    @Test
     fun isAcceptableTarget_sameIndex_isAccepted() {
         assertTrue(
             isAcceptableTarget(
