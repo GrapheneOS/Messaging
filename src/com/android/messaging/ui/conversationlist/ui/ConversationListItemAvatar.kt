@@ -98,7 +98,7 @@ private fun ConversationListAvatarQuickActions(
         visible = visible,
         avatarUri = item.avatar.uri,
         displayName = item.title.orEmpty(),
-        subtitle = item.avatar.details,
+        subtitle = item.avatar.subtitle,
         fallbackIcon = fallbackIcon,
         fallbackLabel = fallbackLabel,
         colorSeedCode = colorSeedCode,

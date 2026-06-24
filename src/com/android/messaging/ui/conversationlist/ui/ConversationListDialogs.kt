@@ -17,6 +17,7 @@ internal fun ConversationListDialogs(
     selectedCount: Int,
     addContactDestination: String?,
     isDeleteVisible: Boolean,
+    blockConversationId: String?,
     blockDestination: String?,
     isSnoozeVisible: Boolean,
     onAction: (Action) -> Unit,
@@ -47,12 +48,17 @@ internal fun ConversationListDialogs(
         )
     }
 
-    blockDestination?.let { destination ->
+    if (blockConversationId != null && blockDestination != null) {
         ConversationListBlockDialog(
-            destination = destination,
+            destination = blockDestination,
             onConfirm = {
                 onDismissBlock()
-                onAction(Action.BlockConfirmed)
+                onAction(
+                    Action.BlockConfirmed(
+                        conversationId = blockConversationId,
+                        destination = blockDestination,
+                    ),
+                )
             },
             onDismiss = onDismissBlock,
         )

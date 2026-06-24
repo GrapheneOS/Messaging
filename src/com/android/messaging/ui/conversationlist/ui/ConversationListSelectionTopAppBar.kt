@@ -92,7 +92,7 @@ private fun ConversationListSelectionActions(
     onDeleteClick: () -> Unit,
     onSnoozeClick: () -> Unit,
 ) {
-    actions.isFirstSelectedSnoozed?.let { isSnoozed ->
+    actions.firstSelectedIsSnoozed?.let { isSnoozed ->
         when {
             isSnoozed -> SelectionActionButton(
                 imageVector = Icons.Default.NotificationsActive,
@@ -108,7 +108,7 @@ private fun ConversationListSelectionActions(
         }
     }
 
-    actions.isFirstSelectedPinned?.let { isPinned ->
+    actions.firstSelectedIsPinned?.let { isPinned ->
         when {
             isPinned -> SelectionActionButton(
                 imageVector = Icons.Outlined.PushPin,
@@ -124,21 +124,17 @@ private fun ConversationListSelectionActions(
         }
     }
 
-    if (actions.canArchive) {
-        SelectionActionButton(
-            imageVector = Icons.Default.Archive,
-            labelResId = R.string.action_archive,
-            onClick = { onAction(Action.ArchiveClicked) },
-        )
-    }
+    SelectionActionButton(
+        imageVector = Icons.Default.Archive,
+        labelResId = R.string.action_archive,
+        onClick = { onAction(Action.ArchiveClicked) },
+    )
 
-    if (actions.canDelete) {
-        SelectionActionButton(
-            imageVector = Icons.Default.Delete,
-            labelResId = R.string.action_delete,
-            onClick = onDeleteClick,
-        )
-    }
+    SelectionActionButton(
+        imageVector = Icons.Default.Delete,
+        labelResId = R.string.action_delete,
+        onClick = onDeleteClick,
+    )
 
     SelectionOverflowMenu(
         actions = actions,
@@ -168,7 +164,7 @@ private fun SelectionOverflowMenu(
             expanded = isExpanded,
             onDismissRequest = { isExpanded = false },
         ) {
-            actions.isFirstSelectedUnread?.let { isUnread ->
+            actions.firstSelectedIsUnread?.let { isUnread ->
                 SelectionMenuItem(
                     labelResId = when {
                         isUnread -> R.string.mark_as_read
@@ -252,13 +248,11 @@ private fun ConversationListSelectionTopAppBarPreview() {
         ConversationListSelectionTopAppBar(
             selectedCount = 2,
             actions = SelectionActionsUiState(
-                canArchive = true,
-                canDelete = true,
                 canAddContact = true,
                 canBlock = true,
-                isFirstSelectedPinned = false,
-                isFirstSelectedSnoozed = false,
-                isFirstSelectedUnread = true,
+                firstSelectedIsPinned = false,
+                firstSelectedIsSnoozed = false,
+                firstSelectedIsUnread = true,
             ),
             onAction = {},
             onDeleteClick = {},

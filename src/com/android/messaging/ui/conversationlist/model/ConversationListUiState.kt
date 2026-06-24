@@ -7,7 +7,7 @@ import kotlinx.collections.immutable.ImmutableList
 internal data class ConversationListUiState(
     val content: ConversationListContentUiState = ConversationListContentUiState.Loading,
     val selection: ConversationListSelectionUiState = ConversationListSelectionUiState(),
-    val isScrollUpVisible: Boolean = false,
+    val isScrollToTopVisible: Boolean = false,
     val hasBlockedParticipants: Boolean = false,
     val isDebugEnabled: Boolean = false,
 )

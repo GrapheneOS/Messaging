@@ -5,7 +5,7 @@ import kotlinx.collections.immutable.ImmutableList
 
 internal sealed interface ConversationListAction {
 
-    sealed interface DialogAction : ConversationListAction
+    sealed interface ConfirmationAction : ConversationListAction
 
     sealed interface LifecycleAction : ConversationListAction
 
@@ -15,23 +15,31 @@ internal sealed interface ConversationListAction {
 
     sealed interface SelectionAction : ConversationListAction
 
-    // region DialogAction
-    data object BlockConfirmed : DialogAction
-    data object DeleteConfirmed : DialogAction
+    sealed interface SnackbarAction : ConversationListAction
+
+    // region ConfirmationAction
+    data class BlockConfirmed(
+        val conversationId: String,
+        val destination: String,
+    ) : ConfirmationAction
+
+    data object DeleteConfirmed : ConfirmationAction
 
     data class AddContactConfirmed(
         val destination: String,
-    ) : DialogAction
+    ) : ConfirmationAction
+    // endregion
 
+    // region SnackbarAction
     data class ArchiveUndoClicked(
         val conversationIds: ImmutableList<String>,
         val isArchived: Boolean,
-    ) : DialogAction
+    ) : SnackbarAction
 
     data class BlockUndoClicked(
         val conversationId: String,
         val destination: String,
-    ) : DialogAction
+    ) : SnackbarAction
     // endregion
 
     // region LifecycleAction
@@ -80,7 +88,7 @@ internal sealed interface ConversationListAction {
     data object ArchivedConversationsClicked : NavigationAction
     data object BlockedParticipantsClicked : NavigationAction
     data object DebugOptionsClicked : NavigationAction
-    data object ScrollUpClicked : NavigationAction
+    data object ScrollToTopClicked : NavigationAction
     data object SettingsClicked : NavigationAction
     data object StartChatClicked : NavigationAction
     // endregion

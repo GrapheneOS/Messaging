@@ -11,9 +11,8 @@ internal sealed interface ConversationListEffect {
     data object OpenDebugOptions : ConversationListEffect
     data object ScrollToTop : ConversationListEffect
 
-    data class ConversationsArchived(
+    data class ArchiveStatusChanged(
         val conversationIds: ImmutableList<String>,
-        val count: Int,
         val isArchived: Boolean,
     ) : ConversationListEffect
 

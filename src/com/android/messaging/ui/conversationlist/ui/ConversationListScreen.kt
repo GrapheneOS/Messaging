@@ -96,6 +96,7 @@ internal fun ConversationListScreen(
 
     var pendingAddContactDestination by rememberSaveable { mutableStateOf<String?>(null) }
     var pendingDelete by rememberSaveable { mutableStateOf(false) }
+    var pendingBlockConversationId by rememberSaveable { mutableStateOf<String?>(null) }
     var pendingBlockDestination by rememberSaveable { mutableStateOf<String?>(null) }
     var pendingSnooze by rememberSaveable { mutableStateOf(false) }
 
@@ -107,7 +108,10 @@ internal fun ConversationListScreen(
         pinAnimationController = pinAnimationController,
         onAction = screenModel::onAction,
         onConfirmAddContact = { pendingAddContactDestination = it },
-        onConfirmBlock = { pendingBlockDestination = it },
+        onConfirmBlock = { conversationId, destination ->
+            pendingBlockConversationId = conversationId
+            pendingBlockDestination = destination
+        },
     )
 
     Box(
@@ -125,7 +129,7 @@ internal fun ConversationListScreen(
             onAction = screenModel::onAction,
             onDeleteClick = { pendingDelete = true },
             onSnoozeClick = { pendingSnooze = true },
-            onScrollToTop = { screenModel.onAction(Action.ScrollUpClicked) },
+            onScrollToTop = { screenModel.onAction(Action.ScrollToTopClicked) },
             modifier = Modifier.fillMaxSize(),
         )
 
@@ -133,15 +137,19 @@ internal fun ConversationListScreen(
     }
 
     ConversationListDialogs(
-        selectedCount = uiState.selection.selectedConversations.size,
+        selectedCount = uiState.selection.selectedCount,
         addContactDestination = pendingAddContactDestination,
         isDeleteVisible = pendingDelete,
+        blockConversationId = pendingBlockConversationId,
         blockDestination = pendingBlockDestination,
         isSnoozeVisible = pendingSnooze,
         onAction = screenModel::onAction,
         onDismissAddContact = { pendingAddContactDestination = null },
         onDismissDelete = { pendingDelete = false },
-        onDismissBlock = { pendingBlockDestination = null },
+        onDismissBlock = {
+            pendingBlockConversationId = null
+            pendingBlockDestination = null
+        },
         onDismissSnooze = { pendingSnooze = false },
     )
 }
@@ -168,7 +176,7 @@ private fun ConversationListEffects(
     pinAnimationController: OverlayReorderAnimationController<ConversationListItemUiModel, String>,
     onAction: (Action) -> Unit,
     onConfirmAddContact: (String) -> Unit,
-    onConfirmBlock: (String) -> Unit,
+    onConfirmBlock: (conversationId: String, destination: String) -> Unit,
 ) {
     val context = LocalContext.current
     val undoLabel = stringResource(R.string.snack_bar_undo)
@@ -193,10 +201,13 @@ private fun ConversationListEffects(
                 }
 
                 is Effect.ConfirmBlock -> {
-                    currentOnConfirmBlock(effect.destination)
+                    currentOnConfirmBlock(
+                        effect.conversationId,
+                        effect.destination,
+                    )
                 }
 
-                is Effect.ConversationsArchived -> {
+                is Effect.ArchiveStatusChanged -> {
                     snackbarScope.launchArchivedSnackbar(
                         snackbarHostState = snackbarHostState,
                         context = currentContext,
@@ -264,7 +275,7 @@ private fun CoroutineScope.launchArchivedSnackbar(
     snackbarHostState: SnackbarHostState,
     context: Context,
     undoLabel: String,
-    effect: Effect.ConversationsArchived,
+    effect: Effect.ArchiveStatusChanged,
     onAction: (Action) -> Unit,
 ) {
     val messageResId = when {
@@ -274,7 +285,7 @@ private fun CoroutineScope.launchArchivedSnackbar(
 
     launch {
         val undoClicked = snackbarHostState.showActionSnackbar(
-            message = context.getString(messageResId, effect.count),
+            message = context.getString(messageResId, effect.conversationIds.size),
             actionLabel = undoLabel,
         )
 
@@ -329,7 +340,7 @@ private fun ConversationListScaffold(
     onScrollToTop: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val isSelectionMode = uiState.selection.isActive
+    val isSelectionMode = uiState.selection.selectedCount > 0
     val backdropColor = conversationListBackdropColor(isSelectionMode)
 
     BackHandler(enabled = isSelectionMode) {
@@ -399,7 +410,7 @@ private fun BoxScope.ConversationListFabs(
     onScrollToTop: () -> Unit,
 ) {
     ScrollToTopFab(
-        visible = uiState.isScrollUpVisible,
+        visible = uiState.isScrollToTopVisible,
         onClick = onScrollToTop,
         modifier = Modifier
             .align(Alignment.BottomCenter)
@@ -409,7 +420,7 @@ private fun BoxScope.ConversationListFabs(
 
     StartChatFab(
         visible = !isSelectionMode,
-        expanded = !uiState.isScrollUpVisible,
+        expanded = !uiState.isScrollToTopVisible,
         onClick = { onAction(Action.StartChatClicked) },
         modifier = Modifier
             .align(Alignment.BottomEnd)
@@ -437,7 +448,7 @@ private fun ConversationListTopBar(
     when {
         isSelectionMode -> {
             ConversationListSelectionTopAppBar(
-                selectedCount = uiState.selection.selectedConversations.size,
+                selectedCount = uiState.selection.selectedCount,
                 actions = uiState.selection.actions,
                 onAction = onAction,
                 onDeleteClick = onDeleteClick,

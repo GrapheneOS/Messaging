@@ -227,13 +227,30 @@ private fun ConversationListItemBadgeIcon(icon: ImageVector) {
 
 @Composable
 private fun ConversationListItemPreviewThumbnail(preview: ConversationListPreviewUiModel?) {
-    val isVisual = preview is ConversationListPreviewUiModel.Image ||
-        preview is ConversationListPreviewUiModel.Video
+    when (preview) {
+        is ConversationListPreviewUiModel.Image -> {
+            ConversationListVisualPreviewThumbnail(
+                contentUri = preview.contentUri,
+                contentType = preview.contentType,
+            )
+        }
 
-    if (preview == null || !isVisual) {
-        return
+        is ConversationListPreviewUiModel.Video -> {
+            ConversationListVisualPreviewThumbnail(
+                contentUri = preview.contentUri,
+                contentType = preview.contentType,
+            )
+        }
+
+        else -> Unit
     }
+}
 
+@Composable
+private fun ConversationListVisualPreviewThumbnail(
+    contentUri: String,
+    contentType: String,
+) {
     val thumbnailSizePx = with(LocalDensity.current) {
         ItemPreviewThumbnailSize.roundToPx()
     }
@@ -242,8 +259,8 @@ private fun ConversationListItemPreviewThumbnail(preview: ConversationListPrevie
         modifier = Modifier
             .size(ItemPreviewThumbnailSize)
             .clip(MaterialTheme.shapes.extraSmall),
-        contentUri = preview.contentUri,
-        contentType = preview.contentType,
+        contentUri = contentUri,
+        contentType = contentType,
         size = IntSize(
             width = thumbnailSizePx,
             height = thumbnailSizePx,
@@ -297,7 +314,15 @@ private fun itemSnippetText(item: ConversationListItemUiModel): String? {
     val snippetText = item.snippet.text?.takeIf(String::isNotBlank)
 
     if (snippetText != null) {
-        return snippetText
+        val senderName = item.snippet.senderName?.takeIf(String::isNotBlank)
+
+        return when {
+            item.avatar.isGroup && !item.isOutgoing && senderName != null -> {
+                "$senderName: $snippetText"
+            }
+
+            else -> snippetText
+        }
     }
 
     return when (item.snippet.preview) {
@@ -470,10 +495,7 @@ private fun ConversationListItemRowBadgesPreview() {
                     conversationId = "audio",
                     title = "Sara Lindberg",
                     snippetText = null,
-                    preview = ConversationListPreviewUiModel.Audio(
-                        contentUri = "content://preview/audio",
-                        contentType = "audio/mp3",
-                    ),
+                    preview = ConversationListPreviewUiModel.Audio,
                 ),
                 onClick = {},
                 onLongClick = {},

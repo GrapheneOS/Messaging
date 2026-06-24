@@ -46,7 +46,7 @@ class ConversationListUiStateMapperImplTest {
                 ),
             ),
             selectedConversationIds = persistentListOf(),
-            isScrollUpVisible = false,
+            isScrollToTopVisible = false,
             isDebugEnabled = false,
         )
 
@@ -63,7 +63,7 @@ class ConversationListUiStateMapperImplTest {
                 ),
             ),
             selectedConversationIds = persistentListOf(),
-            isScrollUpVisible = false,
+            isScrollToTopVisible = false,
             isDebugEnabled = false,
         )
 
@@ -75,15 +75,15 @@ class ConversationListUiStateMapperImplTest {
         val state = mapper.map(
             snapshot = snapshotOf(conversationItem(conversationId = "a")),
             selectedConversationIds = persistentListOf(),
-            isScrollUpVisible = false,
+            isScrollToTopVisible = false,
             isDebugEnabled = false,
         )
 
         val actions = state.selection.actions
-        assertFalse(state.selection.isActive)
-        assertNull(actions.isFirstSelectedPinned)
-        assertNull(actions.isFirstSelectedSnoozed)
-        assertNull(actions.isFirstSelectedUnread)
+        assertEquals(0, state.selection.selectedCount)
+        assertNull(actions.firstSelectedIsPinned)
+        assertNull(actions.firstSelectedIsSnoozed)
+        assertNull(actions.firstSelectedIsUnread)
     }
 
     @Test
@@ -98,14 +98,14 @@ class ConversationListUiStateMapperImplTest {
                 ),
             ),
             selectedConversationIds = persistentListOf("selected"),
-            isScrollUpVisible = false,
+            isScrollToTopVisible = false,
             isDebugEnabled = false,
         )
 
         val actions = state.selection.actions
-        assertEquals(true, actions.isFirstSelectedPinned)
-        assertEquals(true, actions.isFirstSelectedSnoozed)
-        assertEquals(true, actions.isFirstSelectedUnread)
+        assertEquals(true, actions.firstSelectedIsPinned)
+        assertEquals(true, actions.firstSelectedIsSnoozed)
+        assertEquals(true, actions.firstSelectedIsUnread)
     }
 
     @Test
@@ -124,26 +124,45 @@ class ConversationListUiStateMapperImplTest {
                 ),
             ),
             selectedConversationIds = persistentListOf("first", "second"),
-            isScrollUpVisible = false,
+            isScrollToTopVisible = false,
             isDebugEnabled = false,
         )
 
         val actions = state.selection.actions
-        assertEquals(false, actions.isFirstSelectedPinned)
-        assertEquals(false, actions.isFirstSelectedSnoozed)
+        assertEquals(false, actions.firstSelectedIsPinned)
+        assertEquals(false, actions.firstSelectedIsSnoozed)
     }
 
     @Test
-    fun map_selection_canArchiveBecauseInboxItemsAreNotArchived() {
+    fun map_selection_exposesSelectedCount() {
         val state = mapper.map(
-            snapshot = snapshotOf(conversationItem(conversationId = "a")),
-            selectedConversationIds = persistentListOf("a"),
-            isScrollUpVisible = false,
+            snapshot = snapshotOf(
+                conversationItem(conversationId = "a"),
+                conversationItem(conversationId = "b"),
+            ),
+            selectedConversationIds = persistentListOf("a", "b"),
+            isScrollToTopVisible = false,
             isDebugEnabled = false,
         )
 
-        assertTrue(state.selection.actions.canArchive)
-        assertTrue(state.selection.actions.canDelete)
+        assertEquals(2, state.selection.selectedCount)
+    }
+
+    @Test
+    fun map_senderName_preservesItForSnippetAccessibility() {
+        val state = mapper.map(
+            snapshot = snapshotOf(
+                conversationItem(
+                    conversationId = "group",
+                    senderName = "Jane",
+                ),
+            ),
+            selectedConversationIds = persistentListOf(),
+            isScrollToTopVisible = false,
+            isDebugEnabled = false,
+        )
+
+        assertEquals("Jane", singleItem(state).snippet.senderName)
     }
 
     private fun singleItem(
@@ -165,6 +184,7 @@ class ConversationListUiStateMapperImplTest {
         isPinned: Boolean = false,
         isSnoozed: Boolean = false,
         isRead: Boolean = true,
+        senderName: String? = null,
     ): ConversationListItem {
         return ConversationListItem(
             conversationId = conversationId,
@@ -188,7 +208,7 @@ class ConversationListUiStateMapperImplTest {
                 previewContentType = null,
                 status = ConversationListMessageStatus.Normal,
                 isIncoming = true,
-                senderName = null,
+                senderName = senderName,
             ),
             draft = ConversationListDraft(
                 isVisible = false,

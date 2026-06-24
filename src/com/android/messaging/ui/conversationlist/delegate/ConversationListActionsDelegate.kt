@@ -76,9 +76,8 @@ internal class ConversationListActionsDelegateImpl @Inject constructor(
         }
 
         _effects.tryEmit(
-            ConversationListEffect.ConversationsArchived(
+            ConversationListEffect.ArchiveStatusChanged(
                 conversationIds = resolvedConversationIds.toImmutableList(),
-                count = resolvedConversationIds.size,
                 isArchived = isArchived,
             ),
         )

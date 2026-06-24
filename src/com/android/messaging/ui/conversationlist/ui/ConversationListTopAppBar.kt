@@ -50,7 +50,7 @@ internal fun ConversationListTopAppBar(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                 ) {
-                    onAction(Action.ScrollUpClicked)
+                    onAction(Action.ScrollToTopClicked)
                 },
                 text = stringResource(R.string.app_name),
                 maxLines = 1,

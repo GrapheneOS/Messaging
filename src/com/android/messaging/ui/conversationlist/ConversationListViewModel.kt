@@ -47,7 +47,7 @@ internal class ConversationListViewModel @Inject constructor(
 ) : ViewModel(),
     ConversationListScreenModel {
 
-    private val isScrollUpVisible = MutableStateFlow(false)
+    private val isScrollToTopVisible = MutableStateFlow(false)
     private val isDebugEnabled = MutableStateFlow(debugFeaturesProvider.isEnabled())
 
     private val snapshot: StateFlow<ConversationListSnapshot?> = optimisticSnapshotDelegate.snapshot
@@ -61,13 +61,13 @@ internal class ConversationListViewModel @Inject constructor(
     override val uiState: StateFlow<State> = combine(
         snapshot.filterNotNull(),
         selectionDelegate.selectedIds,
-        isScrollUpVisible,
+        isScrollToTopVisible,
         isDebugEnabled,
-    ) { snapshot, selectedIds, isScrollUpVisible, isDebugEnabled ->
+    ) { snapshot, selectedIds, isScrollToTopVisible, isDebugEnabled ->
         uiStateMapper.map(
             snapshot = snapshot,
             selectedConversationIds = selectedIds,
-            isScrollUpVisible = isScrollUpVisible,
+            isScrollToTopVisible = isScrollToTopVisible,
             isDebugEnabled = isDebugEnabled,
         )
     }.stateIn(
@@ -93,28 +93,37 @@ internal class ConversationListViewModel @Inject constructor(
 
     override fun onAction(action: Action) {
         when (action) {
-            is Action.DialogAction -> onDialogAction(action)
+            is Action.ConfirmationAction -> onConfirmationAction(action)
             is Action.LifecycleAction -> onLifecycleAction(action)
             is Action.ListAction -> onListAction(action)
             is Action.NavigationAction -> onNavigationAction(action)
             is Action.SelectionAction -> onSelectionAction(action)
+            is Action.SnackbarAction -> onSnackbarAction(action)
         }
     }
 
-    private fun onDialogAction(action: Action.DialogAction) {
+    private fun onConfirmationAction(action: Action.ConfirmationAction) {
         when (action) {
             is Action.AddContactConfirmed -> {
                 onAddContactConfirmed(action.destination)
             }
 
             is Action.BlockConfirmed -> {
-                onBlockConfirmed()
+                onBlockConfirmed(
+                    conversationId = action.conversationId,
+                    destination = action.destination,
+                )
             }
 
             is Action.DeleteConfirmed -> {
                 onDeleteConfirmed()
             }
 
+        }
+    }
+
+    private fun onSnackbarAction(action: Action.SnackbarAction) {
+        when (action) {
             is Action.ArchiveUndoClicked -> {
                 onArchiveUndoClicked(
                     conversationIds = action.conversationIds,
@@ -138,12 +147,12 @@ internal class ConversationListViewModel @Inject constructor(
         selectionDelegate.clear()
     }
 
-    private fun onBlockConfirmed() {
-        val selectedItem = singleSelectedItem() ?: return
-        val destination = singleSelectedDestination() ?: return
-
+    private fun onBlockConfirmed(
+        conversationId: String,
+        destination: String,
+    ) {
         actionsDelegate.block(
-            conversationId = selectedItem.conversationId,
+            conversationId = conversationId,
             destination = destination,
         )
         selectionDelegate.clear()
@@ -246,11 +255,11 @@ internal class ConversationListViewModel @Inject constructor(
     }
 
     private fun onNewestConversationVisibilityChanged(isVisible: Boolean) {
-        if (isScrollUpVisible.value == !isVisible) {
+        if (isScrollToTopVisible.value == !isVisible) {
             return
         }
 
-        isScrollUpVisible.value = !isVisible
+        isScrollToTopVisible.value = !isVisible
         repository.setNewestConversationVisible(isVisible)
     }
 
@@ -308,7 +317,7 @@ internal class ConversationListViewModel @Inject constructor(
                 _effects.tryEmit(Effect.OpenDebugOptions)
             }
 
-            Action.ScrollUpClicked -> {
+            Action.ScrollToTopClicked -> {
                 _effects.tryEmit(Effect.ScrollToTop)
             }
 

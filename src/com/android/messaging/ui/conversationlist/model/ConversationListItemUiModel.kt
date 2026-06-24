@@ -14,11 +14,9 @@ internal data class ConversationListItemUiModel(
     val status: ConversationListMessageStatus,
     val isOutgoing: Boolean,
     val isUnread: Boolean,
-    val isGroup: Boolean,
     val isEnterprise: Boolean,
     val isMuted: Boolean,
     val isSnoozed: Boolean,
-    val isArchived: Boolean,
     val isPinned: Boolean,
     val isSelected: Boolean,
 )
@@ -30,7 +28,7 @@ internal data class ConversationListAvatarUiModel(
     val lookupKey: String?,
     val normalizedDestination: String?,
     val isGroup: Boolean,
-    val details: String?,
+    val subtitle: String?,
     val canCall: Boolean,
     val canShowContact: Boolean,
     val isContactSaved: Boolean,
@@ -46,36 +44,25 @@ internal data class ConversationListSnippetUiModel(
 
 @Immutable
 internal sealed interface ConversationListPreviewUiModel {
-    val contentUri: String
-    val contentType: String
 
     @Immutable
-    data class Audio(
-        override val contentUri: String,
-        override val contentType: String,
-    ) : ConversationListPreviewUiModel
+    data object Audio : ConversationListPreviewUiModel
 
     @Immutable
-    data class File(
-        override val contentUri: String,
-        override val contentType: String,
-    ) : ConversationListPreviewUiModel
+    data object File : ConversationListPreviewUiModel
+
+    @Immutable
+    data object VCard : ConversationListPreviewUiModel
 
     @Immutable
     data class Image(
-        override val contentUri: String,
-        override val contentType: String,
-    ) : ConversationListPreviewUiModel
-
-    @Immutable
-    data class VCard(
-        override val contentUri: String,
-        override val contentType: String,
+        val contentUri: String,
+        val contentType: String,
     ) : ConversationListPreviewUiModel
 
     @Immutable
     data class Video(
-        override val contentUri: String,
-        override val contentType: String,
+        val contentUri: String,
+        val contentType: String,
     ) : ConversationListPreviewUiModel
 }

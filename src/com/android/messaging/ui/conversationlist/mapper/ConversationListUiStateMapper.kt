@@ -15,7 +15,6 @@ import com.android.messaging.ui.conversationlist.model.ConversationListPreviewUi
 import com.android.messaging.ui.conversationlist.model.ConversationListSelectionUiState
 import com.android.messaging.ui.conversationlist.model.ConversationListSnippetUiModel
 import com.android.messaging.ui.conversationlist.model.ConversationListUiState
-import com.android.messaging.ui.conversationlist.model.SelectedConversationUiModel
 import com.android.messaging.ui.conversationlist.model.SelectionActionsUiState
 import com.android.messaging.util.ContentType
 import javax.inject.Inject
@@ -27,7 +26,7 @@ internal interface ConversationListUiStateMapper {
     fun map(
         snapshot: ConversationListSnapshot,
         selectedConversationIds: ImmutableList<String>,
-        isScrollUpVisible: Boolean,
+        isScrollToTopVisible: Boolean,
         isDebugEnabled: Boolean,
     ): ConversationListUiState
 }
@@ -43,7 +42,7 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
     override fun map(
         snapshot: ConversationListSnapshot,
         selectedConversationIds: ImmutableList<String>,
-        isScrollUpVisible: Boolean,
+        isScrollToTopVisible: Boolean,
         isDebugEnabled: Boolean,
     ): ConversationListUiState {
         val items = snapshot.items
@@ -76,7 +75,7 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
         return ConversationListUiState(
             content = content,
             selection = selection,
-            isScrollUpVisible = isScrollUpVisible,
+            isScrollToTopVisible = isScrollToTopVisible,
             hasBlockedParticipants = snapshot.blockedDestinations.isNotEmpty(),
             isDebugEnabled = isDebugEnabled,
         )
@@ -103,11 +102,9 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
             status = toStatus(),
             isOutgoing = isOutgoing,
             isUnread = !latestMessage.isRead,
-            isGroup = participant.isGroup,
             isEnterprise = participant.isEnterprise,
             isMuted = !notification.isEnabled,
             isSnoozed = notification.isSnoozed,
-            isArchived = isArchived,
             isPinned = isPinned,
             isSelected = isSelected,
         )
@@ -133,7 +130,7 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
             lookupKey = participant.lookupKey,
             normalizedDestination = destination,
             isGroup = participant.isGroup,
-            details = destination.takeIf { isOneOnOne },
+            subtitle = destination.takeIf { isOneOnOne },
             canCall = isOneOnOne && canPlacePhoneCall(destination),
             canShowContact = canShowContact,
             isContactSaved = isContactSaved,
@@ -153,65 +150,46 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
         blockedDestinations: ImmutableSet<String>,
     ): ConversationListSelectionUiState {
         val itemsById = items.associateBy(ConversationListItem::conversationId)
-        val selectedConversations = selectedConversationIds
+        val selectedItems = selectedConversationIds
             .mapNotNull { conversationId ->
-                itemsById[conversationId]?.let(::toSelectedConversation)
+                itemsById[conversationId]
             }
-            .toImmutableList()
 
         return ConversationListSelectionUiState(
-            selectedConversations = selectedConversations,
+            selectedCount = selectedItems.size,
             actions = mapSelectionActions(
-                selectedConversations = selectedConversations,
+                selectedItems = selectedItems,
                 blockedDestinations = blockedDestinations,
             ),
-            isActive = selectedConversations.isNotEmpty(),
-        )
-    }
-
-    private fun toSelectedConversation(
-        item: ConversationListItem,
-    ): SelectedConversationUiModel {
-        return SelectedConversationUiModel(
-            conversationId = item.conversationId,
-            normalizedDestination = item.participant.otherNormalizedDestination,
-            participantLookupKey = item.participant.lookupKey,
-            isGroup = item.participant.isGroup,
-            isArchived = item.isArchived,
-            isPinned = item.isPinned,
-            isSnoozed = item.notification.isSnoozed,
-            isUnread = !item.latestMessage.isRead,
         )
     }
 
     private fun mapSelectionActions(
-        selectedConversations: List<SelectedConversationUiModel>,
+        selectedItems: List<ConversationListItem>,
         blockedDestinations: ImmutableSet<String>,
     ): SelectionActionsUiState {
-        val singleSelection = selectedConversations.singleOrNull()
-        val firstSelected = selectedConversations.firstOrNull()
-        val canAddContact = singleSelection?.let { conversation ->
+        val singleSelection = selectedItems.singleOrNull()
+        val firstSelected = selectedItems.firstOrNull()
+        val canAddContact = singleSelection?.participant?.let { participant ->
             canAddContact(
-                isGroup = conversation.isGroup,
-                lookupKey = conversation.participantLookupKey,
-                destination = conversation.normalizedDestination,
+                isGroup = participant.isGroup,
+                lookupKey = participant.lookupKey,
+                destination = participant.otherNormalizedDestination,
             )
         }
-        val canBlock = singleSelection?.let { conversation ->
+        val canBlock = singleSelection?.let { item ->
             canBlock(
-                destination = conversation.normalizedDestination,
+                destination = item.participant.otherNormalizedDestination,
                 blockedDestinations = blockedDestinations,
             )
         }
 
         return SelectionActionsUiState(
-            canArchive = selectedConversations.any { !it.isArchived },
-            canDelete = selectedConversations.isNotEmpty(),
             canAddContact = canAddContact == true,
             canBlock = canBlock == true,
-            isFirstSelectedPinned = firstSelected?.isPinned,
-            isFirstSelectedSnoozed = firstSelected?.isSnoozed,
-            isFirstSelectedUnread = firstSelected?.isUnread,
+            firstSelectedIsPinned = firstSelected?.isPinned,
+            firstSelectedIsSnoozed = firstSelected?.notification?.isSnoozed,
+            firstSelectedIsUnread = firstSelected?.latestMessage?.isRead?.not(),
         )
     }
 
@@ -267,10 +245,7 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
     ): ConversationListPreviewUiModel {
         return when {
             ContentType.isAudioType(contentType) -> {
-                ConversationListPreviewUiModel.Audio(
-                    contentUri = contentUri,
-                    contentType = contentType,
-                )
+                ConversationListPreviewUiModel.Audio
             }
 
             ContentType.isImageType(contentType) -> {
@@ -288,17 +263,11 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
             }
 
             ContentType.isVCardType(contentType) -> {
-                ConversationListPreviewUiModel.VCard(
-                    contentUri = contentUri,
-                    contentType = contentType,
-                )
+                ConversationListPreviewUiModel.VCard
             }
 
             else -> {
-                ConversationListPreviewUiModel.File(
-                    contentUri = contentUri,
-                    contentType = contentType,
-                )
+                ConversationListPreviewUiModel.File
             }
         }
     }
