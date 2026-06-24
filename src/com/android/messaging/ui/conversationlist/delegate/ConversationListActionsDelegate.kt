@@ -9,9 +9,9 @@ import com.android.messaging.ui.conversationlist.model.ConversationListEffect
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 internal interface ConversationListActionsDelegate {
@@ -40,8 +40,8 @@ internal class ConversationListActionsDelegateImpl @Inject constructor(
     private val blockedParticipantsRepository: BlockedParticipantsRepository,
 ) : ConversationListActionsDelegate {
 
-    private val _effects = MutableSharedFlow<ConversationListEffect>(extraBufferCapacity = 1)
-    override val effects: Flow<ConversationListEffect> = _effects.asSharedFlow()
+    private val _effects = Channel<ConversationListEffect>(Channel.BUFFERED)
+    override val effects: Flow<ConversationListEffect> = _effects.receiveAsFlow()
 
     private var boundScope: CoroutineScope? = null
 
@@ -75,7 +75,7 @@ internal class ConversationListActionsDelegateImpl @Inject constructor(
             return
         }
 
-        _effects.tryEmit(
+        _effects.trySend(
             ConversationListEffect.ArchiveStatusChanged(
                 conversationIds = resolvedConversationIds.toImmutableList(),
                 isArchived = isArchived,
@@ -173,7 +173,7 @@ internal class ConversationListActionsDelegateImpl @Inject constructor(
                 isBlocked = true,
             )
 
-            _effects.emit(
+            _effects.trySend(
                 ConversationListEffect.ConversationBlocked(
                     conversationId = conversationId,
                     destination = resolvedDestination,

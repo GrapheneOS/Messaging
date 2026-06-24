@@ -227,30 +227,23 @@ private fun ConversationListItemBadgeIcon(icon: ImageVector) {
 
 @Composable
 private fun ConversationListItemPreviewThumbnail(preview: ConversationListPreviewUiModel?) {
+    val contentUri: String
+    val contentType: String
+
     when (preview) {
         is ConversationListPreviewUiModel.Image -> {
-            ConversationListVisualPreviewThumbnail(
-                contentUri = preview.contentUri,
-                contentType = preview.contentType,
-            )
+            contentUri = preview.contentUri
+            contentType = preview.contentType
         }
 
         is ConversationListPreviewUiModel.Video -> {
-            ConversationListVisualPreviewThumbnail(
-                contentUri = preview.contentUri,
-                contentType = preview.contentType,
-            )
+            contentUri = preview.contentUri
+            contentType = preview.contentType
         }
 
-        else -> Unit
+        else -> return
     }
-}
 
-@Composable
-private fun ConversationListVisualPreviewThumbnail(
-    contentUri: String,
-    contentType: String,
-) {
     val thumbnailSizePx = with(LocalDensity.current) {
         ItemPreviewThumbnailSize.roundToPx()
     }
@@ -342,7 +335,9 @@ private fun itemSnippetText(item: ConversationListItemUiModel): String? {
             stringResource(R.string.conversation_list_snippet_vcard)
         }
 
-        is ConversationListPreviewUiModel.File -> stringResource(R.string.mms_text)
+        is ConversationListPreviewUiModel.File -> {
+            stringResource(R.string.mms_text)
+        }
 
         null -> null
     }

@@ -2,25 +2,28 @@ package com.android.messaging.ui.conversationlist.delegate
 
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import kotlinx.collections.immutable.PersistentMap
-import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentMapOf
-import kotlinx.collections.immutable.persistentSetOf
 
 internal data class ConversationListOptimisticOverrides(
-    val archivedIds: PersistentSet<String> = persistentSetOf(),
-    val archivedItemsById: PersistentMap<String, ConversationListItem> = persistentMapOf(),
-    val restoringById: PersistentMap<String, RestoringConversation> = persistentMapOf(),
+    val archiveById: PersistentMap<String, ConversationArchiveOverride> = persistentMapOf(),
     val readById: PersistentMap<String, Boolean> = persistentMapOf(),
     val pinnedById: PersistentMap<String, Boolean> = persistentMapOf(),
 ) {
     val isEmpty: Boolean
-        get() = archivedIds.isEmpty() &&
-            restoringById.isEmpty() &&
+        get() = archiveById.isEmpty() &&
             readById.isEmpty() &&
             pinnedById.isEmpty()
 }
 
-internal data class RestoringConversation(
-    val item: ConversationListItem,
-    val hasObservedArchivedSnapshot: Boolean,
-)
+internal sealed interface ConversationArchiveOverride {
+    val item: ConversationListItem
+
+    data class Archived(
+        override val item: ConversationListItem,
+    ) : ConversationArchiveOverride
+
+    data class Restoring(
+        override val item: ConversationListItem,
+        val awaitingRemoval: Boolean,
+    ) : ConversationArchiveOverride
+}

@@ -6,98 +6,77 @@ import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
-import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 
 internal interface ConversationListSelectionDelegate {
-    val selectedIds: StateFlow<PersistentList<String>>
+    val selectedIds: StateFlow<ImmutableList<String>>
 
-    fun bind(scope: CoroutineScope, snapshotFlow: StateFlow<ConversationListSnapshot?>)
+    fun bind(scope: CoroutineScope, snapshot: StateFlow<ConversationListSnapshot?>)
     fun toggle(conversationId: String)
     fun clear()
-    fun isSelectionActive(): Boolean
-    fun currentSelectedItems(): ImmutableList<ConversationListItem>
 }
 
 internal class ConversationListSelectionDelegateImpl @Inject constructor() :
     ConversationListSelectionDelegate {
 
     private val _selectedIds = MutableStateFlow<PersistentList<String>>(persistentListOf())
-    override val selectedIds: StateFlow<PersistentList<String>> = _selectedIds.asStateFlow()
+    override val selectedIds: StateFlow<ImmutableList<String>> = _selectedIds.asStateFlow()
 
-    private var boundSnapshotFlow: StateFlow<ConversationListSnapshot?>? = null
+    private var isBound = false
 
     override fun bind(
         scope: CoroutineScope,
-        snapshotFlow: StateFlow<ConversationListSnapshot?>,
+        snapshot: StateFlow<ConversationListSnapshot?>,
     ) {
-        if (boundSnapshotFlow != null) {
+        if (isBound) {
             return
         }
 
-        boundSnapshotFlow = snapshotFlow
+        isBound = true
 
-        scope.launch {
-            snapshotFlow
-                .filterNotNull()
-                .collect { snapshot ->
-                    pruneSelection(snapshot)
+        snapshot
+            .filterNotNull()
+            .onEach { currentSnapshot ->
+                if (_selectedIds.value.isEmpty()) {
+                    return@onEach
                 }
-        }
+
+                val knownIds = currentSnapshot.items.mapTo(
+                    destination = HashSet(currentSnapshot.items.size),
+                    transform = ConversationListItem::conversationId,
+                )
+
+                _selectedIds.update { currentSelectedIds ->
+                    currentSelectedIds.retainAll(knownIds)
+                }
+            }
+            .launchIn(scope)
     }
 
     override fun toggle(conversationId: String) {
+        val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
+
         _selectedIds.update { currentSelectedIds ->
             when {
-                conversationId in currentSelectedIds -> currentSelectedIds.remove(conversationId)
-                else -> currentSelectedIds.add(conversationId)
+                resolvedConversationId in currentSelectedIds -> {
+                    currentSelectedIds.remove(resolvedConversationId)
+                }
+
+                else -> {
+                    currentSelectedIds.add(resolvedConversationId)
+                }
             }
         }
     }
 
     override fun clear() {
         _selectedIds.value = persistentListOf()
-    }
-
-    override fun isSelectionActive(): Boolean {
-        return _selectedIds.value.isNotEmpty()
-    }
-
-    override fun currentSelectedItems(): ImmutableList<ConversationListItem> {
-        val items = boundSnapshotFlow?.value?.items ?: return persistentListOf()
-        val currentSelectedIds = _selectedIds.value
-
-        return items
-            .filter { item ->
-                item.conversationId in currentSelectedIds
-            }
-            .toImmutableList()
-    }
-
-    private fun pruneSelection(snapshot: ConversationListSnapshot) {
-        if (_selectedIds.value.isEmpty()) {
-            return
-        }
-
-        val visibleConversationIds = snapshot.items
-            .map { item ->
-                item.conversationId
-            }
-            .toSet()
-
-        _selectedIds.update { currentSelectedIds ->
-            currentSelectedIds
-                .filter { conversationId ->
-                    conversationId in visibleConversationIds
-                }
-                .toPersistentList()
-        }
     }
 }

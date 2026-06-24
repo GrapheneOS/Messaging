@@ -91,8 +91,8 @@ private fun ConversationListOverflowMenu(
             ConversationListMenuItem(
                 labelResId = R.string.action_menu_show_archived,
                 onClick = {
-                    isExpanded = false
                     onAction(Action.ArchivedConversationsClicked)
+                    isExpanded = false
                 },
             )
 
@@ -100,8 +100,8 @@ private fun ConversationListOverflowMenu(
                 ConversationListMenuItem(
                     labelResId = R.string.blocked_contacts_title,
                     onClick = {
-                        isExpanded = false
                         onAction(Action.BlockedParticipantsClicked)
+                        isExpanded = false
                     },
                 )
             }
@@ -109,8 +109,8 @@ private fun ConversationListOverflowMenu(
             ConversationListMenuItem(
                 labelResId = R.string.action_settings,
                 onClick = {
-                    isExpanded = false
                     onAction(Action.SettingsClicked)
+                    isExpanded = false
                 },
             )
 
@@ -118,8 +118,8 @@ private fun ConversationListOverflowMenu(
                 ConversationListMenuItem(
                     labelResId = R.string.action_debug_options,
                     onClick = {
-                        isExpanded = false
                         onAction(Action.DebugOptionsClicked)
+                        isExpanded = false
                     },
                 )
             }

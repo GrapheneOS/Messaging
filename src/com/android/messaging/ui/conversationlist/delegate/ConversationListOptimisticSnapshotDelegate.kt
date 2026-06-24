@@ -4,16 +4,10 @@ import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
 import javax.inject.Inject
-import kotlinx.collections.immutable.mutate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal interface ConversationListOptimisticSnapshotDelegate {
@@ -22,6 +16,7 @@ internal interface ConversationListOptimisticSnapshotDelegate {
     fun bind(scope: CoroutineScope)
 
     fun archive(conversationIds: List<String>)
+    fun discardArchived(conversationIds: List<String>)
     fun restoreArchived(conversationIds: List<String>)
     fun markRead(conversationIds: List<String>, isRead: Boolean)
     fun pin(conversationIds: List<String>, isPinned: Boolean)
@@ -32,131 +27,145 @@ internal class ConversationListOptimisticSnapshotDelegateImpl @Inject constructo
     private val reducer: ConversationListOptimisticReducer,
 ) : ConversationListOptimisticSnapshotDelegate {
 
-    private val overrides = MutableStateFlow(ConversationListOptimisticOverrides())
-
     private val _snapshot = MutableStateFlow<ConversationListSnapshot?>(null)
     override val snapshot: StateFlow<ConversationListSnapshot?> = _snapshot.asStateFlow()
 
-    private var rawSnapshot: StateFlow<ConversationListSnapshot?> = MutableStateFlow(null)
-    private var boundScope: CoroutineScope? = null
+    private var rawSnapshot: ConversationListSnapshot? = null
+    private var overrides = ConversationListOptimisticOverrides()
+    private var isBound = false
 
     override fun bind(scope: CoroutineScope) {
-        if (boundScope != null) {
+        if (isBound) {
             return
         }
 
-        boundScope = scope
-        rawSnapshot = repository.observeInboxSnapshot().stateIn(
-            scope = scope,
-            started = SharingStarted.Lazily,
-            initialValue = null,
-        )
+        isBound = true
 
-        emitEffectiveSnapshots(scope)
-        pruneOverridesOnFreshData(scope)
+        scope.launch {
+            repository.observeInboxSnapshot()
+                .collect { snapshot ->
+                    rawSnapshot = snapshot
+                    overrides = reducer.prune(
+                        items = snapshot.items,
+                        overrides = overrides,
+                    )
+                    publishSnapshot()
+                }
+        }
     }
 
     override fun archive(conversationIds: List<String>) {
-        val archivedItemsById = _snapshot.value
+        val requestedIds = conversationIds.toSet()
+        val archivedItems = _snapshot.value
             ?.items
             .orEmpty()
             .filter { item ->
-                item.conversationId in conversationIds
+                item.conversationId in requestedIds
             }
-            .associateBy(ConversationListItem::conversationId)
+            .associate { item ->
+                item.conversationId to ConversationArchiveOverride.Archived(item)
+            }
 
-        overrides.update { overrides ->
-            overrides.copy(
-                archivedIds = overrides.archivedIds.addAll(conversationIds),
-                archivedItemsById = overrides.archivedItemsById.putAll(archivedItemsById),
-                restoringById = overrides.restoringById.mutate { restoring ->
-                    conversationIds.forEach(restoring::remove)
-                },
-            )
+        if (archivedItems.isEmpty()) {
+            return
         }
+
+        overrides = overrides.copy(
+            archiveById = overrides.archiveById.putAll(archivedItems),
+        )
+        publishSnapshot()
+    }
+
+    override fun discardArchived(conversationIds: List<String>) {
+        var archiveById = overrides.archiveById
+
+        conversationIds.forEach { conversationId ->
+            if (archiveById[conversationId] is ConversationArchiveOverride.Archived) {
+                archiveById = archiveById.remove(conversationId)
+            }
+        }
+
+        overrides = overrides.copy(archiveById = archiveById)
+        publishSnapshot()
     }
 
     override fun restoreArchived(conversationIds: List<String>) {
-        val rawItemsById = rawSnapshot.value
+        var archiveById = overrides.archiveById
+        val rawItemsById = rawSnapshot
             ?.items
             .orEmpty()
             .associateBy(ConversationListItem::conversationId)
 
-        overrides.update { overrides ->
-            val archivedItemsById = overrides.archivedItemsById.putAll(
-                rawItemsById.filterKeys { conversationId ->
-                    conversationId in conversationIds
-                },
-            )
+        conversationIds.forEach { conversationId ->
+            val item = archiveById[conversationId]?.item
+                ?: rawItemsById[conversationId]
+                ?: return@forEach
 
-            overrides.copy(
-                archivedIds = overrides.archivedIds.removeAll(conversationIds.toSet()),
-                archivedItemsById = archivedItemsById,
-                restoringById = overrides.restoringById.mutate { restoring ->
-                    conversationIds.forEach { conversationId ->
-                        val item = archivedItemsById[conversationId] ?: return@forEach
-
-                        restoring[conversationId] = RestoringConversation(
-                            item = item,
-                            hasObservedArchivedSnapshot = conversationId !in rawItemsById,
-                        )
-                    }
-                },
+            archiveById = archiveById.put(
+                key = conversationId,
+                value = ConversationArchiveOverride.Restoring(
+                    item = item,
+                    awaitingRemoval = conversationId in rawItemsById,
+                ),
             )
         }
+
+        overrides = overrides.copy(archiveById = archiveById)
+        publishSnapshot()
     }
 
     override fun markRead(
         conversationIds: List<String>,
         isRead: Boolean,
     ) {
-        val readById = conversationIds.associateWith { isRead }
+        val effectiveIds = _snapshot.value
+            ?.items
+            .orEmpty()
+            .mapTo(mutableSetOf()) { item -> item.conversationId }
+        val readOverrides = conversationIds
+            .filter(effectiveIds::contains)
+            .associateWith { isRead }
 
-        overrides.update { overrides ->
-            overrides.copy(
-                readById = overrides.readById.putAll(readById),
-            )
+        if (readOverrides.isEmpty()) {
+            return
         }
+
+        overrides = overrides.copy(
+            readById = overrides.readById.putAll(readOverrides),
+        )
+        publishSnapshot()
     }
 
     override fun pin(
         conversationIds: List<String>,
         isPinned: Boolean,
     ) {
-        val pinnedById = conversationIds.associateWith { isPinned }
+        val effectiveIds = _snapshot.value
+            ?.items
+            .orEmpty()
+            .mapTo(mutableSetOf()) { item -> item.conversationId }
+        val pinOverrides = conversationIds
+            .filter(effectiveIds::contains)
+            .associateWith { isPinned }
 
-        overrides.update { overrides ->
-            overrides.copy(
-                pinnedById = overrides.pinnedById.putAll(pinnedById),
-            )
+        if (pinOverrides.isEmpty()) {
+            return
         }
+
+        overrides = overrides.copy(
+            pinnedById = overrides.pinnedById.putAll(pinOverrides),
+        )
+        publishSnapshot()
     }
 
-    private fun emitEffectiveSnapshots(scope: CoroutineScope) {
-        scope.launch {
-            combine(rawSnapshot, overrides) { snapshot, overrides ->
-                snapshot?.copy(
-                    items = reducer.apply(
-                        items = snapshot.items,
-                        overrides = overrides,
-                    ),
-                )
-            }.collect { effectiveSnapshot ->
-                _snapshot.value = effectiveSnapshot
-            }
-        }
-    }
+    private fun publishSnapshot() {
+        val snapshot = rawSnapshot ?: return
 
-    private fun pruneOverridesOnFreshData(scope: CoroutineScope) {
-        scope.launch {
-            rawSnapshot.filterNotNull().collect { snapshot ->
-                overrides.update { overrides ->
-                    reducer.prune(
-                        items = snapshot.items,
-                        overrides = overrides,
-                    )
-                }
-            }
-        }
+        _snapshot.value = snapshot.copy(
+            items = reducer.apply(
+                items = snapshot.items,
+                overrides = overrides,
+            ),
+        )
     }
 }

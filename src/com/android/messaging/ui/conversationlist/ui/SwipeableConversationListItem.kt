@@ -31,10 +31,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
@@ -89,7 +91,8 @@ private enum class ConversationSwipeAction {
 internal fun SwipeableConversationListItem(
     item: ConversationListItemUiModel,
     isSelectionMode: Boolean,
-    appearanceAnimationToken: Long?,
+    isInteractionEnabled: Boolean,
+    appearanceAnimationToken: AppearanceAnimationToken?,
     onAppearanceAnimationFinished: () -> Unit,
     onArchive: () -> Unit,
     onToggleRead: () -> Unit,
@@ -98,35 +101,17 @@ internal fun SwipeableConversationListItem(
 ) {
     val currentOnArchive by rememberUpdatedState(onArchive)
     val currentOnToggleRead by rememberUpdatedState(onToggleRead)
-    val currentOnAppearanceAnimationFinished by rememberUpdatedState(onAppearanceAnimationFinished)
 
     val offsetX = remember { mutableFloatStateOf(0f) }
-    val visibilityFraction = remember(item.conversationId) {
-        val initialValue = when {
-            appearanceAnimationToken != null -> 0f
-            else -> 1f
-        }
-
-        Animatable(initialValue)
-    }
     val backgroundAction by remember { derivedStateOf { swipeAction(offsetX.floatValue) } }
-
-    LaunchedEffect(item.conversationId, appearanceAnimationToken) {
-        if (appearanceAnimationToken == null) {
-            return@LaunchedEffect
-        }
-
-        visibilityFraction.stop()
-        visibilityFraction.snapTo(0f)
-        visibilityFraction.animateTo(
-            targetValue = 1f,
-            animationSpec = ItemAppearanceSpec,
-        )
-        currentOnAppearanceAnimationFinished()
-    }
+    val visibilityFraction = rememberAppearanceVisibility(
+        conversationId = item.conversationId,
+        appearanceAnimationToken = appearanceAnimationToken,
+        onAppearanceAnimationFinished = onAppearanceAnimationFinished,
+    )
 
     val gestureModifier = when {
-        isSelectionMode -> Modifier
+        !isInteractionEnabled || isSelectionMode -> Modifier
 
         else -> Modifier.swipeActions(
             offsetX = offsetX,
@@ -135,17 +120,24 @@ internal fun SwipeableConversationListItem(
             onToggleRead = { currentOnToggleRead() },
         )
     }
+    val interactionModifier = when {
+        isInteractionEnabled -> Modifier
+        else ->
+            Modifier
+                .consumeAllPointerInput()
+                .clearAndSetSemantics {}
+    }
 
     Box(
         modifier = modifier
             .then(gestureModifier)
+            .then(interactionModifier)
             .collapseVertically { visibilityFraction.value }
             .graphicsLayer { alpha = visibilityFraction.value }
             .clipToBounds(),
     ) {
         ConversationListSwipeBackground(
             action = backgroundAction,
-            isUnread = item.isUnread,
             modifier = Modifier
                 .matchParentSize()
                 .padding(horizontal = SwipeBackgroundOuterHorizontalPadding),
@@ -160,6 +152,50 @@ internal fun SwipeableConversationListItem(
             },
         ) {
             content()
+        }
+    }
+}
+
+@Composable
+private fun rememberAppearanceVisibility(
+    conversationId: String,
+    appearanceAnimationToken: AppearanceAnimationToken?,
+    onAppearanceAnimationFinished: () -> Unit,
+): Animatable<Float, AnimationVector1D> {
+    val currentOnAppearanceAnimationFinished by rememberUpdatedState(onAppearanceAnimationFinished)
+    val visibilityFraction = remember(conversationId) {
+        val initialValue = when {
+            appearanceAnimationToken != null -> 0f
+            else -> 1f
+        }
+
+        Animatable(initialValue)
+    }
+
+    LaunchedEffect(conversationId, appearanceAnimationToken) {
+        if (appearanceAnimationToken == null) {
+            return@LaunchedEffect
+        }
+
+        visibilityFraction.stop()
+        visibilityFraction.snapTo(0f)
+        visibilityFraction.animateTo(
+            targetValue = 1f,
+            animationSpec = ItemAppearanceSpec,
+        )
+        currentOnAppearanceAnimationFinished()
+    }
+
+    return visibilityFraction
+}
+
+private fun Modifier.consumeAllPointerInput(): Modifier {
+    return pointerInput(Unit) {
+        awaitPointerEventScope {
+            while (true) {
+                val event = awaitPointerEvent(pass = PointerEventPass.Initial)
+                event.changes.forEach { change -> change.consume() }
+            }
         }
     }
 }
@@ -274,12 +310,14 @@ private suspend fun settleSwipe(
             )
         }
 
-        ConversationSwipeAction.None -> animateOffset(
-            offsetX = offsetX,
-            targetValue = 0f,
-            initialVelocity = velocityX,
-            animationSpec = SwipeSettleSpec,
-        )
+        ConversationSwipeAction.None -> {
+            animateOffset(
+                offsetX = offsetX,
+                targetValue = 0f,
+                initialVelocity = velocityX,
+                animationSpec = SwipeSettleSpec,
+            )
+        }
     }
 }
 
@@ -328,7 +366,6 @@ private fun swipeAction(offset: Float): ConversationSwipeAction {
 @Composable
 private fun ConversationListSwipeBackground(
     action: ConversationSwipeAction,
-    isUnread: Boolean,
     modifier: Modifier = Modifier,
 ) {
     if (action == ConversationSwipeAction.None) {
@@ -355,13 +392,11 @@ private fun ConversationListSwipeBackground(
 
     val icon = when {
         isArchive -> Icons.Filled.Archive
-        isUnread -> Icons.Filled.MarkChatRead
         else -> Icons.Filled.MarkChatUnread
     }
 
     val description = when {
         isArchive -> stringResource(R.string.action_archive)
-        isUnread -> stringResource(R.string.mark_as_read)
         else -> stringResource(R.string.mark_as_unread)
     }
 

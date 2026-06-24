@@ -19,7 +19,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -64,9 +63,9 @@ internal fun ConversationListContent(
     content: ConversationListContentUiState,
     listState: LazyListState,
     onAction: (Action) -> Unit,
-    contentPadding: PaddingValues,
+    scaffoldContentPadding: PaddingValues,
     isSelectionMode: Boolean,
-    bottomReserve: Dp,
+    fabBottomReserve: Dp,
     pinAnimationController: OverlayReorderAnimationController<ConversationListItemUiModel, String>?,
     modifier: Modifier = Modifier,
 ) {
@@ -77,13 +76,13 @@ internal fun ConversationListContent(
             }
 
             ConversationListContentUiState.WaitingForSync -> {
-                ConversationListMessage(
+                ConversationListStatusMessage(
                     text = stringResource(R.string.conversation_list_first_sync_text),
                 )
             }
 
             ConversationListContentUiState.Empty -> {
-                ConversationListMessage(
+                ConversationListStatusMessage(
                     text = stringResource(R.string.conversation_list_empty_text),
                 )
             }
@@ -93,9 +92,9 @@ internal fun ConversationListContent(
                     items = content.items,
                     listState = listState,
                     onAction = onAction,
-                    contentPadding = contentPadding,
+                    scaffoldContentPadding = scaffoldContentPadding,
                     isSelectionMode = isSelectionMode,
-                    bottomReserve = bottomReserve,
+                    fabBottomReserve = fabBottomReserve,
                     pinAnimationController = pinAnimationController,
                 )
             }
@@ -108,26 +107,14 @@ private fun ConversationListItems(
     items: ImmutableList<ConversationListItemUiModel>,
     listState: LazyListState,
     onAction: (Action) -> Unit,
-    contentPadding: PaddingValues,
+    scaffoldContentPadding: PaddingValues,
     isSelectionMode: Boolean,
-    bottomReserve: Dp,
+    fabBottomReserve: Dp,
     pinAnimationController: OverlayReorderAnimationController<ConversationListItemUiModel, String>?,
 ) {
-    val currentConversationIds: Set<String> =
-        items.mapTo(mutableSetOf(), ConversationListItemUiModel::conversationId)
-    val previousConversationIdsState = remember { mutableStateOf(currentConversationIds) }
-    val enteringConversationIds = currentConversationIds - previousConversationIdsState.value
-    val appearanceGenerationById = remember { mutableMapOf<String, Long>() }
-    val activeAppearanceTokens = remember { mutableStateMapOf<String, Long>() }
-    val enteringAppearanceTokens = remember(items, enteringConversationIds) {
-        enteringConversationIds.associateWith { conversationId ->
-            appearanceGenerationById.getOrDefault(conversationId, 0L) + 1L
-        }.also(appearanceGenerationById::putAll)
-    }
+    val appearanceTokens = rememberAppearanceAnimationTokens(items)
 
     SideEffect {
-        previousConversationIdsState.value = currentConversationIds
-        activeAppearanceTokens.putAll(enteringAppearanceTokens)
         pinAnimationController?.updateItems(items)
     }
 
@@ -143,7 +130,9 @@ private fun ConversationListItems(
         state = listState,
         contentPadding = PaddingValues(
             top = ListContentPadding,
-            bottom = contentPadding.calculateBottomPadding() + ListContentPadding + bottomReserve,
+            bottom = scaffoldContentPadding.calculateBottomPadding() +
+                ListContentPadding +
+                fabBottomReserve,
         ),
         verticalArrangement = Arrangement.spacedBy(ListVerticalSpacing),
     ) {
@@ -152,19 +141,20 @@ private fun ConversationListItems(
             key = { item -> item.conversationId },
             contentType = { CONVERSATION_ROW_CONTENT_TYPE },
         ) { item ->
-            val appearanceAnimationToken = enteringAppearanceTokens[item.conversationId]
-                ?: activeAppearanceTokens[item.conversationId]
+            val appearanceAnimationToken = appearanceTokens.tokenFor(item.conversationId)
 
             ConversationListRow(
                 item = item,
-                items = items,
                 listState = listState,
                 isSelectionMode = isSelectionMode,
                 appearanceAnimationToken = appearanceAnimationToken,
                 pinAnimationController = pinAnimationController,
                 onAppearanceAnimationFinished = {
-                    if (activeAppearanceTokens[item.conversationId] == appearanceAnimationToken) {
-                        activeAppearanceTokens.remove(item.conversationId)
+                    if (appearanceAnimationToken != null) {
+                        appearanceTokens.onAnimationFinished(
+                            conversationId = item.conversationId,
+                            token = appearanceAnimationToken,
+                        )
                     }
                 },
                 onAction = onAction,
@@ -176,10 +166,9 @@ private fun ConversationListItems(
 @Composable
 private fun LazyItemScope.ConversationListRow(
     item: ConversationListItemUiModel,
-    items: ImmutableList<ConversationListItemUiModel>,
     listState: LazyListState,
     isSelectionMode: Boolean,
-    appearanceAnimationToken: Long?,
+    appearanceAnimationToken: AppearanceAnimationToken?,
     pinAnimationController: OverlayReorderAnimationController<ConversationListItemUiModel, String>?,
     onAppearanceAnimationFinished: () -> Unit,
     onAction: (Action) -> Unit,
@@ -196,6 +185,7 @@ private fun LazyItemScope.ConversationListRow(
     SwipeableConversationListItem(
         item = item,
         isSelectionMode = isSelectionMode,
+        isInteractionEnabled = !isHiddenByPinAnimation,
         appearanceAnimationToken = appearanceAnimationToken,
         onAppearanceAnimationFinished = onAppearanceAnimationFinished,
         onArchive = {
@@ -210,9 +200,8 @@ private fun LazyItemScope.ConversationListRow(
                 isPinned = item.isPinned,
                 animatePlacement = !isHiddenByPinAnimation,
             )
-            .reportPinAnimationBounds(
+            .trackPinAnimationBounds(
                 listState = listState,
-                items = items,
                 conversationId = item.conversationId,
                 pinAnimationController = pinAnimationController,
             )
@@ -246,31 +235,37 @@ private fun LazyItemScope.ConversationListRow(
     }
 }
 
-private fun Modifier.reportPinAnimationBounds(
+private fun Modifier.trackPinAnimationBounds(
     listState: LazyListState,
-    items: ImmutableList<ConversationListItemUiModel>,
     conversationId: String,
     pinAnimationController: OverlayReorderAnimationController<ConversationListItemUiModel, String>?,
 ): Modifier {
+    if (pinAnimationController == null) {
+        return this
+    }
+
     return onGloballyPositioned { coordinates ->
         val layoutInfo = listState.layoutInfo
         val physicallyVisibleItems = layoutInfo.visibleItemsInfo.filter { visibleItem ->
             visibleItem.offset < layoutInfo.viewportEndOffset &&
                 visibleItem.offset + visibleItem.size > layoutInfo.viewportStartOffset
         }
-        val lastVisibleItemIndex = physicallyVisibleItems
-            .filter { visibleItem -> visibleItem.key != conversationId }
-            .maxOfOrNull { visibleItem -> visibleItem.index }
-            ?.let { lastIndex -> (lastIndex + 1).coerceAtMost(items.lastIndex) }
+
+        val firstVisibleItemIndex = physicallyVisibleItems
+            .minOfOrNull { visibleItem -> visibleItem.index }
             ?: listState.firstVisibleItemIndex
 
-        pinAnimationController?.updateItemBounds(
+        val lastVisibleItemIndex = physicallyVisibleItems
+            .maxOfOrNull { visibleItem -> visibleItem.index }
+            ?: firstVisibleItemIndex
+
+        pinAnimationController.updateItemBounds(
             itemKey = conversationId,
             boundsInRoot = coordinates.boundsInRoot(),
             isPhysicallyVisible = physicallyVisibleItems.any { visibleItem ->
                 visibleItem.key == conversationId
             },
-            firstVisibleItemIndex = listState.firstVisibleItemIndex,
+            firstVisibleItemIndex = firstVisibleItemIndex,
             lastVisibleItemIndex = lastVisibleItemIndex,
         )
     }
@@ -285,44 +280,100 @@ private fun KeepViewportStationaryOnPinChange(
 
     SideEffect {
         val previousItems = previousItemsState.value
-        val currentItemsById = items.associateBy(ConversationListItemUiModel::conversationId)
-        val hasSameConversationIds = previousItems.size == items.size && previousItems.all { item ->
-            item.conversationId in currentItemsById
-        }
-        val hasPinStateChange = previousItems.any { previousItem ->
-            currentItemsById[previousItem.conversationId]?.isPinned != previousItem.isPinned
-        }
-        val wasAtStart = listState.firstVisibleItemIndex == 0 &&
-            listState.firstVisibleItemScrollOffset == 0
         val firstVisibleConversationId = listState.layoutInfo
             .visibleItemsInfo
-            .firstOrNull()
-            ?.key as? String
-        val previousFirstVisibleIndex = previousItems.indexOfFirst { item ->
-            item.conversationId == firstVisibleConversationId
-        }
-        val previousFirstVisibleItem = previousItems.getOrNull(previousFirstVisibleIndex)
-        val currentFirstVisibleItem = firstVisibleConversationId?.let(currentItemsById::get)
-        val firstVisibleItemPinChanged = previousFirstVisibleItem?.isPinned !=
-            currentFirstVisibleItem?.isPinned
-
-        if (hasSameConversationIds && hasPinStateChange) {
-            when {
-                wasAtStart -> {
-                    listState.requestScrollToItem(index = 0)
-                }
-
-                previousFirstVisibleIndex >= 0 && firstVisibleItemPinChanged -> {
-                    listState.requestScrollToItem(
-                        index = previousFirstVisibleIndex,
-                        scrollOffset = listState.firstVisibleItemScrollOffset,
-                    )
-                }
+            .firstOrNull { visibleItem ->
+                visibleItem.index == listState.firstVisibleItemIndex
             }
+            ?.key as? String
+
+        val scrollRequest = resolvePinChangeScrollRequest(
+            previousItems = previousItems,
+            currentItems = items,
+            firstVisibleConversationId = firstVisibleConversationId,
+            firstVisibleItemIndex = listState.firstVisibleItemIndex,
+            firstVisibleItemScrollOffset = listState.firstVisibleItemScrollOffset,
+        )
+
+        if (scrollRequest != null) {
+            listState.requestScrollToItem(
+                index = scrollRequest.index,
+                scrollOffset = scrollRequest.scrollOffset,
+            )
         }
 
         previousItemsState.value = items
     }
+}
+
+internal data class ConversationListScrollRequest(
+    val index: Int,
+    val scrollOffset: Int,
+)
+
+internal fun resolvePinChangeScrollRequest(
+    previousItems: List<ConversationListItemUiModel>,
+    currentItems: List<ConversationListItemUiModel>,
+    firstVisibleConversationId: String?,
+    firstVisibleItemIndex: Int,
+    firstVisibleItemScrollOffset: Int,
+): ConversationListScrollRequest? {
+    val currentItemsById = currentItems.associateBy(ConversationListItemUiModel::conversationId)
+
+    if (!hasPinReorder(previousItems, currentItemsById)) {
+        return null
+    }
+
+    return when {
+        firstVisibleItemIndex == 0 && firstVisibleItemScrollOffset == 0 -> {
+            ConversationListScrollRequest(
+                index = 0,
+                scrollOffset = 0,
+            )
+        }
+
+        else -> resolveAnchorScrollRequest(
+            previousItems = previousItems,
+            currentItemsById = currentItemsById,
+            firstVisibleConversationId = firstVisibleConversationId,
+            firstVisibleItemScrollOffset = firstVisibleItemScrollOffset,
+        )
+    }
+}
+
+private fun hasPinReorder(
+    previousItems: List<ConversationListItemUiModel>,
+    currentItemsById: Map<String, ConversationListItemUiModel>,
+): Boolean {
+    val hasSameConversationIds = previousItems.size == currentItemsById.size &&
+        previousItems.all { item -> item.conversationId in currentItemsById }
+
+    return hasSameConversationIds && previousItems.any { previousItem ->
+        currentItemsById.getValue(previousItem.conversationId).isPinned != previousItem.isPinned
+    }
+}
+
+private fun resolveAnchorScrollRequest(
+    previousItems: List<ConversationListItemUiModel>,
+    currentItemsById: Map<String, ConversationListItemUiModel>,
+    firstVisibleConversationId: String?,
+    firstVisibleItemScrollOffset: Int,
+): ConversationListScrollRequest? {
+    val previousFirstVisibleIndex = previousItems.indexOfFirst { item ->
+        item.conversationId == firstVisibleConversationId
+    }
+    val previousFirstVisibleItem = previousItems.getOrNull(previousFirstVisibleIndex)
+    val currentFirstVisibleItem = previousFirstVisibleItem
+        ?.let { currentItemsById[it.conversationId] }
+
+    val hasAnchorPinChange = previousFirstVisibleItem != null &&
+        currentFirstVisibleItem != null &&
+        previousFirstVisibleItem.isPinned != currentFirstVisibleItem.isPinned
+
+    return ConversationListScrollRequest(
+        index = previousFirstVisibleIndex,
+        scrollOffset = firstVisibleItemScrollOffset,
+    ).takeIf { hasAnchorPinChange }
 }
 
 private fun Modifier.conversationItemAnimation(
@@ -331,7 +382,12 @@ private fun Modifier.conversationItemAnimation(
     animatePlacement: Boolean,
 ): Modifier = with(lazyItemScope) {
     this@conversationItemAnimation
-        .zIndex(if (isPinned) PINNED_ITEM_Z_INDEX else 0f)
+        .zIndex(
+            when {
+                isPinned -> PINNED_ITEM_Z_INDEX
+                else -> 0f
+            },
+        )
         .animateItem(
             fadeInSpec = null,
             fadeOutSpec = null,
@@ -340,7 +396,7 @@ private fun Modifier.conversationItemAnimation(
 }
 
 @Composable
-private fun ConversationListMessage(text: String) {
+private fun ConversationListStatusMessage(text: String) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -364,9 +420,9 @@ private fun ConversationListContentEmptyPreview() {
             content = ConversationListContentUiState.Empty,
             listState = rememberLazyListState(),
             onAction = {},
-            contentPadding = PaddingValues(),
+            scaffoldContentPadding = PaddingValues(),
             isSelectionMode = false,
-            bottomReserve = 0.dp,
+            fabBottomReserve = 0.dp,
             pinAnimationController = null,
         )
     }
@@ -380,9 +436,9 @@ private fun ConversationListContentWaitingForSyncPreview() {
             content = ConversationListContentUiState.WaitingForSync,
             listState = rememberLazyListState(),
             onAction = {},
-            contentPadding = PaddingValues(),
+            scaffoldContentPadding = PaddingValues(),
             isSelectionMode = false,
-            bottomReserve = 0.dp,
+            fabBottomReserve = 0.dp,
             pinAnimationController = null,
         )
     }
@@ -398,9 +454,9 @@ private fun ConversationListContentItemsPreview() {
             ),
             listState = rememberLazyListState(),
             onAction = {},
-            contentPadding = PaddingValues(),
+            scaffoldContentPadding = PaddingValues(),
             isSelectionMode = false,
-            bottomReserve = 0.dp,
+            fabBottomReserve = 0.dp,
             pinAnimationController = null,
         )
     }
