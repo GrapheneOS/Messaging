@@ -28,7 +28,7 @@ class ConversationListActivity : BugleComponentActivity() {
             AppTheme {
                 val hostView = LocalView.current
                 val effectHandler = remember(hostView) {
-                    ConversationListActivityEffectHandler(
+                    ConversationListEffectHandlerImpl(
                         activity = this,
                         hostView = hostView,
                     )

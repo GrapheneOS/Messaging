@@ -5,9 +5,8 @@ import dagger.Reusable
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentMap
+import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.collections.immutable.toPersistentMap
-import kotlinx.collections.immutable.toPersistentSet
 
 @Reusable
 internal class ConversationListOptimisticReducer @Inject constructor() {
@@ -20,17 +19,18 @@ internal class ConversationListOptimisticReducer @Inject constructor() {
             return items
         }
 
-        val restoredItems = overrides.restoringById
-            .filterKeys { conversationId ->
-                items.none { it.conversationId == conversationId }
-            }
-            .values
-            .map(RestoringConversation::item)
+        val currentIds = items.mapTo(mutableSetOf()) { it.conversationId }
+        val restoredItems = overrides.archiveById.mapNotNull { (conversationId, override) ->
+            val restoring = override as? ConversationArchiveOverride.Restoring
+                ?: return@mapNotNull null
+
+            restoring.item.takeIf { conversationId !in currentIds }
+        }
 
         val overridden = (items + restoredItems)
             .asSequence()
             .filterNot { item ->
-                item.conversationId in overrides.archivedIds
+                overrides.archiveById[item.conversationId] is ConversationArchiveOverride.Archived
             }
             .map { item ->
                 item.withOverrides(overrides)
@@ -54,77 +54,83 @@ internal class ConversationListOptimisticReducer @Inject constructor() {
         }
 
         val itemsById = items.associateBy(ConversationListItem::conversationId)
-        val restoringById = overrides.restoringById.pruneRestoring(itemsById)
+        val archiveById = overrides.archiveById.pruneArchiveOverrides(itemsById)
+        val restoringIds = archiveById
+            .filterValues { override ->
+                override is ConversationArchiveOverride.Restoring
+            }
+            .keys
 
         val readById = overrides.readById
             .pruneStaleOverrides(
                 itemsById = itemsById,
-                restoringById = restoringById,
-            ) { item, isRead ->
-                item.latestMessage.isRead != isRead
-            }
-
-        val archivedIds = overrides.archivedIds
-            .filter { conversationId ->
-                conversationId in itemsById
-            }
-            .toPersistentSet()
-
-        val archivedItemsById = overrides.archivedItemsById
-            .filterKeys { conversationId ->
-                conversationId in archivedIds || conversationId in restoringById
-            }
-            .toPersistentMap()
+                restoringIds = restoringIds,
+                isStillPending = { item, isRead ->
+                    item.latestMessage.isRead != isRead
+                },
+            )
 
         val pinnedById = overrides.pinnedById
             .pruneStaleOverrides(
                 itemsById = itemsById,
-                restoringById = restoringById,
-            ) { item, isPinned ->
-                item.isPinned != isPinned
-            }
+                restoringIds = restoringIds,
+                isStillPending = { item, isPinned ->
+                    item.isPinned != isPinned
+                },
+            )
 
         return ConversationListOptimisticOverrides(
-            archivedIds = archivedIds,
-            archivedItemsById = archivedItemsById,
-            restoringById = restoringById,
+            archiveById = archiveById,
             readById = readById,
             pinnedById = pinnedById,
         )
     }
 
-    private fun PersistentMap<String, RestoringConversation>.pruneRestoring(
+    private fun PersistentMap<String, ConversationArchiveOverride>.pruneArchiveOverrides(
         itemsById: Map<String, ConversationListItem>,
-    ): PersistentMap<String, RestoringConversation> {
-        return mapNotNull { (conversationId, restoring) ->
-            when {
-                conversationId !in itemsById -> {
-                    conversationId to restoring.copy(
-                        hasObservedArchivedSnapshot = true,
-                    )
+    ): PersistentMap<String, ConversationArchiveOverride> {
+        return mutate { archiveOverrides ->
+            forEach { (conversationId, override) ->
+                when (override) {
+                    is ConversationArchiveOverride.Archived -> Unit
+
+                    is ConversationArchiveOverride.Restoring -> {
+                        when {
+                            conversationId !in itemsById -> {
+                                archiveOverrides[conversationId] = override.copy(
+                                    awaitingRemoval = false,
+                                )
+                            }
+
+                            !override.awaitingRemoval -> {
+                                archiveOverrides.remove(conversationId)
+                            }
+                        }
+                    }
                 }
-
-                restoring.hasObservedArchivedSnapshot -> null
-
-                else -> conversationId to restoring
             }
-        }.toMap().toPersistentMap()
+        }
     }
 
     private fun <V> PersistentMap<String, V>.pruneStaleOverrides(
         itemsById: Map<String, ConversationListItem>,
-        restoringById: PersistentMap<String, RestoringConversation>,
+        restoringIds: Set<String>,
         isStillPending: (item: ConversationListItem, override: V) -> Boolean,
     ): PersistentMap<String, V> {
-        return filter { (conversationId, override) ->
-            val item = itemsById[conversationId]
+        return mutate { retainedOverrides ->
+            forEach { (conversationId, override) ->
+                val item = itemsById[conversationId]
+                val shouldRetain = when {
+                    item != null -> isStillPending(item, override)
+                    conversationId in restoringIds -> true
+                    else -> false
+                }
 
-            when {
-                item != null -> isStillPending(item, override)
-                conversationId in restoringById -> true
-                else -> false
+                if (!shouldRetain) {
+                    retainedOverrides.remove(conversationId)
+                }
             }
-        }.toPersistentMap()
+        }
     }
 
     private fun ConversationListItem.withOverrides(

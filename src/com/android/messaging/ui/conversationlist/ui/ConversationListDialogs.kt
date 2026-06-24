@@ -30,8 +30,8 @@ internal fun ConversationListDialogs(
         ConversationListAddContactDialog(
             destination = destination,
             onConfirm = {
-                onDismissAddContact()
                 onAction(Action.AddContactConfirmed(destination))
+                onDismissAddContact()
             },
             onDismiss = onDismissAddContact,
         )
@@ -41,8 +41,8 @@ internal fun ConversationListDialogs(
         ConversationListDeleteDialog(
             selectedCount = selectedCount,
             onConfirm = {
-                onDismissDelete()
                 onAction(Action.DeleteConfirmed)
+                onDismissDelete()
             },
             onDismiss = onDismissDelete,
         )
@@ -52,13 +52,13 @@ internal fun ConversationListDialogs(
         ConversationListBlockDialog(
             destination = blockDestination,
             onConfirm = {
-                onDismissBlock()
                 onAction(
                     Action.BlockConfirmed(
                         conversationId = blockConversationId,
                         destination = blockDestination,
                     ),
                 )
+                onDismissBlock()
             },
             onDismiss = onDismissBlock,
         )

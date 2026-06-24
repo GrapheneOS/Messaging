@@ -170,13 +170,9 @@ internal class OverlayReorderAnimationController<T, K : Any>(
         val animationIndex = animations.indexOfFirst { animation ->
             animation.animationId == animationId
         }
+        val animation = animations.getOrNull(animationIndex)
 
-        if (animationIndex < 0) {
-            return null
-        }
-
-        val animation = animations[animationIndex]
-        if (!animation.isCommitted || animation.isStarted) {
+        if (animation == null || !animation.isCommitted || animation.isStarted) {
             return null
         }
 

@@ -36,6 +36,10 @@ internal sealed interface ConversationListAction {
         val isArchived: Boolean,
     ) : SnackbarAction
 
+    data class ArchiveSnackbarDismissed(
+        val conversationIds: ImmutableList<String>,
+    ) : SnackbarAction
+
     data class BlockUndoClicked(
         val conversationId: String,
         val destination: String,

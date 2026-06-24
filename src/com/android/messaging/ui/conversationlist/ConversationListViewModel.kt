@@ -18,15 +18,15 @@ import com.android.messaging.ui.conversationlist.model.ConversationListUiState a
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 
 internal interface ConversationListScreenModel {
@@ -52,9 +52,9 @@ internal class ConversationListViewModel @Inject constructor(
 
     private val snapshot: StateFlow<ConversationListSnapshot?> = optimisticSnapshotDelegate.snapshot
 
-    private val _effects = MutableSharedFlow<Effect>(extraBufferCapacity = 1)
+    private val _effects = Channel<Effect>(Channel.BUFFERED)
     override val effects: Flow<Effect> = merge(
-        _effects.asSharedFlow(),
+        _effects.receiveAsFlow(),
         actionsDelegate.effects,
     )
 
@@ -84,7 +84,7 @@ internal class ConversationListViewModel @Inject constructor(
         )
         selectionDelegate.bind(
             scope = viewModelScope,
-            snapshotFlow = snapshot,
+            snapshot = snapshot,
         )
         actionsDelegate.bind(
             scope = viewModelScope,
@@ -118,12 +118,15 @@ internal class ConversationListViewModel @Inject constructor(
             is Action.DeleteConfirmed -> {
                 onDeleteConfirmed()
             }
-
         }
     }
 
     private fun onSnackbarAction(action: Action.SnackbarAction) {
         when (action) {
+            is Action.ArchiveSnackbarDismissed -> {
+                optimisticSnapshotDelegate.discardArchived(action.conversationIds)
+            }
+
             is Action.ArchiveUndoClicked -> {
                 onArchiveUndoClicked(
                     conversationIds = action.conversationIds,
@@ -143,7 +146,7 @@ internal class ConversationListViewModel @Inject constructor(
     private fun onAddContactConfirmed(destination: String) {
         val resolvedDestination = destination.takeIf(String::isNotBlank) ?: return
 
-        _effects.tryEmit(Effect.OpenAddContact(resolvedDestination))
+        _effects.trySend(Effect.OpenAddContact(resolvedDestination))
         selectionDelegate.clear()
     }
 
@@ -159,7 +162,7 @@ internal class ConversationListViewModel @Inject constructor(
     }
 
     private fun onDeleteConfirmed() {
-        val selectedItems = selectionDelegate.currentSelectedItems()
+        val selectedItems = currentSelectedItems()
 
         if (selectedItems.isEmpty()) {
             return
@@ -197,11 +200,11 @@ internal class ConversationListViewModel @Inject constructor(
     private fun onListAction(action: Action.ListAction) {
         when (action) {
             is Action.AvatarMessageClicked -> {
-                _effects.tryEmit(Effect.OpenConversation(action.conversationId))
+                _effects.trySend(Effect.OpenConversation(action.conversationId))
             }
 
             is Action.AvatarCallClicked -> {
-                _effects.tryEmit(Effect.PlaceCall(action.destination))
+                _effects.trySend(Effect.PlaceCall(action.destination))
             }
 
             is Action.ConversationClicked -> {
@@ -221,7 +224,7 @@ internal class ConversationListViewModel @Inject constructor(
             }
 
             is Action.AvatarInfoClicked -> {
-                _effects.tryEmit(Effect.OpenConversationSettings(action.conversationId))
+                _effects.trySend(Effect.OpenConversationSettings(action.conversationId))
             }
 
             is Action.ConversationSwipedToArchive -> {
@@ -235,36 +238,34 @@ internal class ConversationListViewModel @Inject constructor(
     }
 
     private fun onConversationClick(conversationId: String) {
-        val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
-
         when {
-            selectionDelegate.isSelectionActive() -> {
-                selectionDelegate.toggle(resolvedConversationId)
+            currentSelectedItems().isNotEmpty() -> {
+                selectionDelegate.toggle(conversationId)
             }
 
             else -> {
-                _effects.tryEmit(Effect.OpenConversation(resolvedConversationId))
+                _effects.trySend(Effect.OpenConversation(conversationId))
             }
         }
     }
 
     private fun onConversationLongClick(conversationId: String) {
-        val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
-
-        selectionDelegate.toggle(resolvedConversationId)
+        selectionDelegate.toggle(conversationId)
     }
 
     private fun onNewestConversationVisibilityChanged(isVisible: Boolean) {
-        if (isScrollToTopVisible.value == !isVisible) {
+        val shouldShowScrollToTop = !isVisible
+
+        if (isScrollToTopVisible.value == shouldShowScrollToTop) {
             return
         }
 
-        isScrollToTopVisible.value = !isVisible
+        isScrollToTopVisible.value = shouldShowScrollToTop
         repository.setNewestConversationVisible(isVisible)
     }
 
     private fun onAvatarContactClick(avatar: ConversationListAvatarUiModel) {
-        _effects.tryEmit(
+        _effects.trySend(
             Effect.ShowOrAddContact(
                 contactId = avatar.contactId,
                 lookupKey = avatar.lookupKey,
@@ -275,8 +276,7 @@ internal class ConversationListViewModel @Inject constructor(
     }
 
     private fun onConversationSwipedToArchive(conversationId: String) {
-        val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
-        val conversationIds = listOf(resolvedConversationId)
+        val conversationIds = listOf(conversationId)
 
         optimisticSnapshotDelegate.archive(conversationIds)
         actionsDelegate.setArchived(
@@ -287,11 +287,10 @@ internal class ConversationListViewModel @Inject constructor(
     }
 
     private fun onConversationSwipedToToggleRead(conversationId: String) {
-        val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
-        val item = itemById(resolvedConversationId) ?: return
+        val item = itemById(conversationId) ?: return
 
         val shouldMarkRead = !item.latestMessage.isRead
-        val conversationIds = listOf(resolvedConversationId)
+        val conversationIds = listOf(conversationId)
 
         optimisticSnapshotDelegate.markRead(
             conversationIds = conversationIds,
@@ -306,27 +305,27 @@ internal class ConversationListViewModel @Inject constructor(
     private fun onNavigationAction(action: Action.NavigationAction) {
         when (action) {
             Action.ArchivedConversationsClicked -> {
-                _effects.tryEmit(Effect.OpenArchivedConversations)
+                _effects.trySend(Effect.OpenArchivedConversations)
             }
 
             Action.BlockedParticipantsClicked -> {
-                _effects.tryEmit(Effect.OpenBlockedParticipants)
+                _effects.trySend(Effect.OpenBlockedParticipants)
             }
 
             Action.DebugOptionsClicked -> {
-                _effects.tryEmit(Effect.OpenDebugOptions)
+                _effects.trySend(Effect.OpenDebugOptions)
             }
 
             Action.ScrollToTopClicked -> {
-                _effects.tryEmit(Effect.ScrollToTop)
+                _effects.trySend(Effect.ScrollToTop)
             }
 
             Action.SettingsClicked -> {
-                _effects.tryEmit(Effect.OpenSettings)
+                _effects.trySend(Effect.OpenSettings)
             }
 
             Action.StartChatClicked -> {
-                _effects.tryEmit(Effect.StartChat)
+                _effects.trySend(Effect.StartChat)
             }
         }
     }
@@ -385,7 +384,7 @@ internal class ConversationListViewModel @Inject constructor(
     private fun onAddContactClick() {
         val destination = singleSelectedDestination() ?: return
 
-        _effects.tryEmit(Effect.ConfirmAddContact(destination))
+        _effects.trySend(Effect.ConfirmAddContact(destination))
     }
 
     private fun onArchiveClick() {
@@ -404,7 +403,7 @@ internal class ConversationListViewModel @Inject constructor(
         val selectedItem = singleSelectedItem() ?: return
         val destination = singleSelectedDestination() ?: return
 
-        _effects.tryEmit(
+        _effects.trySend(
             Effect.ConfirmBlock(
                 conversationId = selectedItem.conversationId,
                 destination = destination,
@@ -428,7 +427,7 @@ internal class ConversationListViewModel @Inject constructor(
 
     private fun onPinClick(isPinned: Boolean) {
         withSelectedIds { conversationIds ->
-            _effects.tryEmit(
+            _effects.trySend(
                 Effect.PreparePinAnimation(
                     conversationIds = conversationIds.toImmutableList(),
                     isPinned = isPinned,
@@ -470,7 +469,7 @@ internal class ConversationListViewModel @Inject constructor(
     }
 
     private inline fun withSelectedIds(block: (List<String>) -> Unit) {
-        val selectedItems = selectionDelegate.currentSelectedItems()
+        val selectedItems = currentSelectedItems()
 
         if (selectedItems.isEmpty()) {
             return
@@ -486,7 +485,18 @@ internal class ConversationListViewModel @Inject constructor(
     }
 
     private fun singleSelectedItem(): ConversationListItem? {
-        return selectionDelegate.currentSelectedItems().singleOrNull()
+        return currentSelectedItems().singleOrNull()
+    }
+
+    private fun currentSelectedItems(): List<ConversationListItem> {
+        val currentSelectedIds = selectionDelegate.selectedIds.value
+
+        return snapshot.value
+            ?.items
+            .orEmpty()
+            .filter { item ->
+                item.conversationId in currentSelectedIds
+            }
     }
 
     private fun singleSelectedDestination(): String? {

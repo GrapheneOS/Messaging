@@ -114,27 +114,16 @@ internal fun ConversationListScreen(
         },
     )
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .onGloballyPositioned { coordinates ->
-                pinAnimationController.updateContainerBounds(coordinates.boundsInRoot())
-            },
-    ) {
-        ConversationListScaffold(
-            uiState = uiState,
-            listState = listState,
-            snackbarHostState = snackbarHostState,
-            pinAnimationController = pinAnimationController,
-            onAction = screenModel::onAction,
-            onDeleteClick = { pendingDelete = true },
-            onSnoozeClick = { pendingSnooze = true },
-            onScrollToTop = { screenModel.onAction(Action.ScrollToTopClicked) },
-            modifier = Modifier.fillMaxSize(),
-        )
-
-        ConversationListPinOverlay(pinAnimationController)
-    }
+    ConversationListScaffoldWithPinOverlay(
+        uiState = uiState,
+        listState = listState,
+        snackbarHostState = snackbarHostState,
+        pinAnimationController = pinAnimationController,
+        onAction = screenModel::onAction,
+        onDeleteClick = { pendingDelete = true },
+        onSnoozeClick = { pendingSnooze = true },
+        modifier = modifier.fillMaxSize(),
+    )
 
     ConversationListDialogs(
         selectedCount = uiState.selection.selectedCount,
@@ -152,6 +141,40 @@ internal fun ConversationListScreen(
         },
         onDismissSnooze = { pendingSnooze = false },
     )
+}
+
+@Composable
+private fun ConversationListScaffoldWithPinOverlay(
+    uiState: State,
+    listState: LazyListState,
+    snackbarHostState: SnackbarHostState,
+    pinAnimationController: OverlayReorderAnimationController<ConversationListItemUiModel, String>,
+    onAction: (Action) -> Unit,
+    onDeleteClick: () -> Unit,
+    onSnoozeClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .onGloballyPositioned { coordinates ->
+                pinAnimationController.updateContainerBounds(coordinates.boundsInRoot())
+            },
+    ) {
+        ConversationListScaffold(
+            uiState = uiState,
+            listState = listState,
+            snackbarHostState = snackbarHostState,
+            pinAnimationController = pinAnimationController,
+            onAction = onAction,
+            onDeleteClick = onDeleteClick,
+            onSnoozeClick = onSnoozeClick,
+            onScrollToTop = { onAction(Action.ScrollToTopClicked) },
+            modifier = Modifier.fillMaxSize(),
+        )
+
+        ConversationListPinOverlay(pinAnimationController)
+    }
 }
 
 @Composable
@@ -296,6 +319,12 @@ private fun CoroutineScope.launchArchivedSnackbar(
                     isArchived = effect.isArchived,
                 ),
             )
+        } else {
+            onAction(
+                Action.ArchiveSnackbarDismissed(
+                    conversationIds = effect.conversationIds,
+                ),
+            )
         }
     }
 }
@@ -386,9 +415,9 @@ private fun ConversationListScaffold(
                 content = uiState.content,
                 listState = listState,
                 onAction = onAction,
-                contentPadding = contentPadding,
+                scaffoldContentPadding = contentPadding,
                 isSelectionMode = isSelectionMode,
-                bottomReserve = FabBottomReserve,
+                fabBottomReserve = FabBottomReserve,
                 pinAnimationController = pinAnimationController,
             )
 

@@ -27,6 +27,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -147,9 +148,7 @@ private fun SelectionOverflowMenu(
     actions: SelectionActionsUiState,
     onAction: (Action) -> Unit,
 ) {
-    var isExpanded by remember {
-        mutableStateOf(value = false)
-    }
+    var isExpanded by remember { mutableStateOf(false) }
 
     Box {
         IconButton(onClick = { isExpanded = true }) {
@@ -219,7 +218,7 @@ private fun SelectionMenuItem(
 
 @Composable
 private fun SelectionActionButton(
-    imageVector: androidx.compose.ui.graphics.vector.ImageVector,
+    imageVector: ImageVector,
     labelResId: Int,
     onClick: () -> Unit,
 ) {
