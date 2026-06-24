@@ -289,6 +289,11 @@ private fun KeepViewportStationaryOnPinChange(
         val hasSameConversationIds = previousItems.size == items.size && previousItems.all { item ->
             item.conversationId in currentItemsById
         }
+        val hasPinStateChange = previousItems.any { previousItem ->
+            currentItemsById[previousItem.conversationId]?.isPinned != previousItem.isPinned
+        }
+        val wasAtStart = listState.firstVisibleItemIndex == 0 &&
+            listState.firstVisibleItemScrollOffset == 0
         val firstVisibleConversationId = listState.layoutInfo
             .visibleItemsInfo
             .firstOrNull()
@@ -301,15 +306,19 @@ private fun KeepViewportStationaryOnPinChange(
         val firstVisibleItemPinChanged = previousFirstVisibleItem?.isPinned !=
             currentFirstVisibleItem?.isPinned
 
-        if (
-            hasSameConversationIds &&
-            previousFirstVisibleIndex >= 0 &&
-            firstVisibleItemPinChanged
-        ) {
-            listState.requestScrollToItem(
-                index = previousFirstVisibleIndex,
-                scrollOffset = listState.firstVisibleItemScrollOffset,
-            )
+        if (hasSameConversationIds && hasPinStateChange) {
+            when {
+                wasAtStart -> {
+                    listState.requestScrollToItem(index = 0)
+                }
+
+                previousFirstVisibleIndex >= 0 && firstVisibleItemPinChanged -> {
+                    listState.requestScrollToItem(
+                        index = previousFirstVisibleIndex,
+                        scrollOffset = listState.firstVisibleItemScrollOffset,
+                    )
+                }
+            }
         }
 
         previousItemsState.value = items

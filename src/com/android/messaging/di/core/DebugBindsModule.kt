@@ -10,7 +10,7 @@ import dagger.hilt.components.SingletonComponent
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal abstract class CoreBindsModule {
+internal abstract class DebugBindsModule {
 
     @Binds
     @Reusable

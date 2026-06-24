@@ -11,6 +11,7 @@ import com.android.messaging.data.conversationlist.model.ConversationListNotific
 import com.android.messaging.data.conversationlist.model.ConversationListParticipant
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.data.conversationlist.store.ConversationListStatusStore
+import com.android.messaging.data.conversationsettings.model.SNOOZE_NEVER_EXPIRES
 import com.android.messaging.data.conversationsettings.model.SnoozeOption
 import com.android.messaging.data.conversationsettings.repository.ConversationNotificationRepository
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
@@ -113,33 +114,54 @@ internal class ConversationListRepositoryImpl @Inject constructor(
     ): Flow<ImmutableList<ConversationListItem>> {
         return flow {
             while (true) {
-                val now = System.currentTimeMillis()
-                val resolved = items
-                    .map { item ->
-                        val snoozedUntilMillis = notificationRepository
-                            .getSnoozeUntilMillis(item.conversationId)
-                            .takeIf { it > now }
-                            ?: ConversationListNotification.SNOOZE_NOT_SET
-
-                        item.copy(
-                            notification = item.notification.copy(
-                                snoozedUntilMillis = snoozedUntilMillis,
-                            ),
-                        )
-                    }
-                    .toImmutableList()
+                val nowMillis = System.currentTimeMillis()
+                val resolved = resolveSnoozeState(
+                    items = items,
+                    nowMillis = nowMillis,
+                )
 
                 emit(resolved)
 
-                val nextExpiryMillis = resolved
-                    .map { it.notification.snoozedUntilMillis }
-                    .filter { expiry -> expiry > now && expiry != SNOOZE_NEVER_EXPIRES }
-                    .minOrNull()
-                    ?: break
+                val nextExpiryMillis = nextFiniteSnoozeExpiryMillis(
+                    items = resolved,
+                    nowMillis = nowMillis,
+                ) ?: break
 
-                delay(nextExpiryMillis - now)
+                delay(nextExpiryMillis - nowMillis)
             }
         }
+    }
+
+    private fun resolveSnoozeState(
+        items: ImmutableList<ConversationListItem>,
+        nowMillis: Long,
+    ): ImmutableList<ConversationListItem> {
+        return items
+            .map { item ->
+                val snoozedUntilMillis = notificationRepository
+                    .getSnoozeUntilMillis(item.conversationId)
+                    .takeIf { it > nowMillis }
+                    ?: ConversationListNotification.SNOOZE_NOT_SET
+
+                item.copy(
+                    notification = item.notification.copy(
+                        snoozedUntilMillis = snoozedUntilMillis,
+                    ),
+                )
+            }
+            .toImmutableList()
+    }
+
+    private fun nextFiniteSnoozeExpiryMillis(
+        items: ImmutableList<ConversationListItem>,
+        nowMillis: Long,
+    ): Long? {
+        return items
+            .map { item -> item.notification.snoozedUntilMillis }
+            .filter { expiryMillis ->
+                expiryMillis > nowMillis && expiryMillis != SNOOZE_NEVER_EXPIRES
+            }
+            .minOrNull()
     }
 
     private fun observeUri(uri: Uri): Flow<Unit> {
@@ -202,9 +224,7 @@ internal class ConversationListRepositoryImpl @Inject constructor(
     }
 
     private fun ConversationListItemData.toConversationListItem(): ConversationListItem? {
-        val resolvedConversationId = conversationId
-            ?.takeIf(String::isNotBlank)
-            ?: return null
+        val resolvedConversationId = conversationId?.takeIf(String::isNotBlank) ?: return null
 
         return ConversationListItem(
             conversationId = resolvedConversationId,
@@ -227,10 +247,7 @@ internal class ConversationListRepositoryImpl @Inject constructor(
             contactId = participantContactId,
             lookupKey = participantLookupKey,
             otherNormalizedDestination = otherParticipantNormalizedDestination,
-            selfId = selfId,
-            count = participantCount,
             isGroup = isGroup,
-            includeEmailAddress = includeEmailAddress,
             isEnterprise = isEnterprise,
         )
     }
@@ -295,8 +312,6 @@ internal class ConversationListRepositoryImpl @Inject constructor(
     }
 
     private companion object {
-        private const val SNOOZE_NEVER_EXPIRES = Long.MAX_VALUE
-
         private val BLOCKED_PARTICIPANTS_PROJECTION = arrayOf(
             ParticipantColumns._ID,
             ParticipantColumns.NORMALIZED_DESTINATION,

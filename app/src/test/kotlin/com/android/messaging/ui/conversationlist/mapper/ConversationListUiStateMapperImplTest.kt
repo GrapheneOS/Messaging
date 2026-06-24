@@ -7,6 +7,7 @@ import com.android.messaging.data.conversationlist.model.ConversationListMessage
 import com.android.messaging.data.conversationlist.model.ConversationListNotification
 import com.android.messaging.data.conversationlist.model.ConversationListParticipant
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
+import com.android.messaging.data.conversationsettings.model.SNOOZE_NEVER_EXPIRES
 import com.android.messaging.domain.conversation.usecase.avatar.ResolveAvatarUri
 import com.android.messaging.domain.conversation.usecase.participant.CanAddContact
 import com.android.messaging.domain.conversation.usecase.participant.CanShowOrAddContact
@@ -176,10 +177,7 @@ class ConversationListUiStateMapperImplTest {
                 contactId = -1L,
                 lookupKey = null,
                 otherNormalizedDestination = "+1555000$conversationId",
-                selfId = null,
-                count = 1,
                 isGroup = false,
-                includeEmailAddress = false,
                 isEnterprise = false,
             ),
             latestMessage = ConversationListLatestMessage(
@@ -202,7 +200,7 @@ class ConversationListUiStateMapperImplTest {
             notification = ConversationListNotification(
                 isEnabled = true,
                 snoozedUntilMillis = when {
-                    isSnoozed -> Long.MAX_VALUE
+                    isSnoozed -> SNOOZE_NEVER_EXPIRES
                     else -> ConversationListNotification.SNOOZE_NOT_SET
                 },
             ),

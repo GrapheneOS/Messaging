@@ -7,6 +7,7 @@ import android.database.ContentObserver
 import android.net.Uri
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.data.conversationsettings.model.ConversationSettingsData
+import com.android.messaging.data.conversationsettings.model.SNOOZE_NEVER_EXPIRES
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.data.ConversationParticipantsData
 import com.android.messaging.datamodel.data.ParticipantData
@@ -66,7 +67,7 @@ internal class ConversationSettingsRepositoryImpl @Inject constructor(
     ): Flow<Unit> {
         return flow {
             val snoozeUntilMillis = notificationRepository.getSnoozeUntilMillis(conversationId)
-            if (snoozeUntilMillis == Long.MAX_VALUE) return@flow
+            if (snoozeUntilMillis == SNOOZE_NEVER_EXPIRES) return@flow
 
             val remaining = snoozeUntilMillis - System.currentTimeMillis()
             if (remaining <= 0L) return@flow

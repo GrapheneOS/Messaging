@@ -2,6 +2,7 @@ package com.android.messaging.data.conversationsettings.repository
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.android.messaging.data.conversationsettings.model.SNOOZE_NEVER_EXPIRES
 import com.android.messaging.data.conversationsettings.model.SnoozeOption
 import com.android.messaging.util.BuglePrefs
 import dagger.hilt.EntryPoint
@@ -69,7 +70,7 @@ internal class ConversationNotificationRepositoryImpl @Inject constructor(
     override fun snooze(conversationId: String, option: SnoozeOption) {
         val prefs = BuglePrefs.getApplicationPrefs()
         val untilMillis = when (option) {
-            SnoozeOption.Always -> Long.MAX_VALUE
+            SnoozeOption.Always -> SNOOZE_NEVER_EXPIRES
             else -> addSafely(System.currentTimeMillis(), option.duration.inWholeMilliseconds)
         }
         prefs.putLong(snoozeKey(conversationId), untilMillis)
@@ -91,7 +92,7 @@ internal class ConversationNotificationRepositoryImpl @Inject constructor(
         val result = base + delta
 
         return if (result < base) {
-            Long.MAX_VALUE
+            SNOOZE_NEVER_EXPIRES
         } else {
             result
         }

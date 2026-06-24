@@ -17,10 +17,7 @@ internal data class ConversationListParticipant(
     val contactId: Long,
     val lookupKey: String?,
     val otherNormalizedDestination: String?,
-    val selfId: String?,
-    val count: Int,
     val isGroup: Boolean,
-    val includeEmailAddress: Boolean,
     val isEnterprise: Boolean,
 )
 

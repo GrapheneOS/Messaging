@@ -39,10 +39,7 @@ internal fun conversationItem(
             contactId = -1L,
             lookupKey = null,
             otherNormalizedDestination = "+1555000$conversationId",
-            selfId = null,
-            count = 1,
             isGroup = false,
-            includeEmailAddress = false,
             isEnterprise = false,
         ),
         latestMessage = ConversationListLatestMessage(

@@ -20,7 +20,7 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -32,13 +32,22 @@ import androidx.compose.ui.zIndex
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
-private const val REORDER_OVERLAY_DURATION_MILLIS = 320
+private const val REORDER_OVERLAY_DURATION_MILLIS = 220
 
 private const val REORDER_OVERLAY_Z_INDEX = 10f
 
-private const val OFFSCREEN_FADE_DURATION_MILLIS = 120
+private const val OVERLAY_SHORT_PHASE_DURATION_MILLIS = 120
+
+private const val OVERLAY_REORDER_PEAK_SCALE = 1.05f
+
+private val OverlayReorderPeakElevation = 8.dp
+
+private const val TARGET_RESOLUTION_TIMEOUT_MILLIS = 250L
 
 @Stable
 internal class OverlayReorderAnimationController<T, K : Any>(
@@ -55,7 +64,7 @@ internal class OverlayReorderAnimationController<T, K : Any>(
     private val itemBoundsByKey = mutableMapOf<K, Rect>()
     private var nextAnimationId = 0L
 
-    internal var animations by mutableStateOf<List<OverlayReorderState<T>>>(emptyList())
+    internal var animations by mutableStateOf<List<OverlayReorderState<T, K>>>(emptyList())
         private set
 
     fun updateContainerBounds(bounds: Rect) {
@@ -157,12 +166,17 @@ internal class OverlayReorderAnimationController<T, K : Any>(
         }
     }
 
-    fun startAnimation(animationId: Long): OverlayReorderState<T>? {
+    fun startAnimation(animationId: Long): OverlayReorderState<T, K>? {
         val animationIndex = animations.indexOfFirst { animation ->
             animation.animationId == animationId
         }
 
         if (animationIndex < 0) {
+            return null
+        }
+
+        val animation = animations[animationIndex]
+        if (!animation.isCommitted || animation.isStarted) {
             return null
         }
 
@@ -173,7 +187,13 @@ internal class OverlayReorderAnimationController<T, K : Any>(
         return animations[animationIndex]
     }
 
-    fun fallbackTarget(animation: OverlayReorderState<T>): Rect {
+    fun currentAnimation(animationId: Long): OverlayReorderState<T, K>? {
+        return animations.firstOrNull { animation ->
+            animation.animationId == animationId
+        }
+    }
+
+    fun fallbackTarget(animation: OverlayReorderState<T, K>): Rect {
         return geometry.fallbackTarget(
             sourceBounds = animation.sourceBounds,
             anchorToTop = animation.anchorToTop,
@@ -190,7 +210,7 @@ internal class OverlayReorderAnimationController<T, K : Any>(
 
     private fun updateAnimationAt(
         index: Int,
-        transform: (OverlayReorderState<T>) -> OverlayReorderState<T>,
+        transform: (OverlayReorderState<T, K>) -> OverlayReorderState<T, K>,
     ) {
         animations = animations.toMutableList().apply {
             this[index] = transform(this[index])
@@ -198,9 +218,9 @@ internal class OverlayReorderAnimationController<T, K : Any>(
     }
 }
 
-internal data class OverlayReorderState<T>(
+internal data class OverlayReorderState<T, K : Any>(
     val animationId: Long,
-    val key: Any,
+    val key: K,
     val item: T,
     val sourceBounds: Rect,
     val sourceIndex: Int,
@@ -219,8 +239,8 @@ internal fun <T, K : Any> rememberOverlayReorderAnimationController(
 }
 
 @Composable
-internal fun <T> OverlayReorderAnimation(
-    controller: OverlayReorderAnimationController<T, *>,
+internal fun <T, K : Any> OverlayReorderAnimation(
+    controller: OverlayReorderAnimationController<T, K>,
     modifier: Modifier = Modifier,
     itemContent: @Composable (T) -> Unit,
 ) {
@@ -238,14 +258,14 @@ internal fun <T> OverlayReorderAnimation(
 }
 
 @Composable
-private fun <T> OverlayReorderItem(
-    animation: OverlayReorderState<T>,
-    controller: OverlayReorderAnimationController<T, *>,
+private fun <T, K : Any> OverlayReorderItem(
+    animation: OverlayReorderState<T, K>,
+    controller: OverlayReorderAnimationController<T, K>,
     itemContent: @Composable (T) -> Unit,
 ) {
     val density = LocalDensity.current
     val alpha = remember(animation.animationId) { Animatable(1f) }
-    val scale = remember(animation.animationId) { Animatable(1.05f) }
+    val scale = remember(animation.animationId) { Animatable(1f) }
     val position = remember(animation.animationId) {
         Animatable(animation.sourceBounds.topLeft, Offset.VectorConverter)
     }
@@ -275,19 +295,22 @@ private fun <T> OverlayReorderItem(
             .height(with(density) { animation.sourceBounds.height.toDp() })
             .zIndex(REORDER_OVERLAY_Z_INDEX)
             .graphicsLayer {
+                val scaleProgress = ((scale.value - 1f) / (OVERLAY_REORDER_PEAK_SCALE - 1f))
+                    .coerceIn(0f, 1f)
+
                 this.alpha = alpha.value
                 scaleX = scale.value
                 scaleY = scale.value
-                shadowElevation = 8.dp.toPx()
+                shadowElevation = OverlayReorderPeakElevation.toPx() * scaleProgress
             },
     ) {
         itemContent(animation.item)
     }
 }
 
-private suspend fun <T> runOverlayReorderAnimation(
-    controller: OverlayReorderAnimationController<T, *>,
-    animation: OverlayReorderState<T>,
+private suspend fun <T, K : Any> runOverlayReorderAnimation(
+    controller: OverlayReorderAnimationController<T, K>,
+    animation: OverlayReorderState<T, K>,
     position: Animatable<Offset, AnimationVector2D>,
     alpha: Animatable<Float, AnimationVector1D>,
     scale: Animatable<Float, AnimationVector1D>,
@@ -296,11 +319,19 @@ private suspend fun <T> runOverlayReorderAnimation(
         return
     }
 
-    withFrameNanos { }
+    val awaitedTargetBounds = withTimeoutOrNull(TARGET_RESOLUTION_TIMEOUT_MILLIS) {
+        snapshotFlow {
+            controller.currentAnimation(animation.animationId)?.targetBounds
+        }
+            .filterNotNull()
+            .first()
+    }
 
     val latestAnimation = controller.startAnimation(animation.animationId) ?: return
-    val targetBounds = latestAnimation.targetBounds ?: controller.fallbackTarget(latestAnimation)
-    val usesFallbackTarget = latestAnimation.targetBounds == null
+    val targetBounds = awaitedTargetBounds
+        ?: latestAnimation.targetBounds
+        ?: controller.fallbackTarget(latestAnimation)
+    val usesFallbackTarget = awaitedTargetBounds == null && latestAnimation.targetBounds == null
 
     val isAtTargetHorizontally =
         abs(targetBounds.left - animation.sourceBounds.left) <= TARGET_POSITION_EPSILON_PX
@@ -308,8 +339,12 @@ private suspend fun <T> runOverlayReorderAnimation(
         abs(targetBounds.top - animation.sourceBounds.top) <= TARGET_POSITION_EPSILON_PX
     val isAlreadyAtTarget = isAtTargetHorizontally && isAtTargetVertically
 
-    if (!isAlreadyAtTarget) {
-        coroutineScope {
+    coroutineScope {
+        launch {
+            animateOverlayScale(scale)
+        }
+
+        if (!isAlreadyAtTarget) {
             launch {
                 position.animateTo(
                     targetValue = targetBounds.topLeft,
@@ -328,24 +363,35 @@ private suspend fun <T> runOverlayReorderAnimation(
                     alpha.animateTo(
                         targetValue = 0f,
                         animationSpec = tween(
-                            durationMillis = OFFSCREEN_FADE_DURATION_MILLIS,
+                            durationMillis = OVERLAY_SHORT_PHASE_DURATION_MILLIS,
                             delayMillis = REORDER_OVERLAY_DURATION_MILLIS -
-                                OFFSCREEN_FADE_DURATION_MILLIS,
+                                OVERLAY_SHORT_PHASE_DURATION_MILLIS,
                         ),
                     )
                 }
-            }
-
-            launch {
-                scale.animateTo(
-                    targetValue = 1f,
-                    animationSpec = tween(
-                        durationMillis = REORDER_OVERLAY_DURATION_MILLIS,
-                    ),
-                )
             }
         }
     }
 
     controller.finish(animation.animationId)
+}
+
+private suspend fun animateOverlayScale(
+    scale: Animatable<Float, AnimationVector1D>,
+) {
+    scale.animateTo(
+        targetValue = OVERLAY_REORDER_PEAK_SCALE,
+        animationSpec = tween(
+            durationMillis = OVERLAY_SHORT_PHASE_DURATION_MILLIS,
+            easing = FastOutSlowInEasing,
+        ),
+    )
+    scale.animateTo(
+        targetValue = 1f,
+        animationSpec = tween(
+            durationMillis = REORDER_OVERLAY_DURATION_MILLIS -
+                OVERLAY_SHORT_PHASE_DURATION_MILLIS,
+            easing = FastOutSlowInEasing,
+        ),
+    )
 }

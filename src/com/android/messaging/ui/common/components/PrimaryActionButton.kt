@@ -17,6 +17,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.ui.core.MessagingPreviewColumn
@@ -44,6 +46,7 @@ internal fun PrimaryActionButton(
     testTag: String? = null,
     shape: Shape = PrimaryActionButtonShape,
 ) {
+    val isInteractionEnabled = enabled && !isLoading
     val colorScheme = MaterialTheme.colorScheme
     val containerColor = when {
         enabled -> colorScheme.primaryContainer
@@ -55,9 +58,15 @@ internal fun PrimaryActionButton(
     }
 
     ExtendedFloatingActionButton(
-        modifier = modifier.optionalTestTag(testTag),
+        modifier = modifier
+            .optionalTestTag(testTag)
+            .semantics {
+                if (!isInteractionEnabled) {
+                    disabled()
+                }
+            },
         onClick = {
-            if (enabled && !isLoading) {
+            if (isInteractionEnabled) {
                 onClick()
             }
         },
