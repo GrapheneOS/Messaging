@@ -21,7 +21,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-class ConversationPinStoreTest {
+internal class ConversationPinStoreTest {
 
     private val databaseWrapper = mockk<DatabaseWrapper>(relaxed = true)
     private val dataModel = mockk<DataModel>()

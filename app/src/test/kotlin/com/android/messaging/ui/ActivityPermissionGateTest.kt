@@ -10,7 +10,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.w3c.dom.Element
 
-class ActivityPermissionGateTest {
+internal class ActivityPermissionGateTest {
 
     private val applicationId = "com.android.messaging"
 
@@ -52,8 +52,9 @@ class ActivityPermissionGateTest {
         )
     }
 
-    private fun isGated(activityClass: Class<*>): Boolean =
-        gatingBases.any { base -> base.isAssignableFrom(activityClass) }
+    private fun isGated(activityClass: Class<*>): Boolean {
+        return gatingBases.any { base -> base.isAssignableFrom(activityClass) }
+    }
 
     private fun manifestActivityNames(): List<String> {
         val document = DocumentBuilderFactory.newInstance()
@@ -68,10 +69,12 @@ class ActivityPermissionGateTest {
             .map { name -> resolveClassName(name) }
     }
 
-    private fun resolveClassName(name: String): String = when {
-        name.startsWith(".") -> applicationId + name
-        !name.contains(".") -> "$applicationId.$name"
-        else -> name
+    private fun resolveClassName(name: String): String {
+        return when {
+            name.startsWith(".") -> applicationId + name
+            !name.contains(".") -> "$applicationId.$name"
+            else -> name
+        }
     }
 
     private fun manifestFile(): File {

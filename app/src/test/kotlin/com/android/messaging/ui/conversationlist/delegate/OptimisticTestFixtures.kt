@@ -7,16 +7,16 @@ import com.android.messaging.data.conversationlist.model.ConversationListMessage
 import com.android.messaging.data.conversationlist.model.ConversationListNotification
 import com.android.messaging.data.conversationlist.model.ConversationListParticipant
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
-import kotlinx.collections.immutable.toImmutableList
 
-internal fun snapshot(vararg conversationIds: String): ConversationListSnapshot {
-    return snapshot(*conversationIds.map { conversationItem(it) }.toTypedArray())
+internal fun snapshotOfIds(vararg conversationIds: String): ConversationListSnapshot {
+    return snapshotOfItems(*conversationIds.map(::conversationItem).toTypedArray())
 }
 
-internal fun snapshot(vararg items: ConversationListItem): ConversationListSnapshot {
+internal fun snapshotOfItems(vararg items: ConversationListItem): ConversationListSnapshot {
     return ConversationListSnapshot(
-        items = items.toList().toImmutableList(),
+        items = persistentListOf(*items),
         blockedDestinations = persistentSetOf(),
         hasFirstSyncCompleted = true,
     )
