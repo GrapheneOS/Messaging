@@ -60,6 +60,15 @@
         <item name="android:background">@android:color/white</item>
     </style>
 
+    <style name="BugleTheme.SmsStorageLowWarningActivity" parent="BugleBaseTheme">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:windowDisablePreview">true</item>
+    </style>
+
     <style name="BugleTheme.ConversationListActivity" parent="BugleTheme">
         <item name="android:windowBackground">@android:color/background_light</item>
     </style>

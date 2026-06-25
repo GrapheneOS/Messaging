@@ -396,9 +396,8 @@
                   android:excludeFromRecents="true">
         </activity>
 
-        <activity android:name=".ui.SmsStorageLowWarningActivity"
-                  android:theme="@style/Translucent"
-                  android:configChanges="orientation|screenSize|keyboardHidden" />
+        <activity android:name=".ui.smsstoragelow.SmsStorageLowWarningActivity"
+                  android:theme="@style/BugleTheme.SmsStorageLowWarningActivity" />
 
         <receiver android:name=".receiver.StorageStatusReceiver"
             android:exported="true">
