@@ -356,7 +356,7 @@ public class DebugUtils {
     /**
      * Load MMS/SMS from the dump file
      */
-    public static SmsMessage[] retreiveSmsFromDumpFile(final String dumpFileName) {
+    public static SmsMessage[] retrieveSmsFromDumpFile(final String dumpFileName) {
         SmsMessage[] messages = null;
         final File inputFile = DebugUtils.getDebugFile(dumpFileName, false);
         if (inputFile != null) {
