@@ -4,9 +4,12 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import com.android.messaging.R
 import com.android.messaging.ui.appsettings.screen.SettingsScreenModel
 import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
@@ -151,6 +154,7 @@ class SubscriptionSettingsScreenTest {
         setContent(subscriptionSettings = sub)
 
         val title = composeTestRule.activity.getString(R.string.delivery_reports_pref_title)
+        scrollToText(text = title)
         composeTestRule.onNodeWithText(title).assertIsDisplayed()
     }
 
@@ -173,6 +177,7 @@ class SubscriptionSettingsScreenTest {
         setContent(subscriptionSettings = sub)
 
         val title = composeTestRule.activity.getString(R.string.delivery_reports_pref_title)
+        scrollToText(text = title)
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
@@ -186,6 +191,7 @@ class SubscriptionSettingsScreenTest {
         setContent(subscriptionSettings = sub)
 
         val title = composeTestRule.activity.getString(R.string.wireless_alerts_title)
+        scrollToText(text = title)
         composeTestRule.onNodeWithText(title).assertIsDisplayed()
     }
 
@@ -204,6 +210,7 @@ class SubscriptionSettingsScreenTest {
         setContent(subscriptionSettings = sub)
 
         val title = composeTestRule.activity.getString(R.string.wireless_alerts_title)
+        scrollToText(text = title)
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
@@ -221,6 +228,7 @@ class SubscriptionSettingsScreenTest {
 
         val advancedTitle =
             composeTestRule.activity.getString(R.string.advanced_category_pref_title)
+        scrollToText(text = advancedTitle)
         composeTestRule.onNodeWithText(advancedTitle).assertIsDisplayed()
     }
 
@@ -255,7 +263,12 @@ class SubscriptionSettingsScreenTest {
         composeTestRule.onNodeWithText(autoRetrieveTitle).assertIsNotEnabled()
 
         val deliveryTitle = composeTestRule.activity.getString(R.string.delivery_reports_pref_title)
+        scrollToText(text = deliveryTitle)
         composeTestRule.onNodeWithText(deliveryTitle).assertIsNotEnabled()
+    }
+
+    private fun scrollToText(text: String) {
+        composeTestRule.onNode(hasScrollAction()).performScrollToNode(hasText(text))
     }
 
     private fun setContent(

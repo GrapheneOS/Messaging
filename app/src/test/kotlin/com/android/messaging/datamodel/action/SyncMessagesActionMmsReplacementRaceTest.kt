@@ -13,10 +13,8 @@ import android.provider.Telephony.Sms
 import androidx.collection.LongSparseArray
 import androidx.core.content.contentValuesOf
 import com.android.messaging.BugleApplication
-import com.android.messaging.Factory
 import com.android.messaging.FactoryTestAccess
 import com.android.messaging.datamodel.ActionSyncTestDataModel
-import com.android.messaging.datamodel.DataModel
 import com.android.messaging.datamodel.DatabaseHelper
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.DatabaseHelper.ConversationParticipantsColumns
@@ -30,11 +28,7 @@ import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.mmslib.pdu.PduHeaders
 import com.android.messaging.sms.DatabaseMessages
-import com.android.messaging.util.BugleGservices
-import com.android.messaging.util.BuglePrefs
-import com.android.messaging.util.PhoneUtils
-import io.mockk.every
-import io.mockk.mockk
+import com.android.messaging.testutil.installTestFactory
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -68,7 +62,10 @@ class SyncMessagesActionMmsReplacementRaceTest {
         context = RuntimeEnvironment.getApplication().applicationContext
         dataModel = ActionSyncTestDataModel()
 
-        FactoryTestAccess.install(testFactory(context = context, dataModel = dataModel))
+        installTestFactory(
+            context = context,
+            dataModel = dataModel,
+        )
 
         database = createInMemoryActionSyncTestDatabase(context)
         dataModel.setDatabase(database)
@@ -697,39 +694,6 @@ class SyncMessagesActionMmsReplacementRaceTest {
         runSyncBatch()
 
         assertMessageCount(id = TEST_ID_BASE, expectedCount = 0)
-    }
-
-    private fun testFactory(context: Context, dataModel: DataModel): Factory {
-        val gServices = mockk<BugleGservices>(relaxed = true)
-        every { gServices.getLong(any(), any()) } answers { secondArg() }
-        every { gServices.getInt(any(), any()) } answers { secondArg() }
-        every { gServices.getBoolean(any(), any()) } answers { secondArg() }
-        every { gServices.getString(any(), any()) } answers { secondArg() }
-        every { gServices.getFloat(any(), any()) } answers { secondArg() }
-
-        val prefs = mockk<BuglePrefs>(relaxed = true)
-        every { prefs.getSharedPreferencesName() } returns BuglePrefs.SHARED_PREFERENCES_NAME
-        every { prefs.getInt(any(), any()) } answers { secondArg() }
-        every { prefs.getLong(any(), any()) } answers { secondArg() }
-        every { prefs.getBoolean(any(), any()) } answers { secondArg() }
-        every { prefs.getString(any(), any()) } answers { secondArg() }
-
-        val phoneUtils = mockk<PhoneUtils>(relaxed = true)
-        every { phoneUtils.getSubIdFromTelephony(any(), any()) } answers {
-            firstArg<Cursor>().getInt(secondArg<Int>())
-        }
-        every { phoneUtils.getCanonicalBySimLocale(any()) } answers { firstArg() }
-        every { phoneUtils.formatForDisplay(any()) } answers { firstArg() }
-
-        return mockk<Factory>(relaxed = true).also { factory ->
-            every { factory.getApplicationContext() } returns context
-            every { factory.getDataModel() } returns dataModel
-            every { factory.getBugleGservices() } returns gServices
-            every { factory.getApplicationPrefs() } returns prefs
-            every { factory.getSubscriptionPrefs(any()) } returns prefs
-            every { factory.getWidgetPrefs() } returns prefs
-            every { factory.getPhoneUtils(any()) } returns phoneUtils
-        }
     }
 
     private fun runSyncBatch() {

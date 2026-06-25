@@ -139,19 +139,12 @@ internal class ConversationSettingsViewModel @Inject constructor(
 
     private fun handleNotificationsClicked() {
         val state = uiState.value
-        val conversationId = state.conversationId
-        val conversationTitle = state.conversationTitle
-
-        viewModelScope.launch {
-            val legacyPrefs = delegate.getLegacyNotificationPrefs(conversationId)
-            _effects.emit(
-                Effect.OpenNotificationChannelSettings(
-                    conversationId = conversationId,
-                    conversationTitle = conversationTitle,
-                    legacyPrefs = legacyPrefs,
-                ),
-            )
-        }
+        emitEffect(
+            Effect.OpenNotificationChannelSettings(
+                conversationId = state.conversationId,
+                conversationTitle = state.conversationTitle,
+            ),
+        )
     }
 
     private fun showOrAddContact(participant: ParticipantUiState) {

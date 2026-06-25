@@ -329,12 +329,9 @@ public class BugleNotifications {
                 new NotificationCompat.Builder(context, conversationId);
         notifBuilder.setCategory(Notification.CATEGORY_MESSAGE);
 
-        NotificationChannelUtil.INSTANCE.createConversationChannel(
+        NotificationChannelUtil.INSTANCE.createConversationChannelForRuntime(
                 conversationId,
-                conversation.getTitle(),
-                conversation.mNotificationEnabled,
-                state.getRingtoneUri(),
-                conversation.mNotificationVibrate
+                conversation.getTitle()
         );
 
         state.mBaseRequestCode = state.mType;
