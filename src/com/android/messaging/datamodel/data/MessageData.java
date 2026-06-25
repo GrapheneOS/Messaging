@@ -276,7 +276,7 @@ public class MessageData implements Parcelable {
      */
     public static MessageData createReceivedSmsMessage(final Uri uri, final String conversationId,
             final String participantId, final String selfId, final String messageText,
-            final String subject, final long sent, final long recieved,
+            final String subject, final long sent, final long received,
             final boolean seen, final boolean read) {
         final MessageData message = new MessageData();
         message.mSmsMessageUri = uri;
@@ -286,7 +286,7 @@ public class MessageData implements Parcelable {
         message.mProtocol = PROTOCOL_SMS;
         message.mStatus = BUGLE_STATUS_INCOMING_COMPLETE;
         message.mMmsSubject = subject;
-        message.mReceivedTimestamp = recieved;
+        message.mReceivedTimestamp = received;
         message.mSentTimestamp = sent;
         message.mParts.add(MessagePartData.createTextMessagePart(messageText));
         message.mSeen = seen;
@@ -314,13 +314,13 @@ public class MessageData implements Parcelable {
     public static MessageData createSmsMessage(final String messageUri, final String participantId,
             final String selfId, final String conversationId, final int bugleStatus,
             final boolean seen, final boolean read, final long sent,
-            final long recieved, final String messageText) {
+            final long received, final String messageText) {
         final MessageData message = new MessageData();
         message.mParticipantId = participantId;
         message.mSelfId = selfId;
         message.mConversationId = conversationId;
         message.mSentTimestamp = sent;
-        message.mReceivedTimestamp = recieved;
+        message.mReceivedTimestamp = received;
         message.mSeen = seen;
         message.mRead = read;
         message.mProtocol = PROTOCOL_SMS;
