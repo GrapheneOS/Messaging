@@ -438,6 +438,8 @@ private fun BoxScope.ConversationListFabs(
     onAction: (Action) -> Unit,
     onScrollToTop: () -> Unit,
 ) {
+    val hasItems = uiState.content is ConversationListContentUiState.Items
+
     ScrollToTopFab(
         visible = uiState.isScrollToTopVisible,
         onClick = onScrollToTop,
@@ -448,7 +450,7 @@ private fun BoxScope.ConversationListFabs(
     )
 
     StartChatFab(
-        visible = !isSelectionMode,
+        visible = hasItems && !isSelectionMode,
         expanded = !uiState.isScrollToTopVisible,
         onClick = { onAction(Action.StartChatClicked) },
         modifier = Modifier

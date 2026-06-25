@@ -3,16 +3,24 @@ package com.android.messaging.ui.conversationlist.ui
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.Chat
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -35,6 +43,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.android.messaging.R
+import com.android.messaging.ui.common.components.PrimaryActionButton
 import com.android.messaging.ui.common.components.reorder.OverlayReorderAnimationController
 import com.android.messaging.ui.conversationlist.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
@@ -85,6 +94,13 @@ internal fun ConversationListContent(
             ConversationListContentUiState.Empty -> {
                 ConversationListStatusMessage(
                     text = stringResource(R.string.conversation_list_empty_text),
+                    actionButton = {
+                        PrimaryActionButton(
+                            text = stringResource(R.string.conversation_list_start_chat),
+                            onClick = { onAction(Action.StartChatClicked) },
+                            leadingIcon = Icons.AutoMirrored.Rounded.Chat,
+                        )
+                    },
                 )
             }
 
@@ -418,19 +434,38 @@ private fun Modifier.conversationItemAnimation(
 }
 
 @Composable
-private fun ConversationListStatusMessage(text: String) {
+private fun ConversationListStatusMessage(
+    text: String,
+    actionButton: @Composable () -> Unit = {},
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = EmptyTextHorizontalPadding),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
+        Column(
+            modifier = Modifier
+                .widthIn(max = 360.dp)
+                .fillMaxWidth()
+                .background(
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    shape = MaterialTheme.shapes.large,
+                )
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+
+            actionButton()
+        }
     }
 }
 

@@ -82,7 +82,7 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
         return ConversationListUiState(
             content = content,
             selection = selection,
-            isScrollToTopVisible = isScrollToTopVisible,
+            isScrollToTopVisible = isScrollToTopVisible && items.isNotEmpty(),
             hasBlockedParticipants = snapshot.blockedDestinations.isNotEmpty(),
             isDebugEnabled = isDebugEnabled,
         )
