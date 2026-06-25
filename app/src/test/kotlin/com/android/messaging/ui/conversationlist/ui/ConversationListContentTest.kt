@@ -14,6 +14,7 @@ class ConversationListContentTest {
         val result = resolvePinChangeScrollRequest(
             previousItems = items,
             currentItems = items,
+            restoredConversationIds = emptySet(),
             firstVisibleConversationId = "b",
             firstVisibleItemIndex = 1,
             firstVisibleItemScrollOffset = 12,
@@ -27,6 +28,55 @@ class ConversationListContentTest {
         val result = resolvePinChangeScrollRequest(
             previousItems = listOf(item("a"), item("b")),
             currentItems = listOf(item("a", isPinned = true), item("c")),
+            restoredConversationIds = emptySet(),
+            firstVisibleConversationId = "a",
+            firstVisibleItemIndex = 0,
+            firstVisibleItemScrollOffset = 0,
+        )
+
+        assertNull(result)
+    }
+
+    @Test
+    fun resolvePinChangeScrollRequest_newTopItemWhileAtStart_requestsFirstItem() {
+        val result = resolvePinChangeScrollRequest(
+            previousItems = listOf(item("a"), item("b")),
+            currentItems = listOf(item("c"), item("a"), item("b")),
+            restoredConversationIds = emptySet(),
+            firstVisibleConversationId = "a",
+            firstVisibleItemIndex = 0,
+            firstVisibleItemScrollOffset = 0,
+        )
+
+        assertEquals(
+            ConversationListScrollRequest(
+                index = 0,
+                scrollOffset = 0,
+            ),
+            result,
+        )
+    }
+
+    @Test
+    fun resolvePinChangeScrollRequest_newTopItemWhileScrolled_returnsNull() {
+        val result = resolvePinChangeScrollRequest(
+            previousItems = listOf(item("a"), item("b")),
+            currentItems = listOf(item("c"), item("a"), item("b")),
+            restoredConversationIds = emptySet(),
+            firstVisibleConversationId = "b",
+            firstVisibleItemIndex = 2,
+            firstVisibleItemScrollOffset = 10,
+        )
+
+        assertNull(result)
+    }
+
+    @Test
+    fun resolvePinChangeScrollRequest_restoredTopItemWhileAtStart_returnsNull() {
+        val result = resolvePinChangeScrollRequest(
+            previousItems = listOf(item("a"), item("b")),
+            currentItems = listOf(item("c"), item("a"), item("b")),
+            restoredConversationIds = setOf("c"),
             firstVisibleConversationId = "a",
             firstVisibleItemIndex = 0,
             firstVisibleItemScrollOffset = 0,
@@ -40,6 +90,7 @@ class ConversationListContentTest {
         val result = resolvePinChangeScrollRequest(
             previousItems = listOf(item("a"), item("b")),
             currentItems = listOf(item("b", isPinned = true), item("a")),
+            restoredConversationIds = emptySet(),
             firstVisibleConversationId = "a",
             firstVisibleItemIndex = 0,
             firstVisibleItemScrollOffset = 0,
@@ -59,6 +110,7 @@ class ConversationListContentTest {
         val result = resolvePinChangeScrollRequest(
             previousItems = listOf(item("a"), item("b"), item("c")),
             currentItems = listOf(item("b", isPinned = true), item("a"), item("c")),
+            restoredConversationIds = emptySet(),
             firstVisibleConversationId = "b",
             firstVisibleItemIndex = 1,
             firstVisibleItemScrollOffset = 24,
@@ -78,6 +130,7 @@ class ConversationListContentTest {
         val result = resolvePinChangeScrollRequest(
             previousItems = listOf(item("a"), item("b"), item("c")),
             currentItems = listOf(item("a", isPinned = true), item("b"), item("c")),
+            restoredConversationIds = emptySet(),
             firstVisibleConversationId = "b",
             firstVisibleItemIndex = 1,
             firstVisibleItemScrollOffset = 24,
@@ -91,6 +144,7 @@ class ConversationListContentTest {
         val result = resolvePinChangeScrollRequest(
             previousItems = listOf(item("a"), item("b")),
             currentItems = listOf(item("b", isPinned = true), item("a")),
+            restoredConversationIds = emptySet(),
             firstVisibleConversationId = null,
             firstVisibleItemIndex = 1,
             firstVisibleItemScrollOffset = 24,

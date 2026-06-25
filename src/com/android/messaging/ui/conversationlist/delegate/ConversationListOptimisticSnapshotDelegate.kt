@@ -4,6 +4,7 @@ import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
 import javax.inject.Inject
+import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -161,11 +162,17 @@ internal class ConversationListOptimisticSnapshotDelegateImpl @Inject constructo
     private fun publishSnapshot() {
         val snapshot = rawSnapshot ?: return
 
+        val restoredConversationIds = overrides.archiveById
+            .filterValues { override -> override is ConversationArchiveOverride.Restoring }
+            .keys
+            .toImmutableSet()
+
         _snapshot.value = snapshot.copy(
             items = reducer.apply(
                 items = snapshot.items,
                 overrides = overrides,
             ),
+            restoredConversationIds = restoredConversationIds,
         )
     }
 }

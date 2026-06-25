@@ -58,7 +58,10 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
 
         val content = when {
             items.isNotEmpty() -> {
-                ConversationListContentUiState.Items(items)
+                ConversationListContentUiState.Items(
+                    items = items,
+                    restoredConversationIds = snapshot.restoredConversationIds,
+                )
             }
 
             !snapshot.hasFirstSyncCompleted -> {

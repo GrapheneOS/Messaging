@@ -47,11 +47,11 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
+import kotlin.math.abs
+import kotlin.math.roundToInt
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import kotlin.math.abs
-import kotlin.math.roundToInt
 
 private val SwipeBackgroundShape = RoundedCornerShape(percent = 50)
 
@@ -141,8 +141,7 @@ internal fun SwipeableConversationListItem(
             .then(gestureModifier)
             .then(interactionModifier)
             .collapseVertically { visibilityFraction.value }
-            .graphicsLayer { alpha = visibilityFraction.value }
-            .clipToBounds(),
+            .graphicsLayer { alpha = visibilityFraction.value },
     ) {
         ConversationListSwipeBackground(
             action = backgroundAction,
@@ -209,7 +208,7 @@ private fun Modifier.consumeAllPointerInput(): Modifier {
 }
 
 private fun Modifier.collapseVertically(fraction: () -> Float): Modifier {
-    return layout { measurable, constraints ->
+    return clipToBounds().layout { measurable, constraints ->
         val placeable = measurable.measure(constraints)
         val height = (placeable.height * fraction().coerceIn(0f, 1f)).roundToInt()
 

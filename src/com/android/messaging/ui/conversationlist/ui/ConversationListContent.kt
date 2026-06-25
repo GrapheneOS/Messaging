@@ -41,6 +41,7 @@ import com.android.messaging.ui.conversationlist.model.ConversationListContentUi
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableSet
 
 private const val CONVERSATION_ROW_CONTENT_TYPE = "conversation_row"
 
@@ -90,6 +91,7 @@ internal fun ConversationListContent(
             is ConversationListContentUiState.Items -> {
                 ConversationListItems(
                     items = content.items,
+                    restoredConversationIds = content.restoredConversationIds,
                     listState = listState,
                     onAction = onAction,
                     scaffoldContentPadding = scaffoldContentPadding,
@@ -105,6 +107,7 @@ internal fun ConversationListContent(
 @Composable
 private fun ConversationListItems(
     items: ImmutableList<ConversationListItemUiModel>,
+    restoredConversationIds: ImmutableSet<String>,
     listState: LazyListState,
     onAction: (Action) -> Unit,
     scaffoldContentPadding: PaddingValues,
@@ -112,7 +115,11 @@ private fun ConversationListItems(
     fabBottomReserve: Dp,
     pinAnimationController: OverlayReorderAnimationController<ConversationListItemUiModel, String>?,
 ) {
-    val appearanceTokens = rememberAppearanceAnimationTokens(items)
+    val appearanceTokens = rememberAppearanceAnimationTokens(
+        items = items,
+        listState = listState,
+        excludedConversationIds = restoredConversationIds,
+    )
 
     SideEffect {
         pinAnimationController?.updateItems(items)
@@ -121,6 +128,7 @@ private fun ConversationListItems(
     KeepViewportStationaryOnPinChange(
         listState = listState,
         items = items,
+        restoredConversationIds = restoredConversationIds,
     )
 
     LazyColumn(
@@ -275,6 +283,7 @@ private fun Modifier.trackPinAnimationBounds(
 private fun KeepViewportStationaryOnPinChange(
     listState: LazyListState,
     items: ImmutableList<ConversationListItemUiModel>,
+    restoredConversationIds: ImmutableSet<String>,
 ) {
     val previousItemsState = remember { mutableStateOf(items) }
 
@@ -290,6 +299,7 @@ private fun KeepViewportStationaryOnPinChange(
         val scrollRequest = resolvePinChangeScrollRequest(
             previousItems = previousItems,
             currentItems = items,
+            restoredConversationIds = restoredConversationIds,
             firstVisibleConversationId = firstVisibleConversationId,
             firstVisibleItemIndex = listState.firstVisibleItemIndex,
             firstVisibleItemScrollOffset = listState.firstVisibleItemScrollOffset,
@@ -314,18 +324,30 @@ internal data class ConversationListScrollRequest(
 internal fun resolvePinChangeScrollRequest(
     previousItems: List<ConversationListItemUiModel>,
     currentItems: List<ConversationListItemUiModel>,
+    restoredConversationIds: Set<String>,
     firstVisibleConversationId: String?,
     firstVisibleItemIndex: Int,
     firstVisibleItemScrollOffset: Int,
 ): ConversationListScrollRequest? {
     val currentItemsById = currentItems.associateBy(ConversationListItemUiModel::conversationId)
-
-    if (!hasPinReorder(previousItems, currentItemsById)) {
-        return null
-    }
+    val previousConversationIds = previousItems.mapTo(HashSet()) { it.conversationId }
+    val isAtTop = firstVisibleItemIndex == 0 && firstVisibleItemScrollOffset == 0
+    val currentTopConversationId = currentItems.firstOrNull()?.conversationId
+    val isNewTopConversation = currentTopConversationId != null &&
+        currentTopConversationId !in previousConversationIds &&
+        currentTopConversationId !in restoredConversationIds
 
     return when {
-        firstVisibleItemIndex == 0 && firstVisibleItemScrollOffset == 0 -> {
+        isAtTop && isNewTopConversation -> {
+            ConversationListScrollRequest(
+                index = 0,
+                scrollOffset = 0,
+            )
+        }
+
+        !hasPinReorder(previousItems, currentItemsById) -> null
+
+        isAtTop -> {
             ConversationListScrollRequest(
                 index = 0,
                 scrollOffset = 0,
