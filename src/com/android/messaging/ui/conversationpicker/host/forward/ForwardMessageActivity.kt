@@ -13,6 +13,7 @@ import com.android.messaging.domain.conversationpicker.usecase.BuildConversation
 import com.android.messaging.domain.conversationpicker.usecase.SendContentToTargets
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversationpicker.ConversationPickerScreen
+import com.android.messaging.ui.conversationpicker.model.ConversationPickerLabels
 import com.android.messaging.ui.core.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -72,6 +73,7 @@ class ForwardMessageActivity : ComponentActivity() {
                     effectHandler = effectHandler,
                     onNavigateBack = ::finish,
                     allowMultiSelect = true,
+                    labels = ConversationPickerLabels.Forward,
                     isInitialDraftLoading = false,
                     initialDraft = draft,
                 )

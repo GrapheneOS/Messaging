@@ -1,5 +1,6 @@
 package com.android.messaging.ui.recipientselection.component
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.Spring
@@ -31,7 +32,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import com.android.messaging.R
 import com.android.messaging.ui.common.components.selection.SelectionListContent
 import com.android.messaging.ui.core.MessagingPreviewColumn
 import com.android.messaging.ui.recipientselection.model.section.RecipientContactListEntry
@@ -53,6 +53,7 @@ internal fun RecipientSelectionContactsContent(
     onPrimaryActionClick: () -> Unit,
     onRecipientDestinationClick: OnRecipientDestinationAction,
     onRecipientDestinationLongClick: OnRecipientDestinationAction?,
+    @StringRes emptyStateText: Int,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
     topListContent: (@Composable () -> Unit)? = null,
@@ -111,6 +112,7 @@ internal fun RecipientSelectionContactsContent(
             rowDecorators = rowDecorators,
             onRecipientDestinationClick = onRecipientDestinationClick,
             onRecipientDestinationLongClick = onRecipientDestinationLongClick,
+            emptyStateText = emptyStateText,
         )
     }
 }
@@ -122,6 +124,7 @@ private fun LazyListScope.recipientSelectionContactItems(
     rowDecorators: RecipientSelectionRowDecorators,
     onRecipientDestinationClick: OnRecipientDestinationAction,
     onRecipientDestinationLongClick: OnRecipientDestinationAction?,
+    @StringRes emptyStateText: Int,
 ) {
     val pickerUiState = uiState.picker
 
@@ -134,7 +137,7 @@ private fun LazyListScope.recipientSelectionContactItems(
 
         pickerUiState.items.isEmpty() -> {
             item {
-                RecipientSelectionEmptyState()
+                RecipientSelectionEmptyState(text = emptyStateText)
             }
         }
 
@@ -302,13 +305,14 @@ private fun RecipientSelectionLoadingMoreState() {
 
 @Composable
 private fun RecipientSelectionEmptyState(
+    @StringRes text: Int,
     modifier: Modifier = Modifier,
 ) {
     Text(
         modifier = modifier
             .fillMaxWidth()
             .padding(all = 24.dp),
-        text = stringResource(id = R.string.contact_list_empty_text),
+        text = stringResource(id = text),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center,

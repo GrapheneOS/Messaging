@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationpicker.common
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.BasicTextField
@@ -37,6 +38,8 @@ internal fun PickerTopAppBar(
     inSelectionMode: Boolean,
     selectedCount: Int,
     searchState: TextFieldState,
+    @StringRes title: Int,
+    @StringRes searchHint: Int,
     onNavigateBack: () -> Unit,
     onSearchOpen: () -> Unit,
     onSearchClose: () -> Unit,
@@ -49,6 +52,8 @@ internal fun PickerTopAppBar(
                 inSelectionMode = inSelectionMode,
                 selectedCount = selectedCount,
                 searchState = searchState,
+                title = title,
+                searchHint = searchHint,
             )
         },
         navigationIcon = {
@@ -80,12 +85,13 @@ internal fun PickerTopAppBar(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun PickerReviewTopAppBar(
+    @StringRes title: Int,
     onBack: () -> Unit,
 ) {
     TopAppBar(
         title = {
             Text(
-                text = stringResource(R.string.share_intent_activity_label),
+                text = stringResource(id = title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
@@ -114,10 +120,15 @@ private fun PickerTopAppBarTitle(
     inSelectionMode: Boolean,
     selectedCount: Int,
     searchState: TextFieldState,
+    @StringRes title: Int,
+    @StringRes searchHint: Int,
 ) {
     when {
         isSearchActive -> {
-            PickerSearchField(state = searchState)
+            PickerSearchField(
+                state = searchState,
+                searchHint = searchHint,
+            )
         }
 
         inSelectionMode -> {
@@ -132,7 +143,7 @@ private fun PickerTopAppBarTitle(
 
         else -> {
             Text(
-                text = stringResource(R.string.share_intent_activity_label),
+                text = stringResource(id = title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
@@ -209,6 +220,7 @@ private fun PickerTopAppBarActions(
 @Composable
 private fun PickerSearchField(
     state: TextFieldState,
+    @StringRes searchHint: Int,
 ) {
     val focusRequester = remember { FocusRequester() }
 
@@ -231,7 +243,7 @@ private fun PickerSearchField(
             Box {
                 if (state.text.isEmpty()) {
                     Text(
-                        text = stringResource(R.string.share_search_hint),
+                        text = stringResource(id = searchHint),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,

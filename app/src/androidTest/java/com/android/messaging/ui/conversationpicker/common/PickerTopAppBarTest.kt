@@ -64,6 +64,8 @@ internal class PickerTopAppBarTest {
                     inSelectionMode = inSelectionMode,
                     selectedCount = 1,
                     searchState = TextFieldState(initialText = searchText),
+                    title = R.string.share_intent_activity_label,
+                    searchHint = R.string.share_search_hint,
                     onNavigateBack = {},
                     onSearchOpen = {},
                     onSearchClose = {},

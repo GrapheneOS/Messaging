@@ -19,6 +19,7 @@ import com.android.messaging.domain.shareintent.model.SharedConversationDraftRes
 import com.android.messaging.domain.shareintent.usecase.BuildSharedConversationDraft
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversationpicker.ConversationPickerScreen
+import com.android.messaging.ui.conversationpicker.model.ConversationPickerLabels
 import com.android.messaging.ui.core.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -80,6 +81,7 @@ class ShareIntentActivity : ComponentActivity() {
                     effectHandler = effectHandler,
                     onNavigateBack = ::finish,
                     allowMultiSelect = true,
+                    labels = ConversationPickerLabels.Share,
                     isInitialDraftLoading = shareDraft.isLoading,
                     initialDraft = shareDraft.draft,
                 )
