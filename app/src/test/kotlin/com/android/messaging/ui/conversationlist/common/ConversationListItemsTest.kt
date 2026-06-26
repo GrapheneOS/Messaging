@@ -1,13 +1,12 @@
-package com.android.messaging.ui.conversationlist.ui
+package com.android.messaging.ui.conversationlist.common
 
-import com.android.messaging.ui.conversationlist.common.previewConversationListItem
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
 import com.android.messaging.ui.conversationlist.common.previewConversationListItem
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
-class ConversationListContentTest {
+class ConversationListItemsTest {
 
     @Test
     fun resolvePinChangeScrollRequest_noPinChange_returnsNull() {
