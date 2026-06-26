@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversationlist.delegate
+package com.android.messaging.ui.conversationlist
 
 import com.android.messaging.data.conversationlist.model.ConversationListDraft
 import com.android.messaging.data.conversationlist.model.ConversationListItem
@@ -7,11 +7,16 @@ import com.android.messaging.data.conversationlist.model.ConversationListMessage
 import com.android.messaging.data.conversationlist.model.ConversationListNotification
 import com.android.messaging.data.conversationlist.model.ConversationListParticipant
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
+import com.android.messaging.data.conversationsettings.model.SNOOZE_NEVER_EXPIRES
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 
 internal fun snapshotOfIds(vararg conversationIds: String): ConversationListSnapshot {
     return snapshotOfItems(*conversationIds.map(::conversationItem).toTypedArray())
+}
+
+internal fun snapshotOf(vararg items: ConversationListItem): ConversationListSnapshot {
+    return snapshotOfItems(*items)
 }
 
 internal fun snapshotOfItems(vararg items: ConversationListItem): ConversationListSnapshot {
@@ -24,20 +29,28 @@ internal fun snapshotOfItems(vararg items: ConversationListItem): ConversationLi
 
 internal fun conversationItem(
     conversationId: String,
+    isArchived: Boolean = false,
     isPinned: Boolean = false,
+    isSnoozed: Boolean = false,
     isRead: Boolean = true,
     timestamp: Long = 1_000L,
+    senderName: String? = null,
+    contactId: Long = -1L,
+    lookupKey: String? = null,
+    isDraftVisible: Boolean = false,
+    draftSnippet: String? = null,
+    draftSubject: String? = null,
 ): ConversationListItem {
     return ConversationListItem(
         conversationId = conversationId,
         title = "Title $conversationId",
         icon = null,
         subject = null,
-        isArchived = false,
+        isArchived = isArchived,
         isPinned = isPinned,
         participant = ConversationListParticipant(
-            contactId = -1L,
-            lookupKey = null,
+            contactId = contactId,
+            lookupKey = lookupKey,
             otherNormalizedDestination = "+1555000$conversationId",
             isGroup = false,
             isEnterprise = false,
@@ -50,15 +63,21 @@ internal fun conversationItem(
             previewContentType = null,
             status = ConversationListMessageStatus.Normal,
             isIncoming = true,
-            senderName = null,
+            senderName = senderName,
         ),
         draft = ConversationListDraft(
-            isVisible = false,
-            snippetText = null,
+            isVisible = isDraftVisible,
+            snippetText = draftSnippet,
             previewUri = null,
             previewContentType = null,
-            subject = null,
+            subject = draftSubject,
         ),
-        notification = ConversationListNotification(isEnabled = true),
+        notification = ConversationListNotification(
+            isEnabled = true,
+            snoozedUntilMillis = when {
+                isSnoozed -> SNOOZE_NEVER_EXPIRES
+                else -> ConversationListNotification.SNOOZE_NOT_SET
+            },
+        ),
     )
 }

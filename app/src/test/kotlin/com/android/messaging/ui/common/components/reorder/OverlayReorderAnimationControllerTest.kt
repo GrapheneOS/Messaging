@@ -3,7 +3,6 @@ package com.android.messaging.ui.common.components.reorder
 import androidx.compose.ui.geometry.Rect
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -42,15 +41,11 @@ class OverlayReorderAnimationControllerTest {
         )
 
         val animationId = controller.animations.single().animationId
-
         assertNull(controller.startAnimation(animationId))
 
         controller.markCommitted()
 
-        val started = controller.startAnimation(animationId)
-
-        assertNotNull(started)
-        assertTrue(started!!.isStarted)
+        assertEquals(true, controller.startAnimation(animationId)?.isStarted)
         assertNull(controller.startAnimation(animationId))
     }
 
@@ -64,7 +59,6 @@ class OverlayReorderAnimationControllerTest {
         )
 
         val animationId = controller.animations.single().animationId
-
         controller.finish(animationId)
 
         assertTrue(controller.animations.isEmpty())

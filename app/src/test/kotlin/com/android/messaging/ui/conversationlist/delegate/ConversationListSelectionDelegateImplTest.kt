@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationlist.delegate
 
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
+import com.android.messaging.ui.conversationlist.snapshotOfIds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runCurrent

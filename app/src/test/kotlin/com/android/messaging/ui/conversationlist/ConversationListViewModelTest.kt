@@ -1,12 +1,6 @@
 package com.android.messaging.ui.conversationlist
 
 import app.cash.turbine.test
-import com.android.messaging.data.conversationlist.model.ConversationListDraft
-import com.android.messaging.data.conversationlist.model.ConversationListItem
-import com.android.messaging.data.conversationlist.model.ConversationListLatestMessage
-import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
-import com.android.messaging.data.conversationlist.model.ConversationListNotification
-import com.android.messaging.data.conversationlist.model.ConversationListParticipant
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
 import com.android.messaging.data.debug.DebugFeaturesProvider
@@ -18,11 +12,12 @@ import com.android.messaging.ui.conversationlist.mapper.ConversationListUiStateM
 import com.android.messaging.ui.conversationlist.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.model.ConversationListEffect as Effect
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import io.mockk.verify
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
@@ -37,13 +32,11 @@ class ConversationListViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val repository = mockk<ConversationListRepository>(relaxUnitFun = true)
+    private val repository = mockk<ConversationListRepository>()
     private val uiStateMapper = mockk<ConversationListUiStateMapper>()
-    private val selectionDelegate =
-        mockk<ConversationListSelectionDelegate>(relaxUnitFun = true)
-    private val actionsDelegate = mockk<ConversationListActionsDelegate>(relaxUnitFun = true)
-    private val optimisticSnapshotDelegate =
-        mockk<ConversationListOptimisticSnapshotDelegate>(relaxUnitFun = true)
+    private val selectionDelegate = mockk<ConversationListSelectionDelegate>()
+    private val actionsDelegate = mockk<ConversationListActionsDelegate>()
+    private val optimisticSnapshotDelegate = mockk<ConversationListOptimisticSnapshotDelegate>()
     private val debugFeaturesProvider = mockk<DebugFeaturesProvider>()
 
     private val snapshotFlow = MutableStateFlow<ConversationListSnapshot?>(null)
@@ -64,7 +57,6 @@ class ConversationListViewModelTest {
         snapshotFlow.value = snapshotOf(conversationItem("a"))
 
         val viewModel = createViewModel()
-
         viewModel.onAction(Action.ArchiveClicked)
 
         verify { optimisticSnapshotDelegate.archive(listOf("a")) }
@@ -83,7 +75,6 @@ class ConversationListViewModelTest {
         snapshotFlow.value = snapshotOf(conversationItem("a", isRead = false))
 
         val viewModel = createViewModel()
-
         viewModel.onAction(Action.ConversationSwipedToToggleRead("a"))
 
         verify { optimisticSnapshotDelegate.markRead(listOf("a"), isRead = true) }
@@ -97,7 +88,6 @@ class ConversationListViewModelTest {
             snapshotFlow.value = snapshotOf(conversationItem("a"))
 
             val viewModel = createViewModel()
-
             viewModel.effects.test {
                 viewModel.onAction(Action.PinClicked)
 
@@ -116,7 +106,6 @@ class ConversationListViewModelTest {
     @Test
     fun pinAnimationPrepared_commitsPinChangeAndClearsSelection() {
         val viewModel = createViewModel()
-
         viewModel.onAction(
             Action.PinAnimationPrepared(
                 conversationIds = persistentListOf("a"),
@@ -135,7 +124,6 @@ class ConversationListViewModelTest {
             snapshotFlow.value = snapshotOf(conversationItem("a"))
 
             val viewModel = createViewModel()
-
             viewModel.effects.test {
                 viewModel.onAction(Action.ConversationClicked("a"))
 
@@ -149,7 +137,6 @@ class ConversationListViewModelTest {
     fun startChatClicked_emitsStartChatEffect() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val viewModel = createViewModel()
-
             viewModel.effects.test {
                 viewModel.onAction(Action.StartChatClicked)
 
@@ -162,7 +149,6 @@ class ConversationListViewModelTest {
     @Test
     fun archiveSnackbarDismissed_discardsArchivedItems() {
         val viewModel = createViewModel()
-
         viewModel.onAction(
             Action.ArchiveSnackbarDismissed(
                 conversationIds = persistentListOf("a", "b"),
@@ -175,7 +161,6 @@ class ConversationListViewModelTest {
     @Test
     fun archiveUndoClicked_restoresItemsAndPersistsUnarchivedState() {
         val viewModel = createViewModel()
-
         viewModel.onAction(
             Action.ArchiveUndoClicked(
                 conversationIds = persistentListOf("a"),
@@ -196,7 +181,6 @@ class ConversationListViewModelTest {
     @Test
     fun unarchiveUndoClicked_archivesItemsAndPersistsArchivedState() {
         val viewModel = createViewModel()
-
         viewModel.onAction(
             Action.ArchiveUndoClicked(
                 conversationIds = persistentListOf("a"),
@@ -215,9 +199,33 @@ class ConversationListViewModelTest {
     }
 
     private fun createViewModel(): ConversationListViewModel {
+        every { repository.refresh() } just runs
+        every { repository.setNewestConversationVisible(any()) } just runs
+
         every { optimisticSnapshotDelegate.snapshot } returns snapshotFlow
+        every { optimisticSnapshotDelegate.bind(any()) } just runs
+        every { optimisticSnapshotDelegate.archive(any()) } just runs
+        every { optimisticSnapshotDelegate.discardArchived(any()) } just runs
+        every { optimisticSnapshotDelegate.restoreArchived(any()) } just runs
+        every { optimisticSnapshotDelegate.markRead(any(), any()) } just runs
+        every { optimisticSnapshotDelegate.pin(any(), any()) } just runs
+
         every { selectionDelegate.selectedIds } returns selectedIdsFlow
+        every { selectionDelegate.bind(any(), any()) } just runs
+        every { selectionDelegate.toggle(any()) } just runs
+        every { selectionDelegate.clear() } just runs
+
         every { actionsDelegate.effects } returns emptyFlow()
+        every { actionsDelegate.bind(any()) } just runs
+        every { actionsDelegate.setArchived(any(), any(), any()) } just runs
+        every { actionsDelegate.setPinned(any(), any()) } just runs
+        every { actionsDelegate.setRead(any(), any()) } just runs
+        every { actionsDelegate.snooze(any(), any()) } just runs
+        every { actionsDelegate.unsnooze(any()) } just runs
+        every { actionsDelegate.delete(any()) } just runs
+        every { actionsDelegate.block(any(), any()) } just runs
+        every { actionsDelegate.unblock(any(), any()) } just runs
+
         every { debugFeaturesProvider.isEnabled() } returns false
 
         return ConversationListViewModel(
@@ -227,53 +235,6 @@ class ConversationListViewModelTest {
             actionsDelegate = actionsDelegate,
             optimisticSnapshotDelegate = optimisticSnapshotDelegate,
             debugFeaturesProvider = debugFeaturesProvider,
-        )
-    }
-
-    private fun snapshotOf(vararg items: ConversationListItem): ConversationListSnapshot {
-        return ConversationListSnapshot(
-            items = persistentListOf(*items),
-            blockedDestinations = persistentSetOf(),
-            hasFirstSyncCompleted = true,
-        )
-    }
-
-    private fun conversationItem(
-        conversationId: String,
-        isRead: Boolean = true,
-    ): ConversationListItem {
-        return ConversationListItem(
-            conversationId = conversationId,
-            title = "Title $conversationId",
-            icon = null,
-            subject = null,
-            isArchived = false,
-            isPinned = false,
-            participant = ConversationListParticipant(
-                contactId = -1L,
-                lookupKey = null,
-                otherNormalizedDestination = "+1555000$conversationId",
-                isGroup = false,
-                isEnterprise = false,
-            ),
-            latestMessage = ConversationListLatestMessage(
-                isRead = isRead,
-                timestamp = 1_000L,
-                snippetText = "Snippet $conversationId",
-                previewUri = null,
-                previewContentType = null,
-                status = ConversationListMessageStatus.Normal,
-                isIncoming = true,
-                senderName = null,
-            ),
-            draft = ConversationListDraft(
-                isVisible = false,
-                snippetText = null,
-                previewUri = null,
-                previewContentType = null,
-                subject = null,
-            ),
-            notification = ConversationListNotification(isEnabled = true),
         )
     }
 }

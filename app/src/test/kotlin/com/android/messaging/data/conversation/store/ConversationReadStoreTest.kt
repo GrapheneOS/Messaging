@@ -75,8 +75,10 @@ internal class ConversationReadStoreTest {
                 match { arguments -> arguments.contentEquals(arrayOf(CONVERSATION_ID)) },
             )
         }
+
         assertEquals(1, values.captured.getAsInteger(DatabaseHelper.MessageColumns.READ))
         assertEquals(1, values.captured.getAsInteger(DatabaseHelper.MessageColumns.SEEN))
+
         verify { MessagingContentProvider.notifyMessagesChanged(CONVERSATION_ID) }
         verify {
             BugleNotifications.cancel(

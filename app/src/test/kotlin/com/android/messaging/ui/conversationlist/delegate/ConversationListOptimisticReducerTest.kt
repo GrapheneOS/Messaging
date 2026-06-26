@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationlist.delegate
 
 import com.android.messaging.data.conversationlist.model.ConversationListItem
+import com.android.messaging.ui.conversationlist.conversationItem
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 import org.junit.Assert.assertEquals

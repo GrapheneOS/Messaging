@@ -4,20 +4,16 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
+import androidx.compose.ui.test.onChildren
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.recyclerview.widget.RecyclerView
+import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ActivityScenario
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.contrib.RecyclerViewActions
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
-import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.common.test.rules.AppTestRule
 import com.android.common.test.rules.MessagingTestRule
-import com.android.messaging.R
 import com.android.messaging.ui.conversationlist.ConversationListActivity
+import com.android.messaging.ui.conversationlist.ui.CONVERSATION_LIST_TEST_TAG
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -42,19 +38,20 @@ class ConversationUserFlowTest {
         )
 
         scenario.use {
-            onView(withId(android.R.id.list))
-                .check(matches(isDisplayed()))
+            composeRule.waitUntilAtLeastOneExists(
+                matcher = hasTestTag(testTag = CONVERSATION_LIST_TEST_TAG),
+                timeoutMillis = TEST_WAIT_TIMEOUT_MILLIS,
+            )
 
-            onView(withId(R.id.start_new_conversation_button))
-                .check(matches(isDisplayed()))
+            composeRule
+                .onNodeWithTag(testTag = CONVERSATION_LIST_TEST_TAG)
+                .assertIsDisplayed()
 
-            onView(withId(android.R.id.list))
-                .perform(
-                    RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(
-                        0,
-                        click(),
-                    ),
-                )
+            composeRule
+                .onNodeWithTag(testTag = CONVERSATION_LIST_TEST_TAG)
+                .onChildren()
+                .onFirst()
+                .performClick()
 
             composeRule.waitUntilAtLeastOneExists(
                 matcher = hasTestTag(testTag = CONVERSATION_TEXT_FIELD_TEST_TAG),

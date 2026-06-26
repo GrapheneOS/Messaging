@@ -5,6 +5,7 @@ import com.android.messaging.data.blockedparticipants.repository.BlockedParticip
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
 import com.android.messaging.data.conversationsettings.model.SnoozeOption
+import com.android.messaging.ui.conversationlist.conversationItem
 import com.android.messaging.ui.conversationlist.model.ConversationListEffect
 import io.mockk.coEvery
 import io.mockk.coVerify

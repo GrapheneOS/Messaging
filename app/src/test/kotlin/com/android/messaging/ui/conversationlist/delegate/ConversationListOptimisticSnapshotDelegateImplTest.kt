@@ -3,6 +3,9 @@ package com.android.messaging.ui.conversationlist.delegate
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
+import com.android.messaging.ui.conversationlist.conversationItem
+import com.android.messaging.ui.conversationlist.snapshotOfIds
+import com.android.messaging.ui.conversationlist.snapshotOfItems
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -86,8 +89,8 @@ internal class ConversationListOptimisticSnapshotDelegateImplTest {
                 ),
             ),
         )
-        val delegate = bindDelegate(rawSnapshot)
 
+        val delegate = bindDelegate(rawSnapshot)
         delegate.markRead(
             conversationIds = listOf("a"),
             isRead = true,
@@ -100,6 +103,7 @@ internal class ConversationListOptimisticSnapshotDelegateImplTest {
             ),
         )
         runCurrent()
+
         rawSnapshot.value = snapshotOfItems(
             conversationItem(
                 conversationId = "a",
@@ -158,6 +162,7 @@ internal class ConversationListOptimisticSnapshotDelegateImplTest {
             conversationItem("b", timestamp = 2_000L),
         )
         runCurrent()
+
         rawSnapshot.value = snapshotOfItems(
             conversationItem("b", timestamp = 2_000L),
             conversationItem("a", isPinned = false, timestamp = 1_000L),
@@ -175,11 +180,11 @@ internal class ConversationListOptimisticSnapshotDelegateImplTest {
     @Test
     fun bind_isIdempotent() = runTest {
         val repository = mockk<ConversationListRepository>()
-        every { repository.observeInboxSnapshot() } returns MutableStateFlow(snapshotOfIds("a"))
         val delegate = ConversationListOptimisticSnapshotDelegateImpl(
             repository = repository,
             reducer = ConversationListOptimisticReducer(),
         )
+        every { repository.observeInboxSnapshot() } returns MutableStateFlow(snapshotOfIds("a"))
 
         delegate.bind(backgroundScope)
         delegate.bind(backgroundScope)
