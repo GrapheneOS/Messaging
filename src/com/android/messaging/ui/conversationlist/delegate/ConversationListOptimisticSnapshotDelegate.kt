@@ -15,11 +15,11 @@ import kotlinx.coroutines.launch
 internal interface ConversationListOptimisticSnapshotDelegate {
     val snapshot: StateFlow<ConversationListSnapshot?>
 
-    fun bind(scope: CoroutineScope)
+    fun bind(scope: CoroutineScope, mode: ConversationListMode)
 
-    fun archive(conversationIds: List<String>)
-    fun discardArchived(conversationIds: List<String>)
-    fun restoreArchived(conversationIds: List<String>)
+    fun remove(conversationIds: List<String>)
+    fun discardRemoval(conversationIds: List<String>)
+    fun restore(conversationIds: List<String>)
     fun markRead(conversationIds: List<String>, isRead: Boolean)
     fun pin(conversationIds: List<String>, isPinned: Boolean)
 }
@@ -36,7 +36,10 @@ internal class ConversationListOptimisticSnapshotDelegateImpl @Inject constructo
     private var overrides = ConversationListOptimisticOverrides()
     private var isBound = false
 
-    override fun bind(scope: CoroutineScope) {
+    override fun bind(
+        scope: CoroutineScope,
+        mode: ConversationListMode,
+    ) {
         if (isBound) {
             return
         }
@@ -44,7 +47,7 @@ internal class ConversationListOptimisticSnapshotDelegateImpl @Inject constructo
         isBound = true
 
         scope.launch {
-            repository.observeSnapshot(ConversationListMode.Inbox)
+            repository.observeSnapshot(mode)
                 .collect { snapshot ->
                     rawSnapshot = snapshot
                     overrides = reducer.prune(
@@ -56,7 +59,7 @@ internal class ConversationListOptimisticSnapshotDelegateImpl @Inject constructo
         }
     }
 
-    override fun archive(conversationIds: List<String>) {
+    override fun remove(conversationIds: List<String>) {
         val requestedIds = conversationIds.toSet()
         val archivedItems = _snapshot.value
             ?.items
@@ -78,7 +81,7 @@ internal class ConversationListOptimisticSnapshotDelegateImpl @Inject constructo
         publishSnapshot()
     }
 
-    override fun discardArchived(conversationIds: List<String>) {
+    override fun discardRemoval(conversationIds: List<String>) {
         var archiveById = overrides.archiveById
 
         conversationIds.forEach { conversationId ->
@@ -91,7 +94,7 @@ internal class ConversationListOptimisticSnapshotDelegateImpl @Inject constructo
         publishSnapshot()
     }
 
-    override fun restoreArchived(conversationIds: List<String>) {
+    override fun restore(conversationIds: List<String>) {
         var archiveById = overrides.archiveById
         val rawItemsById = rawSnapshot
             ?.items

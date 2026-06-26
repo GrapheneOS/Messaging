@@ -31,13 +31,17 @@ internal class ConversationListUiStateMapperImplTest {
     private val isContactSaved = mockk<IsContactSaved>(relaxed = true)
     private val resolveAvatarUri = mockk<ResolveAvatarUri>(relaxed = true)
 
-    private val mapper = ConversationListUiStateMapperImpl(
+    private val itemUiMapper = ConversationListItemUiMapperImpl(
         context = mockk<Context>(relaxed = true),
-        canAddContact = canAddContact,
         canPlacePhoneCall = canPlacePhoneCall,
         canShowOrAddContact = canShowOrAddContact,
         isContactSaved = isContactSaved,
         resolveAvatarUri = resolveAvatarUri,
+    )
+
+    private val mapper = ConversationListUiStateMapperImpl(
+        canAddContact = canAddContact,
+        itemUiMapper = itemUiMapper,
     )
 
     @Test

@@ -46,7 +46,7 @@ class ConversationListViewModelTest {
     fun init_bindsDelegates() {
         createViewModel()
 
-        verify(exactly = 1) { optimisticSnapshotDelegate.bind(any()) }
+        verify(exactly = 1) { optimisticSnapshotDelegate.bind(any(), any()) }
         verify(exactly = 1) { selectionDelegate.bind(any(), snapshotFlow) }
         verify(exactly = 1) { actionsDelegate.bind(any()) }
     }
@@ -59,7 +59,7 @@ class ConversationListViewModelTest {
         val viewModel = createViewModel()
         viewModel.onAction(Action.ArchiveClicked)
 
-        verify { optimisticSnapshotDelegate.archive(listOf("a")) }
+        verify { optimisticSnapshotDelegate.remove(listOf("a")) }
         verify {
             actionsDelegate.setArchived(
                 conversationIds = listOf("a"),
@@ -155,7 +155,7 @@ class ConversationListViewModelTest {
             ),
         )
 
-        verify { optimisticSnapshotDelegate.discardArchived(listOf("a", "b")) }
+        verify { optimisticSnapshotDelegate.discardRemoval(listOf("a", "b")) }
     }
 
     @Test
@@ -168,7 +168,7 @@ class ConversationListViewModelTest {
             ),
         )
 
-        verify { optimisticSnapshotDelegate.restoreArchived(listOf("a")) }
+        verify { optimisticSnapshotDelegate.restore(listOf("a")) }
         verify {
             actionsDelegate.setArchived(
                 conversationIds = listOf("a"),
@@ -188,7 +188,7 @@ class ConversationListViewModelTest {
             ),
         )
 
-        verify { optimisticSnapshotDelegate.archive(listOf("a")) }
+        verify { optimisticSnapshotDelegate.remove(listOf("a")) }
         verify {
             actionsDelegate.setArchived(
                 conversationIds = listOf("a"),
@@ -203,10 +203,10 @@ class ConversationListViewModelTest {
         every { repository.setNewestConversationVisible(any()) } just runs
 
         every { optimisticSnapshotDelegate.snapshot } returns snapshotFlow
-        every { optimisticSnapshotDelegate.bind(any()) } just runs
-        every { optimisticSnapshotDelegate.archive(any()) } just runs
-        every { optimisticSnapshotDelegate.discardArchived(any()) } just runs
-        every { optimisticSnapshotDelegate.restoreArchived(any()) } just runs
+        every { optimisticSnapshotDelegate.bind(any(), any()) } just runs
+        every { optimisticSnapshotDelegate.remove(any()) } just runs
+        every { optimisticSnapshotDelegate.discardRemoval(any()) } just runs
+        every { optimisticSnapshotDelegate.restore(any()) } just runs
         every { optimisticSnapshotDelegate.markRead(any(), any()) } just runs
         every { optimisticSnapshotDelegate.pin(any(), any()) } just runs
 

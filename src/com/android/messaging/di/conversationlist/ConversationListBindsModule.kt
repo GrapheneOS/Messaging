@@ -4,6 +4,8 @@ import com.android.messaging.data.conversationlist.repository.ConversationListRe
 import com.android.messaging.data.conversationlist.repository.ConversationListRepositoryImpl
 import com.android.messaging.data.conversationlist.store.ConversationListStatusStore
 import com.android.messaging.data.conversationlist.store.ConversationListStatusStoreImpl
+import com.android.messaging.ui.conversationlist.mapper.ConversationListItemUiMapper
+import com.android.messaging.ui.conversationlist.mapper.ConversationListItemUiMapperImpl
 import com.android.messaging.ui.conversationlist.mapper.ConversationListUiStateMapper
 import com.android.messaging.ui.conversationlist.mapper.ConversationListUiStateMapperImpl
 import dagger.Binds
@@ -33,4 +35,10 @@ internal abstract class ConversationListBindsModule {
     abstract fun bindConversationListUiStateMapper(
         impl: ConversationListUiStateMapperImpl,
     ): ConversationListUiStateMapper
+
+    @Binds
+    @Reusable
+    abstract fun bindConversationListItemUiMapper(
+        impl: ConversationListItemUiMapperImpl,
+    ): ConversationListItemUiMapper
 }

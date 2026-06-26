@@ -27,7 +27,7 @@ internal class ConversationListOptimisticSnapshotDelegateImplTest {
     fun archive_removesItemFromEffectiveSnapshot() = runTest {
         val delegate = bindDelegate(snapshotOfIds("a", "b"))
 
-        delegate.archive(listOf("a"))
+        delegate.remove(listOf("a"))
 
         assertEquals(listOf("b"), delegate.conversationIds())
     }
@@ -74,8 +74,8 @@ internal class ConversationListOptimisticSnapshotDelegateImplTest {
     fun restoreArchived_afterArchive_bringsItemBack() = runTest {
         val delegate = bindDelegate(snapshotOfIds("a", "b"))
 
-        delegate.archive(listOf("a"))
-        delegate.restoreArchived(listOf("a"))
+        delegate.remove(listOf("a"))
+        delegate.restore(listOf("a"))
 
         assertTrue("a" in delegate.conversationIds())
     }
@@ -122,11 +122,11 @@ internal class ConversationListOptimisticSnapshotDelegateImplTest {
         val rawSnapshot = MutableStateFlow(snapshotOfIds("a", "b"))
         val delegate = bindDelegate(rawSnapshot)
 
-        delegate.archive(listOf("a"))
+        delegate.remove(listOf("a"))
         rawSnapshot.value = snapshotOfIds("b")
         runCurrent()
 
-        delegate.discardArchived(listOf("a"))
+        delegate.discardRemoval(listOf("a"))
 
         assertEquals(listOf("b"), delegate.conversationIds())
     }
@@ -135,9 +135,9 @@ internal class ConversationListOptimisticSnapshotDelegateImplTest {
     fun restoreThenDiscard_keepsRestoredItemVisible() = runTest {
         val delegate = bindDelegate(snapshotOfIds("a", "b"))
 
-        delegate.archive(listOf("a"))
-        delegate.restoreArchived(listOf("a"))
-        delegate.discardArchived(listOf("a"))
+        delegate.remove(listOf("a"))
+        delegate.restore(listOf("a"))
+        delegate.discardRemoval(listOf("a"))
 
         assertTrue("a" in delegate.conversationIds())
     }
@@ -189,8 +189,8 @@ internal class ConversationListOptimisticSnapshotDelegateImplTest {
             repository.observeSnapshot(ConversationListMode.Inbox)
         } returns MutableStateFlow(snapshotOfIds("a"))
 
-        delegate.bind(backgroundScope)
-        delegate.bind(backgroundScope)
+        delegate.bind(backgroundScope, ConversationListMode.Inbox)
+        delegate.bind(backgroundScope, ConversationListMode.Inbox)
         runCurrent()
 
         verify(exactly = 1) { repository.observeSnapshot(ConversationListMode.Inbox) }
@@ -212,7 +212,7 @@ internal class ConversationListOptimisticSnapshotDelegateImplTest {
             repository = repository,
             reducer = ConversationListOptimisticReducer(),
         ).apply {
-            bind(backgroundScope)
+            bind(backgroundScope, ConversationListMode.Inbox)
             runCurrent()
         }
     }
