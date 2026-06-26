@@ -63,13 +63,15 @@ import com.android.messaging.ui.common.components.snackbar.showActionSnackbar
 import com.android.messaging.ui.conversationlist.ConversationListEffectHandler
 import com.android.messaging.ui.conversationlist.ConversationListScreenModel
 import com.android.messaging.ui.conversationlist.ConversationListViewModel
+import com.android.messaging.ui.conversationlist.common.ConversationListItemRow
+import com.android.messaging.ui.conversationlist.common.previewConversationListItems
 import com.android.messaging.ui.conversationlist.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
 import com.android.messaging.ui.conversationlist.model.ConversationListEffect as Effect
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
 import com.android.messaging.ui.conversationlist.model.ConversationListUiState as State
-import com.android.messaging.ui.conversationlist.ui.item.ConversationListItemRow
-import com.android.messaging.ui.conversationlist.ui.support.previewConversationListItems
+import com.android.messaging.ui.conversationlist.common.ConversationListItemRow
+import com.android.messaging.ui.conversationlist.common.previewConversationListItems
 import com.android.messaging.ui.conversationlist.ui.topbar.ConversationListSelectionTopAppBar
 import com.android.messaging.ui.conversationlist.ui.topbar.ConversationListTopAppBar
 import com.android.messaging.ui.core.MessagingPreviewTheme

@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversationlist.ui.item
+package com.android.messaging.ui.conversationlist.common
 
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable

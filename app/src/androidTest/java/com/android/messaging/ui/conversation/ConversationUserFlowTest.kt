@@ -13,7 +13,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.common.test.rules.AppTestRule
 import com.android.common.test.rules.MessagingTestRule
 import com.android.messaging.ui.conversationlist.ConversationListActivity
-import com.android.messaging.ui.conversationlist.ui.support.CONVERSATION_LIST_TEST_TAG
+import com.android.messaging.ui.conversationlist.common.CONVERSATION_LIST_TEST_TAG
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
