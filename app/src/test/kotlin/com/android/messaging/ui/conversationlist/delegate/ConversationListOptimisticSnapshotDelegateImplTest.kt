@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationlist.delegate
 
 import com.android.messaging.data.conversationlist.model.ConversationListItem
+import com.android.messaging.data.conversationlist.model.ConversationListMode
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
 import com.android.messaging.ui.conversationlist.conversationItem
@@ -184,13 +185,15 @@ internal class ConversationListOptimisticSnapshotDelegateImplTest {
             repository = repository,
             reducer = ConversationListOptimisticReducer(),
         )
-        every { repository.observeInboxSnapshot() } returns MutableStateFlow(snapshotOfIds("a"))
+        every {
+            repository.observeSnapshot(ConversationListMode.Inbox)
+        } returns MutableStateFlow(snapshotOfIds("a"))
 
         delegate.bind(backgroundScope)
         delegate.bind(backgroundScope)
         runCurrent()
 
-        verify(exactly = 1) { repository.observeInboxSnapshot() }
+        verify(exactly = 1) { repository.observeSnapshot(ConversationListMode.Inbox) }
     }
 
     private fun TestScope.bindDelegate(
@@ -203,7 +206,7 @@ internal class ConversationListOptimisticSnapshotDelegateImplTest {
         rawSnapshot: MutableStateFlow<ConversationListSnapshot>,
     ): ConversationListOptimisticSnapshotDelegateImpl {
         val repository = mockk<ConversationListRepository>()
-        every { repository.observeInboxSnapshot() } returns rawSnapshot
+        every { repository.observeSnapshot(ConversationListMode.Inbox) } returns rawSnapshot
 
         return ConversationListOptimisticSnapshotDelegateImpl(
             repository = repository,

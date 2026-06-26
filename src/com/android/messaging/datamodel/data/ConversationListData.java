@@ -46,7 +46,7 @@ public class ConversationListData extends BindableData {
             ConversationListViewColumns.PINNED + " DESC, "
             + ConversationListViewColumns.SORT_TIMESTAMP + " DESC";
 
-    private static final String WHERE_ARCHIVED =
+    public static final String WHERE_ARCHIVED =
             "(" + ConversationListViewColumns.ARCHIVE_STATUS + " = 1)";
     public static final String WHERE_NOT_ARCHIVED =
             "(" + ConversationListViewColumns.ARCHIVE_STATUS + " = 0)";

@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationlist.delegate
 
 import com.android.messaging.data.conversationlist.model.ConversationListItem
+import com.android.messaging.data.conversationlist.model.ConversationListMode
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
 import javax.inject.Inject
@@ -43,7 +44,7 @@ internal class ConversationListOptimisticSnapshotDelegateImpl @Inject constructo
         isBound = true
 
         scope.launch {
-            repository.observeInboxSnapshot()
+            repository.observeSnapshot(ConversationListMode.Inbox)
                 .collect { snapshot ->
                     rawSnapshot = snapshot
                     overrides = reducer.prune(
