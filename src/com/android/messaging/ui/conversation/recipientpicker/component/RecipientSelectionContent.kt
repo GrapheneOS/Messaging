@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import com.android.messaging.R
 import com.android.messaging.ui.conversation.preview.previewSimSelectorUiState
 import com.android.messaging.ui.conversation.recipientpicker.component.simselector.NewChatSimSelectorRow
 import com.android.messaging.ui.core.MessagingPreviewTheme
@@ -232,6 +233,7 @@ private fun RecipientSelectionArmedContactsArea(
         onRecipientDestinationClick = onRecipientDestinationClickWrapped,
         onRecipientDestinationLongClick = onRecipientDestinationLongClickWrapped
             .takeIf { onRecipientDestinationLongClick != null },
+        emptyStateText = R.string.contact_list_empty_text,
         topListContent = topListContent,
     )
 }

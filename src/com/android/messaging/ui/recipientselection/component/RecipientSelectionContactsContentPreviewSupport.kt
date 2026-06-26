@@ -7,6 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.android.messaging.R
 import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
 import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerUiState
 import com.android.messaging.ui.recipientselection.model.picker.SelectedRecipient
@@ -38,6 +39,7 @@ internal fun PreviewRecipientSelectionContactsContent(
         onPrimaryActionClick = {},
         onRecipientDestinationClick = { _, _ -> },
         onRecipientDestinationLongClick = onRecipientDestinationLongClick,
+        emptyStateText = R.string.contact_list_empty_text,
         topListContent = topListContent,
     )
 }

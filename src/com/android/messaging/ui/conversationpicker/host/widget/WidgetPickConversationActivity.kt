@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.android.messaging.ui.conversationpicker.ConversationPickerScreen
+import com.android.messaging.ui.conversationpicker.model.ConversationPickerLabels
 import com.android.messaging.ui.core.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -35,11 +36,12 @@ class WidgetPickConversationActivity : ComponentActivity() {
         setContent {
             AppTheme {
                 ConversationPickerScreen(
-                    allowMultiSelect = false,
-                    isInitialDraftLoading = false,
-                    initialDraft = null,
                     effectHandler = effectHandler,
                     onNavigateBack = ::finish,
+                    allowMultiSelect = false,
+                    labels = ConversationPickerLabels.Widget,
+                    isInitialDraftLoading = false,
+                    initialDraft = null,
                 )
             }
         }

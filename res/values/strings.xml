@@ -694,6 +694,8 @@
     <string name="vcard_detail_notes_label">Notes</string>
     <!-- Title for the message forwarding dialog -->
     <string name="forward_message_activity_title">Forward message</string>
+    <!-- Text shown when no contacts are available to forward a message to -->
+    <string name="forward_picker_empty_text">Enter a contact name or phone number to forward to</string>
     <!-- Title for the message reply dialog -->
     <string name="reply_activity_title">Reply</string>
 
@@ -1074,6 +1076,8 @@
     <string name="widget_new_message_content_description">New message</string>
     <!-- Content description for conversation list button in desktop widget -->
     <string name="widget_conversation_list_content_description">Conversation list</string>
+    <!-- Text shown when no contacts are available while picking a conversation for the widget -->
+    <string name="widget_picker_empty_text">Enter a contact name or phone number to pick a conversation</string>
     <!-- Shown when loading conversations in the widget -->
     <string name="loading_conversations">Loading conversations</string>
     <!-- Shown when loading messages in the widget -->
