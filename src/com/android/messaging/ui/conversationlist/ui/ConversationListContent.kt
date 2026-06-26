@@ -50,6 +50,8 @@ import com.android.messaging.ui.conversationlist.model.ConversationListAction as
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
 import com.android.messaging.ui.conversationlist.ui.item.ConversationListItemRow
+import com.android.messaging.ui.conversationlist.ui.item.ConversationSwipeAction
+import com.android.messaging.ui.conversationlist.ui.item.ConversationSwipeBackground
 import com.android.messaging.ui.conversationlist.ui.item.SwipeableConversationListItem
 import com.android.messaging.ui.conversationlist.ui.support.AppearanceAnimationToken
 import com.android.messaging.ui.conversationlist.ui.support.CONVERSATION_LIST_TEST_TAG
@@ -222,18 +224,16 @@ private fun LazyItemScope.ConversationListRow(
         }
     }
 
+    val (startToEndAction, endToStartAction) = inboxSwipeActions(item.conversationId, onAction)
+
     SwipeableConversationListItem(
         item = item,
         isSelectionMode = isSelectionMode,
         isInteractionEnabled = !isHiddenByPinAnimation,
         appearanceAnimationToken = appearanceAnimationToken,
         onAppearanceAnimationFinished = onAppearanceAnimationFinished,
-        onArchive = {
-            onAction(Action.ConversationSwipedToArchive(item.conversationId))
-        },
-        onToggleRead = {
-            onAction(Action.ConversationSwipedToToggleRead(item.conversationId))
-        },
+        startToEndAction = startToEndAction,
+        endToStartAction = endToStartAction,
         backgroundHorizontalInsets = horizontalInsets,
         modifier = Modifier.conversationRowSwipeModifier(
             lazyItemScope = this,
@@ -294,6 +294,22 @@ private fun Modifier.conversationRowSwipeModifier(
                 else -> 1f
             }
         }
+}
+
+private fun inboxSwipeActions(
+    conversationId: String,
+    onAction: (Action) -> Unit,
+): Pair<ConversationSwipeAction, ConversationSwipeAction> {
+    val toggleRead = ConversationSwipeAction(
+        background = ConversationSwipeBackground.ToggleRead,
+        onTrigger = { onAction(Action.ConversationSwipedToToggleRead(conversationId)) },
+    )
+    val archive = ConversationSwipeAction(
+        background = ConversationSwipeBackground.Archive,
+        onTrigger = { onAction(Action.ConversationSwipedToArchive(conversationId)) },
+    )
+
+    return toggleRead to archive
 }
 
 private fun Modifier.trackPinAnimationBounds(
