@@ -7,6 +7,7 @@ import com.android.messaging.data.conversationlist.model.ConversationListDraft
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListLatestMessage
 import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
+import com.android.messaging.data.conversationlist.model.ConversationListMode
 import com.android.messaging.data.conversationlist.model.ConversationListNotification
 import com.android.messaging.data.conversationlist.model.ConversationListParticipant
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
@@ -39,12 +40,13 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 
 internal interface ConversationListRepository {
-    fun observeInboxSnapshot(): Flow<ConversationListSnapshot>
+    fun observeSnapshot(mode: ConversationListMode): Flow<ConversationListSnapshot>
     fun setNewestConversationVisible(isVisible: Boolean)
     fun snooze(conversationId: String, option: SnoozeOption)
     fun clearSnooze(conversationId: String)
@@ -62,19 +64,25 @@ internal class ConversationListRepositoryImpl @Inject constructor(
     private val manualRefresh = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun observeInboxSnapshot(): Flow<ConversationListSnapshot> {
+    override fun observeSnapshot(mode: ConversationListMode): Flow<ConversationListSnapshot> {
         val itemsFlow = merge(
             observeUri(MessagingContentProvider.CONVERSATIONS_URI),
             notificationRepository.observeSnoozeChanges(),
             manualRefresh,
         )
             .conflate()
-            .map { queryInboxConversations() }
+            .map { queryConversations(mode) }
             .flatMapLatest(::observeSnoozeState)
 
-        val blockedDestinationsFlow = observeUri(MessagingContentProvider.PARTICIPANTS_URI)
-            .conflate()
-            .map { queryBlockedParticipantDestinations() }
+        val blockedDestinationsFlow = when (mode) {
+            ConversationListMode.Inbox -> {
+                observeUri(MessagingContentProvider.PARTICIPANTS_URI)
+                    .conflate()
+                    .map { queryBlockedParticipantDestinations() }
+            }
+
+            ConversationListMode.Archived -> flowOf(persistentSetOf())
+        }
 
         return combine(
             itemsFlow,
@@ -181,11 +189,18 @@ internal class ConversationListRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun queryInboxConversations(): ImmutableList<ConversationListItem> {
+    private fun queryConversations(
+        mode: ConversationListMode,
+    ): ImmutableList<ConversationListItem> {
+        val selection = when (mode) {
+            ConversationListMode.Inbox -> ConversationListData.WHERE_NOT_ARCHIVED
+            ConversationListMode.Archived -> ConversationListData.WHERE_ARCHIVED
+        }
+
         val cursor = contentResolver.query(
             MessagingContentProvider.CONVERSATIONS_URI,
             ConversationListItemData.PROJECTION,
-            ConversationListData.WHERE_NOT_ARCHIVED,
+            selection,
             null,
             ConversationListData.SORT_ORDER,
         ) ?: return persistentListOf()
