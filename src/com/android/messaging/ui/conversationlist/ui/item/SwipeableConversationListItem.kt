@@ -17,8 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Archive
-import androidx.compose.material.icons.filled.MarkChatRead
 import androidx.compose.material.icons.filled.MarkChatUnread
+import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -50,11 +50,11 @@ import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
 import com.android.messaging.ui.conversationlist.ui.support.AppearanceAnimationToken
-import kotlin.math.abs
-import kotlin.math.roundToInt
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 private val SwipeBackgroundShape = RoundedCornerShape(percent = 50)
 
@@ -92,11 +92,30 @@ private val ItemCollapseSpec = tween<Float>(durationMillis = ITEM_COLLAPSE_DURAT
 
 private val ItemAppearanceSpec = tween<Float>(durationMillis = ITEM_APPEARANCE_DURATION_MILLIS)
 
-private enum class ConversationSwipeAction {
+internal enum class ConversationSwipeBackground {
     Archive,
+    Unarchive,
     ToggleRead,
+}
+private enum class SwipeDirection {
+    StartToEnd,
+    EndToStart,
     None,
 }
+
+private val ConversationSwipeBackground.isDismiss: Boolean
+    get() = this == ConversationSwipeBackground.Archive ||
+        this == ConversationSwipeBackground.Unarchive
+
+internal data class ConversationSwipeAction(
+    val background: ConversationSwipeBackground,
+    val onTrigger: () -> Unit,
+)
+
+private data class SwipeBackgroundRender(
+    val background: ConversationSwipeBackground,
+    val alignment: Alignment,
+)
 
 @Composable
 internal fun SwipeableConversationListItem(
@@ -105,17 +124,25 @@ internal fun SwipeableConversationListItem(
     isInteractionEnabled: Boolean,
     appearanceAnimationToken: AppearanceAnimationToken?,
     onAppearanceAnimationFinished: () -> Unit,
-    onArchive: () -> Unit,
-    onToggleRead: () -> Unit,
+    startToEndAction: ConversationSwipeAction?,
+    endToStartAction: ConversationSwipeAction?,
     backgroundHorizontalInsets: PaddingValues,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    val currentOnArchive by rememberUpdatedState(onArchive)
-    val currentOnToggleRead by rememberUpdatedState(onToggleRead)
+    val currentStartToEndAction by rememberUpdatedState(startToEndAction)
+    val currentEndToStartAction by rememberUpdatedState(endToStartAction)
 
     val offsetX = remember { mutableFloatStateOf(0f) }
-    val backgroundAction by remember { derivedStateOf { swipeAction(offsetX.floatValue) } }
+    val backgroundRender by remember {
+        derivedStateOf {
+            resolveBackgroundRender(
+                offset = offsetX.floatValue,
+                startToEndAction = currentStartToEndAction,
+                endToStartAction = currentEndToStartAction,
+            )
+        }
+    }
     val visibilityFraction = rememberAppearanceVisibility(
         conversationId = item.conversationId,
         appearanceAnimationToken = appearanceAnimationToken,
@@ -128,8 +155,8 @@ internal fun SwipeableConversationListItem(
         else -> Modifier.swipeActions(
             offsetX = offsetX,
             visibilityFraction = visibilityFraction,
-            onArchive = { currentOnArchive() },
-            onToggleRead = { currentOnToggleRead() },
+            startToEndAction = { currentStartToEndAction },
+            endToStartAction = { currentEndToStartAction },
         )
     }
     val interactionModifier = when {
@@ -148,8 +175,7 @@ internal fun SwipeableConversationListItem(
             .graphicsLayer { alpha = visibilityFraction.value },
     ) {
         ConversationListSwipeBackground(
-            action = backgroundAction,
-            isUnread = item.isUnread,
+            render = backgroundRender,
             modifier = Modifier
                 .matchParentSize()
                 .padding(backgroundHorizontalInsets)
@@ -227,8 +253,8 @@ private fun Modifier.collapseVertically(fraction: () -> Float): Modifier {
 private fun Modifier.swipeActions(
     offsetX: MutableFloatState,
     visibilityFraction: Animatable<Float, AnimationVector1D>,
-    onArchive: () -> Unit,
-    onToggleRead: () -> Unit,
+    startToEndAction: () -> ConversationSwipeAction?,
+    endToStartAction: () -> ConversationSwipeAction?,
 ): Modifier {
     return pointerInput(Unit) {
         val thresholdPx = SwipeActionThreshold.toPx()
@@ -278,8 +304,8 @@ private fun Modifier.swipeActions(
                             width = size.width.toFloat(),
                             velocityX = velocity.x,
                             velocityY = velocity.y,
-                            onArchive = onArchive,
-                            onToggleRead = onToggleRead,
+                            startToEndAction = startToEndAction(),
+                            endToStartAction = endToStartAction(),
                         )
                     }
 
@@ -330,10 +356,10 @@ private suspend fun settleSwipe(
     width: Float,
     velocityX: Float,
     velocityY: Float,
-    onArchive: () -> Unit,
-    onToggleRead: () -> Unit,
+    startToEndAction: ConversationSwipeAction?,
+    endToStartAction: ConversationSwipeAction?,
 ) {
-    val settleAction = resolveSettleAction(
+    val direction = resolveSettleDirection(
         offset = offsetX.floatValue,
         thresholdPx = thresholdPx,
         minFlingDistancePx = minFlingDistancePx,
@@ -341,23 +367,14 @@ private suspend fun settleSwipe(
         velocityY = velocityY,
     )
 
-    when (settleAction) {
-        ConversationSwipeAction.Archive -> {
-            animateOffset(
-                offsetX = offsetX,
-                targetValue = -width,
-                initialVelocity = velocityX,
-                animationSpec = SwipeArchiveSlideSpec,
-            )
-            visibilityFraction.animateTo(
-                targetValue = 0f,
-                animationSpec = ItemCollapseSpec,
-            )
-            onArchive()
-        }
+    val action = when (direction) {
+        SwipeDirection.StartToEnd -> startToEndAction
+        SwipeDirection.EndToStart -> endToStartAction
+        SwipeDirection.None -> null
+    }
 
-        ConversationSwipeAction.ToggleRead -> {
-            onToggleRead()
+    when {
+        action == null -> {
             animateOffset(
                 offsetX = offsetX,
                 targetValue = 0f,
@@ -366,7 +383,27 @@ private suspend fun settleSwipe(
             )
         }
 
-        ConversationSwipeAction.None -> {
+        action.background.isDismiss -> {
+            val target = when (direction) {
+                SwipeDirection.StartToEnd -> width
+                else -> -width
+            }
+
+            animateOffset(
+                offsetX = offsetX,
+                targetValue = target,
+                initialVelocity = velocityX,
+                animationSpec = SwipeArchiveSlideSpec,
+            )
+            visibilityFraction.animateTo(
+                targetValue = 0f,
+                animationSpec = ItemCollapseSpec,
+            )
+            action.onTrigger()
+        }
+
+        else -> {
+            action.onTrigger()
             animateOffset(
                 offsetX = offsetX,
                 targetValue = 0f,
@@ -381,22 +418,22 @@ private fun isHorizontalDrag(panOffset: Offset): Boolean {
     return abs(panOffset.x) > abs(panOffset.y) * SWIPE_DIRECTION_BIAS
 }
 
-private fun resolveSettleAction(
+private fun resolveSettleDirection(
     offset: Float,
     thresholdPx: Float,
     minFlingDistancePx: Float,
     velocityX: Float,
     velocityY: Float,
-): ConversationSwipeAction {
+): SwipeDirection {
     val isHorizontalFling = abs(velocityX) >= SWIPE_FLING_VELOCITY_THRESHOLD &&
         abs(velocityX) >= abs(velocityY) * SWIPE_HORIZONTAL_VELOCITY_BIAS
-    val isArchiveFling = isHorizontalFling && offset <= -minFlingDistancePx && velocityX < 0f
-    val isToggleReadFling = isHorizontalFling && offset >= minFlingDistancePx && velocityX > 0f
+    val isEndToStartFling = isHorizontalFling && offset <= -minFlingDistancePx && velocityX < 0f
+    val isStartToEndFling = isHorizontalFling && offset >= minFlingDistancePx && velocityX > 0f
 
     return when {
-        offset <= -thresholdPx || isArchiveFling -> ConversationSwipeAction.Archive
-        offset >= thresholdPx || isToggleReadFling -> ConversationSwipeAction.ToggleRead
-        else -> ConversationSwipeAction.None
+        offset <= -thresholdPx || isEndToStartFling -> SwipeDirection.EndToStart
+        offset >= thresholdPx || isStartToEndFling -> SwipeDirection.StartToEnd
+        else -> SwipeDirection.None
     }
 }
 
@@ -415,52 +452,64 @@ private suspend fun animateOffset(
     }
 }
 
-private fun swipeAction(offset: Float): ConversationSwipeAction {
+private fun resolveBackgroundRender(
+    offset: Float,
+    startToEndAction: ConversationSwipeAction?,
+    endToStartAction: ConversationSwipeAction?,
+): SwipeBackgroundRender? {
     return when {
-        offset > 0f -> ConversationSwipeAction.ToggleRead
-        offset < 0f -> ConversationSwipeAction.Archive
-        else -> ConversationSwipeAction.None
+        offset > 0f -> startToEndAction?.let {
+            SwipeBackgroundRender(
+                background = it.background,
+                alignment = Alignment.CenterStart,
+            )
+        }
+
+        offset < 0f -> endToStartAction?.let {
+            SwipeBackgroundRender(
+                background = it.background,
+                alignment = Alignment.CenterEnd,
+            )
+        }
+
+        else -> null
     }
 }
 
 @Composable
 private fun ConversationListSwipeBackground(
-    action: ConversationSwipeAction,
-    isUnread: Boolean,
+    render: SwipeBackgroundRender?,
     modifier: Modifier = Modifier,
 ) {
-    if (action == ConversationSwipeAction.None) {
+    if (render == null) {
         Box(modifier = modifier)
         return
     }
 
-    val isArchive = action == ConversationSwipeAction.Archive
+    val background = render.background
 
-    val containerColor = when {
-        isArchive -> MaterialTheme.colorScheme.secondaryContainer
-        else -> MaterialTheme.colorScheme.tertiaryContainer
+    val containerColor = when (background) {
+        ConversationSwipeBackground.Archive -> MaterialTheme.colorScheme.secondaryContainer
+        ConversationSwipeBackground.Unarchive -> MaterialTheme.colorScheme.secondaryContainer
+        ConversationSwipeBackground.ToggleRead -> MaterialTheme.colorScheme.tertiaryContainer
     }
 
-    val contentColor = when {
-        isArchive -> MaterialTheme.colorScheme.onSecondaryContainer
-        else -> MaterialTheme.colorScheme.onTertiaryContainer
+    val contentColor = when (background) {
+        ConversationSwipeBackground.Archive -> MaterialTheme.colorScheme.onSecondaryContainer
+        ConversationSwipeBackground.Unarchive -> MaterialTheme.colorScheme.onSecondaryContainer
+        ConversationSwipeBackground.ToggleRead -> MaterialTheme.colorScheme.onTertiaryContainer
     }
 
-    val alignment = when {
-        isArchive -> Alignment.CenterEnd
-        else -> Alignment.CenterStart
+    val icon = when (background) {
+        ConversationSwipeBackground.Archive -> Icons.Filled.Archive
+        ConversationSwipeBackground.Unarchive -> Icons.Filled.Unarchive
+        ConversationSwipeBackground.ToggleRead -> Icons.Filled.MarkChatUnread
     }
 
-    val icon = when {
-        isArchive -> Icons.Filled.Archive
-        isUnread -> Icons.Filled.MarkChatRead
-        else -> Icons.Filled.MarkChatUnread
-    }
-
-    val description = when {
-        isArchive -> stringResource(R.string.action_archive)
-        isUnread -> stringResource(R.string.mark_as_read)
-        else -> stringResource(R.string.mark_as_unread)
+    val description = when (background) {
+        ConversationSwipeBackground.Archive -> stringResource(R.string.action_archive)
+        ConversationSwipeBackground.Unarchive -> stringResource(R.string.action_unarchive)
+        ConversationSwipeBackground.ToggleRead -> stringResource(R.string.mark_as_unread)
     }
 
     Box(
@@ -468,7 +517,7 @@ private fun ConversationListSwipeBackground(
             .clip(SwipeBackgroundShape)
             .background(containerColor)
             .padding(horizontal = SwipeBackgroundHorizontalPadding),
-        contentAlignment = alignment,
+        contentAlignment = render.alignment,
     ) {
         Icon(
             imageVector = icon,
