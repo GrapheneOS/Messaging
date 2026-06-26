@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversationlist.ui.support
+package com.android.messaging.ui.conversationlist.common
 
 import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
 import com.android.messaging.ui.conversationlist.mapper.conversationListMmsDownloadTitleResId

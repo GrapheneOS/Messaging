@@ -1,8 +1,7 @@
-package com.android.messaging.ui.conversationlist.ui.item
+package com.android.messaging.ui.conversationlist.common
 
 import com.android.messaging.R
 import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
-import com.android.messaging.ui.conversationlist.ui.support.previewConversationListItem
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

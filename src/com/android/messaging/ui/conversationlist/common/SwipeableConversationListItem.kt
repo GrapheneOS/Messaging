@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversationlist.ui.item
+package com.android.messaging.ui.conversationlist.common
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
@@ -49,12 +49,11 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
-import com.android.messaging.ui.conversationlist.ui.support.AppearanceAnimationToken
+import kotlin.math.abs
+import kotlin.math.roundToInt
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import kotlin.math.abs
-import kotlin.math.roundToInt
 
 private val SwipeBackgroundShape = RoundedCornerShape(percent = 50)
 

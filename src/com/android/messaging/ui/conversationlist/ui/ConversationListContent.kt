@@ -46,17 +46,17 @@ import com.android.messaging.R
 import com.android.messaging.ui.common.components.PrimaryActionButton
 import com.android.messaging.ui.common.components.horizontalSafeDrawingInsets
 import com.android.messaging.ui.common.components.reorder.OverlayReorderAnimationController
+import com.android.messaging.ui.conversationlist.common.AppearanceAnimationToken
+import com.android.messaging.ui.conversationlist.common.CONVERSATION_LIST_TEST_TAG
+import com.android.messaging.ui.conversationlist.common.ConversationListItemRow
+import com.android.messaging.ui.conversationlist.common.ConversationSwipeAction
+import com.android.messaging.ui.conversationlist.common.ConversationSwipeBackground
+import com.android.messaging.ui.conversationlist.common.SwipeableConversationListItem
+import com.android.messaging.ui.conversationlist.common.previewConversationListItems
+import com.android.messaging.ui.conversationlist.common.rememberAppearanceAnimationTokens
 import com.android.messaging.ui.conversationlist.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
-import com.android.messaging.ui.conversationlist.ui.item.ConversationListItemRow
-import com.android.messaging.ui.conversationlist.ui.item.ConversationSwipeAction
-import com.android.messaging.ui.conversationlist.ui.item.ConversationSwipeBackground
-import com.android.messaging.ui.conversationlist.ui.item.SwipeableConversationListItem
-import com.android.messaging.ui.conversationlist.ui.support.AppearanceAnimationToken
-import com.android.messaging.ui.conversationlist.ui.support.CONVERSATION_LIST_TEST_TAG
-import com.android.messaging.ui.conversationlist.ui.support.previewConversationListItems
-import com.android.messaging.ui.conversationlist.ui.support.rememberAppearanceAnimationTokens
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet

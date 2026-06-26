@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversationlist.ui.item
+package com.android.messaging.ui.conversationlist.common
 
 import androidx.compose.ui.unit.dp
 
