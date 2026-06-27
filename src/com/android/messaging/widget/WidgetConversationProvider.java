@@ -170,6 +170,7 @@ public class WidgetConversationProvider extends BaseWidgetProvider {
         }
         final Intent intent = new Intent(ACTION_NOTIFY_MESSAGES_CHANGED);
         intent.putExtra(UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID, conversationId);
+        intent.setPackage(context.getPackageName());
         context.sendBroadcast(intent);
     }
 
