@@ -112,11 +112,11 @@
 
         <!-- Displays a list of archived conversations -->
         <activity
-            android:name=".ui.conversationlist.ArchivedConversationListActivity"
+            android:name=".ui.conversationlist.archived.ArchivedConversationListActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:screenOrientation="user"
             android:label="@string/archived_activity_title"
-            android:theme="@style/BugleTheme.ArchivedConversationListActivity"
+            android:theme="@style/Theme.Compose"
             android:parentActivityName="com.android.messaging.ui.conversationlist.ConversationListActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
