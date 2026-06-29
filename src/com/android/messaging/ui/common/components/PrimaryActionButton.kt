@@ -17,8 +17,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.ui.core.MessagingPreviewColumn
@@ -56,15 +60,24 @@ internal fun PrimaryActionButton(
         enabled -> colorScheme.onPrimaryContainer
         else -> colorScheme.onSurface.copy(alpha = DISABLED_CONTENT_ALPHA)
     }
+    val accessibilityModifier = Modifier.clearAndSetSemantics {
+        contentDescription = text
+        role = Role.Button
+
+        if (isInteractionEnabled) {
+            onClick(label = text) {
+                onClick()
+                true
+            }
+        } else {
+            disabled()
+        }
+    }
 
     ExtendedFloatingActionButton(
         modifier = modifier
-            .optionalTestTag(testTag)
-            .semantics {
-                if (!isInteractionEnabled) {
-                    disabled()
-                }
-            },
+            .then(accessibilityModifier)
+            .optionalTestTag(testTag),
         onClick = {
             if (isInteractionEnabled) {
                 onClick()

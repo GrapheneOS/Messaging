@@ -4,6 +4,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
@@ -38,6 +42,8 @@ internal fun TwoLineListItem(
     onLongClick: (() -> Unit)? = null,
     shape: Shape = ListRowShape,
     color: Color = MaterialTheme.colorScheme.background,
+    contentDescription: String? = null,
+    keepLeadingContentAccessible: Boolean = false,
     trailingContent: (@Composable () -> Unit)? = null,
 ) {
     TwoLineListItem(
@@ -56,6 +62,8 @@ internal fun TwoLineListItem(
         onLongClick = onLongClick,
         shape = shape,
         color = color,
+        contentDescription = contentDescription,
+        keepLeadingContentAccessible = keepLeadingContentAccessible,
         subtitleContent = when {
             subtitle.isNullOrBlank() -> null
 
@@ -85,6 +93,8 @@ internal fun TwoLineListItem(
     onLongClick: (() -> Unit)? = null,
     shape: Shape = ListRowShape,
     color: Color = MaterialTheme.colorScheme.background,
+    contentDescription: String? = null,
+    keepLeadingContentAccessible: Boolean = false,
     subtitleContent: (@Composable () -> Unit)? = null,
     trailingContent: (@Composable () -> Unit)? = null,
 ) {
@@ -97,15 +107,34 @@ internal fun TwoLineListItem(
             null -> Modifier.clickable(onClick = onClick)
             else -> Modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick)
         }
+        val semanticsModifier = when (contentDescription) {
+            null -> Modifier
+            else -> Modifier.semantics {
+                this.contentDescription = contentDescription
+            }
+        }
+        val descendantSemanticsModifier = when (contentDescription) {
+            null -> Modifier
+            else -> Modifier.clearAndSetSemantics {}
+        }
+        val leadingSemanticsModifier = when {
+            contentDescription == null -> Modifier
+            keepLeadingContentAccessible -> Modifier
+            else -> descendantSemanticsModifier
+        }
 
         Row(
-            modifier = clickModifier.padding(
-                horizontal = ItemHorizontalPadding,
-                vertical = ItemVerticalPadding,
-            ),
+            modifier = clickModifier
+                .then(semanticsModifier)
+                .padding(
+                    horizontal = ItemHorizontalPadding,
+                    vertical = ItemVerticalPadding,
+                ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            leadingContent()
+            Box(modifier = leadingSemanticsModifier) {
+                leadingContent()
+            }
 
             Spacer(modifier = Modifier.width(ItemHorizontalPadding))
 
@@ -114,10 +143,15 @@ internal fun TwoLineListItem(
                 subtitleContent = subtitleContent,
                 modifier = Modifier
                     .weight(1f)
-                    .padding(horizontal = ItemHorizontalPadding),
+                    .padding(horizontal = ItemHorizontalPadding)
+                    .then(descendantSemanticsModifier),
             )
 
-            trailingContent?.invoke()
+            trailingContent?.let { content ->
+                Box(modifier = descendantSemanticsModifier) {
+                    content()
+                }
+            }
         }
     }
 }

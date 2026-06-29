@@ -15,6 +15,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import com.android.messaging.R
 import com.android.messaging.ui.common.components.participant.ParticipantQuickActionsPopup
 import com.android.messaging.ui.common.components.participant.participantAvatarLabel
 import com.android.messaging.ui.common.components.participant.participantColorSeed
@@ -46,6 +53,19 @@ internal fun ConversationListItemAvatar(
     )
 
     var showQuickActions by remember { mutableStateOf(false) }
+    val onAvatarClick = {
+        when {
+            isSelectionMode -> onToggleSelection()
+            else -> showQuickActions = true
+        }
+    }
+    val avatarContentDescription = stringResource(
+        when {
+            isSelectionMode -> R.string.conversation_list_toggle_selection
+            else -> R.string.conversation_list_show_conversation_actions
+        },
+        item.title.orEmpty(),
+    )
 
     Box(modifier = Modifier.size(ItemAvatarSize)) {
         SelectionListAvatar(
@@ -57,13 +77,10 @@ internal fun ConversationListItemAvatar(
             isSelected = item.isSelected,
             modifier = Modifier
                 .clip(CircleShape)
-                .clickable {
-                    if (isSelectionMode) {
-                        onToggleSelection()
-                    } else {
-                        showQuickActions = true
-                    }
-                },
+                .conversationListAvatarClickSemantics(
+                    contentDescription = avatarContentDescription,
+                    onClick = onAvatarClick,
+                ),
         )
 
         ConversationListAvatarQuickActions(
@@ -79,6 +96,21 @@ internal fun ConversationListItemAvatar(
             onInfoClick = onInfoClick,
         )
     }
+}
+
+private fun Modifier.conversationListAvatarClickSemantics(
+    contentDescription: String,
+    onClick: () -> Unit,
+): Modifier {
+    return clickable(onClick = onClick)
+        .clearAndSetSemantics {
+            this.contentDescription = contentDescription
+            role = Role.Button
+            onClick(label = contentDescription) {
+                onClick()
+                true
+            }
+        }
 }
 
 @Composable

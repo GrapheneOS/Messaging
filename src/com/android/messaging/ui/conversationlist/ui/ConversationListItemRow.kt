@@ -70,6 +70,8 @@ internal fun ConversationListItemRow(
         ),
         onLongClick = onLongClick,
         color = itemContainerColor(item),
+        contentDescription = conversationListItemContentDescription(item),
+        keepLeadingContentAccessible = true,
         subtitleContent = {
             ConversationListItemBody(item)
         },

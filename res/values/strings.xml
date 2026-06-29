@@ -766,6 +766,20 @@
     <string name="conversation_list_status_not_sent">Not sent</string>
     <!-- Conversation list row status for an incoming message that failed to download. -->
     <string name="conversation_list_status_not_downloaded">Not downloaded</string>
+    <!-- Accessibility status for an unread conversation in the conversation list. -->
+    <string name="conversation_list_status_unread">Unread</string>
+    <!-- Accessibility status for a pinned conversation in the conversation list. -->
+    <string name="conversation_list_status_pinned">Pinned</string>
+    <!-- Accessibility status for a muted conversation in the conversation list. -->
+    <string name="conversation_list_status_notifications_off">Notifications off</string>
+    <!-- Accessibility status for a snoozed conversation in the conversation list. -->
+    <string name="conversation_list_status_snoozed">Snoozed</string>
+    <!-- Accessibility status for a work conversation in the conversation list. -->
+    <string name="conversation_list_status_work_profile">Work profile</string>
+    <!-- Accessibility label for the conversation list avatar action that opens conversation quick actions. -->
+    <string name="conversation_list_show_conversation_actions">Show conversation actions for <xliff:g id="conversation">%1$s</xliff:g></string>
+    <!-- Accessibility label for the conversation list avatar action that toggles selection. -->
+    <string name="conversation_list_toggle_selection">Toggle selection for <xliff:g id="contact">%1$s</xliff:g></string>
 
     <!-- Shown in conversation as the snippet when there is no text and an attached picture. [CHAR LIMIT=25] -->
     <string name="conversation_list_snippet_picture">Picture</string>

@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.buildAnnotatedString
@@ -22,7 +21,6 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
-import com.android.messaging.R
 import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
 import com.android.messaging.ui.common.components.TextWithTrailingContent
 import com.android.messaging.ui.common.components.attachment.MediaThumbnail
@@ -73,7 +71,6 @@ internal fun ConversationListItemSnippet(
     }
     val failedIconContent: @Composable () -> Unit = {
         ConversationListItemFailedInlineIcon(
-            item = item,
             fontWeight = fontWeight,
             fontStyle = fontStyle,
             color = color,
@@ -96,7 +93,6 @@ internal fun ConversationListItemSnippet(
 
 @Composable
 private fun ConversationListItemFailedInlineIcon(
-    item: ConversationListItemUiModel,
     fontWeight: FontWeight,
     fontStyle: FontStyle?,
     color: Color,
@@ -115,7 +111,7 @@ private fun ConversationListItemFailedInlineIcon(
                 placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter,
             ),
         ) {
-            ConversationListItemFailedIcon(item = item)
+            ConversationListItemFailedIcon()
         },
     )
 
@@ -132,22 +128,13 @@ private fun ConversationListItemFailedInlineIcon(
 }
 
 @Composable
-private fun ConversationListItemFailedIcon(item: ConversationListItemUiModel) {
-    val description = stringResource(itemFailedStatusResId(item = item))
-
+private fun ConversationListItemFailedIcon() {
     Icon(
         imageVector = Icons.Default.Error,
-        contentDescription = description,
+        contentDescription = null,
         modifier = Modifier.size(ItemBadgeIconSize),
         tint = MaterialTheme.colorScheme.error,
     )
-}
-
-private fun itemFailedStatusResId(item: ConversationListItemUiModel): Int {
-    return when {
-        item.isOutgoing -> R.string.conversation_list_status_not_sent
-        else -> R.string.conversation_list_status_not_downloaded
-    }
 }
 
 private fun ConversationListPreviewUiModel.hasThumbnail(): Boolean {
