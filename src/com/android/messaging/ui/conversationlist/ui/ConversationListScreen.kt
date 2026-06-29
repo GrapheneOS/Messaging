@@ -11,9 +11,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -53,6 +55,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
 import com.android.messaging.ui.common.components.PrimaryActionButton
+import com.android.messaging.ui.common.components.horizontalSafeDrawingInsets
 import com.android.messaging.ui.common.components.reorder.OverlayReorderAnimation
 import com.android.messaging.ui.common.components.reorder.OverlayReorderAnimationController
 import com.android.messaging.ui.common.components.reorder.rememberOverlayReorderAnimationController
@@ -184,6 +187,7 @@ private fun ConversationListPinOverlay(
     OverlayReorderAnimation(controller = controller) { item ->
         ConversationListItemRow(
             item = item,
+            modifier = Modifier.conversationRowHorizontalPadding(horizontalSafeDrawingInsets()),
             onClick = {},
             onLongClick = {},
         )
@@ -439,13 +443,16 @@ private fun BoxScope.ConversationListFabs(
     onScrollToTop: () -> Unit,
 ) {
     val hasItems = uiState.content is ConversationListContentUiState.Items
+    val fabWindowInsets = WindowInsets.safeDrawing.only(
+        WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom,
+    )
 
     ScrollToTopFab(
         visible = uiState.isScrollToTopVisible,
         onClick = onScrollToTop,
         modifier = Modifier
             .align(Alignment.BottomCenter)
-            .windowInsetsPadding(WindowInsets.navigationBars)
+            .windowInsetsPadding(fabWindowInsets)
             .padding(bottom = FabSpacing),
     )
 
@@ -455,7 +462,7 @@ private fun BoxScope.ConversationListFabs(
         onClick = { onAction(Action.StartChatClicked) },
         modifier = Modifier
             .align(Alignment.BottomEnd)
-            .windowInsetsPadding(WindowInsets.navigationBars)
+            .windowInsetsPadding(fabWindowInsets)
             .padding(FabSpacing),
     )
 }

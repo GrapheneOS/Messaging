@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -29,10 +31,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -46,6 +48,7 @@ import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticip
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsAction as Action
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsNavEvent as NavEvent
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsUiState as State
+import com.android.messaging.ui.common.components.horizontalSafeDrawingInsets
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
@@ -127,7 +130,7 @@ private fun BlockedParticipantsContent(
                     BlockedParticipantsList(
                         uiState = uiState,
                         onAction = onAction,
-                        bottomPadding = contentPadding.calculateBottomPadding(),
+                        scaffoldContentPadding = contentPadding,
                     )
                 }
             }
@@ -146,15 +149,18 @@ private fun BlockedParticipantsContent(
 private fun BlockedParticipantsList(
     uiState: State,
     onAction: (Action) -> Unit,
-    bottomPadding: Dp,
+    scaffoldContentPadding: PaddingValues,
 ) {
+    val layoutDirection = LocalLayoutDirection.current
+    val horizontalInsets = horizontalSafeDrawingInsets()
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
             top = ScreenContentPadding,
-            bottom = ScreenContentPadding + bottomPadding,
-            start = ScreenContentPadding,
-            end = ScreenContentPadding,
+            bottom = ScreenContentPadding + scaffoldContentPadding.calculateBottomPadding(),
+            start = ScreenContentPadding + horizontalInsets.calculateStartPadding(layoutDirection),
+            end = ScreenContentPadding + horizontalInsets.calculateEndPadding(layoutDirection),
         ),
     ) {
         itemsIndexed(

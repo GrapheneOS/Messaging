@@ -11,6 +11,7 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.awaitTouchSlopOrCancellation
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -104,6 +105,7 @@ internal fun SwipeableConversationListItem(
     onAppearanceAnimationFinished: () -> Unit,
     onArchive: () -> Unit,
     onToggleRead: () -> Unit,
+    backgroundHorizontalInsets: PaddingValues,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
@@ -147,6 +149,7 @@ internal fun SwipeableConversationListItem(
             action = backgroundAction,
             modifier = Modifier
                 .matchParentSize()
+                .padding(backgroundHorizontalInsets)
                 .padding(horizontal = SwipeBackgroundOuterHorizontalPadding),
         )
 
