@@ -36,6 +36,7 @@ internal fun ConversationSettingsDialogs(
 
     if (showSnoozeChatDialog) {
         SnoozeChatDialog(
+            count = 1,
             onDismiss = onDismissSnoozeChat,
             onConfirm = { option ->
                 onAction(Action.SnoozeOptionSelected(option))

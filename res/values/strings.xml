@@ -815,11 +815,17 @@
     <!-- Label of unblock contact item in People & Options for 1:1 conversation -->
     <string name="unblock_contact_title">Unblock <xliff:g id="destination">%s</xliff:g></string>
 
-    <!-- Title of the snooze chat dialog opened from conversation settings -->
-    <string name="snooze_chat_dialog_title">Snooze chat</string>
+    <!-- Title of the snooze chat dialog -->
+    <plurals name="snooze_chat_dialog_title">
+        <item quantity="one">Snooze chat</item>
+        <item quantity="other">Snooze chats</item>
+    </plurals>
 
     <!-- Description shown inside the snooze chat dialog -->
-    <string name="snooze_chat_dialog_message">You won\'t get notifications from this chat for the selected period.</string>
+    <plurals name="snooze_chat_dialog_message">
+        <item quantity="one">You won\'t get notifications from this chat for the selected period.</item>
+        <item quantity="other">You won\'t get notifications from these chats for the selected period.</item>
+    </plurals>
 
     <!-- Confirm button label for the snooze chat dialog -->
     <string name="snooze_chat_dialog_confirm">Snooze</string>

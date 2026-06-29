@@ -30,6 +30,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
@@ -52,6 +53,7 @@ private val SnoozeOption.labelRes: Int
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SnoozeChatDialog(
+    count: Int,
     onDismiss: () -> Unit,
     onConfirm: (SnoozeOption) -> Unit,
 ) {
@@ -67,7 +69,7 @@ internal fun SnoozeChatDialog(
                     .verticalScroll(rememberScrollState())
                     .padding(vertical = DialogHorizontalPadding),
             ) {
-                SnoozeChatDialogHeader()
+                SnoozeChatDialogHeader(count)
 
                 Column(modifier = Modifier.selectableGroup()) {
                     SnoozeOption.entries.forEach { option ->
@@ -91,7 +93,7 @@ internal fun SnoozeChatDialog(
 }
 
 @Composable
-private fun SnoozeChatDialogHeader() {
+private fun SnoozeChatDialogHeader(count: Int) {
     Icon(
         imageVector = Icons.Default.Snooze,
         contentDescription = stringResource(R.string.snooze_chat_setting_title),
@@ -104,7 +106,7 @@ private fun SnoozeChatDialogHeader() {
     Spacer(modifier = Modifier.height(16.dp))
 
     Text(
-        text = stringResource(R.string.snooze_chat_dialog_title),
+        text = pluralStringResource(R.plurals.snooze_chat_dialog_title, count),
         style = MaterialTheme.typography.headlineSmall,
         color = MaterialTheme.colorScheme.onSurface,
         textAlign = TextAlign.Center,
@@ -116,7 +118,7 @@ private fun SnoozeChatDialogHeader() {
     Spacer(modifier = Modifier.height(16.dp))
 
     Text(
-        text = stringResource(R.string.snooze_chat_dialog_message),
+        text = pluralStringResource(R.plurals.snooze_chat_dialog_message, count),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(horizontal = DialogHorizontalPadding),
@@ -185,6 +187,7 @@ private fun SnoozeOptionRow(
 private fun SnoozeChatDialogPreview() {
     MessagingPreviewTheme {
         SnoozeChatDialog(
+            count = 1,
             onDismiss = {},
             onConfirm = {},
         )

@@ -66,6 +66,7 @@ internal fun ConversationListDialogs(
 
     if (isSnoozeVisible) {
         SnoozeChatDialog(
+            count = selectedCount,
             onDismiss = onDismissSnooze,
             onConfirm = { option ->
                 onAction(Action.SnoozeOptionSelected(option))
