@@ -44,13 +44,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.android.messaging.R
 import com.android.messaging.ui.common.components.PrimaryActionButton
+import com.android.messaging.ui.common.components.horizontalSafeDrawingInsets
 import com.android.messaging.ui.common.components.reorder.OverlayReorderAnimationController
-import com.android.messaging.ui.conversationlist.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
+import com.android.messaging.ui.conversationlist.model.ConversationListAction as Action
 
 private const val CONVERSATION_ROW_CONTENT_TYPE = "conversation_row"
 
@@ -131,6 +132,8 @@ private fun ConversationListItems(
     fabBottomReserve: Dp,
     pinAnimationController: OverlayReorderAnimationController<ConversationListItemUiModel, String>?,
 ) {
+    val rowHorizontalInsets = horizontalSafeDrawingInsets()
+
     val appearanceTokens = rememberAppearanceAnimationTokens(
         items = items,
         listState = listState,
@@ -171,6 +174,7 @@ private fun ConversationListItems(
                 item = item,
                 listState = listState,
                 isSelectionMode = isSelectionMode,
+                horizontalInsets = rowHorizontalInsets,
                 appearanceAnimationToken = appearanceAnimationToken,
                 pinAnimationController = pinAnimationController,
                 onAppearanceAnimationFinished = {
@@ -187,11 +191,17 @@ private fun ConversationListItems(
     }
 }
 
+internal fun Modifier.conversationRowHorizontalPadding(horizontalInsets: PaddingValues): Modifier {
+    return padding(horizontalInsets)
+        .padding(horizontal = ListContentPadding)
+}
+
 @Composable
 private fun LazyItemScope.ConversationListRow(
     item: ConversationListItemUiModel,
     listState: LazyListState,
     isSelectionMode: Boolean,
+    horizontalInsets: PaddingValues,
     appearanceAnimationToken: AppearanceAnimationToken?,
     pinAnimationController: OverlayReorderAnimationController<ConversationListItemUiModel, String>?,
     onAppearanceAnimationFinished: () -> Unit,
@@ -218,22 +228,18 @@ private fun LazyItemScope.ConversationListRow(
         onToggleRead = {
             onAction(Action.ConversationSwipedToToggleRead(item.conversationId))
         },
-        modifier = Modifier
-            .conversationItemAnimation(
-                lazyItemScope = this,
-                isPinned = item.isPinned,
-                animatePlacement = !isHiddenByPinAnimation,
-            )
-            .trackPinAnimationBounds(
-                listState = listState,
-                conversationId = item.conversationId,
-                pinAnimationController = pinAnimationController,
-            )
-            .graphicsLayer { alpha = if (isHiddenByPinAnimation) 0f else 1f },
+        backgroundHorizontalInsets = horizontalInsets,
+        modifier = Modifier.conversationRowSwipeModifier(
+            lazyItemScope = this,
+            item = item,
+            listState = listState,
+            pinAnimationController = pinAnimationController,
+            isHidden = isHiddenByPinAnimation,
+        ),
     ) {
         ConversationListItemRow(
             item = item,
-            modifier = Modifier.padding(horizontal = ListContentPadding),
+            modifier = Modifier.conversationRowHorizontalPadding(horizontalInsets),
             onClick = {
                 onAction(Action.ConversationClicked(item.conversationId))
             },
@@ -257,6 +263,31 @@ private fun LazyItemScope.ConversationListRow(
             },
         )
     }
+}
+
+private fun Modifier.conversationRowSwipeModifier(
+    lazyItemScope: LazyItemScope,
+    item: ConversationListItemUiModel,
+    listState: LazyListState,
+    pinAnimationController: OverlayReorderAnimationController<ConversationListItemUiModel, String>?,
+    isHidden: Boolean,
+): Modifier {
+    return conversationItemAnimation(
+        lazyItemScope = lazyItemScope,
+        isPinned = item.isPinned,
+        animatePlacement = !isHidden,
+    )
+        .trackPinAnimationBounds(
+            listState = listState,
+            conversationId = item.conversationId,
+            pinAnimationController = pinAnimationController,
+        )
+        .graphicsLayer {
+            alpha = when {
+                isHidden -> 0f
+                else -> 1f
+            }
+        }
 }
 
 private fun Modifier.trackPinAnimationBounds(
@@ -429,7 +460,10 @@ private fun Modifier.conversationItemAnimation(
         .animateItem(
             fadeInSpec = null,
             fadeOutSpec = null,
-            placementSpec = if (animatePlacement) ItemPlacementSpec else null,
+            placementSpec = when {
+                animatePlacement -> ItemPlacementSpec
+                else -> null
+            },
         )
 }
 
