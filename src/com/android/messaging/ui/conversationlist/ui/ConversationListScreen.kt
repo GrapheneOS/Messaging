@@ -36,7 +36,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -97,11 +96,11 @@ internal fun ConversationListScreen(
         isSettled = { item, anchorToTop -> item.isPinned == anchorToTop },
     )
 
-    var pendingAddContactDestination by rememberSaveable { mutableStateOf<String?>(null) }
-    var pendingDelete by rememberSaveable { mutableStateOf(false) }
-    var pendingBlockConversationId by rememberSaveable { mutableStateOf<String?>(null) }
-    var pendingBlockDestination by rememberSaveable { mutableStateOf<String?>(null) }
-    var pendingSnooze by rememberSaveable { mutableStateOf(false) }
+    var pendingAddContactDestination by remember { mutableStateOf<String?>(null) }
+    var pendingDelete by remember { mutableStateOf(false) }
+    var pendingBlockConversationId by remember { mutableStateOf<String?>(null) }
+    var pendingBlockDestination by remember { mutableStateOf<String?>(null) }
+    var pendingSnooze by remember { mutableStateOf(false) }
 
     ConversationListEffects(
         effects = screenModel.effects,
