@@ -211,7 +211,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + " ON " +  CONVERSATIONS_TABLE
             + "(" + ConversationColumns.SORT_TIMESTAMP + ")";
 
-    private static final String CONVERSATIONS_TABLE_PINNED_INDEX_SQL =
+    static final String CONVERSATIONS_TABLE_PINNED_INDEX_SQL =
             "CREATE INDEX index_" + CONVERSATIONS_TABLE + "_" + ConversationColumns.PINNED
             + " ON " +  CONVERSATIONS_TABLE
             + "(" + ConversationColumns.PINNED + ")";
