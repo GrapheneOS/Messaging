@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.MarkChatRead
 import androidx.compose.material.icons.filled.MarkChatUnread
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -147,6 +148,7 @@ internal fun SwipeableConversationListItem(
     ) {
         ConversationListSwipeBackground(
             action = backgroundAction,
+            isUnread = item.isUnread,
             modifier = Modifier
                 .matchParentSize()
                 .padding(backgroundHorizontalInsets)
@@ -423,6 +425,7 @@ private fun swipeAction(offset: Float): ConversationSwipeAction {
 @Composable
 private fun ConversationListSwipeBackground(
     action: ConversationSwipeAction,
+    isUnread: Boolean,
     modifier: Modifier = Modifier,
 ) {
     if (action == ConversationSwipeAction.None) {
@@ -449,11 +452,13 @@ private fun ConversationListSwipeBackground(
 
     val icon = when {
         isArchive -> Icons.Filled.Archive
+        isUnread -> Icons.Filled.MarkChatRead
         else -> Icons.Filled.MarkChatUnread
     }
 
     val description = when {
         isArchive -> stringResource(R.string.action_archive)
+        isUnread -> stringResource(R.string.mark_as_read)
         else -> stringResource(R.string.mark_as_unread)
     }
 
