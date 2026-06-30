@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversationlist.common
+package com.android.messaging.ui.conversationlist.common.item
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.MarkChatRead
 import androidx.compose.material.icons.filled.MarkChatUnread
 import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.material3.Icon
@@ -35,6 +36,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.AwaitPointerEventScope
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerId
@@ -48,6 +50,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.ui.conversationlist.common.support.AppearanceAnimationToken
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -158,23 +161,16 @@ internal fun SwipeableConversationListItem(
             endToStartAction = { currentEndToStartAction },
         )
     }
-    val interactionModifier = when {
-        isInteractionEnabled -> Modifier
-        else ->
-            Modifier
-                .consumeAllPointerInput()
-                .clearAndSetSemantics {}
-    }
-
     Box(
         modifier = modifier
             .then(gestureModifier)
-            .then(interactionModifier)
+            .interactionBlocking(isInteractionEnabled)
             .collapseVertically { visibilityFraction.value }
             .graphicsLayer { alpha = visibilityFraction.value },
     ) {
         ConversationListSwipeBackground(
             render = backgroundRender,
+            isUnread = item.isUnread,
             modifier = Modifier
                 .matchParentSize()
                 .padding(backgroundHorizontalInsets)
@@ -478,6 +474,7 @@ private fun resolveBackgroundRender(
 @Composable
 private fun ConversationListSwipeBackground(
     render: SwipeBackgroundRender?,
+    isUnread: Boolean,
     modifier: Modifier = Modifier,
 ) {
     if (render == null) {
@@ -499,18 +496,6 @@ private fun ConversationListSwipeBackground(
         ConversationSwipeBackground.ToggleRead -> MaterialTheme.colorScheme.onTertiaryContainer
     }
 
-    val icon = when (background) {
-        ConversationSwipeBackground.Archive -> Icons.Filled.Archive
-        ConversationSwipeBackground.Unarchive -> Icons.Filled.Unarchive
-        ConversationSwipeBackground.ToggleRead -> Icons.Filled.MarkChatUnread
-    }
-
-    val description = when (background) {
-        ConversationSwipeBackground.Archive -> stringResource(R.string.action_archive)
-        ConversationSwipeBackground.Unarchive -> stringResource(R.string.action_unarchive)
-        ConversationSwipeBackground.ToggleRead -> stringResource(R.string.mark_as_unread)
-    }
-
     Box(
         modifier = modifier
             .clip(SwipeBackgroundShape)
@@ -519,9 +504,49 @@ private fun ConversationListSwipeBackground(
         contentAlignment = render.alignment,
     ) {
         Icon(
-            imageVector = icon,
-            contentDescription = description,
+            imageVector = swipeBackgroundIcon(background, isUnread),
+            contentDescription = swipeBackgroundDescription(background, isUnread),
             tint = contentColor,
         )
+    }
+}
+
+private fun Modifier.interactionBlocking(isInteractionEnabled: Boolean): Modifier {
+    return when {
+        isInteractionEnabled -> this
+        else -> {
+            this
+                .consumeAllPointerInput()
+                .clearAndSetSemantics {}
+        }
+    }
+}
+
+private fun swipeBackgroundIcon(
+    background: ConversationSwipeBackground,
+    isUnread: Boolean,
+): ImageVector {
+    return when (background) {
+        ConversationSwipeBackground.Archive -> Icons.Filled.Archive
+        ConversationSwipeBackground.Unarchive -> Icons.Filled.Unarchive
+        ConversationSwipeBackground.ToggleRead -> when {
+            isUnread -> Icons.Filled.MarkChatRead
+            else -> Icons.Filled.MarkChatUnread
+        }
+    }
+}
+
+@Composable
+private fun swipeBackgroundDescription(
+    background: ConversationSwipeBackground,
+    isUnread: Boolean,
+): String {
+    return when (background) {
+        ConversationSwipeBackground.Archive -> stringResource(R.string.action_archive)
+        ConversationSwipeBackground.Unarchive -> stringResource(R.string.action_unarchive)
+        ConversationSwipeBackground.ToggleRead -> when {
+            isUnread -> stringResource(R.string.mark_as_read)
+            else -> stringResource(R.string.mark_as_unread)
+        }
     }
 }

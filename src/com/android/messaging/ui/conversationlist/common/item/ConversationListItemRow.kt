@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversationlist.common
+package com.android.messaging.ui.conversationlist.common.item
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -32,6 +32,8 @@ import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
 import com.android.messaging.ui.common.components.TwoLineListItem
+import com.android.messaging.ui.conversationlist.common.support.conversationListItemTestTag
+import com.android.messaging.ui.conversationlist.common.support.previewConversationListItem
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
 import com.android.messaging.ui.conversationlist.model.ConversationListPreviewUiModel
 import com.android.messaging.ui.core.MessagingPreviewColumn

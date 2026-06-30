@@ -28,14 +28,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.common.components.PrimaryActionButton
-import com.android.messaging.ui.common.components.horizontalSafeDrawingInsets
 import com.android.messaging.ui.common.components.reorder.OverlayReorderAnimationController
-import com.android.messaging.ui.conversationlist.common.ConversationListItemCallbacks
-import com.android.messaging.ui.conversationlist.common.ConversationListItems
-import com.android.messaging.ui.conversationlist.common.ConversationListSwipeActions
-import com.android.messaging.ui.conversationlist.common.ConversationSwipeAction
-import com.android.messaging.ui.conversationlist.common.ConversationSwipeBackground
-import com.android.messaging.ui.conversationlist.common.previewConversationListItems
+import com.android.messaging.ui.conversationlist.common.item.ConversationSwipeAction
+import com.android.messaging.ui.conversationlist.common.item.ConversationSwipeBackground
+import com.android.messaging.ui.conversationlist.common.list.ConversationListItemCallbacks
+import com.android.messaging.ui.conversationlist.common.list.ConversationListItems
+import com.android.messaging.ui.conversationlist.common.list.ConversationListSwipeActions
+import com.android.messaging.ui.conversationlist.common.support.previewConversationListItems
 import com.android.messaging.ui.conversationlist.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel

@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversationlist.common
+package com.android.messaging.ui.conversationlist.common.support
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull

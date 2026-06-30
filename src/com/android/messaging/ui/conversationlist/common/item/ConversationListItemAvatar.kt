@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversationlist.common
+package com.android.messaging.ui.conversationlist.common.item
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box

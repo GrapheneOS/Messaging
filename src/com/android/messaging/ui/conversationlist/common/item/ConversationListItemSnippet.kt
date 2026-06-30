@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversationlist.common
+package com.android.messaging.ui.conversationlist.common.item
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.size

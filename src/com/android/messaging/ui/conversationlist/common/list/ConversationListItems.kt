@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversationlist.common
+package com.android.messaging.ui.conversationlist.common.list
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VisibilityThreshold
@@ -25,7 +25,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.android.messaging.ui.common.components.horizontalSafeDrawingInsets
 import com.android.messaging.ui.common.components.reorder.OverlayReorderAnimationController
+import com.android.messaging.ui.conversationlist.common.item.ConversationListItemRow
+import com.android.messaging.ui.conversationlist.common.item.ConversationSwipeAction
+import com.android.messaging.ui.conversationlist.common.item.SwipeableConversationListItem
+import com.android.messaging.ui.conversationlist.common.support.AppearanceAnimationToken
+import com.android.messaging.ui.conversationlist.common.support.CONVERSATION_LIST_TEST_TAG
+import com.android.messaging.ui.conversationlist.common.support.rememberAppearanceAnimationTokens
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
@@ -70,6 +77,8 @@ internal fun ConversationListItems(
     callbacks: ConversationListItemCallbacks,
     swipeActions: (ConversationListItemUiModel) -> ConversationListSwipeActions,
 ) {
+    val rowHorizontalInsets = horizontalSafeDrawingInsets()
+
     val appearanceTokens = rememberAppearanceAnimationTokens(
         items = items,
         listState = listState,
@@ -110,6 +119,7 @@ internal fun ConversationListItems(
                 item = item,
                 listState = listState,
                 isSelectionMode = isSelectionMode,
+                horizontalInsets = rowHorizontalInsets,
                 appearanceAnimationToken = appearanceAnimationToken,
                 pinAnimationController = pinAnimationController,
                 onAppearanceAnimationFinished = {
@@ -132,6 +142,7 @@ private fun LazyItemScope.ConversationListRow(
     item: ConversationListItemUiModel,
     listState: LazyListState,
     isSelectionMode: Boolean,
+    horizontalInsets: PaddingValues,
     appearanceAnimationToken: AppearanceAnimationToken?,
     pinAnimationController: OverlayReorderAnimationController<ConversationListItemUiModel, String>?,
     onAppearanceAnimationFinished: () -> Unit,
@@ -155,6 +166,7 @@ private fun LazyItemScope.ConversationListRow(
         onAppearanceAnimationFinished = onAppearanceAnimationFinished,
         startToEndAction = swipeActions.startToEnd,
         endToStartAction = swipeActions.endToStart,
+        backgroundHorizontalInsets = horizontalInsets,
         modifier = Modifier
             .conversationItemAnimation(
                 lazyItemScope = this,
@@ -175,7 +187,7 @@ private fun LazyItemScope.ConversationListRow(
     ) {
         ConversationListItemRow(
             item = item,
-            modifier = Modifier.padding(horizontal = ListContentPadding),
+            modifier = Modifier.conversationRowHorizontalPadding(horizontalInsets),
             onClick = { callbacks.onClick(item.conversationId) },
             onLongClick = { callbacks.onLongClick(item.conversationId) },
             isSelectionMode = isSelectionMode,
@@ -195,6 +207,11 @@ private fun LazyItemScope.ConversationListRow(
             },
         )
     }
+}
+
+internal fun Modifier.conversationRowHorizontalPadding(horizontalInsets: PaddingValues): Modifier {
+    return padding(horizontalInsets)
+        .padding(horizontal = ListContentPadding)
 }
 
 private fun Modifier.trackPinAnimationBounds(
