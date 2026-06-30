@@ -234,6 +234,25 @@ internal class ConversationListUiStateMapperImplTest {
     }
 
     @Test
+    fun map_incomingMmsDownloadStatus_preservesDownloadStatus() {
+        val state = mapper.map(
+            snapshot = snapshotOf(
+                conversationItem(
+                    conversationId = "mms",
+                    status = ConversationListMessageStatus.IncomingAwaitingManualDownload,
+                ),
+            ),
+            selectedConversationIds = persistentListOf(),
+            isScrollToTopVisible = false,
+            isDebugEnabled = false,
+        )
+
+        val item = singleItem(state)
+        assertEquals(ConversationListMessageStatus.IncomingAwaitingManualDownload, item.status)
+        assertFalse(item.isOutgoing)
+    }
+
+    @Test
     fun map_callableSavedContact_populatesAvatarCapabilities() {
         every { canPlacePhoneCall(any()) } returns true
         every { canShowOrAddContact(any(), any(), any(), any()) } returns true

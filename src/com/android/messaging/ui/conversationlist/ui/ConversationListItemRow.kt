@@ -187,14 +187,12 @@ private fun ConversationListItemBadgeIcon(icon: ImageVector) {
 
 @Composable
 private fun ConversationListItemStatusLabel(item: ConversationListItemUiModel) {
-    val text = when (item.status) {
-        ConversationListMessageStatus.Draft,
-        ConversationListMessageStatus.Unknown,
-        -> {
+    val text = when {
+        item.status.isDraftOrUnknown() -> {
             stringResource(R.string.conversation_list_item_view_draft_message)
         }
 
-        ConversationListMessageStatus.Sending -> {
+        item.status == ConversationListMessageStatus.Sending -> {
             stringResource(R.string.message_status_sending)
         }
 
@@ -221,7 +219,8 @@ private fun ConversationListItemStatusLabel(item: ConversationListItemUiModel) {
 
 @Composable
 private fun itemSnippetText(item: ConversationListItemUiModel): String? {
-    val snippetText = item.snippet.text?.takeIf(String::isNotBlank)
+    val snippetText = item.mmsDownloadTitleResId?.let { stringResource(it) }
+        ?: item.snippet.text?.takeIf(String::isNotBlank)
 
     if (snippetText != null) {
         val senderName = item.snippet.senderName?.takeIf(String::isNotBlank)
@@ -278,10 +277,15 @@ private fun itemUnreadFontWeight(item: ConversationListItemUiModel): FontWeight 
 @Composable
 private fun itemSnippetColor(item: ConversationListItemUiModel): Color {
     return when {
-        item.status is ConversationListMessageStatus.Failed -> MaterialTheme.colorScheme.error
+        item.status is ConversationListMessageStatus.Error -> MaterialTheme.colorScheme.error
         item.isUnread -> MaterialTheme.colorScheme.onSurface
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
+}
+
+private fun ConversationListMessageStatus.isDraftOrUnknown(): Boolean {
+    return this == ConversationListMessageStatus.Draft ||
+        this == ConversationListMessageStatus.Unknown
 }
 
 @PreviewLightDark

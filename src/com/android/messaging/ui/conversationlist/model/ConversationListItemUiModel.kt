@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationlist.model
 
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
 import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
 
@@ -12,6 +13,8 @@ internal data class ConversationListItemUiModel(
     val subject: String?,
     val timestampMillis: Long,
     val status: ConversationListMessageStatus,
+    @param:StringRes
+    val mmsDownloadTitleResId: Int?,
     val isOutgoing: Boolean,
     val isUnread: Boolean,
     val isEnterprise: Boolean,

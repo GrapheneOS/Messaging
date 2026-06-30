@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationlist.ui
 
 import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
+import com.android.messaging.ui.conversationlist.mapper.conversationListMmsDownloadTitleResId
 import com.android.messaging.ui.conversationlist.model.ConversationListAvatarUiModel
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
 import com.android.messaging.ui.conversationlist.model.ConversationListPreviewUiModel
@@ -53,6 +54,7 @@ internal fun previewConversationListItem(
         subject = subject,
         timestampMillis = PREVIEW_TIMESTAMP_MILLIS,
         status = status,
+        mmsDownloadTitleResId = conversationListMmsDownloadTitleResId(status),
         isOutgoing = isOutgoing,
         isUnread = isUnread,
         isEnterprise = isEnterprise,

@@ -39,7 +39,7 @@ internal fun ConversationListItemSnippet(
     color: Color,
 ) {
     val hasPreviewThumbnail = item.snippet.preview?.hasThumbnail() ?: false
-    val hasFailedIcon = item.status is ConversationListMessageStatus.Failed
+    val hasFailedIcon = item.status is ConversationListMessageStatus.Error
     val previewPlaceholderSize = with(LocalDensity.current) {
         ItemPreviewThumbnailSize.toSp()
     }

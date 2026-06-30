@@ -289,10 +289,28 @@ internal class ConversationListRepositoryImpl @Inject constructor(
                 ConversationListMessageStatus.Sending
             }
 
+            MessageData.BUGLE_STATUS_INCOMING_YET_TO_MANUAL_DOWNLOAD -> {
+                ConversationListMessageStatus.IncomingAwaitingManualDownload
+            }
+
+            MessageData.BUGLE_STATUS_INCOMING_AUTO_DOWNLOADING,
+            MessageData.BUGLE_STATUS_INCOMING_MANUAL_DOWNLOADING,
+            MessageData.BUGLE_STATUS_INCOMING_RETRYING_AUTO_DOWNLOAD,
+            MessageData.BUGLE_STATUS_INCOMING_RETRYING_MANUAL_DOWNLOAD,
+            -> {
+                ConversationListMessageStatus.IncomingDownloading
+            }
+
+            MessageData.BUGLE_STATUS_INCOMING_DOWNLOAD_FAILED -> {
+                ConversationListMessageStatus.IncomingDownloadFailed
+            }
+
+            MessageData.BUGLE_STATUS_INCOMING_EXPIRED_OR_NOT_AVAILABLE -> {
+                ConversationListMessageStatus.IncomingExpiredOrUnavailable
+            }
+
             MessageData.BUGLE_STATUS_OUTGOING_FAILED,
             MessageData.BUGLE_STATUS_OUTGOING_FAILED_EMERGENCY_NUMBER,
-            MessageData.BUGLE_STATUS_INCOMING_DOWNLOAD_FAILED,
-            MessageData.BUGLE_STATUS_INCOMING_EXPIRED_OR_NOT_AVAILABLE,
             -> {
                 ConversationListMessageStatus.Failed(rawTelephonyStatus)
             }

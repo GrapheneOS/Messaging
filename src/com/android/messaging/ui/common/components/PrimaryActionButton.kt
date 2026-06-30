@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
@@ -60,7 +61,46 @@ internal fun PrimaryActionButton(
         enabled -> colorScheme.onPrimaryContainer
         else -> colorScheme.onSurface.copy(alpha = DISABLED_CONTENT_ALPHA)
     }
-    val accessibilityModifier = Modifier.clearAndSetSemantics {
+    ExtendedFloatingActionButton(
+        modifier = modifier
+            .primaryActionButtonAccessibility(
+                text = text,
+                isInteractionEnabled = isInteractionEnabled,
+                onClick = onClick,
+            )
+            .optionalTestTag(testTag),
+        onClick = {
+            if (isInteractionEnabled) {
+                onClick()
+            }
+        },
+        expanded = expanded,
+        shape = shape,
+        containerColor = containerColor,
+        contentColor = contentColor,
+        icon = {
+            PrimaryActionButtonIcon(
+                isLoading = isLoading,
+                leadingIcon = leadingIcon,
+                contentColor = contentColor,
+                contentDescription = if (expanded) null else text,
+            )
+        },
+        text = {
+            PrimaryActionButtonText(
+                text = text,
+                trailingIcon = trailingIcon,
+            )
+        },
+    )
+}
+
+private fun Modifier.primaryActionButtonAccessibility(
+    text: String,
+    isInteractionEnabled: Boolean,
+    onClick: () -> Unit,
+): Modifier {
+    return clearAndSetSemantics {
         contentDescription = text
         role = Role.Button
 
@@ -73,53 +113,50 @@ internal fun PrimaryActionButton(
             disabled()
         }
     }
+}
 
-    ExtendedFloatingActionButton(
-        modifier = modifier
-            .then(accessibilityModifier)
-            .optionalTestTag(testTag),
-        onClick = {
-            if (isInteractionEnabled) {
-                onClick()
-            }
-        },
-        expanded = expanded,
-        shape = shape,
-        containerColor = containerColor,
-        contentColor = contentColor,
-        icon = {
-            when {
-                isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(size = LoadingIndicatorSize),
-                        color = contentColor,
-                        strokeWidth = 2.dp,
-                    )
-                }
+@Composable
+private fun PrimaryActionButtonIcon(
+    isLoading: Boolean,
+    leadingIcon: ImageVector?,
+    contentColor: Color,
+    contentDescription: String?,
+) {
+    when {
+        isLoading -> {
+            CircularProgressIndicator(
+                modifier = Modifier.size(size = LoadingIndicatorSize),
+                color = contentColor,
+                strokeWidth = 2.dp,
+            )
+        }
 
-                leadingIcon != null -> {
-                    Icon(
-                        imageVector = leadingIcon,
-                        contentDescription = if (expanded) null else text,
-                    )
-                }
-            }
-        },
-        text = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = text)
+        leadingIcon != null -> {
+            Icon(
+                imageVector = leadingIcon,
+                contentDescription = contentDescription,
+            )
+        }
+    }
+}
 
-                trailingIcon?.let { icon ->
-                    Spacer(modifier = Modifier.size(size = IconLabelSpacing))
+@Composable
+private fun PrimaryActionButtonText(
+    text: String,
+    trailingIcon: ImageVector?,
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(text = text)
 
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                    )
-                }
-            }
-        },
-    )
+        trailingIcon?.let { icon ->
+            Spacer(modifier = Modifier.size(size = IconLabelSpacing))
+
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+            )
+        }
+    }
 }
 
 @PreviewLightDark

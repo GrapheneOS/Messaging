@@ -93,6 +93,7 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
     ): ConversationListItemUiModel {
         val isDraft = draft.isVisible
         val isOutgoing = isDraft || !latestMessage.isIncoming
+        val status = toStatus()
 
         return ConversationListItemUiModel(
             conversationId = conversationId,
@@ -106,7 +107,8 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
             ),
             subject = activeSubject(),
             timestampMillis = latestMessage.timestamp,
-            status = toStatus(),
+            status = status,
+            mmsDownloadTitleResId = conversationListMmsDownloadTitleResId(status),
             isOutgoing = isOutgoing,
             isUnread = !latestMessage.isRead,
             isEnterprise = participant.isEnterprise,

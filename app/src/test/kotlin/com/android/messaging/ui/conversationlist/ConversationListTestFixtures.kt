@@ -40,6 +40,7 @@ internal fun conversationItem(
     isDraftVisible: Boolean = false,
     draftSnippet: String? = null,
     draftSubject: String? = null,
+    status: ConversationListMessageStatus = ConversationListMessageStatus.Normal,
 ): ConversationListItem {
     return ConversationListItem(
         conversationId = conversationId,
@@ -61,7 +62,7 @@ internal fun conversationItem(
             snippetText = "Snippet $conversationId",
             previewUri = null,
             previewContentType = null,
-            status = ConversationListMessageStatus.Normal,
+            status = status,
             isIncoming = true,
             senderName = senderName,
         ),

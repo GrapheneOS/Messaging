@@ -67,6 +67,7 @@ internal fun conversationListItemContentDescriptionSpec(
             isOutgoing = isOutgoing,
             isDraft = isDraft,
             status = item.status,
+            isIncomingFailed = item.status is ConversationListMessageStatus.Error,
         ),
         senderOrConversationName = senderOrConversationName,
         message = message,
@@ -82,13 +83,16 @@ internal fun conversationListItemContentDescriptionSpec(
 private fun conversationListItemContentDescriptionMessage(
     item: ConversationListItemUiModel,
 ): String {
-    val snippetText = item.snippet.text?.takeIf(String::isNotBlank)
+    return item.mmsDownloadTitleResId?.let { stringResource(it) }
+        ?: item.snippet.text?.takeIf(String::isNotBlank)
+        ?: conversationListPreviewContentDescription(item.snippet.preview)
+}
 
-    if (snippetText != null) {
-        return snippetText
-    }
-
-    return when (item.snippet.preview) {
+@Composable
+private fun conversationListPreviewContentDescription(
+    preview: ConversationListPreviewUiModel?,
+): String {
+    return when (preview) {
         is ConversationListPreviewUiModel.Audio -> {
             stringResource(R.string.conversation_list_snippet_audio_clip)
         }
@@ -147,6 +151,7 @@ private fun conversationListItemContentDescriptionResId(
     isOutgoing: Boolean,
     isDraft: Boolean,
     status: ConversationListMessageStatus,
+    isIncomingFailed: Boolean,
 ): Int {
     return when {
         isGroup && isOutgoing -> {
@@ -157,7 +162,7 @@ private fun conversationListItemContentDescriptionResId(
         }
 
         isGroup -> {
-            groupIncomingContentDescriptionResId(status = status)
+            groupIncomingContentDescriptionResId(isIncomingFailed)
         }
 
         isOutgoing -> {
@@ -168,7 +173,7 @@ private fun conversationListItemContentDescriptionResId(
         }
 
         else -> {
-            oneOnOneIncomingContentDescriptionResId(status = status)
+            oneOnOneIncomingContentDescriptionResId(isIncomingFailed)
         }
     }
 }
@@ -198,21 +203,6 @@ private fun groupOutgoingContentDescriptionResId(
 }
 
 @StringRes
-private fun groupIncomingContentDescriptionResId(
-    status: ConversationListMessageStatus,
-): Int {
-    return when (status) {
-        is ConversationListMessageStatus.Failed -> {
-            R.string.group_incoming_failed_message_prefix
-        }
-
-        else -> {
-            R.string.group_incoming_successful_message_prefix
-        }
-    }
-}
-
-@StringRes
 private fun oneOnOneOutgoingContentDescriptionResId(
     isDraft: Boolean,
     status: ConversationListMessageStatus,
@@ -236,17 +226,22 @@ private fun oneOnOneOutgoingContentDescriptionResId(
 }
 
 @StringRes
-private fun oneOnOneIncomingContentDescriptionResId(
-    status: ConversationListMessageStatus,
+private fun groupIncomingContentDescriptionResId(
+    isFailed: Boolean,
 ): Int {
-    return when (status) {
-        is ConversationListMessageStatus.Failed -> {
-            R.string.one_on_one_incoming_failed_message_prefix
-        }
+    return when {
+        isFailed -> R.string.group_incoming_failed_message_prefix
+        else -> R.string.group_incoming_successful_message_prefix
+    }
+}
 
-        else -> {
-            R.string.one_on_one_incoming_successful_message_prefix
-        }
+@StringRes
+private fun oneOnOneIncomingContentDescriptionResId(
+    isFailed: Boolean,
+): Int {
+    return when {
+        isFailed -> R.string.one_on_one_incoming_failed_message_prefix
+        else -> R.string.one_on_one_incoming_successful_message_prefix
     }
 }
 
