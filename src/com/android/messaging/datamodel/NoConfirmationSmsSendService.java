@@ -29,7 +29,7 @@ import com.android.messaging.datamodel.action.UpdateMessageNotificationAction;
 import com.android.messaging.datamodel.data.MessageData;
 import com.android.messaging.datamodel.data.ParticipantData;
 import com.android.messaging.ui.UIIntents;
-import com.android.messaging.ui.conversationlist.ConversationListActivity;
+import com.android.messaging.ui.conversationlist.chats.ConversationListActivity;
 import com.android.messaging.util.LogUtil;
 import com.android.messaging.util.UriUtil;
 

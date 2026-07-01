@@ -1,11 +1,11 @@
-package com.android.messaging.ui.conversationlist
+package com.android.messaging.ui.conversationlist.chats
 
 import android.app.Activity
 import android.graphics.Point
 import android.view.View
 import androidx.core.net.toUri
 import com.android.messaging.ui.UIIntents
-import com.android.messaging.ui.conversationlist.model.ConversationListEffect as Effect
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListEffect as Effect
 import com.android.messaging.util.ContactUtil
 import com.android.messaging.util.DebugUtils
 

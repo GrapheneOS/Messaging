@@ -1,6 +1,7 @@
-package com.android.messaging.ui.conversationlist.model
+package com.android.messaging.ui.conversationlist.chats.model
 
 import com.android.messaging.data.conversationsettings.model.SnoozeOption
+import com.android.messaging.ui.conversationlist.model.ConversationListAvatarUiModel
 import kotlinx.collections.immutable.ImmutableList
 
 internal sealed interface ConversationListAction {

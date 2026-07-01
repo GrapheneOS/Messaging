@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversationlist.mapper
+package com.android.messaging.ui.conversationlist.chats.mapper
 
 import android.content.Context
 import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
@@ -8,10 +8,11 @@ import com.android.messaging.domain.conversation.usecase.participant.CanAddConta
 import com.android.messaging.domain.conversation.usecase.participant.CanShowOrAddContact
 import com.android.messaging.domain.conversation.usecase.participant.IsContactSaved
 import com.android.messaging.domain.conversation.usecase.telephony.CanPlacePhoneCall
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState
 import com.android.messaging.ui.conversationlist.conversationItem
+import com.android.messaging.ui.conversationlist.mapper.ConversationListItemUiMapperImpl
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
-import com.android.messaging.ui.conversationlist.model.ConversationListUiState
 import com.android.messaging.ui.conversationlist.snapshotOf
 import io.mockk.every
 import io.mockk.mockk

@@ -13,7 +13,7 @@ import com.android.messaging.ui.BugleComponentActivity
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryLaunchRequest
 import com.android.messaging.ui.conversation.navigation.ConversationNavGraph
-import com.android.messaging.ui.conversationlist.ConversationListActivity
+import com.android.messaging.ui.conversationlist.chats.ConversationListActivity
 import com.android.messaging.ui.core.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 

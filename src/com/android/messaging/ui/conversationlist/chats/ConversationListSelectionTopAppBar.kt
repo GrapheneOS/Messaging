@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversationlist.ui.topbar
+package com.android.messaging.ui.conversationlist.chats
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Archive
@@ -23,8 +23,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.android.messaging.R
-import com.android.messaging.ui.conversationlist.model.ConversationListAction as Action
-import com.android.messaging.ui.conversationlist.model.SelectionActionsUiState
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
+import com.android.messaging.ui.conversationlist.chats.model.SelectionActionsUiState
 import com.android.messaging.ui.core.MessagingPreviewTheme
 
 @OptIn(ExperimentalMaterial3Api::class)

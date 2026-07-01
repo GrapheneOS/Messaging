@@ -1,16 +1,18 @@
-package com.android.messaging.ui.conversationlist
+package com.android.messaging.ui.conversationlist.chats
 
 import app.cash.turbine.test
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
 import com.android.messaging.data.debug.DebugFeaturesProvider
 import com.android.messaging.testutil.MainDispatcherRule
-import com.android.messaging.ui.conversationlist.delegate.ConversationListActionsDelegate
+import com.android.messaging.ui.conversationlist.chats.delegate.ConversationListActionsDelegate
+import com.android.messaging.ui.conversationlist.chats.mapper.ConversationListUiStateMapper
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListEffect as Effect
+import com.android.messaging.ui.conversationlist.conversationItem
 import com.android.messaging.ui.conversationlist.delegate.ConversationListOptimisticSnapshotDelegate
 import com.android.messaging.ui.conversationlist.delegate.ConversationListSelectionDelegate
-import com.android.messaging.ui.conversationlist.mapper.ConversationListUiStateMapper
-import com.android.messaging.ui.conversationlist.model.ConversationListAction as Action
-import com.android.messaging.ui.conversationlist.model.ConversationListEffect as Effect
+import com.android.messaging.ui.conversationlist.snapshotOf
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk

@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversationlist.ui
+package com.android.messaging.ui.conversationlist.chats
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -29,13 +29,13 @@ import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.common.components.PrimaryActionButton
 import com.android.messaging.ui.common.components.reorder.OverlayReorderAnimationController
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.common.item.ConversationSwipeAction
 import com.android.messaging.ui.conversationlist.common.item.ConversationSwipeBackground
 import com.android.messaging.ui.conversationlist.common.list.ConversationListItemCallbacks
 import com.android.messaging.ui.conversationlist.common.list.ConversationListItems
 import com.android.messaging.ui.conversationlist.common.list.ConversationListSwipeActions
 import com.android.messaging.ui.conversationlist.common.support.previewConversationListItems
-import com.android.messaging.ui.conversationlist.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
 import com.android.messaging.ui.core.MessagingPreviewTheme

@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversationlist
+package com.android.messaging.ui.conversationlist.chats
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,14 +8,14 @@ import com.android.messaging.data.conversationlist.model.ConversationListSnapsho
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
 import com.android.messaging.data.conversationsettings.model.SnoozeOption
 import com.android.messaging.data.debug.DebugFeaturesProvider
-import com.android.messaging.ui.conversationlist.delegate.ConversationListActionsDelegate
+import com.android.messaging.ui.conversationlist.chats.delegate.ConversationListActionsDelegate
+import com.android.messaging.ui.conversationlist.chats.mapper.ConversationListUiStateMapper
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListEffect as Effect
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState as State
 import com.android.messaging.ui.conversationlist.delegate.ConversationListOptimisticSnapshotDelegate
 import com.android.messaging.ui.conversationlist.delegate.ConversationListSelectionDelegate
-import com.android.messaging.ui.conversationlist.mapper.ConversationListUiStateMapper
-import com.android.messaging.ui.conversationlist.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.model.ConversationListAvatarUiModel
-import com.android.messaging.ui.conversationlist.model.ConversationListEffect as Effect
-import com.android.messaging.ui.conversationlist.model.ConversationListUiState as State
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList

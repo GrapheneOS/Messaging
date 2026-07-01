@@ -40,6 +40,7 @@ import com.android.messaging.ui.common.components.snackbar.showActionSnackbar
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListAction as Action
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListEffect as Effect
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListUiState as State
+import com.android.messaging.ui.conversationlist.common.dialog.ConversationListDeleteDialog
 import com.android.messaging.ui.conversationlist.common.item.ConversationSwipeAction
 import com.android.messaging.ui.conversationlist.common.item.ConversationSwipeBackground
 import com.android.messaging.ui.conversationlist.common.list.ConversationListItemCallbacks
@@ -47,7 +48,6 @@ import com.android.messaging.ui.conversationlist.common.list.ConversationListIte
 import com.android.messaging.ui.conversationlist.common.list.ConversationListSwipeActions
 import com.android.messaging.ui.conversationlist.common.support.previewConversationListItems
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
-import com.android.messaging.ui.conversationlist.ui.ConversationListDeleteDialog
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow

@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversationlist.ui
+package com.android.messaging.ui.conversationlist.chats
 
 import android.content.Context
 import androidx.activity.compose.BackHandler
@@ -60,19 +60,14 @@ import com.android.messaging.ui.common.components.reorder.OverlayReorderAnimatio
 import com.android.messaging.ui.common.components.reorder.rememberOverlayReorderAnimationController
 import com.android.messaging.ui.common.components.snackbar.MessagingSnackbarHost
 import com.android.messaging.ui.common.components.snackbar.showActionSnackbar
-import com.android.messaging.ui.conversationlist.ConversationListEffectHandler
-import com.android.messaging.ui.conversationlist.ConversationListScreenModel
-import com.android.messaging.ui.conversationlist.ConversationListViewModel
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListEffect as Effect
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState as State
 import com.android.messaging.ui.conversationlist.common.item.ConversationListItemRow
 import com.android.messaging.ui.conversationlist.common.list.conversationRowHorizontalPadding
 import com.android.messaging.ui.conversationlist.common.support.previewConversationListItems
-import com.android.messaging.ui.conversationlist.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
-import com.android.messaging.ui.conversationlist.model.ConversationListEffect as Effect
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
-import com.android.messaging.ui.conversationlist.model.ConversationListUiState as State
-import com.android.messaging.ui.conversationlist.ui.topbar.ConversationListSelectionTopAppBar
-import com.android.messaging.ui.conversationlist.ui.topbar.ConversationListTopAppBar
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow

@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversationlist.model
+package com.android.messaging.ui.conversationlist.chats.model
 
 import androidx.compose.runtime.Immutable
 

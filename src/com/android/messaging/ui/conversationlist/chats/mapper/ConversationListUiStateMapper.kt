@@ -1,12 +1,13 @@
-package com.android.messaging.ui.conversationlist.mapper
+package com.android.messaging.ui.conversationlist.chats.mapper
 
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.domain.conversation.usecase.participant.CanAddContact
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListSelectionUiState
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState
+import com.android.messaging.ui.conversationlist.chats.model.SelectionActionsUiState
+import com.android.messaging.ui.conversationlist.mapper.ConversationListItemUiMapper
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
-import com.android.messaging.ui.conversationlist.model.ConversationListSelectionUiState
-import com.android.messaging.ui.conversationlist.model.ConversationListUiState
-import com.android.messaging.ui.conversationlist.model.SelectionActionsUiState
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet

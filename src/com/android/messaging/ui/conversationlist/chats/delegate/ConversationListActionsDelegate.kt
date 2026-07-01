@@ -1,11 +1,11 @@
-package com.android.messaging.ui.conversationlist.delegate
+package com.android.messaging.ui.conversationlist.chats.delegate
 
 import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepository
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
 import com.android.messaging.data.conversationsettings.model.SnoozeOption
-import com.android.messaging.ui.conversationlist.model.ConversationListEffect
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListEffect
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope

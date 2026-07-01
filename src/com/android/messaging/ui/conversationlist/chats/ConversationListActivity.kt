@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversationlist
+package com.android.messaging.ui.conversationlist.chats
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -8,7 +8,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
 import com.android.messaging.ui.BugleComponentActivity
-import com.android.messaging.ui.conversationlist.ui.ConversationListScreen
 import com.android.messaging.ui.core.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 

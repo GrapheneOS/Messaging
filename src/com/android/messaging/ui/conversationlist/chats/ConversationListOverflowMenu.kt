@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversationlist.ui.topbar
+package com.android.messaging.ui.conversationlist.chats
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ColumnScope
