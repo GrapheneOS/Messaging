@@ -155,11 +155,11 @@
 
         <!-- Full-screen photo viewer -->
         <activity
-            android:name=".ui.photoviewer.BuglePhotoViewActivity"
+            android:name=".ui.photoviewer.PhotoViewerActivity"
+            android:exported="false"
             android:label="@string/photo_view_activity_title"
             android:configChanges="orientation|screenSize|keyboardHidden"
-            android:screenOrientation="user"
-            android:theme="@style/BuglePhotoViewTheme"
+            android:theme="@style/Theme.Compose.Translucent"
         />
 
         <!-- Settings -->

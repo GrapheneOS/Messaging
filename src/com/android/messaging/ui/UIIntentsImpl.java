@@ -34,9 +34,7 @@ import android.provider.MediaStore;
 import android.provider.Telephony;
 import android.text.TextUtils;
 
-import com.android.ex.photo.Intents.PhotoViewIntentBuilder;
 import com.android.messaging.R;
-import com.android.messaging.datamodel.ConversationImagePartsView;
 import com.android.messaging.datamodel.MediaScratchFileProvider;
 import com.android.messaging.datamodel.MessagingContentProvider;
 import com.android.messaging.datamodel.data.MessageData;
@@ -54,7 +52,7 @@ import com.android.messaging.ui.conversationpicker.host.forward.ForwardMessageAc
 import com.android.messaging.ui.conversationsettings.ConversationSettingsActivity;
 import com.android.messaging.ui.debug.DebugMmsConfigActivity;
 import com.android.messaging.ui.permissioncheck.PermissionCheckActivity;
-import com.android.messaging.ui.photoviewer.BuglePhotoViewActivity;
+import com.android.messaging.ui.photoviewer.PhotoViewerActivity;
 import com.android.messaging.ui.conversationpicker.host.widget.WidgetPickConversationActivity;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.ContentType;
@@ -296,21 +294,8 @@ public class UIIntentsImpl extends UIIntents {
     @Override
     public void launchFullScreenPhotoViewer(final Activity activity, final Uri initialPhoto,
             final Rect initialPhotoBounds, final Uri photosUri) {
-        final PhotoViewIntentBuilder builder =
-                com.android.ex.photo.Intents.newPhotoViewIntentBuilder(
-                        activity, BuglePhotoViewActivity.class);
-        builder.setPhotosUri(photosUri.toString());
-        builder.setInitialPhotoUri(initialPhoto.toString());
-        builder.setProjection(ConversationImagePartsView.PhotoViewQuery.PROJECTION);
-
-        // Set the location of the imageView so that the photoviewer can animate from that location
-        // to full screen.
-        builder.setScaleAnimation(initialPhotoBounds.left, initialPhotoBounds.top,
-                initialPhotoBounds.width(), initialPhotoBounds.height());
-
-        builder.setDisplayThumbsFullScreen(false);
-        builder.setMaxInitialScale(8);
-        activity.startActivity(builder.build());
+        activity.startActivity(PhotoViewerActivity.createIntent(
+                activity, initialPhoto, photosUri, initialPhotoBounds));
         activity.overridePendingTransition(0, 0);
     }
 
