@@ -467,6 +467,11 @@ public class MessageNotificationState {
                     if (conversation == null) {
                         final ConversationListItemData convData =
                                 ConversationListItemData.getExistingConversation(db, convId);
+                        if (convData == null) {
+                            // The conversation was removed (e.g. deleted as empty during sync)
+                            // between reading the message and building the notification.
+                            continue;
+                        }
                         final int subId = BugleDatabaseOperations.getSelfSubscriptionId(db,
                                 convData.getSelfId());
                         groupConversationName = convData.getName();

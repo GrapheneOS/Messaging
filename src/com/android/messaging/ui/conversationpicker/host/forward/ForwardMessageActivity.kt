@@ -1,7 +1,6 @@
 package com.android.messaging.ui.conversationpicker.host.forward
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.remember
@@ -11,6 +10,7 @@ import com.android.messaging.di.core.ApplicationCoroutineScope
 import com.android.messaging.di.core.MainDispatcher
 import com.android.messaging.domain.conversationpicker.usecase.BuildConversationDraftFromMessage
 import com.android.messaging.domain.conversationpicker.usecase.SendContentToTargets
+import com.android.messaging.ui.BugleComponentActivity
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversationpicker.ConversationPickerScreen
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerLabels
@@ -21,7 +21,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 
 @AndroidEntryPoint
-class ForwardMessageActivity : ComponentActivity() {
+class ForwardMessageActivity : BugleComponentActivity() {
 
     @Inject
     @ApplicationCoroutineScope

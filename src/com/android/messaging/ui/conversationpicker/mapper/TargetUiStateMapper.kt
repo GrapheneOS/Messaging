@@ -1,11 +1,10 @@
 package com.android.messaging.ui.conversationpicker.mapper
 
-import androidx.core.net.toUri
 import com.android.messaging.data.contact.formatter.ContactDestinationFormatter
 import com.android.messaging.data.conversationpicker.model.TargetConversation
+import com.android.messaging.domain.conversation.usecase.avatar.ResolveAvatarUri
 import com.android.messaging.ui.conversationpicker.formatter.TargetTextFormatter
 import com.android.messaging.ui.conversationpicker.model.TargetUiState
-import com.android.messaging.util.AvatarUriUtil
 import com.android.messaging.util.PhoneUtils
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
@@ -19,6 +18,7 @@ internal interface TargetUiStateMapper {
 
 internal class TargetUiStateMapperImpl @Inject constructor(
     private val contactDestinationFormatter: ContactDestinationFormatter,
+    private val resolveAvatarUri: ResolveAvatarUri,
     private val textFormatter: TargetTextFormatter,
 ) : TargetUiStateMapper {
 
@@ -56,15 +56,5 @@ internal class TargetUiStateMapperImpl @Inject constructor(
             avatarUri = resolveAvatarUri(conversation.icon),
             isGroup = conversation.isGroup,
         )
-    }
-
-    private fun resolveAvatarUri(icon: String?): String? {
-        val iconUriString = icon?.takeIf(String::isNotBlank) ?: return null
-        val iconUri = iconUriString.toUri()
-
-        return when {
-            AvatarUriUtil.isAvatarUri(iconUri) -> AvatarUriUtil.getPrimaryUri(iconUri)?.toString()
-            else -> iconUriString
-        }
     }
 }

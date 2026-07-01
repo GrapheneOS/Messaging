@@ -21,6 +21,7 @@ import android.database.sqlite.SQLiteDatabase;
 import com.android.messaging.Factory;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.LogUtil;
+import com.google.common.annotations.VisibleForTesting;
 
 public class DatabaseUpgradeHelper {
     private static final String TAG = LogUtil.BUGLE_DATABASE_TAG;
@@ -48,6 +49,9 @@ public class DatabaseUpgradeHelper {
         if (currentVersion < 2) {
             currentVersion = upgradeToVersion2(db);
         }
+        if (currentVersion < 3) {
+            currentVersion = upgradeToVersion3(db);
+        }
         // Rebuild all the views
         final Context context = Factory.get().getApplicationContext();
         DatabaseHelper.dropAllViews(db);
@@ -61,6 +65,15 @@ public class DatabaseUpgradeHelper {
                 DatabaseHelper.ConversationColumns.IS_ENTERPRISE + " INT DEFAULT(0)");
         LogUtil.i(TAG, "Ugraded database to version 2");
         return 2;
+    }
+
+    @VisibleForTesting
+    public int upgradeToVersion3(final SQLiteDatabase db) {
+        db.execSQL("ALTER TABLE " + DatabaseHelper.CONVERSATIONS_TABLE + " ADD COLUMN " +
+                DatabaseHelper.ConversationColumns.PINNED + " INT DEFAULT(0)");
+        db.execSQL(DatabaseHelper.CONVERSATIONS_TABLE_PINNED_INDEX_SQL);
+        LogUtil.i(TAG, "Upgraded database to version 3");
+        return 3;
     }
 
     /**

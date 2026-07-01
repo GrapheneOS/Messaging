@@ -2,7 +2,6 @@ package com.android.messaging.ui.conversation.screen
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -14,6 +13,7 @@ import androidx.compose.ui.geometry.Rect as ComposeRect
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
+import com.android.messaging.ui.common.components.snackbar.MessagingSnackbarHost
 import com.android.messaging.ui.conversation.composer.ui.ConversationComposerSection
 import com.android.messaging.ui.conversation.composer.ui.ConversationSimSelectorSheet
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryStartupAttachment
@@ -133,7 +133,7 @@ internal fun ConversationScreenScaffold(
 
     Scaffold(
         modifier = modifier,
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { MessagingSnackbarHost(hostState = snackbarHostState) },
         topBar = {
             ConversationScreenTopBar(
                 uiState = uiState,

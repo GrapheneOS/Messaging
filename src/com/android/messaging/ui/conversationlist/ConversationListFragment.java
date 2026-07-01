@@ -16,7 +16,6 @@
 package com.android.messaging.ui.conversationlist;
 
 import android.app.Activity;
-import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Rect;
 import android.net.Uri;
@@ -29,15 +28,11 @@ import androidx.loader.app.LoaderManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.ViewGroup.MarginLayoutParams;
 import android.view.ViewPropertyAnimator;
-import android.view.accessibility.AccessibilityManager;
 import android.widget.AbsListView;
 import android.widget.ImageView;
 
@@ -71,9 +66,7 @@ public class ConversationListFragment extends Fragment implements ConversationLi
     private static final String BUNDLE_ARCHIVED_MODE = "archived_mode";
     private static final boolean VERBOSE = false;
 
-    private MenuItem mShowBlockedMenuItem;
     private boolean mArchiveMode;
-    private boolean mBlockedAvailable;
 
     public interface ConversationListFragmentHost {
         public void onConversationClick(final ConversationListData listData,
@@ -233,7 +226,6 @@ public class ConversationListFragment extends Fragment implements ConversationLi
         // show explode animation themselves, so we explicitly tag the root view to be a non-group.
         ViewGroupCompat.setTransitionGroup(rootView, false);
 
-        setHasOptionsMenu(true);
         return rootView;
     }
 
@@ -287,47 +279,10 @@ public class ConversationListFragment extends Fragment implements ConversationLi
 
     @Override
     public void setBlockedParticipantsAvailable(final boolean blockedAvailable) {
-        mBlockedAvailable = blockedAvailable;
-        if (mShowBlockedMenuItem != null) {
-            mShowBlockedMenuItem.setVisible(blockedAvailable);
-        }
     }
 
     public void updateUi() {
         mAdapter.notifyDataSetChanged();
-    }
-
-    @Override
-    public void onPrepareOptionsMenu(final Menu menu) {
-        super.onPrepareOptionsMenu(menu);
-        final MenuItem startNewConversationMenuItem =
-                menu.findItem(R.id.action_start_new_conversation);
-        if (startNewConversationMenuItem != null) {
-            // It is recommended for the Floating Action button functionality to be duplicated as a
-            // menu
-            AccessibilityManager accessibilityManager = (AccessibilityManager)
-                    getActivity().getSystemService(Context.ACCESSIBILITY_SERVICE);
-            startNewConversationMenuItem.setVisible(accessibilityManager
-                    .isTouchExplorationEnabled());
-        }
-
-        final MenuItem archive = menu.findItem(R.id.action_show_archived);
-        if (archive != null) {
-            archive.setVisible(true);
-        }
-    }
-
-    @Override
-    public void onCreateOptionsMenu(final Menu menu, final MenuInflater inflater) {
-        if (!isAdded()) {
-            // Guard against being called before we're added to the activity
-            return;
-        }
-
-        mShowBlockedMenuItem = menu.findItem(R.id.action_show_blocked_contacts);
-        if (mShowBlockedMenuItem != null) {
-            mShowBlockedMenuItem.setVisible(mBlockedAvailable);
-        }
     }
 
     /**

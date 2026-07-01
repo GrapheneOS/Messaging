@@ -1,9 +1,9 @@
 package com.android.messaging.ui.blockedparticipants.screen.delegate
 
 import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepository
+import com.android.messaging.di.core.ApplicationCoroutineScope
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.domain.blockedparticipants.usecase.DeleteDirectChats
-import com.android.messaging.domain.blockedparticipants.usecase.SetDestinationBlocked
 import com.android.messaging.ui.blockedparticipants.common.BlockedParticipantsScreenDelegate
 import com.android.messaging.ui.blockedparticipants.screen.mapper.BlockedParticipantsUiStateMapper
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantUiState
@@ -31,10 +31,11 @@ internal interface BlockedParticipantsDelegate : BlockedParticipantsScreenDelega
 internal class BlockedParticipantsDelegateImpl @Inject constructor(
     private val repository: BlockedParticipantsRepository,
     private val mapper: BlockedParticipantsUiStateMapper,
-    private val setDestinationBlocked: SetDestinationBlocked,
     private val deleteDirectChats: DeleteDirectChats,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
+    @param:ApplicationCoroutineScope
+    private val applicationScope: CoroutineScope,
 ) : BlockedParticipantsDelegate {
 
     private val _state = MutableStateFlow(State())
@@ -78,10 +79,13 @@ internal class BlockedParticipantsDelegateImpl @Inject constructor(
     }
 
     override fun unblock(normalizedDestination: String) {
-        setDestinationBlocked(
-            normalizedDestination = normalizedDestination,
-            blocked = false,
-        )
+        applicationScope.launch {
+            repository.setDestinationBlocked(
+                destination = normalizedDestination,
+                conversationId = null,
+                isBlocked = false,
+            )
+        }
     }
 
     override fun deleteSelectedChats() {

@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversationpicker.mapper
 import android.net.Uri
 import com.android.messaging.data.contact.formatter.ContactDestinationFormatter
 import com.android.messaging.data.conversationpicker.model.TargetConversation
+import com.android.messaging.domain.conversation.usecase.avatar.ResolveAvatarUri
 import com.android.messaging.ui.conversationpicker.formatter.TargetTextFormatter
 import com.android.messaging.ui.conversationpicker.model.TargetUiState
 import com.android.messaging.util.PhoneUtils
@@ -14,6 +15,9 @@ import io.mockk.verify
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -35,8 +39,11 @@ internal class TargetUiStateMapperImplTest {
         }
     }
 
+    private val resolveAvatarUri = mockk<ResolveAvatarUri>()
+
     private val mapper = TargetUiStateMapperImpl(
         contactDestinationFormatter = contactDestinationFormatter,
+        resolveAvatarUri = resolveAvatarUri,
         textFormatter = textFormatter,
     )
 
@@ -47,6 +54,7 @@ internal class TargetUiStateMapperImplTest {
         every { phoneUtilsInstance.formatForDisplay(any()) } answers {
             "formatted:${firstArg<String>()}"
         }
+        every { resolveAvatarUri(any()) } returns null
     }
 
     @After
@@ -74,7 +82,7 @@ internal class TargetUiStateMapperImplTest {
         assertEquals("wrapped:Name", conversation.displayName)
         assertEquals("canonical:+15550100", conversation.normalizedDestination)
         assertEquals("details:formatted:+15550100", conversation.details)
-        assertEquals(false, conversation.isGroup)
+        assertFalse(conversation.isGroup)
     }
 
     @Test
@@ -91,9 +99,9 @@ internal class TargetUiStateMapperImplTest {
         ).single()
 
         val conversation = result as TargetUiState.Conversation
-        assertEquals(true, conversation.isGroup)
-        assertEquals(null, conversation.normalizedDestination)
-        assertEquals(null, conversation.details)
+        assertTrue(conversation.isGroup)
+        assertNull(conversation.normalizedDestination)
+        assertNull(conversation.details)
     }
 
     @Test
@@ -110,7 +118,7 @@ internal class TargetUiStateMapperImplTest {
         ).single()
 
         val conversation = result as TargetUiState.Conversation
-        assertEquals(null, conversation.normalizedDestination)
+        assertNull(conversation.normalizedDestination)
     }
 
     @Test
@@ -122,13 +130,14 @@ internal class TargetUiStateMapperImplTest {
         ).single()
 
         val conversation = result as TargetUiState.Conversation
-        assertEquals(null, conversation.normalizedDestination)
-        assertEquals(null, conversation.details)
+        assertNull(conversation.normalizedDestination)
+        assertNull(conversation.details)
     }
 
     @Test
     fun map_resolvesPrimaryUriWhenIconIsAvatarUri() {
         val avatarIcon = avatarUri(primaryUri = "content://primary")
+        every { resolveAvatarUri(avatarIcon) } returns "content://primary"
 
         val result = mapper.map(
             persistentListOf(conversation(icon = avatarIcon)),
@@ -145,11 +154,13 @@ internal class TargetUiStateMapperImplTest {
             persistentListOf(conversation(icon = avatarIcon)),
         ).single()
 
-        assertEquals(null, result.avatarUri)
+        assertNull(result.avatarUri)
     }
 
     @Test
     fun map_usesRawIconWhenIconIsNotAvatarUri() {
+        every { resolveAvatarUri("content://plain") } returns "content://plain"
+
         val result = mapper.map(
             persistentListOf(conversation(icon = "content://plain")),
         ).single()
@@ -163,7 +174,7 @@ internal class TargetUiStateMapperImplTest {
             persistentListOf(conversation(icon = null)),
         ).single()
 
-        assertEquals(null, result.avatarUri)
+        assertNull(result.avatarUri)
     }
 
     @Test
@@ -172,7 +183,7 @@ internal class TargetUiStateMapperImplTest {
             persistentListOf(conversation(icon = "   ")),
         ).single()
 
-        assertEquals(null, result.avatarUri)
+        assertNull(result.avatarUri)
     }
 
     @Test
@@ -188,7 +199,7 @@ internal class TargetUiStateMapperImplTest {
             ),
         ).single()
 
-        assertEquals(null, result.details)
+        assertNull(result.details)
     }
 
     @Test

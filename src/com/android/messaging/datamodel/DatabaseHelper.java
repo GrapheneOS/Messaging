@@ -108,6 +108,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         /* If this conversation is archived */
         public static final String ARCHIVE_STATUS = "archive_status";
 
+        /* If this conversation is pinned to the top of the conversation list */
+        public static final String PINNED = "pinned";
+
         /* Timestamp for sorting purposes */
         public static final String SORT_TIMESTAMP = "sort_timestamp";
 
@@ -175,6 +178,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     + ConversationColumns.DRAFT_PREVIEW_URI + " TEXT, "
                     + ConversationColumns.DRAFT_PREVIEW_CONTENT_TYPE + " TEXT, "
                     + ConversationColumns.ARCHIVE_STATUS + " INT DEFAULT(0), "
+                    + ConversationColumns.PINNED + " INT DEFAULT(0), "
                     + ConversationColumns.SORT_TIMESTAMP + " INT DEFAULT(0), "
                     + ConversationColumns.LAST_READ_TIMESTAMP + " INT DEFAULT(0), "
                     + ConversationColumns.ICON + " TEXT, "
@@ -206,6 +210,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "CREATE INDEX index_" + CONVERSATIONS_TABLE + "_" + ConversationColumns.SORT_TIMESTAMP
             + " ON " +  CONVERSATIONS_TABLE
             + "(" + ConversationColumns.SORT_TIMESTAMP + ")";
+
+    static final String CONVERSATIONS_TABLE_PINNED_INDEX_SQL =
+            "CREATE INDEX index_" + CONVERSATIONS_TABLE + "_" + ConversationColumns.PINNED
+            + " ON " +  CONVERSATIONS_TABLE
+            + "(" + ConversationColumns.PINNED + ")";
 
     // Messages table schema
     public static class MessageColumns implements BaseColumns {
@@ -544,6 +553,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String[] CREATE_INDEX_SQLS = new String[] {
         CONVERSATIONS_TABLE_SMS_THREAD_ID_INDEX_SQL,
         CONVERSATIONS_TABLE_ARCHIVE_STATUS_INDEX_SQL,
+        CONVERSATIONS_TABLE_PINNED_INDEX_SQL,
         CONVERSATIONS_TABLE_SORT_TIMESTAMP_INDEX_SQL,
         MESSAGES_TABLE_SORT_INDEX_SQL,
         MESSAGES_TABLE_STATUS_SEEN_INDEX_SQL,

@@ -22,8 +22,14 @@ import com.android.messaging.data.conversation.repository.ConversationVCardMetad
 import com.android.messaging.data.conversation.repository.ConversationVCardMetadataRepositoryImpl
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.data.conversation.repository.ConversationsRepositoryImpl
+import com.android.messaging.data.conversation.store.ConversationArchiveStore
+import com.android.messaging.data.conversation.store.ConversationArchiveStoreImpl
 import com.android.messaging.data.conversation.store.ConversationDraftStore
 import com.android.messaging.data.conversation.store.ConversationDraftStoreImpl
+import com.android.messaging.data.conversation.store.ConversationPinStore
+import com.android.messaging.data.conversation.store.ConversationPinStoreImpl
+import com.android.messaging.data.conversation.store.ConversationReadStore
+import com.android.messaging.data.conversation.store.ConversationReadStoreImpl
 import com.android.messaging.data.conversation.store.ConversationSelfIdStore
 import com.android.messaging.data.conversation.store.ConversationSelfIdStoreImpl
 import com.android.messaging.data.media.repository.ConversationAttachmentsRepository
@@ -40,6 +46,8 @@ import com.android.messaging.domain.conversation.usecase.action.CheckConversatio
 import com.android.messaging.domain.conversation.usecase.action.CheckConversationActionRequirementsImpl
 import com.android.messaging.domain.conversation.usecase.action.CreateDefaultSmsRoleRequest
 import com.android.messaging.domain.conversation.usecase.action.CreateDefaultSmsRoleRequestImpl
+import com.android.messaging.domain.conversation.usecase.avatar.ResolveAvatarUri
+import com.android.messaging.domain.conversation.usecase.avatar.ResolveAvatarUriImpl
 import com.android.messaging.domain.conversation.usecase.draft.GetConversationDraftSendProtocol
 import com.android.messaging.domain.conversation.usecase.draft.GetConversationDraftSendProtocolImpl
 import com.android.messaging.domain.conversation.usecase.draft.SendConversationDraft
@@ -48,12 +56,20 @@ import com.android.messaging.domain.conversation.usecase.forward.CreateForwarded
 import com.android.messaging.domain.conversation.usecase.forward.CreateForwardedMessageImpl
 import com.android.messaging.domain.conversation.usecase.forward.ForwardedMessageSubjectFormatter
 import com.android.messaging.domain.conversation.usecase.forward.ForwardedMessageSubjectFormatterImpl
+import com.android.messaging.domain.conversation.usecase.participant.CanAddContact
+import com.android.messaging.domain.conversation.usecase.participant.CanAddContactImpl
 import com.android.messaging.domain.conversation.usecase.participant.CanAddMoreConversationParticipants
 import com.android.messaging.domain.conversation.usecase.participant.CanAddMoreConversationParticipantsImpl
+import com.android.messaging.domain.conversation.usecase.participant.CanShowOrAddContact
+import com.android.messaging.domain.conversation.usecase.participant.CanShowOrAddContactImpl
+import com.android.messaging.domain.conversation.usecase.participant.IsContactSaved
+import com.android.messaging.domain.conversation.usecase.participant.IsContactSavedImpl
 import com.android.messaging.domain.conversation.usecase.participant.IsConversationRecipientLimitExceeded
 import com.android.messaging.domain.conversation.usecase.participant.IsConversationRecipientLimitExceededImpl
 import com.android.messaging.domain.conversation.usecase.participant.ResolveConversationId
 import com.android.messaging.domain.conversation.usecase.participant.ResolveConversationIdImpl
+import com.android.messaging.domain.conversation.usecase.telephony.CanPlacePhoneCall
+import com.android.messaging.domain.conversation.usecase.telephony.CanPlacePhoneCallImpl
 import com.android.messaging.domain.conversation.usecase.telephony.IsDeviceVoiceCapable
 import com.android.messaging.domain.conversation.usecase.telephony.IsDeviceVoiceCapableImpl
 import com.android.messaging.domain.conversation.usecase.telephony.IsEmergencyPhoneNumber
@@ -117,6 +133,24 @@ internal abstract class ConversationBindsModule {
 
     @Binds
     @Reusable
+    abstract fun bindConversationReadStore(
+        impl: ConversationReadStoreImpl,
+    ): ConversationReadStore
+
+    @Binds
+    @Reusable
+    abstract fun bindConversationPinStore(
+        impl: ConversationPinStoreImpl,
+    ): ConversationPinStore
+
+    @Binds
+    @Reusable
+    abstract fun bindConversationArchiveStore(
+        impl: ConversationArchiveStoreImpl,
+    ): ConversationArchiveStore
+
+    @Binds
+    @Reusable
     abstract fun bindConversationDraftsRepository(
         impl: ConversationDraftsRepositoryImpl,
     ): ConversationDraftsRepository
@@ -138,6 +172,18 @@ internal abstract class ConversationBindsModule {
     abstract fun bindCanAddMoreConversationParticipants(
         impl: CanAddMoreConversationParticipantsImpl,
     ): CanAddMoreConversationParticipants
+
+    @Binds
+    @Reusable
+    abstract fun bindCanAddContact(
+        impl: CanAddContactImpl,
+    ): CanAddContact
+
+    @Binds
+    @Reusable
+    abstract fun bindCanShowOrAddContact(
+        impl: CanShowOrAddContactImpl,
+    ): CanShowOrAddContact
 
     @Binds
     @Reusable
@@ -180,6 +226,24 @@ internal abstract class ConversationBindsModule {
     abstract fun bindIsEmergencyPhoneNumber(
         impl: IsEmergencyPhoneNumberImpl,
     ): IsEmergencyPhoneNumber
+
+    @Binds
+    @Reusable
+    abstract fun bindCanPlacePhoneCall(
+        impl: CanPlacePhoneCallImpl,
+    ): CanPlacePhoneCall
+
+    @Binds
+    @Reusable
+    abstract fun bindIsContactSaved(
+        impl: IsContactSavedImpl,
+    ): IsContactSaved
+
+    @Binds
+    @Reusable
+    abstract fun bindResolveAvatarUri(
+        impl: ResolveAvatarUriImpl,
+    ): ResolveAvatarUri
 
     @Binds
     @Reusable

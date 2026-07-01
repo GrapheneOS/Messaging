@@ -79,6 +79,7 @@ internal fun participant(
     displayName: String = DISPLAY_NAME_1,
     destination: String? = DESTINATION_1,
     details: String? = destination,
+    canShowContact: Boolean = true,
 ): BlockedParticipantUiState {
     return BlockedParticipantUiState(
         participantId = participantId,
@@ -90,6 +91,7 @@ internal fun participant(
         lookupKey = null,
         normalizedDestination = destination,
         canCall = false,
+        canShowContact = canShowContact,
         isContactSaved = false,
     )
 }
