@@ -2,10 +2,12 @@ package com.android.messaging.ui.photoviewer
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.graphics.Rect
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.android.messaging.ui.core.AppTheme
@@ -20,7 +22,10 @@ internal class PhotoViewerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(scrim = Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(scrim = Color.TRANSPARENT),
+        )
 
         val launchRequest = toPhotoViewerLaunchRequest(intent = intent) ?: run {
             finish()

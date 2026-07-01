@@ -50,9 +50,10 @@ private suspend fun PointerInputScope.detectPhotoViewerTransformGestures(
             if (!isTransformActive) {
                 accumulatedZoom *= zoomChange
                 accumulatedPan += panChange
-                isTransformActive = event.shouldStartPhotoViewerTransform(
-                    gestureState = gestureState,
+                isTransformActive = shouldStartPhotoViewerTransform(
+                    isZoomed = gestureState.isZoomed(),
                     accumulatedZoom = accumulatedZoom,
+                    centroidSize = event.calculateCentroidSize(useCurrent = false),
                     accumulatedPan = accumulatedPan,
                     touchSlop = touchSlop,
                     pressedPointerCount = pressedPointerCount,
@@ -94,20 +95,20 @@ private fun PointerEvent.photoViewerPanChange(
     }
 }
 
-private fun PointerEvent.shouldStartPhotoViewerTransform(
-    gestureState: ZoomablePhotoGestureState,
+internal fun shouldStartPhotoViewerTransform(
+    isZoomed: Boolean,
     accumulatedZoom: Float,
+    centroidSize: Float,
     accumulatedPan: Offset,
     touchSlop: Float,
     pressedPointerCount: Int,
 ): Boolean {
-    val centroidSize = calculateCentroidSize(useCurrent = false)
     val zoomMotion = abs(1f - accumulatedZoom) * centroidSize
     val panMotion = accumulatedPan.getDistance()
 
     return when {
         pressedPointerCount > 1 && zoomMotion > touchSlop -> true
-        gestureState.isZoomed() && panMotion > touchSlop -> true
+        isZoomed && panMotion > touchSlop -> true
         else -> false
     }
 }

@@ -239,6 +239,46 @@ internal class PhotoViewerViewModelTest {
     }
 
     @Test
+    fun closeClick_whenInCarousel_preservesCarouselDisplayMode() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val repositoryResults = MutableSharedFlow<PhotoViewerItemsLoadResult>(replay = 1)
+            val repository = mockPhotoViewerRepository(results = repositoryResults)
+            val viewModel = createViewModel(repository = repository)
+
+            loadInitialItems(
+                repositoryResults = repositoryResults,
+                viewModel = viewModel,
+            )
+            viewModel.onMetadataClick()
+            viewModel.onCloseClick()
+
+            assertEquals(PhotoViewerDisplayMode.Carousel, viewModel.uiState.value.displayMode)
+            assertEquals(false, viewModel.uiState.value.isMetadataSheetVisible)
+            assertEquals(true, viewModel.uiState.value.isClosing)
+        }
+    }
+
+    @Test
+    fun closeClick_whenInImmersive_preservesImmersiveDisplayMode() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val repositoryResults = MutableSharedFlow<PhotoViewerItemsLoadResult>(replay = 1)
+            val repository = mockPhotoViewerRepository(results = repositoryResults)
+            val viewModel = createViewModel(repository = repository)
+
+            loadInitialItems(
+                repositoryResults = repositoryResults,
+                viewModel = viewModel,
+            )
+            viewModel.onEnterImmersiveMode()
+            viewModel.onCloseClick()
+
+            assertEquals(PhotoViewerDisplayMode.Immersive, viewModel.uiState.value.displayMode)
+            assertEquals(false, viewModel.uiState.value.isMetadataSheetVisible)
+            assertEquals(true, viewModel.uiState.value.isClosing)
+        }
+    }
+
+    @Test
     fun closeAnimationFinished_whenCalledTwice_emitsFinishOnce() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val repositoryResults = MutableSharedFlow<PhotoViewerItemsLoadResult>(replay = 1)

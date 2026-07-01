@@ -166,7 +166,6 @@ internal class PhotoViewerViewModel @Inject constructor(
                 state.isClosing -> state
                 else -> {
                     state.copy(
-                        displayMode = PhotoViewerDisplayMode.Immersive,
                         isMetadataSheetVisible = false,
                         isClosing = true,
                     )
