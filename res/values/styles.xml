@@ -210,29 +210,8 @@
         <item name="android:paddingRight">24dp</item>
     </style>
 
-    <style name="ConversationListItemViewPaddingStyle">
-        <item name="android:paddingLeft">@dimen/conversation_list_item_view_padding</item>
-        <item name="android:paddingRight">@dimen/conversation_list_item_view_padding</item>
-    </style>
-
-    <style name="ConversationListItemViewTextStyle">
-        <item name="android:includeFontPadding">false</item>
-        <item name="android:textSize">14sp</item>
-        <item name="android:background">@null</item>
-        <item name="android:textColor">@color/conversation_list_details</item>
-    </style>
-
-    <style name="ConversationListItemViewConversationNameStyle" parent="ConversationListItemViewTextStyle">
-        <item name="android:textSize">16sp</item>
-        <item name="android:textColor">@color/conversation_list_name</item>
-    </style>
-
     <style name="ConversationListNotificationBellPaddingStyle">
         <item name="android:paddingRight">@dimen/conversation_list_notification_bell_padding</item>
-    </style>
-
-    <style name="ConversationListFragmentStartNewButtonStyle">
-        <item name="android:layout_marginRight">@dimen/fab_left_right_margin</item>
     </style>
 
     <style name="AudioAttachmentViewPlayPauseButtonStyle">
