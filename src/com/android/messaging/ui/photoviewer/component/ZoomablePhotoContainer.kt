@@ -267,8 +267,34 @@ private fun handlePhotoViewerDismissDrag(
         isZoomed = gestureState.isZoomed(),
         dragAmount = dragAmount,
     )
+    val decision = resolvePhotoViewerDismissDragDecision(
+        canHandleDismissDrag = canHandleDismissDrag,
+        accumulatedDrag = accumulatedDrag,
+        dragAmount = dragAmount,
+        isDismissDragActive = isDismissDragActive,
+        touchSlop = touchSlop,
+    )
+
+    if (decision.isActive) {
+        dismissDragState.activate()
+        dismissDragState.applyDrag(dragAmount = decision.dragAmount)
+    }
+
+    return decision.isActive
+}
+
+internal fun resolvePhotoViewerDismissDragDecision(
+    canHandleDismissDrag: Boolean,
+    accumulatedDrag: Offset,
+    dragAmount: Float,
+    isDismissDragActive: Boolean,
+    touchSlop: Float,
+): PhotoViewerDismissDragDecision {
     val shouldStartDismissDrag = isDismissDragActive ||
-        accumulatedDrag.shouldStartPhotoViewerDismissDrag(touchSlop = touchSlop)
+        shouldStartPhotoViewerDismissDrag(
+            accumulatedDrag = accumulatedDrag,
+            touchSlop = touchSlop,
+        )
 
     val dismissDragAmount = when {
         isDismissDragActive -> dragAmount
@@ -278,17 +304,24 @@ private fun handlePhotoViewerDismissDrag(
         }
     }
 
-    if (canHandleDismissDrag && shouldStartDismissDrag) {
-        dismissDragState.activate()
-        dismissDragState.applyDrag(dragAmount = dismissDragAmount)
-    }
-
-    return canHandleDismissDrag && shouldStartDismissDrag
+    return PhotoViewerDismissDragDecision(
+        isActive = canHandleDismissDrag && shouldStartDismissDrag,
+        dragAmount = dismissDragAmount,
+    )
 }
 
-private fun Offset.shouldStartPhotoViewerDismissDrag(touchSlop: Float): Boolean {
-    return y > touchSlop && abs(y) >= abs(x)
+internal fun shouldStartPhotoViewerDismissDrag(
+    accumulatedDrag: Offset,
+    touchSlop: Float,
+): Boolean {
+    return accumulatedDrag.y > touchSlop &&
+        abs(accumulatedDrag.y) >= abs(accumulatedDrag.x)
 }
+
+internal data class PhotoViewerDismissDragDecision(
+    val isActive: Boolean,
+    val dragAmount: Float,
+)
 
 private fun finishPhotoViewerDismissDrag(
     dismissDragState: PhotoViewerDismissDragState,

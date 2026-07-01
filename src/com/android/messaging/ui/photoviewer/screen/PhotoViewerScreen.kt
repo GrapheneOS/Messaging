@@ -39,6 +39,7 @@ internal fun PhotoViewerScreen(
         screenModel = screenModel,
         onFinish = onFinish,
     )
+    PhotoViewerSystemBarsEffect(displayMode = uiState.displayMode)
 
     BackHandler(enabled = uiState.isMetadataSheetVisible) {
         screenModel.onMetadataDismissed()
