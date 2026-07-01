@@ -37,6 +37,7 @@ import java.io.ByteArrayOutputStream
 import java.io.DataOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.util.Base64
 import kotlin.math.PI
 import kotlin.math.sin
 import kotlinx.coroutines.flow.first
@@ -54,9 +55,12 @@ private const val SEED_CONTACT_VCARD_FILE_ID = "800004"
 private const val SEED_VIDEO_FILE_ID = "800005"
 private const val SEED_AUDIO_FILE_ID = "800006"
 private const val SEED_LOCATION_VCARD_FILE_ID = "800007"
+private const val SEED_ANIMATED_GIF_FILE_ID = "800008"
 private const val SEED_AUDIO_DURATION_SECONDS = 2
 private const val SEED_AUDIO_SAMPLE_RATE_HZ = 16_000
 private const val SEED_AUDIO_FREQUENCY_HZ = 440.0
+private const val SEED_ANIMATED_GIF_WIDTH = 96
+private const val SEED_ANIMATED_GIF_HEIGHT = 96
 
 private const val MINUTES = 60 * 1000L
 private const val HOURS = 60 * MINUTES
@@ -86,6 +90,7 @@ fun seedTestData(context: Context) {
     val (simAId, simBId) = resolveDualSimSelfIds(context = context)
 
     val testImages = buildTestImages(context)
+    val testAnimatedGif = buildTestAnimatedGif()
     val testAudio = buildTestAudio()
     val testVideo = buildTestVideo(context)
     val testVCards = buildTestVCards()
@@ -122,6 +127,7 @@ fun seedTestData(context: Context) {
             jackId = jack,
             carolId = carol,
             images = testImages,
+            animatedGifUri = testAnimatedGif,
             audioUri = testAudio,
             videoUri = testVideo,
             vCards = testVCards,
@@ -261,6 +267,7 @@ fun clearSeededTestData(context: Context) {
     deleteSeedScratchFile(fileId = SEED_CONTACT_VCARD_FILE_ID, fileExtension = "vcf")
     deleteSeedScratchFile(fileId = SEED_LOCATION_VCARD_FILE_ID, fileExtension = "vcf")
     deleteSeedScratchFile(fileId = SEED_VIDEO_FILE_ID, fileExtension = "mp4")
+    deleteSeedScratchFile(fileId = SEED_ANIMATED_GIF_FILE_ID, fileExtension = "gif")
     deleteSeedScratchFile(fileId = SEED_IMAGE_1_FILE_ID)
     deleteSeedScratchFile(fileId = SEED_IMAGE_2_FILE_ID)
     deleteSeedScratchFile(fileId = SEED_IMAGE_3_FILE_ID)
@@ -268,6 +275,7 @@ fun clearSeededTestData(context: Context) {
     deleteSeedScratchFile(fileId = SEED_LOCATION_VCARD_FILE_ID)
     deleteSeedScratchFile(fileId = SEED_VIDEO_FILE_ID)
     deleteSeedScratchFile(fileId = SEED_AUDIO_FILE_ID)
+    deleteSeedScratchFile(fileId = SEED_ANIMATED_GIF_FILE_ID)
     deleteSeededAttachmentScratchFiles(attachmentUris = seededAttachmentUris)
 
     MessagingContentProvider.notifyConversationListChanged()
@@ -319,6 +327,77 @@ private fun buildTestImages(context: Context): List<String> {
         bmp.recycle()
         imageUri.toString()
     }
+}
+
+private fun buildTestAnimatedGif(): String {
+    val animatedGifUri = buildSeedScratchUri(
+        fileId = SEED_ANIMATED_GIF_FILE_ID,
+        fileExtension = "gif",
+    )
+    val file = MediaScratchFileProvider.getFileFromUri(animatedGifUri)
+    file.parentFile?.mkdirs()
+    file.writeBytes(seedAnimatedGifBytes())
+    MediaScratchFileProvider.addUriToDisplayNameEntry(animatedGifUri, "seed_animation.gif")
+    return animatedGifUri.toString()
+}
+
+private fun seedAnimatedGifBytes(): ByteArray {
+    return Base64.getMimeDecoder().decode(
+        """
+        R0lGODlhYABgAPZtAEFp4UJq4UNr4UVs4kVt4khv4kpw4ktx4050409041F141J35FR45Ft+5Vx+
+        5V1/5WCC5mGC5mOE5mSF52aG52eH52iI53CO6HOQ6XSR6XSS6XmV6nqW6n2Y6n6Z64Ca64Kc64Od
+        64Se7Iag7Ieg7Iih7Imh7Iqj7Yyk7Y6m7ZGp7pet75iu752y8J6z8KC08KG18Ka48ae68am78aq8
+        8qu98qy+8rDB87HB87LC87TE87nI9LvJ9L7M9cHO9cLP9cPQ9sXR9sfT9sjT9snV98zW98zX983Y
+        987Y99Da+NHb+NLc+NTd+NXd+Nbf+dff+djg+dnh+dri+dvj+d3k+t3l+t7l+uDm+uLo+uPp++Xq
+        ++br++bs++jt++nt++nu/Orv/O/y/PDz/fL0/fL1/fX3/fb4/vj5/vn6/vr7/vv7/vv8/v7+////
+        /wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH/
+        C05FVFNDQVBFMi4wAwEAAAAh+QQAIwAAACwAAAAAYABgAAAH/4AAgoOEhYaHiImKi4yNjo+QkZKT
+        lJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvM
+        zc7P0NHS09TV1tfY2drBDjVXZWhWMgyCRG3nTwBR5+znPcYmaG1gRk9mbWOCMlltTysAOcC0OdKj
+        x5A27wYJPIeAV4Y2ZUAMOrCkTQFBPNpgGHSkTQRBDBASerIOTS9+Hgp9gEFAkJI2DgbxOzDIBIVC
+        CNp04UWhjZZFXCwOQpNPUYR+vES0+TEIRrscgogOytmujRJDD4HwStFGSM0eRtqESbmgjZVBPcHw
+        WMtDhaERbYig7rqgsxBcpgB6ehW0oY2ORSzatOBFoIvgqfxsCPIQdxBXGItqtEnRK4O8KDl4jLnH
+        AkCLdVcgz7DSJkoPCYdqRBHjM0oDXhaEjFmjZUZfiaTPMWXN7qahJ1UVbBtOvLjx48iTK1/OvLnz
+        59CjS59Ovbr169iza9/Ovbv37+DDix9Pvrx5ToEAACH5BAAjAAAALAAAAABgAGAAhi59Mi9+MzB+
+        NDB/NDKANjOANzWBODaCOjeDOziDPDmEPD2GQD6HQT6HQkGJREKKRkOKR0SLSEWLSUaMSUuPTkyP
+        T02QUVCSVFKTVVSUV1WVWFaWWVeWWliXW1mYXFuZXl+cYmKdZWWfaGagaWegaWujbWujbm2kcHCm
+        cnGndHOodnWpeHeqenirenmre3utfnytfn2uf36vgYCwgoOyhoe0iY24j465kJG7k5K7lJS8lpS9
+        lpa+mJi/mpnAm5vBnZ3Cn57DoKDEoqLFpKTGpqjJqqnJq6rKq63Mr7HPs7LPs7TRtrjTubvVvLzV
+        vb/XwMDYwcLZw8LZxMTaxcbcyMfcyMjdycndysvezMvfzMzfzc7gz8/h0NPj1NTk1NXl1tbm19jn
+        2Njn2dno2tro29vp3N3q3d/r4ODs4OLt4+Pu5OTu5Obv5ubw5+fw6Ojx6Ozz7e307e/17/D28fH2
+        8fT49fX59ff69/j6+Pj7+fn7+fr8+vv8+/7+/v///wAAAAf/gACCg4SFhoeIiYqLjI2Oj5CRkpOU
+        lZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8DBwsPExcbHyMnKy8zN
+        zs/Q0dLT1NXW19jZ2r8VQ2Z3d2VBEIJTfuddAGHn7OdMxjF4fm9VXXd+cwMAQGh+XDYAjrjxY4UJ
+        Eyl+3g2i8CMMHjxdQOga4ecOi0EKtvg5IGiJHxGDrPi5IAhCQkJJ8JWRB4cjrjN+UhRS0aOAIC1+
+        LAzql0DQgBgbCKnhom+CPA+4NvhRs2jNxkF35iQagKOEoAL3JOBq4cfJIB7tjgjCI1XQgnbnsiTK
+        cRLXDD9RuQbJYELFjxwVAEyGGaTUzZK/S2ocKhDETxYFuUL4WaNv0As/TQR1gDuohB8kiy6E4eNj
+        wQWXtgq08bNj0IJ+RASh8CNWEA0/PBIV2MEnik6uEnGNkAfmSJI5924A2AHGj5nYQsj4AcMkw6Eo
+        FcFIf+NHay4PT+bwQSPkhJ+LZdh5ldMuqKEuaP3wabytvfv38OPLn0+/vv37+PPr38+/v///AAYo
+        4IAEFmjggQgmqOCCDDbo4IMQahIIACH5BAAjAAAALAAAAABgAGAAh9gbYNgcYdgeYtkfY9kgZNkh
+        ZNkiZdokZtolZ9omZ9onaNsra9ssbNwwbtwwb9wxcNwycNw1ct02c905dd47dt48d949eN5Bet9E
+        fd9Ffd9Hf+BIf+BJgOFOhOFQheJTh+JVieJXiuJYiuNZi+NajONej+RgkORhkeRjkuVkk+VmlOVp
+        luZrl+ZrmOZvm+dwm+dxnOdzned0nud1n+h4oel8o+mApuqDqOqEqeuKreuLruuNr+yOsO2UtO2V
+        te2Xt+6aue6cuu+gve+hvu+ivvCmwfCnwvCow/GrxPGuxvGvx/GvyPKxyfK1y/K2zPO4zvO5zvS8
+        0PS90fS+0fS/0vTA0/TB1PXC1fXD1fXE1vXF1vXH2PbI2PbJ2vbL2/bM2/fP3ffQ3vfR3/fS4PjU
+        4fjV4vjW4vjX4/jY5PjZ5PnZ5fnc5/nd5/rg6frh6vrj7Prk7Pvl7fvm7vvq8Pzr8fzt8/zv9Pzw
+        9P3x9f3y9v3z9/30+P31+P32+f73+f74+v75+/77/P/9/v/+/v///wAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAj/AAEIHEiwoMGDCBMqXMiwocOHECNKnEixosWLGDNq3Mixo8ePIEOKHEmypMmT
+        KFOqXMmypcuXMGPKnEmzps2bOHPq3Mmzp8+fQIMKHUq0qNGjSJMqXcq0qdOnUKNKnUq1qtWrWLNq
+        /UkBCBo9fdD4gCCQCqGzYACQOcv2LBOjLwARknMFTB9CdgQA8MGGUJcbAIjIIZSFCROzbwcyuPHF
+        jh4qGnSKIKSHxUAFXQgdEJiEUIiBVwhdEAiBUGKBOwiFvTtnM86+KQqq4EFAYGYLA/u6FgAjMug3
+        tSPc/YBzAyE3C91oHthHj0IdMwYO9m2zBSEnA1OzJQJAACA7Axe01z27JWEIQmT03pxBiMpAGExC
+        01EBoAH6gRrmJtmfpMbBE0kAckUEOX1AyBvqCeQCIU0IxEF7A5VASBEMdUYIFBTkJMBgOijWVxAC
+        nUAIdwLRQMgODAlQQRGEoCGZXGEQgYQdd+EAgA5htIiiD2uNwQR1CRFwFlk5cQCFHoG44YOIlqHB
+        FnZ1tAXke0cMFMFZDVxVBSE2KBCBWS5eRcJ4enSQFQdFbJGFDwRu5eabcMYp55x01mnnnXjmqeee
+        fPbp55+ABirooIQWauihiCaq6KKMNupoogEBADs=
+        """.trimIndent(),
+    )
 }
 
 private fun buildTestVCards(): SeedVCards {
@@ -640,6 +719,29 @@ private fun insertImageMessage(
         seen = seen,
         read = read,
         mmsSubject = mmsSubject,
+    )
+}
+
+private fun insertGifMessage(
+    db: DatabaseWrapper,
+    conversationId: Long,
+    senderId: String,
+    selfId: String,
+    gifUri: String,
+    status: Int,
+    timestamp: Long,
+): Long {
+    return insertAttachmentMessage(
+        db = db,
+        conversationId = conversationId,
+        senderId = senderId,
+        selfId = selfId,
+        contentType = ContentType.IMAGE_GIF,
+        attachmentUri = gifUri,
+        status = status,
+        timestamp = timestamp,
+        width = SEED_ANIMATED_GIF_WIDTH,
+        height = SEED_ANIMATED_GIF_HEIGHT,
     )
 }
 
@@ -1314,6 +1416,7 @@ private fun seedScenarioH(
     jackId: String,
     carolId: String,
     images: List<String>,
+    animatedGifUri: String,
     audioUri: String,
     videoUri: String,
     vCards: SeedVCards,
@@ -1360,6 +1463,7 @@ private fun seedScenarioH(
         Msg("image", attachmentUri = img1, senderId = carolId),
         Msg("text", text = TEST_YOUTUBE_VIDEO_URL, senderId = carolId),
         Msg("text", text = "The clip version is even better", senderId = jackId),
+        Msg("gif", attachmentUri = animatedGifUri, senderId = jackId),
         Msg("video", attachmentUri = videoUri, senderId = carolId),
         Msg("text", text = "And here's the ambient audio from the room", senderId = jackId),
         Msg("audio", attachmentUri = audioUri, senderId = jackId),
@@ -1391,6 +1495,16 @@ private fun seedScenarioH(
                 m.attachmentUri,
                 status,
                 msgTime,
+            )
+
+            "gif" -> insertGifMessage(
+                db = db,
+                conversationId = convId,
+                senderId = m.senderId,
+                selfId = selfId,
+                gifUri = m.attachmentUri,
+                status = status,
+                timestamp = msgTime,
             )
 
             "mixed" -> insertMixedMessage(

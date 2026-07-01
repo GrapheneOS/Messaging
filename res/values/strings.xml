@@ -425,6 +425,10 @@
     <string name="camera_switch_camera_facing">Switch between front and back camera</string>
 
     <string name="photo_view_activity_title">Messaging photos</string>
+    <string name="photo_viewer_image_content_description">Image attachment</string>
+    <string name="photo_viewer_load_error">Couldn\'t load image</string>
+    <string name="photo_viewer_empty">No images</string>
+    <string name="photo_viewer_details_title">Image details</string>
     <plurals name="photos_saved_to_album">
         <item quantity="one"><xliff:g id="quantity">%d</xliff:g> photo saved to \"<xliff:g id="albumName">%s</xliff:g>\" album</item>
         <item quantity="other"><xliff:g id="quantity">%d</xliff:g> photos saved to \"<xliff:g id="albumName">%s</xliff:g>\" album</item>

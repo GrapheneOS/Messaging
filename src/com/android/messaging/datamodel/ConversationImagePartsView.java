@@ -17,8 +17,7 @@
 package com.android.messaging.datamodel;
 
 import android.provider.BaseColumns;
-
-import com.android.ex.photo.provider.PhotoContract.PhotoViewColumns;
+import android.provider.OpenableColumns;
 
 import com.android.messaging.datamodel.DatabaseHelper.MessageColumns;
 import com.android.messaging.datamodel.DatabaseHelper.PartColumns;
@@ -28,8 +27,7 @@ import com.android.messaging.util.ContentType;
 /**
  * View for the image parts for the conversation. It is used to provide the photoviewer with a
  * a data source for all the photos in a conversation, so that the photoviewer can support paging
- * through all the photos of the conversation. The columns of the view are a superset of
- * {@link com.android.ex.photo.provider.PhotoContract.PhotoViewColumns}.
+ * through all the photos of the conversation.
  */
 public class ConversationImagePartsView {
     private static final String VIEW_NAME = "conversation_image_parts_view";
@@ -49,7 +47,7 @@ public class ConversationImagePartsView {
             + DatabaseHelper.PARTS_TABLE + '.' + PartColumns.CONTENT_TYPE
             + " as " + Columns.CONTENT_TYPE + ", "
             //
-            // Columns in addition to those specified by PhotoContract
+            // Columns in addition to the base photo viewer columns
             //
             + DatabaseHelper.PARTICIPANTS_TABLE + '.' + ParticipantColumns.DISPLAY_DESTINATION
             + " as " + Columns.DISPLAY_DESTINATION + ", "
@@ -75,12 +73,12 @@ public class ConversationImagePartsView {
 
     static class Columns implements BaseColumns {
         static final String CONVERSATION_ID = MessageColumns.CONVERSATION_ID;
-        static final String URI = PhotoViewColumns.URI;
-        static final String SENDER_FULL_NAME = PhotoViewColumns.NAME;
-        static final String CONTENT_URI = PhotoViewColumns.CONTENT_URI;
-        static final String THUMBNAIL_URI = PhotoViewColumns.THUMBNAIL_URI;
-        static final String CONTENT_TYPE = PhotoViewColumns.CONTENT_TYPE;
-        // Columns in addition to those specified by PhotoContract
+        static final String URI = "uri";
+        static final String SENDER_FULL_NAME = OpenableColumns.DISPLAY_NAME;
+        static final String CONTENT_URI = "contentUri";
+        static final String THUMBNAIL_URI = "thumbnailUri";
+        static final String CONTENT_TYPE = "contentType";
+        // Columns in addition to the base photo viewer columns
         static final String DISPLAY_DESTINATION = ParticipantColumns.DISPLAY_DESTINATION;
         static final String RECEIVED_TIMESTAMP = MessageColumns.RECEIVED_TIMESTAMP;
         static final String STATUS = MessageColumns.STATUS;
@@ -88,12 +86,12 @@ public class ConversationImagePartsView {
 
     public interface PhotoViewQuery {
         public final String[] PROJECTION = {
-            PhotoViewColumns.URI,
-            PhotoViewColumns.NAME,
-            PhotoViewColumns.CONTENT_URI,
-            PhotoViewColumns.THUMBNAIL_URI,
-            PhotoViewColumns.CONTENT_TYPE,
-            // Columns in addition to those specified by PhotoContract
+            Columns.URI,
+            Columns.SENDER_FULL_NAME,
+            Columns.CONTENT_URI,
+            Columns.THUMBNAIL_URI,
+            Columns.CONTENT_TYPE,
+            // Columns in addition to the base photo viewer columns
             Columns.DISPLAY_DESTINATION,
             Columns.RECEIVED_TIMESTAMP,
             Columns.STATUS,
@@ -104,7 +102,7 @@ public class ConversationImagePartsView {
         public final int INDEX_CONTENT_URI = 2;
         public final int INDEX_THUMBNAIL_URI = 3;
         public final int INDEX_CONTENT_TYPE = 4;
-        // Columns in addition to those specified by PhotoContract
+        // Columns in addition to the base photo viewer columns
         public final int INDEX_DISPLAY_DESTINATION = 5;
         public final int INDEX_RECEIVED_TIMESTAMP = 6;
         public final int INDEX_STATUS = 7;
