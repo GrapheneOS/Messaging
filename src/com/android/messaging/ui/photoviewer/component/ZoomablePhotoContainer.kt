@@ -6,11 +6,9 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateOffsetAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.gestures.TransformableState
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
-import androidx.compose.foundation.gestures.rememberTransformableState
-import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,9 +20,12 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.onSizeChanged
 import com.android.messaging.ui.photoviewer.screen.model.PhotoViewerDisplayMode
+import kotlin.math.abs
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 private const val PHOTO_VIEWER_DOUBLE_TAP_ZOOM_ANIMATION_DURATION_MILLIS = 200
@@ -45,11 +46,6 @@ internal fun ZoomablePhotoContainer(
     val currentOnToggleDisplayMode = rememberUpdatedState(newValue = onToggleDisplayMode)
     val currentOnEnterImmersiveMode = rememberUpdatedState(newValue = onEnterImmersiveMode)
     val currentOnCloseClick = rememberUpdatedState(newValue = onCloseClick)
-    val transformableState = rememberTransformableState { _, zoomChange, panChange, _ ->
-        if (gestureState.applyTransform(zoomChange = zoomChange, panChange = panChange)) {
-            currentOnEnterImmersiveMode.value()
-        }
-    }
     val zoomAnimationSpec = photoViewerZoomAnimationSpec<Float>(
         isEnabled = gestureState.isZoomAnimationEnabled,
     )
@@ -80,7 +76,6 @@ internal fun ZoomablePhotoContainer(
             .photoViewerGestureModifier(
                 contentKey = contentKey,
                 gestureState = gestureState,
-                transformableState = transformableState,
                 animatedScale = animatedScale,
                 animatedOffset = animatedOffset,
                 dismissDragState = dismissDragState,
@@ -122,7 +117,6 @@ private fun PhotoViewerGestureEffects(
 private fun Modifier.photoViewerGestureModifier(
     contentKey: PhotoViewerContentKey,
     gestureState: ZoomablePhotoGestureState,
-    transformableState: TransformableState,
     animatedScale: State<Float>,
     animatedOffset: State<Offset>,
     dismissDragState: PhotoViewerDismissDragState?,
@@ -139,17 +133,16 @@ private fun Modifier.photoViewerGestureModifier(
             currentOnToggleDisplayMode = currentOnToggleDisplayMode,
             currentOnEnterImmersiveMode = currentOnEnterImmersiveMode,
         )
+        .photoViewerTransformInput(
+            contentKey = contentKey,
+            gestureState = gestureState,
+            currentOnEnterImmersiveMode = currentOnEnterImmersiveMode,
+        )
         .photoViewerDismissDragInput(
             contentKey = contentKey,
             gestureState = gestureState,
             dismissDragState = dismissDragState,
             currentOnCloseClick = currentOnCloseClick,
-        )
-        .transformable(
-            state = transformableState,
-            canPan = {
-                gestureState.isZoomed()
-            },
         )
         .graphicsLayer {
             val dismissDragOffset = dismissDragState?.animatedDragOffset ?: 0f
@@ -189,40 +182,126 @@ private fun Modifier.photoViewerDismissDragInput(
     dismissDragState: PhotoViewerDismissDragState?,
     currentOnCloseClick: State<() -> Unit>,
 ): Modifier {
-    return pointerInput(
-        contentKey,
-        dismissDragState,
-    ) {
-        detectVerticalDragGestures(
-            onVerticalDrag = { change, dragAmount ->
-                dismissDragState?.let { activeDismissDragState ->
-                    val canHandleDismissDrag = activeDismissDragState.canHandleDrag(
-                        isZoomed = gestureState.isZoomed(),
-                        dragAmount = dragAmount,
+    return when {
+        dismissDragState == null -> this
+        else -> {
+            pointerInput(
+                contentKey,
+                dismissDragState,
+            ) {
+                detectPhotoViewerDismissDrag(
+                    gestureState = gestureState,
+                    dismissDragState = dismissDragState,
+                    currentOnCloseClick = currentOnCloseClick,
+                )
+            }
+        }
+    }
+}
+
+private suspend fun PointerInputScope.detectPhotoViewerDismissDrag(
+    gestureState: ZoomablePhotoGestureState,
+    dismissDragState: PhotoViewerDismissDragState,
+    currentOnCloseClick: State<() -> Unit>,
+) {
+    val touchSlop = viewConfiguration.touchSlop
+
+    awaitEachGesture {
+        awaitFirstDown(requireUnconsumed = false)
+        var accumulatedDrag = Offset.Zero
+        var isDismissDragActive = false
+        var isGestureActive = true
+
+        while (isGestureActive) {
+            val event = awaitPointerEvent()
+            val pressedChanges = event.changes.filter { change ->
+                change.pressed
+            }
+
+            when {
+                pressedChanges.isEmpty() -> {
+                    finishPhotoViewerDismissDrag(
+                        dismissDragState = dismissDragState,
+                        currentOnCloseClick = currentOnCloseClick,
+                    )
+                    isGestureActive = false
+                }
+
+                pressedChanges.size > 1 -> {
+                    dismissDragState.reset()
+                    isGestureActive = false
+                }
+
+                else -> {
+                    val change = pressedChanges.first()
+                    val positionChange = change.positionChange()
+                    accumulatedDrag += positionChange
+
+                    isDismissDragActive = handlePhotoViewerDismissDrag(
+                        gestureState = gestureState,
+                        dismissDragState = dismissDragState,
+                        accumulatedDrag = accumulatedDrag,
+                        dragAmount = positionChange.y,
+                        isDismissDragActive = isDismissDragActive,
+                        touchSlop = touchSlop,
                     )
 
-                    if (canHandleDismissDrag) {
+                    if (isDismissDragActive) {
                         change.consume()
-                        activeDismissDragState.activate()
-                        activeDismissDragState.applyDrag(dragAmount = dragAmount)
                     }
                 }
-            },
-            onDragEnd = {
-                when {
-                    dismissDragState?.shouldCloseOnDragEnd() == true -> {
-                        currentOnCloseClick.value()
-                    }
+            }
+        }
+    }
+}
 
-                    else -> {
-                        dismissDragState?.reset()
-                    }
-                }
-            },
-            onDragCancel = {
-                dismissDragState?.reset()
-            },
-        )
+private fun handlePhotoViewerDismissDrag(
+    gestureState: ZoomablePhotoGestureState,
+    dismissDragState: PhotoViewerDismissDragState,
+    accumulatedDrag: Offset,
+    dragAmount: Float,
+    isDismissDragActive: Boolean,
+    touchSlop: Float,
+): Boolean {
+    val canHandleDismissDrag = dismissDragState.canHandleDrag(
+        isZoomed = gestureState.isZoomed(),
+        dragAmount = dragAmount,
+    )
+    val shouldStartDismissDrag = isDismissDragActive ||
+        accumulatedDrag.shouldStartPhotoViewerDismissDrag(touchSlop = touchSlop)
+
+    val dismissDragAmount = when {
+        isDismissDragActive -> dragAmount
+        else -> {
+            (accumulatedDrag.y - touchSlop)
+                .coerceAtLeast(minimumValue = 0f)
+        }
+    }
+
+    if (canHandleDismissDrag && shouldStartDismissDrag) {
+        dismissDragState.activate()
+        dismissDragState.applyDrag(dragAmount = dismissDragAmount)
+    }
+
+    return canHandleDismissDrag && shouldStartDismissDrag
+}
+
+private fun Offset.shouldStartPhotoViewerDismissDrag(touchSlop: Float): Boolean {
+    return y > touchSlop && abs(y) >= abs(x)
+}
+
+private fun finishPhotoViewerDismissDrag(
+    dismissDragState: PhotoViewerDismissDragState,
+    currentOnCloseClick: State<() -> Unit>,
+) {
+    when {
+        dismissDragState.shouldCloseOnDragEnd() -> {
+            currentOnCloseClick.value()
+        }
+
+        else -> {
+            dismissDragState.reset()
+        }
     }
 }
 
