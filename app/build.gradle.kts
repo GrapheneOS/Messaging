@@ -181,6 +181,7 @@ dependencies {
     implementation(libs.androidx.photo.picker)
 
     implementation(libs.coil.compose)
+    implementation(libs.coil.gif)
     implementation(libs.coil.network.okhttp)
     implementation(libs.glide)
 
@@ -197,7 +198,6 @@ dependencies {
     implementation(libs.libphonenumber)
 
     implementation(project(":lib:platform_frameworks_opt_chips"))
-    implementation(project(":lib:platform_frameworks_opt_photoviewer"))
     implementation(project(":lib:platform_frameworks_opt_vcard"))
 
     debugImplementation(libs.androidx.compose.ui.test.manifest)
