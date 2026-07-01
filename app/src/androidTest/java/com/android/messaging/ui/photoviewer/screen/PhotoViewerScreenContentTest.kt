@@ -9,6 +9,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.test.TouchInjectionScope
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.doubleClick
@@ -163,6 +164,81 @@ internal class PhotoViewerScreenContentTest {
         composeRule.waitUntil(timeoutMillis = TEST_WAIT_TIMEOUT_MILLIS) {
             enterImmersiveCount.get() == 1 &&
                 uiState.value.displayMode == PhotoViewerDisplayMode.Immersive
+        }
+    }
+
+    @Test
+    fun simultaneousPinchOutPhoto_entersImmersiveMode() {
+        val enterImmersiveCount = AtomicInteger()
+        val uiState = setScreenContent(
+            onEnterImmersiveMode = {
+                enterImmersiveCount.incrementAndGet()
+            },
+        )
+
+        composeRule.onNodeWithTag(testTag = PHOTO_VIEWER_ZOOMABLE_PHOTO_TEST_TAG)
+            .performTouchInput {
+                pinchOutPhoto(moveFirstPointerBeforeSecondDown = false)
+            }
+
+        composeRule.waitUntil(timeoutMillis = TEST_WAIT_TIMEOUT_MILLIS) {
+            enterImmersiveCount.get() >= 1 &&
+                uiState.value.displayMode == PhotoViewerDisplayMode.Immersive
+        }
+    }
+
+    @Test
+    fun staggeredPinchOutPhoto_entersImmersiveMode() {
+        val enterImmersiveCount = AtomicInteger()
+        val uiState = setScreenContent(
+            onEnterImmersiveMode = {
+                enterImmersiveCount.incrementAndGet()
+            },
+        )
+
+        composeRule.onNodeWithTag(testTag = PHOTO_VIEWER_ZOOMABLE_PHOTO_TEST_TAG)
+            .performTouchInput {
+                pinchOutPhoto(moveFirstPointerBeforeSecondDown = true)
+            }
+
+        composeRule.waitUntil(timeoutMillis = TEST_WAIT_TIMEOUT_MILLIS) {
+            enterImmersiveCount.get() >= 1 &&
+                uiState.value.displayMode == PhotoViewerDisplayMode.Immersive
+        }
+    }
+
+    @Test
+    fun panZoomedPhoto_doesNotDismissViewer() {
+        val closeClickCount = AtomicInteger()
+        val enterImmersiveCount = AtomicInteger()
+        val uiState = setScreenContent(
+            onEnterImmersiveMode = {
+                enterImmersiveCount.incrementAndGet()
+            },
+            onCloseClick = {
+                closeClickCount.incrementAndGet()
+            },
+        )
+
+        val photoNode = composeRule.onNodeWithTag(testTag = PHOTO_VIEWER_ZOOMABLE_PHOTO_TEST_TAG)
+        photoNode.performTouchInput {
+            doubleClick()
+        }
+        composeRule.waitUntil(timeoutMillis = TEST_WAIT_TIMEOUT_MILLIS) {
+            enterImmersiveCount.get() == 1 &&
+                uiState.value.displayMode == PhotoViewerDisplayMode.Immersive
+        }
+
+        photoNode.performTouchInput {
+            swipe(
+                start = center,
+                end = Offset(x = center.x + 120f, y = center.y + 80f),
+                durationMillis = 200,
+            )
+        }
+
+        composeRule.runOnIdle {
+            assertEquals(0, closeClickCount.get())
         }
     }
 
@@ -331,6 +407,36 @@ internal class PhotoViewerScreenContentTest {
             PhotoViewerDisplayMode.Carousel -> PhotoViewerDisplayMode.Immersive
             PhotoViewerDisplayMode.Immersive -> PhotoViewerDisplayMode.Carousel
         }
+    }
+
+    private fun TouchInjectionScope.pinchOutPhoto(moveFirstPointerBeforeSecondDown: Boolean) {
+        val firstPointerStart = Offset(
+            x = center.x - 40f,
+            y = center.y,
+        )
+        val secondPointerStart = Offset(
+            x = center.x + 40f,
+            y = center.y,
+        )
+
+        down(pointerId = 0, position = firstPointerStart)
+        if (moveFirstPointerBeforeSecondDown) {
+            moveBy(
+                pointerId = 0,
+                delta = Offset(x = 0f, y = viewConfiguration.touchSlop + 8f),
+                delayMillis = 40,
+            )
+        }
+        down(pointerId = 1, position = secondPointerStart)
+
+        repeat(times = 8) {
+            updatePointerBy(pointerId = 0, delta = Offset(x = -32f, y = -8f))
+            updatePointerBy(pointerId = 1, delta = Offset(x = 32f, y = 8f))
+            move(delayMillis = 16)
+        }
+
+        up(pointerId = 0)
+        up(pointerId = 1)
     }
 
     private companion object {
