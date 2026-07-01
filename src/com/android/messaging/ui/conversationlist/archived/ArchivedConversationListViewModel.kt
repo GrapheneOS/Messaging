@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 internal interface ArchivedConversationListScreenModel {
     val effects: Flow<Effect>
@@ -187,7 +188,11 @@ internal class ArchivedConversationListViewModel @Inject constructor(
         }
 
         optimisticSnapshotDelegate.remove(conversationIds)
-        conversationIds.forEach(conversationsRepository::unarchiveConversation)
+        viewModelScope.launch {
+            conversationIds.forEach {
+                conversationsRepository.unarchiveConversation(it)
+            }
+        }
         _effects.trySend(Effect.ConversationsUnarchived(conversationIds.toImmutableList()))
     }
 
@@ -197,7 +202,11 @@ internal class ArchivedConversationListViewModel @Inject constructor(
         }
 
         optimisticSnapshotDelegate.restore(conversationIds)
-        conversationIds.forEach(conversationsRepository::archiveConversation)
+        viewModelScope.launch {
+            conversationIds.forEach {
+                conversationsRepository.archiveConversation(it)
+            }
+        }
     }
 
     private fun onDeleteSelected() {
