@@ -27,15 +27,11 @@
     <dimen name="contact_icon_view_normal_size">42dp</dimen>
     <dimen name="contact_icon_view_large_size">56dp</dimen>
     <dimen name="contact_icon_view_small_size">12dp</dimen>
-    <dimen name="conversation_list_item_view_padding">16dp</dimen>
-    <dimen name="conversation_list_first_item_extra_padding">8dp</dimen>
     <dimen name="conversation_list_image_preview_corner_radius">3dp</dimen>
-    <dimen name="conversation_list_image_preview_size">56dp</dimen>
     <dimen name="conversation_list_contact_icon_size">56dp</dimen>
     <dimen name="conversation_message_contact_icon_size">42dp</dimen>
     <dimen name="conversation_message_photo_min_size">96dp</dimen>
     <dimen name="conversation_list_notification_bell_padding">4dp</dimen>
-    <dimen name="conversation_list_empty_text_bottom_margin">30dp</dimen>
 
     <dimen name="message_bubble_arrow_width">9dp</dimen>
     <dimen name="message_text_bottom_padding">12dp</dimen>
