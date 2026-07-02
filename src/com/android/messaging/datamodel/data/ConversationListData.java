@@ -43,9 +43,10 @@ public class ConversationListData extends BindableData {
     private static final String TAG = LogUtil.BUGLE_DATAMODEL_TAG;
     private static final String BINDING_ID = "bindingId";
     public static final String SORT_ORDER =
-            ConversationListViewColumns.SORT_TIMESTAMP + " DESC";
+            ConversationListViewColumns.PINNED + " DESC, "
+            + ConversationListViewColumns.SORT_TIMESTAMP + " DESC";
 
-    private static final String WHERE_ARCHIVED =
+    public static final String WHERE_ARCHIVED =
             "(" + ConversationListViewColumns.ARCHIVE_STATUS + " = 1)";
     public static final String WHERE_NOT_ARCHIVED =
             "(" + ConversationListViewColumns.ARCHIVE_STATUS + " = 0)";

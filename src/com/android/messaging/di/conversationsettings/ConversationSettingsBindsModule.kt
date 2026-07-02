@@ -4,8 +4,6 @@ import com.android.messaging.data.conversationsettings.repository.ConversationNo
 import com.android.messaging.data.conversationsettings.repository.ConversationNotificationRepositoryImpl
 import com.android.messaging.data.conversationsettings.repository.ConversationSettingsRepository
 import com.android.messaging.data.conversationsettings.repository.ConversationSettingsRepositoryImpl
-import com.android.messaging.domain.conversationsettings.usecase.SetConversationArchived
-import com.android.messaging.domain.conversationsettings.usecase.SetConversationArchivedImpl
 import com.android.messaging.domain.conversationsettings.usecase.SetConversationSelfParticipantId
 import com.android.messaging.domain.conversationsettings.usecase.SetConversationSelfParticipantIdImpl
 import com.android.messaging.ui.conversationsettings.screen.mapper.ConversationSettingsUiStateMapper
@@ -37,12 +35,6 @@ internal abstract class ConversationSettingsBindsModule {
     abstract fun bindConversationNotificationRepository(
         impl: ConversationNotificationRepositoryImpl,
     ): ConversationNotificationRepository
-
-    @Binds
-    @Reusable
-    abstract fun bindSetConversationArchived(
-        impl: SetConversationArchivedImpl,
-    ): SetConversationArchived
 
     @Binds
     @Reusable

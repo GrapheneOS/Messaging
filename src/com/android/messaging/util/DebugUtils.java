@@ -30,21 +30,22 @@ import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
+
+import static androidx.appcompat.R.style.Theme_AppCompat_Light_Dialog_Alert;
 
 import com.android.messaging.Factory;
 import com.android.messaging.R;
 import com.android.messaging.datamodel.SyncManager;
 import com.android.messaging.datamodel.action.DumpDatabaseAction;
 import com.android.messaging.datamodel.action.LogTelephonyDatabaseAction;
+import com.android.messaging.datamodel.action.ReceiveMmsMessageAction;
+import com.android.messaging.datamodel.data.ParticipantData;
 import com.android.messaging.debug.DebugSimEmulationMode;
 import com.android.messaging.debug.DebugSimEmulationStore;
 import com.android.messaging.debug.TestDataSeeder;
+import com.android.messaging.receiver.SmsReceiver;
 import com.android.messaging.sms.MmsUtils;
 import com.android.messaging.ui.UIIntents;
-import com.android.messaging.ui.debug.DebugSmsMmsFromDumpFileDialogFragment;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
@@ -67,6 +68,8 @@ public class DebugUtils {
 
     public static final int DEBUG_SOUND_SERVER_REQUEST = 0;
     public static final int DEBUG_SOUND_DB_OP = 1;
+
+    private static final int DIALOG_THEME = Theme_AppCompat_Light_Dialog_Alert;
 
     public static void maybePlayDebugNoise(final Context context, final int sound) {
         if (sDebugNoise) {
@@ -114,8 +117,8 @@ public class DebugUtils {
         public abstract void run();
     }
 
-    public static void showDebugOptions(final AppCompatActivity host) {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(host);
+    public static void showDebugOptions(final Activity host) {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(host, DIALOG_THEME);
 
         final ArrayAdapter<DebugAction> arrayAdapter = new ArrayAdapter<DebugAction>(
                 host, android.R.layout.simple_list_item_1);
@@ -161,7 +164,7 @@ public class DebugUtils {
             @Override
             public void run() {
                 new DebugSmsMmsDumpTask(host,
-                        DebugSmsMmsFromDumpFileDialogFragment.ACTION_LOAD).executeOnThreadPool();
+                        DebugSmsMmsDumpTask.ACTION_LOAD).executeOnThreadPool();
             }
         });
 
@@ -169,7 +172,7 @@ public class DebugUtils {
             @Override
             public void run() {
                 new DebugSmsMmsDumpTask(host,
-                        DebugSmsMmsFromDumpFileDialogFragment.ACTION_EMAIL).executeOnThreadPool();
+                        DebugSmsMmsDumpTask.ACTION_EMAIL).executeOnThreadPool();
             }
         });
 
@@ -237,7 +240,7 @@ public class DebugUtils {
         builder.create().show();
     }
 
-    private static void showSimEmulationModeDialog(final AppCompatActivity host) {
+    private static void showSimEmulationModeDialog(final Activity host) {
         final DebugSimEmulationMode[] modes = DebugSimEmulationMode.values();
         final String[] labels = new String[modes.length];
         int checkedIndex = 0;
@@ -249,7 +252,7 @@ public class DebugUtils {
             }
         }
         final int[] selectedIndex = new int[] { checkedIndex };
-        new AlertDialog.Builder(host)
+        new AlertDialog.Builder(host, DIALOG_THEME)
                 .setTitle("SIM emulation mode")
                 .setSingleChoiceItems(labels, checkedIndex,
                         (dialog, which) -> selectedIndex[0] = which)
@@ -280,10 +283,14 @@ public class DebugUtils {
      * Task to list all the dump files and perform an action on it
      */
     private static class DebugSmsMmsDumpTask extends SafeAsyncTask<Void, Void, String[]> {
-        private final String mAction;
-        private final AppCompatActivity mHost;
+        static final String ACTION_LOAD = "load";
+        static final String ACTION_EMAIL = "email";
+        private static final String APPLICATION_OCTET_STREAM = "application/octet-stream";
 
-        public DebugSmsMmsDumpTask(final AppCompatActivity host, final String action) {
+        private final String mAction;
+        private final Activity mHost;
+
+        public DebugSmsMmsDumpTask(final Activity host, final String action) {
             mHost = host;
             mAction = action;
         }
@@ -293,11 +300,56 @@ public class DebugUtils {
             if (result == null || result.length < 1) {
                 return;
             }
-            final FragmentManager fragmentManager = mHost.getSupportFragmentManager();
-            final FragmentTransaction ft = fragmentManager.beginTransaction();
-            final DebugSmsMmsFromDumpFileDialogFragment dialog =
-                    DebugSmsMmsFromDumpFileDialogFragment.newInstance(result, mAction);
-            dialog.show(fragmentManager, ""/*tag*/);
+            final int titleResId = ACTION_LOAD.equals(mAction)
+                    ? R.string.load_sms_mms_from_dump_file_dialog_title
+                    : R.string.email_sms_mms_from_dump_file_dialog_title;
+            new AlertDialog.Builder(mHost, DIALOG_THEME)
+                    .setTitle(titleResId)
+                    .setItems(result, (dialog, which) -> {
+                        final String file = result[which];
+                        if (ACTION_LOAD.equals(mAction)) {
+                            receiveFromDumpFile(file);
+                        } else if (ACTION_EMAIL.equals(mAction)) {
+                            emailDumpFile(file);
+                        }
+                    })
+                    .show();
+        }
+
+        private void receiveFromDumpFile(final String dumpFileName) {
+            if (dumpFileName.startsWith(MmsUtils.SMS_DUMP_PREFIX)) {
+                final SmsMessage[] messages = DebugUtils.retrieveSmsFromDumpFile(dumpFileName);
+                if (messages != null) {
+                    SmsReceiver.deliverSmsMessages(mHost, ParticipantData.DEFAULT_SELF_SUB_ID,
+                            0, messages);
+                } else {
+                    LogUtil.e(LogUtil.BUGLE_TAG,
+                            "receiveFromDumpFile: invalid sms dump file " + dumpFileName);
+                }
+            } else if (dumpFileName.startsWith(MmsUtils.MMS_DUMP_PREFIX)) {
+                final byte[] data = MmsUtils.createDebugNotificationInd(dumpFileName);
+                if (data != null) {
+                    new ReceiveMmsMessageAction(ParticipantData.DEFAULT_SELF_SUB_ID, data).start();
+                } else {
+                    LogUtil.e(LogUtil.BUGLE_TAG,
+                            "receiveFromDumpFile: invalid mms dump file " + dumpFileName);
+                }
+            } else {
+                LogUtil.e(LogUtil.BUGLE_TAG,
+                        "receiveFromDumpFile: invalid dump file name " + dumpFileName);
+            }
+        }
+
+        private void emailDumpFile(final String file) {
+            final String fileLocation = "file://"
+                    + Environment.getExternalStorageDirectory() + "/" + file;
+            final Intent sharingIntent = new Intent(Intent.ACTION_SEND);
+            sharingIntent.setType(APPLICATION_OCTET_STREAM);
+            sharingIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse(fileLocation));
+            sharingIntent.putExtra(Intent.EXTRA_SUBJECT,
+                    mHost.getString(R.string.email_sms_mms_dump_file_subject));
+            mHost.startActivity(Intent.createChooser(sharingIntent,
+                    mHost.getString(R.string.email_sms_mms_dump_file_chooser_title)));
         }
 
         @Override
@@ -307,7 +359,7 @@ public class DebugUtils {
                 @Override
                 public boolean accept(final File dir, final String filename) {
                     return filename != null
-                            && ((mAction == DebugSmsMmsFromDumpFileDialogFragment.ACTION_EMAIL
+                            && ((ACTION_EMAIL.equals(mAction)
                             && filename.equals(DumpDatabaseAction.DUMP_NAME))
                             || filename.startsWith(MmsUtils.MMS_DUMP_PREFIX)
                             || filename.startsWith(MmsUtils.SMS_DUMP_PREFIX));

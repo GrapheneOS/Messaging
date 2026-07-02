@@ -11,9 +11,9 @@ import com.android.messaging.data.subscription.repository.ConversationSimSelecti
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.domain.conversation.usecase.action.CreateDefaultSmsRoleRequest
+import com.android.messaging.domain.conversation.usecase.participant.CanAddContact
 import com.android.messaging.domain.conversation.usecase.participant.CanAddMoreConversationParticipants
-import com.android.messaging.domain.conversation.usecase.telephony.IsDeviceVoiceCapable
-import com.android.messaging.domain.conversation.usecase.telephony.IsEmergencyPhoneNumber
+import com.android.messaging.domain.conversation.usecase.telephony.CanPlacePhoneCall
 import com.android.messaging.ui.conversation.audio.delegate.ConversationAudioRecordingDelegate
 import com.android.messaging.ui.conversation.composer.delegate.ConversationComposerAttachmentsDelegate
 import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftDelegate
@@ -145,9 +145,9 @@ internal class ConversationViewModel @Inject constructor(
     private val conversationComposerUiStateMapper: ConversationComposerUiStateMapper,
     private val simSelectionRepository: ConversationSimSelectionRepository,
     private val canAddMoreConversationParticipants: CanAddMoreConversationParticipants,
+    private val canAddContact: CanAddContact,
+    private val canPlacePhoneCall: CanPlacePhoneCall,
     private val createDefaultSmsRoleRequest: CreateDefaultSmsRoleRequest,
-    private val isDeviceVoiceCapable: IsDeviceVoiceCapable,
-    private val isEmergencyPhoneNumber: IsEmergencyPhoneNumber,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
     private val savedStateHandle: SavedStateHandle,
@@ -268,7 +268,7 @@ internal class ConversationViewModel @Inject constructor(
             canCall = canCall(metadataState = metadataState),
             canArchive = isPresent && presentMetadata?.isArchived == false,
             canUnarchive = isPresent && presentMetadata?.isArchived == true,
-            canAddContact = canAddContact(metadataState = metadataState),
+            canAddContact = isAddContactAvailable(metadataState = metadataState),
             canDeleteConversation = isPresent,
             canEditSubject = isPresent,
             attachmentLimitWarning = attachmentLimitWarning,
@@ -391,22 +391,20 @@ internal class ConversationViewModel @Inject constructor(
         return when {
             metadataState !is ConversationMetadataUiState.Present -> false
             metadataState.participantCount != 1 -> false
-            metadataState.otherParticipantPhoneNumber == null -> false
-            !isDeviceVoiceCapable() -> false
-            isEmergencyPhoneNumber(metadataState.otherParticipantPhoneNumber) -> false
-            else -> true
+            else -> canPlacePhoneCall(metadataState.otherParticipantPhoneNumber)
         }
     }
 
-    private fun canAddContact(
+    private fun isAddContactAvailable(
         metadataState: ConversationMetadataUiState,
     ): Boolean {
         return when {
             metadataState !is ConversationMetadataUiState.Present -> false
-            metadataState.participantCount != 1 -> false
-            metadataState.otherParticipantPhoneNumber.isNullOrBlank() -> false
-            !metadataState.otherParticipantContactLookupKey.isNullOrBlank() -> false
-            else -> true
+            else -> canAddContact(
+                isGroup = metadataState.participantCount != 1,
+                lookupKey = metadataState.otherParticipantContactLookupKey,
+                destination = metadataState.otherParticipantPhoneNumber,
+            )
         }
     }
 
@@ -532,7 +530,7 @@ internal class ConversationViewModel @Inject constructor(
                 ConversationMetadataUiState.Present
             )
             ?.otherParticipantPhoneNumber
-            ?.takeUnless(isEmergencyPhoneNumber::invoke)
+            ?.takeIf(canPlacePhoneCall::invoke)
             ?: return
 
         viewModelScope.launch(defaultDispatcher) {

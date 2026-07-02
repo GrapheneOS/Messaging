@@ -6,9 +6,9 @@ import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
 import com.android.messaging.domain.conversation.usecase.action.CreateDefaultSmsRoleRequest
+import com.android.messaging.domain.conversation.usecase.participant.CanAddContact
 import com.android.messaging.domain.conversation.usecase.participant.CanAddMoreConversationParticipants
-import com.android.messaging.domain.conversation.usecase.telephony.IsDeviceVoiceCapable
-import com.android.messaging.domain.conversation.usecase.telephony.IsEmergencyPhoneNumber
+import com.android.messaging.domain.conversation.usecase.telephony.CanPlacePhoneCall
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.ui.conversation.audio.delegate.ConversationAudioRecordingDelegate
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingUiState
@@ -66,8 +66,8 @@ internal class ConversationViewModelSimSelectionTest {
     private val subscriptionsRepository = mockk<SubscriptionsRepository>()
     private val canAddMoreConversationParticipants = mockk<CanAddMoreConversationParticipants>()
     private val createDefaultSmsRoleRequest = mockk<CreateDefaultSmsRoleRequest>()
-    private val isDeviceVoiceCapable = mockk<IsDeviceVoiceCapable>()
-    private val isEmergencyPhoneNumber = mockk<IsEmergencyPhoneNumber>()
+    private val canAddContact = mockk<CanAddContact>()
+    private val canPlacePhoneCall = mockk<CanPlacePhoneCall>()
 
     @Before
     fun setUp() {
@@ -293,8 +293,8 @@ internal class ConversationViewModelSimSelectionTest {
             simSelectionRepository = simSelectionRepository,
             canAddMoreConversationParticipants = canAddMoreConversationParticipants,
             createDefaultSmsRoleRequest = createDefaultSmsRoleRequest,
-            isDeviceVoiceCapable = isDeviceVoiceCapable,
-            isEmergencyPhoneNumber = isEmergencyPhoneNumber,
+            canAddContact = canAddContact,
+            canPlacePhoneCall = canPlacePhoneCall,
             defaultDispatcher = mainDispatcherRule.testDispatcher,
             savedStateHandle = SavedStateHandle(),
         )

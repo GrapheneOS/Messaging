@@ -2,7 +2,6 @@ package com.android.messaging.ui.conversationpicker.host.share
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
@@ -17,6 +16,7 @@ import com.android.messaging.domain.conversationpicker.usecase.BuildMessageDataF
 import com.android.messaging.domain.conversationpicker.usecase.SendContentToTargets
 import com.android.messaging.domain.shareintent.model.SharedConversationDraftResult
 import com.android.messaging.domain.shareintent.usecase.BuildSharedConversationDraft
+import com.android.messaging.ui.BugleComponentActivity
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversationpicker.ConversationPickerScreen
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerLabels
@@ -27,7 +27,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 
 @AndroidEntryPoint
-class ShareIntentActivity : ComponentActivity() {
+class ShareIntentActivity : BugleComponentActivity() {
 
     @Inject
     @ApplicationCoroutineScope
@@ -48,6 +48,10 @@ class ShareIntentActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (isFinishing) {
+            return
+        }
 
         if (redirectToSendToIfNeeded()) {
             return

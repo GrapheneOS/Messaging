@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -32,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import com.android.messaging.ui.common.components.PrimaryActionButton
 import com.android.messaging.ui.common.components.selection.SelectionListContent
 import com.android.messaging.ui.core.MessagingPreviewColumn
 import com.android.messaging.ui.recipientselection.model.section.RecipientContactListEntry
@@ -87,13 +90,14 @@ internal fun RecipientSelectionContactsContent(
         floatingActionEnterTransition = recipientSelectionPrimaryActionEnterTransition(),
         floatingActionExitTransition = recipientSelectionPrimaryActionExitTransition(),
         floatingActionContent = {
-            RecipientSelectionPrimaryActionButton(
+            PrimaryActionButton(
                 modifier = Modifier
                     .navigationBarsPadding()
                     .padding(end = 8.dp, bottom = 8.dp),
                 enabled = primaryAction?.isEnabled ?: false,
                 isLoading = primaryAction?.isLoading ?: false,
                 text = primaryAction?.text.orEmpty(),
+                trailingIcon = Icons.AutoMirrored.Rounded.ArrowForward,
                 testTag = primaryAction?.testTag,
                 onClick = onPrimaryActionClick,
             )

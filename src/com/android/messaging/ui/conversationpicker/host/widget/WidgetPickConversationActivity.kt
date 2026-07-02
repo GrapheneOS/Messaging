@@ -2,21 +2,25 @@ package com.android.messaging.ui.conversationpicker.host.widget
 
 import android.appwidget.AppWidgetManager
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import com.android.messaging.ui.BugleComponentActivity
 import com.android.messaging.ui.conversationpicker.ConversationPickerScreen
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerLabels
 import com.android.messaging.ui.core.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class WidgetPickConversationActivity : ComponentActivity() {
+class WidgetPickConversationActivity : BugleComponentActivity() {
 
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (isFinishing) {
+            return
+        }
 
         setResult(RESULT_CANCELED)
 

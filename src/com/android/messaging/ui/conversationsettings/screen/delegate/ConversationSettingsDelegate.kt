@@ -1,5 +1,7 @@
 package com.android.messaging.ui.conversationsettings.screen.delegate
 
+import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepository
+import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.data.conversationsettings.model.SnoozeOption
 import com.android.messaging.data.conversationsettings.repository.ConversationNotificationRepository
 import com.android.messaging.data.conversationsettings.repository.ConversationSettingsRepository
@@ -7,8 +9,6 @@ import com.android.messaging.data.subscription.repository.ConversationSimSelecti
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
 import com.android.messaging.datamodel.ParticipantRefresh
 import com.android.messaging.di.core.ApplicationCoroutineScope
-import com.android.messaging.domain.blockedparticipants.usecase.SetDestinationBlocked
-import com.android.messaging.domain.conversationsettings.usecase.SetConversationArchived
 import com.android.messaging.domain.conversationsettings.usecase.SetConversationSelfParticipantId
 import com.android.messaging.ui.conversationsettings.common.ConversationSettingsScreenDelegate
 import com.android.messaging.ui.conversationsettings.screen.mapper.ConversationSettingsUiStateMapper
@@ -44,8 +44,8 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
     private val subscriptionsRepository: SubscriptionsRepository,
     private val simSelectionRepository: ConversationSimSelectionRepository,
     private val mapper: ConversationSettingsUiStateMapper,
-    private val setConversationArchived: SetConversationArchived,
-    private val setDestinationBlocked: SetDestinationBlocked,
+    private val conversationsRepository: ConversationsRepository,
+    private val blockedParticipantsRepository: BlockedParticipantsRepository,
     private val setConversationSelfParticipantId: SetConversationSelfParticipantId,
     @param:ApplicationCoroutineScope private val applicationScope: CoroutineScope,
 ) : ConversationSettingsDelegate {
@@ -100,25 +100,29 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
     }
 
     override fun setDestinationBlocked(blocked: Boolean) {
-        val participant = _state.value.otherParticipant ?: return
-        val normalizedDestination = participant.normalizedDestination
+        val normalizedDestination = _state.value.otherParticipant?.normalizedDestination
         val conversationId = currentConversationId()
 
         if (normalizedDestination == null || conversationId == null) return
 
-        setDestinationBlocked(
-            normalizedDestination = normalizedDestination,
-            blocked = blocked,
-            conversationId = conversationId,
-        )
+        applicationScope.launch {
+            blockedParticipantsRepository.setDestinationBlocked(
+                destination = normalizedDestination,
+                conversationId = conversationId,
+                isBlocked = blocked,
+            )
+        }
     }
 
     override fun setArchived(archived: Boolean) {
         val conversationId = currentConversationId() ?: return
-        setConversationArchived(
-            conversationId = conversationId,
-            archived = archived,
-        )
+
+        applicationScope.launch {
+            when {
+                archived -> conversationsRepository.archiveConversation(conversationId)
+                else -> conversationsRepository.unarchiveConversation(conversationId)
+            }
+        }
     }
 
     override fun setSelfParticipantId(selfParticipantId: String) {

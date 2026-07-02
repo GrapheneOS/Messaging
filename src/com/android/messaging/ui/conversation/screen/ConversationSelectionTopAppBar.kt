@@ -27,7 +27,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.android.messaging.R
@@ -98,9 +97,8 @@ internal fun ConversationSelectionTopAppBar(
 @Composable
 private fun ConversationSelectionTitle(selectedMessageCount: Int) {
     Text(
-        text = pluralStringResource(
-            id = R.plurals.conversation_message_selection_title,
-            count = selectedMessageCount,
+        text = stringResource(
+            id = R.string.conversation_message_selection_title,
             selectedMessageCount,
         ),
     )
