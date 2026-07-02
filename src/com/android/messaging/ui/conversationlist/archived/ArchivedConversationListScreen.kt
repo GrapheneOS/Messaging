@@ -13,7 +13,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,13 +22,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -46,6 +43,8 @@ import com.android.messaging.ui.conversationlist.common.item.ConversationSwipeBa
 import com.android.messaging.ui.conversationlist.common.list.ConversationListItemCallbacks
 import com.android.messaging.ui.conversationlist.common.list.ConversationListItems
 import com.android.messaging.ui.conversationlist.common.list.ConversationListSwipeActions
+import com.android.messaging.ui.conversationlist.common.status.ConversationListLoadingIndicator
+import com.android.messaging.ui.conversationlist.common.status.ConversationListStatusMessage
 import com.android.messaging.ui.conversationlist.common.support.previewConversationListItems
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
 import com.android.messaging.ui.core.MessagingPreviewTheme
@@ -57,8 +56,6 @@ private val ContentCornerShape = RoundedCornerShape(
     topStart = 28.dp,
     topEnd = 28.dp,
 )
-
-private val EmptyTextHorizontalPadding = 32.dp
 
 @Composable
 internal fun ArchivedConversationListScreen(
@@ -245,14 +242,14 @@ private fun ArchivedConversationListContent(
     onAction: (Action) -> Unit,
 ) {
     when (content) {
-        ConversationListContentUiState.Loading -> Unit
-
-        ConversationListContentUiState.WaitingForSync -> Unit
+        ConversationListContentUiState.Loading -> {
+            ConversationListLoadingIndicator()
+        }
 
         ConversationListContentUiState.Empty -> {
-            ArchivedConversationListEmptyState(
+            ConversationListStatusMessage(
+                text = stringResource(R.string.archived_conversation_list_empty_text),
                 modifier = Modifier
-                    .fillMaxSize()
                     .padding(bottom = scaffoldContentPadding.calculateBottomPadding()),
             )
         }
@@ -270,23 +267,8 @@ private fun ArchivedConversationListContent(
                 swipeActions = { archivedSwipeActions(it.conversationId, onAction) },
             )
         }
-    }
-}
 
-@Composable
-private fun ArchivedConversationListEmptyState(
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier.padding(horizontal = EmptyTextHorizontalPadding),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = stringResource(R.string.archived_conversation_list_empty_text),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
+        ConversationListContentUiState.WaitingForSync -> Unit
     }
 }
 

@@ -35,12 +35,16 @@ internal class ArchivedConversationListUiStateMapperImpl @Inject constructor(
             .toImmutableList()
 
         val content = when {
-            items.isNotEmpty() -> ConversationListContentUiState.Items(
-                items = items,
-                restoredConversationIds = snapshot.restoredConversationIds,
-            )
+            items.isNotEmpty() -> {
+                ConversationListContentUiState.Items(
+                    items = items,
+                    restoredConversationIds = snapshot.restoredConversationIds,
+                )
+            }
 
-            else -> ConversationListContentUiState.Empty
+            else -> {
+                ConversationListContentUiState.Empty
+            }
         }
 
         return State(

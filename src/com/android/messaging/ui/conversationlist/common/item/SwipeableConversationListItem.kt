@@ -99,6 +99,7 @@ internal enum class ConversationSwipeBackground {
     Unarchive,
     ToggleRead,
 }
+
 private enum class SwipeDirection {
     StartToEnd,
     EndToStart,
