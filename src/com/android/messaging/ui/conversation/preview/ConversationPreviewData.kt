@@ -85,6 +85,7 @@ internal fun previewSimSelectorUiState(): ConversationSimSelectorUiState {
 internal fun previewMetadata(
     title: String = "Ada Lovelace",
     participantCount: Int = 1,
+    isBlocked: Boolean = false,
 ): ConversationMetadataUiState.Present {
     return ConversationMetadataUiState.Present(
         title = title,
@@ -99,6 +100,7 @@ internal fun previewMetadata(
         otherParticipantPhoneNumber = "+31622223333",
         otherParticipantContactLookupKey = "preview-contact",
         isArchived = false,
+        isBlocked = isBlocked,
         composerAvailability = ConversationComposerAvailability.Editable,
     )
 }
@@ -113,6 +115,7 @@ internal fun previewGroupMetadata(): ConversationMetadataUiState.Present {
         otherParticipantPhoneNumber = null,
         otherParticipantContactLookupKey = null,
         isArchived = false,
+        isBlocked = false,
         composerAvailability = ConversationComposerAvailability.Editable,
     )
 }

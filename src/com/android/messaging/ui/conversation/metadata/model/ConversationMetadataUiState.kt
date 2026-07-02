@@ -38,6 +38,7 @@ internal sealed interface ConversationMetadataUiState {
         val otherParticipantPhoneNumber: String?,
         val otherParticipantContactLookupKey: String?,
         val isArchived: Boolean,
+        val isBlocked: Boolean,
         override val composerAvailability: ConversationComposerAvailability,
     ) : ConversationMetadataUiState
 

@@ -316,13 +316,7 @@ private fun startAudioRecording(
     screenModel: ConversationScreenModel,
     startMode: AudioRecordingStartMode,
 ) {
-    when (startMode) {
-        AudioRecordingStartMode.Unlocked -> {
-            screenModel.onAudioRecordingStart()
-        }
-
-        AudioRecordingStartMode.Locked -> {
-            screenModel.onLockedAudioRecordingStart()
-        }
-    }
+    screenModel.onAudioRecordingStart(
+        isLocked = startMode == AudioRecordingStartMode.Locked,
+    )
 }
