@@ -4,6 +4,7 @@ import com.android.messaging.R
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.di.core.DefaultDispatcher
+import com.android.messaging.domain.blockedparticipants.usecase.SetDestinationBlocked
 import com.android.messaging.domain.conversation.usecase.action.CheckConversationActionRequirements
 import com.android.messaging.domain.conversation.usecase.action.ConversationActionRequirementsResult
 import com.android.messaging.ui.conversation.common.ConversationScreenDelegate
@@ -32,6 +33,7 @@ internal interface ConversationMetadataDelegate :
 
     fun onArchiveConversationClick()
     fun onUnarchiveConversationClick()
+    fun onUnblockConversationClick()
     fun onAddContactClick()
     fun onDeleteConversationClick()
     fun confirmDeleteConversation()
@@ -42,6 +44,7 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
     private val checkConversationActionRequirements: CheckConversationActionRequirements,
     private val conversationsRepository: ConversationsRepository,
     private val conversationMetadataUiStateMapper: ConversationMetadataUiStateMapper,
+    private val setDestinationBlocked: SetDestinationBlocked,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
 ) : ConversationMetadataDelegate {
@@ -118,6 +121,20 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
         boundScope?.launch(defaultDispatcher) {
             conversationsRepository.unarchiveConversation(conversationId = conversationId)
         }
+    }
+
+    override fun onUnblockConversationClick() {
+        val conversationId = currentConversationId ?: return
+        val normalizedDestination = latestMetadata
+            ?.otherParticipantNormalizedDestination
+            ?.takeIf { it.isNotBlank() }
+            ?: return
+
+        setDestinationBlocked(
+            normalizedDestination = normalizedDestination,
+            blocked = false,
+            conversationId = conversationId,
+        )
     }
 
     override fun onAddContactClick() {

@@ -805,6 +805,13 @@
     <!-- Label of unblock contact item in People & Options for 1:1 conversation -->
     <string name="unblock_contact_title">Unblock <xliff:g id="destination">%s</xliff:g></string>
 
+    <!-- Title of the banner shown at the top of a blocked conversation -->
+    <string name="conversation_blocked_banner_title">Blocked</string>
+    <!-- Message of the banner shown at the top of a blocked conversation -->
+    <string name="conversation_blocked_banner_message">Unblock to receive messages from this sender</string>
+    <!-- Label of the unblock action button on the blocked conversation banner -->
+    <string name="conversation_blocked_banner_action">Unblock</string>
+
     <!-- Title of the snooze chat dialog opened from conversation settings -->
     <string name="snooze_chat_dialog_title">Snooze chat</string>
 
