@@ -174,6 +174,7 @@ internal fun ConversationScreenScaffold(
             onMessageLongClick = screenModel::onMessageLongClick,
             onMessageResendClick = screenModel::onMessageResendClick,
             onSimSelectorClick = showSimSelectorSheet,
+            onUnblockClick = screenModel::onUnblockClick,
         )
     }
 

@@ -6,10 +6,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.Subject
+import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.rounded.Archive
 import androidx.compose.material.icons.rounded.Call
 import androidx.compose.material.icons.rounded.Delete
@@ -174,6 +174,7 @@ private fun rememberConversationTopAppBarPresentation(
     )
 
     val avatar = conversationAvatar(metadata)
+    val isBlocked = metadata is ConversationMetadataUiState.Present && metadata.isBlocked
 
     return remember(
         metadata,
@@ -181,12 +182,14 @@ private fun rememberConversationTopAppBarPresentation(
         subtitle,
         subtitleContentDescription,
         avatar,
+        isBlocked,
     ) {
         ConversationTopAppBarPresentation(
             title = title,
             subtitle = subtitle,
             subtitleContentDescription = subtitleContentDescription,
             avatar = avatar,
+            isBlocked = isBlocked,
         )
     }
 }
@@ -212,6 +215,7 @@ private fun ConversationTopAppBarTitle(
     ) {
         ConversationAvatar(
             avatar = presentation.avatar,
+            isBlocked = presentation.isBlocked,
         )
 
         ConversationTopAppBarText(
@@ -457,6 +461,7 @@ private fun ConversationTopAppBarOverflowMenuItem(
 @Composable
 private fun ConversationAvatar(
     avatar: ConversationMetadataUiState.Avatar,
+    isBlocked: Boolean,
 ) {
     when (avatar) {
         ConversationMetadataUiState.Avatar.Group -> {
@@ -471,14 +476,18 @@ private fun ConversationAvatar(
 
         is ConversationMetadataUiState.Avatar.Single -> {
             ParticipantAvatar(
-                avatarUri = avatar.photoUri,
+                avatarUri = avatar.photoUri.takeUnless { isBlocked },
                 size = CONVERSATION_TOP_APP_BAR_AVATAR_SIZE,
-                fallbackLabel = participantAvatarLabel(source = avatar.displayName),
+                fallbackLabel = participantAvatarLabel(source = avatar.displayName)
+                    .takeUnless { isBlocked },
                 colorSeedCode = participantColorSeed(
                     normalizedDestination = avatar.normalizedDestination,
                 ),
                 fallbackSize = CONVERSATION_TOP_APP_BAR_AVATAR_FALLBACK_SIZE,
-                fallbackIcon = Icons.Rounded.Person,
+                fallbackIcon = when {
+                    isBlocked -> Icons.Default.Block
+                    else -> Icons.Rounded.Person
+                },
             )
         }
     }
@@ -604,6 +613,7 @@ private data class ConversationTopAppBarPresentation(
     val subtitle: String?,
     val subtitleContentDescription: String?,
     val avatar: ConversationMetadataUiState.Avatar,
+    val isBlocked: Boolean,
 )
 
 @Immutable
@@ -653,6 +663,21 @@ private fun ConversationTopAppBarOneOnOnePreview() {
             isDeleteConversationVisible = true,
             isShowSubjectFieldVisible = true,
             simSelector = previewSimSelectorUiState(),
+            onAddPeopleClick = {},
+            onTitleClick = {},
+            onNavigateBack = {},
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationTopAppBarBlockedPreview() {
+    MessagingPreviewTheme {
+        ConversationTopAppBar(
+            metadata = previewMetadata(isBlocked = true),
+            isCallVisible = true,
+            isDeleteConversationVisible = true,
             onAddPeopleClick = {},
             onTitleClick = {},
             onNavigateBack = {},

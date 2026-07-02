@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.metadata.delegate
 
 import com.android.messaging.R
+import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepository
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.di.core.DefaultDispatcher
@@ -32,6 +33,7 @@ internal interface ConversationMetadataDelegate :
 
     fun onArchiveConversationClick()
     fun onUnarchiveConversationClick()
+    fun onUnblockConversationClick()
     fun onAddContactClick()
     fun onDeleteConversationClick()
     fun confirmDeleteConversation()
@@ -42,6 +44,7 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
     private val checkConversationActionRequirements: CheckConversationActionRequirements,
     private val conversationsRepository: ConversationsRepository,
     private val conversationMetadataUiStateMapper: ConversationMetadataUiStateMapper,
+    private val blockedParticipantsRepository: BlockedParticipantsRepository,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
 ) : ConversationMetadataDelegate {
@@ -117,6 +120,22 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
 
         boundScope?.launch(defaultDispatcher) {
             conversationsRepository.unarchiveConversation(conversationId = conversationId)
+        }
+    }
+
+    override fun onUnblockConversationClick() {
+        val conversationId = currentConversationId ?: return
+        val normalizedDestination = latestMetadata
+            ?.otherParticipantNormalizedDestination
+            ?.takeIf { it.isNotBlank() }
+            ?: return
+
+        boundScope?.launch(defaultDispatcher) {
+            blockedParticipantsRepository.setDestinationBlocked(
+                destination = normalizedDestination,
+                conversationId = conversationId,
+                isBlocked = false,
+            )
         }
     }
 

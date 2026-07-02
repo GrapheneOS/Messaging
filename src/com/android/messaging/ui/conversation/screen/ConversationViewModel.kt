@@ -90,8 +90,7 @@ internal interface ConversationScreenModel {
     fun onContactCardPicked(contactUri: String?)
     fun onMessageTextChanged(text: String)
     fun tryStartAddingAttachment(): Boolean
-    fun onAudioRecordingStart()
-    fun onLockedAudioRecordingStart()
+    fun onAudioRecordingStart(isLocked: Boolean)
     fun onAudioRecordingLock(): Boolean
     fun onAudioRecordingFinish()
     fun onAudioRecordingCancel()
@@ -116,6 +115,7 @@ internal interface ConversationScreenModel {
 
     fun onArchiveConversationClick()
     fun onUnarchiveConversationClick()
+    fun onUnblockClick()
     fun onAddContactClick()
     fun onDeleteConversationClick()
     fun confirmDeleteConversation()
@@ -271,6 +271,7 @@ internal class ConversationViewModel @Inject constructor(
             canAddContact = isAddContactAvailable(metadataState = metadataState),
             canDeleteConversation = isPresent,
             canEditSubject = isPresent,
+            isBlocked = presentMetadata?.isBlocked == true,
             attachmentLimitWarning = attachmentLimitWarning,
             isDeleteConversationConfirmationVisible = isDeleteConversationConfirmationVisible,
             isSubjectDialogVisible = isSubjectDialogVisible,
@@ -586,12 +587,8 @@ internal class ConversationViewModel @Inject constructor(
         return conversationDraftDelegate.tryStartAddingAttachment()
     }
 
-    override fun onAudioRecordingStart() {
-        startAudioRecording(isLocked = false)
-    }
-
-    override fun onLockedAudioRecordingStart() {
-        startAudioRecording(isLocked = true)
+    override fun onAudioRecordingStart(isLocked: Boolean) {
+        startAudioRecording(isLocked = isLocked)
     }
 
     private fun startAudioRecording(isLocked: Boolean) {
@@ -752,6 +749,10 @@ internal class ConversationViewModel @Inject constructor(
 
     override fun onUnarchiveConversationClick() {
         conversationMetadataDelegate.onUnarchiveConversationClick()
+    }
+
+    override fun onUnblockClick() {
+        conversationMetadataDelegate.onUnblockConversationClick()
     }
 
     override fun onAddContactClick() {

@@ -11,6 +11,7 @@ internal data class ConversationMetadata(
     val otherParticipantContactLookupKey: String?,
     val otherParticipantPhotoUri: String?,
     val isArchived: Boolean,
+    val isBlocked: Boolean,
     val composerAvailability: ConversationComposerAvailability,
     val sortTimestamp: Long,
 )
