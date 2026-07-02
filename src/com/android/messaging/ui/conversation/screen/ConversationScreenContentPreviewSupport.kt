@@ -70,6 +70,7 @@ internal fun ConversationScreenContentPreview(
             onMessageLongClick = {},
             onMessageResendClick = {},
             onSimSelectorClick = {},
+            onUnblockClick = {},
         )
     }
 }
