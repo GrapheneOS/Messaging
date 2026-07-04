@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
@@ -33,6 +32,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.ui.common.components.contentSurfaceShape
 import com.android.messaging.ui.conversation.CONVERSATION_LOADING_INDICATOR_TEST_TAG
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagesUiState
@@ -43,13 +43,6 @@ import com.android.messaging.ui.subscription.mapper.resolveDisplayName
 import kotlinx.collections.immutable.ImmutableList
 
 private const val SMOOTH_SCROLL_JUMP_THRESHOLD = 15
-
-private val conversationCornerShape = RoundedCornerShape(
-    topStart = 28.dp,
-    topEnd = 28.dp,
-    bottomStart = 0.dp,
-    bottomEnd = 0.dp,
-)
 
 private data class ConversationLatestScrollSnapshot(
     val isScrolledToLatestMessage: Boolean,
@@ -246,7 +239,7 @@ private fun Modifier.conversationScreenContentModifier(
     return this
         .padding(paddingValues = contentPadding)
         .background(color = backdropColor)
-        .clip(shape = conversationCornerShape)
+        .clip(shape = MaterialTheme.contentSurfaceShape)
         .background(color = MaterialTheme.colorScheme.background)
 }
 

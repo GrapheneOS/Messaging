@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Chat
 import androidx.compose.material.icons.rounded.ArrowUpward
@@ -54,6 +53,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
 import com.android.messaging.ui.common.components.PrimaryActionButton
+import com.android.messaging.ui.common.components.contentSurfaceShape
 import com.android.messaging.ui.common.components.horizontalSafeDrawingInsets
 import com.android.messaging.ui.common.components.reorder.OverlayReorderAnimation
 import com.android.messaging.ui.common.components.reorder.OverlayReorderAnimationController
@@ -76,10 +76,6 @@ import kotlinx.coroutines.launch
 
 private val FabSpacing = 16.dp
 private val FabBottomReserve = 72.dp
-private val ContentCornerShape = RoundedCornerShape(
-    topStart = 28.dp,
-    topEnd = 28.dp,
-)
 
 @Composable
 internal fun ConversationListScreen(
@@ -401,7 +397,7 @@ private fun ConversationListScaffold(
                     pinAnimationController?.updateContentTop(coordinates.boundsInRoot().top)
                 }
                 .background(backdropColor)
-                .clip(ContentCornerShape)
+                .clip(MaterialTheme.contentSurfaceShape)
                 .background(MaterialTheme.colorScheme.background),
         ) {
             ConversationListContent(
