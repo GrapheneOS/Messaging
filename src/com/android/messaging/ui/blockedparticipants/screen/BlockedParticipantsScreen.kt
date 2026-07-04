@@ -43,11 +43,11 @@ import com.android.messaging.ui.blockedparticipants.common.BlockedParticipantIte
 import com.android.messaging.ui.blockedparticipants.common.BlockedParticipantsTopAppBar
 import com.android.messaging.ui.blockedparticipants.common.ItemDividerHorizontalInset
 import com.android.messaging.ui.blockedparticipants.common.ScreenContentPadding
-import com.android.messaging.ui.blockedparticipants.common.contentSurfaceShape
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantUiState
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsAction as Action
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsNavEvent as NavEvent
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsUiState as State
+import com.android.messaging.ui.common.components.contentSurfaceShape
 import com.android.messaging.ui.common.components.horizontalSafeDrawingInsets
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.persistentListOf

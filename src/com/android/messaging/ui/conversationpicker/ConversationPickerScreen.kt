@@ -53,6 +53,7 @@ import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.common.components.composer.MESSAGE_COMPOSE_FIELD_TEST_TAG
 import com.android.messaging.ui.common.components.composer.MessageComposeBar
 import com.android.messaging.ui.common.components.composer.MessageSendButton
+import com.android.messaging.ui.common.components.contentSurfaceShape
 import com.android.messaging.ui.common.components.mediapreview.MediaPreviewBackground
 import com.android.messaging.ui.common.components.selection.LocalSelectionListItemColors
 import com.android.messaging.ui.common.components.selection.SelectionListContent
@@ -63,7 +64,6 @@ import com.android.messaging.ui.conversationpicker.common.PickerTopAppBar
 import com.android.messaging.ui.conversationpicker.common.ScreenContentPadding
 import com.android.messaging.ui.conversationpicker.common.SelectedTargetsBar
 import com.android.messaging.ui.conversationpicker.common.composeSubjectSlot
-import com.android.messaging.ui.conversationpicker.common.contentSurfaceShape
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerAction as Action
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerLabels
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerUiState as State
