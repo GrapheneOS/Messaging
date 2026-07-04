@@ -679,6 +679,8 @@
     <string name="loading_vcard">Loading contact card</string>
     <!-- Text shown on contact VCard when it failed to load -->
     <string name="failed_loading_vcard">Couldn\'t load contact card</string>
+    <!-- Toast shown when saving the contact card to the address book could not be started -->
+    <string name="failed_saving_vcard_to_contacts">Couldn\'t add contact</string>
     <!-- Text shown on contact VCard promping the user to tap to view the contact -->
     <string name="vcard_tap_hint">View contact card</string>
     <!-- VCard display name for when there's more than one contact, e.g. "2 contact cards" -->

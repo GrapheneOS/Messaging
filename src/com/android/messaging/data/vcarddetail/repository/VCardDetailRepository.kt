@@ -48,7 +48,10 @@ internal class VCardDetailRepositoryImpl @Inject constructor(
                 override fun onPersonDataUpdated(data: PersonItemData) {
                     val typedData = data as? VCardContactItemData ?: return
                     trySend(
-                        VCardDetailResult.Loaded(vCardDetailMapper.map(typedData)),
+                        VCardDetailResult.Loaded(
+                            contacts = vCardDetailMapper.map(typedData),
+                            displayName = typedData.displayName,
+                        ),
                     )
                 }
 

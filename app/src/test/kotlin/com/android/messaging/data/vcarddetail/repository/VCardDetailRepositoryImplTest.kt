@@ -53,6 +53,7 @@ internal class VCardDetailRepositoryImplTest {
         every { DataModel.get() } returns dataModel
         every { dataModel.createVCardContactItemData(any(), any<Uri>()) } returns vCardData
         every { vCardData.setListener(capture(listenerSlot)) } returns Unit
+        every { vCardData.displayName } returns "Ada Lovelace"
         every { mapper.map(vCardData) } returns contacts
 
         repository = VCardDetailRepositoryImpl(
@@ -82,7 +83,13 @@ internal class VCardDetailRepositoryImplTest {
 
             listenerSlot.captured.onPersonDataUpdated(vCardData)
 
-            assertEquals(VCardDetailResult.Loaded(contacts), awaitItem())
+            assertEquals(
+                VCardDetailResult.Loaded(
+                    contacts = contacts,
+                    displayName = "Ada Lovelace",
+                ),
+                awaitItem(),
+            )
             cancelAndConsumeRemainingEvents()
         }
     }
