@@ -2,6 +2,8 @@ package com.android.messaging.ui.vcarddetail.screen
 
 import android.app.Activity
 import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
 import android.net.Uri
 import androidx.core.net.toUri
@@ -17,6 +19,7 @@ internal interface VCardDetailEffectHandler {
 
 internal class VCardDetailEffectHandlerImpl(
     private val activity: Activity,
+    private val clipboardManager: ClipboardManager,
 ) : VCardDetailEffectHandler {
 
     override fun handle(effect: Effect) {
@@ -27,6 +30,10 @@ internal class VCardDetailEffectHandlerImpl(
 
             is Effect.LaunchSaveToContacts -> {
                 launchSaveToContacts(effect.scratchUri)
+            }
+
+            is Effect.CopyToClipboard -> {
+                clipboardManager.setPrimaryClip(ClipData.newPlainText(null, effect.text))
             }
 
             is Effect.ShowMessage -> {

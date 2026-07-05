@@ -2,12 +2,13 @@ package com.android.messaging.ui.vcarddetail.screen
 
 import android.app.Activity
 import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
 import android.net.Uri
 import com.android.messaging.data.vcarddetail.model.VCardFieldAction
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.vcarddetail.screen.model.VCardDetailScreenEffect as Effect
-import com.android.messaging.util.UiUtils
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -29,15 +30,17 @@ internal class VCardDetailEffectHandlerImplTest {
 
     private val activity = mockk<Activity>(relaxed = true)
     private val uiIntents = mockk<UIIntents>(relaxed = true)
+    private val clipboardManager = mockk<ClipboardManager>(relaxed = true)
 
-    private val handler = VCardDetailEffectHandlerImpl(activity = activity)
+    private val handler = VCardDetailEffectHandlerImpl(
+        activity = activity,
+        clipboardManager = clipboardManager,
+    )
 
     @Before
     fun setUp() {
         mockkStatic(UIIntents::class)
-        mockkStatic(UiUtils::class)
         every { UIIntents.get() } returns uiIntents
-        every { UiUtils.showToastAtBottom(any<Int>()) } just runs
     }
 
     @After
@@ -53,13 +56,6 @@ internal class VCardDetailEffectHandlerImplTest {
     }
 
     @Test
-    fun handle_showMessage_showsToast() {
-        handler.handle(Effect.ShowMessage(messageResId = 42))
-
-        verify { UiUtils.showToastAtBottom(42) }
-    }
-
-    @Test
     fun handle_launchSaveToContacts_launchesSaveActivityWithScratchUri() {
         val uriSlot = slot<Uri>()
         every {
@@ -69,6 +65,16 @@ internal class VCardDetailEffectHandlerImplTest {
         handler.handle(Effect.LaunchSaveToContacts("content://scratch/vcard"))
 
         assertEquals("content://scratch/vcard", uriSlot.captured.toString())
+    }
+
+    @Test
+    fun handle_copyToClipboard_setsPrimaryClipWithText() {
+        val clipSlot = slot<ClipData>()
+        every { clipboardManager.setPrimaryClip(capture(clipSlot)) } just runs
+
+        handler.handle(Effect.CopyToClipboard("+1 555 0001"))
+
+        assertEquals("+1 555 0001", clipSlot.captured.getItemAt(0).text.toString())
     }
 
     @Test

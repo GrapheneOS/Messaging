@@ -45,20 +45,21 @@ internal class AddVCardToContactsImplTest {
     }
 
     @Test
-    fun invoke_persistSucceedsWithDisplayName_registersNameAndReturnsPrepared() = runTest {
-        every { UriUtil.persistContentToScratchSpace(any<Uri>()) } returns scratchUri
+    fun invoke_persistSucceedsWithDisplayName_registersNameAndReturnsPrepared() =
+        runTest(testDispatcher) {
+            every { UriUtil.persistContentToScratchSpace(any<Uri>()) } returns scratchUri
 
-        val result = useCase(
-            vCardUri = "content://vcard",
-            displayName = "Ada Lovelace",
-        )
+            val result = useCase(
+                vCardUri = "content://vcard",
+                displayName = "Ada Lovelace",
+            )
 
-        assertEquals(AddVCardToContactsResult.Prepared(scratchUri.toString()), result)
-        verify { MediaScratchFileProvider.addUriToDisplayNameEntry(scratchUri, "Ada Lovelace") }
-    }
+            assertEquals(AddVCardToContactsResult.Prepared(scratchUri.toString()), result)
+            verify { MediaScratchFileProvider.addUriToDisplayNameEntry(scratchUri, "Ada Lovelace") }
+        }
 
     @Test
-    fun invoke_persistSucceedsWithNullDisplayName_doesNotRegisterName() = runTest {
+    fun invoke_persistSucceedsWithNullDisplayName_doesNotRegisterName() = runTest(testDispatcher) {
         every { UriUtil.persistContentToScratchSpace(any<Uri>()) } returns scratchUri
 
         val result = useCase(
@@ -71,7 +72,7 @@ internal class AddVCardToContactsImplTest {
     }
 
     @Test
-    fun invoke_persistSucceedsWithBlankDisplayName_doesNotRegisterName() = runTest {
+    fun invoke_persistSucceedsWithBlankDisplayName_doesNotRegisterName() = runTest(testDispatcher) {
         every { UriUtil.persistContentToScratchSpace(any<Uri>()) } returns scratchUri
 
         val result = useCase(
@@ -84,7 +85,7 @@ internal class AddVCardToContactsImplTest {
     }
 
     @Test
-    fun invoke_persistFails_returnsFailedAndDoesNotRegisterName() = runTest {
+    fun invoke_persistFails_returnsFailedAndDoesNotRegisterName() = runTest(testDispatcher) {
         every { UriUtil.persistContentToScratchSpace(any<Uri>()) } returns null
 
         val result = useCase(

@@ -275,11 +275,11 @@
 
         <!-- VCard details -->
         <activity
-            android:name=".ui.VCardDetailActivity"
+            android:name=".ui.vcarddetail.VCardDetailActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:screenOrientation="user"
             android:label="@string/vcard_detail_activity_title"
-            android:theme="@style/BugleTheme">
+            android:theme="@style/Theme.Compose">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ui.conversation.ConversationActivity" />

@@ -8,5 +8,9 @@ internal sealed interface VCardDetailAction {
         val action: VCardFieldAction,
     ) : VCardDetailAction
 
+    data class FieldLongClicked(
+        val value: String,
+    ) : VCardDetailAction
+
     data object AddToContactsClicked : VCardDetailAction
 }

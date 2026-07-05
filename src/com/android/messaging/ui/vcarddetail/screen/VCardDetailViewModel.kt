@@ -65,6 +65,7 @@ internal class VCardDetailViewModel @Inject constructor(
     override fun onAction(action: Action) {
         when (action) {
             is Action.FieldClicked -> handleFieldClicked(action.action)
+            is Action.FieldLongClicked -> emitEffect(Effect.CopyToClipboard(action.value))
             is Action.AddToContactsClicked -> handleAddToContactsClicked()
         }
     }

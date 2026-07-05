@@ -113,6 +113,18 @@ internal class VCardDetailViewModelTest {
     }
 
     @Test
+    fun fieldLongClicked_emitsCopyToClipboard() = runTest(mainDispatcherRule.testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.effects.test {
+            viewModel.onAction(Action.FieldLongClicked("+1 555 0001"))
+
+            assertEquals(Effect.CopyToClipboard("+1 555 0001"), awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun addToContactsClicked_whenPrepared_emitsLaunchWithDisplayName() =
         runTest(mainDispatcherRule.testDispatcher) {
             coEvery { addVCardToContacts(VCARD_URI, "Ada Lovelace") } returns

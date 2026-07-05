@@ -1,0 +1,69 @@
+package com.android.messaging.ui.vcarddetail.common
+
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.PersonAdd
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
+import com.android.messaging.R
+
+internal const val VCARD_DETAIL_ADD_TO_CONTACTS_TAG = "vcard_detail_add_to_contacts"
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun VCardDetailTopAppBar(
+    onNavigateBack: () -> Unit,
+    canAddToContacts: Boolean,
+    onAddToContactsClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    TopAppBar(
+        modifier = modifier,
+        title = {
+            Text(
+                text = stringResource(R.string.vcard_detail_activity_title),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        },
+        navigationIcon = {
+            IconButton(onClick = onNavigateBack) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.back),
+                )
+            }
+        },
+        actions = {
+            if (canAddToContacts) {
+                IconButton(
+                    onClick = onAddToContactsClick,
+                    modifier = Modifier.testTag(VCARD_DETAIL_ADD_TO_CONTACTS_TAG),
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.PersonAdd,
+                        contentDescription = stringResource(R.string.action_add_contact),
+                        tint = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+        ),
+    )
+}

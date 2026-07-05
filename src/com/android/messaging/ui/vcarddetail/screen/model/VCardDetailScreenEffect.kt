@@ -12,6 +12,10 @@ internal sealed interface VCardDetailScreenEffect {
         val scratchUri: String,
     ) : VCardDetailScreenEffect
 
+    data class CopyToClipboard(
+        val text: String,
+    ) : VCardDetailScreenEffect
+
     data class ShowMessage(
         val messageResId: Int,
     ) : VCardDetailScreenEffect
