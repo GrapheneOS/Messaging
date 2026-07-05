@@ -1,273 +1,221 @@
 package com.android.messaging.data.vcarddetail.mapper
 
-import android.content.Intent
-import android.net.Uri
-import androidx.core.net.toUri
-import com.android.messaging.data.vcarddetail.model.VCardField
+import com.android.messaging.data.vcard.mapper.VCardEntrySummarizerImpl
+import com.android.messaging.data.vcard.model.VCardAvatarPhoto
+import com.android.messaging.data.vcard.photo.VCardPhotoDownscaler
 import com.android.messaging.data.vcarddetail.model.VCardFieldAction
-import com.android.messaging.datamodel.data.VCardContactItemData
-import com.android.messaging.datamodel.media.VCardResource
-import com.android.messaging.datamodel.media.VCardResourceEntry
-import com.android.messaging.datamodel.media.VCardResourceEntry.VCardResourceEntryDestinationItem
+import com.android.messaging.datamodel.media.CustomVCardEntry
+import com.android.vcard.VCardConfig
+import com.android.vcard.VCardProperty
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 internal class VCardDetailMapperImplTest {
 
-    private val mapper = VCardDetailMapperImpl()
+    private val photoDownscaler = mockk<VCardPhotoDownscaler>()
+
+    private val mapper = VCardDetailMapperImpl(
+        context = RuntimeEnvironment.getApplication().applicationContext,
+        entrySummarizer = VCardEntrySummarizerImpl(
+            photoDownscaler = photoDownscaler,
+        ),
+    )
 
     @Test
-    fun map_nullVCardResource_returnsEmptyList() {
-        val data = mockk<VCardContactItemData>()
-        every { data.vCardResource } returns null
-
-        val result = mapper.map(data)
+    fun map_noEntries_returnsEmptyList() {
+        val result = mapper.map(emptyList())
 
         assertTrue(result.isEmpty())
     }
 
     @Test
-    fun map_singleContactWithField_mapsValueLabelAndAction() {
-        val entry = contactEntry(
-            displayName = "Ada Lovelace",
-            avatarUri = "content://avatar".toUri(),
-            items = listOf(
-                destination(
-                    value = "+1 555 0001",
-                    label = "Mobile",
-                    clickIntent = Intent(Intent.ACTION_DIAL, "tel:+15550001".toUri()),
-                ),
-            ),
-        )
-
-        val contact = mapper.map(vCardData(entry)).single()
+    fun map_displayNameFromFormattedName() {
+        val contact = mapper.map(listOf(entryWith("FN" to "Ada Lovelace"))).single()
 
         assertEquals("Ada Lovelace", contact.displayName)
-        assertEquals("content://avatar", contact.avatarUri)
-        assertEquals(
-            VCardField(
-                value = "+1 555 0001",
-                label = "Mobile",
-                action = VCardFieldAction.Dial("+1 555 0001"),
-            ),
-            contact.fields.single(),
-        )
     }
 
     @Test
-    fun map_blankDisplayNameAndAvatar_areNormalizedToNull() {
-        val entry = contactEntry(
-            displayName = "   ",
-            avatarUri = "   ".toUri(),
-            items = emptyList(),
-        )
-
-        val contact = mapper.map(vCardData(entry)).single()
+    fun map_missingDisplayName_isNull() {
+        val contact = mapper.map(listOf(entryWith())).single()
 
         assertNull(contact.displayName)
-        assertNull(contact.avatarUri)
-        assertTrue(contact.fields.isEmpty())
     }
 
     @Test
-    fun map_nullDisplayNameAndAvatar_areMappedToNull() {
-        val entry = contactEntry(
-            displayName = null,
-            avatarUri = null,
-            items = emptyList(),
+    fun map_phone_isDialFieldWithTypeLabel() {
+        val entry = entryWith("FN" to "Ada", "TEL" to "+15550001")
+        val field = mapper.map(listOf(entry)).single().fields.single()
+
+        assertEquals(VCardFieldAction.Dial(field.value), field.action)
+        assertTrue(field.value.contains("555"))
+    }
+
+    @Test
+    fun map_email_isEmailField() {
+        val entry = entryWith("FN" to "Ada", "EMAIL" to "ada@example.com")
+        val field = mapper.map(listOf(entry)).single().fields.single()
+
+        assertEquals("ada@example.com", field.value)
+        assertEquals(VCardFieldAction.Email("ada@example.com"), field.action)
+    }
+
+    @Test
+    fun map_postalAddress_isOpenMapFieldWithFormattedAddress() {
+        val entry = entryWith("FN" to "Ada")
+        entry.addProperty(
+            VCardProperty().apply {
+                setName("ADR")
+                setValues("", "", "1 Engine Way", "London", "", "NW1", "UK")
+            },
         )
 
-        val contact = mapper.map(vCardData(entry)).single()
+        val field = mapper.map(listOf(entry)).single().fields.single()
 
-        assertNull(contact.displayName)
-        assertNull(contact.avatarUri)
+        assertTrue(field.value.contains("1 Engine Way"))
+        assertTrue(field.value.contains("London"))
+        assertEquals(VCardFieldAction.OpenMap(field.value), field.action)
     }
 
     @Test
-    fun map_blankFieldValue_isSkipped() {
-        val entry = contactEntry(
-            displayName = "Ada",
-            avatarUri = null,
-            items = listOf(
-                destination(
-                    value = "   ",
-                    label = null,
-                    clickIntent = null,
-                ),
-            ),
+    fun map_organization_isFormattedWithDepartmentAndTitle() {
+        val entry = entryWith("FN" to "Ada")
+        entry.addProperty(
+            VCardProperty().apply {
+                setName("ORG")
+                setValues("Analytical Engines", "Research")
+            },
         )
-
-        val contact = mapper.map(vCardData(entry)).single()
-
-        assertTrue(contact.fields.isEmpty())
-    }
-
-    @Test
-    fun map_blankFieldLabel_isMappedToNull() {
-        val field = singleField(
-            value = "value",
-            label = "  ",
-            clickIntent = null,
+        entry.addProperty(
+            VCardProperty().apply {
+                setName("TITLE")
+                setValues("Programmer")
+            },
         )
+        val field = mapper.map(listOf(entry)).single().fields.single()
 
-        assertNull(field.label)
+        assertEquals("Analytical Engines, Research, Programmer", field.value)
+        assertEquals(VCardFieldAction.None, field.action)
     }
 
     @Test
-    fun map_multipleContacts_arePreservedInOrder() {
+    fun map_websiteWithoutScheme_opensUrlWithHttpPrefix() {
+        val entry = entryWith("FN" to "Ada", "URL" to "example.com")
+        val field = mapper.map(listOf(entry)).single().fields.single()
+
+        assertEquals("example.com", field.value)
+        assertEquals(VCardFieldAction.OpenUrl("http://example.com"), field.action)
+    }
+
+    @Test
+    fun map_websiteWithScheme_keepsUrl() {
+        val entry = entryWith("FN" to "Ada", "URL" to "https://example.com")
+        val field = mapper.map(listOf(entry)).single().fields.single()
+
+        assertEquals(VCardFieldAction.OpenUrl("https://example.com"), field.action)
+    }
+
+    @Test
+    fun map_birthdayAndNotes_arePlainFields() {
+        val entry = entryWith("FN" to "Ada", "BDAY" to "1815-12-10", "NOTE" to "First programmer")
+        val fields = mapper.map(listOf(entry)).single().fields
+
+        assertEquals(listOf("1815-12-10", "First programmer"), fields.map { it.value })
+        assertEquals("Birthday", fields[0].label)
+        assertEquals("Notes", fields[1].label)
+        assertTrue(fields.all { it.action == VCardFieldAction.None })
+    }
+
+    @Test
+    fun map_nicknameAndAnniversary_arePlainFields() {
+        val entry = entryWith(
+            "FN" to "Ada",
+            "NICKNAME" to "Countess",
+            "ANNIVERSARY" to "1835-07-08",
+        )
+        val fields = mapper.map(listOf(entry)).single().fields
+
+        assertEquals(listOf("Countess", "1835-07-08"), fields.map { it.value })
+        assertEquals("Nickname", fields[0].label)
+        assertEquals("Anniversary", fields[1].label)
+    }
+
+    @Test
+    fun map_photo_isDownscaledIntoAvatar() {
+        val photoBytes = byteArrayOf(1, 2, 3)
+        val downscaledBytes = byteArrayOf(9)
+        every { photoDownscaler.downscale(photoBytes) } returns downscaledBytes
+
+        val entry = entryWith("FN" to "Ada")
+        entry.addProperty(
+            VCardProperty().apply {
+                setName("PHOTO")
+                byteValue = photoBytes
+            },
+        )
+        val contact = mapper.map(listOf(entry)).single()
+
+        assertEquals(VCardAvatarPhoto(downscaledBytes), contact.avatarPhoto)
+    }
+
+    @Test
+    fun map_photoThatFailsDownscaling_hasNoAvatar() {
+        every { photoDownscaler.downscale(any()) } returns null
+
+        val entry = entryWith("FN" to "Ada")
+        entry.addProperty(
+            VCardProperty().apply {
+                setName("PHOTO")
+                byteValue = byteArrayOf(1)
+            },
+        )
+        val contact = mapper.map(listOf(entry)).single()
+
+        assertNull(contact.avatarPhoto)
+    }
+
+    @Test
+    fun map_noPhoto_hasNoAvatarAndSkipsDownscaler() {
+        val contact = mapper.map(listOf(entryWith("FN" to "Ada"))).single()
+
+        assertNull(contact.avatarPhoto)
+        verify(exactly = 0) { photoDownscaler.downscale(any()) }
+    }
+
+    @Test
+    fun map_multipleEntries_arePreservedInOrder() {
         val result = mapper.map(
-            vCardData(
-                contactEntry(
-                    displayName = "First",
-                    avatarUri = null,
-                    items = emptyList(),
-                ),
-                contactEntry(
-                    displayName = "Second",
-                    avatarUri = null,
-                    items = emptyList(),
-                ),
+            listOf(
+                entryWith("FN" to "First"),
+                entryWith("FN" to "Second"),
             ),
         )
 
         assertEquals(listOf("First", "Second"), result.map { it.displayName })
     }
 
-    @Test
-    fun mapAction_nullIntent_isNone() {
-        val field = singleField(
-            value = "value",
-            label = null,
-            clickIntent = null,
-        )
+    private fun entryWith(vararg properties: Pair<String, String>): CustomVCardEntry {
+        val entry = CustomVCardEntry(VCardConfig.VCARD_TYPE_V21_GENERIC, null)
 
-        assertEquals(VCardFieldAction.None, field.action)
-    }
+        properties.forEach { (name, value) ->
+            entry.addProperty(
+                VCardProperty().apply {
+                    setName(name)
+                    setValues(value)
+                    rawValue = value
+                },
+            )
+        }
 
-    @Test
-    fun mapAction_dialTelIntent_isDial() {
-        val action = actionFor(Intent(Intent.ACTION_DIAL, "tel:+15550001".toUri()))
-
-        assertEquals(VCardFieldAction.Dial("value"), action)
-    }
-
-    @Test
-    fun mapAction_sendtoMailtoIntent_isEmail() {
-        val action = actionFor(Intent(Intent.ACTION_SENDTO, "mailto:".toUri()))
-
-        assertEquals(VCardFieldAction.Email("value"), action)
-    }
-
-    @Test
-    fun mapAction_viewGeoIntent_isOpenMap() {
-        val action = actionFor(Intent(Intent.ACTION_VIEW, "geo:0,0?q=Main%20Street".toUri()))
-
-        assertEquals(VCardFieldAction.OpenMap("value"), action)
-    }
-
-    @Test
-    fun mapAction_viewHttpIntent_isOpenUrlFromIntentData() {
-        val action = actionFor(Intent(Intent.ACTION_VIEW, "http://example.com".toUri()))
-
-        assertEquals(VCardFieldAction.OpenUrl("http://example.com"), action)
-    }
-
-    @Test
-    fun mapAction_viewHttpsIntent_isOpenUrlFromIntentData() {
-        val action = actionFor(Intent(Intent.ACTION_VIEW, "https://example.com/path".toUri()))
-
-        assertEquals(VCardFieldAction.OpenUrl("https://example.com/path"), action)
-    }
-
-    @Test
-    fun mapAction_uppercaseScheme_isNormalized() {
-        val action = actionFor(Intent(Intent.ACTION_DIAL, "TEL:+15550001".toUri()))
-
-        assertEquals(VCardFieldAction.Dial("value"), action)
-    }
-
-    @Test
-    fun mapAction_dialActionWithNonTelScheme_isNone() {
-        val action = actionFor(Intent(Intent.ACTION_DIAL, "http://example.com".toUri()))
-
-        assertEquals(VCardFieldAction.None, action)
-    }
-
-    @Test
-    fun mapAction_unknownActionWithKnownScheme_isNone() {
-        val action = actionFor(Intent(Intent.ACTION_EDIT, "tel:+15550001".toUri()))
-
-        assertEquals(VCardFieldAction.None, action)
-    }
-
-    @Test
-    fun mapAction_intentWithoutData_isNone() {
-        val action = actionFor(Intent(Intent.ACTION_VIEW))
-
-        assertEquals(VCardFieldAction.None, action)
-    }
-
-    private fun actionFor(clickIntent: Intent?): VCardFieldAction {
-        return singleField(
-            value = "value",
-            label = null,
-            clickIntent = clickIntent,
-        ).action
-    }
-
-    private fun singleField(
-        value: String,
-        label: String?,
-        clickIntent: Intent?,
-    ): VCardField {
-        val entry = contactEntry(
-            displayName = "Ada",
-            avatarUri = null,
-            items = listOf(
-                destination(
-                    value = value,
-                    label = label,
-                    clickIntent = clickIntent,
-                ),
-            ),
-        )
-        return mapper.map(vCardData(entry)).single().fields.single()
-    }
-
-    private fun vCardData(
-        vararg entries: VCardResourceEntry,
-    ): VCardContactItemData {
-        val resource = mockk<VCardResource>()
-        every { resource.vCards } returns entries.toList()
-        val data = mockk<VCardContactItemData>()
-        every { data.vCardResource } returns resource
-        return data
-    }
-
-    private fun contactEntry(
-        displayName: String?,
-        avatarUri: Uri?,
-        items: List<VCardResourceEntryDestinationItem>,
-    ): VCardResourceEntry {
-        val entry = mockk<VCardResourceEntry>()
-        every { entry.displayName } returns displayName
-        every { entry.avatarUri } returns avatarUri
-        every { entry.contactInfo } returns items
         return entry
-    }
-
-    private fun destination(
-        value: String?,
-        label: String?,
-        clickIntent: Intent?,
-    ): VCardResourceEntryDestinationItem {
-        return VCardResourceEntryDestinationItem(value, label, clickIntent)
     }
 }

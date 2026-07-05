@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.data.vcard.model.VCardAvatarPhoto
 import com.android.messaging.data.vcarddetail.model.VCardContact
 import com.android.messaging.data.vcarddetail.model.VCardField
 import com.android.messaging.data.vcarddetail.model.VCardFieldAction
@@ -50,7 +51,7 @@ internal fun VCardContactCard(
     ) {
         VCardContactHeader(
             displayName = contact.displayName,
-            avatarUri = contact.avatarUri,
+            avatarPhoto = contact.avatarPhoto,
         )
 
         contact.fields.forEach { field ->
@@ -72,7 +73,7 @@ internal fun VCardContactCard(
 @Composable
 private fun VCardContactHeader(
     displayName: String?,
-    avatarUri: String?,
+    avatarPhoto: VCardAvatarPhoto?,
 ) {
     Row(
         modifier = Modifier
@@ -84,8 +85,8 @@ private fun VCardContactHeader(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         VCardAvatar(
-            avatarUri = avatarUri,
             avatarName = displayName,
+            avatarPhoto = avatarPhoto,
             size = AvatarSize,
             iconSize = AvatarIconSize,
         )
@@ -146,7 +147,7 @@ private fun VCardContactCardPreview() {
         VCardContactCard(
             contact = VCardContact(
                 displayName = "Ada Lovelace",
-                avatarUri = null,
+                avatarPhoto = null,
                 fields = persistentListOf(
                     VCardField(
                         value = "+1 555 0001",

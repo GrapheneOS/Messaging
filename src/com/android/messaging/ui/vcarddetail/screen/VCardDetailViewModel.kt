@@ -72,7 +72,7 @@ internal class VCardDetailViewModel @Inject constructor(
 
     private fun handleResult(result: VCardDetailResult) {
         if (result is VCardDetailResult.Loaded) {
-            addToContactsName = result.displayName
+            addToContactsName = result.contacts.singleOrNull()?.displayName
         }
 
         _uiState.value = uiStateMapper.map(result)

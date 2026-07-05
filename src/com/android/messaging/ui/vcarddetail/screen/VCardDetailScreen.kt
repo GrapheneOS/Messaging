@@ -152,7 +152,7 @@ private fun VCardDetailContentPreview() {
                 contacts = persistentListOf(
                     VCardContact(
                         displayName = "Ada Lovelace",
-                        avatarUri = null,
+                        avatarPhoto = null,
                         fields = persistentListOf(
                             VCardField(
                                 value = "+1 555 0001",

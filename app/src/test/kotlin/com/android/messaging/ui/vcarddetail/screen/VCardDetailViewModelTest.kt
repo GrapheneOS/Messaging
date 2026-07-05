@@ -45,7 +45,7 @@ internal class VCardDetailViewModelTest {
     private val contacts = persistentListOf(
         VCardContact(
             displayName = "Ada Lovelace",
-            avatarUri = null,
+            avatarPhoto = null,
             fields = persistentListOf(),
         ),
     )
@@ -56,12 +56,7 @@ internal class VCardDetailViewModelTest {
             val viewModel = createViewModel()
             advanceUntilIdle()
 
-            results.emit(
-                VCardDetailResult.Loaded(
-                    contacts = contacts,
-                    displayName = "Ada Lovelace",
-                ),
-            )
+            results.emit(VCardDetailResult.Loaded(contacts))
             advanceUntilIdle()
 
             val uiState = viewModel.uiState.value
@@ -133,12 +128,7 @@ internal class VCardDetailViewModelTest {
             val viewModel = createViewModel()
             advanceUntilIdle()
 
-            results.emit(
-                VCardDetailResult.Loaded(
-                    contacts = contacts,
-                    displayName = "Ada Lovelace",
-                ),
-            )
+            results.emit(VCardDetailResult.Loaded(contacts))
             advanceUntilIdle()
 
             viewModel.effects.test {

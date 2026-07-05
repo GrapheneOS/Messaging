@@ -695,6 +695,10 @@
     <string name="vcard_detail_birthday_label">Birthday</string>
     <!-- VCard label for describing the Notes field of a contact. -->
     <string name="vcard_detail_notes_label">Notes</string>
+    <!-- VCard label for describing the nickname field of a contact. -->
+    <string name="vcard_detail_nickname_label">Nickname</string>
+    <!-- VCard label for describing the anniversary field of a contact. -->
+    <string name="vcard_detail_anniversary_label">Anniversary</string>
     <!-- Title for the message forwarding dialog -->
     <string name="forward_message_activity_title">Forward message</string>
     <!-- Text shown when no contacts are available to forward a message to -->

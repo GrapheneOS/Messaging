@@ -79,6 +79,12 @@ android {
         compose = true
     }
 
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
+
     sourceSets.getByName("main") {
         assets.srcDir("../assets")
         manifest.srcFile("../AndroidManifest.xml")

@@ -10,13 +10,12 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentType
+import com.android.messaging.data.vcard.model.VCardAvatarPhoto
 import com.android.messaging.ui.common.components.attachment.VCardAttachmentCard
 import com.android.messaging.ui.common.components.attachment.VCardAttachmentKind
 import com.android.messaging.ui.conversation.preview.previewVCardUiModel
 import com.android.messaging.ui.core.MessagingPreviewColumn
 
-private const val PREVIEW_LOCAL_AVATAR_URI =
-    "content://com.android.messaging.preview/avatar.jpg"
 private const val PREVIEW_LONG_CONTACT_TITLE =
     "Alexandria Cassandra Montgomery-Washington from International Partnerships"
 private const val PREVIEW_LONG_CONTACT_SUBTITLE =
@@ -30,7 +29,7 @@ private const val PREVIEW_LONG_LOCATION_SUBTITLE =
 internal fun ConversationVCardAttachmentCardContent(
     modifier: Modifier = Modifier,
     type: ConversationVCardAttachmentType,
-    avatarUri: String?,
+    avatarPhoto: VCardAvatarPhoto?,
     titleText: String?,
     titleTextResId: Int?,
     subtitleText: String?,
@@ -39,7 +38,7 @@ internal fun ConversationVCardAttachmentCardContent(
     VCardAttachmentCard(
         modifier = modifier,
         kind = type.toVCardAttachmentKind(),
-        avatarUri = avatarUri,
+        avatarPhoto = avatarPhoto,
         avatarName = titleText,
         title = resolveVCardText(
             text = titleText,
@@ -91,7 +90,7 @@ private fun ConversationVCardAttachmentCardContentContactVisualPreview() {
         Column(verticalArrangement = Arrangement.spacedBy(space = 16.dp)) {
             PreviewConversationVCardAttachmentCardContent(
                 type = ConversationVCardAttachmentType.CONTACT,
-                avatarUri = null,
+                avatarPhoto = null,
                 titleText = "Ada Lovelace",
                 titleTextResId = null,
                 subtitleText = "+31 6 2222 3333",
@@ -100,7 +99,7 @@ private fun ConversationVCardAttachmentCardContentContactVisualPreview() {
 
             PreviewConversationVCardAttachmentCardContent(
                 type = ConversationVCardAttachmentType.CONTACT,
-                avatarUri = PREVIEW_LOCAL_AVATAR_URI,
+                avatarPhoto = null,
                 titleText = "Marina Silva",
                 titleTextResId = null,
                 subtitleText = "marina@example.com",
@@ -109,7 +108,7 @@ private fun ConversationVCardAttachmentCardContentContactVisualPreview() {
 
             PreviewConversationVCardAttachmentCardContent(
                 type = ConversationVCardAttachmentType.CONTACT,
-                avatarUri = null,
+                avatarPhoto = null,
                 titleText = null,
                 titleTextResId = R.string.notification_vcard,
                 subtitleText = null,
@@ -127,7 +126,7 @@ private fun ConversationVCardAttachmentCardContentTextStatePreview() {
             PreviewConversationVCardAttachmentCardContent(
                 modifier = Modifier.width(width = 220.dp),
                 type = ConversationVCardAttachmentType.CONTACT,
-                avatarUri = null,
+                avatarPhoto = null,
                 titleText = PREVIEW_LONG_CONTACT_TITLE,
                 titleTextResId = null,
                 subtitleText = PREVIEW_LONG_CONTACT_SUBTITLE,
@@ -137,7 +136,7 @@ private fun ConversationVCardAttachmentCardContentTextStatePreview() {
             PreviewConversationVCardAttachmentCardContent(
                 modifier = Modifier.width(width = 220.dp),
                 type = ConversationVCardAttachmentType.LOCATION,
-                avatarUri = null,
+                avatarPhoto = null,
                 titleText = PREVIEW_LONG_LOCATION_TITLE,
                 titleTextResId = null,
                 subtitleText = PREVIEW_LONG_LOCATION_SUBTITLE,
@@ -146,7 +145,7 @@ private fun ConversationVCardAttachmentCardContentTextStatePreview() {
 
             PreviewConversationVCardAttachmentCardContent(
                 type = ConversationVCardAttachmentType.CONTACT,
-                avatarUri = null,
+                avatarPhoto = null,
                 titleText = "Kai",
                 titleTextResId = null,
                 subtitleText = null,
@@ -163,7 +162,7 @@ private fun ConversationVCardAttachmentCardContentMetadataStatePreview() {
         Column(verticalArrangement = Arrangement.spacedBy(space = 16.dp)) {
             PreviewConversationVCardAttachmentCardContent(
                 type = ConversationVCardAttachmentType.CONTACT,
-                avatarUri = null,
+                avatarPhoto = null,
                 titleText = null,
                 titleTextResId = R.string.notification_vcard,
                 subtitleText = null,
@@ -172,7 +171,7 @@ private fun ConversationVCardAttachmentCardContentMetadataStatePreview() {
 
             PreviewConversationVCardAttachmentCardContent(
                 type = ConversationVCardAttachmentType.CONTACT,
-                avatarUri = null,
+                avatarPhoto = null,
                 titleText = null,
                 titleTextResId = R.string.notification_vcard,
                 subtitleText = null,
@@ -181,7 +180,7 @@ private fun ConversationVCardAttachmentCardContentMetadataStatePreview() {
 
             PreviewConversationVCardAttachmentCardContent(
                 type = ConversationVCardAttachmentType.LOCATION,
-                avatarUri = null,
+                avatarPhoto = null,
                 titleText = null,
                 titleTextResId = R.string.notification_location,
                 subtitleText = "Shared map pin",
@@ -198,7 +197,7 @@ private fun PreviewLoadedConversationVCardAttachmentCardContent(
     val uiModel = previewVCardUiModel(type = type)
     PreviewConversationVCardAttachmentCardContent(
         type = uiModel.type,
-        avatarUri = uiModel.avatarUri,
+        avatarPhoto = uiModel.avatarPhoto,
         titleText = uiModel.titleText,
         titleTextResId = uiModel.titleTextResId,
         subtitleText = uiModel.subtitleText,
@@ -210,7 +209,7 @@ private fun PreviewLoadedConversationVCardAttachmentCardContent(
 private fun PreviewConversationVCardAttachmentCardContent(
     modifier: Modifier = Modifier,
     type: ConversationVCardAttachmentType,
-    avatarUri: String?,
+    avatarPhoto: VCardAvatarPhoto?,
     titleText: String?,
     titleTextResId: Int?,
     subtitleText: String?,
@@ -219,7 +218,7 @@ private fun PreviewConversationVCardAttachmentCardContent(
     ConversationVCardAttachmentCardContent(
         modifier = modifier,
         type = type,
-        avatarUri = avatarUri,
+        avatarPhoto = avatarPhoto,
         titleText = titleText,
         titleTextResId = titleTextResId,
         subtitleText = subtitleText,

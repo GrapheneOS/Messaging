@@ -15,6 +15,5 @@ internal sealed interface VCardDetailResult {
     @Immutable
     data class Loaded(
         val contacts: ImmutableList<VCardContact>,
-        val displayName: String?,
     ) : VCardDetailResult
 }

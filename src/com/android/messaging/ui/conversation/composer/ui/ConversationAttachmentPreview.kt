@@ -116,7 +116,7 @@ private fun ResolvedAttachmentPreviewItem(
             VCardAttachmentCell(
                 modifier = Modifier.testTag(itemTestTag),
                 kind = attachment.vCardUiModel.type.toVCardAttachmentKind(),
-                avatarUri = attachment.vCardUiModel.avatarUri,
+                avatarPhoto = attachment.vCardUiModel.avatarPhoto,
                 avatarName = attachment.vCardUiModel.titleText,
                 title = resolveVCardText(
                     text = attachment.vCardUiModel.titleText,

@@ -190,7 +190,7 @@ private fun createVCardInlineAttachment(
         contentUri = contentUri,
         openAction = openAction,
         type = vCardUiModel.type,
-        avatarUri = vCardUiModel.avatarUri,
+        avatarPhoto = vCardUiModel.avatarPhoto,
         titleText = vCardUiModel.titleText,
         titleTextResId = vCardUiModel.titleTextResId,
         subtitleText = when {

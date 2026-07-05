@@ -33,13 +33,7 @@ internal class VCardDetailUiStateMapperImplTest {
     @Test
     fun map_loadedWithContacts_exposesContactsAndAllowsAddToContacts() {
         val contacts = persistentListOf(contact("Ada Lovelace"))
-
-        val uiState = mapper.map(
-            VCardDetailResult.Loaded(
-                contacts = contacts,
-                displayName = "Ada Lovelace",
-            ),
-        )
+        val uiState = mapper.map(VCardDetailResult.Loaded(contacts))
 
         assertFalse(uiState.isLoading)
         assertEquals(contacts, uiState.contacts)
@@ -48,12 +42,7 @@ internal class VCardDetailUiStateMapperImplTest {
 
     @Test
     fun map_loadedWithoutContacts_disallowsAddToContacts() {
-        val uiState = mapper.map(
-            VCardDetailResult.Loaded(
-                contacts = persistentListOf(),
-                displayName = null,
-            ),
-        )
+        val uiState = mapper.map(VCardDetailResult.Loaded(persistentListOf()))
 
         assertFalse(uiState.isLoading)
         assertTrue(uiState.contacts.isEmpty())
@@ -63,7 +52,7 @@ internal class VCardDetailUiStateMapperImplTest {
     private fun contact(displayName: String): VCardContact {
         return VCardContact(
             displayName = displayName,
-            avatarUri = null,
+            avatarPhoto = null,
             fields = persistentListOf(),
         )
     }

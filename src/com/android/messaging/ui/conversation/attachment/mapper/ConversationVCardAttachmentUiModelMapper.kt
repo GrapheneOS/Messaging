@@ -1,9 +1,11 @@
 package com.android.messaging.ui.conversation.attachment.mapper
 
+import android.content.Context
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentMetadata
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentType
 import com.android.messaging.ui.conversation.attachment.model.ConversationVCardAttachmentUiModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
 internal interface ConversationVCardAttachmentUiModelMapper {
@@ -12,129 +14,87 @@ internal interface ConversationVCardAttachmentUiModelMapper {
     ): ConversationVCardAttachmentUiModel
 }
 
-internal class ConversationVCardAttachmentUiModelMapperImpl @Inject constructor() :
-    ConversationVCardAttachmentUiModelMapper {
+internal class ConversationVCardAttachmentUiModelMapperImpl @Inject constructor(
+    @param:ApplicationContext
+    private val context: Context,
+) : ConversationVCardAttachmentUiModelMapper {
 
     override fun map(
         metadata: ConversationVCardAttachmentMetadata?,
     ): ConversationVCardAttachmentUiModel {
-        return mapConversationVCardAttachmentUiModel(
-            metadata = metadata,
-            defaultTitleTextResId = R.string.notification_vcard,
-            defaultSubtitleTextResId = R.string.vcard_tap_hint,
-            failedSubtitleTextResId = R.string.failed_loading_vcard,
-            loadingSubtitleTextResId = R.string.loading_vcard,
-            locationTitleTextResId = R.string.notification_location,
-        )
-    }
-
-    private fun mapConversationVCardAttachmentUiModel(
-        metadata: ConversationVCardAttachmentMetadata?,
-        defaultTitleTextResId: Int?,
-        defaultSubtitleTextResId: Int?,
-        failedSubtitleTextResId: Int,
-        loadingSubtitleTextResId: Int,
-        locationTitleTextResId: Int,
-    ): ConversationVCardAttachmentUiModel {
         return when (metadata) {
             ConversationVCardAttachmentMetadata.Failed -> {
-                createConversationContactUiModel(
-                    avatarUri = null,
-                    titleText = null,
-                    titleTextResId = defaultTitleTextResId,
-                    subtitleText = null,
-                    subtitleTextResId = failedSubtitleTextResId,
-                )
+                placeholderUiModel(R.string.failed_loading_vcard)
             }
 
             ConversationVCardAttachmentMetadata.Loading -> {
-                createConversationContactUiModel(
-                    avatarUri = null,
-                    titleText = null,
-                    titleTextResId = defaultTitleTextResId,
-                    subtitleText = null,
-                    subtitleTextResId = loadingSubtitleTextResId,
-                )
+                placeholderUiModel(R.string.loading_vcard)
             }
 
             ConversationVCardAttachmentMetadata.Missing,
             null,
             -> {
-                createConversationContactUiModel(
-                    avatarUri = null,
-                    titleText = null,
-                    titleTextResId = defaultTitleTextResId,
-                    subtitleText = null,
-                    subtitleTextResId = defaultSubtitleTextResId,
-                )
+                placeholderUiModel(R.string.vcard_tap_hint)
             }
 
             is ConversationVCardAttachmentMetadata.Loaded -> {
-                mapLoadedConversationVCardAttachmentUiModel(
-                    metadata = metadata,
-                    defaultTitleTextResId = defaultTitleTextResId,
-                    defaultSubtitleTextResId = defaultSubtitleTextResId,
-                    locationTitleTextResId = locationTitleTextResId,
-                )
+                loadedUiModel(metadata)
             }
         }
     }
 
-    private fun mapLoadedConversationVCardAttachmentUiModel(
+    private fun loadedUiModel(
         metadata: ConversationVCardAttachmentMetadata.Loaded,
-        defaultTitleTextResId: Int?,
-        defaultSubtitleTextResId: Int?,
-        locationTitleTextResId: Int,
     ): ConversationVCardAttachmentUiModel {
-        return when (metadata.type) {
-            ConversationVCardAttachmentType.CONTACT -> {
-                createConversationContactUiModel(
-                    avatarUri = metadata.avatarUri,
-                    titleText = metadata.displayName,
-                    titleTextResId = if (metadata.displayName == null) {
-                        defaultTitleTextResId
-                    } else {
-                        null
-                    },
-                    subtitleText = metadata.details,
-                    subtitleTextResId = if (metadata.details == null) {
-                        defaultSubtitleTextResId
-                    } else {
-                        null
-                    },
-                )
+        val titleText = titleText(metadata)
+        val titleTextResId = when {
+            titleText != null -> null
+
+            metadata.type == ConversationVCardAttachmentType.LOCATION -> {
+                R.string.notification_location
             }
 
-            ConversationVCardAttachmentType.LOCATION -> {
-                ConversationVCardAttachmentUiModel(
-                    type = ConversationVCardAttachmentType.LOCATION,
-                    avatarUri = metadata.avatarUri,
-                    titleText = metadata.displayName,
-                    titleTextResId = if (metadata.displayName == null) {
-                        locationTitleTextResId
-                    } else {
-                        null
-                    },
-                    subtitleText = metadata.locationAddress ?: metadata.details,
-                    subtitleTextResId = null,
-                )
-            }
+            else -> R.string.notification_vcard
         }
+
+        val locationAddress = when (metadata.type) {
+            ConversationVCardAttachmentType.LOCATION -> metadata.locationAddress
+            ConversationVCardAttachmentType.CONTACT -> null
+        }
+
+        return ConversationVCardAttachmentUiModel(
+            type = metadata.type,
+            avatarPhoto = metadata.avatarPhoto,
+            titleText = titleText,
+            titleTextResId = titleTextResId,
+            subtitleText = locationAddress,
+            subtitleTextResId = when (locationAddress) {
+                null -> R.string.vcard_tap_hint
+                else -> null
+            },
+        )
     }
 
-    private fun createConversationContactUiModel(
-        avatarUri: String?,
-        titleText: String?,
-        titleTextResId: Int?,
-        subtitleText: String?,
-        subtitleTextResId: Int?,
+    private fun titleText(
+        metadata: ConversationVCardAttachmentMetadata.Loaded,
+    ): String? {
+        if (metadata.entryCount > 1) {
+            return context.resources.getQuantityString(
+                R.plurals.vcard_multiple_display_name,
+                metadata.entryCount,
+                metadata.entryCount,
+            )
+        }
+
+        return metadata.singleDisplayName
+    }
+
+    private fun placeholderUiModel(
+        subtitleTextResId: Int,
     ): ConversationVCardAttachmentUiModel {
         return ConversationVCardAttachmentUiModel(
             type = ConversationVCardAttachmentType.CONTACT,
-            avatarUri = avatarUri,
-            titleText = titleText,
-            titleTextResId = titleTextResId,
-            subtitleText = subtitleText,
+            titleTextResId = R.string.notification_vcard,
             subtitleTextResId = subtitleTextResId,
         )
     }

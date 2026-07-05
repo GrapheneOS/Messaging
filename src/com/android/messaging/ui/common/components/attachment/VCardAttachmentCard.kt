@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.android.messaging.data.vcard.model.VCardAvatarPhoto
 
 private val VCARD_AVATAR_SIZE = 36.dp
 private val VCARD_AVATAR_ICON_SIZE = 20.dp
@@ -27,7 +28,7 @@ internal enum class VCardAttachmentKind {
 @Composable
 internal fun VCardAttachmentCard(
     kind: VCardAttachmentKind,
-    avatarUri: String?,
+    avatarPhoto: VCardAvatarPhoto?,
     avatarName: String?,
     title: String,
     subtitle: String?,
@@ -40,7 +41,7 @@ internal fun VCardAttachmentCard(
     ) {
         VCardAttachmentLeadingVisual(
             kind = kind,
-            avatarUri = avatarUri,
+            avatarPhoto = avatarPhoto,
             avatarName = avatarName,
         )
 
@@ -72,13 +73,13 @@ internal fun VCardAttachmentCard(
 @Composable
 private fun VCardAttachmentLeadingVisual(
     kind: VCardAttachmentKind,
-    avatarUri: String?,
+    avatarPhoto: VCardAvatarPhoto?,
     avatarName: String?,
 ) {
     when (kind) {
         VCardAttachmentKind.Contact -> {
             VCardAvatar(
-                avatarUri = avatarUri,
+                avatarPhoto = avatarPhoto,
                 avatarName = avatarName,
                 size = VCARD_AVATAR_SIZE,
                 iconSize = VCARD_AVATAR_ICON_SIZE,

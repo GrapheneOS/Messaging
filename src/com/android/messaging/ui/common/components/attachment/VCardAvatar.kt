@@ -18,20 +18,19 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
-import androidx.core.net.toUri
 import coil3.compose.AsyncImage
-import com.android.messaging.util.UriUtil
+import com.android.messaging.data.vcard.model.VCardAvatarPhoto
 
 @Composable
 internal fun VCardAvatar(
-    avatarUri: String?,
+    avatarPhoto: VCardAvatarPhoto?,
     avatarName: String?,
     size: Dp,
     iconSize: Dp,
     modifier: Modifier = Modifier,
 ) {
-    val displayableAvatarUri = remember(avatarUri) {
-        displayableVCardAvatarUri(avatarUri = avatarUri)
+    val avatarModel = remember(avatarPhoto) {
+        avatarPhoto?.asReadOnlyByteBuffer()
     }
 
     val label = remember(avatarName) {
@@ -49,10 +48,10 @@ internal fun VCardAvatar(
             iconSize = iconSize,
         )
 
-        displayableAvatarUri?.let { uri ->
+        avatarModel?.let { model ->
             AsyncImage(
                 modifier = Modifier.fillMaxSize(),
-                model = uri,
+                model = model,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
             )
@@ -97,14 +96,6 @@ private fun VCardAvatarFallback(
             }
         }
     }
-}
-
-private fun displayableVCardAvatarUri(avatarUri: String?): String? {
-    return avatarUri
-        ?.takeIf { it.isNotBlank() }
-        ?.toUri()
-        ?.takeIf(UriUtil::isLocalResourceUri)
-        ?.toString()
 }
 
 private fun vCardAvatarLabel(avatarName: String?): String? {
