@@ -179,11 +179,6 @@
         <item name="android:paddingEnd">@dimen/message_text_left_right_padding</item>
     </style>
 
-    <style name="MessageVcardAttachmentStyle">
-        <item name="android:paddingStart">@dimen/message_text_left_right_padding</item>
-        <item name="android:paddingEnd">@dimen/message_text_left_right_padding</item>
-    </style>
-
     <style name="NotificationSenderText">
         <item name="android:textColor">@color/notification_sender_text</item>
     </style>
@@ -228,10 +223,6 @@
         <item name="android:textColor">@color/participant_list_text_primary</item>
         <item name="android:background">@null</item>
         <item name="android:layout_gravity">left|center_vertical</item>
-    </style>
-
-    <style name="PeopleListItemViewStyle">
-        <item name="android:paddingStart">16dp</item>
     </style>
 
     <style name="DropDownListViewStyle" parent="Widget.AppCompat.ListView.DropDown">

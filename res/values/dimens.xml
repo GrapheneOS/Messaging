@@ -34,8 +34,6 @@
     <dimen name="conversation_list_notification_bell_padding">4dp</dimen>
 
     <dimen name="message_bubble_arrow_width">9dp</dimen>
-    <dimen name="message_text_bottom_padding">12dp</dimen>
-    <dimen name="message_text_top_padding">10dp</dimen>
     <dimen name="message_text_left_right_padding">14dp</dimen>
     <dimen name="message_padding_default">18dp</dimen>
     <dimen name="message_padding_same_author">2dp</dimen>
@@ -69,7 +67,6 @@
     <dimen name="fab_elevation_pressed">6dp</dimen>
     <dimen name="fab_bottom_margin">16dp</dimen>
     <dimen name="fab_left_right_margin">16dp</dimen>
-    <dimen name="vcard_detail_group_indicator_width">40dp</dimen>
     <dimen name="conversation_fast_fling_threshold">10dp</dimen>
     <dimen name="list_empty_text_size">14sp</dimen>
     <dimen name="list_empty_text_top_margin">20dp</dimen>
