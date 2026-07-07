@@ -12,12 +12,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.android.messaging.R
-
-internal const val VCARD_DETAIL_ADD_TO_CONTACTS_TAG = "vcard_detail_add_to_contacts"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,10 +45,7 @@ internal fun VCardDetailTopAppBar(
         },
         actions = {
             if (canAddToContacts) {
-                IconButton(
-                    onClick = onAddToContactsClick,
-                    modifier = Modifier.testTag(VCARD_DETAIL_ADD_TO_CONTACTS_TAG),
-                ) {
+                IconButton(onClick = onAddToContactsClick) {
                     Icon(
                         imageVector = Icons.Outlined.PersonAdd,
                         contentDescription = stringResource(R.string.action_add_contact),

@@ -77,13 +77,9 @@ internal class ConversationComposerAttachmentsDelegateImpl @Inject constructor(
         )
 
         scope.launch(defaultDispatcher) {
-            refreshTriggers
-                .onStart { emit(Unit) }
-                .flatMapLatest {
-                    draftStateFlow
-                        .map(::createAttachmentSource)
-                        .distinctUntilChanged()
-                }
+            draftStateFlow
+                .map(::createAttachmentSource)
+                .distinctUntilChanged()
                 .flatMapLatest(::observeAttachmentUiModels)
                 .collect { attachmentUiModels ->
                     _state.value = attachmentUiModels
@@ -123,7 +119,10 @@ internal class ConversationComposerAttachmentsDelegateImpl @Inject constructor(
 
         val metadataFlows = vCardContentUris.map { contentUri ->
             conversationVCardMetadataRepository
-                .observeAttachmentMetadata(contentUri = contentUri)
+                .observeAttachmentMetadata(
+                    contentUri = contentUri,
+                    refreshes = refreshTriggers,
+                )
                 .map { metadata ->
                     contentUri to metadata
                 }

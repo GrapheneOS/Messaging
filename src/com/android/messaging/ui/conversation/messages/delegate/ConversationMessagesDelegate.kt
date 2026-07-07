@@ -27,7 +27,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 
 internal interface ConversationMessagesDelegate :
@@ -67,25 +66,22 @@ internal class ConversationMessagesDelegateImpl @Inject constructor(
         scope.launch(defaultDispatcher) {
             var currentConversationId: String? = null
 
-            refreshTriggers
-                .onStart { emit(Unit) }
-                .flatMapLatest { conversationIdFlow }
-                .collectLatest { conversationId ->
-                    if (conversationId != currentConversationId) {
-                        currentConversationId = conversationId
-                        _state.value = ConversationMessagesUiState.Loading
-                    }
-
-                    if (conversationId == null) {
-                        return@collectLatest
-                    }
-
-                    observeConversationMessagesUiState(
-                        conversationId = conversationId,
-                    ).collect { currentMessagesUiState ->
-                        _state.value = currentMessagesUiState
-                    }
+            conversationIdFlow.collectLatest { conversationId ->
+                if (conversationId != currentConversationId) {
+                    currentConversationId = conversationId
+                    _state.value = ConversationMessagesUiState.Loading
                 }
+
+                if (conversationId == null) {
+                    return@collectLatest
+                }
+
+                observeConversationMessagesUiState(
+                    conversationId = conversationId,
+                ).collect { currentMessagesUiState ->
+                    _state.value = currentMessagesUiState
+                }
+            }
         }
     }
 
@@ -137,7 +133,10 @@ internal class ConversationMessagesDelegateImpl @Inject constructor(
 
         val vCardMetadataFlows = vCardContentUris.map { contentUri ->
             conversationVCardMetadataRepository
-                .observeAttachmentMetadata(contentUri = contentUri)
+                .observeAttachmentMetadata(
+                    contentUri = contentUri,
+                    refreshes = refreshTriggers,
+                )
                 .map { metadata ->
                     contentUri to metadata
                 }
