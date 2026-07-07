@@ -31,11 +31,6 @@
         <item name="android:inputType">textShortMessage|textAutoCorrect|textCapSentences|textMultiLine</item>
     </style>
 
-    <style name="ContactListItemLinearLayoutStyle">
-        <item name="android:paddingStart">12dp</item>
-        <item name="android:paddingEnd">24dp</item>
-    </style>
-
     <style name="ConversationListNotificationBellPaddingStyle">
         <item name="android:paddingEnd">@dimen/conversation_list_notification_bell_padding</item>
     </style>

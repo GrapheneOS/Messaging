@@ -42,10 +42,6 @@
 
     <dimen name="compose_message_text_box_padding_side">8dp</dimen>
 
-    <!-- Contact Picker related dimensions. -->
-    <dimen name="contact_list_detail_text_size">14sp</dimen>
-    <dimen name="contact_list_icon_size">42dp</dimen>
-
     <item name="letter_to_tile_ratio" type="fraction">67%</item>
     <item name="sim_identifier_to_tile_ratio" type="fraction">28%</item>
 
