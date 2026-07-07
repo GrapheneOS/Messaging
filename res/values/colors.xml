@@ -70,7 +70,6 @@
 
     <color name="contact_avatar_default_background">#d2d2d2</color>
     <color name="contact_avatar_pressed_color">#40000000</color>
-    <color name="contact_list_text_secondary">#999999</color>
 
     <color name="chips_dropdown_background_activated">#4285f4</color>
     <color name="chips_dropdown_background_pressed">#ededed</color>
