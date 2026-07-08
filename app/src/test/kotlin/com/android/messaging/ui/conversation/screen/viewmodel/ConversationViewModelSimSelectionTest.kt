@@ -27,6 +27,7 @@ import com.android.messaging.ui.conversation.metadata.delegate.ConversationMetad
 import com.android.messaging.ui.conversation.metadata.model.ConversationMetadataUiState
 import com.android.messaging.ui.conversation.screen.ConversationViewModel
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
+import com.android.messaging.util.ContentType
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -97,6 +98,13 @@ internal class ConversationViewModelSimSelectionTest {
             ConversationMessagesUiState.Loading,
         )
         every { conversationMessagesDelegate.bind(any(), any()) } just runs
+        every {
+            conversationMessagesDelegate.resolvePhotoViewerInitialOccurrenceIndex(
+                contentType = any(),
+                partId = any(),
+                contentUri = any(),
+            )
+        } returns 0
 
         every { conversationMessageSelectionDelegate.state } returns MutableStateFlow(
             ConversationMessageSelectionUiState(),
@@ -143,6 +151,44 @@ internal class ConversationViewModelSimSelectionTest {
                 selfId = any(),
             )
         } just runs
+    }
+
+    @Test
+    fun onMessageAttachmentClicked_whenImageAttachment_resolvesPhotoOccurrenceIndex() {
+        val viewModel = createViewModel()
+
+        viewModel.onMessageAttachmentClicked(
+            contentType = ContentType.IMAGE_JPEG,
+            contentUri = ATTACHMENT_URI,
+            partId = ATTACHMENT_PART_ID,
+        )
+
+        verify(exactly = 1) {
+            conversationMessagesDelegate.resolvePhotoViewerInitialOccurrenceIndex(
+                contentType = ContentType.IMAGE_JPEG,
+                partId = ATTACHMENT_PART_ID,
+                contentUri = ATTACHMENT_URI,
+            )
+        }
+    }
+
+    @Test
+    fun onMessageAttachmentClicked_whenNonImageAttachment_delegatesOccurrenceResolution() {
+        val viewModel = createViewModel()
+
+        viewModel.onMessageAttachmentClicked(
+            contentType = ContentType.VIDEO_MP4,
+            contentUri = ATTACHMENT_URI,
+            partId = ATTACHMENT_PART_ID,
+        )
+
+        verify(exactly = 1) {
+            conversationMessagesDelegate.resolvePhotoViewerInitialOccurrenceIndex(
+                contentType = ContentType.VIDEO_MP4,
+                partId = ATTACHMENT_PART_ID,
+                contentUri = ATTACHMENT_URI,
+            )
+        }
     }
 
     @Test
@@ -324,6 +370,8 @@ internal class ConversationViewModelSimSelectionTest {
 
     private companion object {
         private const val CONVERSATION_ID = "conversation-1"
+        private const val ATTACHMENT_PART_ID = "attachment-part-1"
+        private const val ATTACHMENT_URI = "content://example/attachment/1"
         private const val PICKED_SELF_PARTICIPANT_ID = "self-participant-2"
         private const val FIRST_SELF_PARTICIPANT_ID = "self-participant-1"
         private const val SECOND_SELF_PARTICIPANT_ID = "self-participant-2"

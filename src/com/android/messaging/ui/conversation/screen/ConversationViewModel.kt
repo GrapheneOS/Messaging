@@ -70,6 +70,7 @@ internal interface ConversationScreenModel {
     fun onMessageAttachmentClicked(
         contentType: String,
         contentUri: String,
+        partId: String,
     )
 
     fun onMessageClick(messageId: String)
@@ -458,11 +459,19 @@ internal class ConversationViewModel @Inject constructor(
     override fun onMessageAttachmentClicked(
         contentType: String,
         contentUri: String,
+        partId: String,
     ) {
         val imageCollectionUri = conversationIdFlow
             .value
             ?.let(MessagingContentProvider::buildConversationImagesUri)
             ?.toString()
+
+        val initialPhotoOccurrenceIndex =
+            conversationMessagesDelegate.resolvePhotoViewerInitialOccurrenceIndex(
+                contentType = contentType,
+                partId = partId,
+                contentUri = contentUri,
+            )
 
         viewModelScope.launch(defaultDispatcher) {
             _effects.emit(
@@ -470,6 +479,7 @@ internal class ConversationViewModel @Inject constructor(
                     contentType = contentType,
                     contentUri = contentUri,
                     imageCollectionUri = imageCollectionUri,
+                    initialPhotoOccurrenceIndex = initialPhotoOccurrenceIndex,
                 ),
             )
         }

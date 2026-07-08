@@ -32,7 +32,7 @@ private const val PREVIEW_LONG_LOCATION_SUBTITLE =
 internal fun ConversationVCardInlineAttachmentRow(
     attachment: ConversationInlineAttachment.VCard,
     isSelectionMode: Boolean,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onLongClick: () -> Unit,
 ) {
@@ -237,7 +237,7 @@ private fun PreviewConversationVCardInlineAttachmentRow(
     ConversationVCardInlineAttachmentRow(
         attachment = attachment,
         isSelectionMode = false,
-        onAttachmentClick = { _, _ -> },
+        onAttachmentClick = { _, _, _ -> },
         onExternalUriClick = {},
         onLongClick = {},
     )

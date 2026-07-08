@@ -29,6 +29,7 @@ internal sealed interface ConversationScreenEffect {
         val contentType: String,
         val contentUri: String,
         val imageCollectionUri: String?,
+        val initialPhotoOccurrenceIndex: Int = 0,
     ) : ConversationScreenEffect
 
     data class OpenExternalUri(

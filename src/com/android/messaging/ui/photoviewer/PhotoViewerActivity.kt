@@ -59,6 +59,10 @@ internal class PhotoViewerActivity : ComponentActivity() {
         return PhotoViewerLaunchRequest(
             initialPhotoUri = initialPhotoUri.toString(),
             photosUri = photosUri.toString(),
+            initialPhotoOccurrenceIndex = intent.getIntExtra(
+                EXTRA_INITIAL_PHOTO_OCCURRENCE_INDEX,
+                0,
+            ),
             sourceBounds = sourceBoundsFromIntent(intent = intent),
         )
     }
@@ -80,6 +84,8 @@ internal class PhotoViewerActivity : ComponentActivity() {
             "com.android.messaging.photoviewer.extra.INITIAL_PHOTO_URI"
         private const val EXTRA_PHOTOS_URI =
             "com.android.messaging.photoviewer.extra.PHOTOS_URI"
+        private const val EXTRA_INITIAL_PHOTO_OCCURRENCE_INDEX =
+            "com.android.messaging.photoviewer.extra.INITIAL_PHOTO_OCCURRENCE_INDEX"
         private const val EXTRA_START_BOUNDS_LEFT =
             "com.android.messaging.photoviewer.extra.START_BOUNDS_LEFT"
         private const val EXTRA_START_BOUNDS_TOP =
@@ -90,15 +96,18 @@ internal class PhotoViewerActivity : ComponentActivity() {
             "com.android.messaging.photoviewer.extra.START_BOUNDS_HEIGHT"
 
         @JvmStatic
+        @JvmOverloads
         fun createIntent(
             context: Context,
             initialPhotoUri: Uri,
             photosUri: Uri,
             sourceBounds: Rect,
+            initialPhotoOccurrenceIndex: Int = 0,
         ): Intent {
             return Intent(context, PhotoViewerActivity::class.java).apply {
                 putExtra(EXTRA_INITIAL_PHOTO_URI, initialPhotoUri)
                 putExtra(EXTRA_PHOTOS_URI, photosUri)
+                putExtra(EXTRA_INITIAL_PHOTO_OCCURRENCE_INDEX, initialPhotoOccurrenceIndex)
                 putExtra(EXTRA_START_BOUNDS_LEFT, sourceBounds.left)
                 putExtra(EXTRA_START_BOUNDS_TOP, sourceBounds.top)
                 putExtra(EXTRA_START_BOUNDS_WIDTH, sourceBounds.width())

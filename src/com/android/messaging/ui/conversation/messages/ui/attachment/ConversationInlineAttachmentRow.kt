@@ -17,7 +17,7 @@ internal fun ConversationInlineAttachmentRow(
     isIncoming: Boolean,
     isSelectionMode: Boolean,
     useStandaloneAudioAttachmentBackground: Boolean,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onLongClick: () -> Unit = {},
 ) {
@@ -68,7 +68,7 @@ private fun ConversationInlineAttachmentRowPreview() {
                     isIncoming = true,
                     isSelectionMode = false,
                     useStandaloneAudioAttachmentBackground = true,
-                    onAttachmentClick = { _, _ -> },
+                    onAttachmentClick = { _, _, _ -> },
                     onExternalUriClick = {},
                 )
             }

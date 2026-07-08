@@ -9,6 +9,7 @@ internal sealed interface ConversationAttachmentOpenAction {
     data class OpenContent(
         val contentType: String,
         val contentUri: String,
+        val partId: String = "",
     ) : ConversationAttachmentOpenAction
 
     @Immutable

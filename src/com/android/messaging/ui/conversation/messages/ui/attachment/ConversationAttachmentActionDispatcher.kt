@@ -5,7 +5,7 @@ import com.android.messaging.ui.conversation.messages.model.attachment.Conversat
 
 internal fun dispatchConversationAttachmentOpenAction(
     action: ConversationAttachmentOpenAction,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
 ) {
     when (action) {
@@ -13,6 +13,7 @@ internal fun dispatchConversationAttachmentOpenAction(
             onAttachmentClick(
                 action.contentType,
                 action.contentUri,
+                action.partId,
             )
         }
 
@@ -29,6 +30,7 @@ internal fun ConversationMessageAttachment.toConversationAttachmentOpenActionOrN
             ConversationAttachmentOpenAction.OpenContent(
                 contentType = part.contentType,
                 contentUri = part.contentUri.toString(),
+                partId = part.partId,
             )
         }
 
@@ -37,6 +39,7 @@ internal fun ConversationMessageAttachment.toConversationAttachmentOpenActionOrN
                 ConversationAttachmentOpenAction.OpenContent(
                     contentType = part.contentType,
                     contentUri = contentUri.toString(),
+                    partId = part.partId,
                 )
             }
         }

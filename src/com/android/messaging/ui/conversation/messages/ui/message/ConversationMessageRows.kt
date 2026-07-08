@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel.Status
+import com.android.messaging.ui.conversation.messages.ui.attachment.OnConversationAttachmentClick
 import com.android.messaging.ui.conversation.preview.previewAudioPart
 import com.android.messaging.ui.conversation.preview.previewFilePart
 import com.android.messaging.ui.conversation.preview.previewImagePart
@@ -45,7 +46,7 @@ internal fun ConversationMessageBubbleRow(
     layout: ConversationMessageLayout,
     maxBubbleWidth: Dp,
     simDisplayName: String?,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onMessageClick: () -> Unit,
     onMessageAvatarClick: () -> Unit,
@@ -77,12 +78,12 @@ internal fun ConversationMessageBubbleRow(
             layout = layout,
             maxBubbleWidth = maxBubbleWidth,
             simDisplayName = simDisplayName,
-            onAttachmentClick = { contentType, contentUri ->
+            onAttachmentClick = { contentType, contentUri, partId ->
                 when {
                     isSelectionMode -> onMessageClick()
                     message.canDownloadMessage -> onMessageDownloadClick()
                     message.canResendMessage -> onMessageResendClick()
-                    else -> onAttachmentClick(contentType, contentUri)
+                    else -> onAttachmentClick(contentType, contentUri, partId)
                 }
             },
             onExternalUriClick = { uri ->
@@ -673,7 +674,7 @@ private fun ConversationMessageRowsPreviewItem(
             layout = layout,
             maxBubbleWidth = 320.dp,
             simDisplayName = simDisplayName,
-            onAttachmentClick = { _, _ -> },
+            onAttachmentClick = { _, _, _ -> },
             onExternalUriClick = {},
             onMessageClick = {},
             onMessageAvatarClick = {},

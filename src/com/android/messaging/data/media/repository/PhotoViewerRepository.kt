@@ -18,6 +18,7 @@ import com.android.messaging.datamodel.MediaScratchFileProvider
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.di.core.MessagingDbDispatcher
+import com.android.messaging.domain.photoviewer.usecase.NormalizePhotoViewerUri
 import com.android.messaging.util.LogUtil
 import com.android.messaging.util.core.extension.typedFlow
 import com.android.messaging.util.db.ext.getNonBlankStringOrNull
@@ -37,11 +38,13 @@ internal interface PhotoViewerRepository {
     fun getPhotoViewerItems(
         photosUri: Uri,
         initialPhotoUri: Uri,
+        initialPhotoOccurrenceIndex: Int = 0,
     ): Flow<PhotoViewerItemsLoadResult>
 }
 
 internal class PhotoViewerRepositoryImpl @Inject constructor(
     private val contentResolver: ContentResolver,
+    private val normalizePhotoViewerUri: NormalizePhotoViewerUri,
     @param:MessagingDbDispatcher
     private val messagingDbDispatcher: CoroutineDispatcher,
     @param:DefaultDispatcher
@@ -51,6 +54,7 @@ internal class PhotoViewerRepositoryImpl @Inject constructor(
     override fun getPhotoViewerItems(
         photosUri: Uri,
         initialPhotoUri: Uri,
+        initialPhotoOccurrenceIndex: Int,
     ): Flow<PhotoViewerItemsLoadResult> {
         return observeUri(uri = photosUri)
             .flowOn(defaultDispatcher)
@@ -58,6 +62,7 @@ internal class PhotoViewerRepositoryImpl @Inject constructor(
                 loadPhotoViewerItems(
                     photosUri = photosUri,
                     initialPhotoUri = initialPhotoUri,
+                    initialPhotoOccurrenceIndex = initialPhotoOccurrenceIndex,
                 ).recoverPhotoViewerItemsLoadFailure(photosUri = photosUri)
             }
             .recoverPhotoViewerItemsLoadFailure(photosUri = photosUri)
@@ -66,6 +71,7 @@ internal class PhotoViewerRepositoryImpl @Inject constructor(
     private fun loadPhotoViewerItems(
         photosUri: Uri,
         initialPhotoUri: Uri,
+        initialPhotoOccurrenceIndex: Int,
     ): Flow<PhotoViewerItemsLoadResult> {
         return typedFlow { queryItems(photosUri = photosUri) }
             .flowOn(messagingDbDispatcher)
@@ -74,6 +80,7 @@ internal class PhotoViewerRepositoryImpl @Inject constructor(
                     photoViewerItems = buildPhotoViewerItems(
                         queriedItems = queriedItems,
                         initialPhotoUri = initialPhotoUri,
+                        initialPhotoOccurrenceIndex = initialPhotoOccurrenceIndex,
                     ),
                 )
 
@@ -85,6 +92,7 @@ internal class PhotoViewerRepositoryImpl @Inject constructor(
     private fun buildPhotoViewerItems(
         queriedItems: List<PhotoViewerItem>,
         initialPhotoUri: Uri,
+        initialPhotoOccurrenceIndex: Int,
     ): PhotoViewerItems {
         val items = queriedItems.toImmutableList()
 
@@ -93,6 +101,7 @@ internal class PhotoViewerRepositoryImpl @Inject constructor(
             initialIndex = resolveInitialIndex(
                 items = items,
                 initialPhotoUri = initialPhotoUri,
+                initialPhotoOccurrenceIndex = initialPhotoOccurrenceIndex,
             ),
         )
     }
@@ -178,22 +187,26 @@ internal class PhotoViewerRepositoryImpl @Inject constructor(
     private fun resolveInitialIndex(
         items: List<PhotoViewerItem>,
         initialPhotoUri: Uri,
+        initialPhotoOccurrenceIndex: Int,
     ): Int {
-        val normalizedInitialPhotoUri = normalizePhotoUri(uri = initialPhotoUri)
-        val matchIndex = items.indexOfFirst { item ->
-            normalizePhotoUri(uri = item.contentUri) == normalizedInitialPhotoUri
-        }
+        val normalizedInitialPhotoUri = normalizePhotoViewerUri(uri = initialPhotoUri)
+        val requestedOccurrenceIndex = initialPhotoOccurrenceIndex.coerceAtLeast(
+            minimumValue = 0,
+        )
+        val matchingIndexes = items
+            .mapIndexedNotNull { index, item ->
+                when {
+                    normalizePhotoViewerUri(
+                        uri = item.contentUri,
+                    ) == normalizedInitialPhotoUri -> index
+                    else -> null
+                }
+            }
+        val matchIndex = matchingIndexes.getOrNull(index = requestedOccurrenceIndex)
+            ?: matchingIndexes.firstOrNull()
+            ?: -1
 
         return matchIndex.coerceAtLeast(minimumValue = 0)
-    }
-
-    private fun normalizePhotoUri(uri: Uri): String {
-        return uri
-            .buildUpon()
-            .clearQuery()
-            .fragment(null)
-            .build()
-            .toString()
     }
 
     private fun Flow<PhotoViewerItemsLoadResult>.recoverPhotoViewerItemsLoadFailure(

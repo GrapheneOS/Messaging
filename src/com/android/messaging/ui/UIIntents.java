@@ -218,8 +218,16 @@ public abstract class UIIntents {
     /**
      * Launch full screen photo viewer.
      */
+    public void launchFullScreenPhotoViewer(Activity activity, Uri initialPhoto,
+            Rect initialPhotoBounds, Uri photosUri) {
+        launchFullScreenPhotoViewer(activity, initialPhoto, initialPhotoBounds, photosUri, 0);
+    }
+
+    /**
+     * Launch full screen photo viewer.
+     */
     public abstract void launchFullScreenPhotoViewer(Activity activity, Uri initialPhoto,
-            Rect initialPhotoBounds, Uri photosUri);
+            Rect initialPhotoBounds, Uri photosUri, int initialPhotoOccurrenceIndex);
 
     /**
      * Get a ACTION_VIEW intent

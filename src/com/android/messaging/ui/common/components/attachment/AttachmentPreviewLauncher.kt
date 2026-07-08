@@ -21,6 +21,7 @@ internal suspend fun openAttachmentPreview(
     contentUri: String,
     contentType: String,
     imageCollectionUri: String? = null,
+    initialPhotoOccurrenceIndex: Int = 0,
     hostBounds: ComposeRect? = null,
     awaitHostBounds: (suspend () -> ComposeRect)? = null,
 ) {
@@ -35,6 +36,7 @@ internal suspend fun openAttachmentPreview(
                     hostBounds = resolvedHostBounds,
                     attachmentUri = attachmentUri,
                     imageCollectionUri = imageCollectionUri,
+                    initialPhotoOccurrenceIndex = initialPhotoOccurrenceIndex,
                 )
 
             if (!isOpenedInternally) {
@@ -75,6 +77,7 @@ private fun openImageAttachmentPreview(
     hostBounds: ComposeRect,
     attachmentUri: Uri,
     imageCollectionUri: String?,
+    initialPhotoOccurrenceIndex: Int,
 ): Boolean {
     val activity = UiUtils.getActivity(context)
     val imageCollection = imageCollectionUri?.toUri()
@@ -88,6 +91,7 @@ private fun openImageAttachmentPreview(
         attachmentUri,
         hostBounds.toAndroidRect(),
         imageCollection,
+        initialPhotoOccurrenceIndex,
     )
 
     return true

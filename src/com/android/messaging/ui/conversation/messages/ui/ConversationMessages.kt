@@ -29,6 +29,7 @@ import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.ui.conversation.CONVERSATION_MESSAGES_LIST_TEST_TAG
 import com.android.messaging.ui.conversation.conversationMessageItemTestTag
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
+import com.android.messaging.ui.conversation.messages.ui.attachment.OnConversationAttachmentClick
 import com.android.messaging.ui.conversation.messages.ui.message.ConversationMessage
 import com.android.messaging.ui.conversation.messages.ui.message.conversationMessageDisplayEpochDay
 import com.android.messaging.ui.conversation.messages.ui.message.formatDateSeparatorText
@@ -86,7 +87,7 @@ internal fun ConversationMessages(
     subscriptions: ImmutableList<Subscription> = persistentListOf(),
     currentSendSimDisplayName: String? = null,
     additionalTopContentPadding: Dp = 0.dp,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onMessageClick: (String) -> Unit,
     onMessageAvatarClick: (String) -> Unit,
@@ -153,7 +154,7 @@ private fun LazyListScope.conversationMessageItems(
     isSelectionMode: Boolean,
     showIncomingParticipantIdentity: Boolean,
     simDisplayNameByParticipantId: ImmutableMap<String, String>,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onMessageClick: (String) -> Unit,
     onMessageAvatarClick: (String) -> Unit,
@@ -307,7 +308,7 @@ private fun ConversationMessagesItem(
     isSelected: Boolean,
     showIncomingParticipantIdentity: Boolean,
     simDisplayNameByParticipantId: ImmutableMap<String, String>,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onMessageClick: (String) -> Unit,
     onMessageAvatarClick: (String) -> Unit,
@@ -528,7 +529,7 @@ private fun ConversationMessagesPreview() {
             showIncomingParticipantIdentity = true,
             subscriptions = previewSubscriptions(),
             currentSendSimDisplayName = "Personal",
-            onAttachmentClick = { _, _ -> },
+            onAttachmentClick = { _, _, _ -> },
             onExternalUriClick = {},
             onMessageClick = {},
             onMessageAvatarClick = {},

@@ -25,6 +25,7 @@ import com.android.messaging.sms.cleanseMmsSubject
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageContent
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel.Status
+import com.android.messaging.ui.conversation.messages.ui.attachment.OnConversationAttachmentClick
 import com.android.messaging.ui.conversation.preview.previewAudioPart
 import com.android.messaging.ui.conversation.preview.previewFilePart
 import com.android.messaging.ui.conversation.preview.previewImagePart
@@ -48,7 +49,8 @@ internal fun ConversationMessage(
     isSelectionMode: Boolean = false,
     showIncomingParticipantIdentity: Boolean = true,
     simDisplayName: String? = null,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit = { _, _ -> },
+    onAttachmentClick: OnConversationAttachmentClick =
+        { _, _, _ -> },
     onExternalUriClick: (String) -> Unit = {},
     onMessageClick: () -> Unit = {},
     onMessageAvatarClick: () -> Unit = {},
@@ -271,7 +273,7 @@ private fun ConversationMessageContent(
     layout: ConversationMessageLayout,
     maxBubbleWidth: Dp,
     simDisplayName: String?,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onMessageClick: () -> Unit,
     onMessageAvatarClick: () -> Unit,

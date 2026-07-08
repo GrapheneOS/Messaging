@@ -121,6 +121,20 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor(
                 )
             }
 
+            else -> mapAttachmentPart(
+                part = part,
+                contentType = contentType,
+            )
+        }
+    }
+
+    private fun mapAttachmentPart(
+        part: MessagePartData,
+        contentType: String,
+    ): ConversationMessagePartUiModel.Attachment {
+        val partId = part.partId.orEmpty()
+
+        return when {
             ContentType.isAudioType(contentType) -> {
                 ConversationMessagePartUiModel.Attachment.Audio(
                     text = part.text,
@@ -128,6 +142,7 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor(
                     contentUri = part.contentUri,
                     width = part.width,
                     height = part.height,
+                    partId = partId,
                 )
             }
 
@@ -138,6 +153,7 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor(
                     contentUri = part.contentUri,
                     width = part.width,
                     height = part.height,
+                    partId = partId,
                 )
             }
 
@@ -151,6 +167,7 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor(
                     vCardUiModel = conversationVCardAttachmentUiModelMapper.map(
                         metadata = null,
                     ),
+                    partId = partId,
                 )
             }
 
@@ -161,6 +178,7 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor(
                     contentUri = part.contentUri,
                     width = part.width,
                     height = part.height,
+                    partId = partId,
                 )
             }
 
@@ -171,6 +189,7 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor(
                     contentUri = part.contentUri,
                     width = part.width,
                     height = part.height,
+                    partId = partId,
                 )
             }
         }

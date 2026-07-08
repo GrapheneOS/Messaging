@@ -6,6 +6,8 @@ import com.android.messaging.data.media.model.PhotoViewerItem
 import com.android.messaging.data.media.model.PhotoViewerItems
 import com.android.messaging.data.media.model.PhotoViewerItemsLoadResult
 import com.android.messaging.data.media.repository.PhotoViewerRepository
+import com.android.messaging.domain.photoviewer.usecase.NormalizePhotoViewerUri
+import com.android.messaging.domain.photoviewer.usecase.NormalizePhotoViewerUriImpl
 import com.android.messaging.domain.photoviewer.usecase.PreparePhotoViewerSendUri
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.ui.photoviewer.model.PhotoViewerLaunchRequest
@@ -485,10 +487,12 @@ internal class PhotoViewerViewModelTest {
 
     private fun createViewModel(
         repository: PhotoViewerRepository,
+        normalizePhotoViewerUri: NormalizePhotoViewerUri = NormalizePhotoViewerUriImpl(),
         preparePhotoViewerSendUri: PreparePhotoViewerSendUri = FakePreparePhotoViewerSendUri(),
     ): PhotoViewerViewModel {
         return PhotoViewerViewModel(
             photoViewerRepository = repository,
+            normalizePhotoViewerUri = normalizePhotoViewerUri,
             preparePhotoViewerSendUri = preparePhotoViewerSendUri,
             defaultDispatcher = mainDispatcherRule.testDispatcher,
         )
@@ -512,6 +516,7 @@ internal class PhotoViewerViewModelTest {
             repository.getPhotoViewerItems(
                 photosUri = any(),
                 initialPhotoUri = any(),
+                initialPhotoOccurrenceIndex = any(),
             )
         } returns results
 

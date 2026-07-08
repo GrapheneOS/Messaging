@@ -37,6 +37,7 @@ import com.android.messaging.ui.conversation.CONVERSATION_LOADING_INDICATOR_TEST
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagesUiState
 import com.android.messaging.ui.conversation.messages.ui.ConversationMessages
+import com.android.messaging.ui.conversation.messages.ui.attachment.OnConversationAttachmentClick
 import com.android.messaging.ui.conversation.metadata.model.ConversationMetadataUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaffoldUiState
 import com.android.messaging.ui.subscription.mapper.resolveDisplayName
@@ -58,7 +59,7 @@ internal fun ConversationScreenContent(
     contentPadding: PaddingValues,
     pendingScrollPosition: Int?,
     onPendingScrollPositionConsumed: () -> Unit,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onMessageClick: (String) -> Unit,
     onMessageAvatarClick: (String) -> Unit,
@@ -166,7 +167,7 @@ private fun ConversationScreenPresentContent(
     contentBackdropColor: Color,
     pendingScrollPosition: Int?,
     onPendingScrollPositionConsumed: () -> Unit,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onMessageClick: (String) -> Unit,
     onMessageAvatarClick: (String) -> Unit,

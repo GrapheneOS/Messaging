@@ -29,7 +29,7 @@ import com.android.messaging.ui.core.MessagingPreviewColumn
 @Composable
 internal fun ConversationGenericInlineAttachmentRow(
     attachment: ConversationInlineAttachment.File,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onLongClick: () -> Unit,
 ) {
@@ -125,7 +125,7 @@ private fun ConversationGenericInlineAttachmentRowPreview() {
     MessagingPreviewColumn {
         ConversationGenericInlineAttachmentRow(
             attachment = previewInlineFileAttachment(),
-            onAttachmentClick = { _, _ -> },
+            onAttachmentClick = { _, _, _ -> },
             onExternalUriClick = {},
             onLongClick = {},
         )

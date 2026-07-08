@@ -301,9 +301,11 @@ public class UIIntentsImpl extends UIIntents {
 
     @Override
     public void launchFullScreenPhotoViewer(final Activity activity, final Uri initialPhoto,
-            final Rect initialPhotoBounds, final Uri photosUri) {
+            final Rect initialPhotoBounds, final Uri photosUri,
+            final int initialPhotoOccurrenceIndex) {
         activity.startActivity(PhotoViewerActivity.createIntent(
-                activity, initialPhoto, photosUri, initialPhotoBounds));
+                activity, initialPhoto, photosUri, initialPhotoBounds,
+                initialPhotoOccurrenceIndex));
         activity.overridePendingTransition(0, 0);
     }
 

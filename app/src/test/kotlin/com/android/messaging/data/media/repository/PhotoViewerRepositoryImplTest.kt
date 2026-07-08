@@ -11,6 +11,7 @@ import com.android.messaging.data.media.model.PhotoViewerItemsLoadResult
 import com.android.messaging.datamodel.ConversationImagePartsView
 import com.android.messaging.datamodel.MediaScratchFileProvider
 import com.android.messaging.datamodel.data.MessageData
+import com.android.messaging.domain.photoviewer.usecase.NormalizePhotoViewerUriImpl
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -38,6 +39,7 @@ internal class PhotoViewerRepositoryImplTest {
     private val testDispatcher = StandardTestDispatcher()
     private val repository = PhotoViewerRepositoryImpl(
         contentResolver = contentResolver,
+        normalizePhotoViewerUri = NormalizePhotoViewerUriImpl(),
         messagingDbDispatcher = testDispatcher,
         defaultDispatcher = testDispatcher,
     )
@@ -85,6 +87,51 @@ internal class PhotoViewerRepositoryImplTest {
                 ),
                 result.items[1],
             )
+        }
+    }
+
+    @Test
+    fun getPhotoViewerItems_whenInitialUriHasDuplicates_usesOccurrenceIndex() {
+        runTest(context = testDispatcher) {
+            val duplicateContentUri = "content://example/content/shared"
+            val cursor = MatrixCursor(ConversationImagePartsView.PhotoViewQuery.PROJECTION).apply {
+                addPhotoRow(
+                    uri = "content://example/photo/1",
+                    senderName = "Ada",
+                    contentUri = duplicateContentUri,
+                    contentType = IMAGE_JPEG,
+                    senderDestination = "+15550001",
+                    receivedTimestampMillis = 1000L,
+                    status = MessageData.BUGLE_STATUS_INCOMING_COMPLETE,
+                )
+                addPhotoRow(
+                    uri = "content://example/photo/2",
+                    senderName = "Grace",
+                    contentUri = duplicateContentUri,
+                    contentType = IMAGE_JPEG,
+                    senderDestination = "+15550002",
+                    receivedTimestampMillis = 2000L,
+                    status = MessageData.BUGLE_STATUS_INCOMING_COMPLETE,
+                )
+                addPhotoRow(
+                    uri = "content://example/photo/3",
+                    senderName = "Katherine",
+                    contentUri = duplicateContentUri,
+                    contentType = IMAGE_JPEG,
+                    senderDestination = "+15550003",
+                    receivedTimestampMillis = 3000L,
+                    status = MessageData.BUGLE_STATUS_INCOMING_COMPLETE,
+                )
+            }
+            stubContentResolver(cursor = cursor)
+
+            val result = repository.getPhotoViewerItems(
+                photosUri = photosUri,
+                initialPhotoUri = Uri.parse(duplicateContentUri),
+                initialPhotoOccurrenceIndex = 2,
+            ).firstLoadedForTest()
+
+            assertEquals(2, result.initialIndex)
         }
     }
 

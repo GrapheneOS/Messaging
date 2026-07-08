@@ -9,6 +9,7 @@ import com.android.messaging.data.media.model.PhotoViewerItems
 import com.android.messaging.data.media.model.PhotoViewerItemsLoadResult
 import com.android.messaging.data.media.repository.PhotoViewerRepository
 import com.android.messaging.di.core.DefaultDispatcher
+import com.android.messaging.domain.photoviewer.usecase.NormalizePhotoViewerUri
 import com.android.messaging.domain.photoviewer.usecase.PreparePhotoViewerSendUri
 import com.android.messaging.ui.photoviewer.model.PhotoViewerLaunchRequest
 import com.android.messaging.ui.photoviewer.model.PhotoViewerLaunchRequestKey
@@ -56,6 +57,7 @@ internal interface PhotoViewerScreenModel {
 @HiltViewModel
 internal class PhotoViewerViewModel @Inject constructor(
     private val photoViewerRepository: PhotoViewerRepository,
+    private val normalizePhotoViewerUri: NormalizePhotoViewerUri,
     private val preparePhotoViewerSendUri: PreparePhotoViewerSendUri,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
@@ -91,6 +93,7 @@ internal class PhotoViewerViewModel @Inject constructor(
                 .getPhotoViewerItems(
                     photosUri = launchRequest.photosUri.toUri(),
                     initialPhotoUri = launchRequest.initialPhotoUri.toUri(),
+                    initialPhotoOccurrenceIndex = launchRequest.initialPhotoOccurrenceIndex,
                 )
                 .catch { throwable ->
                     if (throwable is CancellationException) {
@@ -374,15 +377,6 @@ internal class PhotoViewerViewModel @Inject constructor(
         return items.indexOfFirst { candidate ->
             normalizePhotoViewerUri(uri = candidate.contentUri) == currentItemUri
         }
-    }
-
-    private fun normalizePhotoViewerUri(uri: Uri): String {
-        return uri
-            .buildUpon()
-            .clearQuery()
-            .fragment(null)
-            .build()
-            .toString()
     }
 
     private companion object {
