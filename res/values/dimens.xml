@@ -74,8 +74,6 @@
     <dimen name="list_empty_text_size">14sp</dimen>
     <dimen name="list_empty_text_top_margin">20dp</dimen>
     <dimen name="list_empty_text_left_right_margin">60dp</dimen>
-    <dimen name="snack_bar_left_right_margin">24dp</dimen>
-    <dimen name="snack_bar_top_bottom_margin">18dp</dimen>
 
     <dimen name="version_dialog_large_padding">24dp</dimen>
     <dimen name="version_dialog_bottom_padding">20dp</dimen>
