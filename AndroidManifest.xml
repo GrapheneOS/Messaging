@@ -396,6 +396,11 @@
                   android:excludeFromRecents="true">
         </activity>
 
+        <activity
+            android:name=".ui.contact.AddContactActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Compose.Dialog" />
+
         <activity android:name=".ui.SmsStorageLowWarningActivity"
                   android:theme="@style/Translucent"
                   android:configChanges="orientation|screenSize|keyboardHidden" />

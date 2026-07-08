@@ -25,6 +25,13 @@
 
     <style name="Theme.Compose" parent="android:Theme.Material.Light.NoActionBar" />
 
+    <style name="Theme.Compose.Dialog" parent="Theme.Compose">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+
     <style name="Theme.License" parent="Theme.AppCompat.DayNight.NoActionBar" />
 
     <!-- Application theme. -->
@@ -239,11 +246,6 @@
         <item name="android:textColor">@color/participant_list_text_primary</item>
         <item name="android:background">@null</item>
         <item name="android:layout_gravity">left|center_vertical</item>
-    </style>
-
-    <style name="AddContactConfirmationTextStyle" parent="ParticipantListItem">
-        <item name="android:paddingStart">12dp</item>
-        <item name="android:paddingEnd">24dp</item>
     </style>
 
     <style name="PeopleListItemViewStyle">
