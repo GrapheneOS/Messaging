@@ -42,6 +42,7 @@ internal class VCardDetailMapperImpl @Inject constructor(
     private fun mapContact(entry: CustomVCardEntry): VCardContact {
         return VCardContact(
             displayName = entrySummarizer.displayName(entry),
+            normalizedDestination = entrySummarizer.normalizedDestination(entry),
             avatarPhoto = entrySummarizer.avatarPhoto(entry),
             fields = contactFields(entry).toImmutableList(),
         )

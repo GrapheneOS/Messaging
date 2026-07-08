@@ -7,6 +7,7 @@ import kotlinx.collections.immutable.ImmutableList
 @Immutable
 internal data class VCardContact(
     val displayName: String?,
+    val normalizedDestination: String?,
     val avatarPhoto: VCardAvatarPhoto?,
     val fields: ImmutableList<VCardField>,
 )

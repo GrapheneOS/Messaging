@@ -190,8 +190,9 @@ private fun PickerReviewAttachmentPage(
             ) {
                 VCardAttachmentCell(
                     kind = attachment.kind,
-                    avatarPhoto = null,
-                    avatarName = attachment.title,
+                    avatarImage = null,
+                    displayName = attachment.title,
+                    normalizedDestination = null,
                     title = attachment.title
                         ?: stringResource(id = R.string.mediapicker_contact_title),
                     subtitle = null,

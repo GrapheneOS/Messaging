@@ -5,6 +5,7 @@ import com.android.messaging.data.vcard.model.VCardAvatarPhoto
 import com.android.messaging.data.vcard.photo.VCardPhotoDownscaler
 import com.android.messaging.data.vcarddetail.model.VCardFieldAction
 import com.android.messaging.datamodel.media.CustomVCardEntry
+import com.android.messaging.testutil.mockContactDestinationFormatter
 import com.android.vcard.VCardConfig
 import com.android.vcard.VCardProperty
 import io.mockk.every
@@ -22,11 +23,13 @@ import org.robolectric.RuntimeEnvironment
 internal class VCardDetailMapperImplTest {
 
     private val photoDownscaler = mockk<VCardPhotoDownscaler>()
+    private val destinationFormatter = mockContactDestinationFormatter()
 
     private val mapper = VCardDetailMapperImpl(
         context = RuntimeEnvironment.getApplication().applicationContext,
         entrySummarizer = VCardEntrySummarizerImpl(
             photoDownscaler = photoDownscaler,
+            destinationFormatter = destinationFormatter,
         ),
     )
 

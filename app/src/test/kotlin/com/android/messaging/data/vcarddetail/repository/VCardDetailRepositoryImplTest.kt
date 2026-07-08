@@ -70,6 +70,7 @@ internal class VCardDetailRepositoryImplTest {
     private fun contact(displayName: String): VCardContact {
         return VCardContact(
             displayName = displayName,
+            normalizedDestination = "+15550001",
             avatarPhoto = null,
             fields = persistentListOf(),
         )

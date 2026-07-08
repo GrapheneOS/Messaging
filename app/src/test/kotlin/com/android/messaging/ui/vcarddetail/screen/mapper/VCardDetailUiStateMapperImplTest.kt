@@ -37,7 +37,7 @@ internal class VCardDetailUiStateMapperImplTest {
         val expectedContacts = persistentListOf(
             VCardContactUiModel(
                 displayName = "Ada Lovelace",
-                avatarName = "Ada Lovelace",
+                normalizedDestination = "+15550001",
                 avatarPhoto = null,
                 fields = persistentListOf(),
             ),
@@ -61,6 +61,7 @@ internal class VCardDetailUiStateMapperImplTest {
     private fun contact(displayName: String): VCardContact {
         return VCardContact(
             displayName = displayName,
+            normalizedDestination = "+15550001",
             avatarPhoto = null,
             fields = persistentListOf(),
         )

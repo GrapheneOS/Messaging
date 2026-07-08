@@ -3,6 +3,7 @@ package com.android.messaging.data.vcard.mapper
 import com.android.messaging.data.vcard.model.VCardAvatarPhoto
 import com.android.messaging.data.vcard.photo.VCardPhotoDownscaler
 import com.android.messaging.datamodel.media.CustomVCardEntry
+import com.android.messaging.testutil.mockContactDestinationFormatter
 import com.android.vcard.VCardConfig
 import com.android.vcard.VCardProperty
 import io.mockk.every
@@ -20,9 +21,11 @@ import org.robolectric.RobolectricTestRunner
 internal class VCardEntrySummarizerImplTest {
 
     private val photoDownscaler = mockk<VCardPhotoDownscaler>()
+    private val destinationFormatter = mockContactDestinationFormatter()
 
     private val summarizer = VCardEntrySummarizerImpl(
         photoDownscaler = photoDownscaler,
+        destinationFormatter = destinationFormatter,
     )
 
     @Test
@@ -56,6 +59,32 @@ internal class VCardEntrySummarizerImplTest {
     fun avatarPhoto_withoutPhoto_isNullAndSkipsDownscaler() {
         assertNull(summarizer.avatarPhoto(entryWith("FN" to "Ada")))
         verify(exactly = 0) { photoDownscaler.downscale(any()) }
+    }
+
+    @Test
+    fun normalizedDestination_prefersFirstPhoneNumber() {
+        val entry = entryWith(
+            "FN" to "Ada",
+            "TEL" to "+1 (555) 000-1",
+            "EMAIL" to "ada@example.com",
+        )
+
+        assertEquals("+15550001", summarizer.normalizedDestination(entry))
+    }
+
+    @Test
+    fun normalizedDestination_fallsBackToEmail() {
+        val entry = entryWith(
+            "FN" to "Ada",
+            "EMAIL" to " Ada@Example.COM ",
+        )
+
+        assertEquals("ada@example.com", summarizer.normalizedDestination(entry))
+    }
+
+    @Test
+    fun normalizedDestination_withoutPhoneOrEmail_isNull() {
+        assertNull(summarizer.normalizedDestination(entryWith("FN" to "Ada")))
     }
 
     @Test

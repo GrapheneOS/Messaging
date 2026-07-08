@@ -21,6 +21,7 @@ internal sealed interface ConversationVCardAttachmentMetadata {
         val avatarPhoto: VCardAvatarPhoto?,
         val entryCount: Int,
         val singleDisplayName: String?,
+        val normalizedDestination: String?,
         val locationAddress: String?,
     ) : ConversationVCardAttachmentMetadata
 }
