@@ -259,6 +259,10 @@ internal fun previewVCardUiModel(
             ConversationVCardAttachmentType.CONTACT -> previewVCardAvatarPhoto()
             ConversationVCardAttachmentType.LOCATION -> null
         },
+        normalizedDestination = when (type) {
+            ConversationVCardAttachmentType.CONTACT -> "+31622223333"
+            ConversationVCardAttachmentType.LOCATION -> null
+        },
         titleText = when (type) {
             ConversationVCardAttachmentType.CONTACT -> "Ada Lovelace"
             ConversationVCardAttachmentType.LOCATION -> "Rathausmarkt"
@@ -477,6 +481,7 @@ internal fun previewInlineVCardAttachment(
         ),
         type = type,
         avatarPhoto = vCardUiModel.avatarPhoto,
+        normalizedDestination = vCardUiModel.normalizedDestination,
         titleText = vCardUiModel.titleText,
         titleTextResId = vCardUiModel.titleTextResId,
         subtitleText = vCardUiModel.subtitleText,

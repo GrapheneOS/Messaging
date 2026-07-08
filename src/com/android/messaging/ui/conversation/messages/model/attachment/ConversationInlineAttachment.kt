@@ -34,6 +34,7 @@ internal sealed interface ConversationInlineAttachment {
         override val openAction: ConversationAttachmentOpenAction?,
         val type: ConversationVCardAttachmentType,
         val avatarPhoto: VCardAvatarPhoto?,
+        val normalizedDestination: String?,
         val titleText: String?,
         val titleTextResId: Int?,
         val subtitleText: String?,

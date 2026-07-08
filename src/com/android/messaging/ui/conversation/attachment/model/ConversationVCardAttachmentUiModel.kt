@@ -8,6 +8,7 @@ import com.android.messaging.data.vcard.model.VCardAvatarPhoto
 internal data class ConversationVCardAttachmentUiModel(
     val type: ConversationVCardAttachmentType,
     val avatarPhoto: VCardAvatarPhoto? = null,
+    val normalizedDestination: String? = null,
     val titleText: String? = null,
     val titleTextResId: Int? = null,
     val subtitleText: String? = null,

@@ -47,7 +47,7 @@ internal class VCardDetailUiStateMapperImpl @Inject constructor() : VCardDetailU
     private fun mapContact(contact: VCardContact): VCardContactUiModel {
         return VCardContactUiModel(
             displayName = contact.displayName,
-            avatarName = contact.displayName,
+            normalizedDestination = contact.normalizedDestination,
             avatarPhoto = contact.avatarPhoto,
             fields = contact.fields
                 .map(::mapField)

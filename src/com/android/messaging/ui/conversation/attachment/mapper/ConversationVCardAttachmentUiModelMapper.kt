@@ -65,6 +65,7 @@ internal class ConversationVCardAttachmentUiModelMapperImpl @Inject constructor(
         return ConversationVCardAttachmentUiModel(
             type = metadata.type,
             avatarPhoto = metadata.avatarPhoto,
+            normalizedDestination = metadata.normalizedDestination,
             titleText = titleText,
             titleTextResId = titleTextResId,
             subtitleText = locationAddress,

@@ -30,6 +30,7 @@ internal class ConversationVCardMetadataMapperImpl @Inject constructor(
             avatarPhoto = singleEntry?.let(entrySummarizer::avatarPhoto),
             entryCount = entries.size,
             singleDisplayName = singleEntry?.let(entrySummarizer::displayName),
+            normalizedDestination = singleEntry?.let(entrySummarizer::normalizedDestination),
             locationAddress = singleEntry?.let(entrySummarizer::firstPostalAddress),
         )
     }

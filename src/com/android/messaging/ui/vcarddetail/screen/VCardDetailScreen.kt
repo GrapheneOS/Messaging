@@ -158,7 +158,7 @@ private fun VCardDetailContentPreview() {
                 contacts = persistentListOf(
                     VCardContactUiModel(
                         displayName = "Ada Lovelace",
-                        avatarName = "Ada Lovelace",
+                        normalizedDestination = "+15550001",
                         avatarPhoto = null,
                         fields = persistentListOf(
                             VCardFieldUiModel(

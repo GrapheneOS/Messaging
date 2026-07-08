@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -13,6 +14,7 @@ import com.android.messaging.data.conversation.model.attachment.ConversationVCar
 import com.android.messaging.data.vcard.model.VCardAvatarPhoto
 import com.android.messaging.ui.common.components.attachment.VCardAttachmentCard
 import com.android.messaging.ui.common.components.attachment.VCardAttachmentKind
+import com.android.messaging.ui.common.components.participant.ParticipantAvatarImage
 import com.android.messaging.ui.common.text.asLtrText
 import com.android.messaging.ui.conversation.preview.previewVCardUiModel
 import com.android.messaging.ui.core.MessagingPreviewColumn
@@ -33,14 +35,22 @@ internal fun ConversationVCardAttachmentCardContent(
     avatarPhoto: VCardAvatarPhoto?,
     titleText: String?,
     titleTextResId: Int?,
+    normalizedDestination: String?,
     subtitleText: String?,
     subtitleTextResId: Int?,
 ) {
+    val avatarImage = remember(avatarPhoto) {
+        avatarPhoto
+            ?.asReadOnlyByteBuffer()
+            ?.let(ParticipantAvatarImage::Bytes)
+    }
+
     VCardAttachmentCard(
         modifier = modifier,
         kind = type.toVCardAttachmentKind(),
-        avatarPhoto = avatarPhoto,
-        avatarName = titleText,
+        avatarImage = avatarImage,
+        displayName = titleText,
+        normalizedDestination = normalizedDestination,
         title = resolveLtrVCardText(
             text = titleText,
             textResId = titleTextResId,
@@ -203,6 +213,7 @@ private fun PreviewLoadedConversationVCardAttachmentCardContent(
         titleTextResId = uiModel.titleTextResId,
         subtitleText = uiModel.subtitleText,
         subtitleTextResId = uiModel.subtitleTextResId,
+        normalizedDestination = uiModel.normalizedDestination,
     )
 }
 
@@ -215,6 +226,7 @@ private fun PreviewConversationVCardAttachmentCardContent(
     titleTextResId: Int?,
     subtitleText: String?,
     subtitleTextResId: Int?,
+    normalizedDestination: String? = null,
 ) {
     ConversationVCardAttachmentCardContent(
         modifier = modifier,
@@ -222,6 +234,7 @@ private fun PreviewConversationVCardAttachmentCardContent(
         avatarPhoto = avatarPhoto,
         titleText = titleText,
         titleTextResId = titleTextResId,
+        normalizedDestination = normalizedDestination,
         subtitleText = subtitleText,
         subtitleTextResId = subtitleTextResId,
     )

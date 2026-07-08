@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -15,7 +16,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.android.messaging.data.vcard.model.VCardAvatarPhoto
+import com.android.messaging.ui.common.components.participant.ParticipantAvatar
+import com.android.messaging.ui.common.components.participant.ParticipantAvatarImage
+import com.android.messaging.ui.common.components.participant.participantAvatarLabel
+import com.android.messaging.ui.common.components.participant.participantColorSeed
 
 private val VCARD_AVATAR_SIZE = 36.dp
 private val VCARD_AVATAR_ICON_SIZE = 20.dp
@@ -28,8 +32,9 @@ internal enum class VCardAttachmentKind {
 @Composable
 internal fun VCardAttachmentCard(
     kind: VCardAttachmentKind,
-    avatarPhoto: VCardAvatarPhoto?,
-    avatarName: String?,
+    avatarImage: ParticipantAvatarImage?,
+    displayName: String?,
+    normalizedDestination: String?,
     title: String,
     subtitle: String?,
     modifier: Modifier = Modifier,
@@ -41,8 +46,9 @@ internal fun VCardAttachmentCard(
     ) {
         VCardAttachmentLeadingVisual(
             kind = kind,
-            avatarPhoto = avatarPhoto,
-            avatarName = avatarName,
+            avatarImage = avatarImage,
+            displayName = displayName,
+            normalizedDestination = normalizedDestination,
         )
 
         Column(
@@ -73,16 +79,23 @@ internal fun VCardAttachmentCard(
 @Composable
 private fun VCardAttachmentLeadingVisual(
     kind: VCardAttachmentKind,
-    avatarPhoto: VCardAvatarPhoto?,
-    avatarName: String?,
+    avatarImage: ParticipantAvatarImage?,
+    displayName: String?,
+    normalizedDestination: String?,
 ) {
     when (kind) {
         VCardAttachmentKind.Contact -> {
-            VCardAvatar(
-                avatarPhoto = avatarPhoto,
-                avatarName = avatarName,
-                size = VCARD_AVATAR_SIZE,
-                iconSize = VCARD_AVATAR_ICON_SIZE,
+            ParticipantAvatar(
+                avatarImage = avatarImage,
+                fallbackSize = VCARD_AVATAR_ICON_SIZE,
+                fallbackIcon = Icons.Rounded.Person,
+                fallbackLabel = participantAvatarLabel(
+                    source = displayName,
+                ),
+                colorSeedCode = participantColorSeed(
+                    normalizedDestination = normalizedDestination,
+                ),
+                modifier = Modifier.size(VCARD_AVATAR_SIZE),
             )
         }
 

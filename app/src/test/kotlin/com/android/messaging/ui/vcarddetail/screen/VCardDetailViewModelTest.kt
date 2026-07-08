@@ -48,6 +48,7 @@ internal class VCardDetailViewModelTest {
     private val contacts = persistentListOf(
         VCardContact(
             displayName = "Ada Lovelace",
+            normalizedDestination = "+15550001",
             avatarPhoto = null,
             fields = persistentListOf(),
         ),

@@ -8,11 +8,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,7 +27,10 @@ import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.data.vcard.model.VCardAvatarPhoto
 import com.android.messaging.data.vcarddetail.model.VCardFieldAction
-import com.android.messaging.ui.common.components.attachment.VCardAvatar
+import com.android.messaging.ui.common.components.participant.ParticipantAvatar
+import com.android.messaging.ui.common.components.participant.ParticipantAvatarImage
+import com.android.messaging.ui.common.components.participant.participantAvatarLabel
+import com.android.messaging.ui.common.components.participant.participantColorSeed
 import com.android.messaging.ui.common.components.selection.SelectionListItemTokens
 import com.android.messaging.ui.common.text.asLtrText
 import com.android.messaging.ui.core.MessagingPreviewColumn
@@ -52,7 +59,7 @@ internal fun VCardContactCard(
     ) {
         VCardContactHeader(
             displayName = contact.displayName,
-            avatarName = contact.avatarName,
+            normalizedDestination = contact.normalizedDestination,
             avatarPhoto = contact.avatarPhoto,
         )
 
@@ -75,10 +82,15 @@ internal fun VCardContactCard(
 @Composable
 private fun VCardContactHeader(
     displayName: String?,
-    avatarName: String?,
+    normalizedDestination: String?,
     avatarPhoto: VCardAvatarPhoto?,
 ) {
     val displayText = displayName?.asLtrText().orEmpty()
+    val avatarImage = remember(avatarPhoto) {
+        avatarPhoto
+            ?.asReadOnlyByteBuffer()
+            ?.let(ParticipantAvatarImage::Bytes)
+    }
 
     Row(
         modifier = Modifier
@@ -89,11 +101,17 @@ private fun VCardContactHeader(
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        VCardAvatar(
-            avatarName = avatarName,
-            avatarPhoto = avatarPhoto,
-            size = AvatarSize,
-            iconSize = AvatarIconSize,
+        ParticipantAvatar(
+            avatarImage = avatarImage,
+            fallbackIcon = Icons.Rounded.Person,
+            fallbackSize = AvatarIconSize,
+            fallbackLabel = participantAvatarLabel(
+                source = displayName,
+            ),
+            colorSeedCode = participantColorSeed(
+                normalizedDestination = normalizedDestination,
+            ),
+            modifier = Modifier.size(AvatarSize),
         )
 
         Spacer(modifier = Modifier.width(AvatarToTextSpacing))
@@ -154,7 +172,7 @@ private fun VCardContactCardPreview() {
         VCardContactCard(
             contact = VCardContactUiModel(
                 displayName = "Ada Lovelace",
-                avatarName = "Ada Lovelace",
+                normalizedDestination = "+15550001",
                 avatarPhoto = null,
                 fields = persistentListOf(
                     VCardFieldUiModel(

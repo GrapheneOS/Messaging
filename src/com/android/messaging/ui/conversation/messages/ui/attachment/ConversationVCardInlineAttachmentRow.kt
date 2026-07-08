@@ -86,6 +86,7 @@ internal fun ConversationVCardInlineAttachmentRowContent(
                 .padding(horizontal = 14.dp, vertical = 12.dp),
             type = attachment.type,
             avatarPhoto = attachment.avatarPhoto,
+            normalizedDestination = attachment.normalizedDestination,
             titleText = attachment.titleText,
             titleTextResId = attachment.titleTextResId,
             subtitleText = attachment.subtitleText,

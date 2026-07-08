@@ -17,6 +17,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,6 +33,7 @@ import com.android.messaging.ui.common.components.attachment.AttachmentPreviewRo
 import com.android.messaging.ui.common.components.attachment.AudioAttachmentCell
 import com.android.messaging.ui.common.components.attachment.MediaAttachmentCell
 import com.android.messaging.ui.common.components.attachment.VCardAttachmentCell
+import com.android.messaging.ui.common.components.participant.ParticipantAvatarImage
 import com.android.messaging.ui.conversation.CONVERSATION_ATTACHMENT_PREVIEW_LIST_TEST_TAG
 import com.android.messaging.ui.conversation.attachment.ui.resolveLtrVCardText
 import com.android.messaging.ui.conversation.attachment.ui.toVCardAttachmentKind
@@ -113,11 +115,18 @@ private fun ResolvedAttachmentPreviewItem(
 
     when (attachment) {
         is ComposerAttachmentUiModel.Resolved.VCard -> {
+            val avatarImage = remember(attachment.vCardUiModel.avatarPhoto) {
+                attachment.vCardUiModel.avatarPhoto
+                    ?.asReadOnlyByteBuffer()
+                    ?.let(ParticipantAvatarImage::Bytes)
+            }
+
             VCardAttachmentCell(
                 modifier = Modifier.testTag(itemTestTag),
                 kind = attachment.vCardUiModel.type.toVCardAttachmentKind(),
-                avatarPhoto = attachment.vCardUiModel.avatarPhoto,
-                avatarName = attachment.vCardUiModel.titleText,
+                avatarImage = avatarImage,
+                displayName = attachment.vCardUiModel.titleText,
+                normalizedDestination = attachment.vCardUiModel.normalizedDestination,
                 title = resolveLtrVCardText(
                     text = attachment.vCardUiModel.titleText,
                     textResId = attachment.vCardUiModel.titleTextResId,
