@@ -1,7 +1,6 @@
 package com.android.messaging.ui.photoviewer.screen
 
 import android.content.ActivityNotFoundException
-import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -15,9 +14,6 @@ import com.android.messaging.ui.conversationpicker.host.share.ShareIntentActivit
 import com.android.messaging.ui.photoviewer.screen.model.PhotoViewerEffect
 import com.android.messaging.util.LogUtil
 import com.android.messaging.util.UiUtils
-import com.android.messaging.util.UriUtil
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 private const val LOG_TAG = "PhotoViewerScreenEffects"
 
@@ -80,13 +76,11 @@ private suspend fun sharePhoto(
     uri: Uri,
     contentType: String,
 ) {
-    val shareUri = normalizeUriForSendIntent(uri = uri)
-
     try {
         Intent(Intent.ACTION_SEND)
             .apply {
                 type = contentType
-                putExtra(Intent.EXTRA_STREAM, shareUri)
+                putExtra(Intent.EXTRA_STREAM, uri)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
             .let { intent ->
@@ -107,32 +101,16 @@ private suspend fun forwardPhoto(
     uri: Uri,
     contentType: String,
 ) {
-    val forwardUri = normalizeUriForSendIntent(uri = uri)
-
     try {
-        Intent(context, ShareIntentActivity::class.java)
-            .apply {
-                action = Intent.ACTION_SEND
-                type = contentType
-                putExtra(Intent.EXTRA_STREAM, forwardUri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
+        ShareIntentActivity
+            .createForwardIntent(
+                context = context,
+                uri = uri,
+                contentType = contentType,
+            )
             .let(context::startActivity)
     } catch (e: ActivityNotFoundException) {
         LogUtil.w(LOG_TAG, "No activity found for photo forward intent", e)
         UiUtils.showToastAtBottom(R.string.activity_not_found_message)
-    }
-}
-
-@Suppress("InjectDispatcher")
-private suspend fun normalizeUriForSendIntent(uri: Uri): Uri {
-    return when {
-        uri.scheme != ContentResolver.SCHEME_FILE -> uri
-
-        else -> {
-            withContext(context = Dispatchers.IO) {
-                UriUtil.persistContentToScratchSpace(uri) ?: uri
-            }
-        }
     }
 }

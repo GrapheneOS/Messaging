@@ -6,6 +6,7 @@ import com.android.messaging.data.media.model.PhotoViewerItem
 import com.android.messaging.data.media.model.PhotoViewerItems
 import com.android.messaging.data.media.model.PhotoViewerItemsLoadResult
 import com.android.messaging.data.media.repository.PhotoViewerRepository
+import com.android.messaging.domain.photoviewer.usecase.PreparePhotoViewerSendUri
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.ui.photoviewer.model.PhotoViewerLaunchRequest
 import com.android.messaging.ui.photoviewer.model.PhotoViewerSourceBounds
@@ -16,7 +17,10 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -190,17 +194,16 @@ internal class PhotoViewerViewModelTest {
     }
 
     @Test
-    fun scratchUriActions_emitEffects() {
+    fun actions_emitEffects() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val repositoryResults = MutableSharedFlow<PhotoViewerItemsLoadResult>(replay = 1)
             val repository = mockPhotoViewerRepository(results = repositoryResults)
             val viewModel = createViewModel(repository = repository)
-            val scratchItem = photo1.copy(contentUri = scratchUri)
 
             viewModel.onLaunchRequest(launchRequest = launchRequest)
             repositoryResults.emitLoaded(
                 photoViewerItems(
-                    items = listOf(scratchItem),
+                    items = listOf(photo1),
                     initialIndex = 0,
                 ),
             )
@@ -210,7 +213,7 @@ internal class PhotoViewerViewModelTest {
                 viewModel.onSaveClick()
                 assertEquals(
                     PhotoViewerEffect.Save(
-                        uri = scratchUri,
+                        uri = photo1.contentUri,
                         contentType = IMAGE_JPEG,
                     ),
                     awaitItem(),
@@ -219,7 +222,7 @@ internal class PhotoViewerViewModelTest {
                 viewModel.onShareClick()
                 assertEquals(
                     PhotoViewerEffect.Share(
-                        uri = scratchUri,
+                        uri = photo1.contentUri,
                         contentType = IMAGE_JPEG,
                     ),
                     awaitItem(),
@@ -228,11 +231,117 @@ internal class PhotoViewerViewModelTest {
                 viewModel.onForwardClick()
                 assertEquals(
                     PhotoViewerEffect.Forward(
-                        uri = scratchUri,
+                        uri = photo1.contentUri,
                         contentType = IMAGE_JPEG,
                     ),
                     awaitItem(),
                 )
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    @Test
+    fun shareAndForward_whenPreparedUriIsDifferent_emitPreparedUri() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val repositoryResults = MutableSharedFlow<PhotoViewerItemsLoadResult>(replay = 1)
+            val repository = mockPhotoViewerRepository(results = repositoryResults)
+            val preparedUri = Uri.parse("content://example/prepared/1")
+            val viewModel = createViewModel(
+                repository = repository,
+                preparePhotoViewerSendUri = FakePreparePhotoViewerSendUri(
+                    preparedUri = preparedUri,
+                ),
+            )
+
+            viewModel.onLaunchRequest(launchRequest = launchRequest)
+            repositoryResults.emitLoaded(
+                photoViewerItems(
+                    items = listOf(photo1),
+                    initialIndex = 0,
+                ),
+            )
+            advanceUntilIdle()
+
+            viewModel.effects.test {
+                viewModel.onShareClick()
+                assertEquals(
+                    PhotoViewerEffect.Share(
+                        uri = preparedUri,
+                        contentType = IMAGE_JPEG,
+                    ),
+                    awaitItem(),
+                )
+
+                viewModel.onForwardClick()
+                assertEquals(
+                    PhotoViewerEffect.Forward(
+                        uri = preparedUri,
+                        contentType = IMAGE_JPEG,
+                    ),
+                    awaitItem(),
+                )
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    @Test
+    fun shareAndForward_whenUriPreparationFails_emitNoEffects() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val repositoryResults = MutableSharedFlow<PhotoViewerItemsLoadResult>(replay = 1)
+            val repository = mockPhotoViewerRepository(results = repositoryResults)
+            val viewModel = createViewModel(
+                repository = repository,
+                preparePhotoViewerSendUri = FakePreparePhotoViewerSendUri(
+                    shouldFail = true,
+                ),
+            )
+
+            viewModel.onLaunchRequest(launchRequest = launchRequest)
+            repositoryResults.emitLoaded(
+                photoViewerItems(
+                    items = listOf(photo1),
+                    initialIndex = 0,
+                ),
+            )
+            advanceUntilIdle()
+
+            viewModel.effects.test {
+                viewModel.onShareClick()
+                viewModel.onForwardClick()
+                advanceUntilIdle()
+
+                expectNoEvents()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    @Test
+    fun actions_whenCurrentItemDisallowsActions_emitNoEffects() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val repositoryResults = MutableSharedFlow<PhotoViewerItemsLoadResult>(replay = 1)
+            val repository = mockPhotoViewerRepository(results = repositoryResults)
+            val viewModel = createViewModel(repository = repository)
+            val nonActionableItem = photo1.copy(canUseActions = false)
+
+            viewModel.onLaunchRequest(launchRequest = launchRequest)
+            repositoryResults.emitLoaded(
+                photoViewerItems(
+                    items = listOf(nonActionableItem),
+                    initialIndex = 0,
+                ),
+            )
+            advanceUntilIdle()
+
+            viewModel.effects.test {
+                viewModel.onSaveClick()
+                viewModel.onShareClick()
+                viewModel.onForwardClick()
+                advanceUntilIdle()
+
+                expectNoEvents()
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -374,9 +483,13 @@ internal class PhotoViewerViewModelTest {
         advanceUntilIdle()
     }
 
-    private fun createViewModel(repository: PhotoViewerRepository): PhotoViewerViewModel {
+    private fun createViewModel(
+        repository: PhotoViewerRepository,
+        preparePhotoViewerSendUri: PreparePhotoViewerSendUri = FakePreparePhotoViewerSendUri(),
+    ): PhotoViewerViewModel {
         return PhotoViewerViewModel(
             photoViewerRepository = repository,
+            preparePhotoViewerSendUri = preparePhotoViewerSendUri,
             defaultDispatcher = mainDispatcherRule.testDispatcher,
         )
     }
@@ -427,9 +540,6 @@ internal class PhotoViewerViewModelTest {
             photosUri = "content://example/photos",
             sourceBounds = PhotoViewerSourceBounds(),
         )
-        val scratchUri: Uri = Uri.parse(
-            "content://com.android.messaging.debug.datamodel.MediaScratchFileProvider/800001?ext=jpg",
-        )
         val photo1 = photoViewerItem(index = 1)
         val photo2 = photoViewerItem(index = 2)
         val photo3 = photoViewerItem(index = 3)
@@ -446,6 +556,20 @@ internal class PhotoViewerViewModelTest {
                 receivedTimestampMillis = 1_735_689_600_000L + index,
                 isDraft = false,
             )
+        }
+    }
+
+    private class FakePreparePhotoViewerSendUri(
+        private val preparedUri: Uri? = null,
+        private val shouldFail: Boolean = false,
+    ) : PreparePhotoViewerSendUri {
+
+        override fun invoke(uri: Uri): Flow<Uri> {
+            return when {
+                shouldFail -> emptyFlow()
+                preparedUri != null -> flowOf(preparedUri)
+                else -> flowOf(uri)
+            }
         }
     }
 }

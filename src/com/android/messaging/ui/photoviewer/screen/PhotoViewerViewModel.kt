@@ -9,6 +9,7 @@ import com.android.messaging.data.media.model.PhotoViewerItems
 import com.android.messaging.data.media.model.PhotoViewerItemsLoadResult
 import com.android.messaging.data.media.repository.PhotoViewerRepository
 import com.android.messaging.di.core.DefaultDispatcher
+import com.android.messaging.domain.photoviewer.usecase.PreparePhotoViewerSendUri
 import com.android.messaging.ui.photoviewer.model.PhotoViewerLaunchRequest
 import com.android.messaging.ui.photoviewer.model.PhotoViewerLaunchRequestKey
 import com.android.messaging.ui.photoviewer.model.photoViewerLaunchRequestKey
@@ -18,7 +19,6 @@ import com.android.messaging.ui.photoviewer.screen.model.PhotoViewerLoadState
 import com.android.messaging.ui.photoviewer.screen.model.PhotoViewerUiState
 import com.android.messaging.util.LogUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CancellationException
@@ -30,9 +30,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 internal interface PhotoViewerScreenModel {
     val effects: Flow<PhotoViewerEffect>
@@ -54,6 +56,7 @@ internal interface PhotoViewerScreenModel {
 @HiltViewModel
 internal class PhotoViewerViewModel @Inject constructor(
     private val photoViewerRepository: PhotoViewerRepository,
+    private val preparePhotoViewerSendUri: PreparePhotoViewerSendUri,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
 ) : ViewModel(),
@@ -195,23 +198,19 @@ internal class PhotoViewerViewModel @Inject constructor(
     }
 
     override fun onShareClick() {
-        currentItemForAction()?.let { item ->
-            sendEffect(
-                effect = PhotoViewerEffect.Share(
-                    uri = item.contentUri,
-                    contentType = item.contentType,
-                ),
+        sendPreparedPhotoEffect { item, preparedUri ->
+            PhotoViewerEffect.Share(
+                uri = preparedUri,
+                contentType = item.contentType,
             )
         }
     }
 
     override fun onForwardClick() {
-        currentItemForAction()?.let { item ->
-            sendEffect(
-                effect = PhotoViewerEffect.Forward(
-                    uri = item.contentUri,
-                    contentType = item.contentType,
-                ),
+        sendPreparedPhotoEffect { item, preparedUri ->
+            PhotoViewerEffect.Forward(
+                uri = preparedUri,
+                contentType = item.contentType,
             )
         }
     }
@@ -219,6 +218,22 @@ internal class PhotoViewerViewModel @Inject constructor(
     private fun sendEffect(effect: PhotoViewerEffect) {
         viewModelScope.launch(defaultDispatcher) {
             effectsChannel.send(element = effect)
+        }
+    }
+
+    private fun sendPreparedPhotoEffect(
+        buildEffect: (PhotoViewerItem, Uri) -> PhotoViewerEffect,
+    ) {
+        val item = currentItemForAction() ?: return
+
+        viewModelScope.launch(defaultDispatcher) {
+            preparePhotoViewerSendUri(uri = item.contentUri)
+                .map { preparedUri ->
+                    buildEffect(item, preparedUri)
+                }
+                .collect { element ->
+                    effectsChannel.send(element = element)
+                }
         }
     }
 
@@ -239,6 +254,7 @@ internal class PhotoViewerViewModel @Inject constructor(
         return state
             .items
             .getOrNull(index = state.currentPage)
+            ?.takeIf { item -> item.canUseActions }
     }
 
     private fun updatedStateForPhotoViewerItems(

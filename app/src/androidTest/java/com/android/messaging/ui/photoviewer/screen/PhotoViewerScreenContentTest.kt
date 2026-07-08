@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.TouchInjectionScope
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -145,6 +146,23 @@ internal class PhotoViewerScreenContentTest {
             assertEquals(1, forwardClickCount.get())
             assertEquals(1, closeClickCount.get())
         }
+    }
+
+    @Test
+    fun chromeActions_whenCurrentItemDisallowsActions_areDisabled() {
+        val uiState = loadedPhotoViewerUiState(
+            firstItemCanUseActions = false,
+        )
+        setScreenContent(uiState = uiState)
+
+        composeRule.onNodeWithTag(testTag = PHOTO_VIEWER_SAVE_BUTTON_TEST_TAG)
+            .assertIsNotEnabled()
+        composeRule.onNodeWithTag(testTag = PHOTO_VIEWER_SHARE_BUTTON_TEST_TAG)
+            .assertIsNotEnabled()
+        composeRule.onNodeWithTag(testTag = PHOTO_VIEWER_OVERFLOW_BUTTON_TEST_TAG)
+            .performClick()
+        composeRule.onNodeWithTag(testTag = PHOTO_VIEWER_FORWARD_MENU_ITEM_TEST_TAG)
+            .assertIsNotEnabled()
     }
 
     @Test
@@ -320,6 +338,7 @@ internal class PhotoViewerScreenContentTest {
     }
 
     private fun setScreenContent(
+        uiState: PhotoViewerUiState = loadedPhotoViewerUiState(),
         onPageSettled: (Int) -> Unit = {},
         onToggleDisplayMode: () -> Unit = {},
         onEnterImmersiveMode: () -> Unit = {},
@@ -328,7 +347,7 @@ internal class PhotoViewerScreenContentTest {
         onSaveClick: () -> Unit = {},
         onShareClick: () -> Unit = {},
     ): MutableState<PhotoViewerUiState> {
-        val uiState = mutableStateOf(value = loadedPhotoViewerUiState())
+        val uiState = mutableStateOf(value = uiState)
 
         composeRule.setContent {
             AppTheme {
@@ -371,17 +390,27 @@ internal class PhotoViewerScreenContentTest {
         return uiState
     }
 
-    private fun loadedPhotoViewerUiState(): PhotoViewerUiState {
+    private fun loadedPhotoViewerUiState(
+        firstItemCanUseActions: Boolean = true,
+    ): PhotoViewerUiState {
         return PhotoViewerUiState(
             items = persistentListOf(
-                photoViewerItem(index = 1, senderName = FIRST_SENDER),
+                photoViewerItem(
+                    index = 1,
+                    senderName = FIRST_SENDER,
+                    canUseActions = firstItemCanUseActions,
+                ),
                 photoViewerItem(index = 2, senderName = SECOND_SENDER),
             ),
             loadState = PhotoViewerLoadState.Loaded,
         )
     }
 
-    private fun photoViewerItem(index: Int, senderName: String): PhotoViewerItem {
+    private fun photoViewerItem(
+        index: Int,
+        senderName: String,
+        canUseActions: Boolean = true,
+    ): PhotoViewerItem {
         return PhotoViewerItem(
             contentUri = photoViewerImageUri(),
             contentType = IMAGE_JPEG,
@@ -389,6 +418,7 @@ internal class PhotoViewerScreenContentTest {
             senderDestination = "+1555000$index",
             receivedTimestampMillis = 1_735_689_600_000L + index,
             isDraft = false,
+            canUseActions = canUseActions,
         )
     }
 

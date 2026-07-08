@@ -11,6 +11,7 @@ internal data class PhotoViewerItem(
     val senderDestination: String?,
     val receivedTimestampMillis: Long,
     val isDraft: Boolean,
+    val canUseActions: Boolean = true,
 ) {
     val title: String
         get() {

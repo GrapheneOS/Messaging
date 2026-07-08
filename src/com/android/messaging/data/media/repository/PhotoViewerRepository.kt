@@ -14,6 +14,7 @@ import com.android.messaging.data.media.model.PhotoViewerItem
 import com.android.messaging.data.media.model.PhotoViewerItems
 import com.android.messaging.data.media.model.PhotoViewerItemsLoadResult
 import com.android.messaging.datamodel.ConversationImagePartsView
+import com.android.messaging.datamodel.MediaScratchFileProvider
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.di.core.MessagingDbDispatcher
@@ -147,8 +148,10 @@ internal class PhotoViewerRepositoryImpl @Inject constructor(
         return when {
             contentUriString == null || contentType == null -> null
             else -> {
+                val contentUri = contentUriString.toUri()
+
                 PhotoViewerItem(
-                    contentUri = contentUriString.toUri(),
+                    contentUri = contentUri,
                     contentType = contentType,
                     senderName = getStringOrNull(
                         ConversationImagePartsView
@@ -166,6 +169,7 @@ internal class PhotoViewerRepositoryImpl @Inject constructor(
                             .INDEX_RECEIVED_TIMESTAMP,
                     ),
                     isDraft = status == MessageData.BUGLE_STATUS_OUTGOING_DRAFT,
+                    canUseActions = !MediaScratchFileProvider.isMediaScratchSpaceUri(contentUri),
                 )
             }
         }

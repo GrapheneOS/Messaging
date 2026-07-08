@@ -2,6 +2,8 @@ package com.android.messaging.di.photoviewer
 
 import com.android.messaging.data.media.repository.PhotoViewerRepository
 import com.android.messaging.data.media.repository.PhotoViewerRepositoryImpl
+import com.android.messaging.domain.photoviewer.usecase.PreparePhotoViewerSendUri
+import com.android.messaging.domain.photoviewer.usecase.PreparePhotoViewerSendUriImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Reusable
@@ -17,4 +19,10 @@ internal abstract class PhotoViewerBindsModule {
     abstract fun bindPhotoViewerRepository(
         impl: PhotoViewerRepositoryImpl,
     ): PhotoViewerRepository
+
+    @Binds
+    @Reusable
+    abstract fun bindPreparePhotoViewerSendUri(
+        impl: PreparePhotoViewerSendUriImpl,
+    ): PreparePhotoViewerSendUri
 }

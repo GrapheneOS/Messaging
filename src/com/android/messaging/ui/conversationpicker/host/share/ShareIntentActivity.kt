@@ -1,6 +1,8 @@
 package com.android.messaging.ui.conversationpicker.host.share
 
+import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -85,7 +87,7 @@ class ShareIntentActivity : BugleComponentActivity() {
                     effectHandler = effectHandler,
                     onNavigateBack = ::finish,
                     allowMultiSelect = true,
-                    labels = ConversationPickerLabels.Share,
+                    labels = conversationPickerLabels(),
                     isInitialDraftLoading = shareDraft.isLoading,
                     initialDraft = shareDraft.draft,
                 )
@@ -142,13 +144,37 @@ class ShareIntentActivity : BugleComponentActivity() {
         return true
     }
 
+    private fun conversationPickerLabels(): ConversationPickerLabels {
+        return when (intent.getStringExtra(EXTRA_CONVERSATION_PICKER_LABELS)) {
+            LABELS_FORWARD -> ConversationPickerLabels.Forward
+            else -> ConversationPickerLabels.Share
+        }
+    }
+
     private data class ShareDraftState(
         val draft: ConversationDraft?,
         val isLoading: Boolean,
         val hasDroppedContent: Boolean,
     )
 
-    private companion object {
+    companion object {
+        internal fun createForwardIntent(
+            context: Context,
+            uri: Uri,
+            contentType: String,
+        ): Intent {
+            return Intent(context, ShareIntentActivity::class.java).apply {
+                action = Intent.ACTION_SEND
+                type = contentType
+                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(EXTRA_CONVERSATION_PICKER_LABELS, LABELS_FORWARD)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+        }
+
         private const val EXTRA_ADDRESS = "address"
+        private const val EXTRA_CONVERSATION_PICKER_LABELS =
+            "com.android.messaging.extra.CONVERSATION_PICKER_LABELS"
+        private const val LABELS_FORWARD = "forward"
     }
 }

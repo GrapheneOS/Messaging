@@ -9,6 +9,7 @@ import com.android.messaging.data.media.model.PhotoViewerItem
 import com.android.messaging.data.media.model.PhotoViewerItems
 import com.android.messaging.data.media.model.PhotoViewerItemsLoadResult
 import com.android.messaging.datamodel.ConversationImagePartsView
+import com.android.messaging.datamodel.MediaScratchFileProvider
 import com.android.messaging.datamodel.data.MessageData
 import io.mockk.every
 import io.mockk.mockk
@@ -109,6 +110,34 @@ internal class PhotoViewerRepositoryImplTest {
             ).firstLoadedForTest()
 
             assertEquals(0, result.initialIndex)
+        }
+    }
+
+    @Test
+    fun getPhotoViewerItems_whenContentUriIsScratchSpace_marksActionsUnavailable() {
+        runTest(context = testDispatcher) {
+            val scratchUri = Uri.parse(
+                "content://${MediaScratchFileProvider.AUTHORITY}/800001?ext=jpg",
+            )
+            val cursor = MatrixCursor(ConversationImagePartsView.PhotoViewQuery.PROJECTION).apply {
+                addPhotoRow(
+                    uri = "content://example/photo/1",
+                    senderName = "Ada",
+                    contentUri = scratchUri.toString(),
+                    contentType = IMAGE_JPEG,
+                    senderDestination = "+15550001",
+                    receivedTimestampMillis = 1000L,
+                    status = MessageData.BUGLE_STATUS_OUTGOING_DRAFT,
+                )
+            }
+            stubContentResolver(cursor = cursor)
+
+            val result = repository.getPhotoViewerItems(
+                photosUri = photosUri,
+                initialPhotoUri = scratchUri,
+            ).firstLoadedForTest()
+
+            assertEquals(false, result.items[0].canUseActions)
         }
     }
 

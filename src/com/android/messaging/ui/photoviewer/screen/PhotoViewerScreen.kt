@@ -83,7 +83,7 @@ internal fun PhotoViewerScreenContent(
     onShareClick: () -> Unit,
 ) {
     val currentItem = uiState.items.getOrNull(index = uiState.currentPage)
-    val actionsEnabled = currentItem != null
+    val actionsEnabled = currentItem?.canUseActions == true
     val dismissDragState = rememberPhotoViewerDismissDragState(
         resetKey = photoViewerLaunchRequestKey(launchRequest = launchRequest),
     )
