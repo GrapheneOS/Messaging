@@ -6,11 +6,11 @@ import com.android.messaging.di.core.IoDispatcher
 import com.android.messaging.util.LogUtil
 import com.android.messaging.util.UriUtil
 import com.android.messaging.util.core.extension.typedFlow
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
-import javax.inject.Inject
 
 internal interface PreparePhotoViewerSendUri {
     operator fun invoke(uri: Uri): Flow<Uri>

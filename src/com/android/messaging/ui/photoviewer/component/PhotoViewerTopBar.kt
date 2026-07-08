@@ -9,11 +9,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.FileDownload
@@ -55,6 +60,7 @@ internal fun PhotoViewerTopBar(
     isVisible: Boolean,
     item: PhotoViewerItem?,
     actionsEnabled: Boolean,
+    navigationBarInsets: WindowInsets = WindowInsets.navigationBars,
     onMetadataClick: () -> Unit,
     onCloseClick: () -> Unit,
     onForwardClick: () -> Unit,
@@ -75,6 +81,7 @@ internal fun PhotoViewerTopBar(
             PhotoViewerTopBarContent(
                 item = item,
                 actionsEnabled = actionsEnabled,
+                navigationBarInsets = navigationBarInsets,
                 onMetadataClick = onMetadataClick,
                 onCloseClick = onCloseClick,
                 onForwardClick = onForwardClick,
@@ -89,6 +96,7 @@ internal fun PhotoViewerTopBar(
 private fun PhotoViewerTopBarContent(
     item: PhotoViewerItem?,
     actionsEnabled: Boolean,
+    navigationBarInsets: WindowInsets,
     onMetadataClick: () -> Unit,
     onCloseClick: () -> Unit,
     onForwardClick: () -> Unit,
@@ -102,6 +110,9 @@ private fun PhotoViewerTopBarContent(
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
+            .windowInsetsPadding(
+                insets = navigationBarInsets.only(sides = WindowInsetsSides.Horizontal),
+            )
             .padding(horizontal = 8.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(space = 2.dp),

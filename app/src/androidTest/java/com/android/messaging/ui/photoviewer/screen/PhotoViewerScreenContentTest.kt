@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -36,6 +37,7 @@ import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_SAVE_BUTTON_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_SHARE_BUTTON_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_TITLE_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_ZOOMABLE_PHOTO_TEST_TAG
+import com.android.messaging.ui.photoviewer.component.PhotoViewerTopBar
 import com.android.messaging.ui.photoviewer.model.PhotoViewerLaunchRequest
 import com.android.messaging.ui.photoviewer.model.PhotoViewerSourceBounds
 import com.android.messaging.ui.photoviewer.screen.model.PhotoViewerDisplayMode
@@ -44,6 +46,7 @@ import com.android.messaging.ui.photoviewer.screen.model.PhotoViewerUiState
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -67,6 +70,93 @@ internal class PhotoViewerScreenContentTest {
         composeRule.onNodeWithTag(testTag = PHOTO_VIEWER_SAVE_BUTTON_TEST_TAG)
             .assertIsDisplayed()
         composeRule.onNodeWithTag(testTag = PHOTO_VIEWER_SHARE_BUTTON_TEST_TAG)
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun topBar_withHorizontalNavigationInsets_keepsEdgeActionsInsideSafeRegion() {
+        val containerWidth = 640.dp
+        val navigationInset = 72.dp
+
+        composeRule.setContent {
+            AppTheme {
+                Box(
+                    modifier = Modifier.size(
+                        width = containerWidth,
+                        height = 360.dp,
+                    ),
+                ) {
+                    PhotoViewerTopBar(
+                        isVisible = true,
+                        item = photoViewerItem(index = 1, senderName = FIRST_SENDER),
+                        actionsEnabled = true,
+                        navigationBarInsets = WindowInsets(
+                            left = navigationInset,
+                            right = navigationInset,
+                        ),
+                        onMetadataClick = {},
+                        onCloseClick = {},
+                        onForwardClick = {},
+                        onSaveClick = {},
+                        onShareClick = {},
+                    )
+                }
+            }
+        }
+
+        composeRule.waitForIdle()
+
+        val containerWidthPx = with(composeRule.density) { containerWidth.toPx() }
+        val navigationInsetPx = with(composeRule.density) { navigationInset.toPx() }
+        val closeButtonBounds = composeRule
+            .onNodeWithTag(testTag = PHOTO_VIEWER_CLOSE_BUTTON_TEST_TAG)
+            .fetchSemanticsNode()
+            .boundsInRoot
+        val overflowButtonBounds = composeRule
+            .onNodeWithTag(testTag = PHOTO_VIEWER_OVERFLOW_BUTTON_TEST_TAG)
+            .fetchSemanticsNode()
+            .boundsInRoot
+
+        assertTrue(closeButtonBounds.left >= navigationInsetPx)
+        assertTrue(overflowButtonBounds.right <= containerWidthPx - navigationInsetPx)
+    }
+
+    @Test
+    fun pager_whenRootWidthShrinks_keepsContentPaddingNonNegative() {
+        val containerWidth = mutableStateOf(value = 900.dp)
+
+        composeRule.setContent {
+            AppTheme {
+                Box(
+                    modifier = Modifier.size(
+                        width = containerWidth.value,
+                        height = 500.dp,
+                    ),
+                ) {
+                    PhotoViewerScreenContent(
+                        launchRequest = launchRequest,
+                        uiState = loadedPhotoViewerUiState(),
+                        onPageSettled = {},
+                        onToggleDisplayMode = {},
+                        onEnterImmersiveMode = {},
+                        onMetadataClick = {},
+                        onMetadataDismissed = {},
+                        onCloseClick = {},
+                        onCloseAnimationFinished = {},
+                        onForwardClick = {},
+                        onSaveClick = {},
+                        onShareClick = {},
+                    )
+                }
+            }
+        }
+
+        composeRule.waitForIdle()
+        composeRule.runOnIdle {
+            containerWidth.value = 320.dp
+        }
+
+        composeRule.onNodeWithTag(testTag = PHOTO_VIEWER_PAGER_TEST_TAG)
             .assertIsDisplayed()
     }
 

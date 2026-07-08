@@ -196,7 +196,7 @@ private fun rememberPhotoViewerPagerLayout(
     return PhotoViewerPagerLayout(
         pageWidth = pageWidth,
         pageSpacing = pageSpacing,
-        horizontalInset = (maxWidth - pageWidth) / 2,
+        horizontalInset = ((maxWidth - pageWidth) / 2).coerceAtLeast(minimumValue = 0.dp),
     )
 }
 

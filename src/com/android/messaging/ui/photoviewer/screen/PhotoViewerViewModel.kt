@@ -19,6 +19,7 @@ import com.android.messaging.ui.photoviewer.screen.model.PhotoViewerLoadState
 import com.android.messaging.ui.photoviewer.screen.model.PhotoViewerUiState
 import com.android.messaging.util.LogUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CancellationException
@@ -34,7 +35,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 internal interface PhotoViewerScreenModel {
     val effects: Flow<PhotoViewerEffect>
