@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -53,6 +55,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -64,6 +67,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
+import com.android.messaging.ui.common.components.horizontalSafeDrawingInsets
 import com.android.messaging.ui.conversation.ConversationActivity
 import com.android.messaging.ui.conversation.conversationSettingsParticipantRowTestTag
 import com.android.messaging.ui.conversationsettings.common.ConversationHeader
@@ -327,14 +331,17 @@ private fun ConversationSettingsList(
     onRequestBlockConfirmation: () -> Unit,
     onRequestSnoozeChooser: () -> Unit,
 ) {
+    val layoutDirection = LocalLayoutDirection.current
+    val horizontalInsets = horizontalSafeDrawingInsets()
+
     LazyColumn(
         state = listState,
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
             top = contentPadding.calculateTopPadding(),
             bottom = contentPadding.calculateBottomPadding() + ScreenContentPadding,
-            start = ScreenContentPadding,
-            end = ScreenContentPadding,
+            start = ScreenContentPadding + horizontalInsets.calculateStartPadding(layoutDirection),
+            end = ScreenContentPadding + horizontalInsets.calculateEndPadding(layoutDirection),
         ),
         verticalArrangement = Arrangement.spacedBy(SectionSpacing),
     ) {
