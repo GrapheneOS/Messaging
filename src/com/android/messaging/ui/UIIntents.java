@@ -161,6 +161,12 @@ public abstract class UIIntents {
     public abstract void launchAddContactActivity(final Context context, final String destination);
 
     /**
+     * Launch a dialog confirming whether to add the given destination to contacts.
+     */
+    public abstract void launchAddContactConfirmation(final Context context,
+            final Uri avatarUri, final String destination);
+
+    /**
      * Launch an activity to show people & options for a given conversation.
      */
     public abstract void launchPeopleAndOptionsActivity(final Activity context,

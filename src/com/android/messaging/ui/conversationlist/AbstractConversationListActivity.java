@@ -36,7 +36,6 @@ import com.android.messaging.ui.BugleActionBarActivity;
 import com.android.messaging.ui.SnackBar;
 import com.android.messaging.ui.SnackBarInteraction;
 import com.android.messaging.ui.UIIntents;
-import com.android.messaging.ui.contact.AddContactsConfirmationDialog;
 import com.android.messaging.ui.conversationlist.ConversationListFragment.ConversationListFragmentHost;
 import com.android.messaging.ui.conversationlist.MultiSelectActionModeCallback.SelectedConversation;
 import com.android.messaging.util.DebugUtils;
@@ -191,9 +190,8 @@ public abstract class AbstractConversationListActivity  extends BugleActionBarAc
         } else {
             avatarUri = null;
         }
-        final AddContactsConfirmationDialog dialog = new AddContactsConfirmationDialog(
+        UIIntents.get().launchAddContactConfirmation(
                 this, avatarUri, conversation.otherParticipantNormalizedDestination);
-        dialog.show();
         exitMultiSelectState();
     }
 

@@ -1,5 +1,6 @@
 package com.android.messaging.ui
 
+import com.android.messaging.ui.contact.AddContactActivity
 import com.android.messaging.ui.conversation.LaunchConversationActivity
 import com.android.messaging.ui.license.LicenseActivity
 import com.android.messaging.ui.permissioncheck.PermissionCheckActivity
@@ -28,6 +29,7 @@ internal class ActivityPermissionGateTest {
         LicenseActivity::class.java,
         TestActivity::class.java,
         ClassZeroActivity::class.java,
+        AddContactActivity::class.java
     )
 
     @Test

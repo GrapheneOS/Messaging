@@ -46,6 +46,7 @@ import com.android.messaging.receiver.NotificationReceiver;
 import com.android.messaging.sms.MmsSmsUtils;
 import com.android.messaging.ui.appsettings.SettingsActivity;
 import com.android.messaging.ui.blockedparticipants.BlockedParticipantsActivity;
+import com.android.messaging.ui.contact.AddContactActivity;
 import com.android.messaging.ui.conversation.ConversationActivity;
 import com.android.messaging.ui.conversation.LaunchConversationActivity;
 import com.android.messaging.ui.conversationlist.ArchivedConversationListActivity;
@@ -209,6 +210,17 @@ public class UIIntentsImpl extends UIIntents {
         intent.setType(Contacts.CONTENT_ITEM_TYPE);
         intent.putExtra(destinationType, destination);
         startExternalActivity(context, intent);
+    }
+
+    @Override
+    public void launchAddContactConfirmation(final Context context, final Uri avatarUri,
+            final String destination) {
+        final Intent intent = new Intent(context, AddContactActivity.class);
+        intent.putExtra(AddContactActivity.EXTRA_DESTINATION, destination);
+        if (avatarUri != null) {
+            intent.putExtra(AddContactActivity.EXTRA_AVATAR_URI, avatarUri.toString());
+        }
+        context.startActivity(intent);
     }
 
     @Override
