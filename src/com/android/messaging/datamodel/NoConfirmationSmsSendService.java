@@ -25,7 +25,6 @@ import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 
 import com.android.messaging.datamodel.action.InsertNewMessageAction;
-import com.android.messaging.datamodel.action.UpdateMessageNotificationAction;
 import com.android.messaging.datamodel.data.MessageData;
 import com.android.messaging.datamodel.data.ParticipantData;
 import com.android.messaging.ui.UIIntents;
@@ -126,8 +125,8 @@ public class NoConfirmationSmsSendService extends IntentService {
                             message);
                 }
                 InsertNewMessageAction.insertNewMessage(messageData);
+                BugleNotifications.updateWithInlineReply(conversationId, message);
             }
-            BugleNotifications.updateWithInlineReply(conversationId, message);
         }
     }
 
