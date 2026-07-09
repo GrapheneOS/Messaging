@@ -8,12 +8,12 @@ import io.mockk.unmockkAll
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.single
-import kotlinx.coroutines.flow.singleOrNull
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -69,9 +69,9 @@ internal class PreparePhotoViewerSendUriImplTest {
             val fileUri = Uri.parse("file:///sdcard/Pictures/photo.jpg")
             every { UriUtil.persistContentToScratchSpace(fileUri) } returns null
 
-            val result = useCase(uri = fileUri).singleOrNull()
+            val result = useCase(uri = fileUri).toList()
 
-            assertNull(result)
+            assertTrue(result.isEmpty())
         }
     }
 }
