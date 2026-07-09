@@ -4,6 +4,8 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
@@ -18,10 +20,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import com.android.messaging.data.media.model.PhotoViewerItem
+import com.android.messaging.ui.common.components.PagerIndicator
 import com.android.messaging.ui.common.components.mediapreview.MediaPreviewBackground
 import com.android.messaging.ui.common.components.mediapreview.MediaPreviewItem
+import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_PAGE_INDICATOR_TEST_TAG
 import com.android.messaging.ui.photoviewer.component.PhotoViewerDismissDragState
 import com.android.messaging.ui.photoviewer.component.PhotoViewerEmptyState
 import com.android.messaging.ui.photoviewer.component.PhotoViewerLoadError
@@ -37,6 +43,7 @@ import kotlinx.collections.immutable.ImmutableList
 
 private const val PHOTO_VIEWER_CLOSE_ANIMATION_MILLIS = 250
 private const val PHOTO_VIEWER_ENTER_ANIMATION_MILLIS = 350
+private val PhotoViewerPageIndicatorBottomPadding = 24.dp
 
 @Composable
 internal fun PhotoViewerAnimatedContent(
@@ -113,10 +120,18 @@ internal fun PhotoViewerContent(
     val shouldShowTopBar by remember(dismissDragState) {
         derivedStateOf { dismissDragState.shouldShowTopBar }
     }
+    val shouldShowChrome = uiState.displayMode == PhotoViewerDisplayMode.Carousel &&
+        currentItem != null &&
+        !uiState.isClosing &&
+        shouldShowTopBar
+    val shouldShowPageIndicator = shouldShowChrome &&
+        uiState.loadState == PhotoViewerLoadState.Loaded &&
+        uiState.items.size > 1
 
     Box(modifier = Modifier.fillMaxSize()) {
         PhotoViewerMediaContent(
             uiState = uiState,
+            isPageIndicatorVisible = shouldShowPageIndicator,
             onPageSettled = onPageSettled,
             onToggleDisplayMode = onToggleDisplayMode,
             onEnterImmersiveMode = onEnterImmersiveMode,
@@ -150,10 +165,7 @@ internal fun PhotoViewerContent(
         }
 
         PhotoViewerTopBar(
-            isVisible = uiState.displayMode == PhotoViewerDisplayMode.Carousel &&
-                currentItem != null &&
-                !uiState.isClosing &&
-                shouldShowTopBar,
+            isVisible = shouldShowChrome,
             item = currentItem,
             actionsEnabled = actionsEnabled,
             onMetadataClick = onMetadataClick,
@@ -168,6 +180,7 @@ internal fun PhotoViewerContent(
 @Composable
 private fun PhotoViewerMediaContent(
     uiState: PhotoViewerUiState,
+    isPageIndicatorVisible: Boolean,
     onPageSettled: (Int) -> Unit,
     onToggleDisplayMode: () -> Unit,
     onEnterImmersiveMode: () -> Unit,
@@ -184,23 +197,37 @@ private fun PhotoViewerMediaContent(
         onPageSettled = onPageSettled,
     )
 
-    PhotoViewerBlurredBackground(
-        dismissDragState = dismissDragState,
-        items = rememberPhotoViewerPreviewItems(items = uiState.items),
-        pagerState = pagerState,
-    )
+    Box(modifier = Modifier.fillMaxSize()) {
+        PhotoViewerBlurredBackground(
+            dismissDragState = dismissDragState,
+            items = rememberPhotoViewerPreviewItems(items = uiState.items),
+            pagerState = pagerState,
+        )
 
-    PhotoViewerPager(
-        modifier = Modifier.fillMaxSize(),
-        items = uiState.items,
-        pagerState = pagerState,
-        displayMode = uiState.displayMode,
-        isClosing = uiState.isClosing,
-        onToggleDisplayMode = onToggleDisplayMode,
-        onEnterImmersiveMode = onEnterImmersiveMode,
-        dismissDragState = dismissDragState,
-        onCloseClick = onCloseClick,
-    )
+        PhotoViewerPager(
+            modifier = Modifier.fillMaxSize(),
+            items = uiState.items,
+            pagerState = pagerState,
+            displayMode = uiState.displayMode,
+            isClosing = uiState.isClosing,
+            onToggleDisplayMode = onToggleDisplayMode,
+            onEnterImmersiveMode = onEnterImmersiveMode,
+            dismissDragState = dismissDragState,
+            onCloseClick = onCloseClick,
+        )
+
+        if (isPageIndicatorVisible) {
+            PagerIndicator(
+                modifier = Modifier
+                    .align(alignment = Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .padding(bottom = PhotoViewerPageIndicatorBottomPadding)
+                    .testTag(tag = PHOTO_VIEWER_PAGE_INDICATOR_TEST_TAG),
+                pagerState = pagerState,
+                pageCount = uiState.items.size,
+            )
+        }
+    }
 }
 
 @Composable

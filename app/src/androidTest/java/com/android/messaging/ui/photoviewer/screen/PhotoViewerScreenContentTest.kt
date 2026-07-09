@@ -33,6 +33,7 @@ import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_FORWARD_MENU_ITEM_TEST_
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_METADATA_SHEET_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_OVERFLOW_BUTTON_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_PAGER_TEST_TAG
+import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_PAGE_INDICATOR_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_SAVE_BUTTON_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_SHARE_BUTTON_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_TITLE_TEST_TAG
@@ -71,6 +72,44 @@ internal class PhotoViewerScreenContentTest {
             .assertIsDisplayed()
         composeRule.onNodeWithTag(testTag = PHOTO_VIEWER_SHARE_BUTTON_TEST_TAG)
             .assertIsDisplayed()
+    }
+
+    @Test
+    fun pageIndicator_whenMultipleItemsInCarousel_isDisplayed() {
+        setScreenContent()
+
+        composeRule.onNodeWithTag(testTag = PHOTO_VIEWER_PAGE_INDICATOR_TEST_TAG)
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun pageIndicator_whenSingleItem_doesNotExist() {
+        setScreenContent(
+            uiState = loadedPhotoViewerUiState(itemCount = 1),
+        )
+
+        composeRule.onNodeWithTag(testTag = PHOTO_VIEWER_PAGE_INDICATOR_TEST_TAG)
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun pageIndicator_whenImmersive_doesNotExist() {
+        setScreenContent(
+            uiState = loadedPhotoViewerUiState(displayMode = PhotoViewerDisplayMode.Immersive),
+        )
+
+        composeRule.onNodeWithTag(testTag = PHOTO_VIEWER_PAGE_INDICATOR_TEST_TAG)
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun pageIndicator_whenClosing_doesNotExist() {
+        setScreenContent(
+            uiState = loadedPhotoViewerUiState(isClosing = true),
+        )
+
+        composeRule.onNodeWithTag(testTag = PHOTO_VIEWER_PAGE_INDICATOR_TEST_TAG)
+            .assertDoesNotExist()
     }
 
     @Test
@@ -482,17 +521,28 @@ internal class PhotoViewerScreenContentTest {
 
     private fun loadedPhotoViewerUiState(
         firstItemCanUseActions: Boolean = true,
+        itemCount: Int = 2,
+        displayMode: PhotoViewerDisplayMode = PhotoViewerDisplayMode.Carousel,
+        isClosing: Boolean = false,
     ): PhotoViewerUiState {
-        return PhotoViewerUiState(
-            items = persistentListOf(
-                photoViewerItem(
-                    index = 1,
-                    senderName = FIRST_SENDER,
-                    canUseActions = firstItemCanUseActions,
-                ),
+        val firstItem = photoViewerItem(
+            index = 1,
+            senderName = FIRST_SENDER,
+            canUseActions = firstItemCanUseActions,
+        )
+        val items = when (itemCount) {
+            1 -> persistentListOf(firstItem)
+            else -> persistentListOf(
+                firstItem,
                 photoViewerItem(index = 2, senderName = SECOND_SENDER),
-            ),
+            )
+        }
+
+        return PhotoViewerUiState(
+            items = items,
             loadState = PhotoViewerLoadState.Loaded,
+            displayMode = displayMode,
+            isClosing = isClosing,
         )
     }
 

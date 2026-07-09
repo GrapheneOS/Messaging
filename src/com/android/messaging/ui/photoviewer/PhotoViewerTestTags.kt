@@ -6,6 +6,7 @@ internal const val PHOTO_VIEWER_FORWARD_MENU_ITEM_TEST_TAG = "photo_viewer_forwa
 internal const val PHOTO_VIEWER_METADATA_SHEET_TEST_TAG = "photo_viewer_metadata_sheet"
 internal const val PHOTO_VIEWER_OVERFLOW_BUTTON_TEST_TAG = "photo_viewer_overflow_button"
 internal const val PHOTO_VIEWER_PAGER_TEST_TAG = "photo_viewer_pager"
+internal const val PHOTO_VIEWER_PAGE_INDICATOR_TEST_TAG = "photo_viewer_page_indicator"
 internal const val PHOTO_VIEWER_SAVE_BUTTON_TEST_TAG = "photo_viewer_save_button"
 internal const val PHOTO_VIEWER_SHARE_BUTTON_TEST_TAG = "photo_viewer_share_button"
 internal const val PHOTO_VIEWER_TITLE_TEST_TAG = "photo_viewer_title"
