@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-#include <jni.h>
 #include <array>
 #include <chrono>
 #include <memory>
 #include <ratio>
 #include <vector>
 
+#include <jni.h>
 #include <android/log.h>
 
 #include "GifTranscoder.h"
@@ -86,9 +86,9 @@ constexpr ColorARGB makeColorARGB(uint8_t a, uint8_t r, uint8_t g, uint8_t b) no
            (static_cast<ColorARGB>(g) << 8) | static_cast<ColorARGB>(b);
 }
 
-constexpr int64_t MAX_COLOR_DISTANCE = 255 * 255 * 255;
+constexpr uint32_t MAX_COLOR_DISTANCE = 255 * 255 * 255;
 
-constexpr int64_t GIF_MAX_AREA = 4LL * 1024 * 1024;
+constexpr size_t GIF_MAX_AREA = 4LL * 1024 * 1024;
 
 // A monotonically increasing timestamp in milliseconds, for measuring elapsed durations.
 [[nodiscard]]
@@ -153,7 +153,7 @@ bool GifTranscoder::resizeBoxFilter(GifFileType* gifIn, GifFileType* gifOut) {
         return false;
     }
 
-    if (static_cast<int64_t>(gifIn->SWidth) * gifIn->SHeight > GIF_MAX_AREA) {
+    if (static_cast<uint64_t>(gifIn->SWidth) * gifIn->SHeight > GIF_MAX_AREA) {
         LOGE("Input GIF is too large: %d x %d", gifIn->SWidth, gifIn->SHeight);
         return false;
     }
