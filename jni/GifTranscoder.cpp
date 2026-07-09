@@ -15,31 +15,15 @@
  */
 
 #include <jni.h>
-#include <time.h>
-#include <stdio.h>
+#include <array>
+#include <chrono>
 #include <memory>
+#include <ratio>
 #include <vector>
 
 #include <android/log.h>
 
 #include "GifTranscoder.h"
-
-#define SQUARE(a) ((a)*(a))
-
-// GIF does not support partial transparency, so our alpha channels are always 0x0 or 0xff.
-static const ColorARGB TRANSPARENT = 0x0;
-
-#define ALPHA(color) (((color) >> 24) & 0xff)
-#define RED(color)   (((color) >> 16) & 0xff)
-#define GREEN(color) (((color) >>  8) & 0xff)
-#define BLUE(color)  (((color) >>  0) & 0xff)
-
-#define MAKE_COLOR_ARGB(a, r, g, b) \
-    ((a) << 24 | (r) << 16 | (g) << 8 | (b))
-
-#define MAX_COLOR_DISTANCE (255 * 255 * 255)
-
-static const int64_t kGifMaxArea = 4LL * 1024 * 1024;
 
 #define TAG "GifTranscoder.cpp"
 #define LOGD_ENABLED 0
@@ -59,19 +43,64 @@ static const int64_t kGifMaxArea = 4LL * 1024 * 1024;
     : (void) 0 )
 #define ASSERT_ENABLED 1
 
+using std::array;
+using std::milli;
+using std::unique_ptr;
+using std::vector;
+using std::chrono::duration;
+using std::chrono::steady_clock;
+
 namespace {
 
-// Current time in milliseconds since Unix epoch.
-double now(void) {
-    struct timespec res;
-    clock_gettime(CLOCK_REALTIME, &res);
-    return 1000.0 * res.tv_sec + (double) res.tv_nsec / 1e6;
+[[nodiscard]]
+constexpr int square(int a) noexcept {
+    return a * a;
+}
+
+// GIF does not support partial transparency, so our alpha channels are always 0x0 or 0xff.
+constexpr ColorARGB TRANSPARENT = 0x0;
+
+[[nodiscard]]
+constexpr uint8_t alpha(ColorARGB color) noexcept {
+    return (color >> 24) & 0xff;
+}
+
+[[nodiscard]]
+constexpr uint8_t red(ColorARGB color) noexcept {
+    return (color >> 16) & 0xff;
+}
+
+[[nodiscard]]
+constexpr uint8_t green(ColorARGB color) noexcept {
+    return (color >> 8) & 0xff;
+}
+
+[[nodiscard]]
+constexpr uint8_t blue(ColorARGB color) noexcept {
+    return (color >> 0) & 0xff;
+}
+
+[[nodiscard]]
+constexpr ColorARGB makeColorARGB(uint8_t a, uint8_t r, uint8_t g, uint8_t b) noexcept {
+    return (static_cast<ColorARGB>(a) << 24) | (static_cast<ColorARGB>(r) << 16) |
+           (static_cast<ColorARGB>(g) << 8) | static_cast<ColorARGB>(b);
+}
+
+constexpr int64_t MAX_COLOR_DISTANCE = 255 * 255 * 255;
+
+constexpr int64_t GIF_MAX_AREA = 4LL * 1024 * 1024;
+
+// A monotonically increasing timestamp in milliseconds, for measuring elapsed durations.
+[[nodiscard]]
+double now() noexcept {
+    return duration<double, milli>(steady_clock::now().time_since_epoch()).count();
 }
 
 // Gets the pixel at position (x,y) from a buffer that uses row-major order to store an image with
 // the specified width.
 template <typename T>
-T* getPixel(T* buffer, int width, int x, int y) {
+[[nodiscard]]
+T* getPixel(T* buffer, int width, int x, int y) noexcept {
     return buffer + (y * width + x);
 }
 
@@ -116,15 +145,15 @@ int GifTranscoder::transcode(const char* pathIn, const char* pathOut) {
 }
 
 bool GifTranscoder::resizeBoxFilter(GifFileType* gifIn, GifFileType* gifOut) {
-    ASSERT(gifIn != NULL, "gifIn cannot be NULL");
-    ASSERT(gifOut != NULL, "gifOut cannot be NULL");
+    ASSERT(gifIn != nullptr, "gifIn cannot be nullptr");
+    ASSERT(gifOut != nullptr, "gifOut cannot be nullptr");
 
     if (gifIn->SWidth < 0 || gifIn->SHeight < 0) {
         LOGE("Input GIF has invalid size: %d x %d", gifIn->SWidth, gifIn->SHeight);
         return false;
     }
 
-    if ((int64_t) gifIn->SWidth * gifIn->SHeight > kGifMaxArea) {
+    if (static_cast<int64_t>(gifIn->SWidth) * gifIn->SHeight > GIF_MAX_AREA) {
         LOGE("Input GIF is too large: %d x %d", gifIn->SWidth, gifIn->SHeight);
         return false;
     }
@@ -148,13 +177,13 @@ bool GifTranscoder::resizeBoxFilter(GifFileType* gifIn, GifFileType* gifOut) {
     int transparentColor = NO_TRANSPARENT_COLOR;
 
     // Buffer for reading raw images from the input GIF.
-    std::vector<GifByteType> srcBuffer(gifIn->SWidth * gifIn->SHeight);
+    vector<GifByteType> srcBuffer(gifIn->SWidth * gifIn->SHeight);
 
     // Buffer for rendering images from the input GIF.
-    std::unique_ptr<ColorARGB[]> renderBuffer(new ColorARGB[gifIn->SWidth * gifIn->SHeight]);
+    unique_ptr<ColorARGB[]> renderBuffer(new ColorARGB[gifIn->SWidth * gifIn->SHeight]);
 
     // Buffer for writing new images to output GIF (one row at a time).
-    std::unique_ptr<GifByteType[]> dstRowBuffer(new GifByteType[gifOut->SWidth]);
+    unique_ptr<GifByteType[]> dstRowBuffer(new GifByteType[gifOut->SWidth]);
 
     // Many GIFs use DISPOSE_DO_NOT to make images draw on top of previous images. They can also
     // use DISPOSE_BACKGROUND to clear the last image region before drawing the next one. We need
@@ -174,7 +203,7 @@ bool GifTranscoder::resizeBoxFilter(GifFileType* gifIn, GifFileType* gifOut) {
         }
         LOGD("Read record type: %d", recordType);
         switch (recordType) {
-            case IMAGE_DESC_RECORD_TYPE: {
+            case GifRecordType::IMAGE_DESC_RECORD_TYPE: {
                 if (DGifGetImageDesc(gifIn) == GIF_ERROR) {
                     LOGE("Could not read image descriptor (%d)", imageIndex);
                     return false;
@@ -227,9 +256,9 @@ bool GifTranscoder::resizeBoxFilter(GifFileType* gifIn, GifFileType* gifOut) {
                 // Generate the image in the output GIF.
                 for (int y = 0; y < gifOut->SHeight; y++) {
                     for (int x = 0; x < gifOut->SWidth; x++) {
-                      const GifByteType dstColorIndex = computeNewColorIndex(
-                          gifIn, transparentColor, renderBuffer.get(), x, y);
-                      *(dstRowBuffer.get() + x) = dstColorIndex;
+                        const GifByteType dstColorIndex = computeNewColorIndex(
+                            gifIn, transparentColor, renderBuffer.get(), x, y);
+                        *(dstRowBuffer.get() + x) = dstColorIndex;
                     }
                     if (EGifPutLine(gifOut, dstRowBuffer.get(), gifOut->SWidth) == GIF_ERROR) {
                         LOGE("Could not write raster data (%d)", imageIndex);
@@ -255,12 +284,12 @@ bool GifTranscoder::resizeBoxFilter(GifFileType* gifIn, GifFileType* gifOut) {
 
                 if (gifOut->Image.ColorMap) {
                     GifFreeMapObject(gifOut->Image.ColorMap);
-                    gifOut->Image.ColorMap = NULL;
+                    gifOut->Image.ColorMap = nullptr;
                 }
 
                 imageIndex++;
             } break;
-            case EXTENSION_RECORD_TYPE: {
+            case GifRecordType::EXTENSION_RECORD_TYPE: {
                 int extCode;
                 GifByteType* ext;
                 if (DGifGetExtension(gifIn, &extCode, &ext) == GIF_ERROR) {
@@ -268,7 +297,7 @@ bool GifTranscoder::resizeBoxFilter(GifFileType* gifIn, GifFileType* gifOut) {
                     return false;
                 }
                 LOGD("Read extension block, code: %d", extCode);
-                if (extCode == GRAPHICS_EXT_FUNC_CODE && ext != NULL) {
+                if (extCode == GRAPHICS_EXT_FUNC_CODE && ext != nullptr) {
                     GraphicsControlBlock gcb;
                     if (DGifExtensionToGCB(ext[0], ext + 1, &gcb) == GIF_ERROR) {
                         LOGE("Could not interpret GCB extension");
@@ -302,18 +331,18 @@ bool GifTranscoder::resizeBoxFilter(GifFileType* gifIn, GifFileType* gifOut) {
                     LOGE("Could not write extension leader");
                     return false;
                 }
-                if (ext != NULL &&
+                if (ext != nullptr &&
                         EGifPutExtensionBlock(gifOut, ext[0], ext + 1) == GIF_ERROR) {
                     LOGE("Could not write extension block");
                     return false;
                 }
                 LOGD("Wrote extension block");
-                while (ext != NULL) {
+                while (ext != nullptr) {
                     if (DGifGetExtensionNext(gifIn, &ext) == GIF_ERROR) {
                         LOGE("Could not read extension continuation");
                         return false;
                     }
-                    if (ext != NULL) {
+                    if (ext != nullptr) {
                         LOGD("Read extension continuation");
                         if (EGifPutExtensionBlock(gifOut, ext[0], ext + 1) == GIF_ERROR) {
                             LOGE("Could not write extension continuation");
@@ -329,7 +358,7 @@ bool GifTranscoder::resizeBoxFilter(GifFileType* gifIn, GifFileType* gifOut) {
             } break;
         }
 
-    } while (recordType != TERMINATE_RECORD_TYPE);
+    } while (recordType != GifRecordType::TERMINATE_RECORD_TYPE);
     LOGD("No more records");
 
     return true;
@@ -337,8 +366,8 @@ bool GifTranscoder::resizeBoxFilter(GifFileType* gifIn, GifFileType* gifOut) {
 
 bool GifTranscoder::readImage(GifFileType* gifIn, GifByteType* rasterBits) {
     if (gifIn->Image.Interlace) {
-        int interlacedOffset[] = { 0, 4, 2, 1 };
-        int interlacedJumps[] = { 8, 8, 4, 2 };
+        array<int, 4> interlacedOffset = { 0, 4, 2, 1 };
+        array<int, 4> interlacedJumps = { 8, 8, 4, 2 };
 
         // Need to perform 4 passes on the image
         for (int i = 0; i < 4; i++) {
@@ -372,7 +401,7 @@ bool GifTranscoder::renderImage(GifFileType* gifIn,
            "Image index %d is out of bounds (count=%d)", imageIndex, gifIn->ImageCount);
 
     ColorMapObject* colorMap = getColorMap(gifIn);
-    if (colorMap == NULL) {
+    if (colorMap == nullptr) {
         LOGE("No GIF color map found");
         return false;
     }
@@ -440,6 +469,7 @@ GifByteType GifTranscoder::computeNewColorIndex(GifFileType* gifIn,
                                                 int x,
                                                 int y) {
     ColorMapObject* colorMap = getColorMap(gifIn);
+    ASSERT(colorMap != nullptr, "No GIF color map found");
 
     // Compute the average color of 4 adjacent pixels from the input image.
     ColorARGB c1 = *getPixel(renderBuffer, gifIn->SWidth, x * 2, y * 2);
@@ -453,22 +483,18 @@ GifByteType GifTranscoder::computeNewColorIndex(GifFileType* gifIn,
 }
 
 ColorARGB GifTranscoder::computeAverage(ColorARGB c1, ColorARGB c2, ColorARGB c3, ColorARGB c4) {
-    char avgAlpha = (char)(((int) ALPHA(c1) + (int) ALPHA(c2) +
-                            (int) ALPHA(c3) + (int) ALPHA(c4)) / 4);
-    char avgRed =   (char)(((int) RED(c1) + (int) RED(c2) +
-                            (int) RED(c3) + (int) RED(c4)) / 4);
-    char avgGreen = (char)(((int) GREEN(c1) + (int) GREEN(c2) +
-                            (int) GREEN(c3) + (int) GREEN(c4)) / 4);
-    char avgBlue =  (char)(((int) BLUE(c1) + (int) BLUE(c2) +
-                            (int) BLUE(c3) + (int) BLUE(c4)) / 4);
-    return MAKE_COLOR_ARGB(avgAlpha, avgRed, avgGreen, avgBlue);
+    uint8_t avgAlpha = static_cast<uint8_t>((alpha(c1) + alpha(c2) + alpha(c3) + alpha(c4)) / 4);
+    uint8_t avgRed = static_cast<uint8_t>((red(c1) + red(c2) + red(c3) + red(c4)) / 4);
+    uint8_t avgGreen = static_cast<uint8_t>((green(c1) + green(c2) + green(c3) + green(c4)) / 4);
+    uint8_t avgBlue = static_cast<uint8_t>((blue(c1) + blue(c2) + blue(c3) + blue(c4)) / 4);
+    return makeColorARGB(avgAlpha, avgRed, avgGreen, avgBlue);
 }
 
 GifByteType GifTranscoder::findBestColor(ColorMapObject* colorMap, int transparentColorIndex,
                                          ColorARGB targetColor) {
     // Return the transparent color if the average alpha is zero.
-    char alpha = ALPHA(targetColor);
-    if (alpha == 0 && transparentColorIndex != NO_TRANSPARENT_COLOR) {
+    uint8_t a = alpha(targetColor);
+    if (a == 0 && transparentColorIndex != NO_TRANSPARENT_COLOR) {
         return transparentColorIndex;
     }
 
@@ -490,9 +516,9 @@ GifByteType GifTranscoder::findBestColor(ColorMapObject* colorMap, int transpare
 }
 
 int GifTranscoder::computeDistance(ColorARGB c1, ColorARGB c2) {
-    return SQUARE(RED(c1) - RED(c2)) +
-           SQUARE(GREEN(c1) - GREEN(c2)) +
-           SQUARE(BLUE(c1) - BLUE(c2));
+    return square(red(c1) - red(c2)) +
+           square(green(c1) - green(c2)) +
+           square(blue(c1) - blue(c2));
 }
 
 ColorMapObject* GifTranscoder::getColorMap(GifFileType* gifIn) {
@@ -511,38 +537,38 @@ ColorARGB GifTranscoder::getColorARGB(ColorMapObject* colorMap, int transparentC
 }
 
 ColorARGB GifTranscoder::gifColorToColorARGB(const GifColorType& color) {
-    return MAKE_COLOR_ARGB(0xff, color.Red, color.Green, color.Blue);
+    return makeColorARGB(0xff, color.Red, color.Green, color.Blue);
 }
 
 GifFilesCloser::~GifFilesCloser() {
     if (mGifIn) {
-        DGifCloseFile(mGifIn, NULL);
-        mGifIn = NULL;
+        DGifCloseFile(mGifIn, nullptr);
+        mGifIn = nullptr;
     }
     if (mGifOut) {
-        EGifCloseFile(mGifOut, NULL);
-        mGifOut = NULL;
+        EGifCloseFile(mGifOut, nullptr);
+        mGifOut = nullptr;
     }
 }
 
 void GifFilesCloser::setGifIn(GifFileType* gifIn) {
-    ASSERT(mGifIn == NULL, "mGifIn is already set");
+    ASSERT(mGifIn == nullptr, "mGifIn is already set");
     mGifIn = gifIn;
 }
 
 void GifFilesCloser::releaseGifIn() {
-    ASSERT(mGifIn != NULL, "mGifIn is already NULL");
-    mGifIn = NULL;
+    ASSERT(mGifIn != nullptr, "mGifIn is already nullptr");
+    mGifIn = nullptr;
 }
 
 void GifFilesCloser::setGifOut(GifFileType* gifOut) {
-    ASSERT(mGifOut == NULL, "mGifOut is already set");
+    ASSERT(mGifOut == nullptr, "mGifOut is already set");
     mGifOut = gifOut;
 }
 
 void GifFilesCloser::releaseGifOut() {
-    ASSERT(mGifOut != NULL, "mGifOut is already NULL");
-    mGifOut = NULL;
+    ASSERT(mGifOut != nullptr, "mGifOut is already nullptr");
+    mGifOut = nullptr;
 }
 
 // JNI stuff
@@ -560,16 +586,16 @@ jboolean transcode(JNIEnv* env, jobject clazz, jstring filePath, jstring outFile
     return (gifCode == GIF_OK);
 }
 
-const char *kClassPathName = "com/android/messaging/util/GifTranscoder";
+constexpr char CLASS_PATH_NAME[] = "com/android/messaging/util/GifTranscoder";
 
-JNINativeMethod kMethods[] = {
-        { "transcodeInternal", "(Ljava/lang/String;Ljava/lang/String;)Z", (void*)transcode },
+const JNINativeMethod METHODS[] = {
+    { "transcodeInternal", "(Ljava/lang/String;Ljava/lang/String;)Z", reinterpret_cast<void*>(transcode) },
 };
 
 int registerNativeMethods(JNIEnv* env, const char* className,
-                          JNINativeMethod* gMethods, int numMethods) {
+                          const JNINativeMethod* gMethods, int numMethods) {
     jclass clazz = env->FindClass(className);
-    if (clazz == NULL) {
+    if (clazz == nullptr) {
         return JNI_FALSE;
     }
     if (env->RegisterNatives(clazz, gMethods, numMethods) < 0) {
@@ -583,8 +609,8 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     if (vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) != JNI_OK) {
         return -1;
     }
-    if (!registerNativeMethods(env, kClassPathName,
-                               kMethods, sizeof(kMethods) / sizeof(kMethods[0]))) {
+    if (!registerNativeMethods(env, CLASS_PATH_NAME,
+                               METHODS, sizeof(METHODS) / sizeof(METHODS[0]))) {
       return -1;
     }
     return JNI_VERSION_1_6;
