@@ -114,7 +114,7 @@ private fun PhotoViewerTopBarContent(
             .windowInsetsPadding(
                 insets = navigationBarInsets.only(sides = WindowInsetsSides.Horizontal),
             )
-            .padding(horizontal = 8.dp, vertical = 8.dp),
+            .padding(all = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(space = 2.dp),
     ) {
