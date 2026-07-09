@@ -37,6 +37,9 @@ internal interface ClassZeroScreenModel {
     fun onSaveClicked()
     fun onCancelClicked()
 
+    fun onHostStarted()
+    fun onHostStopped()
+
     fun onInitialMessageReceived(messageValues: ContentValues?)
     fun onNewMessageReceived(messageValues: ContentValues?)
 }
@@ -63,6 +66,7 @@ internal class ClassZeroViewModel @Inject constructor(
     private var messageSequence = 0
     private var timeoutJob: Job? = null
     private var isCompletingCurrentMessage = false
+    private var isHostStarted = false
 
     private val _effects = MutableSharedFlow<ClassZeroScreenEffect>(
         replay = 1,
@@ -101,8 +105,22 @@ internal class ClassZeroViewModel @Inject constructor(
         )
     }
 
+    override fun onHostStarted() {
+        if (isHostStarted) {
+            return
+        }
+
+        isHostStarted = true
+        scheduleCurrentMessageTimeout()
+    }
+
+    override fun onHostStopped() {
+        isHostStarted = false
+        cancelTimeout()
+    }
+
     private fun handleTimeoutExpired(sequence: Int) {
-        if (sequence != messageSequence || currentMessageValues == null) {
+        if (!isHostStarted || sequence != messageSequence || currentMessageValues == null) {
             return
         }
 
@@ -215,6 +233,18 @@ internal class ClassZeroViewModel @Inject constructor(
         _uiState.value = ClassZeroUiState(
             messageText = messageText,
         )
+
+        scheduleCurrentMessageTimeout()
+    }
+
+    private fun scheduleCurrentMessageTimeout() {
+        if (!isHostStarted) {
+            return
+        }
+
+        val timerFireAtUptimeMillis = savedStateHandle
+            .get<Long>(CLASS_ZERO_TIMER_FIRE_STATE_KEY)
+            ?: return
 
         scheduleTimeout(
             sequence = messageSequence,

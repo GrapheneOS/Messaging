@@ -64,6 +64,18 @@ class ClassZeroActivity : ComponentActivity() {
         )
     }
 
+    override fun onStart() {
+        super.onStart()
+
+        screenModel.onHostStarted()
+    }
+
+    override fun onStop() {
+        screenModel.onHostStopped()
+
+        super.onStop()
+    }
+
     private fun collectScreenModel() {
         lifecycleScope.launch(mainDispatcher) {
             repeatOnLifecycle(state = Lifecycle.State.STARTED) {

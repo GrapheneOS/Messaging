@@ -201,6 +201,85 @@ class ClassZeroViewModelTest {
     }
 
     @Test
+    fun stoppedHostDoesNotProcessExpiredMessageUntilRestarted() {
+        val saveClassZeroMessage = mockSaveClassZeroMessage()
+        val viewModel = createViewModel(saveClassZeroMessage = saveClassZeroMessage)
+
+        viewModel.onInitialMessageReceived(
+            messageValues = messageValues(messageText = FIRST_MESSAGE),
+        )
+        viewModel.onNewMessageReceived(
+            messageValues = messageValues(messageText = SECOND_MESSAGE),
+        )
+        viewModel.onHostStopped()
+        advanceTimeoutBy(delayMillis = CLASS_ZERO_DEFAULT_TIMEOUT_MILLIS)
+
+        assertUiState(
+            viewModel = viewModel,
+            messageText = FIRST_MESSAGE,
+        )
+        verify(exactly = 0) {
+            @Suppress("UnusedFlow")
+            saveClassZeroMessage(messageValues = any())
+        }
+
+        SystemClock.setCurrentTimeMillis(
+            START_UPTIME_MILLIS + CLASS_ZERO_DEFAULT_TIMEOUT_MILLIS,
+        )
+        viewModel.onHostStarted()
+
+        assertUiState(
+            viewModel = viewModel,
+            messageText = SECOND_MESSAGE,
+        )
+        val savedMessage = slot<ContentValues>()
+        verify(exactly = 1) {
+            @Suppress("UnusedFlow")
+            saveClassZeroMessage(messageValues = capture(savedMessage))
+        }
+        assertSavedMessage(
+            messageValues = savedMessage.captured,
+            messageText = FIRST_MESSAGE,
+            isRead = false,
+        )
+        viewModel.onCancelClicked()
+    }
+
+    @Test
+    fun restartedHostUsesOriginalTimeoutDeadline() {
+        val saveClassZeroMessage = mockSaveClassZeroMessage()
+        val viewModel = createViewModel(saveClassZeroMessage = saveClassZeroMessage)
+
+        viewModel.onInitialMessageReceived(
+            messageValues = messageValues(messageText = FIRST_MESSAGE),
+        )
+        viewModel.onHostStopped()
+
+        SystemClock.setCurrentTimeMillis(START_UPTIME_MILLIS + ONE_MINUTE_MILLIS)
+        viewModel.onHostStarted()
+        advanceTimeoutBy(
+            delayMillis = CLASS_ZERO_DEFAULT_TIMEOUT_MILLIS - ONE_MINUTE_MILLIS - 1L,
+        )
+
+        assertUiState(
+            viewModel = viewModel,
+            messageText = FIRST_MESSAGE,
+        )
+        verify(exactly = 0) {
+            @Suppress("UnusedFlow")
+            saveClassZeroMessage(messageValues = any())
+        }
+
+        advanceTimeoutBy(delayMillis = 1L)
+
+        assertNull(viewModel.uiState.value)
+        verify(exactly = 1) {
+            @Suppress("UnusedFlow")
+            saveClassZeroMessage(messageValues = any())
+        }
+    }
+
+    @Test
     fun newMessageWhileDisplayingIsQueuedAndShownAfterCurrentCompletes() {
         runTest {
             val saveClassZeroMessage = mockSaveClassZeroMessage()
@@ -374,12 +453,15 @@ class ClassZeroViewModelTest {
         defaultDispatcher: CoroutineDispatcher = mainDispatcherRule.testDispatcher,
         mainDispatcher: CoroutineDispatcher = mainDispatcherRule.testDispatcher,
     ): ClassZeroViewModel {
-        return ClassZeroViewModel(
+        val viewModel = ClassZeroViewModel(
             saveClassZeroMessage = saveClassZeroMessage,
             savedStateHandle = savedStateHandle,
             defaultDispatcher = defaultDispatcher,
             mainDispatcher = mainDispatcher,
         )
+        viewModel.onHostStarted()
+
+        return viewModel
     }
 
     private fun messageValues(messageText: String): ContentValues {
@@ -426,6 +508,7 @@ class ClassZeroViewModelTest {
         private const val SECOND_MESSAGE = "Second class zero message"
         private const val BLANK_MESSAGE = "   "
         private const val START_UPTIME_MILLIS = 1_000L
+        private const val ONE_MINUTE_MILLIS = 60 * 1000L
         private const val RESTORED_TIMER_FIRE_UPTIME_MILLIS = 42_000L
     }
 }
