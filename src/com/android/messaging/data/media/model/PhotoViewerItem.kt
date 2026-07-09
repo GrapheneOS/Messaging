@@ -7,18 +7,10 @@ import androidx.compose.runtime.Immutable
 internal data class PhotoViewerItem(
     val contentUri: Uri,
     val contentType: String,
+    val isIncoming: Boolean,
     val senderName: String?,
     val senderDestination: String?,
     val receivedTimestampMillis: Long,
     val isDraft: Boolean,
     val canUseActions: Boolean = true,
-) {
-    val title: String
-        get() {
-            return senderName
-                ?.takeIf { it.isNotBlank() }
-                ?: senderDestination
-                    ?.takeIf { it.isNotBlank() }
-                    .orEmpty()
-        }
-}
+)

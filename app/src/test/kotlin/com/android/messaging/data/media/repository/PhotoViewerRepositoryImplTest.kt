@@ -76,10 +76,12 @@ internal class PhotoViewerRepositoryImplTest {
 
             assertEquals(1, result.initialIndex)
             assertEquals(2, result.items.size)
+            assertEquals(true, result.items[0].isIncoming)
             assertEquals(
                 PhotoViewerItem(
                     contentUri = Uri.parse("content://example/content/2?updated=true"),
                     contentType = IMAGE_JPEG,
+                    isIncoming = false,
                     senderName = null,
                     senderDestination = "+15550002",
                     receivedTimestampMillis = 2000L,

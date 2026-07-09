@@ -34,6 +34,7 @@ import com.android.messaging.R
 import com.android.messaging.data.media.model.PhotoViewerItem
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_METADATA_RECEIVED_TIMESTAMP_TEST_TAG
+import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_METADATA_SENDER_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_METADATA_SHEET_TEST_TAG
 import com.android.messaging.ui.photoviewer.preview.previewPhotoViewerItems
 import com.android.messaging.util.Dates
@@ -120,8 +121,8 @@ private fun PhotoViewerMetadataGroup(
     ) {
         PhotoViewerMetadataRow(
             label = stringResource(id = R.string.message_details_from_label),
-            value = item.title.takeIf { it.isNotBlank() }
-                ?: stringResource(id = R.string.unknown_sender),
+            value = photoViewerParticipantTitle(item = item),
+            valueModifier = Modifier.testTag(tag = PHOTO_VIEWER_METADATA_SENDER_TEST_TAG),
         )
         if (!item.isDraft) {
             PhotoViewerMetadataRow(
@@ -188,6 +189,7 @@ private fun PhotoViewerMetadataRow(
     modifier: Modifier = Modifier,
     label: String,
     value: String,
+    valueModifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -199,6 +201,7 @@ private fun PhotoViewerMetadataRow(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(
+            modifier = valueModifier,
             text = value,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface,
