@@ -159,9 +159,12 @@ public class ReceiveSmsMessageAction extends Action implements Parcelable {
                 db.endTransaction();
             }
 
-            LogUtil.i(TAG, "ReceiveSmsMessageAction: Received SMS message " + message.getMessageId()
-                    + " in conversation " + message.getConversationId()
-                    + ", uri = " + messageUri);
+            if (message != null) {
+                LogUtil.i(TAG, "ReceiveSmsMessageAction: Received SMS message "
+                        + message.getMessageId()
+                        + " in conversation " + message.getConversationId()
+                        + ", uri = " + messageUri);
+            }
 
             actionParameters.putInt(KEY_SUB_ID, subId);
             ProcessPendingMessagesAction.scheduleProcessPendingMessagesAction(false, this);
