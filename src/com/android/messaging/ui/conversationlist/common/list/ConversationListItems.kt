@@ -29,6 +29,7 @@ import com.android.messaging.ui.common.components.horizontalSafeDrawingInsets
 import com.android.messaging.ui.common.components.reorder.OverlayReorderAnimationController
 import com.android.messaging.ui.conversationlist.common.item.ConversationListItemRow
 import com.android.messaging.ui.conversationlist.common.item.ConversationSwipeAction
+import com.android.messaging.ui.conversationlist.common.item.ConversationSwipeKind
 import com.android.messaging.ui.conversationlist.common.item.SwipeableConversationListItem
 import com.android.messaging.ui.conversationlist.common.support.AppearanceAnimationToken
 import com.android.messaging.ui.conversationlist.common.support.CONVERSATION_LIST_TEST_TAG
@@ -51,20 +52,6 @@ private val ListVerticalSpacing = 2.dp
 
 private val ListContentPadding = 8.dp
 
-internal data class ConversationListItemCallbacks(
-    val onClick: (conversationId: String) -> Unit,
-    val onLongClick: (conversationId: String) -> Unit,
-    val onAvatarMessageClick: (conversationId: String) -> Unit,
-    val onAvatarCallClick: (destination: String) -> Unit,
-    val onAvatarContactClick: (item: ConversationListItemUiModel) -> Unit,
-    val onAvatarInfoClick: (conversationId: String) -> Unit,
-)
-
-internal data class ConversationListSwipeActions(
-    val startToEnd: ConversationSwipeAction?,
-    val endToStart: ConversationSwipeAction?,
-)
-
 @Composable
 internal fun ConversationListItems(
     items: ImmutableList<ConversationListItemUiModel>,
@@ -74,8 +61,8 @@ internal fun ConversationListItems(
     scaffoldContentPadding: PaddingValues,
     fabBottomReserve: Dp,
     pinAnimationController: OverlayReorderAnimationController<ConversationListItemUiModel, String>?,
-    callbacks: ConversationListItemCallbacks,
-    swipeActions: (ConversationListItemUiModel) -> ConversationListSwipeActions,
+    swipeSpec: ConversationListSwipeSpec,
+    onItemEvent: (ConversationListItemEvent) -> Unit,
 ) {
     val rowHorizontalInsets = horizontalSafeDrawingInsets()
 
@@ -130,8 +117,8 @@ internal fun ConversationListItems(
                         )
                     }
                 },
-                callbacks = callbacks,
-                swipeActions = swipeActions(item),
+                swipeSpec = swipeSpec,
+                onItemEvent = onItemEvent,
             )
         }
     }
@@ -146,11 +133,21 @@ private fun LazyItemScope.ConversationListRow(
     appearanceAnimationToken: AppearanceAnimationToken?,
     pinAnimationController: OverlayReorderAnimationController<ConversationListItemUiModel, String>?,
     onAppearanceAnimationFinished: () -> Unit,
-    callbacks: ConversationListItemCallbacks,
-    swipeActions: ConversationListSwipeActions,
+    swipeSpec: ConversationListSwipeSpec,
+    onItemEvent: (ConversationListItemEvent) -> Unit,
 ) {
-    val destination = item.avatar.normalizedDestination
     val isHiddenByPinAnimation = pinAnimationController?.isItemHidden(item.conversationId) == true
+
+    val startToEndAction = rememberConversationSwipeAction(
+        conversationId = item.conversationId,
+        kind = swipeSpec.startToEnd,
+        onItemEvent = onItemEvent,
+    )
+    val endToStartAction = rememberConversationSwipeAction(
+        conversationId = item.conversationId,
+        kind = swipeSpec.endToStart,
+        onItemEvent = onItemEvent,
+    )
 
     DisposableEffect(item.conversationId, pinAnimationController) {
         onDispose {
@@ -164,8 +161,8 @@ private fun LazyItemScope.ConversationListRow(
         isInteractionEnabled = !isHiddenByPinAnimation,
         appearanceAnimationToken = appearanceAnimationToken,
         onAppearanceAnimationFinished = onAppearanceAnimationFinished,
-        startToEndAction = swipeActions.startToEnd,
-        endToStartAction = swipeActions.endToStart,
+        startToEndAction = startToEndAction,
+        endToStartAction = endToStartAction,
         backgroundHorizontalInsets = horizontalInsets,
         modifier = Modifier
             .conversationItemAnimation(
@@ -185,25 +182,67 @@ private fun LazyItemScope.ConversationListRow(
                 }
             },
     ) {
-        ConversationListItemRow(
+        ConversationListItemContent(
             item = item,
-            modifier = Modifier.conversationRowHorizontalPadding(horizontalInsets),
-            onClick = { callbacks.onClick(item.conversationId) },
-            onLongClick = { callbacks.onLongClick(item.conversationId) },
             isSelectionMode = isSelectionMode,
-            onAvatarMessageClick = {
-                callbacks.onAvatarMessageClick(item.conversationId)
-            },
-            onAvatarCallClick = {
-                if (destination != null) {
-                    callbacks.onAvatarCallClick(destination)
-                }
-            }.takeIf { item.avatar.canCall },
-            onAvatarContactClick = {
-                callbacks.onAvatarContactClick(item)
-            }.takeIf { item.avatar.canShowContact },
-            onAvatarInfoClick = {
-                callbacks.onAvatarInfoClick(item.conversationId)
+            horizontalInsets = horizontalInsets,
+            onItemEvent = onItemEvent,
+        )
+    }
+}
+
+@Composable
+private fun ConversationListItemContent(
+    item: ConversationListItemUiModel,
+    isSelectionMode: Boolean,
+    horizontalInsets: PaddingValues,
+    onItemEvent: (ConversationListItemEvent) -> Unit,
+) {
+    val destination = item.avatar.normalizedDestination
+
+    ConversationListItemRow(
+        item = item,
+        modifier = Modifier.conversationRowHorizontalPadding(horizontalInsets),
+        onClick = {
+            onItemEvent(ConversationListItemEvent.Clicked(item.conversationId))
+        },
+        onLongClick = {
+            onItemEvent(ConversationListItemEvent.LongClicked(item.conversationId))
+        },
+        isSelectionMode = isSelectionMode,
+        onAvatarMessageClick = {
+            onItemEvent(ConversationListItemEvent.AvatarMessageClicked(item.conversationId))
+        },
+        onAvatarCallClick = {
+            if (destination != null) {
+                onItemEvent(ConversationListItemEvent.AvatarCallClicked(destination))
+            }
+        }.takeIf { item.avatar.canCall },
+        onAvatarContactClick = {
+            onItemEvent(ConversationListItemEvent.AvatarContactClicked(item))
+        }.takeIf { item.avatar.canShowContact },
+        onAvatarInfoClick = {
+            onItemEvent(ConversationListItemEvent.AvatarInfoClicked(item.conversationId))
+        },
+    )
+}
+
+@Composable
+private fun rememberConversationSwipeAction(
+    conversationId: String,
+    kind: ConversationSwipeKind,
+    onItemEvent: (ConversationListItemEvent) -> Unit,
+): ConversationSwipeAction {
+    return remember(conversationId, kind, onItemEvent) {
+        ConversationSwipeAction(
+            kind = kind,
+            onTrigger = {
+                onItemEvent(
+                    ConversationListItemEvent.Swiped(
+                        conversationId = conversationId,
+                        kind = kind,
+                    ),
+                )
             },
         )
     }

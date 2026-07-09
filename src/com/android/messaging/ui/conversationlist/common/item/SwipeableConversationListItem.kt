@@ -94,7 +94,7 @@ private val ItemCollapseSpec = tween<Float>(durationMillis = ITEM_COLLAPSE_DURAT
 
 private val ItemAppearanceSpec = tween<Float>(durationMillis = ITEM_APPEARANCE_DURATION_MILLIS)
 
-internal enum class ConversationSwipeBackground {
+internal enum class ConversationSwipeKind {
     Archive,
     Unarchive,
     ToggleRead,
@@ -106,17 +106,17 @@ private enum class SwipeDirection {
     None,
 }
 
-private val ConversationSwipeBackground.isDismiss: Boolean
-    get() = this == ConversationSwipeBackground.Archive ||
-        this == ConversationSwipeBackground.Unarchive
+private val ConversationSwipeKind.isDismiss: Boolean
+    get() = this == ConversationSwipeKind.Archive ||
+        this == ConversationSwipeKind.Unarchive
 
 internal data class ConversationSwipeAction(
-    val background: ConversationSwipeBackground,
+    val kind: ConversationSwipeKind,
     val onTrigger: () -> Unit,
 )
 
 private data class SwipeBackgroundRender(
-    val background: ConversationSwipeBackground,
+    val background: ConversationSwipeKind,
     val alignment: Alignment,
 )
 
@@ -379,7 +379,7 @@ private suspend fun settleSwipe(
             )
         }
 
-        action.background.isDismiss -> {
+        action.kind.isDismiss -> {
             val target = when (direction) {
                 SwipeDirection.StartToEnd -> width
                 else -> -width
@@ -456,14 +456,14 @@ private fun resolveBackgroundRender(
     return when {
         offset > 0f -> startToEndAction?.let {
             SwipeBackgroundRender(
-                background = it.background,
+                background = it.kind,
                 alignment = Alignment.CenterStart,
             )
         }
 
         offset < 0f -> endToStartAction?.let {
             SwipeBackgroundRender(
-                background = it.background,
+                background = it.kind,
                 alignment = Alignment.CenterEnd,
             )
         }
@@ -486,15 +486,15 @@ private fun ConversationListSwipeBackground(
     val background = render.background
 
     val containerColor = when (background) {
-        ConversationSwipeBackground.Archive -> MaterialTheme.colorScheme.secondaryContainer
-        ConversationSwipeBackground.Unarchive -> MaterialTheme.colorScheme.secondaryContainer
-        ConversationSwipeBackground.ToggleRead -> MaterialTheme.colorScheme.tertiaryContainer
+        ConversationSwipeKind.Archive -> MaterialTheme.colorScheme.secondaryContainer
+        ConversationSwipeKind.Unarchive -> MaterialTheme.colorScheme.secondaryContainer
+        ConversationSwipeKind.ToggleRead -> MaterialTheme.colorScheme.tertiaryContainer
     }
 
     val contentColor = when (background) {
-        ConversationSwipeBackground.Archive -> MaterialTheme.colorScheme.onSecondaryContainer
-        ConversationSwipeBackground.Unarchive -> MaterialTheme.colorScheme.onSecondaryContainer
-        ConversationSwipeBackground.ToggleRead -> MaterialTheme.colorScheme.onTertiaryContainer
+        ConversationSwipeKind.Archive -> MaterialTheme.colorScheme.onSecondaryContainer
+        ConversationSwipeKind.Unarchive -> MaterialTheme.colorScheme.onSecondaryContainer
+        ConversationSwipeKind.ToggleRead -> MaterialTheme.colorScheme.onTertiaryContainer
     }
 
     Box(
@@ -524,13 +524,13 @@ private fun Modifier.interactionBlocking(isInteractionEnabled: Boolean): Modifie
 }
 
 private fun swipeBackgroundIcon(
-    background: ConversationSwipeBackground,
+    background: ConversationSwipeKind,
     isUnread: Boolean,
 ): ImageVector {
     return when (background) {
-        ConversationSwipeBackground.Archive -> Icons.Filled.Archive
-        ConversationSwipeBackground.Unarchive -> Icons.Filled.Unarchive
-        ConversationSwipeBackground.ToggleRead -> when {
+        ConversationSwipeKind.Archive -> Icons.Filled.Archive
+        ConversationSwipeKind.Unarchive -> Icons.Filled.Unarchive
+        ConversationSwipeKind.ToggleRead -> when {
             isUnread -> Icons.Filled.MarkChatRead
             else -> Icons.Filled.MarkChatUnread
         }
@@ -539,13 +539,13 @@ private fun swipeBackgroundIcon(
 
 @Composable
 private fun swipeBackgroundDescription(
-    background: ConversationSwipeBackground,
+    background: ConversationSwipeKind,
     isUnread: Boolean,
 ): String {
     return when (background) {
-        ConversationSwipeBackground.Archive -> stringResource(R.string.action_archive)
-        ConversationSwipeBackground.Unarchive -> stringResource(R.string.action_unarchive)
-        ConversationSwipeBackground.ToggleRead -> when {
+        ConversationSwipeKind.Archive -> stringResource(R.string.action_archive)
+        ConversationSwipeKind.Unarchive -> stringResource(R.string.action_unarchive)
+        ConversationSwipeKind.ToggleRead -> when {
             isUnread -> stringResource(R.string.mark_as_read)
             else -> stringResource(R.string.mark_as_unread)
         }

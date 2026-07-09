@@ -37,11 +37,11 @@ import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversa
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListEffect as Effect
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListUiState as State
 import com.android.messaging.ui.conversationlist.common.dialog.ConversationListDeleteDialog
-import com.android.messaging.ui.conversationlist.common.item.ConversationSwipeAction
-import com.android.messaging.ui.conversationlist.common.item.ConversationSwipeBackground
-import com.android.messaging.ui.conversationlist.common.list.ConversationListItemCallbacks
+import com.android.messaging.ui.conversationlist.common.item.ConversationSwipeKind
+import com.android.messaging.ui.conversationlist.common.list.ConversationListItemEvent
 import com.android.messaging.ui.conversationlist.common.list.ConversationListItems
-import com.android.messaging.ui.conversationlist.common.list.ConversationListSwipeActions
+import com.android.messaging.ui.conversationlist.common.list.ConversationListSwipeSpec
+import com.android.messaging.ui.conversationlist.common.list.unsupportedSwipeKind
 import com.android.messaging.ui.conversationlist.common.status.ConversationListLoadingIndicator
 import com.android.messaging.ui.conversationlist.common.status.ConversationListStatusMessage
 import com.android.messaging.ui.conversationlist.common.support.previewConversationListItems
@@ -54,6 +54,11 @@ import kotlinx.coroutines.launch
 private val ContentCornerShape = RoundedCornerShape(
     topStart = 28.dp,
     topEnd = 28.dp,
+)
+
+private val ArchivedSwipeSpec = ConversationListSwipeSpec(
+    startToEnd = ConversationSwipeKind.Unarchive,
+    endToStart = ConversationSwipeKind.Unarchive,
 )
 
 @Composable
@@ -262,8 +267,8 @@ private fun ArchivedConversationListContent(
                 scaffoldContentPadding = scaffoldContentPadding,
                 fabBottomReserve = 0.dp,
                 pinAnimationController = null,
-                callbacks = archivedCallbacks(onAction),
-                swipeActions = { archivedSwipeActions(it.conversationId, onAction) },
+                swipeSpec = ArchivedSwipeSpec,
+                onItemEvent = { onAction(it.toArchivedAction()) },
             )
         }
 
@@ -279,30 +284,41 @@ private fun archivedBackdropColor(isSelectionMode: Boolean): Color {
     }
 }
 
-private fun archivedCallbacks(onAction: (Action) -> Unit): ConversationListItemCallbacks {
-    return ConversationListItemCallbacks(
-        onClick = { onAction(Action.ConversationClicked(it)) },
-        onLongClick = { onAction(Action.ConversationLongClicked(it)) },
-        onAvatarMessageClick = { onAction(Action.AvatarMessageClicked(it)) },
-        onAvatarCallClick = { onAction(Action.AvatarCallClicked(it)) },
-        onAvatarContactClick = { onAction(Action.AvatarContactClicked(it.avatar)) },
-        onAvatarInfoClick = { onAction(Action.AvatarInfoClicked(it)) },
-    )
-}
+private fun ConversationListItemEvent.toArchivedAction(): Action {
+    return when (this) {
+        is ConversationListItemEvent.Clicked -> {
+            Action.ConversationClicked(conversationId)
+        }
 
-private fun archivedSwipeActions(
-    conversationId: String,
-    onAction: (Action) -> Unit,
-): ConversationListSwipeActions {
-    val unarchive = ConversationSwipeAction(
-        background = ConversationSwipeBackground.Unarchive,
-        onTrigger = { onAction(Action.ConversationSwipedToUnarchive(conversationId)) },
-    )
+        is ConversationListItemEvent.LongClicked -> {
+            Action.ConversationLongClicked(conversationId)
+        }
 
-    return ConversationListSwipeActions(
-        startToEnd = unarchive,
-        endToStart = unarchive,
-    )
+        is ConversationListItemEvent.AvatarMessageClicked -> {
+            Action.AvatarMessageClicked(conversationId)
+        }
+
+        is ConversationListItemEvent.AvatarCallClicked -> {
+            Action.AvatarCallClicked(destination)
+        }
+
+        is ConversationListItemEvent.AvatarContactClicked -> {
+            Action.AvatarContactClicked(item.avatar)
+        }
+
+        is ConversationListItemEvent.AvatarInfoClicked -> {
+            Action.AvatarInfoClicked(conversationId)
+        }
+
+        is ConversationListItemEvent.Swiped -> when (kind) {
+            ConversationSwipeKind.Unarchive -> {
+                Action.ConversationSwipedToUnarchive(conversationId)
+            }
+
+            ConversationSwipeKind.Archive -> unsupportedSwipeKind(kind)
+            ConversationSwipeKind.ToggleRead -> unsupportedSwipeKind(kind)
+        }
+    }
 }
 
 @PreviewLightDark
