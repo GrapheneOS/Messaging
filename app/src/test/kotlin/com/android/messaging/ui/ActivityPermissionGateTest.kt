@@ -1,6 +1,7 @@
 package com.android.messaging.ui
 
 import com.android.messaging.ui.contact.AddContactActivity
+import com.android.messaging.ui.classzero.ClassZeroActivity
 import com.android.messaging.ui.conversation.LaunchConversationActivity
 import com.android.messaging.ui.license.LicenseActivity
 import com.android.messaging.ui.permissioncheck.PermissionCheckActivity
@@ -22,14 +23,14 @@ internal class ActivityPermissionGateTest {
         BaseBugleFragmentActivity::class.java,
     )
 
-    private val intentionallyUngated = setOf(
+    private val intentionallyUngated = setOf<Class<*>>(
         PermissionCheckActivity::class.java,
         LaunchConversationActivity::class.java,
         BuglePhotoViewActivity::class.java,
         LicenseActivity::class.java,
         TestActivity::class.java,
         ClassZeroActivity::class.java,
-        AddContactActivity::class.java
+        AddContactActivity::class.java,
     )
 
     @Test
