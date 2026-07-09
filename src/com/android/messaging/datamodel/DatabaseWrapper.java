@@ -28,6 +28,7 @@ import android.util.SparseArray;
 
 import com.android.messaging.Factory;
 import com.android.messaging.R;
+import com.android.messaging.sms.SmsStorageStatusManager;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.BugleGservicesKeys;
 import com.android.messaging.util.DebugUtils;
@@ -156,6 +157,7 @@ public class DatabaseWrapper {
         } catch (SQLiteFullException ex) {
             LogUtil.e(TAG, "Database full, unable to endTransaction", ex);
             UiUtils.showToastAtBottom(R.string.db_full);
+            SmsStorageStatusManager.handleStorageFull();
         }
         if (mLog) {
             printTiming(t1, String.format(Locale.US,
@@ -187,6 +189,7 @@ public class DatabaseWrapper {
         } catch (SQLiteFullException ex) {
             LogUtil.e(TAG, "Database full, unable to insertWithOnConflict", ex);
             UiUtils.showToastAtBottom(R.string.db_full);
+            SmsStorageStatusManager.handleStorageFull();
         }
         if (mLog) {
             printTiming(t1, String.format(Locale.US,
@@ -347,6 +350,7 @@ public class DatabaseWrapper {
         } catch (SQLiteFullException ex) {
             LogUtil.e(TAG, "Database full, unable to update", ex);
             UiUtils.showToastAtBottom(R.string.db_full);
+            SmsStorageStatusManager.handleStorageFull();
         }
         if (mLog) {
             printTiming(t1, String.format(Locale.US, "update %s with %s ==> %d",
@@ -367,6 +371,7 @@ public class DatabaseWrapper {
         } catch (SQLiteFullException ex) {
             LogUtil.e(TAG, "Database full, unable to delete", ex);
             UiUtils.showToastAtBottom(R.string.db_full);
+            SmsStorageStatusManager.handleStorageFull();
         }
         if (mLog) {
             printTiming(t1,
@@ -389,6 +394,7 @@ public class DatabaseWrapper {
         } catch (SQLiteFullException ex) {
             LogUtil.e(TAG, "Database full, unable to insert", ex);
             UiUtils.showToastAtBottom(R.string.db_full);
+            SmsStorageStatusManager.handleStorageFull();
         }
         if (mLog) {
             printTiming(t1, String.format(Locale.US, "insert to %s", table));
@@ -409,6 +415,7 @@ public class DatabaseWrapper {
         } catch (SQLiteFullException ex) {
             LogUtil.e(TAG, "Database full, unable to replace", ex);
             UiUtils.showToastAtBottom(R.string.db_full);
+            SmsStorageStatusManager.handleStorageFull();
         }
         if (mLog) {
             printTiming(t1, String.format(Locale.US, "replace to %s", table));
@@ -431,6 +438,7 @@ public class DatabaseWrapper {
         } catch (SQLiteFullException ex) {
             LogUtil.e(TAG, "Database full, unable to execSQL", ex);
             UiUtils.showToastAtBottom(R.string.db_full);
+            SmsStorageStatusManager.handleStorageFull();
         }
 
         if (mLog) {
@@ -449,6 +457,7 @@ public class DatabaseWrapper {
         } catch (SQLiteFullException ex) {
             LogUtil.e(TAG, "Database full, unable to execSQL", ex);
             UiUtils.showToastAtBottom(R.string.db_full);
+            SmsStorageStatusManager.handleStorageFull();
         }
 
         if (mLog) {
@@ -469,6 +478,7 @@ public class DatabaseWrapper {
         } catch (SQLiteFullException ex) {
             LogUtil.e(TAG, "Database full, unable to execSQLUpdateDelete", ex);
             UiUtils.showToastAtBottom(R.string.db_full);
+            SmsStorageStatusManager.handleStorageFull();
         }
         if (mLog) {
             printTiming(t1, String.format(Locale.US, "execSQLUpdateDelete %s", sql));

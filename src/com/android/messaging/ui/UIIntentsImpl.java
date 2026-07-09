@@ -31,6 +31,7 @@ import android.os.Bundle;
 import android.provider.ContactsContract.Contacts;
 import android.provider.ContactsContract.Intents;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.provider.Telephony;
 import android.text.TextUtils;
 
@@ -52,11 +53,11 @@ import com.android.messaging.ui.conversation.LaunchConversationActivity;
 import com.android.messaging.ui.conversationlist.ArchivedConversationListActivity;
 import com.android.messaging.ui.conversationlist.ConversationListActivity;
 import com.android.messaging.ui.conversationpicker.host.forward.ForwardMessageActivity;
+import com.android.messaging.ui.conversationpicker.host.widget.WidgetPickConversationActivity;
 import com.android.messaging.ui.conversationsettings.ConversationSettingsActivity;
 import com.android.messaging.ui.debug.DebugMmsConfigActivity;
 import com.android.messaging.ui.permissioncheck.PermissionCheckActivity;
 import com.android.messaging.ui.photoviewer.BuglePhotoViewActivity;
-import com.android.messaging.ui.conversationpicker.host.widget.WidgetPickConversationActivity;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.ContentType;
 import com.android.messaging.util.ConversationIdSet;
@@ -148,13 +149,6 @@ public class UIIntentsImpl extends UIIntents {
     public void launchConversationListActivity(final Context context) {
         final Intent intent = getConversationListActivityIntent(context);
         context.startActivity(intent);
-    }
-
-    /**
-     * Get an intent which shows the low storage warning activity.
-     */
-    private Intent getSmsStorageLowWarningActivityIntent(final Context context) {
-        return new Intent(context, SmsStorageLowWarningActivity.class);
     }
 
     @Override
@@ -432,16 +426,15 @@ public class UIIntentsImpl extends UIIntents {
 
     @Override
     public PendingIntent getPendingIntentForLowStorageNotifications(final Context context) {
-        final TaskStackBuilder taskStackBuilder = TaskStackBuilder.create(context);
-        final Intent conversationListIntent = getConversationListActivityIntent(context);
-        taskStackBuilder.addNextIntent(conversationListIntent);
-        taskStackBuilder.addNextIntentWithParentStack(
-                getSmsStorageLowWarningActivityIntent(context));
-
-        // Use FLAG_IMMUTABLE since this PendingIntent launches a fixed activity
-        // and doesn't require modification by external apps.
-        return taskStackBuilder.getPendingIntent(
-                0, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        final Intent storageSettingsIntent = new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
+        if (storageSettingsIntent.resolveActivity(context.getPackageManager()) == null) {
+            storageSettingsIntent.setAction(Settings.ACTION_SETTINGS);
+        }
+        return PendingIntent.getActivity(
+                context,
+                0,
+                storageSettingsIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
     @Override

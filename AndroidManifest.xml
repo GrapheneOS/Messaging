@@ -401,10 +401,6 @@
             android:exported="false"
             android:theme="@style/Theme.Compose.Dialog" />
 
-        <activity android:name=".ui.SmsStorageLowWarningActivity"
-                  android:theme="@style/Translucent"
-                  android:configChanges="orientation|screenSize|keyboardHidden" />
-
         <receiver android:name=".receiver.StorageStatusReceiver"
             android:exported="true">
             <intent-filter>
