@@ -104,10 +104,6 @@ internal class ConversationListViewModel @Inject constructor(
 
     private fun onConfirmationAction(action: Action.ConfirmationAction) {
         when (action) {
-            is Action.AddContactConfirmed -> {
-                onAddContactConfirmed(action.destination)
-            }
-
             is Action.BlockConfirmed -> {
                 onBlockConfirmed(
                     conversationId = action.conversationId,
@@ -141,13 +137,6 @@ internal class ConversationListViewModel @Inject constructor(
                 )
             }
         }
-    }
-
-    private fun onAddContactConfirmed(destination: String) {
-        val resolvedDestination = destination.takeIf(String::isNotBlank) ?: return
-
-        _effects.trySend(Effect.OpenAddContact(resolvedDestination))
-        selectionDelegate.clear()
     }
 
     private fun onBlockConfirmed(
@@ -385,6 +374,7 @@ internal class ConversationListViewModel @Inject constructor(
         val destination = singleSelectedDestination() ?: return
 
         _effects.trySend(Effect.ConfirmAddContact(destination))
+        selectionDelegate.clear()
     }
 
     private fun onArchiveClick() {

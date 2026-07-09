@@ -16,13 +16,11 @@ import com.android.messaging.ui.core.MessagingPreviewTheme
 @Composable
 internal fun ConversationListDialogs(
     selectedCount: Int,
-    addContactDestination: String?,
     isDeleteVisible: Boolean,
     blockConversationId: String?,
     blockDestination: String?,
     isSnoozeVisible: Boolean,
     onAction: (Action) -> Unit,
-    onDismissAddContact: () -> Unit,
     onDismissDelete: () -> Unit,
     onDismissBlock: () -> Unit,
     onDismissSnooze: () -> Unit,
@@ -36,17 +34,6 @@ internal fun ConversationListDialogs(
         onDismissDelete = onDismissDelete,
         onDismissSnooze = onDismissSnooze,
     )
-
-    addContactDestination?.let { destination ->
-        ConversationListAddContactDialog(
-            destination = destination,
-            onConfirm = {
-                onAction(Action.AddContactConfirmed(destination))
-                onDismissAddContact()
-            },
-            onDismiss = onDismissAddContact,
-        )
-    }
 
     if (isDeleteVisible && hasSelectedConversations) {
         ConversationListDeleteDialog(
@@ -115,33 +102,6 @@ private fun DismissSelectionDialogsWithoutSelection(
 }
 
 @Composable
-internal fun ConversationListAddContactDialog(
-    destination: String,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(text = stringResource(R.string.add_contact_confirmation_dialog_title))
-        },
-        text = {
-            Text(text = destination)
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(text = stringResource(R.string.add_contact_confirmation))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = stringResource(android.R.string.cancel))
-            }
-        },
-    )
-}
-
-@Composable
 internal fun ConversationListDeleteDialog(
     selectedCount: Int,
     onConfirm: () -> Unit,
@@ -195,18 +155,6 @@ internal fun ConversationListBlockDialog(
             }
         },
     )
-}
-
-@PreviewLightDark
-@Composable
-private fun ConversationListAddContactDialogPreview() {
-    MessagingPreviewTheme {
-        ConversationListAddContactDialog(
-            destination = "+1 555 0100",
-            onConfirm = {},
-            onDismiss = {},
-        )
-    }
 }
 
 @PreviewLightDark

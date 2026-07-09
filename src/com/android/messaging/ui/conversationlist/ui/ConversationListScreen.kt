@@ -100,7 +100,6 @@ internal fun ConversationListScreen(
         isSettled = { item, anchorToTop -> item.isPinned == anchorToTop },
     )
 
-    var pendingAddContactDestination by remember { mutableStateOf<String?>(null) }
     var pendingDelete by remember { mutableStateOf(false) }
     var pendingBlockConversationId by remember { mutableStateOf<String?>(null) }
     var pendingBlockDestination by remember { mutableStateOf<String?>(null) }
@@ -113,7 +112,6 @@ internal fun ConversationListScreen(
         snackbarHostState = snackbarHostState,
         pinAnimationController = pinAnimationController,
         onAction = screenModel::onAction,
-        onConfirmAddContact = { pendingAddContactDestination = it },
         onConfirmBlock = { conversationId, destination ->
             pendingBlockConversationId = conversationId
             pendingBlockDestination = destination
@@ -133,13 +131,11 @@ internal fun ConversationListScreen(
 
     ConversationListDialogs(
         selectedCount = uiState.selection.selectedCount,
-        addContactDestination = pendingAddContactDestination,
         isDeleteVisible = pendingDelete,
         blockConversationId = pendingBlockConversationId,
         blockDestination = pendingBlockDestination,
         isSnoozeVisible = pendingSnooze,
         onAction = screenModel::onAction,
-        onDismissAddContact = { pendingAddContactDestination = null },
         onDismissDelete = { pendingDelete = false },
         onDismissBlock = {
             pendingBlockConversationId = null
@@ -205,7 +201,6 @@ private fun ConversationListEffects(
     snackbarHostState: SnackbarHostState,
     pinAnimationController: OverlayReorderAnimationController<ConversationListItemUiModel, String>,
     onAction: (Action) -> Unit,
-    onConfirmAddContact: (String) -> Unit,
     onConfirmBlock: (conversationId: String, destination: String) -> Unit,
 ) {
     val context = LocalContext.current
@@ -216,7 +211,6 @@ private fun ConversationListEffects(
     val currentEffectHandler by rememberUpdatedState(effectHandler)
     val currentUndoLabel by rememberUpdatedState(undoLabel)
     val currentOnAction by rememberUpdatedState(onAction)
-    val currentOnConfirmAddContact by rememberUpdatedState(onConfirmAddContact)
     val currentOnConfirmBlock by rememberUpdatedState(onConfirmBlock)
 
     LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
@@ -226,10 +220,6 @@ private fun ConversationListEffects(
     LaunchedEffect(effects) {
         effects.collect { effect ->
             when (effect) {
-                is Effect.ConfirmAddContact -> {
-                    currentOnConfirmAddContact(effect.destination)
-                }
-
                 is Effect.ConfirmBlock -> {
                     currentOnConfirmBlock(
                         effect.conversationId,

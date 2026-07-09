@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -102,6 +103,7 @@ private fun AddContactDestination(uiState: AddContactUiState) {
             size = AvatarSize,
             fallbackLabel = participantAvatarLabel(uiState.destination),
             colorSeedCode = participantColorSeed(uiState.destination),
+            modifier = Modifier.clearAndSetSemantics {},
         )
 
         Spacer(modifier = Modifier.width(16.dp))

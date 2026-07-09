@@ -44,10 +44,6 @@ internal sealed interface ConversationListEffect {
         val destination: String,
     ) : ConversationListEffect
 
-    data class OpenAddContact(
-        val destination: String,
-    ) : ConversationListEffect
-
     data class ConfirmBlock(
         val conversationId: String,
         val destination: String,

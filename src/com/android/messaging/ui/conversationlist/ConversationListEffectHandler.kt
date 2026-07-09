@@ -58,9 +58,10 @@ internal class ConversationListEffectHandlerImpl(
                 DebugUtils.showDebugOptions(activity)
             }
 
-            is Effect.OpenAddContact -> {
-                UIIntents.get().launchAddContactActivity(
+            is Effect.ConfirmAddContact -> {
+                UIIntents.get().launchAddContactConfirmation(
                     activity,
+                    null,
                     effect.destination,
                 )
             }
