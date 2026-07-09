@@ -6,12 +6,11 @@ import com.android.messaging.domain.conversation.usecase.participant.CanAddConta
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListSelectionUiState
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState
 import com.android.messaging.ui.conversationlist.chats.model.SelectionActionsUiState
-import com.android.messaging.ui.conversationlist.mapper.ConversationListItemUiMapper
+import com.android.messaging.ui.conversationlist.mapper.ConversationListContentUiStateMapper
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
-import kotlinx.collections.immutable.toImmutableList
 
 internal interface ConversationListUiStateMapper {
     fun map(
@@ -24,7 +23,7 @@ internal interface ConversationListUiStateMapper {
 
 internal class ConversationListUiStateMapperImpl @Inject constructor(
     private val canAddContact: CanAddContact,
-    private val itemUiMapper: ConversationListItemUiMapper,
+    private val contentMapper: ConversationListContentUiStateMapper,
 ) : ConversationListUiStateMapper {
 
     override fun map(
@@ -33,29 +32,10 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
         isScrollToTopVisible: Boolean,
         isDebugEnabled: Boolean,
     ): ConversationListUiState {
-        val items = snapshot.items
-            .map { item ->
-                val isSelected = item.conversationId in selectedConversationIds
-                itemUiMapper.map(item, isSelected)
-            }
-            .toImmutableList()
-
-        val content = when {
-            items.isNotEmpty() -> {
-                ConversationListContentUiState.Items(
-                    items = items,
-                    restoredConversationIds = snapshot.restoredConversationIds,
-                )
-            }
-
-            !snapshot.hasFirstSyncCompleted -> {
-                ConversationListContentUiState.WaitingForSync
-            }
-
-            else -> {
-                ConversationListContentUiState.Empty
-            }
-        }
+        val content = contentMapper.map(
+            snapshot = snapshot,
+            selectedConversationIds = selectedConversationIds,
+        )
 
         val selection = mapSelectionState(
             items = snapshot.items,
@@ -66,7 +46,8 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
         return ConversationListUiState(
             content = content,
             selection = selection,
-            isScrollToTopVisible = isScrollToTopVisible && items.isNotEmpty(),
+            isScrollToTopVisible = isScrollToTopVisible &&
+                content is ConversationListContentUiState.Items,
             hasBlockedParticipants = snapshot.blockedDestinations.isNotEmpty(),
             isDebugEnabled = isDebugEnabled,
         )

@@ -10,6 +10,7 @@ import com.android.messaging.domain.conversation.usecase.participant.IsContactSa
 import com.android.messaging.domain.conversation.usecase.telephony.CanPlacePhoneCall
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState
 import com.android.messaging.ui.conversationlist.conversationItem
+import com.android.messaging.ui.conversationlist.mapper.ConversationListContentUiStateMapperImpl
 import com.android.messaging.ui.conversationlist.mapper.ConversationListItemUiMapperImpl
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
@@ -40,9 +41,13 @@ internal class ConversationListUiStateMapperImplTest {
         resolveAvatarUri = resolveAvatarUri,
     )
 
+    private val contentMapper = ConversationListContentUiStateMapperImpl(
+        itemUiMapper = itemUiMapper,
+    )
+
     private val mapper = ConversationListUiStateMapperImpl(
         canAddContact = canAddContact,
-        itemUiMapper = itemUiMapper,
+        contentMapper = contentMapper,
     )
 
     @Test
@@ -172,46 +177,6 @@ internal class ConversationListUiStateMapperImplTest {
         )
 
         assertEquals("Jane", singleItem(state).snippet.senderName)
-    }
-
-    @Test
-    fun map_itemsPresent_producesContentItems() {
-        val state = mapper.map(
-            snapshot = snapshotOf(conversationItem(conversationId = "a")),
-            selectedConversationIds = persistentListOf(),
-            isScrollToTopVisible = false,
-            isDebugEnabled = false,
-        )
-
-        assertTrue(state.content is ConversationListContentUiState.Items)
-    }
-
-    @Test
-    fun map_emptyAfterFirstSync_producesEmptyContent() {
-        val state = mapper.map(
-            snapshot = snapshotOf(),
-            selectedConversationIds = persistentListOf(),
-            isScrollToTopVisible = false,
-            isDebugEnabled = false,
-        )
-
-        assertEquals(ConversationListContentUiState.Empty, state.content)
-    }
-
-    @Test
-    fun map_emptyBeforeFirstSync_producesWaitingForSync() {
-        val state = mapper.map(
-            snapshot = ConversationListSnapshot(
-                items = persistentListOf(),
-                blockedDestinations = persistentSetOf(),
-                hasFirstSyncCompleted = false,
-            ),
-            selectedConversationIds = persistentListOf(),
-            isScrollToTopVisible = false,
-            isDebugEnabled = false,
-        )
-
-        assertEquals(ConversationListContentUiState.WaitingForSync, state.content)
     }
 
     @Test

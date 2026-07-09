@@ -2,7 +2,6 @@ package com.android.messaging.ui.conversationlist.archived
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListMode
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
@@ -11,6 +10,7 @@ import com.android.messaging.ui.conversationlist.archived.mapper.ArchivedConvers
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListAction as Action
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListEffect as Effect
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListUiState as State
+import com.android.messaging.ui.conversationlist.delegate.ConversationListActionsDelegate
 import com.android.messaging.ui.conversationlist.delegate.ConversationListOptimisticSnapshotDelegate
 import com.android.messaging.ui.conversationlist.delegate.ConversationListSelectionDelegate
 import com.android.messaging.ui.conversationlist.model.ConversationListAvatarUiModel
@@ -36,7 +36,7 @@ internal interface ArchivedConversationListScreenModel {
 
 @HiltViewModel
 internal class ArchivedConversationListViewModel @Inject constructor(
-    private val conversationsRepository: ConversationsRepository,
+    private val actionsDelegate: ConversationListActionsDelegate,
     private val optimisticSnapshotDelegate: ConversationListOptimisticSnapshotDelegate,
     private val selectionDelegate: ConversationListSelectionDelegate,
     private val uiStateMapper: ArchivedConversationListUiStateMapper,
@@ -189,9 +189,10 @@ internal class ArchivedConversationListViewModel @Inject constructor(
 
         optimisticSnapshotDelegate.remove(conversationIds)
         viewModelScope.launch {
-            conversationIds.forEach {
-                conversationsRepository.unarchiveConversation(it)
-            }
+            actionsDelegate.setArchived(
+                conversationIds = conversationIds,
+                isArchived = false,
+            )
         }
         _effects.trySend(Effect.ConversationsUnarchived(conversationIds.toImmutableList()))
     }
@@ -203,9 +204,10 @@ internal class ArchivedConversationListViewModel @Inject constructor(
 
         optimisticSnapshotDelegate.restore(conversationIds)
         viewModelScope.launch {
-            conversationIds.forEach {
-                conversationsRepository.archiveConversation(it)
-            }
+            actionsDelegate.setArchived(
+                conversationIds = conversationIds,
+                isArchived = true,
+            )
         }
     }
 
@@ -216,12 +218,7 @@ internal class ArchivedConversationListViewModel @Inject constructor(
             return
         }
 
-        selectedItems.forEach { item ->
-            conversationsRepository.deleteConversation(
-                conversationId = item.conversationId,
-                cutoffTimestamp = item.latestMessage.timestamp,
-            )
-        }
+        actionsDelegate.delete(selectedItems)
         selectionDelegate.clear()
     }
 

@@ -8,11 +8,11 @@ import com.android.messaging.data.conversationlist.model.ConversationListSnapsho
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
 import com.android.messaging.data.conversationsettings.model.SnoozeOption
 import com.android.messaging.data.debug.DebugFeaturesProvider
-import com.android.messaging.ui.conversationlist.chats.delegate.ConversationListActionsDelegate
 import com.android.messaging.ui.conversationlist.chats.mapper.ConversationListUiStateMapper
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListEffect as Effect
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState as State
+import com.android.messaging.ui.conversationlist.delegate.ConversationListActionsDelegate
 import com.android.messaging.ui.conversationlist.delegate.ConversationListOptimisticSnapshotDelegate
 import com.android.messaging.ui.conversationlist.delegate.ConversationListSelectionDelegate
 import com.android.messaging.ui.conversationlist.model.ConversationListAvatarUiModel
@@ -26,9 +26,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 internal interface ConversationListScreenModel {
     val effects: Flow<Effect>
@@ -54,10 +54,7 @@ internal class ConversationListViewModel @Inject constructor(
     private val snapshot: StateFlow<ConversationListSnapshot?> = optimisticSnapshotDelegate.snapshot
 
     private val _effects = Channel<Effect>(Channel.BUFFERED)
-    override val effects: Flow<Effect> = merge(
-        _effects.receiveAsFlow(),
-        actionsDelegate.effects,
-    )
+    override val effects: Flow<Effect> = _effects.receiveAsFlow()
 
     override val uiState: StateFlow<State> = combine(
         snapshot.filterNotNull(),
@@ -87,9 +84,6 @@ internal class ConversationListViewModel @Inject constructor(
         selectionDelegate.bind(
             scope = viewModelScope,
             snapshot = snapshot,
-        )
-        actionsDelegate.bind(
-            scope = viewModelScope,
         )
     }
 
@@ -133,10 +127,12 @@ internal class ConversationListViewModel @Inject constructor(
             }
 
             is Action.BlockUndoClicked -> {
-                actionsDelegate.unblock(
-                    conversationId = action.conversationId,
-                    destination = action.destination,
-                )
+                viewModelScope.launch {
+                    actionsDelegate.unblock(
+                        conversationId = action.conversationId,
+                        destination = action.destination,
+                    )
+                }
             }
         }
     }
@@ -145,10 +141,21 @@ internal class ConversationListViewModel @Inject constructor(
         conversationId: String,
         destination: String,
     ) {
-        actionsDelegate.block(
-            conversationId = conversationId,
-            destination = destination,
-        )
+        viewModelScope.launch {
+            val success = actionsDelegate.block(
+                conversationId = conversationId,
+                destination = destination,
+            )
+
+            _effects.trySend(
+                Effect.ConversationBlocked(
+                    conversationId = conversationId,
+                    destination = destination,
+                    success = success,
+                ),
+            )
+        }
+
         selectionDelegate.clear()
     }
 
@@ -172,11 +179,12 @@ internal class ConversationListViewModel @Inject constructor(
             else -> optimisticSnapshotDelegate.remove(conversationIds)
         }
 
-        actionsDelegate.setArchived(
-            conversationIds = conversationIds,
-            isArchived = !isArchived,
-            shouldShowSnackbar = false,
-        )
+        viewModelScope.launch {
+            actionsDelegate.setArchived(
+                conversationIds = conversationIds,
+                isArchived = !isArchived,
+            )
+        }
     }
 
     private fun onLifecycleAction(action: Action.LifecycleAction) {
@@ -270,10 +278,18 @@ internal class ConversationListViewModel @Inject constructor(
         val conversationIds = listOf(conversationId)
 
         optimisticSnapshotDelegate.remove(conversationIds)
-        actionsDelegate.setArchived(
-            conversationIds = conversationIds,
-            isArchived = true,
-            shouldShowSnackbar = true,
+        viewModelScope.launch {
+            actionsDelegate.setArchived(
+                conversationIds = conversationIds,
+                isArchived = true,
+            )
+        }
+
+        _effects.trySend(
+            Effect.ArchiveStatusChanged(
+                conversationIds = conversationIds.toImmutableList(),
+                isArchived = true,
+            ),
         )
     }
 
@@ -287,10 +303,13 @@ internal class ConversationListViewModel @Inject constructor(
             conversationIds = conversationIds,
             isRead = shouldMarkRead,
         )
-        actionsDelegate.setRead(
-            conversationIds = conversationIds,
-            isRead = shouldMarkRead,
-        )
+
+        viewModelScope.launch {
+            actionsDelegate.setRead(
+                conversationIds = conversationIds,
+                isRead = shouldMarkRead,
+            )
+        }
     }
 
     private fun onNavigationAction(action: Action.NavigationAction) {
@@ -382,11 +401,21 @@ internal class ConversationListViewModel @Inject constructor(
     private fun onArchiveClick() {
         withSelectedIds { conversationIds ->
             optimisticSnapshotDelegate.remove(conversationIds)
-            actionsDelegate.setArchived(
-                conversationIds = conversationIds,
-                isArchived = true,
-                shouldShowSnackbar = true,
+
+            viewModelScope.launch {
+                actionsDelegate.setArchived(
+                    conversationIds = conversationIds,
+                    isArchived = true,
+                )
+            }
+
+            _effects.trySend(
+                Effect.ArchiveStatusChanged(
+                    conversationIds = conversationIds.toImmutableList(),
+                    isArchived = true,
+                ),
             )
+
             selectionDelegate.clear()
         }
     }
@@ -409,10 +438,14 @@ internal class ConversationListViewModel @Inject constructor(
                 conversationIds = conversationIds,
                 isRead = isRead,
             )
-            actionsDelegate.setRead(
-                conversationIds = conversationIds,
-                isRead = isRead,
-            )
+
+            viewModelScope.launch {
+                actionsDelegate.setRead(
+                    conversationIds = conversationIds,
+                    isRead = isRead,
+                )
+            }
+
             selectionDelegate.clear()
         }
     }
@@ -436,10 +469,14 @@ internal class ConversationListViewModel @Inject constructor(
             conversationIds = conversationIds,
             isPinned = isPinned,
         )
-        actionsDelegate.setPinned(
-            conversationIds = conversationIds,
-            isPinned = isPinned,
-        )
+
+        viewModelScope.launch {
+            actionsDelegate.setPinned(
+                conversationIds = conversationIds,
+                isPinned = isPinned,
+            )
+        }
+
         selectionDelegate.clear()
     }
 

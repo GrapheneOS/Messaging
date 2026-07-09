@@ -1,7 +1,7 @@
 package com.android.messaging.di.conversationlist
 
-import com.android.messaging.ui.conversationlist.chats.delegate.ConversationListActionsDelegate
-import com.android.messaging.ui.conversationlist.chats.delegate.ConversationListActionsDelegateImpl
+import com.android.messaging.ui.conversationlist.delegate.ConversationListActionsDelegate
+import com.android.messaging.ui.conversationlist.delegate.ConversationListActionsDelegateImpl
 import com.android.messaging.ui.conversationlist.delegate.ConversationListOptimisticSnapshotDelegate
 import com.android.messaging.ui.conversationlist.delegate.ConversationListOptimisticSnapshotDelegateImpl
 import com.android.messaging.ui.conversationlist.delegate.ConversationListSelectionDelegate
