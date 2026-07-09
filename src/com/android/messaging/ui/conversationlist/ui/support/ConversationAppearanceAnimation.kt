@@ -6,6 +6,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshots.Snapshot
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
@@ -100,8 +101,13 @@ internal fun rememberAppearanceAnimationTokens(
         items.mapTo(HashSet(items.size), ConversationListItemUiModel::conversationId)
     }
     val enteringTokens = remember(currentConversationIds, excludedConversationIds) {
-        val isListAtTop = listState.firstVisibleItemIndex == 0 &&
-            listState.firstVisibleItemScrollOffset == 0
+        // LazyListState warns these values are observable and frequently changing.
+        // Sample them only when the id set changes: new rows animate only if the
+        // list is already at the top, and scrolling alone should not invalidate this.
+        val isListAtTop = Snapshot.withoutReadObservation {
+            listState.firstVisibleItemIndex == 0 &&
+                listState.firstVisibleItemScrollOffset == 0
+        }
 
         tracker.computeEntering(
             currentConversationIds = currentConversationIds,
@@ -117,8 +123,10 @@ internal fun rememberAppearanceAnimationTokens(
         )
     }
 
-    return AppearanceAnimationTokens(
-        tracker = tracker,
-        enteringTokens = enteringTokens,
-    )
+    return remember(enteringTokens) {
+        AppearanceAnimationTokens(
+            tracker = tracker,
+            enteringTokens = enteringTokens,
+        )
+    }
 }
