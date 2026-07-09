@@ -1,7 +1,7 @@
 package com.android.messaging.ui
 
-import com.android.messaging.ui.contact.AddContactActivity
 import com.android.messaging.ui.classzero.ClassZeroActivity
+import com.android.messaging.ui.contact.AddContactActivity
 import com.android.messaging.ui.conversation.LaunchConversationActivity
 import com.android.messaging.ui.license.LicenseActivity
 import com.android.messaging.ui.permissioncheck.PermissionCheckActivity
