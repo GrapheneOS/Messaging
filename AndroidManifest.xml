@@ -73,16 +73,22 @@
         <activity
             android:name=".ui.conversationlist.chats.ConversationListActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="false"
             android:screenOrientation="user"
+            android:theme="@style/Theme.Compose" />
+
+        <activity-alias
+            android:name=".ui.conversationlist.ConversationListActivity"
             android:exported="true"
-            android:theme="@style/Theme.Compose">
+            android:targetActivity=".ui.conversationlist.chats.ConversationListActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.APP_MESSAGING" />
             </intent-filter>
-        </activity>
+        </activity-alias>
 
         <activity
             android:name=".ui.permissioncheck.PermissionCheckActivity"
