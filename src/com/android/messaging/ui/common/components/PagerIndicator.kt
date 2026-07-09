@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 
-
 @Composable
 internal fun PagerIndicator(
     pagerState: PagerState,
