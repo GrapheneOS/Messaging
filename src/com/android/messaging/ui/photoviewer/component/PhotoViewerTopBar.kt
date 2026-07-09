@@ -173,10 +173,7 @@ private fun PhotoViewerTitleBlock(
     ) {
         Text(
             modifier = Modifier.testTag(tag = PHOTO_VIEWER_TITLE_TEST_TAG),
-            text = item
-                ?.title
-                ?.takeIf { it.isNotBlank() }
-                ?: stringResource(id = R.string.unknown_sender),
+            text = photoViewerParticipantTitle(item = item),
             style = MaterialTheme.typography.titleSmall,
             color = contentColor,
             maxLines = 1,

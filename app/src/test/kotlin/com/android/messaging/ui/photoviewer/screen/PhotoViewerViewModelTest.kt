@@ -556,6 +556,7 @@ internal class PhotoViewerViewModelTest {
             return PhotoViewerItem(
                 contentUri = Uri.parse("content://example/content/$index"),
                 contentType = IMAGE_JPEG,
+                isIncoming = true,
                 senderName = "Ada Lovelace",
                 senderDestination = "+1555123000$index",
                 receivedTimestampMillis = 1_735_689_600_000L + index,

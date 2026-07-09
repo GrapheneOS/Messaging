@@ -31,6 +31,7 @@ import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_CLOSE_BUTTON_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_DETAILS_MENU_ITEM_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_FORWARD_MENU_ITEM_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_METADATA_RECEIVED_TIMESTAMP_TEST_TAG
+import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_METADATA_SENDER_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_METADATA_SHEET_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_OVERFLOW_BUTTON_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_PAGER_TEST_TAG
@@ -74,6 +75,31 @@ internal class PhotoViewerScreenContentTest {
             .assertIsDisplayed()
         composeRule.onNodeWithTag(testTag = PHOTO_VIEWER_SHARE_BUTTON_TEST_TAG)
             .assertIsDisplayed()
+    }
+
+    @Test
+    fun participantTitle_whenCurrentItemIsIncoming_showsSenderInTopBarAndDetails() {
+        setScreenContent()
+
+        composeRule.onNodeWithTag(testTag = PHOTO_VIEWER_TITLE_TEST_TAG)
+            .assertTextContains(value = FIRST_SENDER)
+        openMetadataSheet()
+        composeRule.onNodeWithTag(testTag = PHOTO_VIEWER_METADATA_SENDER_TEST_TAG)
+            .assertTextContains(value = FIRST_SENDER)
+    }
+
+    @Test
+    fun participantTitle_whenCurrentItemIsOutgoing_showsSelfInTopBarAndDetails() {
+        setScreenContent(
+            uiState = loadedPhotoViewerUiState(firstItemIsIncoming = false),
+        )
+
+        val selfTitle = string(resId = R.string.unknown_self_participant)
+        composeRule.onNodeWithTag(testTag = PHOTO_VIEWER_TITLE_TEST_TAG)
+            .assertTextContains(value = selfTitle)
+        openMetadataSheet()
+        composeRule.onNodeWithTag(testTag = PHOTO_VIEWER_METADATA_SENDER_TEST_TAG)
+            .assertTextContains(value = selfTitle)
     }
 
     @Test
@@ -556,6 +582,7 @@ internal class PhotoViewerScreenContentTest {
 
     private fun loadedPhotoViewerUiState(
         firstItemCanUseActions: Boolean = true,
+        firstItemIsIncoming: Boolean = true,
         firstItemIsDraft: Boolean = false,
         itemCount: Int = 2,
         displayMode: PhotoViewerDisplayMode = PhotoViewerDisplayMode.Carousel,
@@ -565,6 +592,7 @@ internal class PhotoViewerScreenContentTest {
             index = 1,
             senderName = FIRST_SENDER,
             canUseActions = firstItemCanUseActions,
+            isIncoming = firstItemIsIncoming,
             isDraft = firstItemIsDraft,
         )
         val items = when (itemCount) {
@@ -587,11 +615,13 @@ internal class PhotoViewerScreenContentTest {
         index: Int,
         senderName: String,
         canUseActions: Boolean = true,
+        isIncoming: Boolean = true,
         isDraft: Boolean = false,
     ): PhotoViewerItem {
         return PhotoViewerItem(
             contentUri = photoViewerImageUri(),
             contentType = IMAGE_JPEG,
+            isIncoming = isIncoming,
             senderName = senderName,
             senderDestination = "+1555000$index",
             receivedTimestampMillis = 1_735_689_600_000L + index,

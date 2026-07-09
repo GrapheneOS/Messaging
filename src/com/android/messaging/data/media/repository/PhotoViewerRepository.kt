@@ -162,6 +162,7 @@ internal class PhotoViewerRepositoryImpl @Inject constructor(
                 PhotoViewerItem(
                     contentUri = contentUri,
                     contentType = contentType,
+                    isIncoming = MessageData.getIsIncoming(status),
                     senderName = getStringOrNull(
                         ConversationImagePartsView
                             .PhotoViewQuery

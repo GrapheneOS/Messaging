@@ -17,6 +17,7 @@ internal fun previewPhotoViewerItem(index: Int): PhotoViewerItem {
     return PhotoViewerItem(
         contentUri = "content://example/content/$index".toUri(),
         contentType = "image/jpeg",
+        isIncoming = true,
         senderName = "Ada Lovelace",
         senderDestination = "+1555123000$index",
         receivedTimestampMillis = 1_735_689_600_000L,
