@@ -261,12 +261,6 @@
         <item name="android:textColor">@color/list_empty_text</item>
     </style>
 
-    <style name="LowStorageActionItemStyle">
-        <item name="android:textColor">@color/low_storage_action_item_color</item>
-        <item name="android:textSize">@dimen/low_storage_action_item_text_size</item>
-        <item name="android:singleLine">false</item>
-    </style>
-
     <style name="SnackBarMessageWrapper">
         <item name="android:layout_marginLeft">@dimen/snack_bar_left_right_margin</item>
         <item name="android:layout_marginRight">0dp</item>

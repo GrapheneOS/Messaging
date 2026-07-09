@@ -78,8 +78,6 @@
     <dimen name="list_empty_text_size">14sp</dimen>
     <dimen name="list_empty_text_top_margin">20dp</dimen>
     <dimen name="list_empty_text_left_right_margin">60dp</dimen>
-    <dimen name="low_storage_action_item_text_size">16sp</dimen>
-
     <dimen name="snack_bar_left_right_margin">24dp</dimen>
     <dimen name="snack_bar_top_bottom_margin">18dp</dimen>
 

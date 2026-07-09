@@ -30,31 +30,35 @@ import com.android.messaging.util.PendingIntentConstants;
 import com.android.messaging.util.PhoneUtils;
 
 /**
- * Class that handles SMS auto delete and notification when storage is low
+ * Class that handles SMS storage warnings.
  */
 public class SmsStorageStatusManager {
     /**
      * Handles storage low signal for SMS
      */
     public static void handleStorageLow() {
-        if (!PhoneUtils.getDefault().isSmsEnabled()) {
-            return;
-        }
+        handleStorageWarning();
+    }
 
-        // TODO: Auto-delete messages, when that setting exists and is enabled
-
-        // Notify low storage for SMS
-        postStorageLowNotification();
+    /**
+     * Handles a full Messaging database.
+     */
+    public static void handleStorageFull() {
+        handleStorageWarning();
     }
 
     /**
      * Handles storage OK signal for SMS
      */
     public static void handleStorageOk() {
+        cancelStorageLowNotification();
+    }
+
+    private static void handleStorageWarning() {
         if (!PhoneUtils.getDefault().isSmsEnabled()) {
             return;
         }
-        cancelStorageLowNotification();
+        postStorageLowNotification();
     }
 
     /**
@@ -69,11 +73,12 @@ public class SmsStorageStatusManager {
         final NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(context, NotificationChannelUtil.ALERTS_CHANNEL);
         builder.setContentTitle(resources.getString(R.string.sms_storage_low_title))
+                .setContentText(resources.getString(R.string.sms_storage_low_text))
                 .setTicker(resources.getString(R.string.sms_storage_low_notification_ticker))
-                .setSmallIcon(R.drawable.ic_failed_light)
+                .setSmallIcon(R.drawable.ic_sms_light)
                 .setPriority(Notification.PRIORITY_DEFAULT)
-                .setOngoing(true)      // Can't be swiped off
-                .setAutoCancel(false)  // Don't auto cancel
+                .setOngoing(false)
+                .setAutoCancel(false)
                 .setContentIntent(pendingIntent);
 
         final NotificationCompat.BigTextStyle bigTextStyle =

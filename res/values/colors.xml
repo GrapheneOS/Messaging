@@ -103,7 +103,6 @@
     <color name="fab_ripple">#40ffffff</color>
 
     <color name="list_empty_text">#6d6d6d</color>
-    <color name="low_storage_action_item_color">#ff000000</color>
     <color name="open_conversation_animation_background_shadow">#40000000</color>
     <color name="compose_notification_bar_background">@color/primary_color</color>
 
