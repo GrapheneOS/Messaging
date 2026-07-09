@@ -30,12 +30,14 @@ import com.android.messaging.ui.core.AppTheme
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_CLOSE_BUTTON_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_DETAILS_MENU_ITEM_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_FORWARD_MENU_ITEM_TEST_TAG
+import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_METADATA_RECEIVED_TIMESTAMP_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_METADATA_SHEET_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_OVERFLOW_BUTTON_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_PAGER_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_PAGE_INDICATOR_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_SAVE_BUTTON_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_SHARE_BUTTON_TEST_TAG
+import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_TIMESTAMP_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_TITLE_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_ZOOMABLE_PHOTO_TEST_TAG
 import com.android.messaging.ui.photoviewer.component.PhotoViewerTopBar
@@ -235,6 +237,30 @@ internal class PhotoViewerScreenContentTest {
         composeRule.onNodeWithText(text = string(resId = R.string.message_details_type_label))
             .assertIsDisplayed()
         composeRule.onNodeWithText(text = IMAGE_JPEG).assertIsDisplayed()
+    }
+
+    @Test
+    fun timestamps_whenCurrentItemIsNotDraft_areDisplayed() {
+        setScreenContent()
+
+        composeRule.onNodeWithTag(testTag = PHOTO_VIEWER_TIMESTAMP_TEST_TAG)
+            .assertIsDisplayed()
+        openMetadataSheet()
+        composeRule.onNodeWithTag(testTag = PHOTO_VIEWER_METADATA_RECEIVED_TIMESTAMP_TEST_TAG)
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun timestamps_whenCurrentItemIsDraft_doNotExist() {
+        setScreenContent(
+            uiState = loadedPhotoViewerUiState(firstItemIsDraft = true),
+        )
+
+        composeRule.onNodeWithTag(testTag = PHOTO_VIEWER_TIMESTAMP_TEST_TAG)
+            .assertDoesNotExist()
+        openMetadataSheet()
+        composeRule.onNodeWithTag(testTag = PHOTO_VIEWER_METADATA_RECEIVED_TIMESTAMP_TEST_TAG)
+            .assertDoesNotExist()
     }
 
     @Test
@@ -519,8 +545,18 @@ internal class PhotoViewerScreenContentTest {
         return uiState
     }
 
+    private fun openMetadataSheet() {
+        composeRule.onNodeWithTag(testTag = PHOTO_VIEWER_OVERFLOW_BUTTON_TEST_TAG)
+            .performClick()
+        composeRule.onNodeWithTag(testTag = PHOTO_VIEWER_DETAILS_MENU_ITEM_TEST_TAG)
+            .performClick()
+        composeRule.onNodeWithTag(testTag = PHOTO_VIEWER_METADATA_SHEET_TEST_TAG)
+            .assertIsDisplayed()
+    }
+
     private fun loadedPhotoViewerUiState(
         firstItemCanUseActions: Boolean = true,
+        firstItemIsDraft: Boolean = false,
         itemCount: Int = 2,
         displayMode: PhotoViewerDisplayMode = PhotoViewerDisplayMode.Carousel,
         isClosing: Boolean = false,
@@ -529,6 +565,7 @@ internal class PhotoViewerScreenContentTest {
             index = 1,
             senderName = FIRST_SENDER,
             canUseActions = firstItemCanUseActions,
+            isDraft = firstItemIsDraft,
         )
         val items = when (itemCount) {
             1 -> persistentListOf(firstItem)
@@ -550,6 +587,7 @@ internal class PhotoViewerScreenContentTest {
         index: Int,
         senderName: String,
         canUseActions: Boolean = true,
+        isDraft: Boolean = false,
     ): PhotoViewerItem {
         return PhotoViewerItem(
             contentUri = photoViewerImageUri(),
@@ -557,7 +595,7 @@ internal class PhotoViewerScreenContentTest {
             senderName = senderName,
             senderDestination = "+1555000$index",
             receivedTimestampMillis = 1_735_689_600_000L + index,
-            isDraft = false,
+            isDraft = isDraft,
             canUseActions = canUseActions,
         )
     }

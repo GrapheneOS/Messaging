@@ -52,6 +52,7 @@ import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_FORWARD_MENU_ITEM_TEST_
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_OVERFLOW_BUTTON_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_SAVE_BUTTON_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_SHARE_BUTTON_TEST_TAG
+import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_TIMESTAMP_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_TITLE_TEST_TAG
 import com.android.messaging.util.Dates
 
@@ -181,13 +182,16 @@ private fun PhotoViewerTitleBlock(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        Text(
-            text = photoViewerTimestamp(item = item),
-            style = MaterialTheme.typography.bodySmall,
-            color = secondaryContentColor,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        if (item?.isDraft != true) {
+            Text(
+                modifier = Modifier.testTag(tag = PHOTO_VIEWER_TIMESTAMP_TEST_TAG),
+                text = photoViewerTimestamp(item = item),
+                style = MaterialTheme.typography.bodySmall,
+                color = secondaryContentColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 
