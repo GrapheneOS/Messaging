@@ -37,7 +37,7 @@ internal fun PhotoViewerScreenEffects(
     }
 }
 
-private suspend fun handlePhotoViewerEffect(
+private fun handlePhotoViewerEffect(
     context: Context,
     effect: PhotoViewerEffect,
     onFinish: () -> Unit,
@@ -71,7 +71,7 @@ private suspend fun handlePhotoViewerEffect(
     }
 }
 
-private suspend fun sharePhoto(
+private fun sharePhoto(
     context: Context,
     uri: Uri,
     contentType: String,
@@ -96,7 +96,7 @@ private suspend fun sharePhoto(
     }
 }
 
-private suspend fun forwardPhoto(
+private fun forwardPhoto(
     context: Context,
     uri: Uri,
     contentType: String,
