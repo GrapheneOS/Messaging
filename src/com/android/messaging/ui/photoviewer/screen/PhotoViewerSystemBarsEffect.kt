@@ -5,6 +5,7 @@ import android.view.Window
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -17,12 +18,14 @@ internal fun PhotoViewerSystemBarsEffect(
 ) {
     val view = LocalView.current
     val window = view.context.findActivityWindow()
-
-    DisposableEffect(window, view) {
-        val controller = createWindowInsetsController(
+    val controller = remember(window, view) {
+        createWindowInsetsController(
             window = window,
             view = view,
         )
+    }
+
+    DisposableEffect(controller) {
         controller?.systemBarsBehavior = WindowInsetsControllerCompat
             .BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
 
@@ -32,11 +35,7 @@ internal fun PhotoViewerSystemBarsEffect(
         }
     }
 
-    LaunchedEffect(window, view, displayMode) {
-        val controller = createWindowInsetsController(
-            window = window,
-            view = view,
-        )
+    LaunchedEffect(controller, displayMode) {
         val systemBars = WindowInsetsCompat.Type.systemBars()
         when (displayMode) {
             PhotoViewerDisplayMode.Carousel -> controller?.show(systemBars)
