@@ -75,7 +75,7 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
         participant: ParticipantData,
     ): ParticipantUiState {
         val fullName = participant.fullName
-        val hasFullName = fullName.isNotEmpty()
+        val hasFullName = !fullName.isNullOrEmpty()
         val displayName = when {
             hasFullName -> fullName
             else -> participant.sendDestination.orEmpty()
