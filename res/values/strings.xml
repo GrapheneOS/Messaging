@@ -948,6 +948,8 @@
     <string name="activity_not_found_message">Could not find an appropriate application</string>
 
     <string name="debug_sub_id_spinner_text" translatable="false">SUB Id</string>
+    <string name="debug_mms_config_title" translatable="false">MMS Config</string>
+    <string name="debug_mms_config_empty_value" translatable="false">Empty</string>
 
     <!-- Accessibility : Content description for deleting a recipient chip. -->
     <string name="chips_delete_content_description">Remove recipient</string>

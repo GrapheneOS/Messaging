@@ -298,7 +298,7 @@
             android:name=".ui.debug.DebugMmsConfigActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:screenOrientation="user"
-            android:theme="@style/BugleTheme.DialogActivity"
+            android:theme="@style/Theme.Compose"
             android:exported="false">
         </activity>
 
