@@ -17,6 +17,7 @@ import com.android.messaging.R
 import com.android.messaging.ui.appsettings.common.SettingsClickableItem
 import com.android.messaging.ui.appsettings.common.SettingsTopAppBar
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionUiState
+import com.android.messaging.ui.common.text.asLtrText
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -62,7 +63,7 @@ internal fun SettingsMainScreen(
             itemsIndexed(subscriptions, key = { _, item -> item.subId }) { index, subscription ->
                 SettingsClickableItem(
                     title = subscription.displayName,
-                    summary = subscription.displayDetail,
+                    summary = subscription.displayDetail.asLtrText(),
                     onClick = {
                         onSubscriptionClick(subscription.subId, subscription.displayName)
                     },

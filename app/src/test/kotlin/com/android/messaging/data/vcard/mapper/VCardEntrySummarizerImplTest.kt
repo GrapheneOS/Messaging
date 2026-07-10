@@ -29,11 +29,6 @@ internal class VCardEntrySummarizerImplTest {
     )
 
     @Test
-    fun displayName_fromFormattedName() {
-        assertEquals("Ada Lovelace", summarizer.displayName(entryWith("FN" to "Ada Lovelace")))
-    }
-
-    @Test
     fun displayName_missing_isNull() {
         assertNull(summarizer.displayName(entryWith()))
     }

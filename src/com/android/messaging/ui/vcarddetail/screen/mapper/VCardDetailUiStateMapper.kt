@@ -58,7 +58,6 @@ internal class VCardDetailUiStateMapperImpl @Inject constructor() : VCardDetailU
     private fun mapField(field: VCardField): VCardFieldUiModel {
         return VCardFieldUiModel(
             value = field.value,
-            displayValue = field.value,
             label = field.label,
             action = field.action,
         )

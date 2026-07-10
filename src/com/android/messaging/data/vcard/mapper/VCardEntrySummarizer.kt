@@ -21,12 +21,7 @@ internal class VCardEntrySummarizerImpl @Inject constructor(
 ) : VCardEntrySummarizer {
 
     override fun displayName(entry: CustomVCardEntry): String? {
-        val name = entry.displayName ?: run {
-            entry.consolidateFields()
-            entry.displayName
-        }
-
-        return name?.takeIf(String::isNotBlank)
+        return entry.displayName?.takeIf(String::isNotBlank)
     }
 
     override fun avatarPhoto(entry: CustomVCardEntry): VCardAvatarPhoto? {

@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -14,10 +13,10 @@ import com.android.messaging.data.conversation.model.attachment.ConversationVCar
 import com.android.messaging.data.vcard.model.VCardAvatarPhoto
 import com.android.messaging.ui.common.components.attachment.VCardAttachmentCard
 import com.android.messaging.ui.common.components.attachment.VCardAttachmentKind
-import com.android.messaging.ui.common.components.participant.ParticipantAvatarImage
 import com.android.messaging.ui.common.text.asLtrText
 import com.android.messaging.ui.conversation.preview.previewVCardUiModel
 import com.android.messaging.ui.core.MessagingPreviewColumn
+import com.android.messaging.ui.vcard.rememberVCardAvatarImage
 
 private const val PREVIEW_LONG_CONTACT_TITLE =
     "Alexandria Cassandra Montgomery-Washington from International Partnerships"
@@ -39,11 +38,7 @@ internal fun ConversationVCardAttachmentCardContent(
     subtitleText: String?,
     subtitleTextResId: Int?,
 ) {
-    val avatarImage = remember(avatarPhoto) {
-        avatarPhoto
-            ?.asReadOnlyByteBuffer()
-            ?.let(ParticipantAvatarImage::Bytes)
-    }
+    val avatarImage = rememberVCardAvatarImage(avatarPhoto)
 
     VCardAttachmentCard(
         modifier = modifier,
