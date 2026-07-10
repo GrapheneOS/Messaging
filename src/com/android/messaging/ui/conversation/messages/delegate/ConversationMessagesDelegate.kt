@@ -64,13 +64,8 @@ internal class ConversationMessagesDelegateImpl @Inject constructor(
         isBound = true
 
         scope.launch(defaultDispatcher) {
-            var currentConversationId: String? = null
-
             conversationIdFlow.collectLatest { conversationId ->
-                if (conversationId != currentConversationId) {
-                    currentConversationId = conversationId
-                    _state.value = ConversationMessagesUiState.Loading
-                }
+                _state.value = ConversationMessagesUiState.Loading
 
                 if (conversationId == null) {
                     return@collectLatest

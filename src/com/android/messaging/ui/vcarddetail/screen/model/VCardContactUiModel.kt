@@ -16,7 +16,6 @@ internal data class VCardContactUiModel(
 @Immutable
 internal data class VCardFieldUiModel(
     val value: String,
-    val displayValue: String,
     val label: String?,
     val action: VCardFieldAction,
 )

@@ -17,7 +17,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,7 +32,6 @@ import com.android.messaging.ui.common.components.attachment.AttachmentPreviewRo
 import com.android.messaging.ui.common.components.attachment.AudioAttachmentCell
 import com.android.messaging.ui.common.components.attachment.MediaAttachmentCell
 import com.android.messaging.ui.common.components.attachment.VCardAttachmentCell
-import com.android.messaging.ui.common.components.participant.ParticipantAvatarImage
 import com.android.messaging.ui.conversation.CONVERSATION_ATTACHMENT_PREVIEW_LIST_TEST_TAG
 import com.android.messaging.ui.conversation.attachment.ui.resolveLtrVCardText
 import com.android.messaging.ui.conversation.attachment.ui.toVCardAttachmentKind
@@ -48,6 +46,7 @@ import com.android.messaging.ui.conversation.preview.previewResolvedImageAttachm
 import com.android.messaging.ui.conversation.preview.previewResolvedVCardAttachment
 import com.android.messaging.ui.conversation.preview.previewResolvedVideoAttachment
 import com.android.messaging.ui.core.MessagingPreviewTheme
+import com.android.messaging.ui.vcard.rememberVCardAvatarImage
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -115,11 +114,7 @@ private fun ResolvedAttachmentPreviewItem(
 
     when (attachment) {
         is ComposerAttachmentUiModel.Resolved.VCard -> {
-            val avatarImage = remember(attachment.vCardUiModel.avatarPhoto) {
-                attachment.vCardUiModel.avatarPhoto
-                    ?.asReadOnlyByteBuffer()
-                    ?.let(ParticipantAvatarImage::Bytes)
-            }
+            val avatarImage = rememberVCardAvatarImage(attachment.vCardUiModel.avatarPhoto)
 
             VCardAttachmentCell(
                 modifier = Modifier.testTag(itemTestTag),

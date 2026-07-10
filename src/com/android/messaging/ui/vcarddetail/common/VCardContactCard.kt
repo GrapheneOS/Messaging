@@ -16,7 +16,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,12 +27,12 @@ import com.android.messaging.R
 import com.android.messaging.data.vcard.model.VCardAvatarPhoto
 import com.android.messaging.data.vcarddetail.model.VCardFieldAction
 import com.android.messaging.ui.common.components.participant.ParticipantAvatar
-import com.android.messaging.ui.common.components.participant.ParticipantAvatarImage
 import com.android.messaging.ui.common.components.participant.participantAvatarLabel
 import com.android.messaging.ui.common.components.participant.participantColorSeed
 import com.android.messaging.ui.common.components.selection.SelectionListItemTokens
 import com.android.messaging.ui.common.text.asLtrText
 import com.android.messaging.ui.core.MessagingPreviewColumn
+import com.android.messaging.ui.vcard.rememberVCardAvatarImage
 import com.android.messaging.ui.vcarddetail.screen.model.VCardContactUiModel
 import com.android.messaging.ui.vcarddetail.screen.model.VCardFieldUiModel
 import kotlinx.collections.immutable.persistentListOf
@@ -86,11 +85,7 @@ private fun VCardContactHeader(
     avatarPhoto: VCardAvatarPhoto?,
 ) {
     val displayText = displayName?.asLtrText().orEmpty()
-    val avatarImage = remember(avatarPhoto) {
-        avatarPhoto
-            ?.asReadOnlyByteBuffer()
-            ?.let(ParticipantAvatarImage::Bytes)
-    }
+    val avatarImage = rememberVCardAvatarImage(avatarPhoto)
 
     Row(
         modifier = Modifier
@@ -133,12 +128,13 @@ private fun VCardFieldRow(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
-    val displayValue = field.displayValue.asLtrText()
+    val displayValue = field.value.asLtrText()
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .combinedClickable(
+                enabled = field.action != VCardFieldAction.None,
                 onClick = onClick,
                 onLongClick = onLongClick,
             )
@@ -177,25 +173,21 @@ private fun VCardContactCardPreview() {
                 fields = persistentListOf(
                     VCardFieldUiModel(
                         value = "+1 555 0001",
-                        displayValue = "+1 555 0001",
                         label = "Mobile",
                         action = VCardFieldAction.Dial("+15550001"),
                     ),
                     VCardFieldUiModel(
                         value = "ada@example.com",
-                        displayValue = "ada@example.com",
                         label = "Home",
                         action = VCardFieldAction.Email("ada@example.com"),
                     ),
                     VCardFieldUiModel(
                         value = "1 Analytical Engine Way, London",
-                        displayValue = "1 Analytical Engine Way, London",
                         label = "Address",
                         action = VCardFieldAction.OpenMap("1 Analytical Engine Way, London"),
                     ),
                     VCardFieldUiModel(
                         value = "First computer programmer",
-                        displayValue = "First computer programmer",
                         label = stringResource(R.string.vcard_detail_notes_label),
                         action = VCardFieldAction.None,
                     ),
