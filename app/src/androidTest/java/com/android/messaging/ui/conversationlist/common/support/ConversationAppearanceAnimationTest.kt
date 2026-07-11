@@ -1,4 +1,4 @@
-package com.android.messaging.ui.conversationlist.ui.support
+package com.android.messaging.ui.conversationlist.common.support
 
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
