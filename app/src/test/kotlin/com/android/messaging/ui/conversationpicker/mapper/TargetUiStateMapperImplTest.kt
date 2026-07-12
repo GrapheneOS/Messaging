@@ -2,12 +2,11 @@ package com.android.messaging.ui.conversationpicker.mapper
 
 import com.android.messaging.data.contact.formatter.ContactDestinationFormatter
 import com.android.messaging.data.conversationpicker.model.TargetConversation
+import com.android.messaging.data.phone.formatter.PhoneNumberFormatter
 import com.android.messaging.domain.conversation.usecase.avatar.ResolveAvatarUri
 import com.android.messaging.ui.conversationpicker.model.TargetUiState
-import com.android.messaging.util.PhoneUtils
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.After
@@ -23,7 +22,9 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 internal class TargetUiStateMapperImplTest {
 
-    private val phoneUtilsInstance = mockk<PhoneUtils>(relaxed = true)
+    private val phoneNumberFormatter = mockk<PhoneNumberFormatter> {
+        every { formatForDisplay(any()) } answers { "formatted:${firstArg<String>()}" }
+    }
 
     private val contactDestinationFormatter = mockk<ContactDestinationFormatter> {
         every { canonicalize(any()) } answers { "canonical:${firstArg<String>()}" }
@@ -33,16 +34,12 @@ internal class TargetUiStateMapperImplTest {
 
     private val mapper = TargetUiStateMapperImpl(
         contactDestinationFormatter = contactDestinationFormatter,
+        phoneNumberFormatter = phoneNumberFormatter,
         resolveAvatarUri = resolveAvatarUri,
     )
 
     @Before
     fun setUp() {
-        mockkStatic(PhoneUtils::class)
-        every { PhoneUtils.getDefault() } returns phoneUtilsInstance
-        every { phoneUtilsInstance.formatForDisplay(any()) } answers {
-            "formatted:${firstArg<String>()}"
-        }
         every { resolveAvatarUri(any()) } returns null
     }
 
