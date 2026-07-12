@@ -1,5 +1,6 @@
 package com.android.messaging.ui.common.components.mediapreview
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -8,14 +9,16 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -25,7 +28,8 @@ import com.android.messaging.ui.common.components.attachment.loadMediaThumbnailB
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.filterNotNull
 
 private const val MEDIA_PREVIEW_BACKGROUND_BITMAP_SIZE_PX = 40
 private const val MEDIA_PREVIEW_BACKGROUND_OVERLAY_ALPHA = 0.5f
@@ -37,184 +41,375 @@ internal fun MediaPreviewBackground(
     pagerState: PagerState,
     modifier: Modifier = Modifier,
 ) {
-    val backgroundState = rememberMediaPreviewBackgroundState(
+    val context = LocalContext.current
+
+    val bitmapLoader: suspend (MediaPreviewItem) -> Bitmap? = remember(context) {
+        { item ->
+            loadMediaThumbnailBitmap(
+                contentResolver = context.contentResolver,
+                contentUri = item.contentUri.toUri(),
+                contentType = item.contentType,
+                size = IntSize(
+                    width = MEDIA_PREVIEW_BACKGROUND_BITMAP_SIZE_PX,
+                    height = MEDIA_PREVIEW_BACKGROUND_BITMAP_SIZE_PX,
+                ),
+                softenBitmap = true,
+            )
+        }
+    }
+
+    MediaPreviewBackground(
+        modifier = modifier,
         items = items,
-        settledPage = pagerState.settledPage,
+        pagerState = pagerState,
+        bitmapLoader = bitmapLoader,
+    )
+}
+
+@Composable
+internal fun MediaPreviewBackground(
+    items: ImmutableList<MediaPreviewItem>,
+    pagerState: PagerState,
+    bitmapLoader: suspend (MediaPreviewItem) -> Bitmap?,
+    modifier: Modifier = Modifier,
+) {
+    val frames = rememberMediaPreviewBackgroundFrames(
+        items = items,
+        pagerState = pagerState,
+        bitmapLoader = bitmapLoader,
+    )
+    val transitionState = remember { MediaPreviewBackgroundTransitionState() }
+
+    MediaPreviewBackgroundTransitionEffects(
+        items = items,
+        pagerState = pagerState,
+        frames = frames,
+        transitionState = transitionState,
+    )
+
+    val renderState = resolveMediaPreviewBackgroundRenderState(
+        isScrollInProgress = pagerState.isScrollInProgress,
+        frames = frames,
+        transitionState = transitionState,
     )
 
     MediaPreviewBackgroundContent(
         modifier = modifier,
-        state = backgroundState,
+        fallbackBackgroundColor = MaterialTheme
+            .colorScheme
+            .surfaceContainerHighest
+            .copy(alpha = MEDIA_PREVIEW_BACKGROUND_FALLBACK_ALPHA),
+        pagerState = pagerState,
+        renderState = renderState,
     )
 }
 
 @Composable
-private fun MediaPreviewBackgroundContent(
-    modifier: Modifier = Modifier,
-    state: MediaPreviewBackgroundState,
-) {
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(
-                color = state.fallbackBackgroundColor,
-            ),
-    ) {
-        if (state.settledBackgroundImageBitmap != null) {
-            Image(
-                bitmap = state.settledBackgroundImageBitmap,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                filterQuality = FilterQuality.Low,
-                modifier = Modifier.fillMaxSize(),
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        color = Color.Black.copy(alpha = MEDIA_PREVIEW_BACKGROUND_OVERLAY_ALPHA),
-                    ),
+private fun rememberMediaPreviewBackgroundFrames(
+    items: ImmutableList<MediaPreviewItem>,
+    pagerState: PagerState,
+    bitmapLoader: suspend (MediaPreviewItem) -> Bitmap?,
+): MediaPreviewBackgroundFrames {
+    val blendPages by remember(pagerState, items.size) {
+        derivedStateOf {
+            resolveMediaPreviewBackgroundBlendPages(
+                currentPage = pagerState.currentPage,
+                currentPageOffsetFraction = pagerState.currentPageOffsetFraction,
+                pageCount = items.size,
             )
         }
     }
-}
-
-@Composable
-private fun rememberMediaPreviewBackgroundState(
-    items: ImmutableList<MediaPreviewItem>,
-    settledPage: Int,
-): MediaPreviewBackgroundState {
-    val backgroundSelection = remember(
+    val itemsToPrefetch = remember(
         items,
-        settledPage,
+        pagerState.currentPage,
+        pagerState.settledPage,
+        pagerState.targetPage,
+        blendPages,
     ) {
-        getMediaPreviewBackgroundSelection(
+        getMediaPreviewBackgroundPrefetchItems(
             items = items,
-            settledPage = settledPage,
+            currentPage = pagerState.currentPage,
+            settledPage = pagerState.settledPage,
+            targetPage = pagerState.targetPage,
+            blendPages = blendPages,
         )
     }
-
-    val backgroundBitmapCache = rememberMediaPreviewBitmapCache(
+    val bitmapCache = rememberMediaPreviewBitmapCache(
         items = items,
-        itemsToPrefetch = backgroundSelection.itemsToPrefetch,
+        itemsToPrefetch = itemsToPrefetch,
+        bitmapLoader = bitmapLoader,
+    )
+    val lowerFrame = mediaPreviewBackgroundFrame(
+        items = items,
+        page = blendPages.lowerPage,
+        bitmapCache = bitmapCache,
+    )
+    val upperFrame = mediaPreviewBackgroundFrame(
+        items = items,
+        page = blendPages.upperPage,
+        bitmapCache = bitmapCache,
     )
 
-    val fallbackBackgroundColor = MaterialTheme
-        .colorScheme
-        .surfaceContainerHighest
-        .copy(alpha = MEDIA_PREVIEW_BACKGROUND_FALLBACK_ALPHA)
+    return MediaPreviewBackgroundFrames(
+        bitmapCache = bitmapCache,
+        blendPages = blendPages,
+        lowerFrame = lowerFrame,
+        upperFrame = upperFrame,
+        currentPageFrame = mediaPreviewBackgroundFrame(
+            items = items,
+            page = pagerState.currentPage,
+            bitmapCache = bitmapCache,
+        ),
+        isInteractivePairReady = rememberMediaPreviewBackgroundInteractivePairReady(
+            pagerState = pagerState,
+            blendPages = blendPages,
+            hasLowerFrame = lowerFrame != null,
+            hasUpperFrame = upperFrame != null,
+        ),
+    )
+}
 
-    val settledBackgroundBitmap = backgroundSelection
-        .itemsToPrefetch
-        .firstOrNull()
-        ?.let { item ->
-            backgroundBitmapCache[item.contentUri]
+@Composable
+private fun rememberMediaPreviewBackgroundInteractivePairReady(
+    pagerState: PagerState,
+    blendPages: MediaPreviewBackgroundBlendPages,
+    hasLowerFrame: Boolean,
+    hasUpperFrame: Boolean,
+): Boolean {
+    val isInteractivePairReady by remember(
+        pagerState,
+        blendPages,
+        hasLowerFrame,
+        hasUpperFrame,
+    ) {
+        derivedStateOf {
+            resolveMediaPreviewBackgroundInteractivePairReady(
+                currentPageOffsetFraction = pagerState.currentPageOffsetFraction,
+                blendPages = blendPages,
+                hasLowerFrame = hasLowerFrame,
+                hasUpperFrame = hasUpperFrame,
+            )
         }
+    }
 
-    val settledBackgroundImageBitmap = settledBackgroundBitmap?.asImageBitmap()
-
-    return MediaPreviewBackgroundState(
-        settledBackgroundImageBitmap = settledBackgroundImageBitmap,
-        fallbackBackgroundColor = fallbackBackgroundColor,
-    )
+    return isInteractivePairReady
 }
 
 @Composable
 private fun rememberMediaPreviewBitmapCache(
     items: ImmutableList<MediaPreviewItem>,
     itemsToPrefetch: ImmutableList<MediaPreviewItem>,
+    bitmapLoader: suspend (MediaPreviewItem) -> Bitmap?,
 ): MediaPreviewBitmapCache {
-    val context = LocalContext.current
+    val bitmapCache = remember { MediaPreviewBitmapCache() }
+    val bitmapPrefetcher = remember { MediaPreviewBitmapPrefetcher() }
+    val currentBitmapLoader by rememberUpdatedState(newValue = bitmapLoader)
 
-    val backgroundBitmapCache = remember {
-        MediaPreviewBitmapCache()
+    LaunchedEffect(bitmapPrefetcher, bitmapCache) {
+        bitmapPrefetcher.runWorkers(
+            bitmapCache = bitmapCache,
+            bitmapLoader = { item -> currentBitmapLoader(item) },
+        )
     }
-
-    LaunchedEffect(items) {
-        backgroundBitmapCache.removeInactive(
-            activeContentUris = items
-                .asSequence()
-                .map { it.contentUri }
-                .toSet(),
+    LaunchedEffect(items, itemsToPrefetch, bitmapPrefetcher, bitmapCache) {
+        bitmapPrefetcher.updateRequests(
+            items = items,
+            candidates = itemsToPrefetch,
+            bitmapCache = bitmapCache,
         )
     }
 
-    LaunchedEffect(itemsToPrefetch) {
-        itemsToPrefetch
-            .asSequence()
-            .filter { backgroundBitmapCache[it.contentUri] == null }
-            .forEach { item ->
-                loadMediaThumbnailBitmap(
-                    contentResolver = context.contentResolver,
-                    contentUri = item.contentUri.toUri(),
-                    contentType = item.contentType,
-                    size = IntSize(
-                        width = MEDIA_PREVIEW_BACKGROUND_BITMAP_SIZE_PX,
-                        height = MEDIA_PREVIEW_BACKGROUND_BITMAP_SIZE_PX,
-                    ),
-                    softenBitmap = true,
-                )?.let { bitmap ->
-                    backgroundBitmapCache.put(
-                        contentUri = item.contentUri,
-                        bitmap = bitmap,
-                    )
-                }
-            }
-    }
-
-    return backgroundBitmapCache
+    return bitmapCache
 }
 
-private fun getMediaPreviewBackgroundSelection(
+@Composable
+private fun MediaPreviewBackgroundTransitionEffects(
     items: ImmutableList<MediaPreviewItem>,
-    settledPage: Int,
-): MediaPreviewBackgroundSelection {
-    if (items.isEmpty()) {
-        return MediaPreviewBackgroundSelection(
-            itemsToPrefetch = persistentListOf(),
-        )
-    }
-
-    val settledIndex = settledPage.coerceIn(
-        minimumValue = 0,
-        maximumValue = items.lastIndex,
+    pagerState: PagerState,
+    frames: MediaPreviewBackgroundFrames,
+    transitionState: MediaPreviewBackgroundTransitionState,
+) {
+    MediaPreviewBackgroundScrollEffect(
+        pagerState = pagerState,
+        frames = frames,
+        transitionState = transitionState,
     )
+    MediaPreviewBackgroundSettledEffect(
+        items = items,
+        pagerState = pagerState,
+        bitmapCache = frames.bitmapCache,
+        transitionState = transitionState,
+    )
+}
 
-    val settledItem = items[settledIndex]
+@Composable
+private fun MediaPreviewBackgroundScrollEffect(
+    pagerState: PagerState,
+    frames: MediaPreviewBackgroundFrames,
+    transitionState: MediaPreviewBackgroundTransitionState,
+) {
+    val isScrollInProgress = pagerState.isScrollInProgress
 
-    val previousItem = items
-        .getOrNull(index = settledIndex - 1)
-        ?.takeIf { it.contentUri != settledItem.contentUri }
+    LaunchedEffect(
+        isScrollInProgress,
+        frames.isInteractivePairReady,
+        pagerState.currentPage,
+        frames.currentPageFrame,
+    ) {
+        if (isScrollInProgress) {
+            transitionState.onScrollFrame(
+                isInteractivePairReady = frames.isInteractivePairReady,
+                currentPageFrame = frames.currentPageFrame,
+            )
+        }
+    }
+}
 
-    val nextItem = items
-        .getOrNull(index = settledIndex + 1)
-        ?.takeIf { item ->
-            item.contentUri != settledItem.contentUri &&
-                item.contentUri != previousItem?.contentUri
+@Composable
+private fun MediaPreviewBackgroundSettledEffect(
+    items: ImmutableList<MediaPreviewItem>,
+    pagerState: PagerState,
+    bitmapCache: MediaPreviewBitmapCache,
+    transitionState: MediaPreviewBackgroundTransitionState,
+) {
+    val currentItems by rememberUpdatedState(newValue = items)
+    val isEmpty = items.isEmpty()
+
+    LaunchedEffect(isEmpty, pagerState, bitmapCache, transitionState) {
+        if (isEmpty) {
+            transitionState.clear()
+            return@LaunchedEffect
         }
 
-    val itemsToPrefetch = listOfNotNull(
-        settledItem,
-        previousItem,
-        nextItem,
-    ).toImmutableList()
+        snapshotFlow {
+            when {
+                pagerState.isScrollInProgress -> null
+                else -> mediaPreviewBackgroundFrame(
+                    items = currentItems,
+                    page = pagerState.settledPage,
+                    bitmapCache = bitmapCache,
+                )
+            }
+        }
+            .filterNotNull()
+            .conflate()
+            .collect(transitionState::settle)
+    }
+}
 
-    return MediaPreviewBackgroundSelection(
-        itemsToPrefetch = itemsToPrefetch,
+@Composable
+private fun MediaPreviewBackgroundContent(
+    fallbackBackgroundColor: Color,
+    pagerState: PagerState,
+    renderState: MediaPreviewBackgroundRenderState,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(color = fallbackBackgroundColor),
+    ) {
+        when (renderState) {
+            MediaPreviewBackgroundRenderState.Fallback -> Unit
+            is MediaPreviewBackgroundRenderState.Held -> {
+                MediaPreviewBackgroundImage(frame = renderState.frame)
+            }
+            is MediaPreviewBackgroundRenderState.Interactive -> {
+                MediaPreviewBackgroundInteractiveContent(
+                    pagerState = pagerState,
+                    renderState = renderState,
+                )
+            }
+            is MediaPreviewBackgroundRenderState.Recovering -> {
+                MediaPreviewBackgroundRecoveryContent(renderState = renderState)
+            }
+        }
+        MediaPreviewBackgroundOverlay(renderState = renderState)
+    }
+}
+
+@Composable
+private fun MediaPreviewBackgroundInteractiveContent(
+    pagerState: PagerState,
+    renderState: MediaPreviewBackgroundRenderState.Interactive,
+) {
+    MediaPreviewBackgroundImage(frame = renderState.lowerFrame)
+    renderState.upperFrame?.let { upperFrame ->
+        MediaPreviewBackgroundImage(
+            modifier = Modifier
+                .graphicsLayer {
+                    alpha = resolveMediaPreviewBackgroundUpperAlpha(
+                        currentPage = pagerState.currentPage,
+                        currentPageOffsetFraction = pagerState.currentPageOffsetFraction,
+                        lowerPage = renderState.lowerPage,
+                        pageCount = pagerState.pageCount,
+                    )
+                },
+            frame = upperFrame,
+        )
+    }
+}
+
+@Composable
+private fun MediaPreviewBackgroundRecoveryContent(
+    renderState: MediaPreviewBackgroundRenderState.Recovering,
+) {
+    renderState.displayedFrame?.let { displayedFrame ->
+        MediaPreviewBackgroundImage(frame = displayedFrame)
+    }
+    MediaPreviewBackgroundImage(
+        modifier = Modifier
+            .graphicsLayer {
+                alpha = renderState.recoveryProgress.value
+            },
+        frame = renderState.incomingFrame,
     )
 }
 
-@Immutable
-private data class MediaPreviewBackgroundSelection(
-    val itemsToPrefetch: ImmutableList<MediaPreviewItem>,
-)
+@Composable
+private fun MediaPreviewBackgroundOverlay(
+    renderState: MediaPreviewBackgroundRenderState,
+) {
+    if (renderState == MediaPreviewBackgroundRenderState.Fallback) {
+        return
+    }
 
-@Immutable
-private data class MediaPreviewBackgroundState(
-    val settledBackgroundImageBitmap: ImageBitmap?,
-    val fallbackBackgroundColor: Color,
-)
+    val isRecoveringWithoutDisplayedFrame =
+        renderState is MediaPreviewBackgroundRenderState.Recovering &&
+            renderState.displayedFrame == null
+
+    val overlayModifier = when {
+        isRecoveringWithoutDisplayedFrame -> {
+            Modifier
+                .graphicsLayer {
+                    alpha = renderState.recoveryProgress.value
+                }
+        }
+        else -> Modifier
+    }
+
+    Box(
+        modifier = overlayModifier
+            .fillMaxSize()
+            .background(
+                color = Color.Black.copy(alpha = MEDIA_PREVIEW_BACKGROUND_OVERLAY_ALPHA),
+            ),
+    )
+}
+
+@Composable
+private fun MediaPreviewBackgroundImage(
+    frame: MediaPreviewBackgroundFrame,
+    modifier: Modifier = Modifier,
+) {
+    Image(
+        modifier = modifier.fillMaxSize(),
+        bitmap = frame.imageBitmap,
+        contentDescription = null,
+        contentScale = ContentScale.Crop,
+        filterQuality = FilterQuality.Low,
+    )
+}
 
 @PreviewLightDark
 @Composable
