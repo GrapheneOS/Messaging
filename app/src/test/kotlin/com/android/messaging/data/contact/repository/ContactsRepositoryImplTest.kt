@@ -8,6 +8,7 @@ import android.provider.ContactsContract
 import com.android.messaging.data.contact.formatter.ContactDestinationFormatterImpl
 import com.android.messaging.data.contact.model.Contact
 import com.android.messaging.data.contact.model.ContactDestination
+import com.android.messaging.data.phone.formatter.PhoneNumberFormatterImpl
 import com.android.messaging.sms.MmsSmsUtils
 import com.android.messaging.util.PhoneUtils
 import io.mockk.every
@@ -496,7 +497,9 @@ internal class ContactsRepositoryImplTest {
 
     private fun createRepository(): ContactsRepositoryImpl {
         return ContactsRepositoryImpl(
-            formatter = ContactDestinationFormatterImpl(),
+            formatter = ContactDestinationFormatterImpl(
+                PhoneNumberFormatterImpl(phoneUtilsInstance),
+            ),
             contentResolver = contentResolver,
             ioDispatcher = UnconfinedTestDispatcher(),
         )

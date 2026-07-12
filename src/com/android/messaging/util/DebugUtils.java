@@ -43,7 +43,7 @@ import com.android.messaging.datamodel.data.ParticipantData;
 import com.android.messaging.debug.DebugSimEmulationMode;
 import com.android.messaging.debug.DebugSimEmulationStore;
 import com.android.messaging.debug.TestDataSeeder;
-import com.android.messaging.receiver.SmsReceiver;
+import com.android.messaging.receiver.SmsDeliverReceiver;
 import com.android.messaging.sms.MmsUtils;
 import com.android.messaging.ui.UIIntents;
 
@@ -320,7 +320,7 @@ public class DebugUtils {
             if (dumpFileName.startsWith(MmsUtils.SMS_DUMP_PREFIX)) {
                 final SmsMessage[] messages = DebugUtils.retrieveSmsFromDumpFile(dumpFileName);
                 if (messages != null) {
-                    SmsReceiver.deliverSmsMessages(mHost, ParticipantData.DEFAULT_SELF_SUB_ID,
+                    SmsDeliverReceiver.deliverSmsMessages(mHost, ParticipantData.DEFAULT_SELF_SUB_ID,
                             0, messages);
                 } else {
                     LogUtil.e(LogUtil.BUGLE_TAG,
