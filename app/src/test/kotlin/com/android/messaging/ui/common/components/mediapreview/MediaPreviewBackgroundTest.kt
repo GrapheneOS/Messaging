@@ -1,6 +1,6 @@
 package com.android.messaging.ui.common.components.mediapreview
 
-import androidx.compose.ui.graphics.ImageBitmap
+import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
@@ -393,7 +393,7 @@ internal class MediaPreviewBackgroundTest {
     private fun mediaPreviewBackgroundFrame(contentUri: String): MediaPreviewBackgroundFrame {
         return MediaPreviewBackgroundFrame(
             contentUri = contentUri,
-            imageBitmap = ImageBitmap(width = 1, height = 1),
+            imageBitmap = mockk(),
         )
     }
 
