@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation
 
+import android.Manifest
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
@@ -8,17 +9,31 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.rule.GrantPermissionRule
 import com.android.common.test.helpers.targetContext
+import com.android.common.test.rules.AppTestRule
 import com.android.messaging.R
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 internal class ConversationActivityRecipientPickerTest {
 
+    private val appRule = AppTestRule()
+    private val permissionRule = GrantPermissionRule.grant(
+        Manifest.permission.READ_CONTACTS,
+        Manifest.permission.READ_PHONE_STATE,
+        Manifest.permission.READ_SMS,
+    )
+    private val composeTestRule = createAndroidComposeRule<ConversationActivity>()
+
     @get:Rule
-    val composeTestRule = createAndroidComposeRule<ConversationActivity>()
+    val ruleChain: RuleChain = RuleChain
+        .outerRule(appRule)
+        .around(permissionRule)
+        .around(composeTestRule)
 
     @Test
     fun createGroupAction_keepsUserOnNewChatScreenAndShowsInlineSelectionMode() {
