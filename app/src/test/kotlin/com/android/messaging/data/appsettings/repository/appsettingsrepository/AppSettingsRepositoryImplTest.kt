@@ -30,6 +30,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -63,6 +64,12 @@ internal class AppSettingsRepositoryImplTest {
         every { context.getString(R.string.send_sound_pref_key) } returns SEND_SOUND_PREF_KEY
         every { context.getString(R.string.dump_sms_pref_key) } returns DUMP_SMS_PREF_KEY
         every { context.getString(R.string.dump_mms_pref_key) } returns DUMP_MMS_PREF_KEY
+        every {
+            context.getString(R.string.youtube_link_previews_pref_key)
+        } returns YOUTUBE_LINK_PREVIEWS_PREF_KEY
+        every {
+            resources.getBoolean(R.bool.youtube_link_previews_pref_default)
+        } returns YOUTUBE_LINK_PREVIEWS_DEFAULT
         every { resources.getBoolean(R.bool.send_sound_pref_default) } returns
             SEND_SOUND_DEFAULT
         every { resources.getBoolean(R.bool.dump_sms_pref_default) } returns DUMP_SMS_DEFAULT
@@ -83,6 +90,12 @@ internal class AppSettingsRepositoryImplTest {
             every { appPrefs.getBoolean(SEND_SOUND_PREF_KEY, SEND_SOUND_DEFAULT) } returns false
             every { appPrefs.getBoolean(DUMP_SMS_PREF_KEY, DUMP_SMS_DEFAULT) } returns true
             every { appPrefs.getBoolean(DUMP_MMS_PREF_KEY, DUMP_MMS_DEFAULT) } returns false
+            every {
+                appPrefs.getBoolean(
+                    YOUTUBE_LINK_PREVIEWS_PREF_KEY,
+                    YOUTUBE_LINK_PREVIEWS_DEFAULT,
+                )
+            } returns true
 
             val result = createRepository(
                 ioDispatcher = UnconfinedTestDispatcher(testScheduler),
@@ -91,11 +104,16 @@ internal class AppSettingsRepositoryImplTest {
             assertTrue(result.isDefaultSmsApp)
             assertEquals(DEFAULT_SMS_APP_LABEL, result.defaultSmsAppLabel)
             assertFalse(result.sendSoundEnabled)
+            assertTrue(result.youTubeLinkPreviewsEnabled)
             assertTrue(result.isDebugEnabled)
             assertTrue(result.dumpSmsEnabled)
             assertFalse(result.dumpMmsEnabled)
             verify(exactly = 1) {
                 appPrefs.getBoolean(SEND_SOUND_PREF_KEY, SEND_SOUND_DEFAULT)
+                appPrefs.getBoolean(
+                    YOUTUBE_LINK_PREVIEWS_PREF_KEY,
+                    YOUTUBE_LINK_PREVIEWS_DEFAULT,
+                )
                 appPrefs.getBoolean(DUMP_SMS_PREF_KEY, DUMP_SMS_DEFAULT)
                 appPrefs.getBoolean(DUMP_MMS_PREF_KEY, DUMP_MMS_DEFAULT)
             }
@@ -122,6 +140,10 @@ internal class AppSettingsRepositoryImplTest {
                 pref = AppBooleanPref.DUMP_MMS,
                 enabled = true,
             )
+            repository.setBooleanPref(
+                pref = AppBooleanPref.YOUTUBE_LINK_PREVIEWS,
+                enabled = true,
+            )
 
             verify(exactly = 1) {
                 appPrefs.putBoolean(
@@ -136,7 +158,44 @@ internal class AppSettingsRepositoryImplTest {
                     DUMP_MMS_PREF_KEY,
                     true,
                 )
+                appPrefs.putBoolean(
+                    YOUTUBE_LINK_PREVIEWS_PREF_KEY,
+                    true,
+                )
             }
+        }
+    }
+
+    @Test
+    fun isYouTubeLinkPreviewsEnabled_readsPreferenceWithResourceDefault() {
+        runTest {
+            every {
+                appPrefs.getBoolean(
+                    YOUTUBE_LINK_PREVIEWS_PREF_KEY,
+                    YOUTUBE_LINK_PREVIEWS_DEFAULT,
+                )
+            } returns true
+
+            val result = createRepository(
+                ioDispatcher = UnconfinedTestDispatcher(testScheduler),
+            ).isYouTubeLinkPreviewsEnabled()
+
+            assertTrue(result)
+        }
+    }
+
+    @Test
+    fun isYouTubeLinkPreviewsEnabled_defaultsToDisabledFromResources() {
+        runTest {
+            every { appPrefs.getBoolean(any(), any()) } answers { secondArg() }
+
+            val result = AppSettingsRepositoryImpl(
+                context = RuntimeEnvironment.getApplication().applicationContext,
+                ioDispatcher = UnconfinedTestDispatcher(testScheduler),
+                debugFeaturesProvider = debugFeaturesProvider,
+            ).isYouTubeLinkPreviewsEnabled()
+
+            assertFalse(result)
         }
     }
 
@@ -156,5 +215,7 @@ internal class AppSettingsRepositoryImplTest {
         private const val DUMP_SMS_PREF_KEY = "dump_sms"
         private const val SEND_SOUND_DEFAULT = true
         private const val SEND_SOUND_PREF_KEY = "send_sound"
+        private const val YOUTUBE_LINK_PREVIEWS_DEFAULT = false
+        private const val YOUTUBE_LINK_PREVIEWS_PREF_KEY = "youtube_link_previews"
     }
 }

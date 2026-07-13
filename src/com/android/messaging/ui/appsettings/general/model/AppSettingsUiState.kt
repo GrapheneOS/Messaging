@@ -7,6 +7,7 @@ internal data class AppSettingsUiState(
     val isDefaultSmsApp: Boolean = false,
     val defaultSmsAppLabel: String = "",
     val sendSoundEnabled: Boolean = true,
+    val youTubeLinkPreviewsEnabled: Boolean = false,
     val isDebugEnabled: Boolean = false,
     val dumpSmsEnabled: Boolean = false,
     val dumpMmsEnabled: Boolean = false,

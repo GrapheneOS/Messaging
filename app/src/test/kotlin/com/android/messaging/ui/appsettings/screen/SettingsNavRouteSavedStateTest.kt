@@ -23,6 +23,13 @@ internal class SettingsNavRouteSavedStateTest {
     }
 
     @Test
+    fun saver_roundTripsPrivacyRoute() {
+        assertRoundTrip(
+            route = SettingsNavRoute.Privacy,
+        )
+    }
+
+    @Test
     fun saver_roundTripsSubscriptionSettingsRoute() {
         assertRoundTrip(
             route = SettingsNavRoute.SubscriptionSettings(

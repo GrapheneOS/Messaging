@@ -171,6 +171,32 @@ class AppSettingsScreenTest {
     }
 
     @Test
+    fun privacySettings_clickDelegatesToCallback() {
+        var privacyClicks = 0
+
+        composeTestRule.setContent {
+            AppTheme {
+                AppSettingsScreen(
+                    appSettings = AppSettingsUiState(),
+                    onAction = screenModel::onAction,
+                    onNavigateBack = {},
+                    onPrivacyClick = { privacyClicks += 1 },
+                )
+            }
+        }
+
+        val privacyTitle = composeTestRule.activity.getString(
+            R.string.privacy_settings_activity_title,
+        )
+        composeTestRule.onNodeWithText(privacyTitle).assertIsDisplayed()
+        composeTestRule.onNodeWithText(privacyTitle).performClick()
+
+        composeTestRule.runOnIdle {
+            assertEquals(1, privacyClicks)
+        }
+    }
+
+    @Test
     fun advancedSettings_shownWhenTopLevel() {
         var advancedClicks = 0
 
@@ -180,6 +206,7 @@ class AppSettingsScreenTest {
                     appSettings = AppSettingsUiState(),
                     onAction = screenModel::onAction,
                     onNavigateBack = {},
+                    onPrivacyClick = {},
                     isTopLevel = true,
                     onAdvancedClick = { advancedClicks += 1 },
                 )
@@ -203,6 +230,7 @@ class AppSettingsScreenTest {
                     appSettings = AppSettingsUiState(),
                     onAction = screenModel::onAction,
                     onNavigateBack = {},
+                    onPrivacyClick = {},
                     isTopLevel = false,
                     onAdvancedClick = null,
                 )
@@ -226,6 +254,7 @@ class AppSettingsScreenTest {
                     appSettings = appSettings,
                     onAction = screenModel::onAction,
                     onNavigateBack = {},
+                    onPrivacyClick = {},
                 )
             }
         }

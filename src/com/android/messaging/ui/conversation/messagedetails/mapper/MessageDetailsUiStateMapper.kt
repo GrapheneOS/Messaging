@@ -10,6 +10,7 @@ internal interface MessageDetailsUiStateMapper {
     fun map(
         message: ConversationMessageData?,
         details: ConversationMessageDetails?,
+        youTubeLinkPreviewsEnabled: Boolean,
     ): MessageDetailsUiState
 }
 
@@ -20,6 +21,7 @@ internal class MessageDetailsUiStateMapperImpl @Inject constructor(
     override fun map(
         message: ConversationMessageData?,
         details: ConversationMessageDetails?,
+        youTubeLinkPreviewsEnabled: Boolean,
     ): MessageDetailsUiState {
         if (message == null || details == null) {
             return MessageDetailsUiState.Unavailable
@@ -28,6 +30,7 @@ internal class MessageDetailsUiStateMapperImpl @Inject constructor(
         return MessageDetailsUiState.Content(
             preview = conversationMessageUiModelMapper.map(data = message),
             details = details,
+            youTubeLinkPreviewsEnabled = youTubeLinkPreviewsEnabled,
         )
     }
 }
