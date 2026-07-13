@@ -81,8 +81,9 @@ constexpr uint8_t blue(ColorARGB color) noexcept {
 }
 
 [[nodiscard]]
-constexpr ColorARGB makeColorARGB(int a, int r, int g, int b) noexcept {
-    return (a << 24) | (r << 16) | (g << 8) | (b << 0);
+constexpr ColorARGB makeColorARGB(uint8_t a, uint8_t r, uint8_t g, uint8_t b) noexcept {
+    return (static_cast<ColorARGB>(a) << 24) | (static_cast<ColorARGB>(r) << 16) |
+           (static_cast<ColorARGB>(g) << 8) | static_cast<ColorARGB>(b);
 }
 
 constexpr uint32_t MAX_COLOR_DISTANCE = 255 * 255 * 255;
@@ -482,17 +483,17 @@ GifByteType GifTranscoder::computeNewColorIndex(GifFileType* gifIn,
 }
 
 ColorARGB GifTranscoder::computeAverage(ColorARGB c1, ColorARGB c2, ColorARGB c3, ColorARGB c4) {
-    char avgAlpha = static_cast<char>((alpha(c1) + alpha(c2) + alpha(c3) + alpha(c4)) / 4);
-    char avgRed = static_cast<char>((red(c1) + red(c2) + red(c3) + red(c4)) / 4);
-    char avgGreen = static_cast<char>((green(c1) + green(c2) + green(c3) + green(c4)) / 4);
-    char avgBlue = static_cast<char>((blue(c1) + blue(c2) + blue(c3) + blue(c4)) / 4);
+    uint8_t avgAlpha = static_cast<uint8_t>((alpha(c1) + alpha(c2) + alpha(c3) + alpha(c4)) / 4);
+    uint8_t avgRed = static_cast<uint8_t>((red(c1) + red(c2) + red(c3) + red(c4)) / 4);
+    uint8_t avgGreen = static_cast<uint8_t>((green(c1) + green(c2) + green(c3) + green(c4)) / 4);
+    uint8_t avgBlue = static_cast<uint8_t>((blue(c1) + blue(c2) + blue(c3) + blue(c4)) / 4);
     return makeColorARGB(avgAlpha, avgRed, avgGreen, avgBlue);
 }
 
 GifByteType GifTranscoder::findBestColor(ColorMapObject* colorMap, int transparentColorIndex,
                                          ColorARGB targetColor) {
     // Return the transparent color if the average alpha is zero.
-    char a = alpha(targetColor);
+    uint8_t a = alpha(targetColor);
     if (a == 0 && transparentColorIndex != NO_TRANSPARENT_COLOR) {
         return transparentColorIndex;
     }
