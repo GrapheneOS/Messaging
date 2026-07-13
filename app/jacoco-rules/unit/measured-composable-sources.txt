@@ -1,7 +1,8 @@
 # Composable source files intentionally measured by the unit coverage track.
-conversation/ConversationSubscriptionLabelResolver.kt
+common/components/attachment/MediaThumbnail.kt
+common/components/mediapreview/MediaPreviewBackground.kt
+common/components/PrimaryActionButton.kt
 conversation/addparticipants/AddParticipantsScreen.kt
-conversation/attachment/ui/ConversationMediaThumbnail.kt
 conversation/attachment/ui/ConversationVCardAttachmentCardContent.kt
 conversation/composer/ui/ConversationAttachmentPreview.kt
 conversation/composer/ui/ConversationAudioRecordingBar.kt
@@ -10,7 +11,6 @@ conversation/composer/ui/ConversationComposeMessageField.kt
 conversation/composer/ui/ConversationComposerSection.kt
 conversation/composer/ui/ConversationSendActionButton.kt
 conversation/composer/ui/ConversationSendActionButtonGesture.kt
-conversation/composer/ui/ConversationSimAvatar.kt
 conversation/composer/ui/ConversationSimSelectorSheet.kt
 conversation/composer/ui/ConversationSubjectChip.kt
 conversation/entry/NewChatScreen.kt
@@ -26,7 +26,6 @@ conversation/mediapicker/component/capture/ConversationMediaCaptureControls.kt
 conversation/mediapicker/component/capture/ConversationMediaCaptureShutterButton.kt
 conversation/mediapicker/component/capture/ConversationMediaPickerCapture.kt
 conversation/mediapicker/component/review/ConversationMediaPickerReview.kt
-conversation/mediapicker/component/review/ConversationMediaReviewBackground.kt
 conversation/mediapicker/component/review/ConversationMediaReviewPageCard.kt
 conversation/mediapicker/component/review/ConversationMediaReviewPagerState.kt
 conversation/messages/ui/ConversationMessageSeparator.kt
@@ -48,13 +47,8 @@ conversation/messages/ui/message/ConversationMmsDownloadBody.kt
 conversation/messages/ui/text/ConversationMessageText.kt
 conversation/metadata/ui/ConversationTopAppBar.kt
 conversation/recipientpicker/RecipientPickerScreen.kt
-conversation/recipientpicker/component/MultiDestinationContactRow.kt
 conversation/recipientpicker/component/RecipientSelectionArmedRecipient.kt
-conversation/recipientpicker/component/RecipientSelectionContactAvatar.kt
-conversation/recipientpicker/component/RecipientSelectionContactRow.kt
-conversation/recipientpicker/component/RecipientSelectionContactsContent.kt
 conversation/recipientpicker/component/RecipientSelectionContent.kt
-conversation/recipientpicker/component/RecipientSelectionPrimaryActionButton.kt
 conversation/recipientpicker/component/RecipientSelectionQueryCard.kt
 conversation/recipientpicker/component/RecipientSelectionQueryField.kt
 conversation/recipientpicker/component/RecipientSelectionSelectedRecipientChips.kt
@@ -66,3 +60,9 @@ conversation/screen/ConversationScreenEffects.kt
 conversation/screen/ConversationScreenRoute.kt
 conversation/screen/ConversationSelectionTopAppBar.kt
 conversation/screen/ConversationSimSheetState.kt
+recipientselection/component/MultiDestinationContactRow.kt
+recipientselection/component/RecipientSelectionContactAvatar.kt
+recipientselection/component/RecipientSelectionContactRow.kt
+recipientselection/component/RecipientSelectionContactsContent.kt
+subscription/component/SimAvatar.kt
+subscription/mapper/SubscriptionSimMapper.kt
