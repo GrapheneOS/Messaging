@@ -152,6 +152,7 @@ internal abstract class BaseConversationMessageRenderingTest {
             canForwardMessage = true,
             canResendMessage = canResendMessage,
             canSaveAttachments = canSaveAttachments,
+            isYouTubePreviewEnabled = false,
             mmsDownload = mmsDownload,
             mmsSubject = mmsSubject,
             protocol = protocol,

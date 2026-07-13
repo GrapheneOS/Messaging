@@ -41,7 +41,10 @@ internal class ConversationMessageUiModelMapperStatusTest :
         )
 
         statusToUiStatus.forEach { (bugleStatus, expectedUiStatus) ->
-            val uiModel = mapper.map(messageData(status = bugleStatus))
+            val uiModel = mapper.map(
+                messageData(status = bugleStatus),
+                isYouTubePreviewEnabled = false,
+            )
 
             assertEquals("status=$bugleStatus", expectedUiStatus, uiModel.status)
         }
@@ -49,7 +52,7 @@ internal class ConversationMessageUiModelMapperStatusTest :
 
     @Test
     fun map_withUnexpectedStatus_mapsToUnknown() {
-        val uiModel = mapper.map(messageData(status = 9999))
+        val uiModel = mapper.map(messageData(status = 9999), isYouTubePreviewEnabled = false)
 
         assertEquals(Status.Unknown, uiModel.status)
     }

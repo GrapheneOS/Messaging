@@ -174,6 +174,7 @@ internal abstract class BaseConversationScreenTest {
                 canForwardMessage = true,
                 canResendMessage = false,
                 canSaveAttachments = false,
+                isYouTubePreviewEnabled = false,
                 mmsDownload = null,
                 mmsSubject = null,
                 protocol = ConversationMessageUiModel.Protocol.SMS,

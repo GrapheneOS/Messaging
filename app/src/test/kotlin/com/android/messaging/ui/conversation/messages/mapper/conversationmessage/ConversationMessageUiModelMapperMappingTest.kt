@@ -47,6 +47,7 @@ internal class ConversationMessageUiModelMapperMappingTest :
                 mmsSubject = "Subject line",
                 isSms = true,
             ),
+            isYouTubePreviewEnabled = true,
         )
 
         assertEquals(
@@ -74,6 +75,7 @@ internal class ConversationMessageUiModelMapperMappingTest :
                 canForwardMessage = true,
                 canResendMessage = false,
                 canSaveAttachments = false,
+                isYouTubePreviewEnabled = true,
                 mmsDownload = null,
                 mmsSubject = "Subject line",
                 protocol = Protocol.SMS,
@@ -86,6 +88,7 @@ internal class ConversationMessageUiModelMapperMappingTest :
     fun map_withNullMessageIdAndConversationId_substitutesEmptyStrings() {
         val uiModel = mapper.map(
             messageData(messageId = null, conversationId = null),
+            isYouTubePreviewEnabled = false,
         )
 
         assertEquals("", uiModel.messageId)
@@ -94,7 +97,7 @@ internal class ConversationMessageUiModelMapperMappingTest :
 
     @Test
     fun map_withNullParts_returnsEmptyPartsList() {
-        val uiModel = mapper.map(messageData(parts = null))
+        val uiModel = mapper.map(messageData(parts = null), isYouTubePreviewEnabled = false)
 
         assertEquals(persistentListOf<ConversationMessagePartUiModel>(), uiModel.parts)
     }
@@ -107,6 +110,7 @@ internal class ConversationMessageUiModelMapperMappingTest :
                 senderParticipantId = "",
                 selfParticipantId = " ",
             ),
+            isYouTubePreviewEnabled = false,
         )
 
         assertNull(uiModel.senderNormalizedDestination)

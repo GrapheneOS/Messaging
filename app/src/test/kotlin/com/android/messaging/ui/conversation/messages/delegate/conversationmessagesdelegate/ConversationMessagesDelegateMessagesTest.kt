@@ -78,8 +78,18 @@ internal class ConversationMessagesDelegateMessagesTest : BaseConversationMessag
                 ConversationMessagesUiState.Present(persistentListOf(first, second)),
                 delegate.state.value,
             )
-            verify(exactly = 1) { messageUiModelMapper.map(data = messageData[0]) }
-            verify(exactly = 1) { messageUiModelMapper.map(data = messageData[1]) }
+            verify(exactly = 1) {
+                messageUiModelMapper.map(
+                    data = messageData[0],
+                    isYouTubePreviewEnabled = false,
+                )
+            }
+            verify(exactly = 1) {
+                messageUiModelMapper.map(
+                    data = messageData[1],
+                    isYouTubePreviewEnabled = false,
+                )
+            }
         }
     }
 

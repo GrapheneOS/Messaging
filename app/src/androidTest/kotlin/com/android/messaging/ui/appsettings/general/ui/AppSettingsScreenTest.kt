@@ -180,6 +180,7 @@ class AppSettingsScreenTest {
                     appSettings = AppSettingsUiState(),
                     onAction = screenModel::onAction,
                     onNavigateBack = {},
+                    onPrivacyClick = {},
                     isTopLevel = true,
                     onAdvancedClick = { advancedClicks += 1 },
                 )
@@ -203,6 +204,7 @@ class AppSettingsScreenTest {
                     appSettings = AppSettingsUiState(),
                     onAction = screenModel::onAction,
                     onNavigateBack = {},
+                    onPrivacyClick = {},
                     isTopLevel = false,
                     onAdvancedClick = null,
                 )
@@ -226,6 +228,7 @@ class AppSettingsScreenTest {
                     appSettings = appSettings,
                     onAction = screenModel::onAction,
                     onNavigateBack = {},
+                    onPrivacyClick = {},
                 )
             }
         }

@@ -1060,6 +1060,15 @@
     <!-- The title for general settings activity  -->
     <string name="general_settings_activity_title">General settings</string>
 
+    <!-- The title for privacy settings screen  -->
+    <string name="privacy_settings_activity_title">Privacy</string>
+
+    <!-- The title for the YouTube link previews setting -->
+    <string name="youtube_link_previews_pref_title">YouTube link previews</string>
+
+    <!-- The description for the YouTube link previews setting -->
+    <string name="youtube_link_previews_pref_summary">Show video thumbnails for YouTube links in conversations. Enabling this fetches thumbnails from YouTube and may reduce privacy</string>
+
     <!-- The title for advanced settings activity  -->
     <string name="advanced_settings_activity_title">Advanced settings</string>
 

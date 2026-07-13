@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 
 internal interface AppSettingsDelegate : SettingsScreenDelegate<AppSettingsUiState> {
     fun onSendSoundChanged(enabled: Boolean)
+    fun onYouTubeLinkPreviewsChanged(enabled: Boolean)
     fun onDumpSmsChanged(enabled: Boolean)
     fun onDumpMmsChanged(enabled: Boolean)
 }
@@ -59,6 +60,13 @@ internal class AppSettingsDelegateImpl @Inject constructor(
     override fun onSendSoundChanged(enabled: Boolean) {
         setBooleanPref(
             pref = AppBooleanPref.SEND_SOUND,
+            enabled = enabled,
+        )
+    }
+
+    override fun onYouTubeLinkPreviewsChanged(enabled: Boolean) {
+        setBooleanPref(
+            pref = AppBooleanPref.YOUTUBE_LINK_PREVIEWS,
             enabled = enabled,
         )
     }

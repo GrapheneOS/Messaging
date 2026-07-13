@@ -60,7 +60,7 @@ private fun buildConversationMessageAttachments(
             attachment.part is ConversationMessagePartUiModel.Attachment.Image
     }
 
-    if (hasImageAttachment) {
+    if (!message.isYouTubePreviewEnabled || hasImageAttachment) {
         return attachmentItems
     }
 

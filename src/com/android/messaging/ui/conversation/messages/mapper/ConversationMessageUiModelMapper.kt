@@ -15,14 +15,20 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 internal interface ConversationMessageUiModelMapper {
-    fun map(data: ConversationMessageData): ConversationMessageUiModel
+    fun map(
+        data: ConversationMessageData,
+        isYouTubePreviewEnabled: Boolean,
+    ): ConversationMessageUiModel
 }
 
 internal class ConversationMessageUiModelMapperImpl @Inject constructor(
     private val conversationVCardAttachmentUiModelMapper: ConversationVCardAttachmentUiModelMapper,
 ) : ConversationMessageUiModelMapper {
 
-    override fun map(data: ConversationMessageData): ConversationMessageUiModel {
+    override fun map(
+        data: ConversationMessageData,
+        isYouTubePreviewEnabled: Boolean,
+    ): ConversationMessageUiModel {
         return ConversationMessageUiModel(
             messageId = data.messageId ?: "",
             conversationId = data.conversationId ?: "",
@@ -57,6 +63,7 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor(
             canForwardMessage = data.canForwardMessage,
             canResendMessage = data.showResendMessage,
             canSaveAttachments = canSaveAttachments(data),
+            isYouTubePreviewEnabled = isYouTubePreviewEnabled,
             mmsDownload = mapMmsDownload(data = data),
             mmsSubject = data.mmsSubject,
             protocol = mapProtocol(data),

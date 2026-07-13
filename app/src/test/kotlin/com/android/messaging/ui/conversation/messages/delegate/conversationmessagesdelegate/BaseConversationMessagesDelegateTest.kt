@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.messages.delegate.conversationmessagesdelegate
 
 import android.net.Uri
+import com.android.messaging.data.appsettings.repository.AppSettingsRepository
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentMetadata
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentType
 import com.android.messaging.data.conversation.repository.ConversationVCardMetadataRepository
@@ -15,6 +16,7 @@ import com.android.messaging.ui.conversation.messages.delegate.ConversationMessa
 import com.android.messaging.ui.conversation.messages.mapper.ConversationMessageUiModelMapper
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.collections.immutable.toImmutableList
@@ -31,6 +33,9 @@ internal abstract class BaseConversationMessagesDelegateTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     protected val conversationsRepository = mockk<ConversationsRepository>()
+    protected val appSettingsRepository = mockk<AppSettingsRepository> {
+        coEvery { isYouTubeLinkPreviewsEnabled() } returns false
+    }
     protected val messageUiModelMapper = mockk<ConversationMessageUiModelMapper>()
     protected val vCardUiModelMapper = mockk<ConversationVCardAttachmentUiModelMapper>()
     protected val vCardMetadataRepository = mockk<ConversationVCardMetadataRepository>()
@@ -38,6 +43,7 @@ internal abstract class BaseConversationMessagesDelegateTest {
     protected fun createDelegate(): ConversationMessagesDelegateImpl {
         return ConversationMessagesDelegateImpl(
             conversationsRepository = conversationsRepository,
+            appSettingsRepository = appSettingsRepository,
             resolveInitialPhotoOccurrenceIndex =
                 mockk<ResolveConversationPhotoViewerInitialOccurrenceIndex>(relaxed = true),
             conversationMessageUiModelMapper = messageUiModelMapper,
@@ -90,7 +96,12 @@ internal abstract class BaseConversationMessagesDelegateTest {
     ): List<ConversationMessageData> {
         return uiModels.map { uiModel ->
             mockk<ConversationMessageData>(relaxed = true).also { data ->
-                every { messageUiModelMapper.map(data = data) } returns uiModel
+                every {
+                    messageUiModelMapper.map(
+                        data = data,
+                        isYouTubePreviewEnabled = any(),
+                    )
+                } returns uiModel
             }
         }
     }
@@ -123,6 +134,7 @@ internal abstract class BaseConversationMessagesDelegateTest {
             canForwardMessage = false,
             canResendMessage = false,
             canSaveAttachments = false,
+            isYouTubePreviewEnabled = false,
             mmsDownload = null,
             mmsSubject = null,
             protocol = ConversationMessageUiModel.Protocol.SMS,

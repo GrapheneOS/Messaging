@@ -30,6 +30,8 @@
     <string name="sms_enabled_pref_key" translatable="false">sms_enabled</string>
     <string name="send_sound_pref_key" translatable="false">send_sound</string>
     <bool name="send_sound_pref_default" translatable="false">true</bool>
+    <string name="youtube_link_previews_pref_key" translatable="false">youtube_link_previews</string>
+    <bool name="youtube_link_previews_pref_default" translatable="false">false</bool>
     <string name="advanced_pref_key" translatable="false">advanced_prefs</string>
 
     <!-- Subscription-specific settings. The values of these pref keys must be prefixed with

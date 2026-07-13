@@ -25,11 +25,17 @@ internal class MessageDetailsUiStateMapperImplTest {
         val message = mockk<ConversationMessageData>()
         val preview = mockk<ConversationMessageUiModel>()
 
-        every { conversationMessageUiModelMapper.map(data = message) } returns preview
+        every {
+            conversationMessageUiModelMapper.map(
+                data = message,
+                isYouTubePreviewEnabled = false,
+            )
+        } returns preview
 
         val result = mapper.map(
             message = message,
             details = details(),
+            isYouTubePreviewEnabled = false,
         )
 
         val content = result as MessageDetailsUiState.Content
@@ -41,6 +47,7 @@ internal class MessageDetailsUiStateMapperImplTest {
         val result = mapper.map(
             message = null,
             details = details(),
+            isYouTubePreviewEnabled = false,
         )
 
         assertEquals(MessageDetailsUiState.Unavailable, result)
@@ -51,6 +58,7 @@ internal class MessageDetailsUiStateMapperImplTest {
         val result = mapper.map(
             message = mockk<ConversationMessageData>(),
             details = null,
+            isYouTubePreviewEnabled = false,
         )
 
         assertEquals(MessageDetailsUiState.Unavailable, result)
