@@ -30,10 +30,12 @@ internal class MessageDetailsUiStateMapperImplTest {
         val result = mapper.map(
             message = message,
             details = details(),
+            youTubeLinkPreviewsEnabled = true,
         )
 
         val content = result as MessageDetailsUiState.Content
         assertSame(preview, content.preview)
+        assertEquals(true, content.youTubeLinkPreviewsEnabled)
     }
 
     @Test
@@ -41,6 +43,7 @@ internal class MessageDetailsUiStateMapperImplTest {
         val result = mapper.map(
             message = null,
             details = details(),
+            youTubeLinkPreviewsEnabled = false,
         )
 
         assertEquals(MessageDetailsUiState.Unavailable, result)
@@ -51,6 +54,7 @@ internal class MessageDetailsUiStateMapperImplTest {
         val result = mapper.map(
             message = mockk<ConversationMessageData>(),
             details = null,
+            youTubeLinkPreviewsEnabled = false,
         )
 
         assertEquals(MessageDetailsUiState.Unavailable, result)

@@ -14,6 +14,9 @@ internal sealed interface SettingsNavRouteSavedState : Parcelable {
     data object AppSettings : SettingsNavRouteSavedState
 
     @Parcelize
+    data object Privacy : SettingsNavRouteSavedState
+
+    @Parcelize
     data class SubscriptionSettings(
         val subId: Int,
         val title: String,
@@ -37,6 +40,10 @@ private fun SettingsNavRoute.toSavedState(): SettingsNavRouteSavedState {
             SettingsNavRouteSavedState.AppSettings
         }
 
+        SettingsNavRoute.Privacy -> {
+            SettingsNavRouteSavedState.Privacy
+        }
+
         is SettingsNavRoute.SubscriptionSettings -> {
             SettingsNavRouteSavedState.SubscriptionSettings(
                 subId = subId,
@@ -54,6 +61,10 @@ private fun SettingsNavRouteSavedState.toRoute(): SettingsNavRoute {
 
         SettingsNavRouteSavedState.AppSettings -> {
             SettingsNavRoute.AppSettings
+        }
+
+        SettingsNavRouteSavedState.Privacy -> {
+            SettingsNavRoute.Privacy
         }
 
         is SettingsNavRouteSavedState.SubscriptionSettings -> {

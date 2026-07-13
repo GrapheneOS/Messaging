@@ -186,6 +186,7 @@ internal fun previewConversationMessageRowsLayout(
     val content = buildConversationMessageContent(
         message = message,
         subjectText = message.mmsSubject,
+        youTubeLinkPreviewsEnabled = true,
     )
 
     return ConversationMessageLayout(

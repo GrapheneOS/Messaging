@@ -132,6 +132,7 @@ private fun MessageDetailsContent(
         MessageDetailsPreviewCard(
             preview = content.preview,
             details = details,
+            youTubeLinkPreviewsEnabled = content.youTubeLinkPreviewsEnabled,
         )
 
         MessageDetailsMessageFields(

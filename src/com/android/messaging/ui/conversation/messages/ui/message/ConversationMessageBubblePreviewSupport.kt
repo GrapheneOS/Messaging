@@ -122,6 +122,7 @@ internal fun previewConversationMessageLayout(
         content = buildConversationMessageContent(
             message = message,
             subjectText = message.mmsSubject,
+            youTubeLinkPreviewsEnabled = true,
         ),
         metadataText = "18:04",
         showSender = showSender,

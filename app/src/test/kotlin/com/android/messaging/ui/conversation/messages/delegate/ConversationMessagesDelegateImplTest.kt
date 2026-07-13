@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.messages.delegate
 
 import androidx.core.net.toUri
+import com.android.messaging.data.appsettings.repository.AppSettingsRepository
 import com.android.messaging.data.conversation.repository.ConversationVCardMetadataRepository
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.domain.photoviewer.usecase.ResolveConversationPhotoViewerInitialOccurrenceIndex
@@ -23,6 +24,7 @@ internal class ConversationMessagesDelegateImplTest {
         mockk<ResolveConversationPhotoViewerInitialOccurrenceIndex>()
     private val delegate = ConversationMessagesDelegateImpl(
         conversationsRepository = mockk<ConversationsRepository>(),
+        appSettingsRepository = mockk<AppSettingsRepository>(),
         resolveInitialPhotoOccurrenceIndex = resolveInitialPhotoOccurrenceIndex,
         conversationMessageUiModelMapper = mockk<ConversationMessageUiModelMapper>(),
         conversationVCardAttachmentUiModelMapper =

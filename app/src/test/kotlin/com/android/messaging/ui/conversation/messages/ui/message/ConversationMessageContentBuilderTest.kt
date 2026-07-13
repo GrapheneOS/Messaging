@@ -33,6 +33,7 @@ class ConversationMessageContentBuilderTest {
         val content = buildConversationMessageContent(
             message = message,
             subjectText = null,
+            youTubeLinkPreviewsEnabled = true,
         )
 
         assertNull(content.bodyText)
@@ -65,6 +66,7 @@ class ConversationMessageContentBuilderTest {
         val content = buildConversationMessageContent(
             message = message,
             subjectText = null,
+            youTubeLinkPreviewsEnabled = true,
         )
 
         assertNull(content.bodyText)
@@ -90,6 +92,7 @@ class ConversationMessageContentBuilderTest {
         val content = buildConversationMessageContent(
             message = message,
             subjectText = null,
+            youTubeLinkPreviewsEnabled = true,
         )
 
         assertEquals("See you soon", content.bodyText)
@@ -110,6 +113,7 @@ class ConversationMessageContentBuilderTest {
         val content = buildConversationMessageContent(
             message = message,
             subjectText = null,
+            youTubeLinkPreviewsEnabled = true,
         )
 
         assertEquals("Message body", content.bodyText)
@@ -130,6 +134,7 @@ class ConversationMessageContentBuilderTest {
         val content = buildConversationMessageContent(
             message = message,
             subjectText = null,
+            youTubeLinkPreviewsEnabled = true,
         )
 
         assertEquals("Ambient room tone", content.bodyText)

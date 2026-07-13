@@ -48,6 +48,7 @@ internal fun ConversationMessage(
     isSelected: Boolean = false,
     isSelectionMode: Boolean = false,
     showIncomingParticipantIdentity: Boolean = true,
+    youTubeLinkPreviewsEnabled: Boolean = false,
     simDisplayName: String? = null,
     onAttachmentClick: OnConversationAttachmentClick =
         { _, _, _ -> },
@@ -66,6 +67,7 @@ internal fun ConversationMessage(
         val layout = rememberConversationMessageLayout(
             message = message,
             showIncomingParticipantIdentity = showIncomingParticipantIdentity,
+            youTubeLinkPreviewsEnabled = youTubeLinkPreviewsEnabled,
         )
 
         val maxBubbleWidth = remember(maxWidth) {
@@ -128,6 +130,7 @@ internal enum class ConversationMessageBubbleLayoutMode {
 private fun rememberConversationMessageLayout(
     message: ConversationMessageUiModel,
     showIncomingParticipantIdentity: Boolean,
+    youTubeLinkPreviewsEnabled: Boolean,
 ): ConversationMessageLayout {
     val bubbleShape = remember(
         message.canClusterWithPrevious,
@@ -136,7 +139,10 @@ private fun rememberConversationMessageLayout(
         messageBubbleShape(message = message)
     }
 
-    val content = rememberConversationMessageContent(message = message)
+    val content = rememberConversationMessageContent(
+        message = message,
+        youTubeLinkPreviewsEnabled = youTubeLinkPreviewsEnabled,
+    )
     val metadataText = rememberConversationMessageMetadataText(message = message)
 
     val showSender = message.isIncoming &&
@@ -196,6 +202,7 @@ private fun conversationMessageMaxBubbleWidth(
 @Composable
 private fun rememberConversationMessageContent(
     message: ConversationMessageUiModel,
+    youTubeLinkPreviewsEnabled: Boolean,
 ): ConversationMessageContent {
     val resources = LocalResources.current
     val configuration = LocalConfiguration.current
@@ -215,11 +222,13 @@ private fun rememberConversationMessageContent(
         message.text,
         message.mmsSubject,
         message.parts,
+        youTubeLinkPreviewsEnabled,
         subjectText,
     ) {
         buildConversationMessageContent(
             message = message,
             subjectText = subjectText,
+            youTubeLinkPreviewsEnabled = youTubeLinkPreviewsEnabled,
         )
     }
 }

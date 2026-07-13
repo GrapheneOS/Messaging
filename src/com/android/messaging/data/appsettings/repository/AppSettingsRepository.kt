@@ -15,6 +15,7 @@ import kotlinx.coroutines.withContext
 
 internal interface AppSettingsRepository {
     suspend fun getAppSettings(): AppSettings
+    suspend fun isYouTubeLinkPreviewsEnabled(): Boolean
     suspend fun setBooleanPref(pref: AppBooleanPref, enabled: Boolean)
 }
 
@@ -37,6 +38,7 @@ internal class AppSettingsRepositoryImpl @Inject constructor(
                     context.getString(R.string.send_sound_pref_key),
                     resources.getBoolean(R.bool.send_sound_pref_default),
                 ),
+                youTubeLinkPreviewsEnabled = readYouTubeLinkPreviewsEnabled(),
                 isDebugEnabled = debugFeaturesProvider.isEnabled(),
                 dumpSmsEnabled = appPrefs.getBoolean(
                     context.getString(R.string.dump_sms_pref_key),
@@ -50,6 +52,12 @@ internal class AppSettingsRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun isYouTubeLinkPreviewsEnabled(): Boolean {
+        return withContext(ioDispatcher) {
+            readYouTubeLinkPreviewsEnabled()
+        }
+    }
+
     override suspend fun setBooleanPref(
         pref: AppBooleanPref,
         enabled: Boolean,
@@ -60,5 +68,12 @@ internal class AppSettingsRepositoryImpl @Inject constructor(
                 enabled,
             )
         }
+    }
+
+    private fun readYouTubeLinkPreviewsEnabled(): Boolean {
+        return BuglePrefs.getApplicationPrefs().getBoolean(
+            context.getString(R.string.youtube_link_previews_pref_key),
+            context.resources.getBoolean(R.bool.youtube_link_previews_pref_default),
+        )
     }
 }

@@ -2,30 +2,32 @@ package com.android.messaging.ui.appsettings.screen.model
 
 internal sealed interface SettingsAction {
 
+    sealed interface Subscription : SettingsAction
+
     data class AutoRetrieveMmsChanged(
         val subId: Int,
         val enabled: Boolean,
-    ) : SettingsAction
+    ) : Subscription
 
     data class AutoRetrieveMmsWhenRoamingChanged(
         val subId: Int,
         val enabled: Boolean,
-    ) : SettingsAction
+    ) : Subscription
 
     data class DeliveryReportsChanged(
         val subId: Int,
         val enabled: Boolean,
-    ) : SettingsAction
+    ) : Subscription
 
     data class GroupMmsChanged(
         val subId: Int,
         val enabled: Boolean,
-    ) : SettingsAction
+    ) : Subscription
 
     data class PhoneNumberChanged(
         val subId: Int,
         val phoneNumber: String,
-    ) : SettingsAction
+    ) : Subscription
 
     data class WirelessAlertsClicked(
         val subId: Int,
@@ -40,6 +42,10 @@ internal sealed interface SettingsAction {
     ) : SettingsAction
 
     data class SendSoundChanged(
+        val enabled: Boolean,
+    ) : SettingsAction
+
+    data class YouTubeLinkPreviewsChanged(
         val enabled: Boolean,
     ) : SettingsAction
 

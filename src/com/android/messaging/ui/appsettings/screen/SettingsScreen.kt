@@ -25,6 +25,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.ui.appsettings.general.ui.AppSettingsScreen
+import com.android.messaging.ui.appsettings.privacy.ui.PrivacySettingsScreen
 import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
 import com.android.messaging.ui.appsettings.screen.model.SettingsNavRoute
 import com.android.messaging.ui.appsettings.screen.model.SettingsUiState
@@ -147,16 +148,18 @@ private fun SettingsNavHost(
             }
 
             is SettingsNavRoute.AppSettings -> {
-                val isSingleSim = uiState.isMultiSim == false
-                AppSettingsScreen(
+                AppSettingsRoute(
+                    uiState = uiState,
+                    onAction = onAction,
+                    navigateUp = navigateUp,
+                    onRouteChange = onRouteChange,
+                )
+            }
+
+            is SettingsNavRoute.Privacy -> {
+                PrivacySettingsScreen(
                     appSettings = uiState.appSettings,
                     onAction = onAction,
-                    isTopLevel = isSingleSim,
-                    onAdvancedClick = advancedClickHandler(
-                        uiState = uiState,
-                        isSingleSim = isSingleSim,
-                        onRouteChange = onRouteChange,
-                    ),
                     onNavigateBack = navigateUp,
                 )
             }
@@ -173,6 +176,31 @@ private fun SettingsNavHost(
             }
         }
     }
+}
+
+@Composable
+private fun AppSettingsRoute(
+    uiState: SettingsUiState,
+    onAction: (Action) -> Unit,
+    navigateUp: () -> Unit,
+    onRouteChange: (SettingsNavRoute) -> Unit,
+) {
+    val isSingleSim = uiState.isMultiSim == false
+
+    AppSettingsScreen(
+        appSettings = uiState.appSettings,
+        onAction = onAction,
+        isTopLevel = isSingleSim,
+        onPrivacyClick = {
+            onRouteChange(SettingsNavRoute.Privacy)
+        },
+        onAdvancedClick = advancedClickHandler(
+            uiState = uiState,
+            isSingleSim = isSingleSim,
+            onRouteChange = onRouteChange,
+        ),
+        onNavigateBack = navigateUp,
+    )
 }
 
 @Composable
@@ -222,6 +250,10 @@ private fun buildNavigateUp(
 
         effectiveRoute is SettingsNavRoute.AppSettings -> {
             onRouteChange(SettingsNavRoute.Main)
+        }
+
+        effectiveRoute is SettingsNavRoute.Privacy -> {
+            onRouteChange(SettingsNavRoute.AppSettings)
         }
 
         effectiveRoute is SettingsNavRoute.SubscriptionSettings -> {

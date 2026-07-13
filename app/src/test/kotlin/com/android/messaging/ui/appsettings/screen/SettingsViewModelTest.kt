@@ -128,6 +128,20 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun onYouTubeLinkPreviewsChanged_delegatesToAppSettings() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val appDelegate = mockAppSettingsDelegate()
+            val viewModel = createViewModel(appSettingsDelegate = appDelegate)
+
+            viewModel.onAction(Action.YouTubeLinkPreviewsChanged(enabled = true))
+
+            verify(exactly = 1) {
+                appDelegate.onYouTubeLinkPreviewsChanged(enabled = true)
+            }
+        }
+    }
+
+    @Test
     fun onDumpSmsChanged_delegatesToAppSettings() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val appDelegate = mockAppSettingsDelegate()

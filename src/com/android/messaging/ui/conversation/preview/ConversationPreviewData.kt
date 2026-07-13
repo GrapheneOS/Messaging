@@ -279,7 +279,10 @@ private fun previewVCardAvatarPhoto(): VCardAvatarPhoto {
 }
 
 internal fun previewMessagesUiState(): ConversationMessagesUiState.Present {
-    return ConversationMessagesUiState.Present(messages = previewMessages())
+    return ConversationMessagesUiState.Present(
+        messages = previewMessages(),
+        youTubeLinkPreviewsEnabled = true,
+    )
 }
 
 internal fun previewMessages(): ImmutableList<ConversationMessageUiModel> {

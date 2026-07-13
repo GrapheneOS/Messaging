@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.messages.delegate
 
 import androidx.core.net.toUri
+import com.android.messaging.data.appsettings.repository.AppSettingsRepository
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentMetadata
 import com.android.messaging.data.conversation.repository.ConversationVCardMetadataRepository
 import com.android.messaging.data.conversation.repository.ConversationsRepository
@@ -29,11 +30,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 
 internal interface ConversationMessagesDelegate :
@@ -49,6 +52,7 @@ internal interface ConversationMessagesDelegate :
 
 internal class ConversationMessagesDelegateImpl @Inject constructor(
     private val conversationsRepository: ConversationsRepository,
+    private val appSettingsRepository: AppSettingsRepository,
     private val resolveInitialPhotoOccurrenceIndex:
     ResolveConversationPhotoViewerInitialOccurrenceIndex,
     private val conversationMessageUiModelMapper: ConversationMessageUiModelMapper,
@@ -127,28 +131,41 @@ internal class ConversationMessagesDelegateImpl @Inject constructor(
     private fun observeConversationMessagesUiState(
         conversationId: String,
     ): Flow<ConversationMessagesUiState> {
-        return conversationsRepository
-            .getConversationMessages(conversationId = conversationId)
-            .onEach { messages ->
-                currentMessages.value = messages
-            }
-            .map { messages ->
-                messages
-                    .asSequence()
-                    .map(conversationMessageUiModelMapper::map)
-                    .toImmutableList()
-            }
-            .flatMapLatest { messages ->
-                observeConversationMessagesUiState(
-                    messages = messages,
-                )
-            }
+        return combine(
+            conversationsRepository
+                .getConversationMessages(conversationId = conversationId)
+                .onEach { messages ->
+                    currentMessages.value = messages
+                }
+                .map { messages ->
+                    messages
+                        .asSequence()
+                        .map(conversationMessageUiModelMapper::map)
+                        .toImmutableList()
+                }
+                .flatMapLatest { messages ->
+                    observeMessagesWithVCardMetadata(messages = messages)
+                },
+            observeYouTubeLinkPreviewsEnabled(),
+        ) { messages, youTubeLinkPreviewsEnabled ->
+            ConversationMessagesUiState.Present(
+                messages = messages,
+                youTubeLinkPreviewsEnabled = youTubeLinkPreviewsEnabled,
+            )
+        }
             .flowOn(defaultDispatcher)
     }
 
-    private fun observeConversationMessagesUiState(
+    private fun observeYouTubeLinkPreviewsEnabled(): Flow<Boolean> {
+        return refreshTriggers
+            .onStart { emit(Unit) }
+            .map { appSettingsRepository.isYouTubeLinkPreviewsEnabled() }
+            .distinctUntilChanged()
+    }
+
+    private fun observeMessagesWithVCardMetadata(
         messages: List<ConversationMessageUiModel>,
-    ): Flow<ConversationMessagesUiState> {
+    ): Flow<ImmutableList<ConversationMessageUiModel>> {
         val vCardContentUris = messages
             .asSequence()
             .flatMap { message -> message.parts.asSequence() }
@@ -161,11 +178,7 @@ internal class ConversationMessagesDelegateImpl @Inject constructor(
             .toList()
 
         if (vCardContentUris.isEmpty()) {
-            return flowOf(
-                ConversationMessagesUiState.Present(
-                    messages = messages.toImmutableList(),
-                ),
-            )
+            return flowOf(messages.toImmutableList())
         }
 
         val vCardMetadataFlows = vCardContentUris.map { contentUri ->
@@ -184,11 +197,9 @@ internal class ConversationMessagesDelegateImpl @Inject constructor(
                 pair.first to pair.second
             }
 
-            ConversationMessagesUiState.Present(
-                messages = updateMessagesWithVCardUiModel(
-                    messages = messages,
-                    vCardAttachmentMetadata = vCardAttachmentMetadata,
-                ),
+            updateMessagesWithVCardUiModel(
+                messages = messages,
+                vCardAttachmentMetadata = vCardAttachmentMetadata,
             )
         }
     }

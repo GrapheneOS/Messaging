@@ -42,6 +42,7 @@ internal fun MessageDetailsPreviewCard(
     preview: ConversationMessageUiModel,
     details: ConversationMessageDetails,
     modifier: Modifier = Modifier,
+    youTubeLinkPreviewsEnabled: Boolean = false,
 ) {
     val simDisplayName = details.subscriptionLabel?.resolveDisplayName()
 
@@ -55,6 +56,7 @@ internal fun MessageDetailsPreviewCard(
             message = preview,
             simDisplayName = simDisplayName,
             showIncomingParticipantIdentity = false,
+            youTubeLinkPreviewsEnabled = youTubeLinkPreviewsEnabled,
         )
     }
 }
