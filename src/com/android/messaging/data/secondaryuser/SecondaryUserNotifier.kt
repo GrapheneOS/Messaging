@@ -1,14 +1,14 @@
 package com.android.messaging.data.secondaryuser
 
+import android.app.NotificationManager
 import android.content.Context
 import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import com.android.messaging.R
 import com.android.messaging.data.secondaryuser.model.SecondaryUserMessageInfo
+import com.android.messaging.domain.notification.usecase.GenerateNotificationId
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.util.LogUtil
 import com.android.messaging.util.NotificationChannelUtil
-import com.android.messaging.util.PendingIntentConstants
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
@@ -20,6 +20,8 @@ internal interface SecondaryUserNotifier {
 internal class SecondaryUserNotifierImpl @Inject constructor(
     @param:ApplicationContext
     private val context: Context,
+    private val notificationManager: NotificationManager,
+    private val generateNotificationId: GenerateNotificationId,
 ) : SecondaryUserNotifier {
 
     override fun notifyIncomingMessage(info: SecondaryUserMessageInfo?) {
@@ -30,6 +32,7 @@ internal class SecondaryUserNotifierImpl @Inject constructor(
         val pendingIntent = UIIntents.get()
             .getPendingIntentForSecondaryUserNewMessageNotification(context)
 
+        val notificationId = generateNotificationId()
         val notification = NotificationCompat.Builder(
             context,
             NotificationChannelUtil.INCOMING_MESSAGES,
@@ -44,9 +47,9 @@ internal class SecondaryUserNotifierImpl @Inject constructor(
             .build()
 
         try {
-            notificationManager().notify(
+            notificationManager.notify(
                 notificationTag(),
-                PendingIntentConstants.SMS_SECONDARY_USER_NOTIFICATION_ID,
+                notificationId,
                 notification,
             )
         } catch (exception: SecurityException) {
@@ -59,14 +62,17 @@ internal class SecondaryUserNotifierImpl @Inject constructor(
     }
 
     override fun cancel() {
-        notificationManager().cancel(
-            notificationTag(),
-            PendingIntentConstants.SMS_SECONDARY_USER_NOTIFICATION_ID,
-        )
-    }
-
-    private fun notificationManager(): NotificationManagerCompat {
-        return NotificationManagerCompat.from(context)
+        val tag = notificationTag()
+        notificationManager.activeNotifications
+            .filter { notification ->
+                notification.tag == tag
+            }
+            .forEach { notification ->
+                notificationManager.cancel(
+                    notification.tag,
+                    notification.id,
+                )
+            }
     }
 
     private fun notificationTag(): String {
