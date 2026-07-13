@@ -1,5 +1,6 @@
 package com.android.messaging.di.core
 
+import android.app.NotificationManager
 import android.app.role.RoleManager
 import android.content.ClipboardManager
 import android.content.ContentResolver
@@ -82,6 +83,15 @@ internal class CoreProvidesModule {
 
     @Provides
     @Reusable
+    fun providePackageManager(
+        @ApplicationContext
+        context: Context,
+    ): PackageManager {
+        return context.packageManager
+    }
+
+    @Provides
+    @Reusable
     fun provideClipboardManager(
         @ApplicationContext
         context: Context,
@@ -91,11 +101,11 @@ internal class CoreProvidesModule {
 
     @Provides
     @Reusable
-    fun providePackageManager(
+    fun provideNotificationManager(
         @ApplicationContext
         context: Context,
-    ): PackageManager {
-        return context.packageManager
+    ): NotificationManager {
+        return context.getSystemService(NotificationManager::class.java)
     }
 
     @Provides
