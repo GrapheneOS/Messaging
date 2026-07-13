@@ -154,7 +154,13 @@ public class BugleNotifications {
         }
     }
 
-    private static void createMessageNotification(final String conversationId) {
+    @VisibleForTesting
+    static void createMessageNotification(final String conversationId) {
+        if (!TextUtils.isEmpty(conversationId) && isConversationBlocked(conversationId)) {
+            LogUtil.d(TAG, "Skipping notification: conversation blocked, id=" + conversationId);
+            return;
+        }
+
         final MessageNotificationState state = MessageNotificationState.getNotificationState();
         final boolean softSound = DataModel.get().isNewMessageObservable(conversationId);
         if (state == null) {
@@ -166,8 +172,9 @@ public class BugleNotifications {
         }
 
         // Send per-conversation notifications (if there are multiple conversations).
-        Optional<Conversation> conversation =
-                state.mConversationsList.mConversations.stream().findFirst();
+        Optional<Conversation> conversation = state.mConversationsList.mConversations.stream()
+                .filter(conv -> !isConversationBlocked(conv.mConversationId))
+                .findFirst();
         conversation.ifPresent(conv -> processAndSend(state, conv));
     }
 
@@ -223,6 +230,20 @@ public class BugleNotifications {
                 ConversationListItemData.getExistingConversation(db, conversationId);
         return RingtoneUtil.getNotificationRingtoneUri(conversationId,
                 convData != null ? convData.getNotificationSoundUri() : null);
+    }
+
+    private static boolean isConversationBlocked(final String conversationId) {
+        final DatabaseWrapper db = DataModel.get().getDatabase();
+        final ConversationListItemData convData =
+                ConversationListItemData.getExistingConversation(db, conversationId);
+
+        if (convData == null) {
+            return false;
+        }
+
+        final String otherDestination = convData.getOtherParticipantNormalizedDestination();
+        return otherDestination != null
+                && BugleDatabaseOperations.isBlockedDestination(db, otherDestination);
     }
 
     /**
@@ -322,7 +343,8 @@ public class BugleNotifications {
         }
     }
 
-    private static void processAndSend(final MessageNotificationState state, final Conversation conversation) {
+    @VisibleForTesting
+    static void processAndSend(final MessageNotificationState state, final Conversation conversation) {
         final Context context = Factory.get().getApplicationContext();
         final String conversationId = conversation.mConversationId;
         final NotificationCompat.Builder notifBuilder =
