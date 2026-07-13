@@ -23,7 +23,7 @@
 
 // 24-bit color with alpha, stored in order: A, R, G, B.
 // The internal GIF render buffer stores pixels using this format.
-typedef uint32_t ColorARGB;
+using ColorARGB = uint32_t;
 
 // Compresses a GIF (probably animated) so it can be sent via MMS, which generally has a 1 MB limit
 // on attachments. GIF image data is already compressed (LZW), so to achieve further reduction in
@@ -35,8 +35,8 @@ typedef uint32_t ColorARGB;
 //
 class GifTranscoder {
 public:
-    GifTranscoder() {}
-    ~GifTranscoder() {}
+    GifTranscoder() = default;
+    ~GifTranscoder() = default;
 
     // Resizes a GIF's width and height to 50% of their original dimensions. The new file is
     // written to pathOut.
@@ -75,6 +75,7 @@ private:
                          ColorARGB color);
 
     // Computes the color for the pixel (x,y) in the current image in the output GIF.
+    [[nodiscard]]
     static GifByteType computeNewColorIndex(GifFileType* gifIn,
                                             int transparentColorIndex,
                                             ColorARGB* renderBuffer,
@@ -82,31 +83,42 @@ private:
                                             int y);
 
     // Computes the average color (by averaging the per-channel (ARGB) values).
+    [[nodiscard]]
     static ColorARGB computeAverage(ColorARGB c1, ColorARGB c2, ColorARGB c3, ColorARGB c4);
 
     // Searches a color map for the color closest (Euclidean distance) to the target color.
+    [[nodiscard]]
     static GifByteType findBestColor(ColorMapObject* colorMap, int transparentColorIndex,
                                      ColorARGB targetColor);
 
     // Computes distance (squared) between 2 colors, considering each channel a separate dimension.
+    [[nodiscard]]
     static int computeDistance(ColorARGB c1, ColorARGB c2);
 
     // Returns the local color map of the current image (if any), or else the global color map.
+    [[nodiscard]]
     static ColorMapObject* getColorMap(GifFileType* gifIn);
 
     // Returns an indexed color from the color map.
+    [[nodiscard]]
     static ColorARGB getColorARGB(ColorMapObject* colorMap, int transparentColorIndex,
                                   GifByteType colorIndex);
 
     // Converts a 24-bit GIF color (RGB) to a 32-bit ARGB color.
+    [[nodiscard]]
     static ColorARGB gifColorToColorARGB(const GifColorType& color);
 };
 
 // Wrapper class that automatically closes the GIF files when the wrapper goes out of scope.
 class GifFilesCloser {
 public:
-    GifFilesCloser() {}
+    GifFilesCloser() = default;
     ~GifFilesCloser();
+
+    // Owns the raw GIF file handles and closes them in its destructor, so copying would
+    // lead to a double free.
+    GifFilesCloser(const GifFilesCloser&) = delete;
+    GifFilesCloser& operator=(const GifFilesCloser&) = delete;
 
     void setGifIn(GifFileType* gifIn);
     void releaseGifIn();
@@ -115,8 +127,8 @@ public:
     void releaseGifOut();
 
 private:
-    GifFileType* mGifIn = NULL;
-    GifFileType* mGifOut = NULL;
+    GifFileType* mGifIn = nullptr;
+    GifFileType* mGifOut = nullptr;
 };
 
 #endif // GIF_TRANSCODER_H
