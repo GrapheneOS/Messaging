@@ -1,5 +1,6 @@
 package com.android.messaging.ui.appsettings.subscription.ui
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -169,31 +170,65 @@ private fun LazyListScope.mmsSettingsItems(
         )
     }
 
-    item(key = "auto_retrieve_mms") {
-        SettingsSwitchItem(
-            title = stringResource(R.string.auto_retrieve_mms_pref_title),
-            summary = stringResource(R.string.auto_retrieve_mms_pref_summary),
-            checked = subscriptionSettings.autoRetrieveMms,
-            enabled = subscriptionSettings.isDefaultSmsApp,
-            onCheckedChange = { enabled ->
-                onAction(
-                    Action.AutoRetrieveMmsChanged(subscriptionSettings.subId, enabled),
-                )
-            },
-        )
-    }
+    autoRetrieveMmsItems(
+        subscriptionSettings = subscriptionSettings,
+        onAction = onAction,
+    )
+}
 
-    item(key = "auto_retrieve_mms_roaming") {
+private fun LazyListScope.autoRetrieveMmsItems(
+    subscriptionSettings: SubscriptionUiState,
+    onAction: (Action) -> Unit,
+) {
+    autoRetrieveSwitchItem(
+        key = "auto_retrieve_mms",
+        subscriptionSettings = subscriptionSettings,
+        titleResId = R.string.auto_retrieve_mms_pref_title,
+        summaryResId = R.string.auto_retrieve_mms_pref_summary,
+        checked = subscriptionSettings.autoRetrieveMms,
+        dependencyEnabled = true,
+        onCheckedChange = { enabled ->
+            onAction(Action.AutoRetrieveMmsChanged(subscriptionSettings.subId, enabled))
+        },
+    )
+
+    autoRetrieveSwitchItem(
+        key = "auto_retrieve_mms_roaming",
+        subscriptionSettings = subscriptionSettings,
+        titleResId = R.string.auto_retrieve_mms_when_roaming_pref_title,
+        summaryResId = R.string.auto_retrieve_mms_when_roaming_pref_summary,
+        checked = subscriptionSettings.autoRetrieveMmsWhenRoaming,
+        dependencyEnabled = subscriptionSettings.autoRetrieveMms,
+        onCheckedChange = { enabled ->
+            onAction(Action.AutoRetrieveMmsWhenRoamingChanged(subscriptionSettings.subId, enabled))
+        },
+    )
+}
+
+private fun LazyListScope.autoRetrieveSwitchItem(
+    key: String,
+    subscriptionSettings: SubscriptionUiState,
+    @StringRes titleResId: Int,
+    @StringRes summaryResId: Int,
+    checked: Boolean,
+    dependencyEnabled: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    item(key = key) {
         SettingsSwitchItem(
-            title = stringResource(R.string.auto_retrieve_mms_when_roaming_pref_title),
-            summary = stringResource(R.string.auto_retrieve_mms_when_roaming_pref_summary),
-            checked = subscriptionSettings.autoRetrieveMmsWhenRoaming,
-            enabled = subscriptionSettings.isDefaultSmsApp && subscriptionSettings.autoRetrieveMms,
-            onCheckedChange = { enabled ->
-                onAction(
-                    Action.AutoRetrieveMmsWhenRoamingChanged(subscriptionSettings.subId, enabled),
-                )
+            title = stringResource(titleResId),
+            summary = when {
+                subscriptionSettings.isSecondaryUser -> {
+                    stringResource(R.string.auto_retrieve_mms_secondary_user_summary)
+                }
+
+                else -> stringResource(summaryResId)
             },
+            checked = checked,
+            enabled = subscriptionSettings.isDefaultSmsApp &&
+                dependencyEnabled &&
+                !subscriptionSettings.isSecondaryUser,
+            onCheckedChange = onCheckedChange,
         )
     }
 }
