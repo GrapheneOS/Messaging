@@ -5,6 +5,7 @@ import android.content.Intent
 import android.provider.Telephony.Sms
 import android.telephony.SmsMessage
 import com.android.messaging.Factory
+import com.android.messaging.datamodel.DataModel
 import com.android.messaging.datamodel.action.ReceiveSmsMessageAction
 import com.android.messaging.sms.MmsUtils
 import com.android.messaging.util.DebugUtils
@@ -34,11 +35,12 @@ internal class IncomingSmsDelivererImpl @Inject constructor(
         val errorCode = intent.getIntExtra(EXTRA_ERROR_CODE, NO_ERROR_CODE)
         val subId = PhoneUtils.getDefault()
             .getEffectiveIncomingSubIdFromSystem(intent, EXTRA_SUB_ID)
-        deliver(
+        deliverInternal(
             context = context,
             subId = subId,
             errorCode = errorCode,
             messages = messages,
+            executeImmediately = true,
         )
 
         if (MmsUtils.isDumpSmsEnabled()) {
@@ -52,6 +54,22 @@ internal class IncomingSmsDelivererImpl @Inject constructor(
         subId: Int,
         errorCode: Int,
         messages: Array<SmsMessage>,
+    ) {
+        deliverInternal(
+            context = context,
+            subId = subId,
+            errorCode = errorCode,
+            messages = messages,
+            executeImmediately = false,
+        )
+    }
+
+    private fun deliverInternal(
+        context: Context,
+        subId: Int,
+        errorCode: Int,
+        messages: Array<SmsMessage>,
+        executeImmediately: Boolean,
     ) {
         val firstMessage = messages.first()
         val messageValues = MmsUtils.parseReceivedSmsMessage(context, messages, errorCode)
@@ -71,7 +89,13 @@ internal class IncomingSmsDelivererImpl @Inject constructor(
             isClassZero -> Factory.get().getUIIntents()
                 .launchClassZeroActivity(context, messageValues)
 
-            else -> ReceiveSmsMessageAction(messageValues).start()
+            else -> {
+                val action = ReceiveSmsMessageAction(messageValues)
+                when {
+                    executeImmediately -> DataModel.executeActionImmediately(action)
+                    else -> action.start()
+                }
+            }
         }
     }
 

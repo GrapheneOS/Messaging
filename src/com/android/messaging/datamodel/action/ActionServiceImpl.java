@@ -78,6 +78,26 @@ public class ActionServiceImpl extends JobIntentService {
     }
 
     /**
+     * Execute action synchronously on the calling thread instead of queueing it on the service
+     * @param action - action to execute
+     */
+    public static void executeActionImmediately(final Action action) {
+        final LoggingTimer timer =
+                createLoggingTimer(action, "#executeActionImmediately");
+        final BackgroundWorker worker =
+                DataModel.get().getBackgroundWorkerForActionService();
+        action.markStart();
+        action.markBeginExecute();
+
+        timer.start();
+        final Object result = action.executeAction();
+        timer.stopAndLog();
+
+        action.markEndExecute(result);
+        action.sendBackgroundActions(worker);
+    }
+
+    /**
      * Handle response returned by BackgroundWorker
      * @param request - request generating response
      * @param response - response from service
