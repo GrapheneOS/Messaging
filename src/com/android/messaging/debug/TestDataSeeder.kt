@@ -957,7 +957,6 @@ private fun insertMmsDownloadMessage(
             put(MessageColumns.RECEIVED_TIMESTAMP, timestamp)
             put(MessageColumns.SEEN, 1)
             put(MessageColumns.READ, 1)
-            put(MessageColumns.SMS_MESSAGE_URI, "content://mms/${900_000 + seedIndex}")
             put(MessageColumns.SMS_PRIORITY, 0)
             put(MessageColumns.SMS_MESSAGE_SIZE, messageSizeBytes)
             put(MessageColumns.MMS_TRANSACTION_ID, "seeded-transaction-$seedIndex")

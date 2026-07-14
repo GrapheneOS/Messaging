@@ -1951,6 +1951,9 @@ public class MmsUtils {
     }
 
     public static void clearMmsStatus(final Context context, final Uri uri) {
+        if (uri == null) {
+            return;
+        }
         // Messaging application can leave invalid values in STATUS field of M-Notification.ind
         // messages.  Take this opportunity to clear it.
         // Downloading status just kept in local db and not reflected into telephony.
