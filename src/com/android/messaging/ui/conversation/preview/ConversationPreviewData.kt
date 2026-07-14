@@ -491,11 +491,13 @@ internal fun previewInlineVCardAttachment(
 
 internal fun previewMmsDownloadUiModel(
     state: MmsDownloadUiModel.State = MmsDownloadUiModel.State.AwaitingManualDownload,
+    isSecondaryUser: Boolean = false,
 ): MmsDownloadUiModel {
     return MmsDownloadUiModel(
         state = state,
         sizeBytes = 2_400_000L,
         expiryTimestamp = PREVIEW_NOW_MILLIS + 86_400_000L,
+        isSecondaryUser = isSecondaryUser,
     )
 }
 

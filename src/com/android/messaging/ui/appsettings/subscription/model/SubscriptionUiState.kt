@@ -17,4 +17,5 @@ internal data class SubscriptionUiState(
     val deliveryReportsEnabled: Boolean = false,
     val isWirelessAlertsSupported: Boolean = false,
     val isDefaultSmsApp: Boolean = false,
+    val isSecondaryUser: Boolean = false,
 )

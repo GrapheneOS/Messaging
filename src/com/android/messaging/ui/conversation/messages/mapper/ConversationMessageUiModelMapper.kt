@@ -10,6 +10,7 @@ import com.android.messaging.ui.conversation.messages.model.message.Conversation
 import com.android.messaging.ui.conversation.messages.model.message.MmsDownloadUiModel
 import com.android.messaging.util.ContentType
 import com.android.messaging.util.LogUtil
+import com.android.messaging.util.OsUtil
 import javax.inject.Inject
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -93,6 +94,7 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor(
                 state = state,
                 sizeBytes = data.smsMessageSize.toLong(),
                 expiryTimestamp = data.mmsExpiry,
+                isSecondaryUser = OsUtil.isSecondaryUser(),
             )
         }
     }

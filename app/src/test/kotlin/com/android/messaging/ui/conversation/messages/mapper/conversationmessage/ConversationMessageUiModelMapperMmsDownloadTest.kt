@@ -27,6 +27,7 @@ internal class ConversationMessageUiModelMapperMmsDownloadTest :
                 state = MmsDownloadUiModel.State.AwaitingManualDownload,
                 sizeBytes = 2_048L,
                 expiryTimestamp = 1_700_000_000_000L,
+                isSecondaryUser = false,
             ),
             uiModel.mmsDownload,
         )
