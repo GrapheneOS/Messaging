@@ -33,11 +33,13 @@ import android.provider.ContactsContract.Intents;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.provider.Telephony;
+import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 
 import com.android.messaging.R;
 import com.android.messaging.datamodel.MediaScratchFileProvider;
 import com.android.messaging.datamodel.MessagingContentProvider;
+import com.android.messaging.datamodel.NoConfirmationSmsSendService;
 import com.android.messaging.datamodel.data.MessageData;
 import com.android.messaging.datamodel.data.MessagePartData;
 import com.android.messaging.receiver.ConversationReadReceiver;
@@ -81,6 +83,8 @@ public class UIIntentsImpl extends UIIntents {
             "com.android.providers.media.MediaScannerService";
     private static final String MEDIA_SCANNER_PACKAGE = "com.android.providers.media";
     private static final String MEDIA_SCANNER_SCAN_ACTION = "android.media.IMediaScannerService";
+    private static final int MUTABLE_PENDING_INTENT_FLAGS =
+            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE;
 
     /**
      * Get an intent which takes you to a conversation
@@ -363,15 +367,14 @@ public class UIIntentsImpl extends UIIntents {
     public PendingIntent getPendingIntentForSendingMessageToConversation(final Context context,
             final String conversationId, final String selfId, final boolean requiresMms,
             final int requestCode) {
-        final Intent intent = new Intent(context, RemoteInputEntrypointActivity.class);
-        intent.setAction(Intent.ACTION_SENDTO);
+        final Intent intent = new Intent(context, NoConfirmationSmsSendService.class);
+        intent.setAction(TelephonyManager.ACTION_RESPOND_VIA_MESSAGE);
         // Ensure that the platform doesn't reuse PendingIntents across conversations
         intent.setData(MessagingContentProvider.buildConversationMetadataUri(conversationId));
         intent.putExtra(UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID, conversationId);
         intent.putExtra(UIIntents.UI_INTENT_EXTRA_SELF_ID, selfId);
         intent.putExtra(UIIntents.UI_INTENT_EXTRA_REQUIRES_MMS, requiresMms);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        return getPendingIntentWithParentStack(context, intent, requestCode);
+        return PendingIntent.getService(context, requestCode, intent, MUTABLE_PENDING_INTENT_FLAGS);
     }
 
     @Override
@@ -409,7 +412,7 @@ public class UIIntentsImpl extends UIIntents {
         // Adds the back stack for the Intent (plus the Intent itself)
         stackBuilder.addNextIntentWithParentStack(intent);
         final PendingIntent resultPendingIntent =
-            stackBuilder.getPendingIntent(requestCode, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE);
+            stackBuilder.getPendingIntent(requestCode, MUTABLE_PENDING_INTENT_FLAGS);
         return resultPendingIntent;
     }
 
