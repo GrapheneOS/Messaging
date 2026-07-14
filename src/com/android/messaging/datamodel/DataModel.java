@@ -52,6 +52,11 @@ public abstract class DataModel {
         get().getActionService().startAction(action);
     }
 
+    @DoesNotRunOnMainThread
+    public static final void executeActionImmediately(final Action action) {
+        get().getActionService().executeActionImmediately(action);
+    }
+
     public static final void scheduleAction(final Action action,
             final int code, final long delayMs) {
         get().getActionService().scheduleAction(action, code, delayMs);

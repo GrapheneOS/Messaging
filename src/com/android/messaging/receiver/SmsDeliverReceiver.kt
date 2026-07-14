@@ -5,15 +5,27 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Telephony.Sms
 import android.telephony.SmsMessage
-import com.android.messaging.data.sms.IncomingSmsDeliverer
 import com.android.messaging.di.receiver.IncomingSmsEntryPoint
 import dagger.hilt.android.EntryPointAccessors
+import kotlinx.coroutines.launch
 
 class SmsDeliverReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action == Sms.Intents.SMS_DELIVER_ACTION) {
-            delivererFrom(context).deliverFromIntent(context, intent)
+        if (intent.action != Sms.Intents.SMS_DELIVER_ACTION) {
+            return
+        }
+
+        // Import within the broadcast window, not via the job queue that JobScheduler can defer
+        val pendingResult = goAsync()
+        val appContext = context.applicationContext
+        val entryPoint = entryPoint(appContext)
+        entryPoint.applicationScope().launch(entryPoint.ioDispatcher()) {
+            try {
+                entryPoint.incomingSmsDeliverer().deliverFromIntent(appContext, intent)
+            } finally {
+                pendingResult.finish()
+            }
         }
     }
 
@@ -26,19 +38,19 @@ class SmsDeliverReceiver : BroadcastReceiver() {
             errorCode: Int,
             messages: Array<SmsMessage>,
         ) {
-            delivererFrom(context).deliver(
+            entryPoint(context).incomingSmsDeliverer().deliver(
                 context = context,
                 subId = subId,
                 errorCode = errorCode,
-                messages = messages
+                messages = messages,
             )
         }
 
-        private fun delivererFrom(context: Context): IncomingSmsDeliverer {
+        private fun entryPoint(context: Context): IncomingSmsEntryPoint {
             return EntryPointAccessors.fromApplication(
                 context.applicationContext,
                 IncomingSmsEntryPoint::class.java,
-            ).incomingSmsDeliverer()
+            )
         }
     }
 }
