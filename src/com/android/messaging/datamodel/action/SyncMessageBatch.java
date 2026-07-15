@@ -365,7 +365,11 @@ class SyncMessageBatch {
                 continue;
             }
 
-            final boolean archived = mCache.isArchived(conversationId);
+            // Honor both the cached archive state and the current db archive state so a sync does
+            // not clobber a conversation the user archived after the cache was populated.
+            final boolean archived = mCache.isArchived(conversationId)
+                    || BugleDatabaseOperations.getConversationArchiveStatusInTransaction(db,
+                            conversationId);
             // Always attempt to auto-switch conversation self id for sync/import case.
             BugleDatabaseOperations.maybeRefreshConversationMetadataInTransaction(db,
                     conversationId, true /*shouldAutoSwitchSelfId*/, archived /*keepArchived*/);

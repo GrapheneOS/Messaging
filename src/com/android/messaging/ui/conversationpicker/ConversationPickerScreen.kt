@@ -53,6 +53,7 @@ import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.common.components.composer.MESSAGE_COMPOSE_FIELD_TEST_TAG
 import com.android.messaging.ui.common.components.composer.MessageComposeBar
 import com.android.messaging.ui.common.components.composer.MessageSendButton
+import com.android.messaging.ui.common.components.contentSurfaceShape
 import com.android.messaging.ui.common.components.mediapreview.MediaPreviewBackground
 import com.android.messaging.ui.common.components.selection.LocalSelectionListItemColors
 import com.android.messaging.ui.common.components.selection.SelectionListContent
@@ -63,8 +64,8 @@ import com.android.messaging.ui.conversationpicker.common.PickerTopAppBar
 import com.android.messaging.ui.conversationpicker.common.ScreenContentPadding
 import com.android.messaging.ui.conversationpicker.common.SelectedTargetsBar
 import com.android.messaging.ui.conversationpicker.common.composeSubjectSlot
-import com.android.messaging.ui.conversationpicker.common.contentSurfaceShape
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerAction as Action
+import com.android.messaging.ui.conversationpicker.model.ConversationPickerLabels
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerUiState as State
 import com.android.messaging.ui.conversationpicker.model.DraftUiState
 import com.android.messaging.ui.conversationpicker.model.RecentTargetsUiState
@@ -87,6 +88,7 @@ internal fun ConversationPickerScreen(
     effectHandler: ConversationPickerEffectHandler,
     onNavigateBack: () -> Unit,
     allowMultiSelect: Boolean,
+    labels: ConversationPickerLabels,
     modifier: Modifier = Modifier,
     screenModel: ConversationPickerScreenModel = viewModel<ConversationPickerViewModel>(),
 ) {
@@ -128,6 +130,7 @@ internal fun ConversationPickerScreen(
             permissionLauncher.launch(Manifest.permission.READ_CONTACTS)
         },
         allowMultiSelect = allowMultiSelect,
+        labels = labels,
         modifier = modifier,
     )
 }
@@ -146,6 +149,7 @@ private fun PickerContent(
     onNavigateBack: () -> Unit,
     onGrantContactsPermission: () -> Unit,
     allowMultiSelect: Boolean,
+    labels: ConversationPickerLabels,
     modifier: Modifier = Modifier,
 ) {
     val searchState = rememberTextFieldState()
@@ -167,6 +171,7 @@ private fun PickerContent(
         PickerReviewScaffold(
             uiState = uiState,
             onAction = onAction,
+            labels = labels,
             modifier = modifier,
         )
     } else {
@@ -177,6 +182,7 @@ private fun PickerContent(
             onNavigateBack = onNavigateBack,
             onGrantContactsPermission = onGrantContactsPermission,
             allowMultiSelect = allowMultiSelect,
+            labels = labels,
             modifier = modifier,
         )
     }
@@ -212,6 +218,7 @@ private fun PickerScaffold(
     onNavigateBack: () -> Unit,
     onGrantContactsPermission: () -> Unit,
     allowMultiSelect: Boolean,
+    labels: ConversationPickerLabels,
     modifier: Modifier = Modifier,
 ) {
     val inSelectionMode = uiState.targets.selection.selectedIds.isNotEmpty()
@@ -226,6 +233,7 @@ private fun PickerScaffold(
                 inSelectionMode = inSelectionMode,
                 onAction = onAction,
                 onNavigateBack = onNavigateBack,
+                labels = labels,
             )
         },
     ) { contentPadding ->
@@ -256,6 +264,7 @@ private fun PickerScaffold(
                             onAction = onAction,
                             onGrantContactsPermission = onGrantContactsPermission,
                             bottomPadding = contentPadding.calculateBottomPadding(),
+                            labels = labels,
                         )
                     }
                 }
@@ -272,6 +281,7 @@ private fun PickerTargetsContent(
     onAction: (Action) -> Unit,
     onGrantContactsPermission: () -> Unit,
     bottomPadding: Dp,
+    labels: ConversationPickerLabels,
     modifier: Modifier = Modifier,
 ) {
     if (!uiState.contacts.hasContactsPermission) {
@@ -282,6 +292,7 @@ private fun PickerTargetsContent(
             onAction = onAction,
             onGrantContactsPermission = onGrantContactsPermission,
             bottomPadding = bottomPadding,
+            labels = labels,
             modifier = modifier,
         )
         return
@@ -294,6 +305,7 @@ private fun PickerTargetsContent(
         onAction = onAction,
         onGrantContactsPermission = onGrantContactsPermission,
         bottomPadding = bottomPadding,
+        labels = labels,
         modifier = modifier,
     )
 }
@@ -306,6 +318,7 @@ private fun PickerRecentTargetsContent(
     onAction: (Action) -> Unit,
     onGrantContactsPermission: () -> Unit,
     bottomPadding: Dp,
+    labels: ConversationPickerLabels,
     modifier: Modifier = Modifier,
 ) {
     SelectionListContent(
@@ -333,6 +346,7 @@ private fun PickerRecentTargetsContent(
                 hasContactsPermission = uiState.contacts.hasContactsPermission,
                 onAction = onAction,
                 onGrantContactsPermission = onGrantContactsPermission,
+                recentConversationsTitle = labels.recentConversationsTitle,
                 modifier = Modifier.animateItem(),
             )
         }
@@ -347,6 +361,7 @@ private fun PickerContactsTargetsContent(
     onAction: (Action) -> Unit,
     onGrantContactsPermission: () -> Unit,
     bottomPadding: Dp,
+    labels: ConversationPickerLabels,
     modifier: Modifier = Modifier,
 ) {
     RecipientSelectionContactsContent(
@@ -358,6 +373,7 @@ private fun PickerContactsTargetsContent(
             bottom = bottomPadding,
         ),
         uiState = uiState.asRecipientSelectionState(),
+        emptyStateText = labels.emptyStateText,
         rowDecorators = pickerContactRowDecorators,
         onLoadMore = { onAction(Action.LoadMoreContacts) },
         onPrimaryActionClick = {},
@@ -393,6 +409,7 @@ private fun PickerContactsTargetsContent(
                         hasContactsPermission = uiState.contacts.hasContactsPermission,
                         onAction = onAction,
                         onGrantContactsPermission = onGrantContactsPermission,
+                        recentConversationsTitle = labels.recentConversationsTitle,
                     )
                 }
             }
@@ -407,6 +424,7 @@ private fun PickerTopBar(
     inSelectionMode: Boolean,
     onAction: (Action) -> Unit,
     onNavigateBack: () -> Unit,
+    labels: ConversationPickerLabels,
 ) {
     Column(
         modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainer),
@@ -416,6 +434,8 @@ private fun PickerTopBar(
             inSelectionMode = inSelectionMode,
             selectedCount = uiState.targets.selection.selectedIds.size,
             searchState = searchState,
+            title = labels.title,
+            searchHint = labels.searchHint,
             onNavigateBack = onNavigateBack,
             onSearchOpen = { onAction(Action.SearchOpened) },
             onSearchClose = {
@@ -444,6 +464,7 @@ private fun PickerTopBar(
 private fun PickerReviewScaffold(
     uiState: State,
     onAction: (Action) -> Unit,
+    labels: ConversationPickerLabels,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -454,6 +475,7 @@ private fun PickerReviewScaffold(
                 modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainer),
             ) {
                 PickerReviewTopAppBar(
+                    title = labels.title,
                     onBack = { onAction(Action.ReviewDismissed) },
                 )
 
@@ -558,7 +580,6 @@ private fun PickerReviewSimSelector(
         ),
         selectedContentDescription = stringResource(id = R.string.sim_selector_item_selected),
         onSimSelected = onSimSelected,
-        showDestination = true,
     )
 }
 
@@ -625,6 +646,7 @@ private fun PickerContentPreview() {
             onNavigateBack = {},
             onGrantContactsPermission = {},
             allowMultiSelect = true,
+            labels = ConversationPickerLabels.Share,
         )
     }
 }
@@ -671,6 +693,7 @@ private fun PickerSelectionPreview() {
             onNavigateBack = {},
             onGrantContactsPermission = {},
             allowMultiSelect = true,
+            labels = ConversationPickerLabels.Share,
         )
     }
 }
@@ -688,6 +711,7 @@ private fun PickerEmptyPreview() {
             onNavigateBack = {},
             onGrantContactsPermission = {},
             allowMultiSelect = true,
+            labels = ConversationPickerLabels.Share,
         )
     }
 }
@@ -706,6 +730,7 @@ private fun PickerContactsPermissionPreview() {
             onNavigateBack = {},
             onGrantContactsPermission = {},
             allowMultiSelect = true,
+            labels = ConversationPickerLabels.Share,
         )
     }
 }

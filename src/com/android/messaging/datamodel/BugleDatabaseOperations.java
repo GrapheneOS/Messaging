@@ -616,6 +616,16 @@ public class BugleDatabaseOperations {
         updateConversationRowIfExists(dbWrapper, conversationId, values);
     }
 
+    @DoesNotRunOnMainThread
+    public static void updateConversationPinStatusInTransaction(final DatabaseWrapper dbWrapper,
+            final String conversationId, final boolean isPinned) {
+        Assert.isNotMainThread();
+        Assert.isTrue(dbWrapper.getDatabase().inTransaction());
+        final ContentValues values = new ContentValues();
+        values.put(ConversationColumns.PINNED, isPinned ? 1 : 0);
+        updateConversationRowIfExists(dbWrapper, conversationId, values);
+    }
+
     static void addSnippetTextAndPreviewToContentValues(final MessageData message,
             final boolean showDraft, final ContentValues values) {
         values.put(ConversationColumns.SHOW_DRAFT, showDraft ? 1 : 0);
@@ -1489,6 +1499,28 @@ public class BugleDatabaseOperations {
             if (cursor != null) {
                 cursor.close();
             }
+        }
+    }
+
+    /**
+     * Returns whether the conversation is currently archived in the local db. Used so that a
+     * message sync does not clobber the user's archive state when it refreshes conversation
+     * metadata.
+     */
+    @DoesNotRunOnMainThread
+    public static boolean getConversationArchiveStatusInTransaction(
+            final DatabaseWrapper dbWrapper,
+            final String conversationId
+    ) {
+        try (Cursor cursor = dbWrapper.query(
+                DatabaseHelper.CONVERSATIONS_TABLE,
+                new String[] { ConversationColumns.ARCHIVE_STATUS },
+                ConversationColumns._ID + "=?",
+                new String[] { conversationId },
+                null, null, null
+            )
+        ) {
+            return cursor.moveToFirst() && cursor.getInt(0) == 1;
         }
     }
 

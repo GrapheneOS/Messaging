@@ -1,6 +1,5 @@
 package com.android.messaging.ui.conversationpicker.common
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -29,6 +27,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.android.messaging.R
+import com.android.messaging.ui.common.components.PagerIndicator
 import com.android.messaging.ui.common.components.attachment.AudioAttachmentCell
 import com.android.messaging.ui.common.components.attachment.VCardAttachmentCell
 import com.android.messaging.ui.common.components.mediapreview.MediaPreviewCard
@@ -44,9 +43,6 @@ private val ReviewPageHorizontalPadding = 24.dp
 private val ReviewPageVerticalPadding = 12.dp
 private val ReviewDeleteChipPadding = 8.dp
 private val ReviewPageIndicatorPadding = 12.dp
-private val ReviewIndicatorDotSize = 8.dp
-private val ReviewIndicatorDotSpacing = 6.dp
-private const val REVIEW_INDICATOR_INACTIVE_ALPHA = 0.4f
 
 @Composable
 internal fun PickerReviewAttachments(
@@ -98,40 +94,10 @@ internal fun PickerReviewAttachments(
         }
 
         if (attachments.size > 1) {
-            PickerReviewPagerIndicator(
+            PagerIndicator(
                 pagerState = pagerState,
                 pageCount = attachments.size,
                 modifier = Modifier.padding(vertical = ReviewPageIndicatorPadding),
-            )
-        }
-    }
-}
-
-@Composable
-private fun PickerReviewPagerIndicator(
-    pagerState: PagerState,
-    pageCount: Int,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(space = ReviewIndicatorDotSpacing),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        repeat(times = pageCount) { index ->
-            val isSelected = pagerState.currentPage == index
-            val dotColor = when {
-                isSelected -> MaterialTheme.colorScheme.primary
-                else ->
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                        .copy(alpha = REVIEW_INDICATOR_INACTIVE_ALPHA)
-            }
-
-            Box(
-                modifier = Modifier
-                    .size(size = ReviewIndicatorDotSize)
-                    .clip(shape = CircleShape)
-                    .background(color = dotColor),
             )
         }
     }
@@ -190,8 +156,9 @@ private fun PickerReviewAttachmentPage(
             ) {
                 VCardAttachmentCell(
                     kind = attachment.kind,
-                    avatarUri = null,
-                    avatarName = attachment.title,
+                    avatarImage = null,
+                    displayName = attachment.title,
+                    normalizedDestination = null,
                     title = attachment.title
                         ?: stringResource(id = R.string.mediapicker_contact_title),
                     subtitle = null,

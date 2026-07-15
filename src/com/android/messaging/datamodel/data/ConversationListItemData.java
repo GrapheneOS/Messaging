@@ -65,6 +65,7 @@ public class ConversationListItemData {
     private String mDraftPreviewContentType;
     private String mDraftSnippetText;
     private boolean mIsArchived;
+    private boolean mIsPinned;
     private String mSubject;
     private String mDraftSubject;
     private String mSnippetSenderFirstName;
@@ -132,6 +133,7 @@ public class ConversationListItemData {
         mSnippetSenderDisplayDestination =
                 cursor.getString(INDEX_SNIPPET_SENDER_DISPLAY_DESTINATION);
         mIsEnterprise = cursor.getInt(INDEX_IS_ENTERPRISE) == 1;
+        mIsPinned = cursor.getInt(INDEX_PINNED) == 1;
     }
 
     public String getConversationId() {
@@ -269,6 +271,10 @@ public class ConversationListItemData {
         return mIsArchived;
     }
 
+    public boolean getIsPinned() {
+        return mIsPinned;
+    }
+
     public String getSubject() {
         return mSubject;
     }
@@ -310,6 +316,8 @@ public class ConversationListItemData {
             + " as " + ConversationListViewColumns.CURRENT_SELF_ID + ", "
             + DatabaseHelper.CONVERSATIONS_TABLE + '.' + ConversationColumns.ARCHIVE_STATUS
             + " as " + ConversationListViewColumns.ARCHIVE_STATUS + ", "
+            + DatabaseHelper.CONVERSATIONS_TABLE + '.' + ConversationColumns.PINNED
+            + " as " + ConversationListViewColumns.PINNED + ", "
             + DatabaseHelper.MESSAGES_TABLE + '.' + MessageColumns.READ
             + " as " + ConversationListViewColumns.READ + ", "
             + DatabaseHelper.CONVERSATIONS_TABLE + '.' + ConversationColumns.ICON
@@ -389,6 +397,7 @@ public class ConversationListItemData {
         public static final String _ID = ConversationColumns._ID;
         static final String NAME = ConversationColumns.NAME;
         static final String ARCHIVE_STATUS = ConversationColumns.ARCHIVE_STATUS;
+        static final String PINNED = ConversationColumns.PINNED;
         static final String READ = MessageColumns.READ;
         static final String SORT_TIMESTAMP = ConversationColumns.SORT_TIMESTAMP;
         static final String PREVIEW_URI = ConversationColumns.PREVIEW_URI;
@@ -453,6 +462,7 @@ public class ConversationListItemData {
         ConversationListViewColumns.SNIPPET_SENDER_FIRST_NAME,
         ConversationListViewColumns.SNIPPET_SENDER_DISPLAY_DESTINATION,
         ConversationListViewColumns.IS_ENTERPRISE,
+        ConversationListViewColumns.PINNED,
     };
 
     private static final int INDEX_ID = 0;
@@ -485,6 +495,7 @@ public class ConversationListItemData {
     private static final int INDEX_SNIPPET_SENDER_FIRST_NAME = 27;
     private static final int INDEX_SNIPPET_SENDER_DISPLAY_DESTINATION = 28;
     private static final int INDEX_IS_ENTERPRISE = 29;
+    private static final int INDEX_PINNED = 30;
 
     private static final String DIVIDER_TEXT = ", ";
 

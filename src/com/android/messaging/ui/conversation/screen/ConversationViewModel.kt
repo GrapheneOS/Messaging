@@ -11,9 +11,9 @@ import com.android.messaging.data.subscription.repository.ConversationSimSelecti
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.domain.conversation.usecase.action.CreateDefaultSmsRoleRequest
+import com.android.messaging.domain.conversation.usecase.participant.CanAddContact
 import com.android.messaging.domain.conversation.usecase.participant.CanAddMoreConversationParticipants
-import com.android.messaging.domain.conversation.usecase.telephony.IsDeviceVoiceCapable
-import com.android.messaging.domain.conversation.usecase.telephony.IsEmergencyPhoneNumber
+import com.android.messaging.domain.conversation.usecase.telephony.CanPlacePhoneCall
 import com.android.messaging.ui.conversation.audio.delegate.ConversationAudioRecordingDelegate
 import com.android.messaging.ui.conversation.composer.delegate.ConversationComposerAttachmentsDelegate
 import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftDelegate
@@ -70,6 +70,7 @@ internal interface ConversationScreenModel {
     fun onMessageAttachmentClicked(
         contentType: String,
         contentUri: String,
+        partId: String,
     )
 
     fun onMessageClick(messageId: String)
@@ -90,8 +91,7 @@ internal interface ConversationScreenModel {
     fun onContactCardPicked(contactUri: String?)
     fun onMessageTextChanged(text: String)
     fun tryStartAddingAttachment(): Boolean
-    fun onAudioRecordingStart()
-    fun onLockedAudioRecordingStart()
+    fun onAudioRecordingStart(isLocked: Boolean)
     fun onAudioRecordingLock(): Boolean
     fun onAudioRecordingFinish()
     fun onAudioRecordingCancel()
@@ -116,6 +116,7 @@ internal interface ConversationScreenModel {
 
     fun onArchiveConversationClick()
     fun onUnarchiveConversationClick()
+    fun onUnblockClick()
     fun onAddContactClick()
     fun onDeleteConversationClick()
     fun confirmDeleteConversation()
@@ -145,9 +146,9 @@ internal class ConversationViewModel @Inject constructor(
     private val conversationComposerUiStateMapper: ConversationComposerUiStateMapper,
     private val simSelectionRepository: ConversationSimSelectionRepository,
     private val canAddMoreConversationParticipants: CanAddMoreConversationParticipants,
+    private val canAddContact: CanAddContact,
+    private val canPlacePhoneCall: CanPlacePhoneCall,
     private val createDefaultSmsRoleRequest: CreateDefaultSmsRoleRequest,
-    private val isDeviceVoiceCapable: IsDeviceVoiceCapable,
-    private val isEmergencyPhoneNumber: IsEmergencyPhoneNumber,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
     private val savedStateHandle: SavedStateHandle,
@@ -268,9 +269,10 @@ internal class ConversationViewModel @Inject constructor(
             canCall = canCall(metadataState = metadataState),
             canArchive = isPresent && presentMetadata?.isArchived == false,
             canUnarchive = isPresent && presentMetadata?.isArchived == true,
-            canAddContact = canAddContact(metadataState = metadataState),
+            canAddContact = isAddContactAvailable(metadataState = metadataState),
             canDeleteConversation = isPresent,
             canEditSubject = isPresent,
+            isBlocked = presentMetadata?.isBlocked == true,
             attachmentLimitWarning = attachmentLimitWarning,
             isDeleteConversationConfirmationVisible = isDeleteConversationConfirmationVisible,
             isSubjectDialogVisible = isSubjectDialogVisible,
@@ -391,22 +393,20 @@ internal class ConversationViewModel @Inject constructor(
         return when {
             metadataState !is ConversationMetadataUiState.Present -> false
             metadataState.participantCount != 1 -> false
-            metadataState.otherParticipantPhoneNumber == null -> false
-            !isDeviceVoiceCapable() -> false
-            isEmergencyPhoneNumber(metadataState.otherParticipantPhoneNumber) -> false
-            else -> true
+            else -> canPlacePhoneCall(metadataState.otherParticipantPhoneNumber)
         }
     }
 
-    private fun canAddContact(
+    private fun isAddContactAvailable(
         metadataState: ConversationMetadataUiState,
     ): Boolean {
         return when {
             metadataState !is ConversationMetadataUiState.Present -> false
-            metadataState.participantCount != 1 -> false
-            metadataState.otherParticipantPhoneNumber.isNullOrBlank() -> false
-            !metadataState.otherParticipantContactLookupKey.isNullOrBlank() -> false
-            else -> true
+            else -> canAddContact(
+                isGroup = metadataState.participantCount != 1,
+                lookupKey = metadataState.otherParticipantContactLookupKey,
+                destination = metadataState.otherParticipantPhoneNumber,
+            )
         }
     }
 
@@ -459,11 +459,19 @@ internal class ConversationViewModel @Inject constructor(
     override fun onMessageAttachmentClicked(
         contentType: String,
         contentUri: String,
+        partId: String,
     ) {
         val imageCollectionUri = conversationIdFlow
             .value
             ?.let(MessagingContentProvider::buildConversationImagesUri)
             ?.toString()
+
+        val initialPhotoOccurrenceIndex =
+            conversationMessagesDelegate.resolvePhotoViewerInitialOccurrenceIndex(
+                contentType = contentType,
+                partId = partId,
+                contentUri = contentUri,
+            )
 
         viewModelScope.launch(defaultDispatcher) {
             _effects.emit(
@@ -471,6 +479,7 @@ internal class ConversationViewModel @Inject constructor(
                     contentType = contentType,
                     contentUri = contentUri,
                     imageCollectionUri = imageCollectionUri,
+                    initialPhotoOccurrenceIndex = initialPhotoOccurrenceIndex,
                 ),
             )
         }
@@ -532,7 +541,7 @@ internal class ConversationViewModel @Inject constructor(
                 ConversationMetadataUiState.Present
             )
             ?.otherParticipantPhoneNumber
-            ?.takeUnless(isEmergencyPhoneNumber::invoke)
+            ?.takeIf(canPlacePhoneCall::invoke)
             ?: return
 
         viewModelScope.launch(defaultDispatcher) {
@@ -588,12 +597,8 @@ internal class ConversationViewModel @Inject constructor(
         return conversationDraftDelegate.tryStartAddingAttachment()
     }
 
-    override fun onAudioRecordingStart() {
-        startAudioRecording(isLocked = false)
-    }
-
-    override fun onLockedAudioRecordingStart() {
-        startAudioRecording(isLocked = true)
+    override fun onAudioRecordingStart(isLocked: Boolean) {
+        startAudioRecording(isLocked = isLocked)
     }
 
     private fun startAudioRecording(isLocked: Boolean) {
@@ -756,6 +761,10 @@ internal class ConversationViewModel @Inject constructor(
         conversationMetadataDelegate.onUnarchiveConversationClick()
     }
 
+    override fun onUnblockClick() {
+        conversationMetadataDelegate.onUnblockConversationClick()
+    }
+
     override fun onAddContactClick() {
         conversationMetadataDelegate.onAddContactClick()
     }
@@ -789,6 +798,8 @@ internal class ConversationViewModel @Inject constructor(
     }
 
     override fun onScreenForegrounded(cancelNotification: Boolean) {
+        conversationComposerAttachmentsDelegate.refresh()
+        conversationMessagesDelegate.refresh()
         conversationFocusDelegate.setScreenFocused(
             focused = true,
             cancelNotification = cancelNotification,

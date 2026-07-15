@@ -57,10 +57,7 @@
     <string name="contact_list_send_to_text">Send to <xliff:g id="destination">%s</xliff:g></string>
 
     <string name="mediapicker_gallery_title">Choose media</string>
-    <plurals name="conversation_message_selection_title">
-        <item quantity="one">%d selected</item>
-        <item quantity="other">%d selected</item>
-    </plurals>
+    <string name="conversation_message_selection_title">%d</string>
     <string name="mediapicker_audio_title">Record audio</string>
     <string name="mediapicker_contact_title">Choose a contact</string>
     <string name="conversation_media_picker_add_selection">Add (<xliff:g id="count">%1$d</xliff:g>)</string>
@@ -271,6 +268,10 @@
     <string name="action_archive">Archive</string>
     <!-- Action menu title for unarchiving selected conversations in conversation list -->
     <string name="action_unarchive">Unarchive</string>
+    <!-- Action menu title for pinning selected conversations to the top of the conversation list -->
+    <string name="action_pin">Pin</string>
+    <!-- Action menu title for unpinning selected conversations in conversation list -->
+    <string name="action_unpin">Unpin</string>
     <!-- Action menu title for turning off notification for the selected conversations in conversation list -->
     <string name="action_notification_off">Turn off notifications</string>
     <!-- Action menu title for turning on notification for the selected conversations in conversation list -->
@@ -425,6 +426,10 @@
     <string name="camera_switch_camera_facing">Switch between front and back camera</string>
 
     <string name="photo_view_activity_title">Messaging photos</string>
+    <string name="photo_viewer_image_content_description">Image attachment</string>
+    <string name="photo_viewer_load_error">Couldn\'t load image</string>
+    <string name="photo_viewer_empty">No images</string>
+    <string name="photo_viewer_details_title">Image details</string>
     <plurals name="photos_saved_to_album">
         <item quantity="one"><xliff:g id="quantity">%d</xliff:g> photo saved to \"<xliff:g id="albumName">%s</xliff:g>\" album</item>
         <item quantity="other"><xliff:g id="quantity">%d</xliff:g> photos saved to \"<xliff:g id="albumName">%s</xliff:g>\" album</item>
@@ -678,6 +683,8 @@
     <string name="loading_vcard">Loading contact card</string>
     <!-- Text shown on contact VCard when it failed to load -->
     <string name="failed_loading_vcard">Couldn\'t load contact card</string>
+    <!-- Toast shown when saving the contact card to the address book could not be started -->
+    <string name="failed_saving_vcard_to_contacts">Couldn\'t add contact</string>
     <!-- Text shown on contact VCard promping the user to tap to view the contact -->
     <string name="vcard_tap_hint">View contact card</string>
     <!-- VCard display name for when there's more than one contact, e.g. "2 contact cards" -->
@@ -694,6 +701,8 @@
     <string name="vcard_detail_notes_label">Notes</string>
     <!-- Title for the message forwarding dialog -->
     <string name="forward_message_activity_title">Forward message</string>
+    <!-- Text shown when no contacts are available to forward a message to -->
+    <string name="forward_picker_empty_text">Enter a contact name or phone number to forward to</string>
     <!-- Title for the message reply dialog -->
     <string name="reply_activity_title">Reply</string>
 
@@ -755,6 +764,29 @@
     <!-- String to show in the conversation list view when we haven't synchronized the SMS database yet -->
     <string name="conversation_list_first_sync_text">Loading conversations&#8230;</string>
 
+    <!-- Label for the button that starts a new conversation from the conversation list. -->
+    <string name="conversation_list_start_chat">Start chat</string>
+    <!-- Accessibility label for the button that scrolls the conversation list back to the top. -->
+    <string name="conversation_list_scroll_to_top">Scroll to top</string>
+    <!-- Conversation list row status for an outgoing message that failed to send. -->
+    <string name="conversation_list_status_not_sent">Not sent</string>
+    <!-- Conversation list row status for an incoming message that failed to download. -->
+    <string name="conversation_list_status_not_downloaded">Not downloaded</string>
+    <!-- Accessibility status for an unread conversation in the conversation list. -->
+    <string name="conversation_list_status_unread">Unread</string>
+    <!-- Accessibility status for a pinned conversation in the conversation list. -->
+    <string name="conversation_list_status_pinned">Pinned</string>
+    <!-- Accessibility status for a muted conversation in the conversation list. -->
+    <string name="conversation_list_status_notifications_off">Notifications off</string>
+    <!-- Accessibility status for a snoozed conversation in the conversation list. -->
+    <string name="conversation_list_status_snoozed">Snoozed</string>
+    <!-- Accessibility status for a work conversation in the conversation list. -->
+    <string name="conversation_list_status_work_profile">Work profile</string>
+    <!-- Accessibility label for the conversation list avatar action that opens conversation quick actions. -->
+    <string name="conversation_list_show_conversation_actions">Show conversation actions for <xliff:g id="conversation">%1$s</xliff:g></string>
+    <!-- Accessibility label for the conversation list avatar action that toggles selection. -->
+    <string name="conversation_list_toggle_selection">Toggle selection for <xliff:g id="contact">%1$s</xliff:g></string>
+
     <!-- Shown in conversation as the snippet when there is no text and an attached picture. [CHAR LIMIT=25] -->
     <string name="conversation_list_snippet_picture">Picture</string>
     <!-- Shown in conversation as the snippet when there is no text and an attached audio clip. [CHAR LIMIT=25] -->
@@ -803,11 +835,24 @@
     <!-- Label of unblock contact item in People & Options for 1:1 conversation -->
     <string name="unblock_contact_title">Unblock <xliff:g id="destination">%s</xliff:g></string>
 
-    <!-- Title of the snooze chat dialog opened from conversation settings -->
-    <string name="snooze_chat_dialog_title">Snooze chat</string>
+    <!-- Title of the banner shown at the top of a blocked conversation -->
+    <string name="conversation_blocked_banner_title">Blocked</string>
+    <!-- Message of the banner shown at the top of a blocked conversation -->
+    <string name="conversation_blocked_banner_message">Unblock to receive messages from this sender</string>
+    <!-- Label of the unblock action button on the blocked conversation banner -->
+    <string name="conversation_blocked_banner_action">Unblock</string>
+
+    <!-- Title of the snooze chat dialog -->
+    <plurals name="snooze_chat_dialog_title">
+        <item quantity="one">Snooze chat</item>
+        <item quantity="other">Snooze chats</item>
+    </plurals>
 
     <!-- Description shown inside the snooze chat dialog -->
-    <string name="snooze_chat_dialog_message">You won\'t get notifications from this chat for the selected period.</string>
+    <plurals name="snooze_chat_dialog_message">
+        <item quantity="one">You won\'t get notifications from this chat for the selected period.</item>
+        <item quantity="other">You won\'t get notifications from these chats for the selected period.</item>
+    </plurals>
 
     <!-- Confirm button label for the snooze chat dialog -->
     <string name="snooze_chat_dialog_confirm">Snooze</string>
@@ -907,6 +952,8 @@
     <string name="activity_not_found_message">Could not find an appropriate application</string>
 
     <string name="debug_sub_id_spinner_text" translatable="false">SUB Id</string>
+    <string name="debug_mms_config_title" translatable="false">MMS Config</string>
+    <string name="debug_mms_config_empty_value" translatable="false">Empty</string>
 
     <!-- Accessibility : Content description for deleting a recipient chip. -->
     <string name="chips_delete_content_description">Remove recipient</string>
@@ -1074,6 +1121,8 @@
     <string name="widget_new_message_content_description">New message</string>
     <!-- Content description for conversation list button in desktop widget -->
     <string name="widget_conversation_list_content_description">Conversation list</string>
+    <!-- Text shown when no contacts are available while picking a conversation for the widget -->
+    <string name="widget_picker_empty_text">Enter a contact name or phone number to pick a conversation</string>
     <!-- Shown when loading conversations in the widget -->
     <string name="loading_conversations">Loading conversations</string>
     <!-- Shown when loading messages in the widget -->
@@ -1147,4 +1196,5 @@
     <string name="alerts_channel">Alerts</string>
 
     <string name="mark_as_read">Mark as read</string>
+    <string name="mark_as_unread">Mark as unread</string>
 </resources>

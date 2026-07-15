@@ -1,5 +1,6 @@
 package com.android.messaging.ui.recipientselection.component
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.Spring
@@ -20,6 +21,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -31,7 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import com.android.messaging.R
+import com.android.messaging.ui.common.components.PrimaryActionButton
 import com.android.messaging.ui.common.components.selection.SelectionListContent
 import com.android.messaging.ui.core.MessagingPreviewColumn
 import com.android.messaging.ui.recipientselection.model.section.RecipientContactListEntry
@@ -53,6 +56,7 @@ internal fun RecipientSelectionContactsContent(
     onPrimaryActionClick: () -> Unit,
     onRecipientDestinationClick: OnRecipientDestinationAction,
     onRecipientDestinationLongClick: OnRecipientDestinationAction?,
+    @StringRes emptyStateText: Int,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
     topListContent: (@Composable () -> Unit)? = null,
@@ -86,13 +90,14 @@ internal fun RecipientSelectionContactsContent(
         floatingActionEnterTransition = recipientSelectionPrimaryActionEnterTransition(),
         floatingActionExitTransition = recipientSelectionPrimaryActionExitTransition(),
         floatingActionContent = {
-            RecipientSelectionPrimaryActionButton(
+            PrimaryActionButton(
                 modifier = Modifier
                     .navigationBarsPadding()
                     .padding(end = 8.dp, bottom = 8.dp),
                 enabled = primaryAction?.isEnabled ?: false,
                 isLoading = primaryAction?.isLoading ?: false,
                 text = primaryAction?.text.orEmpty(),
+                trailingIcon = Icons.AutoMirrored.Rounded.ArrowForward,
                 testTag = primaryAction?.testTag,
                 onClick = onPrimaryActionClick,
             )
@@ -111,6 +116,7 @@ internal fun RecipientSelectionContactsContent(
             rowDecorators = rowDecorators,
             onRecipientDestinationClick = onRecipientDestinationClick,
             onRecipientDestinationLongClick = onRecipientDestinationLongClick,
+            emptyStateText = emptyStateText,
         )
     }
 }
@@ -122,6 +128,7 @@ private fun LazyListScope.recipientSelectionContactItems(
     rowDecorators: RecipientSelectionRowDecorators,
     onRecipientDestinationClick: OnRecipientDestinationAction,
     onRecipientDestinationLongClick: OnRecipientDestinationAction?,
+    @StringRes emptyStateText: Int,
 ) {
     val pickerUiState = uiState.picker
 
@@ -134,7 +141,7 @@ private fun LazyListScope.recipientSelectionContactItems(
 
         pickerUiState.items.isEmpty() -> {
             item {
-                RecipientSelectionEmptyState()
+                RecipientSelectionEmptyState(text = emptyStateText)
             }
         }
 
@@ -302,13 +309,14 @@ private fun RecipientSelectionLoadingMoreState() {
 
 @Composable
 private fun RecipientSelectionEmptyState(
+    @StringRes text: Int,
     modifier: Modifier = Modifier,
 ) {
     Text(
         modifier = modifier
             .fillMaxWidth()
             .padding(all = 24.dp),
-        text = stringResource(id = R.string.contact_list_empty_text),
+        text = stringResource(id = text),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center,

@@ -1,8 +1,9 @@
 package com.android.messaging.ui.conversationpicker.host.share
 
+import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
@@ -17,8 +18,10 @@ import com.android.messaging.domain.conversationpicker.usecase.BuildMessageDataF
 import com.android.messaging.domain.conversationpicker.usecase.SendContentToTargets
 import com.android.messaging.domain.shareintent.model.SharedConversationDraftResult
 import com.android.messaging.domain.shareintent.usecase.BuildSharedConversationDraft
+import com.android.messaging.ui.BugleComponentActivity
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversationpicker.ConversationPickerScreen
+import com.android.messaging.ui.conversationpicker.model.ConversationPickerLabels
 import com.android.messaging.ui.core.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -26,7 +29,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 
 @AndroidEntryPoint
-class ShareIntentActivity : ComponentActivity() {
+class ShareIntentActivity : BugleComponentActivity() {
 
     @Inject
     @ApplicationCoroutineScope
@@ -47,6 +50,10 @@ class ShareIntentActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (isFinishing) {
+            return
+        }
 
         if (redirectToSendToIfNeeded()) {
             return
@@ -80,6 +87,7 @@ class ShareIntentActivity : ComponentActivity() {
                     effectHandler = effectHandler,
                     onNavigateBack = ::finish,
                     allowMultiSelect = true,
+                    labels = conversationPickerLabels(),
                     isInitialDraftLoading = shareDraft.isLoading,
                     initialDraft = shareDraft.draft,
                 )
@@ -136,13 +144,37 @@ class ShareIntentActivity : ComponentActivity() {
         return true
     }
 
+    private fun conversationPickerLabels(): ConversationPickerLabels {
+        return when (intent.getStringExtra(EXTRA_CONVERSATION_PICKER_LABELS)) {
+            LABELS_FORWARD -> ConversationPickerLabels.Forward
+            else -> ConversationPickerLabels.Share
+        }
+    }
+
     private data class ShareDraftState(
         val draft: ConversationDraft?,
         val isLoading: Boolean,
         val hasDroppedContent: Boolean,
     )
 
-    private companion object {
+    companion object {
+        internal fun createForwardIntent(
+            context: Context,
+            uri: Uri,
+            contentType: String,
+        ): Intent {
+            return Intent(context, ShareIntentActivity::class.java).apply {
+                action = Intent.ACTION_SEND
+                type = contentType
+                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(EXTRA_CONVERSATION_PICKER_LABELS, LABELS_FORWARD)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+        }
+
         private const val EXTRA_ADDRESS = "address"
+        private const val EXTRA_CONVERSATION_PICKER_LABELS =
+            "com.android.messaging.extra.CONVERSATION_PICKER_LABELS"
+        private const val LABELS_FORWARD = "forward"
     }
 }

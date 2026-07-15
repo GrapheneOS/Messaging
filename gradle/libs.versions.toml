@@ -2,6 +2,7 @@
 agp = "9.2.1"
 detekt = "2.0.0-alpha.3"
 hilt = "2.59.2"
+jacoco = "0.8.14"
 kotlin = "2.3.21"
 kotlinx-serialization = "1.11.0"
 ksp = "2.3.6"
@@ -32,7 +33,7 @@ recyclerview = "1.4.0"
 
 
 junit4 = "4.13.2"
-mockk = "1.14.9"
+mockk = "1.14.11"
 robolectric = "4.16.1"
 turbine = "1.2.1"
 
@@ -78,6 +79,7 @@ androidx-preference = { module = "androidx.preference:preference", version.ref =
 androidx-recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "recyclerview" }
 
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 

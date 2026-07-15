@@ -62,7 +62,7 @@ internal fun ConversationMessageBubblePreviewItem(
         ),
         maxBubbleWidth = 320.dp,
         simDisplayName = simDisplayName,
-        onAttachmentClick = { _, _ -> },
+        onAttachmentClick = { _, _, _ -> },
         onExternalUriClick = {},
         onMessageLongClick = {},
     )

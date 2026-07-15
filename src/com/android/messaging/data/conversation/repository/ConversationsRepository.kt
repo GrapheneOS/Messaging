@@ -10,6 +10,9 @@ import com.android.messaging.data.conversation.model.metadata.ConversationCompos
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
 import com.android.messaging.data.conversation.model.send.ConversationSendData
 import com.android.messaging.data.conversation.platform.MessageDetailsPlatformSource
+import com.android.messaging.data.conversation.store.ConversationArchiveStore
+import com.android.messaging.data.conversation.store.ConversationPinStore
+import com.android.messaging.data.conversation.store.ConversationReadStore
 import com.android.messaging.data.conversation.store.ConversationSelfIdStore
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
@@ -18,7 +21,6 @@ import com.android.messaging.datamodel.action.DeleteConversationAction
 import com.android.messaging.datamodel.action.DeleteMessageAction
 import com.android.messaging.datamodel.action.RedownloadMmsAction
 import com.android.messaging.datamodel.action.ResendMessageAction
-import com.android.messaging.datamodel.action.UpdateConversationArchiveStatusAction
 import com.android.messaging.datamodel.data.ConversationListItemData
 import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.datamodel.data.ConversationParticipantsData
@@ -64,9 +66,17 @@ internal interface ConversationsRepository {
 
     fun resendMessage(messageId: String)
 
-    fun archiveConversation(conversationId: String)
+    suspend fun archiveConversation(conversationId: String)
 
-    fun unarchiveConversation(conversationId: String)
+    suspend fun unarchiveConversation(conversationId: String)
+
+    suspend fun pinConversation(conversationId: String)
+
+    suspend fun unpinConversation(conversationId: String)
+
+    suspend fun markConversationRead(conversationId: String)
+
+    suspend fun markConversationUnread(conversationId: String)
 
     fun deleteConversation(conversationId: String, cutoffTimestamp: Long)
 
@@ -78,6 +88,9 @@ internal class ConversationsRepositoryImpl @Inject constructor(
     private val messageDetailsMapper: ConversationMessageDetailsMapper,
     private val messageDetailsPlatformSource: MessageDetailsPlatformSource,
     private val conversationSelfIdStore: ConversationSelfIdStore,
+    private val conversationReadStore: ConversationReadStore,
+    private val conversationPinStore: ConversationPinStore,
+    private val conversationArchiveStore: ConversationArchiveStore,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
     @param:MessagingDbDispatcher
@@ -203,16 +216,52 @@ internal class ConversationsRepositoryImpl @Inject constructor(
             ?.let(ResendMessageAction::resendMessage)
     }
 
-    override fun archiveConversation(conversationId: String) {
-        conversationId
-            .takeIf { it.isNotBlank() }
-            ?.let(UpdateConversationArchiveStatusAction::archiveConversation)
+    override suspend fun archiveConversation(conversationId: String) {
+        val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
+
+        withContext(messagingDbDispatcher) {
+            conversationArchiveStore.archiveConversation(resolvedConversationId)
+        }
     }
 
-    override fun unarchiveConversation(conversationId: String) {
-        conversationId
-            .takeIf { it.isNotBlank() }
-            ?.let(UpdateConversationArchiveStatusAction::unarchiveConversation)
+    override suspend fun unarchiveConversation(conversationId: String) {
+        val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
+
+        withContext(messagingDbDispatcher) {
+            conversationArchiveStore.unarchiveConversation(resolvedConversationId)
+        }
+    }
+
+    override suspend fun pinConversation(conversationId: String) {
+        val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
+
+        withContext(messagingDbDispatcher) {
+            conversationPinStore.pinConversation(resolvedConversationId)
+        }
+    }
+
+    override suspend fun unpinConversation(conversationId: String) {
+        val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
+
+        withContext(messagingDbDispatcher) {
+            conversationPinStore.unpinConversation(resolvedConversationId)
+        }
+    }
+
+    override suspend fun markConversationRead(conversationId: String) {
+        val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
+
+        withContext(messagingDbDispatcher) {
+            conversationReadStore.markConversationRead(resolvedConversationId)
+        }
+    }
+
+    override suspend fun markConversationUnread(conversationId: String) {
+        val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
+
+        withContext(messagingDbDispatcher) {
+            conversationReadStore.markConversationUnread(resolvedConversationId)
+        }
     }
 
     override fun deleteConversation(conversationId: String, cutoffTimestamp: Long) {
@@ -326,6 +375,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
                         ?.profilePhotoUri
                         ?.takeIf { it.isNotBlank() },
                     isArchived = cursor.getInt(ConversationColumns.ARCHIVE_STATUS) == 1,
+                    isBlocked = otherParticipant?.isBlocked == true,
                     composerAvailability = ConversationComposerAvailability.Editable,
                     sortTimestamp = cursor.getLong(ConversationColumns.SORT_TIMESTAMP),
                 )

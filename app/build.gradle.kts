@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.detekt)
     alias(libs.plugins.hilt)
+    jacoco
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.serialization)
@@ -79,12 +80,26 @@ android {
         compose = true
     }
 
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
+
     sourceSets.getByName("main") {
         assets.srcDir("../assets")
         manifest.srcFile("../AndroidManifest.xml")
         java.srcDirs("../src")
         kotlin.srcDirs("../src")
         res.srcDir("../res")
+    }
+
+    sourceSets.getByName("test") {
+        kotlin.srcDir("src/sharedTest/kotlin")
+    }
+
+    sourceSets.getByName("androidTest") {
+        kotlin.srcDir("src/sharedTest/kotlin")
     }
 
     val keystorePropertiesFile = rootProject.file("keystore.properties")
@@ -113,7 +128,7 @@ android {
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "../proguard.flags",
-                "../proguard-release.flags"
+                "../proguard-release.flags",
             )
 
             if (useKeystoreProperties) {
@@ -124,6 +139,8 @@ android {
         getByName("debug") {
             applicationIdSuffix = ".debug"
             resValue("string", "app_name", "Messaging d")
+            enableUnitTestCoverage = true
+            enableAndroidTestCoverage = true
         }
 
         create("perf") {
@@ -132,6 +149,22 @@ android {
             matchingFallbacks += listOf("release")
             resValue("string", "app_name", "Messaging d")
             signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+
+    testCoverage {
+        jacocoVersion = libs.versions.jacoco.get()
+    }
+
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            all { unitTest ->
+                unitTest.extensions.configure(JacocoTaskExtension::class.java) {
+                    isIncludeNoLocationClasses = true
+                    excludes = listOf("jdk.internal.*")
+                }
+            }
         }
     }
 
@@ -175,6 +208,7 @@ dependencies {
     implementation(libs.androidx.photo.picker)
 
     implementation(libs.coil.compose)
+    implementation(libs.coil.gif)
     implementation(libs.coil.network.okhttp)
     implementation(libs.glide)
 
@@ -191,12 +225,13 @@ dependencies {
     implementation(libs.libphonenumber)
 
     implementation(project(":lib:platform_frameworks_opt_chips"))
-    implementation(project(":lib:platform_frameworks_opt_photoviewer"))
     implementation(project(":lib:platform_frameworks_opt_vcard"))
 
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
     testImplementation(libs.junit4)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
@@ -221,3 +256,5 @@ dependencies {
     androidTestImplementation(libs.mockk.android)
     androidTestImplementation(libs.turbine)
 }
+
+apply(from = "jacoco.gradle.kts")

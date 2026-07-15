@@ -10,10 +10,6 @@
 	path = lib/platform_frameworks_opt_chips
 	url = https://github.com/GrapheneOS-Archive/platform_frameworks_opt_chips
 	branch = main
-[submodule "lib/platform_frameworks_opt_photoviewer"]
-	path = lib/platform_frameworks_opt_photoviewer
-	url = https://github.com/GrapheneOS-Archive/platform_frameworks_opt_photoviewer
-	branch = main
 [submodule "lib/platform_frameworks_opt_vcard"]
 	path = lib/platform_frameworks_opt_vcard
 	url = https://github.com/GrapheneOS/platform_frameworks_opt_vcard

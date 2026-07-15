@@ -1,8 +1,6 @@
 package com.android.messaging.ui.appsettings.subscription.mapper
 
 import android.content.Context
-import androidx.core.text.BidiFormatter
-import androidx.core.text.TextDirectionHeuristicsCompat
 import com.android.messaging.R
 import com.android.messaging.data.subscriptionsettings.model.PerSubscriptionData
 import com.android.messaging.data.subscriptionsettings.model.SubscriptionSettingsData
@@ -108,13 +106,11 @@ internal class SubscriptionSettingsUiStateMapperImpl @Inject constructor(
         val formattedNumber = perSub.formattedSavedPhoneNumber
             ?: perSub.formattedDefaultPhoneNumber
             ?: context.getString(R.string.unknown_phone_number_pref_display_value)
-        val displayPhoneNumber = BidiFormatter.getInstance()
-            .unicodeWrap(formattedNumber, TextDirectionHeuristicsCompat.LTR)
 
         return SubscriptionUiState(
             subId = perSub.subId,
             displayName = displayName,
-            displayDetail = displayPhoneNumber,
+            displayDetail = formattedNumber,
             phoneNumber = perSub.savedPhoneNumber,
             defaultPhoneNumber = perSub.defaultPhoneNumber,
             isGroupMmsSupported = perSub.isGroupMmsSupported,

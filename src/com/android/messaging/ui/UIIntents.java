@@ -161,6 +161,12 @@ public abstract class UIIntents {
     public abstract void launchAddContactActivity(final Context context, final String destination);
 
     /**
+     * Launch a dialog confirming whether to add the given destination to contacts.
+     */
+    public abstract void launchAddContactConfirmation(final Context context,
+            final Uri avatarUri, final String destination);
+
+    /**
      * Launch an activity to show people & options for a given conversation.
      */
     public abstract void launchPeopleAndOptionsActivity(final Activity context,
@@ -212,8 +218,16 @@ public abstract class UIIntents {
     /**
      * Launch full screen photo viewer.
      */
+    public void launchFullScreenPhotoViewer(Activity activity, Uri initialPhoto,
+            Rect initialPhotoBounds, Uri photosUri) {
+        launchFullScreenPhotoViewer(activity, initialPhoto, initialPhotoBounds, photosUri, 0);
+    }
+
+    /**
+     * Launch full screen photo viewer.
+     */
     public abstract void launchFullScreenPhotoViewer(Activity activity, Uri initialPhoto,
-            Rect initialPhotoBounds, Uri photosUri);
+            Rect initialPhotoBounds, Uri photosUri, int initialPhotoOccurrenceIndex);
 
     /**
      * Get a ACTION_VIEW intent

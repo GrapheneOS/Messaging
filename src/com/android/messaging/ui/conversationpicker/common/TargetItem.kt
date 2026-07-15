@@ -14,6 +14,7 @@ import com.android.messaging.ui.common.components.selection.SelectionListAvatar
 import com.android.messaging.ui.common.components.selection.SelectionListItem
 import com.android.messaging.ui.common.components.selection.SelectionListItemTokens
 import com.android.messaging.ui.common.components.selection.SelectionListTrailingIndicator
+import com.android.messaging.ui.common.text.asLtrText
 import com.android.messaging.ui.conversationpicker.model.TargetUiState
 import com.android.messaging.ui.core.MessagingPreviewColumn
 
@@ -48,10 +49,12 @@ internal fun TargetItem(
     shape: RoundedCornerShape = SelectionListItemTokens.singleShape,
 ) {
     val avatarContent = target.avatarContent()
+    val title = target.displayName.asLtrText()
+    val subtitle = target.details?.asLtrText()
 
     TargetRow(
-        title = target.displayName,
-        subtitle = target.details,
+        title = title,
+        subtitle = subtitle,
         avatarUri = target.avatarUri,
         colorSeedCode = avatarContent.colorSeedCode,
         fallbackIcon = avatarContent.fallbackIcon,

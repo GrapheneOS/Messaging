@@ -33,7 +33,7 @@ import com.android.messaging.ui.common.components.attachment.AudioAttachmentCell
 import com.android.messaging.ui.common.components.attachment.MediaAttachmentCell
 import com.android.messaging.ui.common.components.attachment.VCardAttachmentCell
 import com.android.messaging.ui.conversation.CONVERSATION_ATTACHMENT_PREVIEW_LIST_TEST_TAG
-import com.android.messaging.ui.conversation.attachment.ui.resolveVCardText
+import com.android.messaging.ui.conversation.attachment.ui.resolveLtrVCardText
 import com.android.messaging.ui.conversation.attachment.ui.toVCardAttachmentKind
 import com.android.messaging.ui.conversation.composer.model.ComposerAttachmentUiModel
 import com.android.messaging.ui.conversation.conversationAttachmentPreviewItemTestTag
@@ -46,6 +46,7 @@ import com.android.messaging.ui.conversation.preview.previewResolvedImageAttachm
 import com.android.messaging.ui.conversation.preview.previewResolvedVCardAttachment
 import com.android.messaging.ui.conversation.preview.previewResolvedVideoAttachment
 import com.android.messaging.ui.core.MessagingPreviewTheme
+import com.android.messaging.ui.vcard.rememberVCardAvatarImage
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -113,16 +114,19 @@ private fun ResolvedAttachmentPreviewItem(
 
     when (attachment) {
         is ComposerAttachmentUiModel.Resolved.VCard -> {
+            val avatarImage = rememberVCardAvatarImage(attachment.vCardUiModel.avatarPhoto)
+
             VCardAttachmentCell(
                 modifier = Modifier.testTag(itemTestTag),
                 kind = attachment.vCardUiModel.type.toVCardAttachmentKind(),
-                avatarUri = attachment.vCardUiModel.avatarUri,
-                avatarName = attachment.vCardUiModel.titleText,
-                title = resolveVCardText(
+                avatarImage = avatarImage,
+                displayName = attachment.vCardUiModel.titleText,
+                normalizedDestination = attachment.vCardUiModel.normalizedDestination,
+                title = resolveLtrVCardText(
                     text = attachment.vCardUiModel.titleText,
                     textResId = attachment.vCardUiModel.titleTextResId,
                 ).orEmpty(),
-                subtitle = resolveVCardText(
+                subtitle = resolveLtrVCardText(
                     text = attachment.vCardUiModel.subtitleText,
                     textResId = attachment.vCardUiModel.subtitleTextResId,
                 ),

@@ -1,23 +1,15 @@
 package com.android.messaging.ui.conversation.messages.ui.message
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -27,6 +19,7 @@ import com.android.messaging.ui.conversation.messages.model.message.Conversation
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel.Status
 import com.android.messaging.ui.conversation.messages.ui.attachment.ConversationMessageAttachments
+import com.android.messaging.ui.conversation.messages.ui.attachment.OnConversationAttachmentClick
 import com.android.messaging.ui.conversation.messages.ui.text.ConversationMessageText
 import com.android.messaging.ui.conversation.messages.ui.text.LocalConversationMessageLinkColor
 import com.android.messaging.ui.conversation.preview.previewAudioPart
@@ -39,11 +32,8 @@ import com.android.messaging.ui.conversation.preview.previewVCardPart
 import com.android.messaging.ui.conversation.preview.previewVideoPart
 import kotlinx.collections.immutable.persistentListOf
 
-private val MESSAGE_BUBBLE_MEDIA_SECTION_SPACING = 8.dp
-private val MESSAGE_BUBBLE_MEDIA_TEXT_PADDING = 12.dp
 private val MESSAGE_BUBBLE_TEXT_HORIZONTAL_PADDING = 16.dp
 private val MESSAGE_BUBBLE_TEXT_VERTICAL_PADDING = 12.dp
-private const val MESSAGE_SELECTION_MEDIA_OVERLAY_ALPHA = 0.2f
 
 @Composable
 internal fun ConversationMessageBubble(
@@ -54,7 +44,7 @@ internal fun ConversationMessageBubble(
     layout: ConversationMessageLayout,
     maxBubbleWidth: Dp,
     simDisplayName: String?,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
 ) {
@@ -106,65 +96,6 @@ internal fun ConversationMessageBubble(
 }
 
 @Composable
-private fun ConversationMessageAttachmentOnlyBubble(
-    modifier: Modifier,
-    layout: ConversationMessageLayout,
-    message: ConversationMessageUiModel,
-    isSelected: Boolean,
-    isSelectionMode: Boolean,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
-    onExternalUriClick: (String) -> Unit,
-    onMessageLongClick: () -> Unit,
-) {
-    ConversationMessageAttachmentOnlyContainer(
-        modifier = modifier,
-        bubbleShape = layout.bubbleShape,
-        message = message,
-        isSelected = isSelected,
-    ) {
-        ConversationMessageAttachmentBubbleContent(
-            modifier = Modifier.fillMaxWidth(),
-            layout = layout,
-            message = message,
-            isSelected = isSelected,
-            isSelectionMode = isSelectionMode,
-            onAttachmentClick = onAttachmentClick,
-            onExternalUriClick = onExternalUriClick,
-            onMessageLongClick = onMessageLongClick,
-        )
-    }
-}
-
-@Composable
-private fun ConversationMessageAttachmentSurfaceBubble(
-    modifier: Modifier,
-    layout: ConversationMessageLayout,
-    isSelected: Boolean,
-    message: ConversationMessageUiModel,
-    isSelectionMode: Boolean,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
-    onExternalUriClick: (String) -> Unit,
-    onMessageLongClick: () -> Unit,
-) {
-    ConversationMessageBubbleSurface(
-        modifier = modifier,
-        isSelected = isSelected,
-        message = message,
-        layout = layout,
-    ) {
-        ConversationMessageAttachmentBubbleContent(
-            layout = layout,
-            message = message,
-            isSelected = isSelected,
-            isSelectionMode = isSelectionMode,
-            onAttachmentClick = onAttachmentClick,
-            onExternalUriClick = onExternalUriClick,
-            onMessageLongClick = onMessageLongClick,
-        )
-    }
-}
-
-@Composable
 private fun ConversationMessageTextSurfaceBubble(
     modifier: Modifier,
     layout: ConversationMessageLayout,
@@ -172,7 +103,7 @@ private fun ConversationMessageTextSurfaceBubble(
     message: ConversationMessageUiModel,
     isSelectionMode: Boolean,
     simDisplayName: String?,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
 ) {
@@ -196,7 +127,7 @@ private fun ConversationMessageTextSurfaceBubble(
 }
 
 @Composable
-private fun ConversationMessageBubbleSurface(
+internal fun ConversationMessageBubbleSurface(
     modifier: Modifier = Modifier,
     isSelected: Boolean,
     message: ConversationMessageUiModel,
@@ -226,51 +157,13 @@ private fun ConversationMessageBubbleSurface(
 }
 
 @Composable
-private fun ConversationMessageAttachmentOnlyContainer(
-    modifier: Modifier = Modifier,
-    bubbleShape: RoundedCornerShape,
-    message: ConversationMessageUiModel,
-    isSelected: Boolean,
-    content: @Composable () -> Unit,
-) {
-    val overlayColor by animateColorAsState(
-        targetValue = when {
-            isSelected -> {
-                messageBubbleColor(
-                    message = message,
-                    isSelected = true,
-                ).copy(alpha = MESSAGE_SELECTION_MEDIA_OVERLAY_ALPHA)
-            }
-
-            else -> Color.Transparent
-        },
-        label = "conversationMessageSelectionOverlayColor",
-    )
-
-    Box(
-        modifier = modifier.clip(shape = bubbleShape),
-    ) {
-        content()
-
-        if (overlayColor != Color.Transparent) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(shape = bubbleShape)
-                    .background(color = overlayColor),
-            )
-        }
-    }
-}
-
-@Composable
 private fun ConversationMessageTextBubbleContent(
     layout: ConversationMessageLayout,
     message: ConversationMessageUiModel,
     isSelected: Boolean,
     isSelectionMode: Boolean,
     simDisplayName: String?,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
 ) {
@@ -292,6 +185,8 @@ private fun ConversationMessageTextBubbleContent(
 
         when {
             message.mmsDownload != null -> {
+                ConversationMessageSubject(subjectText = layout.content.subjectText)
+
                 ConversationMmsDownloadBody(
                     download = message.mmsDownload,
                     canDownloadMessage = message.canDownloadMessage,
@@ -319,111 +214,15 @@ private fun ConversationMessageTextBubbleContent(
 }
 
 @Composable
-private fun ConversationMessageAttachmentBubbleContent(
-    modifier: Modifier = Modifier,
-    layout: ConversationMessageLayout,
-    message: ConversationMessageUiModel,
-    isSelected: Boolean,
-    isSelectionMode: Boolean,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
-    onExternalUriClick: (String) -> Unit,
-    onMessageLongClick: () -> Unit,
-) {
-    val content = layout.content
-    val hasHeader = layout.showSender || !content.subjectText.isNullOrBlank()
-    val hasBodyText = !content.bodyText.isNullOrBlank()
-
-    Column(
-        modifier = modifier.fillMaxWidth(),
-    ) {
-        ConversationMessageSender(
-            modifier = Modifier.padding(
-                start = MESSAGE_BUBBLE_MEDIA_TEXT_PADDING,
-                top = MESSAGE_BUBBLE_MEDIA_TEXT_PADDING,
-                end = MESSAGE_BUBBLE_MEDIA_TEXT_PADDING,
-                bottom = conversationMessageSenderBottomPadding(content),
-            ),
-            color = messageSenderColor(
-                message = message,
-                isSelected = isSelected,
-            ),
-            senderDisplayName = message.senderDisplayName,
-            showSender = layout.showSender,
-        )
-
-        content.subjectText?.let { subjectText ->
-            Text(
-                modifier = Modifier.padding(
-                    start = MESSAGE_BUBBLE_MEDIA_TEXT_PADDING,
-                    top = conversationMessageSubjectTopPadding(showSender = layout.showSender),
-                    end = MESSAGE_BUBBLE_MEDIA_TEXT_PADDING,
-                    bottom = MESSAGE_BUBBLE_MEDIA_SECTION_SPACING,
-                ),
-                text = subjectText,
-                style = MaterialTheme.typography.titleSmall,
-            )
-        }
-
-        ConversationMessageAttachments(
-            attachmentSections = content.attachmentSections,
-            hasTextAboveVisualAttachments = hasHeader,
-            hasTextBelowVisualAttachments = hasBodyText,
-            isIncoming = message.isIncoming,
-            isSelectionMode = isSelectionMode,
-            useStandaloneAudioAttachmentBg = false,
-            onAttachmentClick = onAttachmentClick,
-            onExternalUriClick = onExternalUriClick,
-            onMessageLongClick = onMessageLongClick,
-        )
-
-        content.bodyText?.let { bodyText ->
-            ConversationMessageText(
-                modifier = Modifier.padding(
-                    start = MESSAGE_BUBBLE_MEDIA_TEXT_PADDING,
-                    top = MESSAGE_BUBBLE_MEDIA_SECTION_SPACING,
-                    end = MESSAGE_BUBBLE_MEDIA_TEXT_PADDING,
-                    bottom = MESSAGE_BUBBLE_MEDIA_TEXT_PADDING,
-                ),
-                text = bodyText,
-                style = MaterialTheme.typography.bodyLarge,
-                onExternalUriClick = onExternalUriClick,
-                onMessageLongClick = onMessageLongClick,
-            )
-        }
-    }
-}
-
-private fun conversationMessageSenderBottomPadding(
-    content: ConversationMessageContent,
-): Dp {
-    return when {
-        content.subjectText.isNullOrBlank() -> 6.dp
-        else -> MESSAGE_BUBBLE_MEDIA_SECTION_SPACING
-    }
-}
-
-private fun conversationMessageSubjectTopPadding(showSender: Boolean): Dp {
-    return when {
-        showSender -> 0.dp
-        else -> MESSAGE_BUBBLE_MEDIA_TEXT_PADDING
-    }
-}
-
-@Composable
 private fun ConversationMessageBody(
     content: ConversationMessageContent,
     isIncoming: Boolean,
     isSelectionMode: Boolean,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
 ) {
-    content.subjectText?.let { subjectText ->
-        Text(
-            text = subjectText,
-            style = MaterialTheme.typography.titleSmall,
-        )
-    }
+    ConversationMessageSubject(subjectText = content.subjectText)
 
     ConversationMessageAttachments(
         attachmentSections = content.attachmentSections,
@@ -448,7 +247,23 @@ private fun ConversationMessageBody(
 }
 
 @Composable
-private fun ConversationMessageSender(
+internal fun ConversationMessageSubject(
+    subjectText: String?,
+    modifier: Modifier = Modifier,
+) {
+    if (subjectText.isNullOrBlank()) {
+        return
+    }
+
+    Text(
+        modifier = modifier,
+        text = subjectText,
+        style = MaterialTheme.typography.titleSmall,
+    )
+}
+
+@Composable
+internal fun ConversationMessageSender(
     modifier: Modifier = Modifier,
     color: Color,
     senderDisplayName: String?,
@@ -469,7 +284,7 @@ private fun ConversationMessageSender(
 }
 
 @Composable
-private fun messageBubbleColor(
+internal fun messageBubbleColor(
     message: ConversationMessageUiModel,
     isSelected: Boolean,
 ): Color {
@@ -493,7 +308,7 @@ private fun messageBubbleContentColor(
 }
 
 @Composable
-private fun messageSenderColor(
+internal fun messageSenderColor(
     message: ConversationMessageUiModel,
     isSelected: Boolean,
 ): Color {
@@ -592,6 +407,8 @@ private fun ConversationMessageBubbleMmsDownloadPreview() {
                     mmsDownload = previewMmsDownloadUiModel(state = item.downloadState),
                     protocol = ConversationMessageUiModel.Protocol.MMS_PUSH_NOTIFICATION,
                     canDownloadMessage = item.canDownloadMessage,
+                ).copy(
+                    mmsSubject = "Weekend photos",
                 ),
                 bubbleLayoutMode = ConversationMessageBubbleLayoutMode.TextInSurface,
                 isSelected = item.isSelected,

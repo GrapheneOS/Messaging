@@ -1,0 +1,2 @@
+# Non-composable UI source files intentionally measured by the instrumented coverage track.
+conversation/ConversationActivity.kt

@@ -17,6 +17,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,6 +37,8 @@ internal interface ConversationComposerAttachmentsDelegate {
         scope: CoroutineScope,
         draftStateFlow: StateFlow<ConversationDraftState>,
     )
+
+    fun refresh()
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -53,6 +56,8 @@ internal class ConversationComposerAttachmentsDelegateImpl @Inject constructor(
     )
 
     override val state = _state.asStateFlow()
+
+    private val refreshTriggers = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     private var isBound = false
 
@@ -80,6 +85,10 @@ internal class ConversationComposerAttachmentsDelegateImpl @Inject constructor(
                     _state.value = attachmentUiModels
                 }
         }
+    }
+
+    override fun refresh() {
+        refreshTriggers.tryEmit(Unit)
     }
 
     private fun createAttachmentSource(
@@ -110,7 +119,10 @@ internal class ConversationComposerAttachmentsDelegateImpl @Inject constructor(
 
         val metadataFlows = vCardContentUris.map { contentUri ->
             conversationVCardMetadataRepository
-                .observeAttachmentMetadata(contentUri = contentUri)
+                .observeAttachmentMetadata(
+                    contentUri = contentUri,
+                    refreshes = refreshTriggers,
+                )
                 .map { metadata ->
                     contentUri to metadata
                 }

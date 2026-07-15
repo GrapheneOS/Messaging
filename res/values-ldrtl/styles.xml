@@ -31,35 +31,8 @@
         <item name="android:inputType">textShortMessage|textAutoCorrect|textCapSentences|textMultiLine</item>
     </style>
 
-    <style name="ContactListItemLinearLayoutStyle">
-        <item name="android:paddingStart">12dp</item>
-        <item name="android:paddingEnd">24dp</item>
-    </style>
-
-    <style name="ConversationListItemViewPaddingStyle">
-        <item name="android:paddingStart">@dimen/conversation_list_item_view_padding</item>
-        <item name="android:paddingEnd">@dimen/conversation_list_item_view_padding</item>
-    </style>
-
-    <style name="ConversationListItemViewTextStyle">
-        <item name="android:includeFontPadding">false</item>
-        <item name="android:textSize">14sp</item>
-        <item name="android:background">@null</item>
-        <item name="android:textAlignment">viewStart</item>
-        <item name="android:textColor">@color/conversation_list_details</item>
-    </style>
-
-    <style name="ConversationListItemViewConversationNameStyle" parent="ConversationListItemViewTextStyle">
-        <item name="android:textSize">16sp</item>
-        <item name="android:textColor">@color/conversation_list_name</item>
-    </style>
-
     <style name="ConversationListNotificationBellPaddingStyle">
         <item name="android:paddingEnd">@dimen/conversation_list_notification_bell_padding</item>
-    </style>
-
-    <style name="ConversationListFragmentStartNewButtonStyle">
-        <item name="android:layout_marginEnd">@dimen/fab_left_right_margin</item>
     </style>
 
     <style name="BugleActionBarTitleTextStyle" parent="@style/TextAppearance.AppCompat.Widget.ActionBar.Title">
@@ -87,11 +60,6 @@
     <style name="ConversationMessageViewStyle">
         <item name="android:paddingStart">12dp</item>
         <item name="android:paddingEnd">12dp</item>
-    </style>
-
-    <style name="SnackBarMessageWrapper">
-        <item name="android:layout_marginStart">@dimen/snack_bar_left_right_margin</item>
-        <item name="android:layout_marginEnd">0dp</item>
     </style>
 
     <style name="SmsDeliverdBadge">

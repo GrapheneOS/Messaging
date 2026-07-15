@@ -2,10 +2,10 @@ package com.android.messaging.ui.appsettings
 
 import android.app.role.RoleManager
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.android.messaging.datamodel.data.ParticipantData
+import com.android.messaging.ui.BugleComponentActivity
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.appsettings.screen.SettingsEffectHandlerImpl
 import com.android.messaging.ui.appsettings.screen.SettingsScreen
@@ -14,13 +14,17 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class SettingsActivity : ComponentActivity() {
+class SettingsActivity : BugleComponentActivity() {
 
     @Inject
     lateinit var roleManager: RoleManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (isFinishing) {
+            return
+        }
 
         enableEdgeToEdge()
 

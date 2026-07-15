@@ -22,15 +22,9 @@
     <color name="action_bar_background_color">@color/primary_color</color>
     <color name="action_bar_background_color_dark">#537F2D</color>
     <color name="contextual_action_bar_background_color">#ffffff</color>
-    <color name="archived_conversation_action_bar_background_color">#9D9D9D</color>
-    <color name="archived_conversation_action_bar_background_color_dark">#838383</color>
 
     <!-- Conversation list -->
-    <color name="conversation_list_item_read">#636363</color>
-    <color name="conversation_list_item_unread">#323232</color>
     <color name="conversation_list_error">#F05A24</color>
-    <color name="conversation_list_name">#DE000000</color>
-    <color name="conversation_list_details">#8A000000</color>
 
     <color name="conversation_compose_divider_start">#44000000</color>
 
@@ -76,7 +70,6 @@
 
     <color name="contact_avatar_default_background">#d2d2d2</color>
     <color name="contact_avatar_pressed_color">#40000000</color>
-    <color name="contact_list_text_secondary">#999999</color>
 
     <color name="chips_dropdown_background_activated">#4285f4</color>
     <color name="chips_dropdown_background_pressed">#ededed</color>
@@ -103,7 +96,6 @@
     <color name="fab_ripple">#40ffffff</color>
 
     <color name="list_empty_text">#6d6d6d</color>
-    <color name="low_storage_action_item_color">#ff000000</color>
     <color name="open_conversation_animation_background_shadow">#40000000</color>
     <color name="compose_notification_bar_background">@color/primary_color</color>
 

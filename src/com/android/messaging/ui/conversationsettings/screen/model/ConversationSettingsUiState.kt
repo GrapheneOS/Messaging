@@ -35,4 +35,5 @@ internal data class ParticipantUiState(
     val displayDestination: String?,
     val canCall: Boolean,
     val isContactSaved: Boolean,
+    val isDisplayNameLtr: Boolean = false,
 )

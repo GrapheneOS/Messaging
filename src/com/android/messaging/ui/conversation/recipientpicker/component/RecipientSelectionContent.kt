@@ -2,6 +2,7 @@
 
 package com.android.messaging.ui.conversation.recipientpicker.component
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import com.android.messaging.R
 import com.android.messaging.ui.conversation.preview.previewSimSelectorUiState
 import com.android.messaging.ui.conversation.recipientpicker.component.simselector.NewChatSimSelectorRow
 import com.android.messaging.ui.core.MessagingPreviewTheme
@@ -113,7 +115,9 @@ private fun RecipientSelectionContentLayout(
             queryArea()
 
             Spacer(modifier = Modifier.height(12.dp))
-            contactsArea()
+            Box(modifier = Modifier.weight(weight = 1f)) {
+                contactsArea()
+            }
         }
     }
 }
@@ -232,6 +236,7 @@ private fun RecipientSelectionArmedContactsArea(
         onRecipientDestinationClick = onRecipientDestinationClickWrapped,
         onRecipientDestinationLongClick = onRecipientDestinationLongClickWrapped
             .takeIf { onRecipientDestinationLongClick != null },
+        emptyStateText = R.string.contact_list_empty_text,
         topListContent = topListContent,
     )
 }

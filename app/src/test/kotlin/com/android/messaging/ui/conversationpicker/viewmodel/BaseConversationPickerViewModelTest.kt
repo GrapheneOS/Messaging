@@ -9,7 +9,6 @@ import com.android.messaging.testutil.TEST_RESOLVED_CONVERSATION_ID
 import com.android.messaging.ui.conversationpicker.ConversationPickerViewModel
 import com.android.messaging.ui.conversationpicker.delegate.DraftDelegate
 import com.android.messaging.ui.conversationpicker.delegate.TargetsDelegate
-import com.android.messaging.ui.conversationpicker.formatter.TargetTextFormatter
 import com.android.messaging.ui.conversationpicker.mapper.ContactTargetMapperImpl
 import com.android.messaging.ui.conversationpicker.model.DraftUiState
 import com.android.messaging.ui.conversationpicker.model.SelectionUiState
@@ -54,12 +53,7 @@ internal abstract class BaseConversationPickerViewModelTest {
         every { state } returns contactsState
     }
 
-    protected val textFormatter = mockk<TargetTextFormatter> {
-        every { wrap(any()) } answers { firstArg() }
-        every { detailsOrNull(any(), any()) } answers { secondArg() }
-    }
-
-    protected val contactTargetMapper = ContactTargetMapperImpl(textFormatter)
+    protected val contactTargetMapper = ContactTargetMapperImpl()
 
     protected val draftDelegate = mockk<DraftDelegate>(relaxed = true) {
         every { state } returns draftState

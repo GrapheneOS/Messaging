@@ -88,6 +88,11 @@ public class Dates {
         return getTimeString(time, true /*abbreviated*/, false /*minPeriodToday*/);
     }
 
+    public static CharSequence getConversationContentDescriptionTimeString(final long time) {
+        return getTimeString(time, true /*abbreviated*/, false /*minPeriodToday*/,
+                true /*fullWeekday*/);
+    }
+
     public static CharSequence getMessageTimeString(final long time) {
         return getTimeString(time, false /*abbreviated*/, false /*minPeriodToday*/);
     }
@@ -115,6 +120,11 @@ public class Dates {
 
     private static CharSequence getTimeString(final long time, final boolean abbreviated,
             final boolean minPeriodToday) {
+        return getTimeString(time, abbreviated, minPeriodToday, false /*fullWeekday*/);
+    }
+
+    private static CharSequence getTimeString(final long time, final boolean abbreviated,
+            final boolean minPeriodToday, final boolean fullWeekday) {
         final Context context = getContext();
         int flags;
         if (android.text.format.DateFormat.is24HourFormat(context)) {
@@ -123,13 +133,21 @@ public class Dates {
             flags = FORCE_12_HOUR;
         }
         return getTimestamp(time, System.currentTimeMillis(), abbreviated,
-                context.getResources().getConfiguration().locale, flags, minPeriodToday);
+                context.getResources().getConfiguration().locale, flags, minPeriodToday,
+                fullWeekday);
     }
 
     @VisibleForTesting
     public static CharSequence getTimestamp(final long time, final long now,
             final boolean abbreviated, final Locale locale, final int flags,
             final boolean minPeriodToday) {
+        return getTimestamp(time, now, abbreviated, locale, flags, minPeriodToday,
+                false /*fullWeekday*/);
+    }
+
+    private static CharSequence getTimestamp(final long time, final long now,
+            final boolean abbreviated, final Locale locale, final int flags,
+            final boolean minPeriodToday, final boolean fullWeekday) {
         final long timeDiff = now - time;
 
         if (!minPeriodToday && timeDiff < DateUtils.MINUTE_IN_MILLIS) {
@@ -139,7 +157,7 @@ public class Dates {
         } else if (getNumberOfDaysPassed(time, now) == 0) {
             return getTodayTimeStamp(time, flags);
         } else if (timeDiff < DateUtils.WEEK_IN_MILLIS) {
-            return getThisWeekTimestamp(time, locale, abbreviated, flags);
+            return getThisWeekTimestamp(time, locale, abbreviated, flags, fullWeekday);
         } else if (timeDiff < DateUtils.YEAR_IN_MILLIS) {
             return getThisYearTimestamp(time, locale, abbreviated, flags);
         } else {
@@ -178,11 +196,15 @@ public class Dates {
     }
 
     private static CharSequence getThisWeekTimestamp(final long time,
-            final Locale locale, final boolean abbreviated, final int flags) {
+            final Locale locale, final boolean abbreviated, final int flags,
+            final boolean fullWeekday) {
         final Context context = getContext();
         if (abbreviated) {
-            return DateUtils.formatDateTime(context, time,
-                    DateUtils.FORMAT_SHOW_WEEKDAY | DateUtils.FORMAT_ABBREV_WEEKDAY | flags);
+            int weekdayFlags = DateUtils.FORMAT_SHOW_WEEKDAY | flags;
+            if (!fullWeekday) {
+                weekdayFlags |= DateUtils.FORMAT_ABBREV_WEEKDAY;
+            }
+            return DateUtils.formatDateTime(context, time, weekdayFlags);
         } else {
             if (locale.equals(Locale.US)) {
                 return getExplicitFormattedTime(time, flags, "EEE HH:mm", "EEE h:mmaa");

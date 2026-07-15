@@ -2,6 +2,8 @@ package com.android.messaging.di.conversationpicker
 
 import com.android.messaging.data.conversationpicker.repository.TargetsRepository
 import com.android.messaging.data.conversationpicker.repository.TargetsRepositoryImpl
+import com.android.messaging.domain.conversationpicker.usecase.BuildConversationDraftFromMessage
+import com.android.messaging.domain.conversationpicker.usecase.BuildConversationDraftFromMessageImpl
 import com.android.messaging.domain.conversationpicker.usecase.BuildMessageDataFromDraft
 import com.android.messaging.domain.conversationpicker.usecase.BuildMessageDataFromDraftImpl
 import com.android.messaging.domain.conversationpicker.usecase.ResolveTargetsToConversationIds
@@ -41,6 +43,12 @@ internal abstract class ConversationPickerBindsModule {
     abstract fun bindTargetsRepository(
         impl: TargetsRepositoryImpl,
     ): TargetsRepository
+
+    @Binds
+    @Reusable
+    abstract fun bindBuildConversationDraftFromMessage(
+        impl: BuildConversationDraftFromMessageImpl,
+    ): BuildConversationDraftFromMessage
 
     @Binds
     @Reusable

@@ -31,12 +31,11 @@ import android.os.Bundle;
 import android.provider.ContactsContract.Contacts;
 import android.provider.ContactsContract.Intents;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.provider.Telephony;
 import android.text.TextUtils;
 
-import com.android.ex.photo.Intents.PhotoViewIntentBuilder;
 import com.android.messaging.R;
-import com.android.messaging.datamodel.ConversationImagePartsView;
 import com.android.messaging.datamodel.MediaScratchFileProvider;
 import com.android.messaging.datamodel.MessagingContentProvider;
 import com.android.messaging.datamodel.data.MessageData;
@@ -46,16 +45,19 @@ import com.android.messaging.receiver.NotificationReceiver;
 import com.android.messaging.sms.MmsSmsUtils;
 import com.android.messaging.ui.appsettings.SettingsActivity;
 import com.android.messaging.ui.blockedparticipants.BlockedParticipantsActivity;
+import com.android.messaging.ui.classzero.ClassZeroActivity;
+import com.android.messaging.ui.contact.AddContactActivity;
 import com.android.messaging.ui.conversation.ConversationActivity;
 import com.android.messaging.ui.conversation.LaunchConversationActivity;
-import com.android.messaging.ui.conversationlist.ArchivedConversationListActivity;
-import com.android.messaging.ui.conversationlist.ConversationListActivity;
-import com.android.messaging.ui.conversationlist.ForwardMessageActivity;
+import com.android.messaging.ui.conversationlist.chats.ConversationListActivity;
+import com.android.messaging.ui.conversationlist.archived.ArchivedConversationListActivity;
+import com.android.messaging.ui.conversationpicker.host.forward.ForwardMessageActivity;
+import com.android.messaging.ui.conversationpicker.host.widget.WidgetPickConversationActivity;
 import com.android.messaging.ui.conversationsettings.ConversationSettingsActivity;
 import com.android.messaging.ui.debug.DebugMmsConfigActivity;
 import com.android.messaging.ui.permissioncheck.PermissionCheckActivity;
-import com.android.messaging.ui.photoviewer.BuglePhotoViewActivity;
-import com.android.messaging.ui.conversationpicker.host.widget.WidgetPickConversationActivity;
+import com.android.messaging.ui.photoviewer.PhotoViewerActivity;
+import com.android.messaging.ui.vcarddetail.VCardDetailActivity;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.ContentType;
 import com.android.messaging.util.ConversationIdSet;
@@ -149,13 +151,6 @@ public class UIIntentsImpl extends UIIntents {
         context.startActivity(intent);
     }
 
-    /**
-     * Get an intent which shows the low storage warning activity.
-     */
-    private Intent getSmsStorageLowWarningActivityIntent(final Context context) {
-        return new Intent(context, SmsStorageLowWarningActivity.class);
-    }
-
     @Override
     public void launchConversationActivity(final Context context,
             final String conversationId, final MessageData draft, final Bundle activityOptions,
@@ -209,6 +204,17 @@ public class UIIntentsImpl extends UIIntents {
         intent.setType(Contacts.CONTENT_ITEM_TYPE);
         intent.putExtra(destinationType, destination);
         startExternalActivity(context, intent);
+    }
+
+    @Override
+    public void launchAddContactConfirmation(final Context context, final Uri avatarUri,
+            final String destination) {
+        final Intent intent = new Intent(context, AddContactActivity.class);
+        intent.putExtra(AddContactActivity.EXTRA_DESTINATION, destination);
+        if (avatarUri != null) {
+            intent.putExtra(AddContactActivity.EXTRA_AVATAR_URI, avatarUri.toString());
+        }
+        context.startActivity(intent);
     }
 
     @Override
@@ -295,22 +301,11 @@ public class UIIntentsImpl extends UIIntents {
 
     @Override
     public void launchFullScreenPhotoViewer(final Activity activity, final Uri initialPhoto,
-            final Rect initialPhotoBounds, final Uri photosUri) {
-        final PhotoViewIntentBuilder builder =
-                com.android.ex.photo.Intents.newPhotoViewIntentBuilder(
-                        activity, BuglePhotoViewActivity.class);
-        builder.setPhotosUri(photosUri.toString());
-        builder.setInitialPhotoUri(initialPhoto.toString());
-        builder.setProjection(ConversationImagePartsView.PhotoViewQuery.PROJECTION);
-
-        // Set the location of the imageView so that the photoviewer can animate from that location
-        // to full screen.
-        builder.setScaleAnimation(initialPhotoBounds.left, initialPhotoBounds.top,
-                initialPhotoBounds.width(), initialPhotoBounds.height());
-
-        builder.setDisplayThumbsFullScreen(false);
-        builder.setMaxInitialScale(8);
-        activity.startActivity(builder.build());
+            final Rect initialPhotoBounds, final Uri photosUri,
+            final int initialPhotoOccurrenceIndex) {
+        activity.startActivity(PhotoViewerActivity.createIntent(
+                activity, initialPhoto, photosUri, initialPhotoBounds,
+                initialPhotoOccurrenceIndex));
         activity.overridePendingTransition(0, 0);
     }
 
@@ -420,16 +415,15 @@ public class UIIntentsImpl extends UIIntents {
 
     @Override
     public PendingIntent getPendingIntentForLowStorageNotifications(final Context context) {
-        final TaskStackBuilder taskStackBuilder = TaskStackBuilder.create(context);
-        final Intent conversationListIntent = getConversationListActivityIntent(context);
-        taskStackBuilder.addNextIntent(conversationListIntent);
-        taskStackBuilder.addNextIntentWithParentStack(
-                getSmsStorageLowWarningActivityIntent(context));
-
-        // Use FLAG_IMMUTABLE since this PendingIntent launches a fixed activity
-        // and doesn't require modification by external apps.
-        return taskStackBuilder.getPendingIntent(
-                0, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        final Intent storageSettingsIntent = new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS);
+        if (storageSettingsIntent.resolveActivity(context.getPackageManager()) == null) {
+            storageSettingsIntent.setAction(Settings.ACTION_SETTINGS);
+        }
+        return PendingIntent.getActivity(
+                context,
+                0,
+                storageSettingsIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
     @Override

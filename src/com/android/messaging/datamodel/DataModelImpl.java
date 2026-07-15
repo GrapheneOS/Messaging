@@ -39,7 +39,6 @@ import com.android.messaging.datamodel.data.LaunchConversationData.LaunchConvers
 import com.android.messaging.datamodel.data.MediaPickerData;
 import com.android.messaging.datamodel.data.MessagePartData;
 import com.android.messaging.datamodel.data.ParticipantData;
-import com.android.messaging.datamodel.data.VCardContactItemData;
 import com.android.messaging.sms.MmsConfig;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.Assert.DoesNotRunOnMainThread;
@@ -106,18 +105,6 @@ public class DataModelImpl extends DataModel {
     public LaunchConversationData createLaunchConversationData(
             final LaunchConversationDataListener listener) {
        return new LaunchConversationData(listener);
-    }
-
-    @Override
-    public VCardContactItemData createVCardContactItemData(final Context context,
-            final MessagePartData data) {
-        return new VCardContactItemData(context, data);
-    }
-
-    @Override
-    public VCardContactItemData createVCardContactItemData(final Context context,
-            final Uri vCardUri) {
-        return new VCardContactItemData(context, vCardUri);
     }
 
     @Override

@@ -43,6 +43,7 @@ import com.android.messaging.ui.appsettings.common.SettingsTopAppBar
 import com.android.messaging.ui.appsettings.screen.SettingsScreenModel
 import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionUiState
+import com.android.messaging.ui.common.text.asLtrText
 import com.android.messaging.ui.core.MessagingPreviewTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -163,7 +164,7 @@ private fun LazyListScope.mmsSettingsItems(
     item(key = "phone_number") {
         SettingsClickableItem(
             title = stringResource(R.string.mms_phone_number_pref_title),
-            summary = subscriptionSettings.displayDetail,
+            summary = subscriptionSettings.displayDetail.asLtrText(),
             onClick = onPhoneNumberClick,
         )
     }

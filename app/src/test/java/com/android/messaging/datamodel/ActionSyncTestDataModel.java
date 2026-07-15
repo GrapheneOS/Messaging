@@ -2,7 +2,6 @@ package com.android.messaging.datamodel;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
-import android.net.Uri;
 
 import com.android.messaging.datamodel.action.ActionService;
 import com.android.messaging.datamodel.action.BackgroundWorker;
@@ -14,8 +13,6 @@ import com.android.messaging.datamodel.data.DraftMessageData;
 import com.android.messaging.datamodel.data.GalleryGridItemData;
 import com.android.messaging.datamodel.data.LaunchConversationData;
 import com.android.messaging.datamodel.data.MediaPickerData;
-import com.android.messaging.datamodel.data.MessagePartData;
-import com.android.messaging.datamodel.data.VCardContactItemData;
 import com.android.messaging.util.Assert;
 
 public class ActionSyncTestDataModel extends DataModel {
@@ -66,18 +63,6 @@ public class ActionSyncTestDataModel extends DataModel {
     @Override
     public LaunchConversationData createLaunchConversationData(
             final LaunchConversationData.LaunchConversationDataListener listener) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public VCardContactItemData createVCardContactItemData(final Context context,
-            final MessagePartData data) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public VCardContactItemData createVCardContactItemData(final Context context,
-            final Uri vCardUri) {
         throw new UnsupportedOperationException();
     }
 

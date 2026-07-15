@@ -28,6 +28,7 @@ internal suspend fun openAttachmentPreviewEffect(
         contentUri = effect.contentUri,
         contentType = effect.contentType,
         imageCollectionUri = effect.imageCollectionUri,
+        initialPhotoOccurrenceIndex = effect.initialPhotoOccurrenceIndex,
         awaitHostBounds = {
             snapshotFlow { hostBoundsState.value }
                 .filterNotNull()

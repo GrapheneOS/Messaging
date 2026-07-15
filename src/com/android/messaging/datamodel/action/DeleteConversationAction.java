@@ -35,14 +35,12 @@ import com.android.messaging.datamodel.DatabaseHelper.MessageColumns;
 import com.android.messaging.datamodel.DatabaseWrapper;
 import com.android.messaging.datamodel.MessagingContentProvider;
 import com.android.messaging.sms.MmsUtils;
-import com.android.messaging.ui.conversationlist.MultiSelectActionModeCallback.SelectedConversation;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.LogUtil;
 import com.android.messaging.util.NotificationChannelUtil;
 import com.android.messaging.widget.WidgetConversationProvider;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -63,10 +61,6 @@ public class DeleteConversationAction extends Action implements Parcelable {
         TargetConversation(Parcel in) {
             mId = in.readString();
             mCutoffTimestamp = in.readLong();
-        }
-
-        static TargetConversation fromSelectedConversation(SelectedConversation conversation) {
-            return new TargetConversation(conversation.conversationId, conversation.timestamp);
         }
 
         @Override
@@ -97,14 +91,6 @@ public class DeleteConversationAction extends Action implements Parcelable {
     public static void deleteConversation(final String conversationId, final long cutoffTimestamp) {
         final DeleteConversationAction action = new DeleteConversationAction(
                 new TargetConversation[]{new TargetConversation(conversationId, cutoffTimestamp)});
-        action.start();
-    }
-
-    public static void deleteConversations(final Collection<SelectedConversation> selectedConversations) {
-        TargetConversation[] conversations = selectedConversations.stream()
-                .map(TargetConversation::fromSelectedConversation)
-                .toArray(TargetConversation[]::new);
-        final DeleteConversationAction action = new DeleteConversationAction(conversations);
         action.start();
     }
 

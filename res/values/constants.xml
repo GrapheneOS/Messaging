@@ -55,7 +55,6 @@
     <integer name="mediapicker_transition_duration">600</integer><!-- ms -->
     <integer name="asyncimage_transition_duration">300</integer><!-- ms -->
     <integer name="compose_transition_duration">300</integer><!-- ms -->
-    <integer name="snackbar_translation_duration_ms">300</integer>
 
     <!-- Notification preferences -->
     <string name="notifications_group_children_key" translatable="false">notifications_group_children</string>

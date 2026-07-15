@@ -37,7 +37,7 @@ import com.android.messaging.datamodel.CursorQueryData;
 import com.android.messaging.datamodel.FrequentContactsCursorQueryData;
 import com.android.messaging.datamodel.data.ParticipantData;
 import com.android.messaging.sms.MmsSmsUtils;
-import com.android.messaging.ui.contact.AddContactsConfirmationDialog;
+import com.android.messaging.ui.UIIntents;
 import com.google.common.annotations.VisibleForTesting;
 
 /**
@@ -201,9 +201,8 @@ public class ContactUtil {
                     ContactsContract.QuickContact.MODE_LARGE, null);
         } else if (!TextUtils.isEmpty(normalizedDestination) && !TextUtils.equals(
                 normalizedDestination, ParticipantData.getUnknownSenderDestination())) {
-            final AddContactsConfirmationDialog dialog = new AddContactsConfirmationDialog(
+            UIIntents.get().launchAddContactConfirmation(
                     view.getContext(), avatarUri, normalizedDestination);
-            dialog.show();
         }
     }
 

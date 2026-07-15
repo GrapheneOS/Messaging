@@ -49,7 +49,6 @@ internal fun SimSelectorRow(
     selectedContentDescription: String,
     onSimSelected: (String) -> Unit,
     modifier: Modifier = Modifier,
-    showDestination: Boolean = false,
 ) {
     if (!uiState.isAvailable) {
         return
@@ -81,7 +80,6 @@ internal fun SimSelectorRow(
             SimSelectorChip(
                 option = selectedOption,
                 contentDescription = chipContentDescription,
-                showDestination = showDestination,
                 onClick = { isDropdownExpanded = true },
             )
 
@@ -101,15 +99,9 @@ internal fun SimSelectorRow(
 private fun SimSelectorChip(
     option: SimOptionUiModel,
     contentDescription: String,
-    showDestination: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val chipText = when {
-        showDestination -> option.destination ?: option.label
-        else -> option.label
-    }
-
     Row(
         modifier = modifier
             .clip(shape = MaterialTheme.shapes.small)
@@ -133,7 +125,7 @@ private fun SimSelectorChip(
         )
 
         Text(
-            text = chipText,
+            text = option.label,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
         )

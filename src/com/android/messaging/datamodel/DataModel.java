@@ -38,7 +38,6 @@ import com.android.messaging.datamodel.data.LaunchConversationData;
 import com.android.messaging.datamodel.data.LaunchConversationData.LaunchConversationDataListener;
 import com.android.messaging.datamodel.data.MediaPickerData;
 import com.android.messaging.datamodel.data.MessagePartData;
-import com.android.messaging.datamodel.data.VCardContactItemData;
 import com.android.messaging.util.Assert.DoesNotRunOnMainThread;
 
 public abstract class DataModel {
@@ -75,12 +74,6 @@ public abstract class DataModel {
 
     public abstract LaunchConversationData createLaunchConversationData(
             LaunchConversationDataListener listener);
-
-    public abstract VCardContactItemData createVCardContactItemData(final Context context,
-            final MessagePartData data);
-
-    public abstract VCardContactItemData createVCardContactItemData(final Context context,
-            final Uri vCardUri);
 
     public abstract DraftMessageData createDraftMessageData(String conversationId);
 

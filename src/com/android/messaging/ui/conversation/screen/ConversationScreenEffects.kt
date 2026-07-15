@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
@@ -31,6 +30,7 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.UIIntents
+import com.android.messaging.ui.common.components.snackbar.showActionSnackbar
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
 import com.android.messaging.util.BuglePrefs
 import com.android.messaging.util.ContactUtil
@@ -234,13 +234,13 @@ private suspend fun requestDefaultSmsRole(
         else -> R.string.requires_default_sms_app
     }
 
-    val snackbarResult = snackbarHostState.showSnackbar(
+    val actionClicked = snackbarHostState.showActionSnackbar(
         message = context.getString(messageResId),
         actionLabel = context.getString(R.string.requires_default_sms_change_button),
         duration = SnackbarDuration.Indefinite,
     )
 
-    if (snackbarResult == SnackbarResult.ActionPerformed) {
+    if (actionClicked) {
         onActionClick()
     }
 }

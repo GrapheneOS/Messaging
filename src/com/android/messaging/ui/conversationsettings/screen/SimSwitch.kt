@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
 import com.android.messaging.data.subscription.model.Subscription
+import com.android.messaging.ui.common.text.asLtrText
 import com.android.messaging.ui.conversationsettings.common.settingsCardShape
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsAction as Action
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState as State
@@ -75,37 +76,47 @@ private fun SimSwitchItem(
         color = MaterialTheme.colorScheme.surfaceContainer,
         onClick = { expanded = true },
     ) {
-        Row(
+        Column(
             modifier = Modifier.padding(
                 start = 16.dp,
                 end = 8.dp,
-                top = 12.dp,
-                bottom = 12.dp,
+                top = 14.dp,
+                bottom = 14.dp,
             ),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalArrangement = Arrangement.spacedBy(space = 10.dp),
         ) {
-            Icon(
-                imageVector = Icons.Default.SimCard,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurface,
+            Text(
+                text = stringResource(R.string.sim_selector_item_title),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
-            Spacer(modifier = Modifier.width(20.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.SimCard,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                )
 
-            SimSwitchItemSummary(
-                selected = selected,
-                modifier = Modifier.weight(1f),
-            )
+                Spacer(modifier = Modifier.width(20.dp))
 
-            SimSwitchItemMenu(
-                subscriptions = subscriptions,
-                expanded = expanded,
-                onExpandedChange = { expanded = it },
-                onSimSelected = { id ->
-                    expanded = false
-                    onSimSelected(id)
-                },
-            )
+                SimSwitchItemSummary(
+                    selected = selected,
+                    modifier = Modifier.weight(1f),
+                )
+
+                SimSwitchItemMenu(
+                    subscriptions = subscriptions,
+                    expanded = expanded,
+                    onExpandedChange = { expanded = it },
+                    onSimSelected = { id ->
+                        expanded = false
+                        onSimSelected(id)
+                    },
+                )
+            }
         }
     }
 }
@@ -117,18 +128,18 @@ private fun SimSwitchItemSummary(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = stringResource(R.string.sim_selector_item_title),
+            text = selected.label.resolveDisplayName(),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface,
         )
 
-        val subtitle = selected.displayDestination
-            ?: selected.label.resolveDisplayName()
-        Text(
-            text = subtitle,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        selected.displayDestination?.let { destination ->
+            Text(
+                text = destination.asLtrText(),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 
@@ -205,8 +216,10 @@ private fun SimSelectorRow(
             )
 
             subscription.displayDestination?.let { destination ->
+                val displayDestination = destination.asLtrText()
+
                 Text(
-                    text = destination,
+                    text = displayDestination,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

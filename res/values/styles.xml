@@ -25,6 +25,22 @@
 
     <style name="Theme.Compose" parent="android:Theme.Material.Light.NoActionBar" />
 
+    <style name="Theme.Compose.Dialog" parent="Theme.Compose">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+
+    <style name="Theme.Compose.Translucent" parent="Theme.Compose">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:windowDisablePreview">true</item>
+    </style>
+
     <style name="Theme.License" parent="Theme.AppCompat.DayNight.NoActionBar" />
 
     <!-- Application theme. -->
@@ -60,13 +76,16 @@
         <item name="android:background">@android:color/white</item>
     </style>
 
-    <style name="BugleTheme.ConversationListActivity" parent="BugleTheme">
-        <item name="android:windowBackground">@android:color/background_light</item>
+    <!-- Class 0 is a Compose dialog hosted by a dialog-themed Activity.
+         Keep the host window transparent and titleless so only the Material dialog surface is visible -->
+    <style name="BugleTheme.ClassZeroActivity" parent="@style/BugleTheme.DialogActivity">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
     </style>
 
-    <style name="BugleTheme.ArchivedConversationListActivity" parent="BugleTheme.ConversationListActivity">
-        <item name="colorPrimary">@color/archived_conversation_action_bar_background_color</item>
-        <item name="colorPrimaryDark">@color/archived_conversation_action_bar_background_color_dark</item>
+    <style name="BugleTheme.ConversationListActivity" parent="BugleTheme">
+        <item name="android:windowBackground">@android:color/background_light</item>
     </style>
 
     <style name="Invisible" parent="BugleBaseTheme">
@@ -101,10 +120,6 @@
 
     <style name="ConversationActionBarTitleTextStyle" parent="BugleActionBarTitleTextStyle">
       <item name="android:background">?android:attr/selectableItemBackgroundBorderless</item>
-    </style>
-
-    <style name="BuglePhotoViewTheme" parent="PhotoViewTheme.Translucent">
-        <item name="actionModeShareDrawable">@drawable/ic_share_light</item>
     </style>
 
     <style name="ConversationMessageText">
@@ -147,12 +162,6 @@
         <item name="android:inputType">textShortMessage|textAutoCorrect|textCapSentences|textMultiLine</item>
     </style>
 
-    <style name="ContactListItemDetail">
-        <item name="android:textSize">@dimen/contact_list_detail_text_size</item>
-        <item name="android:textColor">@color/contact_list_text_secondary</item>
-        <item name="android:background">@null</item>
-    </style>
-
     <style name="AudioAttachmentTimerText">
         <item name="android:textSize">@dimen/audio_attachment_text_size</item>
         <item name="android:textColor">@color/audio_attachment_timer_text_color</item>
@@ -165,11 +174,6 @@
     </style>
 
     <style name="VcardAttachmentSingleStyle">
-        <item name="android:paddingStart">@dimen/message_text_left_right_padding</item>
-        <item name="android:paddingEnd">@dimen/message_text_left_right_padding</item>
-    </style>
-
-    <style name="MessageVcardAttachmentStyle">
         <item name="android:paddingStart">@dimen/message_text_left_right_padding</item>
         <item name="android:paddingEnd">@dimen/message_text_left_right_padding</item>
     </style>
@@ -195,34 +199,8 @@
         <item name="android:paddingStart">16dp</item>
     </style>
 
-    <style name="ContactListItemLinearLayoutStyle">
-        <item name="android:paddingLeft">12dp</item>
-        <item name="android:paddingRight">24dp</item>
-    </style>
-
-    <style name="ConversationListItemViewPaddingStyle">
-        <item name="android:paddingLeft">@dimen/conversation_list_item_view_padding</item>
-        <item name="android:paddingRight">@dimen/conversation_list_item_view_padding</item>
-    </style>
-
-    <style name="ConversationListItemViewTextStyle">
-        <item name="android:includeFontPadding">false</item>
-        <item name="android:textSize">14sp</item>
-        <item name="android:background">@null</item>
-        <item name="android:textColor">@color/conversation_list_details</item>
-    </style>
-
-    <style name="ConversationListItemViewConversationNameStyle" parent="ConversationListItemViewTextStyle">
-        <item name="android:textSize">16sp</item>
-        <item name="android:textColor">@color/conversation_list_name</item>
-    </style>
-
     <style name="ConversationListNotificationBellPaddingStyle">
         <item name="android:paddingRight">@dimen/conversation_list_notification_bell_padding</item>
-    </style>
-
-    <style name="ConversationListFragmentStartNewButtonStyle">
-        <item name="android:layout_marginRight">@dimen/fab_left_right_margin</item>
     </style>
 
     <style name="AudioAttachmentViewPlayPauseButtonStyle">
@@ -241,15 +219,6 @@
         <item name="android:layout_gravity">left|center_vertical</item>
     </style>
 
-    <style name="AddContactConfirmationTextStyle" parent="ParticipantListItem">
-        <item name="android:paddingStart">12dp</item>
-        <item name="android:paddingEnd">24dp</item>
-    </style>
-
-    <style name="PeopleListItemViewStyle">
-        <item name="android:paddingStart">16dp</item>
-    </style>
-
     <style name="DropDownListViewStyle" parent="Widget.AppCompat.ListView.DropDown">
       <item name="android:dividerHeight">0dp</item>
     </style>
@@ -257,23 +226,6 @@
     <style name="ListEmptyText">
         <item name="android:textSize">@dimen/list_empty_text_size</item>
         <item name="android:textColor">@color/list_empty_text</item>
-    </style>
-
-    <style name="LowStorageActionItemStyle">
-        <item name="android:textColor">@color/low_storage_action_item_color</item>
-        <item name="android:textSize">@dimen/low_storage_action_item_text_size</item>
-        <item name="android:singleLine">false</item>
-    </style>
-
-    <style name="SnackBarMessageWrapper">
-        <item name="android:layout_marginLeft">@dimen/snack_bar_left_right_margin</item>
-        <item name="android:layout_marginRight">0dp</item>
-    </style>
-
-    <style name="SnackBarText">
-        <item name="android:textColor">@android:color/white</item>
-        <item name="android:textSize">14sp</item>
-        <item name="android:fontFamily">sans-serif</item>
     </style>
 
     <style name="SmsDeliverdBadge">
@@ -312,11 +264,6 @@
 
     <style name="ColorAccentGrayOverrideStyle">
         <item name="colorAccent">@color/search_view_text_cursor</item>
-    </style>
-
-    <style name="DebugMmsConfigItemStyle">
-        <item name="android:paddingStart">16dp</item>
-        <item name="android:paddingEnd">16dp</item>
     </style>
 
     <style name="WidgetTitle" parent="@android:style/TextAppearance.Holo.Widget.ActionBar.Title">

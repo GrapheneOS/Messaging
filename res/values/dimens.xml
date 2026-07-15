@@ -27,19 +27,13 @@
     <dimen name="contact_icon_view_normal_size">42dp</dimen>
     <dimen name="contact_icon_view_large_size">56dp</dimen>
     <dimen name="contact_icon_view_small_size">12dp</dimen>
-    <dimen name="conversation_list_item_view_padding">16dp</dimen>
-    <dimen name="conversation_list_first_item_extra_padding">8dp</dimen>
     <dimen name="conversation_list_image_preview_corner_radius">3dp</dimen>
-    <dimen name="conversation_list_image_preview_size">56dp</dimen>
     <dimen name="conversation_list_contact_icon_size">56dp</dimen>
     <dimen name="conversation_message_contact_icon_size">42dp</dimen>
     <dimen name="conversation_message_photo_min_size">96dp</dimen>
     <dimen name="conversation_list_notification_bell_padding">4dp</dimen>
-    <dimen name="conversation_list_empty_text_bottom_margin">30dp</dimen>
 
     <dimen name="message_bubble_arrow_width">9dp</dimen>
-    <dimen name="message_text_bottom_padding">12dp</dimen>
-    <dimen name="message_text_top_padding">10dp</dimen>
     <dimen name="message_text_left_right_padding">14dp</dimen>
     <dimen name="message_padding_default">18dp</dimen>
     <dimen name="message_padding_same_author">2dp</dimen>
@@ -47,10 +41,6 @@
     <dimen name="message_audio_attachment_padding">12dp</dimen>
 
     <dimen name="compose_message_text_box_padding_side">8dp</dimen>
-
-    <!-- Contact Picker related dimensions. -->
-    <dimen name="contact_list_detail_text_size">14sp</dimen>
-    <dimen name="contact_list_icon_size">42dp</dimen>
 
     <item name="letter_to_tile_ratio" type="fraction">67%</item>
     <item name="sim_identifier_to_tile_ratio" type="fraction">28%</item>
@@ -73,15 +63,10 @@
     <dimen name="fab_elevation_pressed">6dp</dimen>
     <dimen name="fab_bottom_margin">16dp</dimen>
     <dimen name="fab_left_right_margin">16dp</dimen>
-    <dimen name="vcard_detail_group_indicator_width">40dp</dimen>
     <dimen name="conversation_fast_fling_threshold">10dp</dimen>
     <dimen name="list_empty_text_size">14sp</dimen>
     <dimen name="list_empty_text_top_margin">20dp</dimen>
     <dimen name="list_empty_text_left_right_margin">60dp</dimen>
-    <dimen name="low_storage_action_item_text_size">16sp</dimen>
-
-    <dimen name="snack_bar_left_right_margin">24dp</dimen>
-    <dimen name="snack_bar_top_bottom_margin">18dp</dimen>
 
     <dimen name="version_dialog_large_padding">24dp</dimen>
     <dimen name="version_dialog_bottom_padding">20dp</dimen>

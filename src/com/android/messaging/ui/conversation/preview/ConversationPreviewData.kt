@@ -8,6 +8,7 @@ import com.android.messaging.data.conversation.model.attachment.ConversationVCar
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
 import com.android.messaging.data.subscription.model.Subscription
+import com.android.messaging.data.vcard.model.VCardAvatarPhoto
 import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
 import com.android.messaging.ui.conversation.attachment.model.ConversationVCardAttachmentUiModel
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingPhase
@@ -26,6 +27,7 @@ import com.android.messaging.ui.conversation.messages.model.message.Conversation
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagesUiState
 import com.android.messaging.ui.conversation.messages.model.message.MmsDownloadUiModel
 import com.android.messaging.ui.conversation.metadata.model.ConversationMetadataUiState
+import java.util.Base64
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -33,6 +35,8 @@ private const val PREVIEW_NOW_MILLIS = 1_806_240_000_000L
 private const val PREVIEW_MESSAGE_RECEIVED_MILLIS = PREVIEW_NOW_MILLIS - 120_000L
 private const val PREVIEW_IMAGE_WIDTH = 1600
 private const val PREVIEW_IMAGE_HEIGHT = 1200
+private const val PREVIEW_AVATAR_PNG_BASE64 =
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADUlEQVR42mP8z8BQDwAFgwJ/l0SWJAAAAABJRU5ErkJggg=="
 
 internal fun previewSubscriptions(): ImmutableList<Subscription> {
     return persistentListOf(
@@ -85,6 +89,7 @@ internal fun previewSimSelectorUiState(): ConversationSimSelectorUiState {
 internal fun previewMetadata(
     title: String = "Ada Lovelace",
     participantCount: Int = 1,
+    isBlocked: Boolean = false,
 ): ConversationMetadataUiState.Present {
     return ConversationMetadataUiState.Present(
         title = title,
@@ -99,6 +104,7 @@ internal fun previewMetadata(
         otherParticipantPhoneNumber = "+31622223333",
         otherParticipantContactLookupKey = "preview-contact",
         isArchived = false,
+        isBlocked = isBlocked,
         composerAvailability = ConversationComposerAvailability.Editable,
     )
 }
@@ -113,6 +119,7 @@ internal fun previewGroupMetadata(): ConversationMetadataUiState.Present {
         otherParticipantPhoneNumber = null,
         otherParticipantContactLookupKey = null,
         isArchived = false,
+        isBlocked = false,
         composerAvailability = ConversationComposerAvailability.Editable,
     )
 }
@@ -248,7 +255,14 @@ internal fun previewVCardUiModel(
 ): ConversationVCardAttachmentUiModel {
     return ConversationVCardAttachmentUiModel(
         type = type,
-        avatarUri = null,
+        avatarPhoto = when (type) {
+            ConversationVCardAttachmentType.CONTACT -> previewVCardAvatarPhoto()
+            ConversationVCardAttachmentType.LOCATION -> null
+        },
+        normalizedDestination = when (type) {
+            ConversationVCardAttachmentType.CONTACT -> "+31622223333"
+            ConversationVCardAttachmentType.LOCATION -> null
+        },
         titleText = when (type) {
             ConversationVCardAttachmentType.CONTACT -> "Ada Lovelace"
             ConversationVCardAttachmentType.LOCATION -> "Rathausmarkt"
@@ -258,6 +272,10 @@ internal fun previewVCardUiModel(
             ConversationVCardAttachmentType.LOCATION -> "Hamburg, Germany"
         },
     )
+}
+
+private fun previewVCardAvatarPhoto(): VCardAvatarPhoto {
+    return VCardAvatarPhoto(Base64.getDecoder().decode(PREVIEW_AVATAR_PNG_BASE64))
 }
 
 internal fun previewMessagesUiState(): ConversationMessagesUiState.Present {
@@ -462,7 +480,8 @@ internal fun previewInlineVCardAttachment(
             contentUri = "content://com.android.messaging.preview/message/contact.vcf",
         ),
         type = type,
-        avatarUri = vCardUiModel.avatarUri,
+        avatarPhoto = vCardUiModel.avatarPhoto,
+        normalizedDestination = vCardUiModel.normalizedDestination,
         titleText = vCardUiModel.titleText,
         titleTextResId = vCardUiModel.titleTextResId,
         subtitleText = vCardUiModel.subtitleText,

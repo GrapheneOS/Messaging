@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationpicker
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -32,12 +33,13 @@ internal fun RecentTargetsSection(
     hasContactsPermission: Boolean,
     onAction: (Action) -> Unit,
     onGrantContactsPermission: () -> Unit,
+    @StringRes recentConversationsTitle: Int,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         if (recentTargets.isNotEmpty()) {
             SectionHeader(
-                text = stringResource(R.string.share_recent_conversations_title),
+                text = stringResource(id = recentConversationsTitle),
             )
         }
 

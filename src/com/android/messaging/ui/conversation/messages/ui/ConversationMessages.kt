@@ -29,6 +29,7 @@ import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.ui.conversation.CONVERSATION_MESSAGES_LIST_TEST_TAG
 import com.android.messaging.ui.conversation.conversationMessageItemTestTag
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
+import com.android.messaging.ui.conversation.messages.ui.attachment.OnConversationAttachmentClick
 import com.android.messaging.ui.conversation.messages.ui.message.ConversationMessage
 import com.android.messaging.ui.conversation.messages.ui.message.conversationMessageDisplayEpochDay
 import com.android.messaging.ui.conversation.messages.ui.message.formatDateSeparatorText
@@ -45,16 +46,19 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableMap
 
+private val MESSAGES_CONTENT_HORIZONTAL_PADDING = 16.dp
+private val MESSAGES_CONTENT_TOP_PADDING = 24.dp
+
 private val messagesContentPadding = PaddingValues(
-    start = 16.dp,
-    top = 24.dp,
-    end = 16.dp,
+    start = MESSAGES_CONTENT_HORIZONTAL_PADDING,
+    top = MESSAGES_CONTENT_TOP_PADDING,
+    end = MESSAGES_CONTENT_HORIZONTAL_PADDING,
     bottom = 24.dp,
 )
 private val sendSimContentPadding = PaddingValues(
-    start = 16.dp,
-    top = 24.dp,
-    end = 16.dp,
+    start = MESSAGES_CONTENT_HORIZONTAL_PADDING,
+    top = MESSAGES_CONTENT_TOP_PADDING,
+    end = MESSAGES_CONTENT_HORIZONTAL_PADDING,
     bottom = 6.dp,
 )
 
@@ -82,7 +86,8 @@ internal fun ConversationMessages(
     showIncomingParticipantIdentity: Boolean = true,
     subscriptions: ImmutableList<Subscription> = persistentListOf(),
     currentSendSimDisplayName: String? = null,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    additionalTopContentPadding: Dp = 0.dp,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onMessageClick: (String) -> Unit,
     onMessageAvatarClick: (String) -> Unit,
@@ -113,6 +118,7 @@ internal fun ConversationMessages(
             .background(color = MaterialTheme.colorScheme.background),
         contentPadding = conversationMessagesContentPadding(
             shouldShowSendSimIndicator = shouldShowSendSimIndicator,
+            additionalTopContentPadding = additionalTopContentPadding,
         ),
     ) {
         conversationSendSimIndicatorItem(
@@ -148,7 +154,7 @@ private fun LazyListScope.conversationMessageItems(
     isSelectionMode: Boolean,
     showIncomingParticipantIdentity: Boolean,
     simDisplayNameByParticipantId: ImmutableMap<String, String>,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onMessageClick: (String) -> Unit,
     onMessageAvatarClick: (String) -> Unit,
@@ -215,11 +221,23 @@ private fun LazyListScope.conversationSendSimIndicatorItem(
 
 private fun conversationMessagesContentPadding(
     shouldShowSendSimIndicator: Boolean,
+    additionalTopContentPadding: Dp,
 ): PaddingValues {
-    return when {
+    val basePadding = when {
         shouldShowSendSimIndicator -> sendSimContentPadding
         else -> messagesContentPadding
     }
+
+    if (additionalTopContentPadding <= 0.dp) {
+        return basePadding
+    }
+
+    return PaddingValues(
+        start = MESSAGES_CONTENT_HORIZONTAL_PADDING,
+        top = MESSAGES_CONTENT_TOP_PADDING + additionalTopContentPadding,
+        end = MESSAGES_CONTENT_HORIZONTAL_PADDING,
+        bottom = basePadding.calculateBottomPadding(),
+    )
 }
 
 @Composable
@@ -290,7 +308,7 @@ private fun ConversationMessagesItem(
     isSelected: Boolean,
     showIncomingParticipantIdentity: Boolean,
     simDisplayNameByParticipantId: ImmutableMap<String, String>,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onMessageClick: (String) -> Unit,
     onMessageAvatarClick: (String) -> Unit,
@@ -511,7 +529,7 @@ private fun ConversationMessagesPreview() {
             showIncomingParticipantIdentity = true,
             subscriptions = previewSubscriptions(),
             currentSendSimDisplayName = "Personal",
-            onAttachmentClick = { _, _ -> },
+            onAttachmentClick = { _, _, _ -> },
             onExternalUriClick = {},
             onMessageClick = {},
             onMessageAvatarClick = {},

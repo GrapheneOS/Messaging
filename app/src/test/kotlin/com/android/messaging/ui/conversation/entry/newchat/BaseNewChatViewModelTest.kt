@@ -33,7 +33,8 @@ internal abstract class BaseNewChatViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     protected fun createViewModel(
-        subscriptionsRepository: SubscriptionsRepository = createSubscriptionsRepositoryMock(),
+        subscriptionsRepository: SubscriptionsRepository =
+            createSubscriptionsRepositoryMock(),
         isConversationRecipientLimitExceeded: IsConversationRecipientLimitExceeded =
             createRecipientLimitExceeded(exceeded = false),
         recipientPickerDelegate: RecipientPickerDelegate =

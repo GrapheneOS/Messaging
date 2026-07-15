@@ -4,9 +4,9 @@ import android.content.Context
 import com.android.messaging.R
 import com.android.messaging.data.appsettings.model.AppBooleanPref
 import com.android.messaging.data.appsettings.model.AppSettings
+import com.android.messaging.data.debug.DebugFeaturesProvider
 import com.android.messaging.di.core.IoDispatcher
 import com.android.messaging.util.BuglePrefs
-import com.android.messaging.util.DebugUtils
 import com.android.messaging.util.PhoneUtils
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -21,6 +21,7 @@ internal interface AppSettingsRepository {
 internal class AppSettingsRepositoryImpl @Inject constructor(
     @param:ApplicationContext private val context: Context,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    private val debugFeaturesProvider: DebugFeaturesProvider,
 ) : AppSettingsRepository {
 
     override suspend fun getAppSettings(): AppSettings {
@@ -36,7 +37,7 @@ internal class AppSettingsRepositoryImpl @Inject constructor(
                     context.getString(R.string.send_sound_pref_key),
                     resources.getBoolean(R.bool.send_sound_pref_default),
                 ),
-                isDebugEnabled = DebugUtils.isDebugEnabled(),
+                isDebugEnabled = debugFeaturesProvider.isEnabled(),
                 dumpSmsEnabled = appPrefs.getBoolean(
                     context.getString(R.string.dump_sms_pref_key),
                     resources.getBoolean(R.bool.dump_sms_pref_default),

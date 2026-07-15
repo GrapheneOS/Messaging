@@ -1,6 +1,6 @@
 package com.android.messaging.ui.conversationpicker.mapper
 
-import com.android.messaging.ui.conversationpicker.formatter.TargetTextFormatter
+import com.android.messaging.ui.conversationpicker.formatter.targetDetailsTextOrNull
 import com.android.messaging.ui.conversationpicker.model.TargetUiState
 import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
 import javax.inject.Inject
@@ -9,9 +9,7 @@ internal interface ContactTargetMapper {
     fun map(item: RecipientPickerListItem, destination: String): TargetUiState.Contact
 }
 
-internal class ContactTargetMapperImpl @Inject constructor(
-    private val textFormatter: TargetTextFormatter,
-) : ContactTargetMapper {
+internal class ContactTargetMapperImpl @Inject constructor() : ContactTargetMapper {
 
     override fun map(
         item: RecipientPickerListItem,
@@ -31,14 +29,14 @@ internal class ContactTargetMapperImpl @Inject constructor(
             it.normalizedValue == destination || it.value == destination
         }
         val displayDestination = matchingDestination?.displayValue ?: destination
-        val name = item.contact.displayName.ifBlank { displayDestination }
+        val targetDisplayName = item.contact.displayName.ifBlank { displayDestination }
 
         return TargetUiState.Contact(
             destination = matchingDestination?.normalizedValue ?: destination,
             normalizedDestination = matchingDestination?.normalizedValue ?: destination,
-            displayName = textFormatter.wrap(name),
-            details = textFormatter.detailsOrNull(
-                name = name,
+            displayName = targetDisplayName,
+            details = targetDetailsTextOrNull(
+                displayName = targetDisplayName,
                 value = displayDestination,
             ),
             avatarUri = item.contact.photoUri,
@@ -48,14 +46,14 @@ internal class ContactTargetMapperImpl @Inject constructor(
     private fun mapSyntheticPhone(
         item: RecipientPickerListItem.SyntheticPhone,
     ): TargetUiState.Contact {
-        val name = item.displayName.ifBlank { item.rawQuery }
+        val targetDisplayName = item.displayName.ifBlank { item.rawQuery }
 
         return TargetUiState.Contact(
             destination = item.normalizedDestination,
             normalizedDestination = item.normalizedDestination,
-            displayName = textFormatter.wrap(name),
-            details = textFormatter.detailsOrNull(
-                name = name,
+            displayName = targetDisplayName,
+            details = targetDetailsTextOrNull(
+                displayName = targetDisplayName,
                 value = item.secondaryText,
             ),
             avatarUri = null,

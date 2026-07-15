@@ -42,6 +42,8 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.semantics.text
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
@@ -610,6 +612,7 @@ private fun SegmentCounterIndicator(
             .clearAndSetSemantics {
                 testTag = CONVERSATION_SEGMENT_COUNTER_TEST_TAG
                 contentDescription = accessibilityDescription
+                text = AnnotatedString(text = displayText)
             },
         text = displayText,
         style = MaterialTheme.typography.labelSmall,

@@ -71,18 +71,24 @@
 
         <!-- Displays a list of conversations -->
         <activity
-            android:name=".ui.conversationlist.ConversationListActivity"
+            android:name=".ui.conversationlist.chats.ConversationListActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="false"
             android:screenOrientation="user"
+            android:theme="@style/Theme.Compose" />
+
+        <activity-alias
+            android:name=".ui.conversationlist.ConversationListActivity"
             android:exported="true"
-            android:theme="@style/LaunchTheme">
+            android:targetActivity=".ui.conversationlist.chats.ConversationListActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.APP_MESSAGING" />
             </intent-filter>
-        </activity>
+        </activity-alias>
 
         <activity
             android:name=".ui.permissioncheck.PermissionCheckActivity"
@@ -112,15 +118,15 @@
 
         <!-- Displays a list of archived conversations -->
         <activity
-            android:name=".ui.conversationlist.ArchivedConversationListActivity"
+            android:name=".ui.conversationlist.archived.ArchivedConversationListActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:screenOrientation="user"
             android:label="@string/archived_activity_title"
-            android:theme="@style/BugleTheme.ArchivedConversationListActivity"
-            android:parentActivityName="com.android.messaging.ui.conversationlist.ConversationListActivity">
+            android:theme="@style/Theme.Compose"
+            android:parentActivityName="com.android.messaging.ui.conversationlist.chats.ConversationListActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.android.messaging.ui.conversationlist.ConversationListActivity" />
+                android:value="com.android.messaging.ui.conversationlist.chats.ConversationListActivity" />
         </activity>
 
         <!-- Displays the contents of a single conversation -->
@@ -132,10 +138,10 @@
             android:resizeableActivity="true"
             android:windowSoftInputMode="stateHidden|adjustResize"
             android:theme="@style/Theme.Compose"
-            android:parentActivityName="com.android.messaging.ui.conversationlist.ConversationListActivity">
+            android:parentActivityName="com.android.messaging.ui.conversationlist.chats.ConversationListActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.android.messaging.ui.conversationlist.ConversationListActivity" />
+                android:value="com.android.messaging.ui.conversationlist.chats.ConversationListActivity" />
         </activity>
 
         <!-- Blocked Participants -->
@@ -144,22 +150,22 @@
             android:allowEmbedded="true"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:label="@string/blocked_contacts_title"
-            android:parentActivityName="com.android.messaging.ui.conversationlist.ConversationListActivity"
+            android:parentActivityName="com.android.messaging.ui.conversationlist.chats.ConversationListActivity"
             android:resizeableActivity="true"
             android:screenOrientation="user"
             android:theme="@style/Theme.Compose">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.android.messaging.ui.conversationlist.ConversationListActivity" />
+                android:value="com.android.messaging.ui.conversationlist.chats.ConversationListActivity" />
         </activity>
 
         <!-- Full-screen photo viewer -->
         <activity
-            android:name=".ui.photoviewer.BuglePhotoViewActivity"
+            android:name=".ui.photoviewer.PhotoViewerActivity"
+            android:exported="false"
             android:label="@string/photo_view_activity_title"
             android:configChanges="orientation|screenSize|keyboardHidden"
-            android:screenOrientation="user"
-            android:theme="@style/BuglePhotoViewTheme"
+            android:theme="@style/Theme.Compose.Translucent"
         />
 
         <!-- Settings -->
@@ -169,13 +175,13 @@
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="true"
             android:label="@string/settings_activity_title"
-            android:parentActivityName="com.android.messaging.ui.conversationlist.ConversationListActivity"
+            android:parentActivityName="com.android.messaging.ui.conversationlist.chats.ConversationListActivity"
             android:resizeableActivity="true"
             android:screenOrientation="user"
             android:theme="@style/Theme.Compose">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.android.messaging.ui.conversationlist.ConversationListActivity" />
+                android:value="com.android.messaging.ui.conversationlist.chats.ConversationListActivity" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -247,12 +253,12 @@
 
         <!-- Message Forwarding -->
         <activity
-            android:name=".ui.conversationlist.ForwardMessageActivity"
+            android:name=".ui.conversationpicker.host.forward.ForwardMessageActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:screenOrientation="user"
             android:label="@string/forward_message_activity_title"
-            android:theme="@style/BugleTheme.DialogActivity">
-        </activity>
+            android:theme="@style/Theme.Compose"
+            android:windowSoftInputMode="stateHidden|adjustResize" />
 
         <!-- Entry point for handling remote input/actions. Currently, this is only used by Android
              Wear to send voice replies. Since that uses PendingIntents, we don't need to export
@@ -269,11 +275,11 @@
 
         <!-- VCard details -->
         <activity
-            android:name=".ui.VCardDetailActivity"
+            android:name=".ui.vcarddetail.VCardDetailActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:screenOrientation="user"
             android:label="@string/vcard_detail_activity_title"
-            android:theme="@style/BugleTheme">
+            android:theme="@style/Theme.Compose">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ui.conversation.ConversationActivity" />
@@ -292,7 +298,7 @@
             android:name=".ui.debug.DebugMmsConfigActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:screenOrientation="user"
-            android:theme="@style/BugleTheme.DialogActivity"
+            android:theme="@style/Theme.Compose"
             android:exported="false">
         </activity>
 
@@ -387,18 +393,18 @@
             </intent-filter>
         </service>
 
-        <activity android:name=".ui.ClassZeroActivity"
+        <activity android:name=".ui.classzero.ClassZeroActivity"
                   android:configChanges="orientation|screenSize|keyboardHidden"
-                  android:screenOrientation="user"
                   android:label="@string/class_0_message_activity"
-                  android:theme="@style/BugleTheme.DialogActivity"
+                  android:theme="@style/BugleTheme.ClassZeroActivity"
                   android:launchMode="singleTask"
                   android:excludeFromRecents="true">
         </activity>
 
-        <activity android:name=".ui.SmsStorageLowWarningActivity"
-                  android:theme="@style/Translucent"
-                  android:configChanges="orientation|screenSize|keyboardHidden" />
+        <activity
+            android:name=".ui.contact.AddContactActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Compose.Dialog" />
 
         <receiver android:name=".receiver.StorageStatusReceiver"
             android:exported="true">

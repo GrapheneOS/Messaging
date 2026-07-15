@@ -42,16 +42,10 @@ import android.widget.Toast;
 
 import com.android.messaging.Factory;
 import com.android.messaging.R;
-import com.android.messaging.ui.SnackBar;
-import com.android.messaging.ui.SnackBar.Placement;
-import com.android.messaging.ui.SnackBarInteraction;
-import com.android.messaging.ui.SnackBarManager;
 import com.android.messaging.ui.UIIntents;
 
 import java.lang.reflect.Field;
-import java.util.List;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
@@ -110,44 +104,6 @@ public class UiUtils {
                 Toast.LENGTH_LONG);
         toast.setGravity(Gravity.CENTER_HORIZONTAL, 0, 0);
         toast.show();
-    }
-
-    public static void showSnackBar(final Context context, @NonNull final View parentView,
-            final String message, @Nullable final Runnable runnable, final int runnableLabel,
-            @Nullable final List<SnackBarInteraction> interactions) {
-        Assert.notNull(context);
-        SnackBar.Action action = null;
-        switch (runnableLabel) {
-            case SnackBar.Action.SNACK_BAR_UNDO:
-                action = SnackBar.Action.createUndoAction(runnable);
-                break;
-            case SnackBar.Action.SNACK_BAR_RETRY:
-                action =  SnackBar.Action.createRetryAction(runnable);
-                break;
-            default :
-                break;
-        }
-
-        showSnackBarWithCustomAction(context, parentView, message, action, interactions,
-                                        null /* placement */);
-    }
-
-    public static void showSnackBarWithCustomAction(final Context context,
-            @NonNull final View parentView,
-            @NonNull final String message,
-            @NonNull final SnackBar.Action action,
-            @Nullable final List<SnackBarInteraction> interactions,
-            @Nullable final Placement placement) {
-        Assert.notNull(context);
-        Assert.isTrue(!TextUtils.isEmpty(message));
-        Assert.notNull(action);
-        SnackBarManager.get()
-            .newBuilder(parentView)
-            .setText(message)
-            .setAction(action)
-            .withInteractions(interactions)
-            .withPlacement(placement)
-            .show();
     }
 
     /**

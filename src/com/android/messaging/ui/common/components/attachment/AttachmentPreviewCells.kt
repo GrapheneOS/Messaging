@@ -27,6 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import com.android.messaging.ui.common.components.participant.ParticipantAvatarImage
 
 private val AttachmentPreviewCardHeight = 88.dp
 private val AttachmentPreviewCardWidth = 220.dp
@@ -132,8 +133,9 @@ internal fun AudioAttachmentCell(
 @Composable
 internal fun VCardAttachmentCell(
     kind: VCardAttachmentKind,
-    avatarUri: String?,
-    avatarName: String?,
+    avatarImage: ParticipantAvatarImage?,
+    displayName: String?,
+    normalizedDestination: String?,
     title: String,
     subtitle: String?,
     onClick: () -> Unit,
@@ -154,8 +156,9 @@ internal fun VCardAttachmentCell(
                 .align(alignment = Alignment.CenterStart)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             kind = kind,
-            avatarUri = avatarUri,
-            avatarName = avatarName,
+            avatarImage = avatarImage,
+            displayName = displayName,
+            normalizedDestination = normalizedDestination,
             title = title,
             subtitle = subtitle,
         )

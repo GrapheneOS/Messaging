@@ -6,9 +6,9 @@ import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
 import com.android.messaging.domain.conversation.usecase.action.CreateDefaultSmsRoleRequest
+import com.android.messaging.domain.conversation.usecase.participant.CanAddContact
 import com.android.messaging.domain.conversation.usecase.participant.CanAddMoreConversationParticipants
-import com.android.messaging.domain.conversation.usecase.telephony.IsDeviceVoiceCapable
-import com.android.messaging.domain.conversation.usecase.telephony.IsEmergencyPhoneNumber
+import com.android.messaging.domain.conversation.usecase.telephony.CanPlacePhoneCall
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.ui.conversation.audio.delegate.ConversationAudioRecordingDelegate
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingUiState
@@ -27,6 +27,7 @@ import com.android.messaging.ui.conversation.metadata.delegate.ConversationMetad
 import com.android.messaging.ui.conversation.metadata.model.ConversationMetadataUiState
 import com.android.messaging.ui.conversation.screen.ConversationViewModel
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
+import com.android.messaging.util.ContentType
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -66,8 +67,8 @@ internal class ConversationViewModelSimSelectionTest {
     private val subscriptionsRepository = mockk<SubscriptionsRepository>()
     private val canAddMoreConversationParticipants = mockk<CanAddMoreConversationParticipants>()
     private val createDefaultSmsRoleRequest = mockk<CreateDefaultSmsRoleRequest>()
-    private val isDeviceVoiceCapable = mockk<IsDeviceVoiceCapable>()
-    private val isEmergencyPhoneNumber = mockk<IsEmergencyPhoneNumber>()
+    private val canAddContact = mockk<CanAddContact>()
+    private val canPlacePhoneCall = mockk<CanPlacePhoneCall>()
 
     @Before
     fun setUp() {
@@ -97,6 +98,13 @@ internal class ConversationViewModelSimSelectionTest {
             ConversationMessagesUiState.Loading,
         )
         every { conversationMessagesDelegate.bind(any(), any()) } just runs
+        every {
+            conversationMessagesDelegate.resolvePhotoViewerInitialOccurrenceIndex(
+                contentType = any(),
+                partId = any(),
+                contentUri = any(),
+            )
+        } returns 0
 
         every { conversationMessageSelectionDelegate.state } returns MutableStateFlow(
             ConversationMessageSelectionUiState(),
@@ -143,6 +151,44 @@ internal class ConversationViewModelSimSelectionTest {
                 selfId = any(),
             )
         } just runs
+    }
+
+    @Test
+    fun onMessageAttachmentClicked_whenImageAttachment_resolvesPhotoOccurrenceIndex() {
+        val viewModel = createViewModel()
+
+        viewModel.onMessageAttachmentClicked(
+            contentType = ContentType.IMAGE_JPEG,
+            contentUri = ATTACHMENT_URI,
+            partId = ATTACHMENT_PART_ID,
+        )
+
+        verify(exactly = 1) {
+            conversationMessagesDelegate.resolvePhotoViewerInitialOccurrenceIndex(
+                contentType = ContentType.IMAGE_JPEG,
+                partId = ATTACHMENT_PART_ID,
+                contentUri = ATTACHMENT_URI,
+            )
+        }
+    }
+
+    @Test
+    fun onMessageAttachmentClicked_whenNonImageAttachment_delegatesOccurrenceResolution() {
+        val viewModel = createViewModel()
+
+        viewModel.onMessageAttachmentClicked(
+            contentType = ContentType.VIDEO_MP4,
+            contentUri = ATTACHMENT_URI,
+            partId = ATTACHMENT_PART_ID,
+        )
+
+        verify(exactly = 1) {
+            conversationMessagesDelegate.resolvePhotoViewerInitialOccurrenceIndex(
+                contentType = ContentType.VIDEO_MP4,
+                partId = ATTACHMENT_PART_ID,
+                contentUri = ATTACHMENT_URI,
+            )
+        }
     }
 
     @Test
@@ -293,8 +339,8 @@ internal class ConversationViewModelSimSelectionTest {
             simSelectionRepository = simSelectionRepository,
             canAddMoreConversationParticipants = canAddMoreConversationParticipants,
             createDefaultSmsRoleRequest = createDefaultSmsRoleRequest,
-            isDeviceVoiceCapable = isDeviceVoiceCapable,
-            isEmergencyPhoneNumber = isEmergencyPhoneNumber,
+            canAddContact = canAddContact,
+            canPlacePhoneCall = canPlacePhoneCall,
             defaultDispatcher = mainDispatcherRule.testDispatcher,
             savedStateHandle = SavedStateHandle(),
         )
@@ -324,6 +370,8 @@ internal class ConversationViewModelSimSelectionTest {
 
     private companion object {
         private const val CONVERSATION_ID = "conversation-1"
+        private const val ATTACHMENT_PART_ID = "attachment-part-1"
+        private const val ATTACHMENT_URI = "content://example/attachment/1"
         private const val PICKED_SELF_PARTICIPANT_ID = "self-participant-2"
         private const val FIRST_SELF_PARTICIPANT_ID = "self-participant-1"
         private const val SECOND_SELF_PARTICIPANT_ID = "self-participant-2"
