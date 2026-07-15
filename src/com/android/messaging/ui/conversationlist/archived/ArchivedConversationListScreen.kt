@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
@@ -31,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
+import com.android.messaging.ui.common.components.contentSurfaceShape
 import com.android.messaging.ui.common.components.snackbar.MessagingSnackbarHost
 import com.android.messaging.ui.common.components.snackbar.showActionSnackbar
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListAction as Action
@@ -50,11 +50,6 @@ import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
-
-private val ContentCornerShape = RoundedCornerShape(
-    topStart = 28.dp,
-    topEnd = 28.dp,
-)
 
 private val ArchivedSwipeSpec = ConversationListSwipeSpec(
     startToEnd = ConversationSwipeKind.Unarchive,
@@ -200,7 +195,7 @@ private fun ArchivedConversationListScaffold(
                 .fillMaxSize()
                 .padding(top = contentPadding.calculateTopPadding())
                 .background(archivedBackdropColor(isSelectionMode))
-                .clip(ContentCornerShape)
+                .clip(MaterialTheme.contentSurfaceShape)
                 .background(MaterialTheme.colorScheme.background),
         ) {
             ArchivedConversationListContent(

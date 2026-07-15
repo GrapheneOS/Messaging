@@ -37,6 +37,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.ui.common.components.horizontalSafeDrawingInsets
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
@@ -75,7 +76,9 @@ internal fun ConversationBlockedBannerSlot(
     val density = LocalDensity.current
 
     AnimatedVisibility(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(paddingValues = horizontalSafeDrawingInsets()),
         visible = isRevealed,
         enter = fadeIn() + expandVertically(),
         exit = fadeOut() + shrinkVertically(),

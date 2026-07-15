@@ -4,8 +4,8 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.android.messaging.data.media.model.PhotoViewerItem
 import com.android.messaging.ui.common.components.PagerIndicator
+import com.android.messaging.ui.common.components.bottomBarInsets
 import com.android.messaging.ui.common.components.mediapreview.MediaPreviewBackground
 import com.android.messaging.ui.common.components.mediapreview.MediaPreviewItem
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_PAGE_INDICATOR_TEST_TAG
@@ -220,7 +221,7 @@ private fun PhotoViewerMediaContent(
             PagerIndicator(
                 modifier = Modifier
                     .align(alignment = Alignment.BottomCenter)
-                    .navigationBarsPadding()
+                    .windowInsetsPadding(bottomBarInsets())
                     .padding(bottom = PhotoViewerPageIndicatorBottomPadding)
                     .testTag(tag = PHOTO_VIEWER_PAGE_INDICATOR_TEST_TAG),
                 pagerState = pagerState,

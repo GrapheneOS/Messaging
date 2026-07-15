@@ -7,9 +7,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.FileDownload
@@ -32,6 +32,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.data.media.model.PhotoViewerItem
+import com.android.messaging.ui.common.components.bottomBarInsets
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_METADATA_RECEIVED_TIMESTAMP_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_METADATA_SENDER_TEST_TAG
@@ -98,7 +99,7 @@ private fun PhotoViewerMetadataSheetContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .navigationBarsPadding()
+            .windowInsetsPadding(bottomBarInsets())
             .padding(start = 24.dp, top = 16.dp, end = 24.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(space = 24.dp),
     ) {

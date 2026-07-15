@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.data.subscription.model.Subscription
+import com.android.messaging.ui.common.components.safeDrawingContentPadding
 import com.android.messaging.ui.conversation.CONVERSATION_MESSAGES_LIST_TEST_TAG
 import com.android.messaging.ui.conversation.conversationMessageItemTestTag
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
@@ -48,19 +49,8 @@ import kotlinx.collections.immutable.toImmutableMap
 
 private val MESSAGES_CONTENT_HORIZONTAL_PADDING = 16.dp
 private val MESSAGES_CONTENT_TOP_PADDING = 24.dp
-
-private val messagesContentPadding = PaddingValues(
-    start = MESSAGES_CONTENT_HORIZONTAL_PADDING,
-    top = MESSAGES_CONTENT_TOP_PADDING,
-    end = MESSAGES_CONTENT_HORIZONTAL_PADDING,
-    bottom = 24.dp,
-)
-private val sendSimContentPadding = PaddingValues(
-    start = MESSAGES_CONTENT_HORIZONTAL_PADDING,
-    top = MESSAGES_CONTENT_TOP_PADDING,
-    end = MESSAGES_CONTENT_HORIZONTAL_PADDING,
-    bottom = 6.dp,
-)
+private val MESSAGES_CONTENT_BOTTOM_PADDING = 24.dp
+private val SEND_SIM_CONTENT_BOTTOM_PADDING = 6.dp
 
 private val MESSAGES_CLUSTER_TOP_PADDING = 2.dp
 private val MESSAGES_GROUP_TOP_PADDING = 12.dp
@@ -219,24 +209,20 @@ private fun LazyListScope.conversationSendSimIndicatorItem(
     }
 }
 
+@Composable
 private fun conversationMessagesContentPadding(
     shouldShowSendSimIndicator: Boolean,
     additionalTopContentPadding: Dp,
 ): PaddingValues {
-    val basePadding = when {
-        shouldShowSendSimIndicator -> sendSimContentPadding
-        else -> messagesContentPadding
+    val bottomPadding = when {
+        shouldShowSendSimIndicator -> SEND_SIM_CONTENT_BOTTOM_PADDING
+        else -> MESSAGES_CONTENT_BOTTOM_PADDING
     }
 
-    if (additionalTopContentPadding <= 0.dp) {
-        return basePadding
-    }
-
-    return PaddingValues(
-        start = MESSAGES_CONTENT_HORIZONTAL_PADDING,
+    return safeDrawingContentPadding(
         top = MESSAGES_CONTENT_TOP_PADDING + additionalTopContentPadding,
-        end = MESSAGES_CONTENT_HORIZONTAL_PADDING,
-        bottom = basePadding.calculateBottomPadding(),
+        bottom = bottomPadding,
+        horizontal = MESSAGES_CONTENT_HORIZONTAL_PADDING,
     )
 }
 

@@ -16,10 +16,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -49,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
 import com.android.messaging.ui.common.components.composer.MessageComposeBar
+import com.android.messaging.ui.common.components.imeAwareBottomBarInsets
 import com.android.messaging.ui.conversation.CONVERSATION_ATTACHMENT_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_COMPOSE_BAR_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_SEGMENT_COUNTER_TEST_TAG
@@ -127,8 +127,7 @@ internal fun ConversationComposeBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .imePadding()
-            .navigationBarsPadding()
+            .windowInsetsPadding(imeAwareBottomBarInsets())
             .testTag(CONVERSATION_COMPOSE_BAR_TEST_TAG),
     ) {
         ConversationComposeInputContent(

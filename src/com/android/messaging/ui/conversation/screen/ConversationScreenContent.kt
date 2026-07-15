@@ -238,7 +238,10 @@ private fun Modifier.conversationScreenContentModifier(
     backdropColor: Color,
 ): Modifier {
     return this
-        .padding(paddingValues = contentPadding)
+        .padding(
+            top = contentPadding.calculateTopPadding(),
+            bottom = contentPadding.calculateBottomPadding(),
+        )
         .background(color = backdropColor)
         .clip(shape = MaterialTheme.contentSurfaceShape)
         .background(color = MaterialTheme.colorScheme.background)
