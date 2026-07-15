@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -31,7 +29,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -48,7 +45,7 @@ import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticip
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsNavEvent as NavEvent
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsUiState as State
 import com.android.messaging.ui.common.components.contentSurfaceShape
-import com.android.messaging.ui.common.components.horizontalSafeDrawingInsets
+import com.android.messaging.ui.common.components.safeDrawingContentPadding
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
@@ -151,16 +148,12 @@ private fun BlockedParticipantsList(
     onAction: (Action) -> Unit,
     scaffoldContentPadding: PaddingValues,
 ) {
-    val layoutDirection = LocalLayoutDirection.current
-    val horizontalInsets = horizontalSafeDrawingInsets()
-
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
+        contentPadding = safeDrawingContentPadding(
             top = ScreenContentPadding,
             bottom = ScreenContentPadding + scaffoldContentPadding.calculateBottomPadding(),
-            start = ScreenContentPadding + horizontalInsets.calculateStartPadding(layoutDirection),
-            end = ScreenContentPadding + horizontalInsets.calculateEndPadding(layoutDirection),
+            horizontal = ScreenContentPadding,
         ),
     ) {
         itemsIndexed(

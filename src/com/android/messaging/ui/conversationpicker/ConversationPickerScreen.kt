@@ -14,14 +14,9 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.text.input.TextFieldState
@@ -54,7 +49,9 @@ import com.android.messaging.ui.common.components.composer.MESSAGE_COMPOSE_FIELD
 import com.android.messaging.ui.common.components.composer.MessageComposeBar
 import com.android.messaging.ui.common.components.composer.MessageSendButton
 import com.android.messaging.ui.common.components.contentSurfaceShape
+import com.android.messaging.ui.common.components.imeAwareBottomBarInsets
 import com.android.messaging.ui.common.components.mediapreview.MediaPreviewBackground
+import com.android.messaging.ui.common.components.safeDrawingContentPadding
 import com.android.messaging.ui.common.components.selection.LocalSelectionListItemColors
 import com.android.messaging.ui.common.components.selection.SelectionListContent
 import com.android.messaging.ui.common.components.selection.selectionListItemColors
@@ -323,11 +320,10 @@ private fun PickerRecentTargetsContent(
 ) {
     SelectionListContent(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
-            start = ScreenContentPadding,
+        contentPadding = safeDrawingContentPadding(
             top = ScreenContentPadding,
-            end = ScreenContentPadding,
             bottom = bottomPadding,
+            horizontal = ScreenContentPadding,
         ),
         canLoadMore = false,
         isLoading = false,
@@ -366,11 +362,10 @@ private fun PickerContactsTargetsContent(
 ) {
     RecipientSelectionContactsContent(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
-            start = ScreenContentPadding,
+        contentPadding = safeDrawingContentPadding(
             top = ScreenContentPadding,
-            end = ScreenContentPadding,
             bottom = bottomPadding,
+            horizontal = ScreenContentPadding,
         ),
         uiState = uiState.asRecipientSelectionState(),
         emptyStateText = labels.emptyStateText,
@@ -545,9 +540,7 @@ private fun PickerReviewContent(
             PickerReviewComposeBar(
                 uiState = uiState,
                 onAction = onAction,
-                modifier = Modifier.windowInsetsPadding(
-                    WindowInsets.ime.union(WindowInsets.navigationBars),
-                ),
+                modifier = Modifier.windowInsetsPadding(imeAwareBottomBarInsets()),
             )
         }
     }
