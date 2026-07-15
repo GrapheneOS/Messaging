@@ -153,8 +153,23 @@ public final class SmsReceiver extends BroadcastReceiver {
                     (Telephony.Sms.Intents.SMS_RECEIVED_ACTION.equals(action) ||
                             // TODO: update this with the actual constant from Telephony
                             "android.provider.Telephony.MMS_DOWNLOADED".equals(action))) {
-                postNewMessageSecondaryUserNotification();
+                boolean isSenderBlocked = false;
+                final android.telephony.SmsMessage[] messages = getMessagesFromIntent(intent);
+                if (messages != null && messages.length > 0) {
+                    final String senderAddress = messages[0].getOriginatingAddress();
+                    if (senderAddress != null) {
+                        final com.android.messaging.datamodel.DatabaseWrapper db = com.android.messaging.datamodel.DataModel.get().getDatabase();
+                        isSenderBlocked = com.android.messaging.datamodel.BugleDatabaseOperations.isBlockedDestination(db, senderAddress);
+
+                    }
+                }
+                if (isSenderBlocked) {
+                    postNewMessageSecondaryUserNotification();
+                }else{
+                    LogUtil.v(TAG,"SmsReceviver:Suppressed secondary user notification for blocked sender");
+                }
             }
+
         }
     }
 

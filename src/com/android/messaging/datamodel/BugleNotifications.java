@@ -134,7 +134,7 @@ public class BugleNotifications {
             LogUtil.v(TAG, "Update: conversationId = " + conversationId
                     + " coverage = " + coverage);
         }
-    Assert.isNotMainThread();
+        Assert.isNotMainThread();
 
         if (!PhoneUtils.getDefault().isDefaultSmsApp()) {
             LogUtil.d(TAG, "Skipping notification: not the default SMS app");
@@ -157,10 +157,42 @@ public class BugleNotifications {
     private static void createMessageNotification(final String conversationId) {
         final MessageNotificationState state = MessageNotificationState.getNotificationState();
         final boolean softSound = DataModel.get().isNewMessageObservable(conversationId);
+
         if (state == null) {
             if (softSound && !TextUtils.isEmpty(conversationId)) {
-                final Uri ringtoneUri = getNotificationRingtoneUriForConversationId(conversationId);
-                playObservableConversationNotificationSound(ringtoneUri);
+
+                boolean isBlocked = false;
+
+                // 1. Access the database to check the participant's blocked status
+                final DatabaseWrapper db = DataModel.get().getDatabase();
+
+                // 2. Query the participant table for this specific conversation ID
+                final String query = "SELECT " + DatabaseHelper.ParticipantColumns.BLOCKED +
+                        " FROM " + DatabaseHelper.PARTICIPANTS_TABLE +
+                        " INNER JOIN " + DatabaseHelper.CONVERSATION_PARTICIPANTS_TABLE +
+                        " ON " + DatabaseHelper.PARTICIPANTS_TABLE + "." + DatabaseHelper.ParticipantColumns._ID +
+                        " = " + DatabaseHelper.CONVERSATION_PARTICIPANTS_TABLE + "." + DatabaseHelper.ConversationParticipantsColumns.PARTICIPANT_ID +
+                        " WHERE " + DatabaseHelper.CONVERSATION_PARTICIPANTS_TABLE + "." + DatabaseHelper.ConversationParticipantsColumns.CONVERSATION_ID + " = ?";
+
+                try (android.database.Cursor cursor = db.rawQuery(query, new String[] { conversationId })) {
+                    if (cursor != null) {
+                        while (cursor.moveToNext()) {
+                            // If any participant in this conversation has BLOCKED = 1, flag it
+                            if (cursor.getInt(0) == 1) {
+                                isBlocked = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // 3. The Gatekeeper: Only play the sound if the conversation is NOT blocked
+                if (!isBlocked) {
+                    final Uri ringtoneUri = getNotificationRingtoneUriForConversationId(conversationId);
+                    playObservableConversationNotificationSound(ringtoneUri);
+                } else {
+                    LogUtil.v(TAG, "Suppressed audio for blocked observable conversation.");
+                }
             }
             return;
         }
@@ -232,7 +264,7 @@ public class BugleNotifications {
      * @param conversationId The conversation id (optional)
      */
     private static String buildNotificationTag(final String name,
-            final String conversationId) {
+                                               final String conversationId) {
         final Context context = Factory.get().getApplicationContext();
         if (conversationId != null) {
             return context.getPackageName() + name + ":" + conversationId;
@@ -489,7 +521,7 @@ public class BugleNotifications {
         final boolean silenced =
                 audioManager.getRingerMode() != AudioManager.RINGER_MODE_NORMAL;
         if (silenced) {
-             return;
+            return;
         }
 
         final NotificationPlayer player = new NotificationPlayer(LogUtil.BUGLE_TAG);
@@ -522,12 +554,12 @@ public class BugleNotifications {
     }
 
     public static void notifyEmergencySmsFailed(final String emergencyNumber,
-            final String conversationId) {
+                                                final String conversationId) {
         final Context context = Factory.get().getApplicationContext();
 
         final CharSequence line1 = MessageNotificationState.applyWarningTextColor(context,
                 context.getString(R.string.notification_emergency_send_failure_line1,
-                emergencyNumber));
+                        emergencyNumber));
         final String line2 = context.getString(R.string.notification_emergency_send_failure_line2,
                 emergencyNumber);
         final PendingIntent destinationIntent = UIIntents.get()
