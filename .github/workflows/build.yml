@@ -86,7 +86,7 @@ jobs:
           cache: gradle
 
       - name: Run Detekt
-        run: ./gradlew :app:detekt --no-daemon --stacktrace --console=plain
+        run: ./gradlew :app:detektDebug --no-daemon --stacktrace --console=plain
 
       - name: Upload Detekt reports
         if: failure()

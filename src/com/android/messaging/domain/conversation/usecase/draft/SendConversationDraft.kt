@@ -62,11 +62,9 @@ internal class SendConversationDraftImpl @Inject constructor(
                     draft = draft,
                     ignoreMessageSizeLimit = ignoreMessageSizeLimit,
                 )
+            } catch (exception: CancellationException) {
+                throw exception
             } catch (exception: Exception) {
-                if (exception is CancellationException) {
-                    throw exception
-                }
-
                 throw exception.toSendConversationDraftException(
                     conversationId = conversationId,
                 )

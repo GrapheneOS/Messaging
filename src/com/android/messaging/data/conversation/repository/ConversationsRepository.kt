@@ -476,7 +476,6 @@ internal class ConversationsRepositoryImpl @Inject constructor(
                         add(ConversationMessageData().apply { bind(reversedCursor) })
                     }
                 }
-            }
-            ?: emptyList()
+            }.orEmpty()
     }
 }

@@ -77,7 +77,7 @@ internal class ConversationMediaRepositoryImpl @Inject constructor(
                     add(item)
                 }
             }
-        } ?: emptyList()
+        }.orEmpty()
     }
 
     private fun createRecentMediaQueryArgs(limit: Int): Bundle {

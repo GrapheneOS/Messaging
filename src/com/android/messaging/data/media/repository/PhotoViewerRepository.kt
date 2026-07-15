@@ -141,8 +141,7 @@ internal class PhotoViewerRepositoryImpl @Inject constructor(
                         }
                     }
                 }
-            }
-            ?: emptyList()
+            }.orEmpty()
     }
 
     private fun Cursor.toPhotoViewerItem(): PhotoViewerItem? {
