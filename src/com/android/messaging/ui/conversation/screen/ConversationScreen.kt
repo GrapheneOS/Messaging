@@ -12,6 +12,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.geometry.Rect as ComposeRect
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.common.components.snackbar.MessagingSnackbarHost
 import com.android.messaging.ui.conversation.composer.ui.ConversationComposerSection
@@ -25,7 +26,7 @@ import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaf
 @Composable
 internal fun ConversationScreen(
     modifier: Modifier = Modifier,
-    conversationId: String? = null,
+    conversationId: ConversationId? = null,
     launchGeneration: Int? = null,
     cancelIncomingNotification: Boolean = true,
     onAddPeopleClick: () -> Unit,
@@ -108,7 +109,7 @@ internal fun ConversationScreen(
 @Composable
 internal fun ConversationScreenScaffold(
     modifier: Modifier = Modifier,
-    conversationId: String?,
+    conversationId: ConversationId?,
     uiState: ConversationScreenScaffoldUiState,
     snackbarHostState: SnackbarHostState,
     isMediaPickerOpen: Boolean,

@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.messages.mapper
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.datamodel.data.MessagePartData
@@ -26,7 +27,7 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor(
     override fun map(data: ConversationMessageData): ConversationMessageUiModel {
         return ConversationMessageUiModel(
             messageId = data.messageId ?: "",
-            conversationId = data.conversationId ?: "",
+            conversationId = ConversationId(data.conversationId ?: ""),
             text = data.text,
             parts = data
                 .parts

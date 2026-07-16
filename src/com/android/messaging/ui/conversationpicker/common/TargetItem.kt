@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.common.components.selection.SelectionListAvatar
 import com.android.messaging.ui.common.components.selection.SelectionListItem
 import com.android.messaging.ui.common.components.selection.SelectionListItemTokens
@@ -114,7 +115,7 @@ private fun TargetItemPreview() {
     MessagingPreviewColumn {
         TargetItem(
             target = TargetUiState.Conversation(
-                conversationId = "1",
+                conversationId = ConversationId("1"),
                 normalizedDestination = "+31612345678",
                 displayName = "Jane Doe",
                 details = "+31 6 1234 5678",

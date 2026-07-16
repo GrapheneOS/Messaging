@@ -1,6 +1,7 @@
 package com.android.messaging.ui.blockedparticipants.screen.model
 
 import androidx.compose.runtime.Immutable
+import com.android.messaging.data.conversation.model.ConversationId
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentListOf
@@ -16,7 +17,7 @@ internal data class BlockedParticipantsUiState(
 @Immutable
 internal data class BlockedParticipantUiState(
     val participantId: String,
-    val conversationId: String,
+    val conversationId: ConversationId,
     val avatarUri: String?,
     val displayName: String,
     val details: String?,

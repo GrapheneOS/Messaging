@@ -2,6 +2,7 @@ package com.android.messaging.data.conversationsettings.repository
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationsettings.model.SNOOZE_NEVER_EXPIRES
 import com.android.messaging.data.conversationsettings.model.SnoozeOption
 import com.android.messaging.util.BuglePrefs
@@ -18,13 +19,13 @@ internal interface ConversationNotificationRepository {
 
     fun observeSnoozeChanges(): Flow<Unit>
 
-    fun getSnoozeUntilMillis(conversationId: String): Long
+    fun getSnoozeUntilMillis(conversationId: ConversationId): Long
 
-    fun isSnoozed(conversationId: String): Boolean
+    fun isSnoozed(conversationId: ConversationId): Boolean
 
-    fun snooze(conversationId: String, option: SnoozeOption)
+    fun snooze(conversationId: ConversationId, option: SnoozeOption)
 
-    fun clearSnooze(conversationId: String)
+    fun clearSnooze(conversationId: ConversationId)
 
     @EntryPoint
     @InstallIn(SingletonComponent::class)
@@ -58,16 +59,16 @@ internal class ConversationNotificationRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getSnoozeUntilMillis(conversationId: String): Long {
+    override fun getSnoozeUntilMillis(conversationId: ConversationId): Long {
         val prefs = BuglePrefs.getApplicationPrefs()
         return prefs.getLong(snoozeKey(conversationId), SNOOZE_NOT_SET)
     }
 
-    override fun isSnoozed(conversationId: String): Boolean {
+    override fun isSnoozed(conversationId: ConversationId): Boolean {
         return getSnoozeUntilMillis(conversationId) > System.currentTimeMillis()
     }
 
-    override fun snooze(conversationId: String, option: SnoozeOption) {
+    override fun snooze(conversationId: ConversationId, option: SnoozeOption) {
         val prefs = BuglePrefs.getApplicationPrefs()
         val untilMillis = when (option) {
             SnoozeOption.Always -> SNOOZE_NEVER_EXPIRES
@@ -76,13 +77,13 @@ internal class ConversationNotificationRepositoryImpl @Inject constructor(
         prefs.putLong(snoozeKey(conversationId), untilMillis)
     }
 
-    override fun clearSnooze(conversationId: String) {
+    override fun clearSnooze(conversationId: ConversationId) {
         val prefs = BuglePrefs.getApplicationPrefs()
         prefs.remove(snoozeKey(conversationId))
     }
 
-    private fun snoozeKey(conversationId: String): String {
-        return "$SNOOZE_KEY_PREFIX$conversationId"
+    private fun snoozeKey(conversationId: ConversationId): String {
+        return "$SNOOZE_KEY_PREFIX${conversationId.value}"
     }
 
     private fun addSafely(

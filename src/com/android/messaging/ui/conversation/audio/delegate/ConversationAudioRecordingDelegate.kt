@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.audio.delegate
 
 import android.net.Uri
 import android.os.SystemClock
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.data.conversation.model.draft.ConversationDraftPendingAttachment
 import com.android.messaging.data.conversation.model.draft.ConversationDraftPendingAttachmentKind
@@ -67,7 +68,7 @@ internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
 
     override fun bind(
         scope: CoroutineScope,
-        conversationIdFlow: StateFlow<String?>,
+        conversationIdFlow: StateFlow<ConversationId?>,
     ) {
         if (boundScope != null) {
             return

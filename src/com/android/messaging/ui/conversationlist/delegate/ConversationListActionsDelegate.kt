@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationlist.delegate
 
 import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepository
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
@@ -8,14 +9,14 @@ import com.android.messaging.data.conversationsettings.model.SnoozeOption
 import javax.inject.Inject
 
 internal interface ConversationListActionsDelegate {
-    suspend fun setArchived(conversationIds: List<String>, isArchived: Boolean)
-    suspend fun setPinned(conversationIds: List<String>, isPinned: Boolean)
-    suspend fun setRead(conversationIds: List<String>, isRead: Boolean)
-    suspend fun block(conversationId: String, destination: String): Boolean
-    suspend fun unblock(conversationId: String, destination: String)
+    suspend fun setArchived(conversationIds: List<ConversationId>, isArchived: Boolean)
+    suspend fun setPinned(conversationIds: List<ConversationId>, isPinned: Boolean)
+    suspend fun setRead(conversationIds: List<ConversationId>, isRead: Boolean)
+    suspend fun block(conversationId: ConversationId, destination: String): Boolean
+    suspend fun unblock(conversationId: ConversationId, destination: String)
     fun delete(items: List<ConversationListItem>)
-    fun snooze(conversationIds: List<String>, option: SnoozeOption)
-    fun unsnooze(conversationIds: List<String>)
+    fun snooze(conversationIds: List<ConversationId>, option: SnoozeOption)
+    fun unsnooze(conversationIds: List<ConversationId>)
 }
 
 internal class ConversationListActionsDelegateImpl @Inject constructor(
@@ -25,7 +26,7 @@ internal class ConversationListActionsDelegateImpl @Inject constructor(
 ) : ConversationListActionsDelegate {
 
     override suspend fun setArchived(
-        conversationIds: List<String>,
+        conversationIds: List<ConversationId>,
         isArchived: Boolean,
     ) {
         conversationIds.normalizedIds().forEach { conversationId ->
@@ -37,7 +38,7 @@ internal class ConversationListActionsDelegateImpl @Inject constructor(
     }
 
     override suspend fun setPinned(
-        conversationIds: List<String>,
+        conversationIds: List<ConversationId>,
         isPinned: Boolean,
     ) {
         conversationIds.normalizedIds().forEach { conversationId ->
@@ -49,7 +50,7 @@ internal class ConversationListActionsDelegateImpl @Inject constructor(
     }
 
     override suspend fun setRead(
-        conversationIds: List<String>,
+        conversationIds: List<ConversationId>,
         isRead: Boolean,
     ) {
         conversationIds.normalizedIds().forEach { conversationId ->
@@ -61,27 +62,27 @@ internal class ConversationListActionsDelegateImpl @Inject constructor(
     }
 
     override suspend fun block(
-        conversationId: String,
+        conversationId: ConversationId,
         destination: String,
     ): Boolean {
         val resolvedDestination = destination.takeIf(String::isNotBlank) ?: return false
 
         return blockedParticipantsRepository.setDestinationBlocked(
             destination = resolvedDestination,
-            conversationId = conversationId.takeIf(String::isNotBlank),
+            conversationId = conversationId.takeIf { it.isNotBlank() },
             isBlocked = true,
         )
     }
 
     override suspend fun unblock(
-        conversationId: String,
+        conversationId: ConversationId,
         destination: String,
     ) {
         val resolvedDestination = destination.takeIf(String::isNotBlank) ?: return
 
         blockedParticipantsRepository.setDestinationBlocked(
             destination = resolvedDestination,
-            conversationId = conversationId.takeIf(String::isNotBlank),
+            conversationId = conversationId.takeIf { it.isNotBlank() },
             isBlocked = false,
         )
     }
@@ -96,7 +97,7 @@ internal class ConversationListActionsDelegateImpl @Inject constructor(
     }
 
     override fun snooze(
-        conversationIds: List<String>,
+        conversationIds: List<ConversationId>,
         option: SnoozeOption,
     ) {
         conversationIds.normalizedIds().forEach { conversationId ->
@@ -107,11 +108,11 @@ internal class ConversationListActionsDelegateImpl @Inject constructor(
         }
     }
 
-    override fun unsnooze(conversationIds: List<String>) {
+    override fun unsnooze(conversationIds: List<ConversationId>) {
         conversationIds.normalizedIds().forEach(conversationListRepository::clearSnooze)
     }
 
-    private fun List<String>.normalizedIds(): List<String> {
-        return filter(String::isNotBlank).distinct()
+    private fun List<ConversationId>.normalizedIds(): List<ConversationId> {
+        return filter { it.isNotBlank() }.distinct()
     }
 }

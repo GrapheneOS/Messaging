@@ -1,5 +1,7 @@
 package com.android.messaging.domain.conversation.usecase.draft.exception
 
+import com.android.messaging.data.conversation.model.ConversationId
+
 internal sealed class SendConversationDraftException(
     message: String,
     cause: Throwable? = null,
@@ -11,59 +13,59 @@ internal class BlankConversationIdException :
     )
 
 internal class EmptyConversationDraftException(
-    conversationId: String,
+    conversationId: ConversationId,
 ) : SendConversationDraftException(
     message = "Draft must contain content before it can be sent " +
-        "for conversation $conversationId.",
+        "for conversation ${conversationId.value}.",
 )
 
 internal class ConversationRecipientsNotLoadedException(
-    conversationId: String,
+    conversationId: ConversationId,
 ) : SendConversationDraftException(
-    message = "Conversation recipients are not loaded for conversation $conversationId.",
+    message = "Conversation recipients are not loaded for conversation ${conversationId.value}.",
 )
 
 internal class UnknownConversationRecipientException(
-    conversationId: String,
+    conversationId: ConversationId,
 ) : SendConversationDraftException(
-    message = "Conversation $conversationId contains an unknown sender.",
+    message = "Conversation ${conversationId.value} contains an unknown sender.",
 )
 
 internal class MissingSelfPhoneNumberForGroupMmsException(
-    conversationId: String,
+    conversationId: ConversationId,
     selfSubId: Int,
 ) : SendConversationDraftException(
-    message = "Missing self phone number for group MMS in conversation $conversationId " +
+    message = "Missing self phone number for group MMS in conversation ${conversationId.value} " +
         "on subId $selfSubId.",
 )
 
 internal class ConversationSimNotReadyException(
-    conversationId: String,
+    conversationId: ConversationId,
     selfSubId: Int,
     cause: Throwable,
 ) : SendConversationDraftException(
-    message = "SIM is not ready for conversation $conversationId on subId $selfSubId.",
+    message = "SIM is not ready for conversation ${conversationId.value} on subId $selfSubId.",
     cause = cause,
 )
 
 internal class TooManyVideoAttachmentsException(
-    conversationId: String,
+    conversationId: ConversationId,
     videoAttachmentCount: Int,
 ) : SendConversationDraftException(
-    message = "Draft for conversation $conversationId has $videoAttachmentCount video " +
+    message = "Draft for conversation ${conversationId.value} has $videoAttachmentCount video " +
         "attachments.",
 )
 
 internal class MessageLimitExceededException(
-    conversationId: String,
+    conversationId: ConversationId,
 ) : SendConversationDraftException(
-    message = "Draft for conversation $conversationId exceeds the MMS message limit.",
+    message = "Draft for conversation ${conversationId.value} exceeds the MMS message limit.",
 )
 
 internal class DraftDispatchFailedException(
-    conversationId: String,
+    conversationId: ConversationId,
     cause: Throwable,
 ) : SendConversationDraftException(
-    message = "Failed to enqueue outgoing draft for conversation $conversationId.",
+    message = "Failed to enqueue outgoing draft for conversation ${conversationId.value}.",
     cause = cause,
 )

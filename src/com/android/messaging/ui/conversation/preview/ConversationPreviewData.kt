@@ -4,6 +4,7 @@ package com.android.messaging.ui.conversation.preview
 
 import androidx.core.net.toUri
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentType
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
@@ -520,7 +521,7 @@ private fun previewMessage(
 ): ConversationMessageUiModel {
     return ConversationMessageUiModel(
         messageId = messageId,
-        conversationId = "conversation-1",
+        conversationId = ConversationId("conversation-1"),
         text = text,
         parts = parts,
         sentTimestamp = PREVIEW_MESSAGE_RECEIVED_MILLIS,

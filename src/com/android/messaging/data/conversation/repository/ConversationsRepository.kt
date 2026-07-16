@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.database.ContentObserver
 import android.net.Uri
 import com.android.messaging.data.conversation.mapper.ConversationMessageDetailsMapper
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetailsData
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetailsResult
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
@@ -42,16 +43,21 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 internal interface ConversationsRepository {
-    fun getConversationMetadata(conversationId: String): Flow<ConversationMetadata?>
-    suspend fun getConversationMetadataSnapshot(conversationId: String): ConversationMetadata?
-    fun getConversationMessages(conversationId: String): Flow<List<ConversationMessageData>>
+    fun getConversationMetadata(conversationId: ConversationId): Flow<ConversationMetadata?>
+
+    suspend fun getConversationMetadataSnapshot(
+        conversationId: ConversationId,
+    ): ConversationMetadata?
+
+    fun getConversationMessages(conversationId: ConversationId): Flow<List<ConversationMessageData>>
+
     suspend fun getConversationSendData(
-        conversationId: String,
+        conversationId: ConversationId,
         requestedSelfParticipantId: String,
     ): ConversationSendData?
 
     suspend fun getConversationMessage(
-        conversationId: String,
+        conversationId: ConversationId,
         messageId: String,
     ): ConversationMessageData?
 
@@ -60,27 +66,27 @@ internal interface ConversationsRepository {
     fun downloadMessage(messageId: String)
 
     suspend fun getMessageDetails(
-        conversationId: String,
+        conversationId: ConversationId,
         messageId: String,
     ): ConversationMessageDetailsResult?
 
     fun resendMessage(messageId: String)
 
-    suspend fun archiveConversation(conversationId: String)
+    suspend fun archiveConversation(conversationId: ConversationId)
 
-    suspend fun unarchiveConversation(conversationId: String)
+    suspend fun unarchiveConversation(conversationId: ConversationId)
 
-    suspend fun pinConversation(conversationId: String)
+    suspend fun pinConversation(conversationId: ConversationId)
 
-    suspend fun unpinConversation(conversationId: String)
+    suspend fun unpinConversation(conversationId: ConversationId)
 
-    suspend fun markConversationRead(conversationId: String)
+    suspend fun markConversationRead(conversationId: ConversationId)
 
-    suspend fun markConversationUnread(conversationId: String)
+    suspend fun markConversationUnread(conversationId: ConversationId)
 
-    fun deleteConversation(conversationId: String, cutoffTimestamp: Long)
+    fun deleteConversation(conversationId: ConversationId, cutoffTimestamp: Long)
 
-    suspend fun setConversationSelfId(conversationId: String, selfId: String)
+    suspend fun setConversationSelfId(conversationId: ConversationId, selfId: String)
 }
 
 internal class ConversationsRepositoryImpl @Inject constructor(
@@ -97,8 +103,10 @@ internal class ConversationsRepositoryImpl @Inject constructor(
     private val messagingDbDispatcher: CoroutineDispatcher,
 ) : ConversationsRepository {
 
-    override fun getConversationMetadata(conversationId: String): Flow<ConversationMetadata?> {
-        val uri = MessagingContentProvider.buildConversationMetadataUri(conversationId)
+    override fun getConversationMetadata(
+        conversationId: ConversationId,
+    ): Flow<ConversationMetadata?> {
+        val uri = MessagingContentProvider.buildConversationMetadataUri(conversationId.value)
 
         return observeUri(uri = uri)
             .flowOn(defaultDispatcher)
@@ -109,11 +117,11 @@ internal class ConversationsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getConversationMetadataSnapshot(
-        conversationId: String,
+        conversationId: ConversationId,
     ): ConversationMetadata? {
         if (conversationId.isBlank()) return null
 
-        val uri = MessagingContentProvider.buildConversationMetadataUri(conversationId)
+        val uri = MessagingContentProvider.buildConversationMetadataUri(conversationId.value)
         return withContext(context = messagingDbDispatcher) {
             queryConversationMetadata(
                 uri = uri,
@@ -122,9 +130,9 @@ internal class ConversationsRepositoryImpl @Inject constructor(
     }
 
     override fun getConversationMessages(
-        conversationId: String,
+        conversationId: ConversationId,
     ): Flow<List<ConversationMessageData>> {
-        val uri = MessagingContentProvider.buildConversationMessagesUri(conversationId)
+        val uri = MessagingContentProvider.buildConversationMessagesUri(conversationId.value)
 
         return observeUri(uri = uri)
             .flowOn(defaultDispatcher)
@@ -136,7 +144,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getConversationSendData(
-        conversationId: String,
+        conversationId: ConversationId,
         requestedSelfParticipantId: String,
     ): ConversationSendData? {
         return withContext(context = messagingDbDispatcher) {
@@ -144,7 +152,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
                 conversationId.isBlank() -> null
                 else -> {
                     MessagingContentProvider
-                        .buildConversationMetadataUri(conversationId)
+                        .buildConversationMetadataUri(conversationId.value)
                         .let(::queryConversationMetadata)
                 }
             }
@@ -164,7 +172,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getConversationMessage(
-        conversationId: String,
+        conversationId: ConversationId,
         messageId: String,
     ): ConversationMessageData? {
         return withContext(context = messagingDbDispatcher) {
@@ -189,7 +197,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getMessageDetails(
-        conversationId: String,
+        conversationId: ConversationId,
         messageId: String,
     ): ConversationMessageDetailsResult? {
         return withContext(context = messagingDbDispatcher) {
@@ -216,67 +224,67 @@ internal class ConversationsRepositoryImpl @Inject constructor(
             ?.let(ResendMessageAction::resendMessage)
     }
 
-    override suspend fun archiveConversation(conversationId: String) {
-        val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
+    override suspend fun archiveConversation(conversationId: ConversationId) {
+        if (conversationId.isBlank()) return
 
         withContext(messagingDbDispatcher) {
-            conversationArchiveStore.archiveConversation(resolvedConversationId)
+            conversationArchiveStore.archiveConversation(conversationId)
         }
     }
 
-    override suspend fun unarchiveConversation(conversationId: String) {
-        val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
+    override suspend fun unarchiveConversation(conversationId: ConversationId) {
+        if (conversationId.isBlank()) return
 
         withContext(messagingDbDispatcher) {
-            conversationArchiveStore.unarchiveConversation(resolvedConversationId)
+            conversationArchiveStore.unarchiveConversation(conversationId)
         }
     }
 
-    override suspend fun pinConversation(conversationId: String) {
-        val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
+    override suspend fun pinConversation(conversationId: ConversationId) {
+        if (conversationId.isBlank()) return
 
         withContext(messagingDbDispatcher) {
-            conversationPinStore.pinConversation(resolvedConversationId)
+            conversationPinStore.pinConversation(conversationId)
         }
     }
 
-    override suspend fun unpinConversation(conversationId: String) {
-        val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
+    override suspend fun unpinConversation(conversationId: ConversationId) {
+        if (conversationId.isBlank()) return
 
         withContext(messagingDbDispatcher) {
-            conversationPinStore.unpinConversation(resolvedConversationId)
+            conversationPinStore.unpinConversation(conversationId)
         }
     }
 
-    override suspend fun markConversationRead(conversationId: String) {
-        val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
+    override suspend fun markConversationRead(conversationId: ConversationId) {
+        if (conversationId.isBlank()) return
 
         withContext(messagingDbDispatcher) {
-            conversationReadStore.markConversationRead(resolvedConversationId)
+            conversationReadStore.markConversationRead(conversationId)
         }
     }
 
-    override suspend fun markConversationUnread(conversationId: String) {
-        val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
+    override suspend fun markConversationUnread(conversationId: ConversationId) {
+        if (conversationId.isBlank()) return
 
         withContext(messagingDbDispatcher) {
-            conversationReadStore.markConversationUnread(resolvedConversationId)
+            conversationReadStore.markConversationUnread(conversationId)
         }
     }
 
-    override fun deleteConversation(conversationId: String, cutoffTimestamp: Long) {
+    override fun deleteConversation(conversationId: ConversationId, cutoffTimestamp: Long) {
         if (conversationId.isBlank()) {
             return
         }
 
         DeleteConversationAction.deleteConversation(
-            conversationId,
+            conversationId.value,
             cutoffTimestamp,
         )
     }
 
     override suspend fun setConversationSelfId(
-        conversationId: String,
+        conversationId: ConversationId,
         selfId: String,
     ) {
         if (conversationId.isBlank() || selfId.isBlank()) return
@@ -287,7 +295,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
                 selfId = selfId,
             )
             MessagingContentProvider.notifyConversationListChanged()
-            MessagingContentProvider.notifyConversationMetadataChanged(conversationId)
+            MessagingContentProvider.notifyConversationMetadataChanged(conversationId.value)
         }
     }
 
@@ -309,7 +317,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
     }
 
     private fun getConversationMessageData(
-        conversationId: String,
+        conversationId: ConversationId,
         messageId: String,
     ): ConversationMessageData? {
         return when {
@@ -317,7 +325,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
 
             else -> {
                 MessagingContentProvider
-                    .buildConversationMessagesUri(conversationId)
+                    .buildConversationMessagesUri(conversationId.value)
                     .let(::queryConversationMessages)
                     .firstOrNull { it.messageId == messageId }
             }
@@ -383,7 +391,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
     }
 
     private fun loadMessageDetailsData(
-        conversationId: String,
+        conversationId: ConversationId,
         messageId: String,
     ): ConversationMessageDetailsData? {
         val message = getConversationMessageData(
@@ -408,16 +416,19 @@ internal class ConversationsRepositoryImpl @Inject constructor(
     private fun queryConversationOtherParticipant(uri: Uri): ParticipantData? {
         val conversationId = uri.lastPathSegment
             ?.takeIf { it.isNotBlank() }
+            ?.let(::ConversationId)
             ?: return null
 
-        val participants = queryConversationParticipants(conversationId = conversationId)
+        val participants = queryConversationParticipants(
+            conversationId = conversationId,
+        )
         return participants.getOtherParticipant()
     }
 
     private fun queryConversationParticipants(
-        conversationId: String,
+        conversationId: ConversationId,
     ): ConversationParticipantsData {
-        val uri = MessagingContentProvider.buildConversationParticipantsUri(conversationId)
+        val uri = MessagingContentProvider.buildConversationParticipantsUri(conversationId.value)
 
         return contentResolver
             .query(

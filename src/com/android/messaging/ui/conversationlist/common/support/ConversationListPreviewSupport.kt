@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationlist.common.support
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
 import com.android.messaging.ui.conversationlist.mapper.conversationListMmsDownloadTitleResId
 import com.android.messaging.ui.conversationlist.model.ConversationListAvatarUiModel
@@ -12,7 +13,7 @@ import kotlinx.collections.immutable.persistentListOf
 internal const val PREVIEW_TIMESTAMP_MILLIS = 1_806_240_000_000L
 
 internal fun previewConversationListItem(
-    conversationId: String,
+    conversationId: ConversationId,
     title: String,
     snippetText: String?,
     senderName: String? = null,
@@ -29,7 +30,7 @@ internal fun previewConversationListItem(
     isDraft: Boolean = false,
     isSelected: Boolean = false,
 ): ConversationListItemUiModel {
-    val normalizedDestination = "+3161234$conversationId".takeUnless { isGroup }
+    val normalizedDestination = "+3161234${conversationId.value}".takeUnless { isGroup }
 
     return ConversationListItemUiModel(
         conversationId = conversationId,
@@ -71,25 +72,25 @@ internal fun previewConversationListItem(
 internal fun previewConversationListItems(): ImmutableList<ConversationListItemUiModel> {
     return persistentListOf(
         previewConversationListItem(
-            conversationId = "1",
+            conversationId = ConversationId("1"),
             title = "Jane Doe",
             snippetText = "Are we still on for tomorrow?",
             isUnread = true,
         ),
         previewConversationListItem(
-            conversationId = "2",
+            conversationId = ConversationId("2"),
             title = "Ada Lovelace",
             snippetText = "Sounds good, thanks!",
         ),
         previewConversationListItem(
-            conversationId = "3",
+            conversationId = ConversationId("3"),
             title = "Grace Hopper",
             snippetText = "I was thinking that we could",
             status = ConversationListMessageStatus.Draft,
             isDraft = true,
         ),
         previewConversationListItem(
-            conversationId = "4",
+            conversationId = ConversationId("4"),
             title = "Weekend plans",
             snippetText = "I can bring snacks",
             senderName = "Jane",
@@ -97,7 +98,7 @@ internal fun previewConversationListItems(): ImmutableList<ConversationListItemU
             isMuted = true,
         ),
         previewConversationListItem(
-            conversationId = "5",
+            conversationId = ConversationId("5"),
             title = "Marina Silva",
             snippetText = "Did you get my last message?",
             status = ConversationListMessageStatus.Failed(rawTelephonyStatus = 0),

@@ -8,6 +8,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.common.components.SnoozeChatDialog
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.common.dialog.ConversationListDeleteDialog
@@ -17,7 +18,7 @@ import com.android.messaging.ui.core.MessagingPreviewTheme
 internal fun ConversationListDialogs(
     selectedCount: Int,
     isDeleteVisible: Boolean,
-    blockConversationId: String?,
+    blockConversationId: ConversationId?,
     blockDestination: String?,
     isSnoozeVisible: Boolean,
     onAction: (Action) -> Unit,

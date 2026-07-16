@@ -1,6 +1,7 @@
 package com.android.messaging.domain.conversation.usecase.draft
 
 import com.android.messaging.data.conversation.mapper.ConversationDraftMessageDataMapper
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.data.conversation.model.send.ConversationSendData
@@ -34,7 +35,7 @@ import kotlinx.coroutines.flow.flowOn
 
 internal interface SendConversationDraft {
     operator fun invoke(
-        conversationId: String,
+        conversationId: ConversationId,
         draft: ConversationDraft,
         ignoreMessageSizeLimit: Boolean = false,
     ): Flow<Unit>
@@ -51,7 +52,7 @@ internal class SendConversationDraftImpl @Inject constructor(
 
     @Suppress("TooGenericExceptionCaught")
     override operator fun invoke(
-        conversationId: String,
+        conversationId: ConversationId,
         draft: ConversationDraft,
         ignoreMessageSizeLimit: Boolean,
     ): Flow<Unit> {
@@ -73,7 +74,7 @@ internal class SendConversationDraftImpl @Inject constructor(
     }
 
     private fun Exception.toSendConversationDraftException(
-        conversationId: String,
+        conversationId: ConversationId,
     ): SendConversationDraftException {
         return when (this) {
             is SendConversationDraftException -> this
@@ -88,7 +89,7 @@ internal class SendConversationDraftImpl @Inject constructor(
     }
 
     private suspend fun validateAndSendDraft(
-        conversationId: String,
+        conversationId: ConversationId,
         draft: ConversationDraft,
         ignoreMessageSizeLimit: Boolean,
     ) {
@@ -141,7 +142,7 @@ internal class SendConversationDraftImpl @Inject constructor(
     }
 
     private fun validateDraftForSend(
-        conversationId: String,
+        conversationId: ConversationId,
         draft: ConversationDraft,
         sendData: ConversationSendData,
         selfSubId: Int,
@@ -165,7 +166,7 @@ internal class SendConversationDraftImpl @Inject constructor(
     }
 
     private fun validateDraftBasics(
-        conversationId: String,
+        conversationId: ConversationId,
         draft: ConversationDraft,
     ) {
         if (conversationId.isBlank()) {
@@ -180,7 +181,7 @@ internal class SendConversationDraftImpl @Inject constructor(
     }
 
     private fun validateKnownRecipients(
-        conversationId: String,
+        conversationId: ConversationId,
         sendData: ConversationSendData,
     ) {
         if (!sendData.participants.isLoaded) {
@@ -203,7 +204,7 @@ internal class SendConversationDraftImpl @Inject constructor(
     }
 
     private fun validateGroupMmsSelfNumber(
-        conversationId: String,
+        conversationId: ConversationId,
         sendData: ConversationSendData,
         selfSubId: Int,
         shouldSendAsMms: Boolean,
@@ -230,7 +231,7 @@ internal class SendConversationDraftImpl @Inject constructor(
     }
 
     private fun validateVideoAttachmentLimit(
-        conversationId: String,
+        conversationId: ConversationId,
         attachments: Iterable<ConversationDraftAttachment>,
     ) {
         val videoAttachmentCount = attachments.count { attachment ->
@@ -246,7 +247,7 @@ internal class SendConversationDraftImpl @Inject constructor(
     }
 
     private fun validateMappedMessageForSend(
-        conversationId: String,
+        conversationId: ConversationId,
         message: MessageData,
         selfSubId: Int,
         ignoreMessageSizeLimit: Boolean,

@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.messages.delegate
 
 import androidx.core.net.toUri
 import com.android.messaging.data.appsettings.repository.AppSettingsRepository
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentMetadata
 import com.android.messaging.data.conversation.repository.ConversationVCardMetadataRepository
 import com.android.messaging.data.conversation.repository.ConversationsRepository
@@ -77,7 +78,7 @@ internal class ConversationMessagesDelegateImpl @Inject constructor(
 
     override fun bind(
         scope: CoroutineScope,
-        conversationIdFlow: StateFlow<String?>,
+        conversationIdFlow: StateFlow<ConversationId?>,
     ) {
         if (isBound) {
             return
@@ -129,7 +130,7 @@ internal class ConversationMessagesDelegateImpl @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeConversationMessagesUiState(
-        conversationId: String,
+        conversationId: ConversationId,
     ): Flow<ConversationMessagesUiState> {
         return combine(
             conversationsRepository
