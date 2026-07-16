@@ -9,7 +9,7 @@ open class BugleComponentActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        UiUtils.redirectToPermissionCheckIfNeeded(this)
+        UiUtils.redirectToOnboardingIfNeeded(this)
     }
 
     override fun onResume() {

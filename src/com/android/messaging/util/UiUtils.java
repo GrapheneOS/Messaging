@@ -42,7 +42,10 @@ import android.widget.Toast;
 
 import com.android.messaging.Factory;
 import com.android.messaging.R;
+import com.android.messaging.domain.onboarding.usecase.ShouldShowOnboarding;
 import com.android.messaging.ui.UIIntents;
+
+import dagger.hilt.android.EntryPointAccessors;
 
 import java.lang.reflect.Field;
 
@@ -259,20 +262,27 @@ public class UiUtils {
     }
 
     /**
-     * Check if the activity needs to be redirected to permission check
+     * Check if the activity needs to be redirected to onboarding, which covers both the
+     * once-per-version SMS warning and the permission check.
      * @return true if {@link Activity#finish()} was called because redirection was performed
      */
-    public static boolean redirectToPermissionCheckIfNeeded(final Activity activity) {
-        if (!OsUtil.hasRequiredPermissions()) {
-            UIIntents.get().launchPermissionCheckActivity(activity);
-        } else {
+    public static boolean redirectToOnboardingIfNeeded(final Activity activity) {
+        if (!shouldShowOnboarding()) {
             // No redirect performed
             return false;
         }
 
-        // Redirect performed
+        UIIntents.get().launchOnboardingActivity(activity);
         activity.finish();
         return true;
+    }
+
+    private static boolean shouldShowOnboarding() {
+        final Context context = Factory.get().getApplicationContext();
+        return EntryPointAccessors
+                .fromApplication(context, ShouldShowOnboarding.Provider.class)
+                .shouldShowOnboarding()
+                .invoke();
     }
 
     /**

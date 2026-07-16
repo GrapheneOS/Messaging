@@ -57,7 +57,7 @@ import com.android.messaging.ui.conversationpicker.host.forward.ForwardMessageAc
 import com.android.messaging.ui.conversationpicker.host.widget.WidgetPickConversationActivity;
 import com.android.messaging.ui.conversationsettings.ConversationSettingsActivity;
 import com.android.messaging.ui.debug.DebugMmsConfigActivity;
-import com.android.messaging.ui.permissioncheck.PermissionCheckActivity;
+import com.android.messaging.ui.onboarding.OnboardingActivity;
 import com.android.messaging.ui.photoviewer.PhotoViewerActivity;
 import com.android.messaging.ui.vcarddetail.VCardDetailActivity;
 import com.android.messaging.util.Assert;
@@ -137,8 +137,8 @@ public class UIIntentsImpl extends UIIntents {
     }
 
     @Override
-    public void launchPermissionCheckActivity(final Context context) {
-        final Intent intent = new Intent(context, PermissionCheckActivity.class);
+    public void launchOnboardingActivity(final Context context) {
+        final Intent intent = new Intent(context, OnboardingActivity.class);
         context.startActivity(intent);
     }
 
