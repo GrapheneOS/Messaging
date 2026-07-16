@@ -44,6 +44,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.common.components.composer.MESSAGE_COMPOSE_FIELD_TEST_TAG
 import com.android.messaging.ui.common.components.composer.MessageComposeBar
@@ -609,7 +610,7 @@ private fun PickerReviewComposeBar(
 private fun PickerContentPreview() {
     val targets = persistentListOf(
         TargetUiState.Conversation(
-            conversationId = "1",
+            conversationId = ConversationId("1"),
             normalizedDestination = "+31612345678",
             displayName = "Jane Doe",
             details = "+31 6 1234 5678",
@@ -617,7 +618,7 @@ private fun PickerContentPreview() {
             isGroup = false,
         ),
         TargetUiState.Conversation(
-            conversationId = "2",
+            conversationId = ConversationId("2"),
             normalizedDestination = null,
             displayName = "Project group",
             details = null,
@@ -649,7 +650,7 @@ private fun PickerContentPreview() {
 private fun PickerSelectionPreview() {
     val targets = persistentListOf(
         TargetUiState.Conversation(
-            conversationId = "1",
+            conversationId = ConversationId("1"),
             normalizedDestination = "+31612345678",
             displayName = "Jane Doe",
             details = "+31 6 1234 5678",
@@ -657,7 +658,7 @@ private fun PickerSelectionPreview() {
             isGroup = false,
         ),
         TargetUiState.Conversation(
-            conversationId = "2",
+            conversationId = ConversationId("2"),
             normalizedDestination = null,
             displayName = "Project group",
             details = null,

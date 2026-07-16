@@ -1,6 +1,7 @@
 package com.android.messaging.ui.blockedparticipants.screen.delegate
 
 import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepository
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.di.core.ApplicationCoroutineScope
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.domain.blockedparticipants.usecase.DeleteDirectChats
@@ -100,7 +101,7 @@ internal class BlockedParticipantsDelegateImpl @Inject constructor(
         deleteDirectChats(conversationIds)
     }
 
-    private fun State.conversationIdsForSelection(): List<String> {
+    private fun State.conversationIdsForSelection(): List<ConversationId> {
         return participants.asSequence()
             .filter { it.participantId in selectedParticipantIds }
             .map { it.conversationId }

@@ -5,6 +5,7 @@ import android.content.ClipboardManager
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.ui.conversation.messagedetails.mapper.MessageDetailsUiStateMapper
 import com.android.messaging.ui.conversation.messagedetails.model.MessageDetailsUiState as State
@@ -20,7 +21,7 @@ import kotlinx.coroutines.launch
 internal interface MessageDetailsScreenModel {
     val uiState: StateFlow<State>
 
-    fun onArguments(conversationId: String, messageId: String)
+    fun onArguments(conversationId: ConversationId, messageId: String)
 
     fun onCopy(value: String)
 }
@@ -37,9 +38,8 @@ internal class MessageDetailsViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<State>(State.Loading)
     override val uiState = _uiState.asStateFlow()
 
-    private val conversationIdFlow: StateFlow<String?> = savedStateHandle.getStateFlow(
-        key = CONVERSATION_ID_KEY,
-        initialValue = null,
+    private val conversationIdFlow: MutableStateFlow<ConversationId?> = MutableStateFlow(
+        ConversationId.fromOrNull(savedStateHandle[CONVERSATION_ID_KEY]),
     )
     private val messageIdFlow: StateFlow<String?> = savedStateHandle.getStateFlow(
         key = MESSAGE_ID_KEY,
@@ -55,19 +55,24 @@ internal class MessageDetailsViewModel @Inject constructor(
             combine(
                 conversationIdFlow,
                 messageIdFlow,
-                ::MessageDetailsArguments,
-            ).collectLatest { arguments ->
+            ) { conversationId, messageId ->
+                MessageDetailsArguments(
+                    conversationId = conversationId,
+                    messageId = messageId,
+                )
+            }.collectLatest { arguments ->
                 _uiState.value = loadMessageDetails(arguments)
             }
         }
     }
 
     override fun onArguments(
-        conversationId: String,
+        conversationId: ConversationId,
         messageId: String,
     ) {
         if (conversationIdFlow.value != conversationId) {
-            savedStateHandle[CONVERSATION_ID_KEY] = conversationId
+            conversationIdFlow.value = conversationId
+            savedStateHandle[CONVERSATION_ID_KEY] = conversationId.value
         }
         if (messageIdFlow.value != messageId) {
             savedStateHandle[MESSAGE_ID_KEY] = messageId
@@ -98,7 +103,7 @@ internal class MessageDetailsViewModel @Inject constructor(
     }
 
     private data class MessageDetailsArguments(
-        val conversationId: String?,
+        val conversationId: ConversationId?,
         val messageId: String?,
     )
 

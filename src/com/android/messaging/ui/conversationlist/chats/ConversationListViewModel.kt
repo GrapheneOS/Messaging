@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversationlist.chats
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListMode
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
@@ -138,7 +139,7 @@ internal class ConversationListViewModel @Inject constructor(
     }
 
     private fun onBlockConfirmed(
-        conversationId: String,
+        conversationId: ConversationId,
         destination: String,
     ) {
         viewModelScope.launch {
@@ -171,7 +172,7 @@ internal class ConversationListViewModel @Inject constructor(
     }
 
     private fun onArchiveUndoClicked(
-        conversationIds: List<String>,
+        conversationIds: List<ConversationId>,
         isArchived: Boolean,
     ) {
         when {
@@ -236,7 +237,7 @@ internal class ConversationListViewModel @Inject constructor(
         }
     }
 
-    private fun onConversationClick(conversationId: String) {
+    private fun onConversationClick(conversationId: ConversationId) {
         when {
             currentSelectedItems().isNotEmpty() -> {
                 selectionDelegate.toggle(conversationId)
@@ -248,7 +249,7 @@ internal class ConversationListViewModel @Inject constructor(
         }
     }
 
-    private fun onConversationLongClick(conversationId: String) {
+    private fun onConversationLongClick(conversationId: ConversationId) {
         selectionDelegate.toggle(conversationId)
     }
 
@@ -274,7 +275,7 @@ internal class ConversationListViewModel @Inject constructor(
         )
     }
 
-    private fun onConversationSwipedToArchive(conversationId: String) {
+    private fun onConversationSwipedToArchive(conversationId: ConversationId) {
         val conversationIds = listOf(conversationId)
 
         optimisticSnapshotDelegate.remove(conversationIds)
@@ -293,7 +294,7 @@ internal class ConversationListViewModel @Inject constructor(
         )
     }
 
-    private fun onConversationSwipedToToggleRead(conversationId: String) {
+    private fun onConversationSwipedToToggleRead(conversationId: ConversationId) {
         val item = itemById(conversationId) ?: return
 
         val shouldMarkRead = !item.latestMessage.isRead
@@ -462,7 +463,7 @@ internal class ConversationListViewModel @Inject constructor(
     }
 
     private fun commitPinChange(
-        conversationIds: List<String>,
+        conversationIds: List<ConversationId>,
         isPinned: Boolean,
     ) {
         optimisticSnapshotDelegate.pin(
@@ -497,7 +498,7 @@ internal class ConversationListViewModel @Inject constructor(
         }
     }
 
-    private inline fun withSelectedIds(block: (List<String>) -> Unit) {
+    private inline fun withSelectedIds(block: (List<ConversationId>) -> Unit) {
         val selectedItems = currentSelectedItems()
 
         if (selectedItems.isEmpty()) {
@@ -507,7 +508,7 @@ internal class ConversationListViewModel @Inject constructor(
         block(selectedItems.map(ConversationListItem::conversationId))
     }
 
-    private fun itemById(conversationId: String): ConversationListItem? {
+    private fun itemById(conversationId: ConversationId): ConversationListItem? {
         return snapshot.value
             ?.items
             ?.firstOrNull { item -> item.conversationId == conversationId }

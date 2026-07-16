@@ -30,10 +30,10 @@ internal class ConversationSettingsEffectHandlerImpl(
                 val intent = Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
                     .putExtra(Settings.EXTRA_APP_PACKAGE, activity.packageName)
                     .putExtra(Settings.EXTRA_CHANNEL_ID, NotificationChannelUtil.INCOMING_MESSAGES)
-                    .putExtra(Settings.EXTRA_CONVERSATION_ID, effect.conversationId)
+                    .putExtra(Settings.EXTRA_CONVERSATION_ID, effect.conversationId.value)
 
                 NotificationChannelUtil.createConversationChannelForRuntime(
-                    conversationId = effect.conversationId,
+                    conversationId = effect.conversationId.value,
                     conversationTitle = effect.conversationTitle,
                 )
 
@@ -43,7 +43,7 @@ internal class ConversationSettingsEffectHandlerImpl(
             is Effect.OpenParticipantChat -> {
                 val intent = UIIntents.get().getIntentForConversationActivity(
                     activity,
-                    effect.conversationId,
+                    effect.conversationId.value,
                     null,
                 )
                 activity.startActivity(intent)

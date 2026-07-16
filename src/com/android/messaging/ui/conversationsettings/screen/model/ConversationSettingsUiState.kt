@@ -1,13 +1,14 @@
 package com.android.messaging.ui.conversationsettings.screen.model
 
 import androidx.compose.runtime.Immutable
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.subscription.model.Subscription
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @Immutable
 internal data class ConversationSettingsUiState(
-    val conversationId: String = "",
+    val conversationId: ConversationId = ConversationId(""),
     val conversationTitle: String = "",
     val isArchived: Boolean = false,
     val isSnoozed: Boolean = false,

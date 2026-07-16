@@ -343,7 +343,7 @@ private fun messageDetailsDebugEntries(
     return listOfNotNull(
         debug.messageId?.let { "Message id" to it },
         debug.telephonyUri?.let { "Telephony uri" to it },
-        debug.conversationId?.let { "Conversation id" to it },
+        debug.conversationId?.let { "Conversation id" to it.value },
         debug.conversationTelephonyThreadId?.let { "Conversation thread id" to it.toString() },
         debug.telephonyThreadId?.let { "Telephony thread id" to it.toString() },
         debug.contentLocationUrl?.let { "Content location" to it },

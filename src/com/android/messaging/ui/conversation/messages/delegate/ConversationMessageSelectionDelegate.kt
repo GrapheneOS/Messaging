@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.data.media.model.AttachmentToSave
 import com.android.messaging.data.media.repository.ConversationAttachmentsRepository
@@ -85,7 +86,7 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
 
     override fun bind(
         scope: CoroutineScope,
-        conversationIdFlow: StateFlow<String?>,
+        conversationIdFlow: StateFlow<ConversationId?>,
     ) {
         if (boundScope != null) {
             return
@@ -203,7 +204,7 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
 
     private fun bindConversationChanges(
         scope: CoroutineScope,
-        conversationIdFlow: StateFlow<String?>,
+        conversationIdFlow: StateFlow<ConversationId?>,
     ) {
         scope.launch(defaultDispatcher) {
             conversationIdFlow.collect {

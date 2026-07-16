@@ -37,6 +37,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.common.components.horizontalSafeDrawingInsets
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlin.time.Duration.Companion.seconds
@@ -48,7 +49,7 @@ private val BLOCKED_BANNER_ICON_SIZE = 32.dp
 
 @Composable
 internal fun rememberBlockedBannerRevealState(
-    conversationId: String?,
+    conversationId: ConversationId?,
     isBlocked: Boolean,
     isContentLoaded: Boolean,
 ): Boolean {

@@ -23,7 +23,7 @@ internal class ArchivedConversationListEffectHandlerImpl(
             is Effect.OpenConversation -> {
                 UIIntents.get().launchConversationActivity(
                     activity,
-                    effect.conversationId,
+                    effect.conversationId.value,
                     null,
                 )
             }
@@ -31,7 +31,7 @@ internal class ArchivedConversationListEffectHandlerImpl(
             is Effect.OpenConversationSettings -> {
                 UIIntents.get().launchPeopleAndOptionsActivity(
                     activity,
-                    effect.conversationId,
+                    effect.conversationId.value,
                 )
             }
 

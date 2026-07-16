@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationlist.delegate
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import javax.inject.Inject
@@ -16,18 +17,18 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 
 internal interface ConversationListSelectionDelegate {
-    val selectedIds: StateFlow<ImmutableList<String>>
+    val selectedIds: StateFlow<ImmutableList<ConversationId>>
 
     fun bind(scope: CoroutineScope, snapshot: StateFlow<ConversationListSnapshot?>)
-    fun toggle(conversationId: String)
+    fun toggle(conversationId: ConversationId)
     fun clear()
 }
 
 internal class ConversationListSelectionDelegateImpl @Inject constructor() :
     ConversationListSelectionDelegate {
 
-    private val _selectedIds = MutableStateFlow<PersistentList<String>>(persistentListOf())
-    override val selectedIds: StateFlow<ImmutableList<String>> = _selectedIds.asStateFlow()
+    private val _selectedIds = MutableStateFlow<PersistentList<ConversationId>>(persistentListOf())
+    override val selectedIds: StateFlow<ImmutableList<ConversationId>> = _selectedIds.asStateFlow()
 
     private var isBound = false
 
@@ -60,17 +61,17 @@ internal class ConversationListSelectionDelegateImpl @Inject constructor() :
             .launchIn(scope)
     }
 
-    override fun toggle(conversationId: String) {
-        val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
+    override fun toggle(conversationId: ConversationId) {
+        if (conversationId.isBlank()) return
 
         _selectedIds.update { currentSelectedIds ->
             when {
-                resolvedConversationId in currentSelectedIds -> {
-                    currentSelectedIds.remove(resolvedConversationId)
+                conversationId in currentSelectedIds -> {
+                    currentSelectedIds.remove(conversationId)
                 }
 
                 else -> {
-                    currentSelectedIds.add(resolvedConversationId)
+                    currentSelectedIds.add(conversationId)
                 }
             }
         }

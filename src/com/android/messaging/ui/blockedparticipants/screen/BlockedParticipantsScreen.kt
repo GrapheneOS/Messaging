@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.blockedparticipants.common.BlockedParticipantItem
 import com.android.messaging.ui.blockedparticipants.common.BlockedParticipantsTopAppBar
 import com.android.messaging.ui.blockedparticipants.common.ItemDividerHorizontalInset
@@ -248,7 +249,7 @@ private fun BlockedParticipantsContentPreview() {
                 participants = persistentListOf(
                     BlockedParticipantUiState(
                         participantId = "1",
-                        conversationId = "c1",
+                        conversationId = ConversationId("c1"),
                         avatarUri = null,
                         displayName = "Spam Caller",
                         details = "+31 6 1234 5678",
@@ -261,7 +262,7 @@ private fun BlockedParticipantsContentPreview() {
                     ),
                     BlockedParticipantUiState(
                         participantId = "2",
-                        conversationId = "c2",
+                        conversationId = ConversationId("c2"),
                         avatarUri = null,
                         displayName = "+31 6 0000 1111",
                         details = null,

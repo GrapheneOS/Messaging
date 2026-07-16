@@ -20,6 +20,7 @@ import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingPhase
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryStartupAttachment
@@ -84,7 +85,7 @@ internal fun rememberAudioRecordingStartRequest(
 
 @Composable
 internal fun ConversationScreenRouteEffects(
-    conversationId: String?,
+    conversationId: ConversationId?,
     launchGeneration: Int?,
     cancelIncomingNotification: Boolean,
     pendingDraft: ConversationDraft?,
@@ -138,7 +139,7 @@ internal fun ConversationScreenRouteEffects(
 
 @Composable
 private fun ConversationPendingLaunchEffects(
-    conversationId: String?,
+    conversationId: ConversationId?,
     launchGeneration: Int?,
     pendingDraft: ConversationDraft?,
     pendingSelfParticipantId: String?,
@@ -226,7 +227,7 @@ private fun ConversationScreenLifecycleEffects(
 @Composable
 internal fun ConversationScreenSurface(
     modifier: Modifier,
-    conversationId: String?,
+    conversationId: ConversationId?,
     scaffoldUiState: ConversationScreenScaffoldUiState,
     mediaPickerOverlayUiState: ConversationMediaPickerOverlayUiState,
     mediaPickerState: ConversationMediaPickerState,

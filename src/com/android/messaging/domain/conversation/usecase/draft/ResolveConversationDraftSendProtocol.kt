@@ -1,5 +1,6 @@
 package com.android.messaging.domain.conversation.usecase.draft
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.send.ConversationSendData
 import com.android.messaging.data.conversation.repository.ConversationsRepository
@@ -10,7 +11,7 @@ import kotlinx.coroutines.CancellationException
 
 internal interface ResolveConversationDraftSendProtocol {
     suspend operator fun invoke(
-        conversationId: String?,
+        conversationId: ConversationId?,
         draft: ConversationDraft,
     ): ConversationDraftSendProtocol
 }
@@ -22,7 +23,7 @@ internal class ResolveConversationDraftSendProtocolImpl @Inject constructor(
 
     @Suppress("TooGenericExceptionCaught")
     override suspend operator fun invoke(
-        conversationId: String?,
+        conversationId: ConversationId?,
         draft: ConversationDraft,
     ): ConversationDraftSendProtocol {
         return try {
@@ -45,7 +46,7 @@ internal class ResolveConversationDraftSendProtocolImpl @Inject constructor(
         } catch (exception: Exception) {
             LogUtil.e(
                 TAG,
-                "Failed to resolve draft send protocol for conversation $conversationId",
+                "Failed to resolve draft send protocol for conversation ${conversationId?.value}",
                 exception,
             )
 
@@ -54,11 +55,11 @@ internal class ResolveConversationDraftSendProtocolImpl @Inject constructor(
     }
 
     private suspend fun resolveConversationSendData(
-        conversationId: String?,
+        conversationId: ConversationId?,
         draft: ConversationDraft,
     ): ConversationSendData? {
         return when {
-            draft.hasContent && !conversationId.isNullOrBlank() -> {
+            draft.hasContent && conversationId?.isNotBlank() == true -> {
                 conversationsRepository.getConversationSendData(
                     conversationId = conversationId,
                     requestedSelfParticipantId = draft.selfParticipantId,

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.conversation.composer.model.ConversationComposerUiState
 import com.android.messaging.ui.conversation.composer.model.ConversationSimSelectorUiState
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
@@ -51,7 +52,7 @@ private const val PREVIEW_SCREEN_CONTENT_OVERFLOW_TEXT =
 @Composable
 internal fun ConversationScreenContentPreview(
     uiState: ConversationScreenScaffoldUiState,
-    conversationId: String? = "conversation-1",
+    conversationId: ConversationId? = ConversationId("conversation-1"),
 ) {
     MessagingPreviewTheme {
         ConversationScreenContent(

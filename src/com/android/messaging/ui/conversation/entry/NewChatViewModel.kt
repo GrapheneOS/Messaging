@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
 import com.android.messaging.data.subscription.resolveSelectedSubscription
@@ -248,7 +249,7 @@ internal class NewChatViewModel @Inject constructor(
         }
     }
 
-    private fun onConversationResolved(conversationId: String) {
+    private fun onConversationResolved(conversationId: ConversationId) {
         val pendingSelf = pendingSelfParticipantId?.takeUnless { it.isBlank() }
         pendingSelfParticipantId = null
 

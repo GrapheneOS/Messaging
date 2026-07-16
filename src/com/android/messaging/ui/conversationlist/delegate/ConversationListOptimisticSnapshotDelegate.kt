@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationlist.delegate
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListMode
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
@@ -17,11 +18,11 @@ internal interface ConversationListOptimisticSnapshotDelegate {
 
     fun bind(scope: CoroutineScope, mode: ConversationListMode)
 
-    fun remove(conversationIds: List<String>)
-    fun discardRemoval(conversationIds: List<String>)
-    fun restore(conversationIds: List<String>)
-    fun markRead(conversationIds: List<String>, isRead: Boolean)
-    fun pin(conversationIds: List<String>, isPinned: Boolean)
+    fun remove(conversationIds: List<ConversationId>)
+    fun discardRemoval(conversationIds: List<ConversationId>)
+    fun restore(conversationIds: List<ConversationId>)
+    fun markRead(conversationIds: List<ConversationId>, isRead: Boolean)
+    fun pin(conversationIds: List<ConversationId>, isPinned: Boolean)
 }
 
 internal class ConversationListOptimisticSnapshotDelegateImpl @Inject constructor(
@@ -59,7 +60,7 @@ internal class ConversationListOptimisticSnapshotDelegateImpl @Inject constructo
         }
     }
 
-    override fun remove(conversationIds: List<String>) {
+    override fun remove(conversationIds: List<ConversationId>) {
         val requestedIds = conversationIds.toSet()
         val archivedItems = _snapshot.value
             ?.items
@@ -81,7 +82,7 @@ internal class ConversationListOptimisticSnapshotDelegateImpl @Inject constructo
         publishSnapshot()
     }
 
-    override fun discardRemoval(conversationIds: List<String>) {
+    override fun discardRemoval(conversationIds: List<ConversationId>) {
         var archiveById = overrides.archiveById
 
         conversationIds.forEach { conversationId ->
@@ -94,7 +95,7 @@ internal class ConversationListOptimisticSnapshotDelegateImpl @Inject constructo
         publishSnapshot()
     }
 
-    override fun restore(conversationIds: List<String>) {
+    override fun restore(conversationIds: List<ConversationId>) {
         var archiveById = overrides.archiveById
         val rawItemsById = rawSnapshot
             ?.items
@@ -120,7 +121,7 @@ internal class ConversationListOptimisticSnapshotDelegateImpl @Inject constructo
     }
 
     override fun markRead(
-        conversationIds: List<String>,
+        conversationIds: List<ConversationId>,
         isRead: Boolean,
     ) {
         val effectiveIds = _snapshot.value
@@ -142,7 +143,7 @@ internal class ConversationListOptimisticSnapshotDelegateImpl @Inject constructo
     }
 
     override fun pin(
-        conversationIds: List<String>,
+        conversationIds: List<ConversationId>,
         isPinned: Boolean,
     ) {
         val effectiveIds = _snapshot.value

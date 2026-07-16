@@ -1,6 +1,7 @@
 package com.android.messaging.domain.conversationpicker.usecase
 
 import androidx.core.net.toUri
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.di.core.IoDispatcher
@@ -19,7 +20,7 @@ import kotlinx.coroutines.withContext
 internal interface SendContentToConversations {
     suspend operator fun invoke(
         draft: ConversationDraft,
-        conversationIds: Set<String>,
+        conversationIds: Set<ConversationId>,
     ): SendContentResult
 }
 
@@ -31,7 +32,7 @@ internal class SendContentToConversationsImpl @Inject constructor(
 
     override suspend fun invoke(
         draft: ConversationDraft,
-        conversationIds: Set<String>,
+        conversationIds: Set<ConversationId>,
     ): SendContentResult {
         if (conversationIds.isEmpty()) {
             return SendContentResult.Success
@@ -46,7 +47,10 @@ internal class SendContentToConversationsImpl @Inject constructor(
         conversationIds.forEachIndexed { index, conversationId ->
             val perConversationDraft = drafts[index]
             if (perConversationDraft == null) {
-                LogUtil.w(TAG, "Skipping send to $conversationId: failed to copy attachments")
+                LogUtil.w(
+                    TAG,
+                    "Skipping send to ${conversationId.value}: failed to copy attachments"
+                )
                 anyFailed = true
                 return@forEachIndexed
             }
@@ -93,14 +97,14 @@ internal class SendContentToConversationsImpl @Inject constructor(
     }
 
     private suspend fun sendToConversation(
-        conversationId: String,
+        conversationId: ConversationId,
         draft: ConversationDraft,
     ): Boolean {
         return try {
             sendConversationDraft(conversationId, draft).collect()
             true
         } catch (exception: SendConversationDraftException) {
-            LogUtil.w(TAG, "Failed to send shared draft to $conversationId", exception)
+            LogUtil.w(TAG, "Failed to send shared draft to ${conversationId.value}", exception)
             false
         }
     }
