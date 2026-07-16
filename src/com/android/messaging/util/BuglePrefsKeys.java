@@ -62,6 +62,14 @@ public final class BuglePrefsKeys {
             = "conversation_notification_channels_migrated_v1";
 
     /**
+     * The app version code for which the SMS insecurity warning was last acknowledged.
+     */
+    public static final String SMS_WARNING_ACKNOWLEDGED_VERSION
+            = "sms_warning_acknowledged_version";
+    public static final int SMS_WARNING_ACKNOWLEDGED_VERSION_DEFAULT
+            = BuglePrefs.NO_SHARED_PREFERENCES_VERSION;
+
+    /**
      * The last selected chooser index in the media picker.
      */
     public static final String SELECTED_MEDIA_PICKER_CHOOSER_INDEX

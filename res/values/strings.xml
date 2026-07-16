@@ -35,6 +35,9 @@
     <string name="next">Next</string>
     <string name="exit">Exit</string>
     <string name="settings">Settings</string>
+    <!-- Shown once per app version to warn that SMS/MMS offer no meaningful privacy -->
+    <string name="sms_warning_title">SMS isn\'t private</string>
+    <string name="sms_warning_description">Text messages aren\'t encrypted. Use an app with end-to-end encryption for anything sensitive.</string>
     <!-- Inform user of the names of permissions that are required to use the app -->
     <string name="required_permissions_promo">Messaging needs permission to SMS, Phone and Contacts.</string>
     <!-- Guidance shown when the app is not the default SMS app and the role request was permanently dismissed -->
