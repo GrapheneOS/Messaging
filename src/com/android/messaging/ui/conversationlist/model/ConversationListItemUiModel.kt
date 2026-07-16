@@ -2,11 +2,12 @@ package com.android.messaging.ui.conversationlist.model
 
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
 
 @Immutable
 internal data class ConversationListItemUiModel(
-    val conversationId: String,
+    val conversationId: ConversationId,
     val title: String?,
     val avatar: ConversationListAvatarUiModel,
     val snippet: ConversationListSnippetUiModel,

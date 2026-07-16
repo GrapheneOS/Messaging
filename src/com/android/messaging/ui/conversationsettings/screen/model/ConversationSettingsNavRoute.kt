@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationsettings.screen.model
 
 import androidx.compose.runtime.Immutable
+import com.android.messaging.data.conversation.model.ConversationId
 
 @Immutable
 internal sealed interface ConversationSettingsNavRoute {
@@ -12,15 +13,15 @@ internal sealed interface ConversationSettingsNavRoute {
     }
 
     data class ParticipantInfo(
-        val conversationId: String,
+        val conversationId: ConversationId,
     ) : ConversationSettingsNavRoute {
         override val depth: Int = 1
     }
 }
 
 internal fun ConversationSettingsNavRoute.targetConversationId(
-    rootConversationId: String,
-): String {
+    rootConversationId: ConversationId,
+): ConversationId {
     return when (this) {
         ConversationSettingsNavRoute.Conversation -> rootConversationId
         is ConversationSettingsNavRoute.ParticipantInfo -> conversationId
@@ -30,6 +31,6 @@ internal fun ConversationSettingsNavRoute.targetConversationId(
 internal fun ConversationSettingsNavRoute.saveableKey(): String {
     return when (this) {
         ConversationSettingsNavRoute.Conversation -> "conversation"
-        is ConversationSettingsNavRoute.ParticipantInfo -> "participant:$conversationId"
+        is ConversationSettingsNavRoute.ParticipantInfo -> "participant:${conversationId.value}"
     }
 }

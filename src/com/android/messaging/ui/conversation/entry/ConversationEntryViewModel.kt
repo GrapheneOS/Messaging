@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.entry
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.android.messaging.data.conversation.mapper.ConversationMessageDataDraftMapper
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryLaunchRequest
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryStartupAttachment
@@ -17,19 +18,19 @@ internal interface ConversationEntryScreenModel {
     val uiState: StateFlow<ConversationEntryUiState>
 
     fun onConversationNavigationRequested(
-        conversationId: String,
+        conversationId: ConversationId,
         pendingSelfParticipantId: String?,
     )
 
     fun onLaunchRequest(launchRequest: ConversationEntryLaunchRequest)
 
-    fun onDraftPayloadConsumed(conversationId: String)
+    fun onDraftPayloadConsumed(conversationId: ConversationId)
 
-    fun onScrollPositionConsumed(conversationId: String)
+    fun onScrollPositionConsumed(conversationId: ConversationId)
 
-    fun onPendingSelfParticipantIdConsumed(conversationId: String)
+    fun onPendingSelfParticipantIdConsumed(conversationId: ConversationId)
 
-    fun onStartupAttachmentConsumed(conversationId: String)
+    fun onStartupAttachmentConsumed(conversationId: ConversationId)
 }
 
 @HiltViewModel
@@ -43,7 +44,7 @@ internal class ConversationEntryViewModel @Inject constructor(
     override val uiState = _uiState.asStateFlow()
 
     override fun onConversationNavigationRequested(
-        conversationId: String,
+        conversationId: ConversationId,
         pendingSelfParticipantId: String?,
     ) {
         updateUiState(
@@ -83,7 +84,7 @@ internal class ConversationEntryViewModel @Inject constructor(
         savedStateHandle[PROCESSED_LAUNCH_GENERATION_KEY] = launchRequest.launchGeneration
     }
 
-    override fun onDraftPayloadConsumed(conversationId: String) {
+    override fun onDraftPayloadConsumed(conversationId: ConversationId) {
         val currentUiState = _uiState.value
 
         if (
@@ -100,7 +101,7 @@ internal class ConversationEntryViewModel @Inject constructor(
         }
     }
 
-    override fun onScrollPositionConsumed(conversationId: String) {
+    override fun onScrollPositionConsumed(conversationId: ConversationId) {
         val currentUiState = _uiState.value
 
         val hasPendingScrollPosition = currentUiState.pendingScrollPosition != null
@@ -116,7 +117,7 @@ internal class ConversationEntryViewModel @Inject constructor(
         }
     }
 
-    override fun onStartupAttachmentConsumed(conversationId: String) {
+    override fun onStartupAttachmentConsumed(conversationId: ConversationId) {
         val currentUiState = _uiState.value
 
         val hasPendingStartupAttachment = currentUiState.pendingStartupAttachment != null
@@ -130,7 +131,7 @@ internal class ConversationEntryViewModel @Inject constructor(
         }
     }
 
-    override fun onPendingSelfParticipantIdConsumed(conversationId: String) {
+    override fun onPendingSelfParticipantIdConsumed(conversationId: ConversationId) {
         val currentUiState = _uiState.value
 
         val hasPendingSelfParticipantId = currentUiState.pendingSelfParticipantId != null
@@ -155,7 +156,7 @@ internal class ConversationEntryViewModel @Inject constructor(
 
         return ConversationEntryUiState(
             launchGeneration = savedStateHandle[LAUNCH_GENERATION_KEY],
-            conversationId = savedStateHandle[CONVERSATION_ID_KEY],
+            conversationId = ConversationId.fromOrNull(savedStateHandle[CONVERSATION_ID_KEY]),
             pendingDraft = pendingDraftData?.let(conversationMessageDataDraftMapper::map),
             pendingScrollPosition = savedStateHandle[PENDING_SCROLL_POSITION_KEY],
             pendingSelfParticipantId = savedStateHandle[PENDING_SELF_PARTICIPANT_ID_KEY],
@@ -186,7 +187,7 @@ internal class ConversationEntryViewModel @Inject constructor(
         }
 
         if (previousUiState.conversationId != uiState.conversationId) {
-            savedStateHandle[CONVERSATION_ID_KEY] = uiState.conversationId
+            savedStateHandle[CONVERSATION_ID_KEY] = uiState.conversationId?.value
         }
 
         if (previousUiState.pendingSelfParticipantId != uiState.pendingSelfParticipantId) {

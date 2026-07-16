@@ -20,6 +20,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.conversation.addparticipants.AddParticipantsScreen
 import com.android.messaging.ui.conversation.entry.ConversationEntryScreenModel
@@ -36,7 +37,7 @@ import com.android.messaging.ui.conversation.screen.ConversationScreen
 internal fun ConversationNavGraph(
     launchRequest: ConversationEntryLaunchRequest?,
     modifier: Modifier = Modifier,
-    onConversationDetailsClick: (String) -> Unit = {},
+    onConversationDetailsClick: (ConversationId) -> Unit = {},
     onFinish: () -> Unit,
     entryModel: ConversationEntryScreenModel = hiltViewModel<ConversationEntryViewModel>(),
     navigationReducer: ConversationNavigationReducer = defaultConversationNavReducer,
@@ -314,7 +315,7 @@ private fun handleNavBack(
 
 private fun pendingLaunchPayloadForConversation(
     entryUiState: ConversationEntryUiState,
-    conversationId: String,
+    conversationId: ConversationId,
 ): ConversationPendingLaunchPayload {
     if (entryUiState.conversationId != conversationId) {
         return ConversationPendingLaunchPayload()
@@ -334,7 +335,7 @@ private class ConversationNavRouteState(
     val entryUiState: State<ConversationEntryUiState>,
     val isLaunchedFromBubble: State<Boolean>,
     val navigationReducer: State<ConversationNavigationReducer>,
-    val onConversationDetailsClick: State<(String) -> Unit>,
+    val onConversationDetailsClick: State<(ConversationId) -> Unit>,
     val onFinish: State<() -> Unit>,
 )
 

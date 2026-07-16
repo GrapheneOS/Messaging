@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationlist.delegate
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import dagger.Reusable
 import javax.inject.Inject
@@ -86,9 +87,9 @@ internal class ConversationListOptimisticReducer @Inject constructor() {
         )
     }
 
-    private fun PersistentMap<String, ConversationArchiveOverride>.pruneArchiveOverrides(
-        itemsById: Map<String, ConversationListItem>,
-    ): PersistentMap<String, ConversationArchiveOverride> {
+    private fun PersistentMap<ConversationId, ConversationArchiveOverride>.pruneArchiveOverrides(
+        itemsById: Map<ConversationId, ConversationListItem>,
+    ): PersistentMap<ConversationId, ConversationArchiveOverride> {
         return mutate { archiveOverrides ->
             forEach { (conversationId, override) ->
                 when (override) {
@@ -112,11 +113,11 @@ internal class ConversationListOptimisticReducer @Inject constructor() {
         }
     }
 
-    private fun <V> PersistentMap<String, V>.pruneStaleOverrides(
-        itemsById: Map<String, ConversationListItem>,
-        restoringIds: Set<String>,
+    private fun <V> PersistentMap<ConversationId, V>.pruneStaleOverrides(
+        itemsById: Map<ConversationId, ConversationListItem>,
+        restoringIds: Set<ConversationId>,
         isStillPending: (item: ConversationListItem, override: V) -> Boolean,
-    ): PersistentMap<String, V> {
+    ): PersistentMap<ConversationId, V> {
         return mutate { retainedOverrides ->
             forEach { (conversationId, override) ->
                 val item = itemsById[conversationId]

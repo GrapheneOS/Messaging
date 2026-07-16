@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationlist.mapper
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
 import javax.inject.Inject
@@ -9,7 +10,7 @@ import kotlinx.collections.immutable.toImmutableList
 internal interface ConversationListContentUiStateMapper {
     fun map(
         snapshot: ConversationListSnapshot,
-        selectedConversationIds: ImmutableList<String>,
+        selectedConversationIds: ImmutableList<ConversationId>,
     ): ConversationListContentUiState
 }
 
@@ -19,7 +20,7 @@ internal class ConversationListContentUiStateMapperImpl @Inject constructor(
 
     override fun map(
         snapshot: ConversationListSnapshot,
-        selectedConversationIds: ImmutableList<String>,
+        selectedConversationIds: ImmutableList<ConversationId>,
     ): ConversationListContentUiState {
         val items = snapshot.items
             .map { item ->

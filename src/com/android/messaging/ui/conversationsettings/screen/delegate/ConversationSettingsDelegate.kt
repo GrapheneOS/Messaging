@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationsettings.screen.delegate
 
 import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepository
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.data.conversationsettings.model.SnoozeOption
 import com.android.messaging.data.conversationsettings.repository.ConversationNotificationRepository
@@ -55,7 +56,7 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
 
     private val refreshTriggers = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
-    private val conversationIdFlow = MutableStateFlow<String?>(null)
+    private val conversationIdFlow = MutableStateFlow<ConversationId?>(null)
     private var isBound = false
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -70,13 +71,13 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
             .launchIn(scope)
     }
 
-    override fun setConversationId(conversationId: String) {
+    override fun setConversationId(conversationId: ConversationId) {
         if (conversationIdFlow.value == conversationId) return
         conversationIdFlow.value = conversationId
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private fun observeUiState(id: String): Flow<ConversationSettingsUiState> {
+    private fun observeUiState(id: ConversationId): Flow<ConversationSettingsUiState> {
         val settings = refreshTriggers
             .onStart { emit(Unit) }
             .flatMapLatest { repository.getConversationSettings(id) }
@@ -149,7 +150,7 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
         refresh()
     }
 
-    private fun currentConversationId(): String? {
-        return conversationIdFlow.value?.takeIf(String::isNotBlank)
+    private fun currentConversationId(): ConversationId? {
+        return conversationIdFlow.value?.takeIf { it.isNotBlank() }
     }
 }

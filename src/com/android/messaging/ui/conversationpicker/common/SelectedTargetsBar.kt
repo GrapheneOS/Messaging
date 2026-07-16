@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.common.components.participant.ParticipantAvatar
 import com.android.messaging.ui.common.components.selection.SelectionListItemTokens
 import com.android.messaging.ui.common.text.asLtrText
@@ -268,7 +269,7 @@ private fun SelectedTargetsBarPreview() {
         SelectedTargetsBar(
             targets = persistentListOf(
                 TargetUiState.Conversation(
-                    conversationId = "1",
+                    conversationId = ConversationId("1"),
                     normalizedDestination = "+31612345678",
                     displayName = "Jane Doe",
                     details = "+31 6 1234 5678",
@@ -276,7 +277,7 @@ private fun SelectedTargetsBarPreview() {
                     isGroup = false,
                 ),
                 TargetUiState.Conversation(
-                    conversationId = "2",
+                    conversationId = ConversationId("2"),
                     normalizedDestination = null,
                     displayName = "Project group",
                     details = null,

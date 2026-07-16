@@ -5,6 +5,7 @@ package com.android.messaging.data.conversationsettings.repository
 import android.content.ContentResolver
 import android.database.ContentObserver
 import android.net.Uri
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.data.conversationsettings.model.ConversationSettingsData
 import com.android.messaging.data.conversationsettings.model.SNOOZE_NEVER_EXPIRES
@@ -28,7 +29,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 
 internal interface ConversationSettingsRepository {
-    fun getConversationSettings(conversationId: String): Flow<ConversationSettingsData>
+    fun getConversationSettings(conversationId: ConversationId): Flow<ConversationSettingsData>
 }
 
 internal class ConversationSettingsRepositoryImpl @Inject constructor(
@@ -39,11 +40,11 @@ internal class ConversationSettingsRepositoryImpl @Inject constructor(
 ) : ConversationSettingsRepository {
 
     override fun getConversationSettings(
-        conversationId: String,
+        conversationId: ConversationId,
     ): Flow<ConversationSettingsData> {
         val uris = listOf(
-            MessagingContentProvider.buildConversationMetadataUri(conversationId),
-            MessagingContentProvider.buildConversationParticipantsUri(conversationId),
+            MessagingContentProvider.buildConversationMetadataUri(conversationId.value),
+            MessagingContentProvider.buildConversationParticipantsUri(conversationId.value),
         )
 
         return refreshTriggers(conversationId, uris)
@@ -52,7 +53,7 @@ internal class ConversationSettingsRepositoryImpl @Inject constructor(
     }
 
     private fun refreshTriggers(
-        conversationId: String,
+        conversationId: ConversationId,
         uris: List<Uri>,
     ): Flow<Unit> {
         return observeUris(uris).flatMapLatest {
@@ -63,7 +64,7 @@ internal class ConversationSettingsRepositoryImpl @Inject constructor(
     }
 
     private fun snoozeExpiry(
-        conversationId: String,
+        conversationId: ConversationId,
     ): Flow<Unit> {
         return flow {
             val snoozeUntilMillis = notificationRepository.getSnoozeUntilMillis(conversationId)
@@ -78,7 +79,7 @@ internal class ConversationSettingsRepositoryImpl @Inject constructor(
     }
 
     private suspend fun loadConversationSettings(
-        conversationId: String,
+        conversationId: ConversationId,
     ): ConversationSettingsData {
         val participants = queryOtherParticipants(conversationId)
         val metadata = conversationsRepository.getConversationMetadataSnapshot(
@@ -96,11 +97,11 @@ internal class ConversationSettingsRepositoryImpl @Inject constructor(
     }
 
     private fun queryOtherParticipants(
-        conversationId: String,
+        conversationId: ConversationId,
     ): List<ParticipantData> {
         val participantsData = ConversationParticipantsData().apply {
             contentResolver.query(
-                MessagingContentProvider.buildConversationParticipantsUri(conversationId),
+                MessagingContentProvider.buildConversationParticipantsUri(conversationId.value),
                 ParticipantData.ParticipantsQuery.PROJECTION,
                 null,
                 null,

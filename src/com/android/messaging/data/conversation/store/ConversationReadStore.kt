@@ -1,6 +1,7 @@
 package com.android.messaging.data.conversation.store
 
 import android.content.ContentValues
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.datamodel.BugleDatabaseOperations
 import com.android.messaging.datamodel.BugleNotifications
 import com.android.messaging.datamodel.DataModel
@@ -12,16 +13,16 @@ import com.android.messaging.util.PendingIntentConstants
 import javax.inject.Inject
 
 internal interface ConversationReadStore {
-    fun markConversationRead(conversationId: String)
-    fun markConversationUnread(conversationId: String)
+    fun markConversationRead(conversationId: ConversationId)
+    fun markConversationUnread(conversationId: ConversationId)
 }
 
 internal class ConversationReadStoreImpl @Inject constructor() : ConversationReadStore {
 
-    override fun markConversationRead(conversationId: String) {
+    override fun markConversationRead(conversationId: ConversationId) {
         val database = DataModel.get().database
 
-        val threadId = BugleDatabaseOperations.getThreadId(database, conversationId)
+        val threadId = BugleDatabaseOperations.getThreadId(database, conversationId.value)
         if (threadId != -1L) {
             MmsUtils.updateSmsReadStatus(threadId, Long.MAX_VALUE)
         }
@@ -40,11 +41,11 @@ internal class ConversationReadStoreImpl @Inject constructor() : ConversationRea
                 DatabaseHelper.MESSAGES_TABLE,
                 values,
                 selection,
-                arrayOf(conversationId),
+                arrayOf(conversationId.value),
             )
 
             if (updatedRows > 0) {
-                MessagingContentProvider.notifyMessagesChanged(conversationId)
+                MessagingContentProvider.notifyMessagesChanged(conversationId.value)
             }
 
             database.setTransactionSuccessful()
@@ -52,16 +53,16 @@ internal class ConversationReadStoreImpl @Inject constructor() : ConversationRea
             database.endTransaction()
         }
 
-        BugleNotifications.cancel(PendingIntentConstants.SMS_NOTIFICATION_ID, conversationId)
+        BugleNotifications.cancel(PendingIntentConstants.SMS_NOTIFICATION_ID, conversationId.value)
     }
 
-    override fun markConversationUnread(conversationId: String) {
+    override fun markConversationUnread(conversationId: ConversationId) {
         val database = DataModel.get().database
 
         database.beginTransaction()
         try {
             val latestMessageId = BugleDatabaseOperations
-                .getQueryConversationsLatestMessageStatement(database, conversationId)
+                .getQueryConversationsLatestMessageStatement(database, conversationId.value)
                 .simpleQueryForString()
 
             if (latestMessageId != null) {
@@ -77,7 +78,7 @@ internal class ConversationReadStoreImpl @Inject constructor() : ConversationRea
                 )
 
                 if (updatedRows > 0) {
-                    MessagingContentProvider.notifyMessagesChanged(conversationId)
+                    MessagingContentProvider.notifyMessagesChanged(conversationId.value)
                 }
             }
 

@@ -1,21 +1,22 @@
 package com.android.messaging.ui.conversation.navigation
 
 import androidx.navigation3.runtime.NavKey
+import com.android.messaging.data.conversation.model.ConversationId
 
 internal interface ConversationNavigationReducer {
     fun navigateToAddParticipants(
         backStack: MutableList<NavKey>,
-        conversationId: String,
+        conversationId: ConversationId,
     )
 
     fun navigateToConversation(
         backStack: MutableList<NavKey>,
-        conversationId: String,
+        conversationId: ConversationId,
     )
 
     fun navigateToMessageDetails(
         backStack: MutableList<NavKey>,
-        conversationId: String,
+        conversationId: ConversationId,
         messageId: String,
     )
 
@@ -28,7 +29,7 @@ internal interface ConversationNavigationReducer {
 
     fun replaceCurrentConversation(
         backStack: MutableList<NavKey>,
-        conversationId: String,
+        conversationId: ConversationId,
     )
 
     fun resetBackStack(
@@ -41,7 +42,7 @@ internal class ConversationNavigationReducerImpl : ConversationNavigationReducer
 
     override fun navigateToAddParticipants(
         backStack: MutableList<NavKey>,
-        conversationId: String,
+        conversationId: ConversationId,
     ) {
         AddParticipantsNavKey(conversationId = conversationId)
             .takeIf { it != backStack.lastOrNull() }
@@ -50,7 +51,7 @@ internal class ConversationNavigationReducerImpl : ConversationNavigationReducer
 
     override fun navigateToConversation(
         backStack: MutableList<NavKey>,
-        conversationId: String,
+        conversationId: ConversationId,
     ) {
         removeTrailingConversationEntryDestinations(backStack = backStack)
 
@@ -65,7 +66,7 @@ internal class ConversationNavigationReducerImpl : ConversationNavigationReducer
 
     override fun navigateToMessageDetails(
         backStack: MutableList<NavKey>,
-        conversationId: String,
+        conversationId: ConversationId,
         messageId: String,
     ) {
         MessageDetailsNavKey(
@@ -96,7 +97,7 @@ internal class ConversationNavigationReducerImpl : ConversationNavigationReducer
 
     override fun replaceCurrentConversation(
         backStack: MutableList<NavKey>,
-        conversationId: String,
+        conversationId: ConversationId,
     ) {
         if (backStack.lastOrNull() is AddParticipantsNavKey) {
             backStack.removeAt(backStack.lastIndex)
