@@ -2,7 +2,6 @@ package com.android.messaging.ui.conversation.messages.delegate.selection
 
 import android.content.ClipData
 import app.cash.turbine.test
-import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction

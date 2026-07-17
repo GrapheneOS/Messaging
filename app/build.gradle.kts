@@ -1,7 +1,6 @@
 import dev.detekt.gradle.Detekt
 import java.io.FileInputStream
 import java.util.Properties
-import org.gradle.api.tasks.testing.Test
 
 plugins {
     id("messaging.licenses")
