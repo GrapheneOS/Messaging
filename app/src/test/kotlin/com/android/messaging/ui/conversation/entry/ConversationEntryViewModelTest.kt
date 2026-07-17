@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.entry
 import androidx.lifecycle.SavedStateHandle
 import com.android.messaging.data.conversation.mapper.ConversationMessageDataDraftMapper
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
@@ -96,11 +97,11 @@ internal class ConversationEntryViewModelTest {
 
         viewModel.onConversationNavigationRequested(
             conversationId = CONVERSATION_ID,
-            pendingSelfParticipantId = "self-1",
+            pendingSelfParticipantId = ParticipantId("self-1"),
         )
 
         assertEquals(CONVERSATION_ID, viewModel.uiState.value.conversationId)
-        assertEquals("self-1", viewModel.uiState.value.pendingSelfParticipantId)
+        assertEquals(ParticipantId("self-1"), viewModel.uiState.value.pendingSelfParticipantId)
     }
 
     @Test
@@ -118,7 +119,7 @@ internal class ConversationEntryViewModelTest {
         )
         viewModel.onConversationNavigationRequested(
             conversationId = CONVERSATION_ID,
-            pendingSelfParticipantId = "self-1",
+            pendingSelfParticipantId = ParticipantId("self-1"),
         )
 
         viewModel.onDraftPayloadConsumed(conversationId = ConversationId("other"))
@@ -131,7 +132,7 @@ internal class ConversationEntryViewModelTest {
             viewModel.uiState.value.pendingDraft,
         )
         assertEquals(3, viewModel.uiState.value.pendingScrollPosition)
-        assertEquals("self-1", viewModel.uiState.value.pendingSelfParticipantId)
+        assertEquals(ParticipantId("self-1"), viewModel.uiState.value.pendingSelfParticipantId)
         assertEquals(
             ConversationEntryStartupAttachment(
                 contentType = "image/png",
@@ -195,13 +196,16 @@ internal class ConversationEntryViewModelTest {
 
         createViewModel(savedStateHandle = savedStateHandle).onConversationNavigationRequested(
             conversationId = CONVERSATION_ID,
-            pendingSelfParticipantId = "self-1",
+            pendingSelfParticipantId = ParticipantId("self-1"),
         )
 
         val recreatedViewModel = createViewModel(savedStateHandle = savedStateHandle)
 
         assertEquals(CONVERSATION_ID, recreatedViewModel.uiState.value.conversationId)
-        assertEquals("self-1", recreatedViewModel.uiState.value.pendingSelfParticipantId)
+        assertEquals(
+            ParticipantId("self-1"),
+            recreatedViewModel.uiState.value.pendingSelfParticipantId
+        )
     }
 
     @Test

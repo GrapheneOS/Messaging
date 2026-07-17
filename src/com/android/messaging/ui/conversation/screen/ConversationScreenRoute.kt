@@ -22,6 +22,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingPhase
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryStartupAttachment
@@ -90,7 +91,7 @@ internal fun ConversationScreenRouteEffects(
     launchGeneration: Int?,
     cancelIncomingNotification: Boolean,
     pendingDraft: ConversationDraft?,
-    pendingSelfParticipantId: String?,
+    pendingSelfParticipantId: ParticipantId?,
     pendingStartupAttachment: ConversationEntryStartupAttachment?,
     scaffoldUiState: ConversationScreenScaffoldUiState,
     snackbarHostState: SnackbarHostState,
@@ -143,7 +144,7 @@ private fun ConversationPendingLaunchEffects(
     conversationId: ConversationId?,
     launchGeneration: Int?,
     pendingDraft: ConversationDraft?,
-    pendingSelfParticipantId: String?,
+    pendingSelfParticipantId: ParticipantId?,
     pendingStartupAttachment: ConversationEntryStartupAttachment?,
     screenModel: ConversationScreenModel,
     onPendingDraftConsumed: () -> Unit,

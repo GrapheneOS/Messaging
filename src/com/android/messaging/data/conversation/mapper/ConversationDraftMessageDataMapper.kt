@@ -32,14 +32,14 @@ internal class ConversationDraftMessageDataMapperImpl @Inject constructor() :
         val message = when {
             isMms -> MessageData.createDraftMmsMessage(
                 conversationId.value,
-                selfParticipantId,
+                selfParticipantId?.value,
                 draft.messageText,
                 draft.subjectText,
             )
 
             else -> MessageData.createDraftSmsMessage(
                 conversationId.value,
-                selfParticipantId,
+                selfParticipantId?.value,
                 draft.messageText,
             )
         }

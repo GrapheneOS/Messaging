@@ -1,6 +1,7 @@
 package com.android.messaging.data.conversation.mapper
 
 import android.net.Uri
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.datamodel.data.MessagePartData
@@ -36,12 +37,12 @@ class ConversationMessageDataDraftMapperImplTest {
 
         val draft = mapper.map(
             messageData = messageData,
-            fallbackSelfParticipantId = "fallback-self",
+            fallbackSelfParticipantId = ParticipantId("fallback-self"),
         )
 
         assertEquals("Hello", draft.messageText)
         assertEquals("Subject", draft.subjectText)
-        assertEquals("self-1", draft.selfParticipantId)
+        assertEquals(ParticipantId("self-1"), draft.selfParticipantId)
         assertEquals(
             listOf(
                 createAttachment(
@@ -66,10 +67,10 @@ class ConversationMessageDataDraftMapperImplTest {
 
         val draft = mapper.map(
             messageData = messageData,
-            fallbackSelfParticipantId = "fallback-self",
+            fallbackSelfParticipantId = ParticipantId("fallback-self"),
         )
 
-        assertEquals("fallback-self", draft.selfParticipantId)
+        assertEquals(ParticipantId("fallback-self"), draft.selfParticipantId)
     }
 
     @Test
@@ -82,10 +83,10 @@ class ConversationMessageDataDraftMapperImplTest {
 
         val draft = mapper.map(
             messageData = messageData,
-            fallbackSelfParticipantId = "fallback-self",
+            fallbackSelfParticipantId = ParticipantId("fallback-self"),
         )
 
-        assertEquals("fallback-self", draft.selfParticipantId)
+        assertEquals(ParticipantId("fallback-self"), draft.selfParticipantId)
     }
 
     @Test

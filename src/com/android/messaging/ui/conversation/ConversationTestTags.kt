@@ -73,8 +73,8 @@ internal const val CONVERSATION_SUBJECT_DIALOG_TEXT_FIELD_TEST_TAG =
 internal const val CONVERSATION_SUBJECT_DIALOG_CLEAR_BUTTON_TEST_TAG =
     "conversation_subject_dialog_clear_button"
 
-internal fun conversationSimSelectorItemTestTag(selfParticipantId: String): String {
-    return "conversation_sim_selector_item_$selfParticipantId"
+internal fun conversationSimSelectorItemTestTag(selfParticipantId: ParticipantId): String {
+    return "conversation_sim_selector_item_${selfParticipantId.value}"
 }
 
 internal fun conversationMessageItemTestTag(messageId: MessageId): String {

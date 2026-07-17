@@ -1,6 +1,7 @@
 package com.android.messaging.data.subscription.repository
 
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.util.BuglePrefs
 import javax.inject.Inject
 import kotlinx.coroutines.channels.BufferOverflow
@@ -12,9 +13,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 
 internal interface ConversationSimSelectionRepository {
-    fun observe(conversationId: ConversationId): Flow<String?>
-    fun getSelectedSelfId(conversationId: ConversationId): String?
-    fun setSelectedSelfId(conversationId: ConversationId, selfId: String)
+    fun observe(conversationId: ConversationId): Flow<ParticipantId?>
+    fun getSelectedSelfId(conversationId: ConversationId): ParticipantId?
+    fun setSelectedSelfId(conversationId: ConversationId, selfId: ParticipantId)
 }
 
 internal class ConversationSimSelectionRepositoryImpl @Inject constructor() :
@@ -25,7 +26,7 @@ internal class ConversationSimSelectionRepositoryImpl @Inject constructor() :
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
 
-    override fun observe(conversationId: ConversationId): Flow<String?> {
+    override fun observe(conversationId: ConversationId): Flow<ParticipantId?> {
         return changes
             .filter { it == conversationId }
             .map { getSelectedSelfId(conversationId) }
@@ -33,22 +34,23 @@ internal class ConversationSimSelectionRepositoryImpl @Inject constructor() :
             .distinctUntilChanged()
     }
 
-    override fun getSelectedSelfId(conversationId: ConversationId): String? {
+    override fun getSelectedSelfId(conversationId: ConversationId): ParticipantId? {
         if (conversationId.isBlank()) return null
 
         val prefs = BuglePrefs.getApplicationPrefs()
-        return prefs.getString(prefKey(conversationId), null)
-            ?.takeIf(String::isNotEmpty)
+        return ParticipantId
+            .fromOrNull(prefs.getString(prefKey(conversationId), null))
+            ?.takeIf { it.isNotBlank() }
     }
 
     override fun setSelectedSelfId(
         conversationId: ConversationId,
-        selfId: String,
+        selfId: ParticipantId,
     ) {
-        if (conversationId.isBlank() || selfId.isEmpty()) return
+        if (conversationId.isBlank() || selfId.isBlank()) return
 
         val prefs = BuglePrefs.getApplicationPrefs()
-        prefs.putString(prefKey(conversationId), selfId)
+        prefs.putString(prefKey(conversationId), selfId.value)
         changes.tryEmit(conversationId)
     }
 

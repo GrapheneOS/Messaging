@@ -18,7 +18,7 @@ internal interface ConversationSettingsUiStateMapper {
     fun map(
         data: ConversationSettingsData,
         subscriptions: ImmutableList<Subscription> = persistentListOf(),
-        selfIdOverride: String? = null,
+        selfIdOverride: ParticipantId? = null,
     ): ConversationSettingsUiState
 }
 
@@ -31,7 +31,7 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
     override fun map(
         data: ConversationSettingsData,
         subscriptions: ImmutableList<Subscription>,
-        selfIdOverride: String?,
+        selfIdOverride: ParticipantId?,
     ): ConversationSettingsUiState {
         val participants = data.participants
             .map(::toParticipantUiState)
@@ -39,7 +39,7 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
         val otherParticipant = participants.singleOrNull()
 
         val effectiveSelfId = selfIdOverride
-            ?.takeIf(String::isNotEmpty)
+            ?.takeIf { it.isNotBlank() }
             ?: data.dbSelfParticipantId
 
         val selectedSubscription = subscriptions

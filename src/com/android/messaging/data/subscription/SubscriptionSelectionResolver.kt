@@ -1,12 +1,13 @@
 package com.android.messaging.data.subscription
 
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.datamodel.data.ParticipantData
 import kotlinx.collections.immutable.ImmutableList
 
 internal fun resolveSelectedSubscription(
     subscriptions: ImmutableList<Subscription>,
-    selectedSelfParticipantId: String?,
+    selectedSelfParticipantId: ParticipantId?,
     defaultSmsSubscriptionId: Int,
 ): Subscription? {
     subscriptions

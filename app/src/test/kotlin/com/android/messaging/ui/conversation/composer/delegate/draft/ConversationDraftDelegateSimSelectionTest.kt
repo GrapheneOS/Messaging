@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.composer.delegate.draft
 
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.repository.ConversationDraftsRepository
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
@@ -142,7 +143,7 @@ internal class ConversationDraftDelegateSimSelectionTest {
         delegate.onSendClick()
         runCurrent()
 
-        assertEquals("", sentDraft.captured.selfParticipantId)
+        assertEquals(ParticipantId(""), sentDraft.captured.selfParticipantId)
     }
 
     private fun TestScope.createDelegate(): ConversationDraftDelegateImpl {
@@ -164,7 +165,7 @@ internal class ConversationDraftDelegateSimSelectionTest {
 
     private companion object {
         private val CONVERSATION_ID = ConversationId("conversation-1")
-        private const val PICKED_SELF_PARTICIPANT_ID = "self-participant-2"
-        private const val SEEDED_SELF_PARTICIPANT_ID = "self-participant-1"
+        private val PICKED_SELF_PARTICIPANT_ID = ParticipantId("self-participant-2")
+        private val SEEDED_SELF_PARTICIPANT_ID = ParticipantId("self-participant-1")
     }
 }

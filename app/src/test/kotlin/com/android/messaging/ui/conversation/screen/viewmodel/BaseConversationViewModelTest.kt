@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
 import com.android.messaging.datamodel.data.ParticipantData
@@ -124,7 +125,7 @@ internal abstract class BaseConversationViewModelTest {
     ): ConversationMetadataUiState.Present {
         return ConversationMetadataUiState.Present(
             title = "Alice",
-            selfParticipantId = "self-1",
+            selfParticipantId = ParticipantId("self-1"),
             avatar = ConversationMetadataUiState.Avatar.Single(
                 photoUri = null,
                 normalizedDestination = phoneNumber,

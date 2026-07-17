@@ -9,6 +9,7 @@ import android.content.IntentFilter
 import android.database.ContentObserver
 import android.net.Uri
 import android.telephony.SubscriptionManager
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
@@ -50,7 +51,7 @@ internal interface SubscriptionsRepository {
 
     fun resolveAttachmentLimit(): Int
 
-    fun resolveMaxMessageSize(selfParticipantId: String): Flow<Int>
+    fun resolveMaxMessageSize(selfParticipantId: ParticipantId): Flow<Int>
 }
 
 internal class SubscriptionsRepositoryImpl @Inject constructor(
@@ -138,7 +139,7 @@ internal class SubscriptionsRepositoryImpl @Inject constructor(
             )
     }
 
-    override fun resolveMaxMessageSize(selfParticipantId: String): Flow<Int> {
+    override fun resolveMaxMessageSize(selfParticipantId: ParticipantId): Flow<Int> {
         return typedFlow {
             resolveSubscriptionId(selfParticipantId = selfParticipantId)
         }
@@ -218,7 +219,7 @@ internal class SubscriptionsRepositoryImpl @Inject constructor(
         colorIndex: Int,
     ): Subscription {
         return Subscription(
-            selfParticipantId = "$FAKE_SIM_ID_PREFIX$slotId",
+            selfParticipantId = ParticipantId("$FAKE_SIM_ID_PREFIX$slotId"),
             subId = ParticipantData.DEFAULT_SELF_SUB_ID,
             label = ConversationSubscriptionLabel.DebugFake(slotId = slotId),
             displayDestination = null,
@@ -292,7 +293,7 @@ internal class SubscriptionsRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun resolveSubscriptionId(selfParticipantId: String): Int? {
+    private fun resolveSubscriptionId(selfParticipantId: ParticipantId): Int? {
         if (selfParticipantId.isBlank()) {
             return null
         }
@@ -301,7 +302,7 @@ internal class SubscriptionsRepositoryImpl @Inject constructor(
             MessagingContentProvider.PARTICIPANTS_URI,
             ParticipantData.ParticipantsQuery.PROJECTION,
             "${ParticipantColumns._ID} = ?",
-            arrayOf(selfParticipantId),
+            arrayOf(selfParticipantId.value),
             null,
         )?.use { cursor ->
             when {
@@ -327,7 +328,7 @@ internal class SubscriptionsRepositoryImpl @Inject constructor(
         val slotId = displaySlotId
 
         return Subscription(
-            selfParticipantId = id,
+            selfParticipantId = ParticipantId(id),
             subId = subId,
             label = when {
                 subscriptionName.isNullOrBlank() -> ConversationSubscriptionLabel.Slot(

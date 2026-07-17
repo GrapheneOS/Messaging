@@ -6,6 +6,7 @@ import android.net.Uri
 import com.android.messaging.data.conversation.mapper.ConversationMessageDetailsMapper
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetailsData
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetailsResult
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
@@ -54,7 +55,7 @@ internal interface ConversationsRepository {
 
     suspend fun getConversationSendData(
         conversationId: ConversationId,
-        requestedSelfParticipantId: String,
+        requestedSelfParticipantId: ParticipantId,
     ): ConversationSendData?
 
     suspend fun getConversationMessage(
@@ -87,7 +88,7 @@ internal interface ConversationsRepository {
 
     fun deleteConversation(conversationId: ConversationId, cutoffTimestamp: Long)
 
-    suspend fun setConversationSelfId(conversationId: ConversationId, selfId: String)
+    suspend fun setConversationSelfId(conversationId: ConversationId, selfId: ParticipantId)
 }
 
 internal class ConversationsRepositoryImpl @Inject constructor(
@@ -146,7 +147,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
 
     override suspend fun getConversationSendData(
         conversationId: ConversationId,
-        requestedSelfParticipantId: String,
+        requestedSelfParticipantId: ParticipantId,
     ): ConversationSendData? {
         return withContext(context = messagingDbDispatcher) {
             val metadata = when {
@@ -286,7 +287,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
 
     override suspend fun setConversationSelfId(
         conversationId: ConversationId,
-        selfId: String,
+        selfId: ParticipantId,
     ) {
         if (conversationId.isBlank() || selfId.isBlank()) return
 
@@ -363,8 +364,8 @@ internal class ConversationsRepositoryImpl @Inject constructor(
 
                 ConversationMetadata(
                     conversationName = cursor.getStringOrEmpty(ConversationColumns.NAME),
-                    selfParticipantId = cursor.getStringOrEmpty(
-                        ConversationColumns.CURRENT_SELF_ID,
+                    selfParticipantId = ParticipantId(
+                        cursor.getStringOrEmpty(ConversationColumns.CURRENT_SELF_ID),
                     ),
                     isGroupConversation = participantCount > 1,
                     includeEmailAddress = cursor.getInt(
@@ -404,7 +405,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
             conversationId = conversationId,
         )
         val selfParticipant = queryParticipant(
-            participantId = message.selfParticipantId,
+            participantId = ParticipantId.fromOrNull(message.selfParticipantId),
         )
 
         return ConversationMessageDetailsData(
@@ -448,9 +449,9 @@ internal class ConversationsRepositoryImpl @Inject constructor(
     }
 
     private fun queryParticipant(
-        participantId: String?,
+        participantId: ParticipantId?,
     ): ParticipantData? {
-        if (participantId.isNullOrBlank()) {
+        if (participantId == null || participantId.isBlank()) {
             return null
         }
 
@@ -459,7 +460,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
                 MessagingContentProvider.PARTICIPANTS_URI,
                 ParticipantData.ParticipantsQuery.PROJECTION,
                 "${ParticipantColumns._ID} = ?",
-                arrayOf(participantId),
+                arrayOf(participantId.value),
                 null,
             )
             ?.use { cursor ->

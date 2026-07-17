@@ -21,6 +21,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.conversation.addparticipants.AddParticipantsScreen
 import com.android.messaging.ui.conversation.entry.ConversationEntryScreenModel
@@ -342,7 +343,7 @@ private class ConversationNavRouteState(
 private data class ConversationPendingLaunchPayload(
     val draft: ConversationDraft? = null,
     val scrollPosition: Int? = null,
-    val selfParticipantId: String? = null,
+    val selfParticipantId: ParticipantId? = null,
     val startupAttachment: ConversationEntryStartupAttachment? = null,
 )
 

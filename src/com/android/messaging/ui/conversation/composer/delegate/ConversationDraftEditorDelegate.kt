@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.composer.delegate
 
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.data.conversation.model.draft.ConversationDraftPendingAttachment
@@ -35,7 +36,7 @@ internal interface ConversationDraftEditorDelegate {
 
     fun onSelfParticipantIdChanged(
         conversationId: ConversationId,
-        selfParticipantId: String,
+        selfParticipantId: ParticipantId,
     )
 
     fun seedDraft(
@@ -137,7 +138,7 @@ internal class ConversationDraftEditorDelegateImpl @Inject constructor(
 
     override fun onSelfParticipantIdChanged(
         conversationId: ConversationId,
-        selfParticipantId: String,
+        selfParticipantId: ParticipantId,
     ) {
         pendingSelfParticipantId = PendingSelfParticipantId(
             conversationId = conversationId,
@@ -483,7 +484,7 @@ private data class PendingDraftSeed(
 
 private data class PendingSelfParticipantId(
     val conversationId: ConversationId,
-    val selfParticipantId: String,
+    val selfParticipantId: ParticipantId,
 )
 
 private data class PendingAttachmentResolutionState(
