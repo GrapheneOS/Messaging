@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.messages.mapper.conversationmessag
 
 import android.net.Uri
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
@@ -66,7 +67,7 @@ internal class ConversationMessageUiModelMapperMappingTest :
                 senderContactId = 42L,
                 senderContactLookupKey = "lookup-7",
                 senderNormalizedDestination = "+15550100",
-                senderParticipantId = "participant-7",
+                senderParticipantId = ParticipantId("participant-7"),
                 selfParticipantId = "self-7",
                 canClusterWithPrevious = true,
                 canClusterWithNext = false,

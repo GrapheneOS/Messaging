@@ -1,6 +1,7 @@
 package com.android.messaging.ui.blockedparticipants.screen.support
 
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantUiState
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsUiState
 import kotlinx.collections.immutable.ImmutableList
@@ -10,9 +11,9 @@ import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.collections.immutable.toPersistentSet
 
-internal const val PARTICIPANT_ID_1 = "p1"
-internal const val PARTICIPANT_ID_2 = "p2"
-internal const val PARTICIPANT_ID_3 = "p3"
+internal val PARTICIPANT_ID_1 = ParticipantId("p1")
+internal val PARTICIPANT_ID_2 = ParticipantId("p2")
+internal val PARTICIPANT_ID_3 = ParticipantId("p3")
 
 internal const val CONVERSATION_ID_1 = "c1"
 internal const val CONVERSATION_ID_2 = "c2"
@@ -28,7 +29,7 @@ internal const val DESTINATION_3 = "+31633333333"
 
 internal fun loadedState(
     participants: ImmutableList<BlockedParticipantUiState> = defaultParticipants(),
-    selectedIds: PersistentSet<String> = persistentSetOf(),
+    selectedIds: PersistentSet<ParticipantId> = persistentSetOf(),
 ): BlockedParticipantsUiState {
     return BlockedParticipantsUiState(
         isLoading = false,
@@ -46,7 +47,7 @@ internal fun emptyState(): BlockedParticipantsUiState {
 }
 
 internal fun stateWithSelection(
-    selectedIds: Set<String>,
+    selectedIds: Set<ParticipantId>,
 ): BlockedParticipantsUiState {
     return loadedState(selectedIds = selectedIds.toPersistentSet())
 }
@@ -75,7 +76,7 @@ internal fun defaultParticipants(): ImmutableList<BlockedParticipantUiState> {
 }
 
 internal fun participant(
-    participantId: String = PARTICIPANT_ID_1,
+    participantId: ParticipantId = PARTICIPANT_ID_1,
     conversationId: ConversationId = ConversationId(CONVERSATION_ID_1),
     displayName: String = DISPLAY_NAME_1,
     destination: String? = DESTINATION_1,

@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.database.ContentObserver
 import android.net.Uri
 import app.cash.turbine.test
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.recipient.ConversationRecipient
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.data.ParticipantData
@@ -147,14 +148,14 @@ class ConversationParticipantsRepositoryImplTest {
                 assertEquals(
                     listOf(
                         ConversationRecipient(
-                            id = "1",
+                            id = ParticipantId("1"),
                             displayName = "Ada",
                             destination = "+1 555 0100",
                             photoUri = "content://photos/1",
                             secondaryText = "+1 555 0100",
                         ),
                         ConversationRecipient(
-                            id = "4",
+                            id = ParticipantId("4"),
                             displayName = "Bob",
                             destination = "+1 555 0101",
                             secondaryText = null,
@@ -206,7 +207,7 @@ class ConversationParticipantsRepositoryImplTest {
                 assertEquals(
                     listOf(
                         ConversationRecipient(
-                            id = "1",
+                            id = ParticipantId("1"),
                             displayName = "Ada",
                             destination = "+1 555 0100",
                             secondaryText = "+1 555 0100",
@@ -228,7 +229,7 @@ class ConversationParticipantsRepositoryImplTest {
                 assertEquals(
                     listOf(
                         ConversationRecipient(
-                            id = "2",
+                            id = ParticipantId("2"),
                             displayName = "Bob",
                             destination = "+1 555 0101",
                             secondaryText = "+1 555 0101",
