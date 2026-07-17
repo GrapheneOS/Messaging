@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.screen.viewmodel
 
 import app.cash.turbine.test
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.domain.conversation.usecase.participant.CanAddMoreConversationParticipants
@@ -70,7 +71,7 @@ internal class ConversationViewModelUiStateTest : BaseConversationViewModelTest(
                 ).toPersistentList(),
             )
             val selectionState = ConversationMessageSelectionUiState(
-                selectedMessageIds = persistentSetOf(MESSAGE_ID),
+                selectedMessageIds = persistentSetOf(MessageId(MESSAGE_ID)),
             )
             metadataDelegate.stateFlow.value = metadataState
             messagesDelegate.stateFlow.value = messagesState

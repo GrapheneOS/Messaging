@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.screen.effects
 import android.graphics.Point
 import android.net.Uri
 import android.view.View
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.testutil.TEST_WAIT_TIMEOUT_MILLIS
 import com.android.messaging.ui.UIIntents
@@ -187,18 +188,18 @@ internal class ConversationScreenImmediateEffectsTest : BaseConversationScreenEf
 
     @Test
     fun navigateToMessageDetails_forwardsMessageId() {
-        var navigatedMessageId: String? = null
+        var navigatedMessageId: MessageId? = null
         setEffectsContent(
             onNavigateToMessageDetails = { messageId -> navigatedMessageId = messageId },
         )
 
         emitEffect(
             ConversationScreenEffect.NavigateToMessageDetails(
-                messageId = "message-1",
+                messageId = MessageId("message-1"),
             ),
         )
 
-        assertEquals("message-1", navigatedMessageId)
+        assertEquals(MessageId("message-1"), navigatedMessageId)
     }
 
     private companion object {

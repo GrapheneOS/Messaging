@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.messages.delegate.conversationmess
 import android.net.Uri
 import com.android.messaging.data.appsettings.repository.AppSettingsRepository
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentMetadata
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentType
 import com.android.messaging.data.conversation.repository.ConversationVCardMetadataRepository
@@ -107,7 +108,7 @@ internal abstract class BaseConversationMessagesDelegateTest {
         parts: List<ConversationMessagePartUiModel> = emptyList(),
     ): ConversationMessageUiModel {
         return ConversationMessageUiModel(
-            messageId = messageId,
+            messageId = MessageId(messageId),
             conversationId = CONVERSATION_ID,
             text = "Hello",
             parts = parts.toImmutableList(),

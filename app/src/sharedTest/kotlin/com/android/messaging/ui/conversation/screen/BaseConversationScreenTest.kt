@@ -7,6 +7,7 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
@@ -152,7 +153,7 @@ internal abstract class BaseConversationScreenTest {
             val messageId = "$messageIdPrefix-$index"
             val isLatestMessage = messageId == latestMessageId
             messages += ConversationMessageUiModel(
-                messageId = messageId,
+                messageId = MessageId(messageId),
                 conversationId = CONVERSATION_ID,
                 text = "Message $index",
                 parts = persistentListOf(),

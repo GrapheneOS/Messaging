@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.conversation.CONVERSATION_DELETE_MESSAGES_CONFIRM_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_DELETE_MESSAGES_DISMISS_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_SELECTION_OVERFLOW_BUTTON_TEST_TAG
@@ -34,7 +35,7 @@ internal class ConversationScreenSelectionModeTest : BaseConversationScreenTest(
                 latestMessageIncoming = false,
             ),
             selection = ConversationMessageSelectionUiState(
-                selectedMessageIds = persistentSetOf("message-1"),
+                selectedMessageIds = persistentSetOf(MessageId("message-1")),
                 availableActions = persistentSetOf(
                     ConversationMessageSelectionAction.Copy,
                     ConversationMessageSelectionAction.Delete,
@@ -105,7 +106,7 @@ internal class ConversationScreenSelectionModeTest : BaseConversationScreenTest(
                 latestMessageIncoming = true,
             ),
             selection = ConversationMessageSelectionUiState(
-                selectedMessageIds = persistentSetOf("message-1"),
+                selectedMessageIds = persistentSetOf(MessageId("message-1")),
                 availableActions = persistentSetOf(
                     ConversationMessageSelectionAction.Delete,
                     ConversationMessageSelectionAction.SaveAttachment,
@@ -156,7 +157,10 @@ internal class ConversationScreenSelectionModeTest : BaseConversationScreenTest(
                 latestMessageIncoming = false,
             ),
             selection = ConversationMessageSelectionUiState(
-                selectedMessageIds = persistentSetOf("message-1", "message-2"),
+                selectedMessageIds = persistentSetOf(
+                    MessageId("message-1"),
+                    MessageId("message-2")
+                ),
                 availableActions = persistentSetOf(
                     ConversationMessageSelectionAction.Delete,
                 ),
@@ -199,12 +203,12 @@ internal class ConversationScreenSelectionModeTest : BaseConversationScreenTest(
                 latestMessageIncoming = false,
             ),
             selection = ConversationMessageSelectionUiState(
-                selectedMessageIds = persistentSetOf("message-1"),
+                selectedMessageIds = persistentSetOf(MessageId("message-1")),
                 availableActions = persistentSetOf(
                     ConversationMessageSelectionAction.Delete,
                 ),
                 deleteConfirmation = ConversationMessageDeleteConfirmationUiState(
-                    messageIds = persistentSetOf("message-1"),
+                    messageIds = persistentSetOf(MessageId("message-1")),
                 ),
             ),
         )

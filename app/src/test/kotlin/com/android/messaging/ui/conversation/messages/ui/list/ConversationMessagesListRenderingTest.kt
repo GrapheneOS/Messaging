@@ -14,6 +14,7 @@ import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.datamodel.data.ParticipantData
@@ -46,11 +47,11 @@ internal class ConversationMessagesListRenderingTest {
 
     private val onAttachmentClick = mockk<(String, String, String) -> Unit>(relaxed = true)
     private val onExternalUriClick = mockk<(String) -> Unit>(relaxed = true)
-    private val onMessageAvatarClick = mockk<(String) -> Unit>(relaxed = true)
-    private val onMessageClick = mockk<(String) -> Unit>(relaxed = true)
-    private val onMessageDownloadClick = mockk<(String) -> Unit>(relaxed = true)
-    private val onMessageLongClick = mockk<(String) -> Unit>(relaxed = true)
-    private val onMessageResendClick = mockk<(String) -> Unit>(relaxed = true)
+    private val onMessageAvatarClick = mockk<(MessageId) -> Unit>(relaxed = true)
+    private val onMessageClick = mockk<(MessageId) -> Unit>(relaxed = true)
+    private val onMessageDownloadClick = mockk<(MessageId) -> Unit>(relaxed = true)
+    private val onMessageLongClick = mockk<(MessageId) -> Unit>(relaxed = true)
+    private val onMessageResendClick = mockk<(MessageId) -> Unit>(relaxed = true)
     private val onSimSelectorClick = mockk<() -> Unit>(relaxed = true)
 
     @Before
@@ -66,7 +67,9 @@ internal class ConversationMessagesListRenderingTest {
             .onNodeWithTag(testTag = CONVERSATION_MESSAGES_LIST_TEST_TAG)
             .assertIsDisplayed()
         composeTestRule
-            .onNodeWithTag(testTag = conversationMessageItemTestTag(messageId = FIRST_MESSAGE_ID))
+            .onNodeWithTag(
+                testTag = conversationMessageItemTestTag(messageId = MessageId(FIRST_MESSAGE_ID))
+            )
             .assertDoesNotExist()
     }
 
@@ -96,7 +99,7 @@ internal class ConversationMessagesListRenderingTest {
 
         composeTestRule.runOnIdle {
             verify(exactly = 1) {
-                onMessageLongClick.invoke(SECOND_MESSAGE_ID)
+                onMessageLongClick.invoke(MessageId(SECOND_MESSAGE_ID))
             }
             verify(exactly = 0) {
                 onMessageClick.invoke(any())
@@ -113,13 +116,13 @@ internal class ConversationMessagesListRenderingTest {
                     text = FIRST_MESSAGE_TEXT,
                 ),
             ),
-            selectedMessageIds = persistentSetOf(FIRST_MESSAGE_ID),
+            selectedMessageIds = persistentSetOf(MessageId(FIRST_MESSAGE_ID)),
         )
 
         composeTestRule
             .onNodeWithTag(
                 testTag = conversationMessageSelectionRowTestTag(
-                    messageId = FIRST_MESSAGE_ID,
+                    messageId = MessageId(FIRST_MESSAGE_ID),
                 ),
             )
             .assertIsSelected()
@@ -128,17 +131,17 @@ internal class ConversationMessagesListRenderingTest {
         composeTestRule
             .onNodeWithTag(
                 testTag = conversationMessageSelectionRowTestTag(
-                    messageId = FIRST_MESSAGE_ID,
+                    messageId = MessageId(FIRST_MESSAGE_ID),
                 ),
             )
             .performSemanticsAction(SemanticsActions.OnLongClick)
 
         composeTestRule.runOnIdle {
             verify(exactly = 1) {
-                onMessageClick.invoke(FIRST_MESSAGE_ID)
+                onMessageClick.invoke(MessageId(FIRST_MESSAGE_ID))
             }
             verify(exactly = 1) {
-                onMessageLongClick.invoke(FIRST_MESSAGE_ID)
+                onMessageLongClick.invoke(MessageId(FIRST_MESSAGE_ID))
             }
         }
     }
@@ -178,7 +181,7 @@ internal class ConversationMessagesListRenderingTest {
                     text = FIRST_MESSAGE_TEXT,
                 ),
             ),
-            selectedMessageIds = persistentSetOf(FIRST_MESSAGE_ID),
+            selectedMessageIds = persistentSetOf(MessageId(FIRST_MESSAGE_ID)),
             currentSendSimDisplayName = SEND_SIM_DISPLAY_NAME,
         )
 
@@ -193,7 +196,7 @@ internal class ConversationMessagesListRenderingTest {
 
     private fun setMessagesContent(
         messages: ImmutableList<ConversationMessageUiModel>,
-        selectedMessageIds: ImmutableSet<String> = persistentSetOf(),
+        selectedMessageIds: ImmutableSet<MessageId> = persistentSetOf(),
         currentSendSimDisplayName: String? = null,
     ) {
         composeTestRule.setContent {
@@ -236,7 +239,7 @@ internal class ConversationMessagesListRenderingTest {
     private fun longClickBubble(messageId: String) {
         composeTestRule
             .onNodeWithTag(
-                testTag = conversationMessageBubbleTestTag(messageId = messageId),
+                testTag = conversationMessageBubbleTestTag(messageId = MessageId(messageId)),
             )
             .performSemanticsAction(SemanticsActions.OnLongClick)
     }
@@ -257,7 +260,7 @@ internal class ConversationMessagesListRenderingTest {
         text: String,
     ): ConversationMessageUiModel {
         return ConversationMessageUiModel(
-            messageId = messageId,
+            messageId = MessageId(messageId),
             conversationId = CONVERSATION_ID,
             text = text,
             parts = persistentListOf(),

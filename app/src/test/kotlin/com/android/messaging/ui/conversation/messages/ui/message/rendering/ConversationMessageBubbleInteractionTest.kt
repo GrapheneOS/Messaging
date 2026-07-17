@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.conversation.conversationMessageSelectionRowTestTag
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.model.message.MmsDownloadUiModel
@@ -142,7 +143,7 @@ internal class ConversationMessageBubbleInteractionTest :
         composeTestRule
             .onNodeWithTag(
                 testTag = conversationMessageSelectionRowTestTag(
-                    messageId = DEFAULT_MESSAGE_ID,
+                    messageId = MessageId(DEFAULT_MESSAGE_ID),
                 ),
             )
             .assertIsSelected()
@@ -178,7 +179,7 @@ internal class ConversationMessageBubbleInteractionTest :
         composeTestRule
             .onNodeWithTag(
                 testTag = conversationMessageSelectionRowTestTag(
-                    messageId = DEFAULT_MESSAGE_ID,
+                    messageId = MessageId(DEFAULT_MESSAGE_ID),
                 ),
             )
             .assertIsSelected()

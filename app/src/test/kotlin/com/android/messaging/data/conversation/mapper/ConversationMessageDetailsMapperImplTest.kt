@@ -1,5 +1,6 @@
 package com.android.messaging.data.conversation.mapper
 
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetails
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetailsData
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
@@ -306,7 +307,7 @@ internal class ConversationMessageDetailsMapperImplTest {
     @Test
     fun map_passesThroughDebugModel() {
         val debug = ConversationMessageDetails.Debug(
-            messageId = "id",
+            messageId = MessageId("id"),
             telephonyUri = null,
             conversationId = null,
             conversationTelephonyThreadId = null,
