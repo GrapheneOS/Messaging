@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation
 
 import androidx.compose.ui.semantics.SemanticsPropertyKey
 import androidx.compose.ui.semantics.SemanticsPropertyReceiver
+import com.android.messaging.data.conversation.model.ParticipantId
 
 internal const val CONVERSATION_COMPOSE_BAR_TEST_TAG = "conversation_compose_bar"
 internal const val CONVERSATION_ATTACHMENT_BUTTON_TEST_TAG = "conversation_attachment_button"
@@ -79,8 +80,8 @@ internal fun conversationMessageItemTestTag(messageId: String): String {
     return "conversation_message_item_$messageId"
 }
 
-internal fun conversationSettingsParticipantRowTestTag(participantId: String): String {
-    return "conversation_settings_participant_row_$participantId"
+internal fun conversationSettingsParticipantRowTestTag(participantId: ParticipantId): String {
+    return "conversation_settings_participant_row_${participantId.value}"
 }
 
 internal fun conversationMessageBubbleTestTag(messageId: String): String {

@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversationsettings.screen.model
 
 import androidx.compose.runtime.Immutable
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.subscription.model.Subscription
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -25,7 +26,7 @@ internal data class ConversationSettingsUiState(
 
 @Immutable
 internal data class ParticipantUiState(
-    val id: String,
+    val id: ParticipantId,
     val avatarUri: String?,
     val displayName: String,
     val details: String?,

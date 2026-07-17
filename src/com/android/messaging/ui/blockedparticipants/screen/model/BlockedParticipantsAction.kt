@@ -1,6 +1,7 @@
 package com.android.messaging.ui.blockedparticipants.screen.model
 
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 
 internal sealed interface BlockedParticipantsAction {
 
@@ -9,11 +10,11 @@ internal sealed interface BlockedParticipantsAction {
     ) : BlockedParticipantsAction
 
     data class ParticipantClicked(
-        val participantId: String,
+        val participantId: ParticipantId,
     ) : BlockedParticipantsAction
 
     data class ParticipantLongClicked(
-        val participantId: String,
+        val participantId: ParticipantId,
     ) : BlockedParticipantsAction
 
     data class ParticipantMessageClicked(

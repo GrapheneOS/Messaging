@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.datamodel.data.ParticipantData
 import kotlinx.collections.immutable.ImmutableList
 
@@ -23,7 +24,7 @@ internal data class ConversationMessageUiModel(
     val senderContactId: Long,
     val senderContactLookupKey: String?,
     val senderNormalizedDestination: String?,
-    val senderParticipantId: String?,
+    val senderParticipantId: ParticipantId?,
     val selfParticipantId: String?,
     val canClusterWithPrevious: Boolean,
     val canClusterWithNext: Boolean,
