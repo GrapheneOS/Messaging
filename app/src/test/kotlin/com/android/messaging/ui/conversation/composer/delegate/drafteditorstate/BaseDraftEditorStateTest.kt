@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.composer.delegate.drafteditorstate
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.data.conversation.model.draft.ConversationDraftPendingAttachment
@@ -63,7 +64,7 @@ internal abstract class BaseDraftEditorStateTest {
     }
 
     protected fun loadedState(
-        conversationId: String? = CONVERSATION_ID,
+        conversationId: ConversationId? = CONVERSATION_ID,
         persistedDraft: ConversationDraft = draft(),
         isSending: Boolean = false,
         pendingAttachments: List<ConversationDraftPendingAttachment> = emptyList(),
@@ -80,6 +81,6 @@ internal abstract class BaseDraftEditorStateTest {
     }
 
     protected companion object {
-        const val CONVERSATION_ID = "conversation-1"
+        val CONVERSATION_ID = ConversationId("conversation-1")
     }
 }

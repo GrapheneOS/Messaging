@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.entry
 
 import androidx.lifecycle.SavedStateHandle
 import com.android.messaging.data.conversation.mapper.ConversationMessageDataDraftMapper
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
@@ -78,7 +79,7 @@ internal class ConversationEntryViewModelTest {
         viewModel.onLaunchRequest(
             launchRequest = ConversationEntryLaunchRequest(
                 launchGeneration = 1,
-                conversationId = "conversation-2",
+                conversationId = ConversationId("conversation-2"),
                 draftData = draftData,
             ),
         )
@@ -120,10 +121,10 @@ internal class ConversationEntryViewModelTest {
             pendingSelfParticipantId = "self-1",
         )
 
-        viewModel.onDraftPayloadConsumed(conversationId = "other")
-        viewModel.onScrollPositionConsumed(conversationId = "other")
-        viewModel.onStartupAttachmentConsumed(conversationId = "other")
-        viewModel.onPendingSelfParticipantIdConsumed(conversationId = "other")
+        viewModel.onDraftPayloadConsumed(conversationId = ConversationId("other"))
+        viewModel.onScrollPositionConsumed(conversationId = ConversationId("other"))
+        viewModel.onStartupAttachmentConsumed(conversationId = ConversationId("other"))
+        viewModel.onPendingSelfParticipantIdConsumed(conversationId = ConversationId("other"))
 
         assertEquals(
             ConversationDraft(messageText = "Mapped"),
@@ -219,7 +220,7 @@ internal class ConversationEntryViewModelTest {
         recreatedViewModel.onLaunchRequest(
             launchRequest = ConversationEntryLaunchRequest(
                 launchGeneration = 1,
-                conversationId = "conversation-2",
+                conversationId = ConversationId("conversation-2"),
                 draftData = mockk(),
             ),
         )

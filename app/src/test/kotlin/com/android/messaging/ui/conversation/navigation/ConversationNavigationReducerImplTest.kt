@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.navigation
 
 import androidx.navigation3.runtime.NavKey
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -56,13 +57,13 @@ class ConversationNavigationReducerImplTest {
 
         reducer.navigateToConversation(
             backStack = backStack,
-            conversationId = "conversation-2",
+            conversationId = ConversationId("conversation-2"),
         )
 
         assertEquals(
             listOf(
                 ConversationNavKey(conversationId = CONVERSATION_ID),
-                ConversationNavKey(conversationId = "conversation-2"),
+                ConversationNavKey(conversationId = ConversationId("conversation-2")),
             ),
             backStack,
         )
@@ -165,12 +166,12 @@ class ConversationNavigationReducerImplTest {
 
         reducer.replaceCurrentConversation(
             backStack = backStack,
-            conversationId = "conversation-2",
+            conversationId = ConversationId("conversation-2"),
         )
 
         assertEquals(
             listOf(
-                ConversationNavKey(conversationId = "conversation-2"),
+                ConversationNavKey(conversationId = ConversationId("conversation-2")),
             ),
             backStack,
         )
@@ -185,13 +186,13 @@ class ConversationNavigationReducerImplTest {
 
         reducer.replaceCurrentConversation(
             backStack = backStack,
-            conversationId = "conversation-2",
+            conversationId = ConversationId("conversation-2"),
         )
 
         assertEquals(
             listOf(
                 NewChatNavKey,
-                ConversationNavKey(conversationId = "conversation-2"),
+                ConversationNavKey(conversationId = ConversationId("conversation-2")),
             ),
             backStack,
         )
@@ -218,12 +219,12 @@ class ConversationNavigationReducerImplTest {
 
         reducer.resetBackStack(
             backStack = backStack,
-            destination = ConversationNavKey(conversationId = "conversation-2"),
+            destination = ConversationNavKey(conversationId = ConversationId("conversation-2")),
         )
 
         assertEquals(
             listOf(
-                ConversationNavKey(conversationId = "conversation-2"),
+                ConversationNavKey(conversationId = ConversationId("conversation-2")),
             ),
             backStack,
         )
@@ -231,17 +232,19 @@ class ConversationNavigationReducerImplTest {
 
     @Test
     fun navigateToMessageDetails_appendsMessageDetailsDestination() {
-        val backStack = mutableListOf<NavKey>(ConversationNavKey(conversationId = "c"))
+        val backStack = mutableListOf<NavKey>(
+            ConversationNavKey(conversationId = ConversationId("c")),
+        )
 
         reducer.navigateToMessageDetails(
             backStack = backStack,
-            conversationId = "c",
+            conversationId = ConversationId("c"),
             messageId = "m",
         )
 
         assertEquals(
             MessageDetailsNavKey(
-                conversationId = "c",
+                conversationId = ConversationId("c"),
                 messageId = "m",
             ),
             backStack.last(),
@@ -252,16 +255,16 @@ class ConversationNavigationReducerImplTest {
     @Test
     fun navigateToMessageDetails_whenAlreadyOnTop_doesNotDuplicate() {
         val backStack = mutableListOf(
-            ConversationNavKey(conversationId = "c"),
+            ConversationNavKey(conversationId = ConversationId("c")),
             MessageDetailsNavKey(
-                conversationId = "c",
+                conversationId = ConversationId("c"),
                 messageId = "m",
             ),
         )
 
         reducer.navigateToMessageDetails(
             backStack = backStack,
-            conversationId = "c",
+            conversationId = ConversationId("c"),
             messageId = "m",
         )
 

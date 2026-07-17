@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.messages.delegate.conversationmessagesdelegate
 
 import android.net.Uri
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentMetadata
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentType
 import com.android.messaging.data.conversation.repository.ConversationVCardMetadataRepository
@@ -48,7 +49,7 @@ internal abstract class BaseConversationMessagesDelegateTest {
     }
 
     protected fun TestScope.createBoundDelegate(
-        conversationIdFlow: StateFlow<String?>,
+        conversationIdFlow: StateFlow<ConversationId?>,
     ): ConversationMessagesDelegateImpl {
         return createDelegate().also { delegate ->
             delegate.bind(scope = backgroundScope, conversationIdFlow = conversationIdFlow)
@@ -57,7 +58,7 @@ internal abstract class BaseConversationMessagesDelegateTest {
 
     protected fun givenConversationMessages(
         messages: Flow<List<ConversationMessageData>>,
-        conversationId: String = CONVERSATION_ID,
+        conversationId: ConversationId = CONVERSATION_ID,
     ) {
         every {
             conversationsRepository.getConversationMessages(conversationId = conversationId)

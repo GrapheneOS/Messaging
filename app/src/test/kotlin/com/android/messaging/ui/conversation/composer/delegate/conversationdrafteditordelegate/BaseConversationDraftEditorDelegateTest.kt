@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.composer.delegate.conversationdrafteditordelegate
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.data.conversation.model.draft.ConversationDraftPendingAttachment
@@ -49,7 +50,7 @@ internal abstract class BaseConversationDraftEditorDelegateTest {
     }
 
     protected fun loadedDelegate(
-        conversationId: String = CONVERSATION_ID,
+        conversationId: ConversationId = CONVERSATION_ID,
         persistedDraft: ConversationDraft = draft(),
     ): ConversationDraftEditorDelegateImpl {
         return createDelegate().also { delegate ->
@@ -64,7 +65,7 @@ internal abstract class BaseConversationDraftEditorDelegateTest {
     }
 
     protected fun persistedDraftUpdate(
-        conversationId: String = CONVERSATION_ID,
+        conversationId: ConversationId = CONVERSATION_ID,
         persistedDraft: ConversationDraft = draft(),
     ): PersistedDraftUpdate {
         return PersistedDraftUpdate(

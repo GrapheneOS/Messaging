@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.metadata.delegate
 
 import app.cash.turbine.test
 import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepository
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
 import com.android.messaging.data.conversation.repository.ConversationsRepository
@@ -34,7 +35,7 @@ class ConversationMetadataDelegateImplTest {
     @Test
     fun onArchiveConversationClick_archivesViaRepositoryAndEmitsCloseConversation() {
         runTest(context = mainDispatcherRule.testDispatcher) {
-            val harness = createHarness(conversationId = "conversation-42")
+            val harness = createHarness(conversationId = ConversationId("conversation-42"))
 
             try {
                 harness.delegate.effects.test {
@@ -47,7 +48,7 @@ class ConversationMetadataDelegateImplTest {
 
                 coVerify(exactly = 1) {
                     harness.conversationsRepository
-                        .archiveConversation(conversationId = "conversation-42")
+                        .archiveConversation(conversationId = ConversationId("conversation-42"))
                 }
             } finally {
                 harness.cancel()
@@ -58,7 +59,7 @@ class ConversationMetadataDelegateImplTest {
     @Test
     fun onUnarchiveConversationClick_unarchivesViaRepositoryWithoutClosing() {
         runTest(context = mainDispatcherRule.testDispatcher) {
-            val harness = createHarness(conversationId = "conversation-42")
+            val harness = createHarness(conversationId = ConversationId("conversation-42"))
 
             try {
                 harness.delegate.effects.test {
@@ -71,7 +72,7 @@ class ConversationMetadataDelegateImplTest {
 
                 coVerify(exactly = 1) {
                     harness.conversationsRepository
-                        .unarchiveConversation(conversationId = "conversation-42")
+                        .unarchiveConversation(conversationId = ConversationId("conversation-42"))
                 }
             } finally {
                 harness.cancel()
@@ -82,7 +83,7 @@ class ConversationMetadataDelegateImplTest {
     @Test
     fun onAddContactClick_emitsLaunchAddContactFlowWithDestination() {
         runTest(context = mainDispatcherRule.testDispatcher) {
-            val harness = createHarness(conversationId = "conversation-42")
+            val harness = createHarness(conversationId = ConversationId("conversation-42"))
 
             try {
                 harness.setPresentState(
@@ -111,7 +112,7 @@ class ConversationMetadataDelegateImplTest {
     @Test
     fun onAddContactClick_doesNothingWhenDestinationMissing() {
         runTest(context = mainDispatcherRule.testDispatcher) {
-            val harness = createHarness(conversationId = "conversation-42")
+            val harness = createHarness(conversationId = ConversationId("conversation-42"))
 
             try {
                 harness.setPresentState(otherParticipantPhoneNumber = null)
@@ -133,7 +134,7 @@ class ConversationMetadataDelegateImplTest {
     @Test
     fun onDeleteConversationClick_togglesConfirmationVisibility() {
         runTest(context = mainDispatcherRule.testDispatcher) {
-            val harness = createHarness(conversationId = "conversation-42")
+            val harness = createHarness(conversationId = ConversationId("conversation-42"))
 
             try {
                 advanceUntilIdle()
@@ -164,7 +165,7 @@ class ConversationMetadataDelegateImplTest {
     @Test
     fun confirmDeleteConversation_deletesViaRepositoryAndEmitsCloseConversation() {
         runTest(context = mainDispatcherRule.testDispatcher) {
-            val harness = createHarness(conversationId = "conversation-42")
+            val harness = createHarness(conversationId = ConversationId("conversation-42"))
 
             try {
                 advanceUntilIdle()
@@ -186,7 +187,7 @@ class ConversationMetadataDelegateImplTest {
                 verify(exactly = 1) {
                     harness.conversationsRepository
                         .deleteConversation(
-                            conversationId = "conversation-42",
+                            conversationId = ConversationId("conversation-42"),
                             cutoffTimestamp = any(),
                         )
                 }
@@ -200,7 +201,9 @@ class ConversationMetadataDelegateImplTest {
     fun commandMethods_doNothingWhenConversationIdIsBlankOrNull() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             listOf(null, "   ").forEach { blankOrNullConversationId ->
-                val harness = createHarness(conversationId = blankOrNullConversationId)
+                val harness = createHarness(
+                    conversationId = blankOrNullConversationId?.let(::ConversationId),
+                )
 
                 try {
                     harness.delegate.effects.test {
@@ -237,7 +240,7 @@ class ConversationMetadataDelegateImplTest {
         }
     }
 
-    private fun createHarness(conversationId: String?): DelegateHarness {
+    private fun createHarness(conversationId: ConversationId?): DelegateHarness {
         val dispatcher = mainDispatcherRule.testDispatcher
         val scope = TestScope(dispatcher)
         val conversationsRepository = mockk<ConversationsRepository>(relaxed = true)

@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.messages.delegate.selection
 
 import android.content.ClipboardManager
 import android.net.Uri
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.data.media.repository.ConversationAttachmentsRepository
 import com.android.messaging.domain.conversation.usecase.action.CheckConversationActionRequirements
@@ -46,7 +47,7 @@ internal abstract class BaseConversationMessageSelectionDelegateTest {
         val messagesStateFlow = MutableStateFlow<ConversationMessagesUiState>(
             value = ConversationMessagesUiState.Loading,
         )
-        val conversationIdFlow = MutableStateFlow<String?>(CONVERSATION_ID)
+        val conversationIdFlow = MutableStateFlow<ConversationId?>(CONVERSATION_ID)
 
         every { conversationMessagesDelegate.state } returns messagesStateFlow
         coEvery {
@@ -156,7 +157,7 @@ internal abstract class BaseConversationMessageSelectionDelegateTest {
         val delegate: ConversationMessageSelectionDelegateImpl,
         val clipboardManager: ClipboardManager,
         val conversationAttachmentsRepository: ConversationAttachmentsRepository,
-        val conversationIdFlow: MutableStateFlow<String?>,
+        val conversationIdFlow: MutableStateFlow<ConversationId?>,
         val conversationsRepository: ConversationsRepository,
         val createForwardedMessage: CreateForwardedMessage,
         val messagesStateFlow: MutableStateFlow<ConversationMessagesUiState>,

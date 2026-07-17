@@ -1,5 +1,6 @@
 package com.android.messaging.data.conversation.repository.conversations
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.datamodel.action.DeleteConversationAction
 import com.android.messaging.datamodel.action.DeleteMessageAction
 import com.android.messaging.datamodel.action.RedownloadMmsAction
@@ -89,18 +90,26 @@ internal class ConversationsRepositoryActionsTest : BaseConversationsRepositoryT
         runTest(context = mainDispatcherRule.testDispatcher) {
             val repository = createRepository()
 
-            repository.archiveConversation(conversationId = "")
-            repository.archiveConversation(conversationId = "conversation-archive")
-            repository.unarchiveConversation(conversationId = " ")
-            repository.unarchiveConversation(conversationId = "conversation-unarchive")
+            repository.archiveConversation(conversationId = ConversationId(""))
+            repository.archiveConversation(conversationId = ConversationId("conversation-archive"))
+            repository.unarchiveConversation(conversationId = ConversationId(" "))
+            repository.unarchiveConversation(
+                conversationId = ConversationId("conversation-unarchive")
+            )
 
-            io.mockk.coVerify(exactly = 0) { conversationArchiveStore.archiveConversation("") }
-            io.mockk.coVerify(exactly = 1) {
-                conversationArchiveStore.archiveConversation("conversation-archive")
+            io.mockk.coVerify(exactly = 0) {
+                conversationArchiveStore.archiveConversation(ConversationId(""))
             }
-            io.mockk.coVerify(exactly = 0) { conversationArchiveStore.unarchiveConversation(" ") }
             io.mockk.coVerify(exactly = 1) {
-                conversationArchiveStore.unarchiveConversation("conversation-unarchive")
+                conversationArchiveStore.archiveConversation(ConversationId("conversation-archive"))
+            }
+            io.mockk.coVerify(exactly = 0) {
+                conversationArchiveStore.unarchiveConversation(ConversationId(" "))
+            }
+            io.mockk.coVerify(exactly = 1) {
+                conversationArchiveStore.unarchiveConversation(
+                    ConversationId("conversation-unarchive")
+                )
             }
         }
     }
@@ -109,9 +118,9 @@ internal class ConversationsRepositoryActionsTest : BaseConversationsRepositoryT
     fun deleteConversation_skipsBlankIdAndDelegatesNonBlankIdWithCutoff() {
         val repository = createRepository()
 
-        repository.deleteConversation(conversationId = "", cutoffTimestamp = 123L)
+        repository.deleteConversation(conversationId = ConversationId(""), cutoffTimestamp = 123L)
         repository.deleteConversation(
-            conversationId = "conversation-delete",
+            conversationId = ConversationId("conversation-delete"),
             cutoffTimestamp = 456L,
         )
 

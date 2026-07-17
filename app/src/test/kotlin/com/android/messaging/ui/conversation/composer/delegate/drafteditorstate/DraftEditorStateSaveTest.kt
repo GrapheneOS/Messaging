@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.composer.delegate.drafteditorstate
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.conversation.composer.delegate.DraftEditorState
 import com.android.messaging.ui.conversation.composer.delegate.DraftSaveRequest
 import org.junit.Assert.assertEquals
@@ -61,7 +62,10 @@ internal class DraftEditorStateSaveTest : BaseDraftEditorStateTest() {
 
         assertFalse(
             state.matchesSaveRequest(
-                DraftSaveRequest(conversationId = "other", draft = draft(messageText = "hello")),
+                DraftSaveRequest(
+                    conversationId = ConversationId("other"),
+                    draft = draft(messageText = "hello")
+                ),
             ),
         )
     }
@@ -147,7 +151,10 @@ internal class DraftEditorStateSaveTest : BaseDraftEditorStateTest() {
         assertSame(
             state,
             state.withPersistedSaveResult(
-                DraftSaveRequest(conversationId = "other", draft = draft(messageText = "hello")),
+                DraftSaveRequest(
+                    conversationId = ConversationId("other"),
+                    draft = draft(messageText = "hello")
+                ),
             ),
         )
     }

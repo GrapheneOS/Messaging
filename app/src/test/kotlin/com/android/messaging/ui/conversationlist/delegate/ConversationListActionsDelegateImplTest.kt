@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationlist.delegate
 
 import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepository
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
 import com.android.messaging.data.conversationsettings.model.SnoozeOption
@@ -22,12 +23,21 @@ internal class ConversationListActionsDelegateImplTest {
         val harness = createHarness()
 
         harness.delegate.setArchived(
-            conversationIds = listOf("a", "", "a", "b"),
+            conversationIds = listOf(
+                ConversationId("a"),
+                ConversationId(""),
+                ConversationId("a"),
+                ConversationId("b")
+            ),
             isArchived = true,
         )
 
-        coVerify(exactly = 1) { harness.conversationsRepository.archiveConversation("a") }
-        coVerify(exactly = 1) { harness.conversationsRepository.archiveConversation("b") }
+        coVerify(exactly = 1) {
+            harness.conversationsRepository.archiveConversation(ConversationId("a"))
+        }
+        coVerify(exactly = 1) {
+            harness.conversationsRepository.archiveConversation(ConversationId("b"))
+        }
         coVerify(exactly = 0) { harness.conversationsRepository.unarchiveConversation(any()) }
     }
 
@@ -36,11 +46,13 @@ internal class ConversationListActionsDelegateImplTest {
         val harness = createHarness()
 
         harness.delegate.setArchived(
-            conversationIds = listOf("a"),
+            conversationIds = listOf(ConversationId("a")),
             isArchived = false,
         )
 
-        coVerify(exactly = 1) { harness.conversationsRepository.unarchiveConversation("a") }
+        coVerify(exactly = 1) {
+            harness.conversationsRepository.unarchiveConversation(ConversationId("a"))
+        }
         coVerify(exactly = 0) { harness.conversationsRepository.archiveConversation(any()) }
     }
 
@@ -49,14 +61,28 @@ internal class ConversationListActionsDelegateImplTest {
         val harness = createHarness()
 
         harness.delegate.setPinned(
-            conversationIds = listOf("a", "", " ", "b", "a"),
+            conversationIds = listOf(
+                ConversationId("a"),
+                ConversationId(""),
+                ConversationId(" "),
+                ConversationId("b"),
+                ConversationId("a")
+            ),
             isPinned = true,
         )
 
-        coVerify(exactly = 1) { harness.conversationsRepository.pinConversation("a") }
-        coVerify(exactly = 1) { harness.conversationsRepository.pinConversation("b") }
-        coVerify(exactly = 0) { harness.conversationsRepository.pinConversation("") }
-        coVerify(exactly = 0) { harness.conversationsRepository.pinConversation(" ") }
+        coVerify(exactly = 1) {
+            harness.conversationsRepository.pinConversation(ConversationId("a"))
+        }
+        coVerify(exactly = 1) {
+            harness.conversationsRepository.pinConversation(ConversationId("b"))
+        }
+        coVerify(exactly = 0) {
+            harness.conversationsRepository.pinConversation(ConversationId(""))
+        }
+        coVerify(exactly = 0) {
+            harness.conversationsRepository.pinConversation(ConversationId(" "))
+        }
     }
 
     @Test
@@ -64,11 +90,13 @@ internal class ConversationListActionsDelegateImplTest {
         val harness = createHarness()
 
         harness.delegate.setPinned(
-            conversationIds = listOf("a"),
+            conversationIds = listOf(ConversationId("a")),
             isPinned = false,
         )
 
-        coVerify(exactly = 1) { harness.conversationsRepository.unpinConversation("a") }
+        coVerify(exactly = 1) {
+            harness.conversationsRepository.unpinConversation(ConversationId("a"))
+        }
         coVerify(exactly = 0) { harness.conversationsRepository.pinConversation(any()) }
     }
 
@@ -90,7 +118,7 @@ internal class ConversationListActionsDelegateImplTest {
         val harness = createHarness()
 
         harness.delegate.setPinned(
-            conversationIds = listOf("", "  "),
+            conversationIds = listOf(ConversationId(""), ConversationId("  ")),
             isPinned = true,
         )
 
@@ -102,12 +130,22 @@ internal class ConversationListActionsDelegateImplTest {
         val harness = createHarness()
 
         harness.delegate.setRead(
-            conversationIds = listOf("a", "", " ", "b", "a"),
+            conversationIds = listOf(
+                ConversationId("a"),
+                ConversationId(""),
+                ConversationId(" "),
+                ConversationId("b"),
+                ConversationId("a")
+            ),
             isRead = true,
         )
 
-        coVerify(exactly = 1) { harness.conversationsRepository.markConversationRead("a") }
-        coVerify(exactly = 1) { harness.conversationsRepository.markConversationRead("b") }
+        coVerify(exactly = 1) {
+            harness.conversationsRepository.markConversationRead(ConversationId("a"))
+        }
+        coVerify(exactly = 1) {
+            harness.conversationsRepository.markConversationRead(ConversationId("b"))
+        }
         coVerify(exactly = 0) { harness.conversationsRepository.markConversationUnread(any()) }
     }
 
@@ -116,11 +154,13 @@ internal class ConversationListActionsDelegateImplTest {
         val harness = createHarness()
 
         harness.delegate.setRead(
-            conversationIds = listOf("a"),
+            conversationIds = listOf(ConversationId("a")),
             isRead = false,
         )
 
-        coVerify(exactly = 1) { harness.conversationsRepository.markConversationUnread("a") }
+        coVerify(exactly = 1) {
+            harness.conversationsRepository.markConversationUnread(ConversationId("a"))
+        }
         coVerify(exactly = 0) { harness.conversationsRepository.markConversationRead(any()) }
     }
 
@@ -129,15 +169,21 @@ internal class ConversationListActionsDelegateImplTest {
         val harness = createHarness()
 
         harness.delegate.snooze(
-            conversationIds = listOf("a", "", " ", "b", "a"),
+            conversationIds = listOf(
+                ConversationId("a"),
+                ConversationId(""),
+                ConversationId(" "),
+                ConversationId("b"),
+                ConversationId("a")
+            ),
             option = SnoozeOption.OneHour,
         )
 
         verify(exactly = 1) {
-            harness.conversationListRepository.snooze("a", SnoozeOption.OneHour)
+            harness.conversationListRepository.snooze(ConversationId("a"), SnoozeOption.OneHour)
         }
         verify(exactly = 1) {
-            harness.conversationListRepository.snooze("b", SnoozeOption.OneHour)
+            harness.conversationListRepository.snooze(ConversationId("b"), SnoozeOption.OneHour)
         }
     }
 
@@ -145,10 +191,18 @@ internal class ConversationListActionsDelegateImplTest {
     fun unsnooze_clearsEachDistinctNonBlankConversation() = runTest {
         val harness = createHarness()
 
-        harness.delegate.unsnooze(listOf("a", "", " ", "b", "a"))
+        harness.delegate.unsnooze(
+            listOf(
+                ConversationId("a"),
+                ConversationId(""),
+                ConversationId(" "),
+                ConversationId("b"),
+                ConversationId("a")
+            )
+        )
 
-        verify(exactly = 1) { harness.conversationListRepository.clearSnooze("a") }
-        verify(exactly = 1) { harness.conversationListRepository.clearSnooze("b") }
+        verify(exactly = 1) { harness.conversationListRepository.clearSnooze(ConversationId("a")) }
+        verify(exactly = 1) { harness.conversationListRepository.clearSnooze(ConversationId("b")) }
     }
 
     @Test
@@ -157,13 +211,13 @@ internal class ConversationListActionsDelegateImplTest {
         coEvery {
             harness.blockedParticipantsRepository.setDestinationBlocked(
                 destination = "+15551234",
-                conversationId = "conv",
+                conversationId = ConversationId("conv"),
                 isBlocked = true,
             )
         } returns true
 
         val result = harness.delegate.block(
-            conversationId = "conv",
+            conversationId = ConversationId("conv"),
             destination = "+15551234",
         )
 
@@ -171,7 +225,7 @@ internal class ConversationListActionsDelegateImplTest {
         coVerify(exactly = 1) {
             harness.blockedParticipantsRepository.setDestinationBlocked(
                 destination = "+15551234",
-                conversationId = "conv",
+                conversationId = ConversationId("conv"),
                 isBlocked = true,
             )
         }
@@ -182,7 +236,7 @@ internal class ConversationListActionsDelegateImplTest {
         val harness = createHarness()
 
         val result = harness.delegate.block(
-            conversationId = "conv",
+            conversationId = ConversationId("conv"),
             destination = "  ",
         )
 
@@ -198,20 +252,20 @@ internal class ConversationListActionsDelegateImplTest {
         coEvery {
             harness.blockedParticipantsRepository.setDestinationBlocked(
                 destination = "+15551234",
-                conversationId = "conv",
+                conversationId = ConversationId("conv"),
                 isBlocked = false,
             )
         } returns true
 
         harness.delegate.unblock(
-            conversationId = "conv",
+            conversationId = ConversationId("conv"),
             destination = "+15551234",
         )
 
         coVerify(exactly = 1) {
             harness.blockedParticipantsRepository.setDestinationBlocked(
                 destination = "+15551234",
-                conversationId = "conv",
+                conversationId = ConversationId("conv"),
                 isBlocked = false,
             )
         }
@@ -223,13 +277,17 @@ internal class ConversationListActionsDelegateImplTest {
 
         harness.delegate.delete(
             listOf(
-                conversationItem("a", timestamp = 5_000L),
-                conversationItem("b", timestamp = 7_000L),
+                conversationItem(ConversationId("a"), timestamp = 5_000L),
+                conversationItem(ConversationId("b"), timestamp = 7_000L),
             ),
         )
 
-        verify(exactly = 1) { harness.conversationsRepository.deleteConversation("a", 5_000L) }
-        verify(exactly = 1) { harness.conversationsRepository.deleteConversation("b", 7_000L) }
+        verify(exactly = 1) {
+            harness.conversationsRepository.deleteConversation(ConversationId("a"), 5_000L)
+        }
+        verify(exactly = 1) {
+            harness.conversationsRepository.deleteConversation(ConversationId("b"), 7_000L)
+        }
     }
 
     private fun createHarness(): Harness {

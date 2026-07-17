@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationpicker.viewmodel
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.testutil.TEST_CONTACT_DESTINATION
 import com.android.messaging.testutil.TEST_CONTACT_DISPLAY_NAME
@@ -18,7 +19,7 @@ internal class ConversationPickerViewModelRoutingTest : BaseConversationPickerVi
     @Test
     fun selectionToggled_togglesSelectionOnTargetsDelegate() {
         val viewModel = createViewModel()
-        val target = conversationTarget(conversationId = "1")
+        val target = conversationTarget(conversationId = ConversationId("1"))
 
         viewModel.onAction(Action.SelectionToggled(target))
 

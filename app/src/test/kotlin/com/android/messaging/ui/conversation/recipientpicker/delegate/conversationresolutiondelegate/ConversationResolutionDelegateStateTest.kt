@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.recipientpicker.delegate.conversationresolutiondelegate
 
 import app.cash.turbine.test
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveConversationIdResult
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.ConversationResolutionState
 import kotlinx.coroutines.CompletableDeferred
@@ -114,7 +115,9 @@ internal class ConversationResolutionDelegateStateTest : BaseConversationResolut
                 )
 
                 gate.complete(
-                    ResolveConversationIdResult.Resolved(conversationId = "conversation-42"),
+                    ResolveConversationIdResult.Resolved(
+                        conversationId = ConversationId("conversation-42")
+                    ),
                 )
                 runCurrent()
 
@@ -134,7 +137,9 @@ internal class ConversationResolutionDelegateStateTest : BaseConversationResolut
             runCurrent()
 
             gate.complete(
-                ResolveConversationIdResult.Resolved(conversationId = "conversation-42"),
+                ResolveConversationIdResult.Resolved(
+                    conversationId = ConversationId("conversation-42")
+                ),
             )
             runCurrent()
 

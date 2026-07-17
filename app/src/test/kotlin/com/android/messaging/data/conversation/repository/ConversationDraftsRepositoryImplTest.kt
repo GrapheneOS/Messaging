@@ -72,7 +72,7 @@ class ConversationDraftsRepositoryImplTest {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val registeredObserver = slot<ContentObserver>()
             val expectedUri = MessagingContentProvider
-                .buildConversationMetadataUri(CONVERSATION_ID)
+                .buildConversationMetadataUri(CONVERSATION_ID.value)
             val repository = createRepository()
 
             every {
@@ -84,7 +84,7 @@ class ConversationDraftsRepositoryImplTest {
                     selfParticipantId = "self-1",
                 )
             } returns MessageData.createDraftSmsMessage(
-                CONVERSATION_ID,
+                CONVERSATION_ID.value,
                 "self-1",
                 "Hello",
             )
@@ -115,10 +115,12 @@ class ConversationDraftsRepositoryImplTest {
     fun observeConversationDraft_reloadsDraftWhenObserverChanges() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val registeredObserver = slot<ContentObserver>()
-            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(CONVERSATION_ID)
+            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(
+                CONVERSATION_ID.value
+            )
             val repository = createRepository()
             var currentDraftMessage: MessageData? = MessageData.createDraftSmsMessage(
-                CONVERSATION_ID,
+                CONVERSATION_ID.value,
                 "self-1",
                 "Before",
             )
@@ -143,7 +145,7 @@ class ConversationDraftsRepositoryImplTest {
                 assertEquals("Before", awaitItem().messageText)
 
                 currentDraftMessage = MessageData.createDraftMmsMessage(
-                    CONVERSATION_ID,
+                    CONVERSATION_ID.value,
                     "self-1",
                     "",
                     "Updated subject",
@@ -161,7 +163,9 @@ class ConversationDraftsRepositoryImplTest {
     fun observeConversationDraft_emitsEmptyDraftWhenConversationDoesNotExist() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val registeredObserver = slot<ContentObserver>()
-            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(CONVERSATION_ID)
+            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(
+                CONVERSATION_ID.value
+            )
             val repository = createRepository()
 
             every {
@@ -183,7 +187,9 @@ class ConversationDraftsRepositoryImplTest {
     fun observeConversationDraft_emitsSafeEmptyDraftWhenLoadingFails() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val registeredObserver = slot<ContentObserver>()
-            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(CONVERSATION_ID)
+            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(
+                CONVERSATION_ID.value
+            )
             val repository = createRepository()
 
             every {
@@ -205,7 +211,9 @@ class ConversationDraftsRepositoryImplTest {
     fun observeConversationDraft_resolvesAudioAttachmentDuration() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val registeredObserver = slot<ContentObserver>()
-            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(CONVERSATION_ID)
+            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(
+                CONVERSATION_ID.value
+            )
             val repository = createRepository()
 
             mockkConstructor(MediaMetadataRetrieverWrapper::class)
@@ -253,7 +261,9 @@ class ConversationDraftsRepositoryImplTest {
     fun observeConversationDraft_skipsAudioMetadataResolverWhenDraftHasNoAudioAttachments() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val registeredObserver = slot<ContentObserver>()
-            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(CONVERSATION_ID)
+            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(
+                CONVERSATION_ID.value
+            )
             val repository = createRepository()
 
             mockkConstructor(MediaMetadataRetrieverWrapper::class)
@@ -310,7 +320,7 @@ class ConversationDraftsRepositoryImplTest {
             assertEquals("self-1", updatedMessage.captured.selfId)
             assertEquals("self-1", updatedMessage.captured.participantId)
             verify(exactly = 1) {
-                MessagingContentProvider.notifyConversationMetadataChanged(CONVERSATION_ID)
+                MessagingContentProvider.notifyConversationMetadataChanged(CONVERSATION_ID.value)
             }
         }
     }
@@ -400,7 +410,7 @@ class ConversationDraftsRepositoryImplTest {
 
     private fun createDraftAudioMessageData(): MessageData {
         return MessageData.createDraftMmsMessage(
-            CONVERSATION_ID,
+            CONVERSATION_ID.value,
             "self-1",
             "",
             "",
@@ -418,7 +428,7 @@ class ConversationDraftsRepositoryImplTest {
 
     private fun createDraftImageMessageData(): MessageData {
         return MessageData.createDraftMmsMessage(
-            CONVERSATION_ID,
+            CONVERSATION_ID.value,
             "self-1",
             "",
             "",

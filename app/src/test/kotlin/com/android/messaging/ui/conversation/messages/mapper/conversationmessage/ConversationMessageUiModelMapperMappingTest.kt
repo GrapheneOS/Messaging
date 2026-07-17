@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.messages.mapper.conversationmessage
 
 import android.net.Uri
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
@@ -24,7 +25,7 @@ internal class ConversationMessageUiModelMapperMappingTest :
         val uiModel = mapper.map(
             messageData(
                 messageId = "message-7",
-                conversationId = "conversation-3",
+                conversationId = ConversationId("conversation-3"),
                 text = "Hello there",
                 parts = emptyList(),
                 sentTimestamp = 1_000L,
@@ -52,7 +53,7 @@ internal class ConversationMessageUiModelMapperMappingTest :
         assertEquals(
             ConversationMessageUiModel(
                 messageId = "message-7",
-                conversationId = "conversation-3",
+                conversationId = ConversationId("conversation-3"),
                 text = "Hello there",
                 parts = persistentListOf(),
                 sentTimestamp = 1_000L,
@@ -89,7 +90,7 @@ internal class ConversationMessageUiModelMapperMappingTest :
         )
 
         assertEquals("", uiModel.messageId)
-        assertEquals("", uiModel.conversationId)
+        assertEquals(ConversationId(""), uiModel.conversationId)
     }
 
     @Test

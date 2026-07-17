@@ -29,7 +29,7 @@ class ConversationDraftMessageDataMapperImplTest {
         )
         val parts = message.parts.toList()
 
-        assertEquals(CONVERSATION_ID, message.conversationId)
+        assertEquals(CONVERSATION_ID.value, message.conversationId)
         assertEquals("self-1", message.selfId)
         assertEquals("self-1", message.participantId)
         assertEquals(MessageData.PROTOCOL_SMS, message.protocol)
