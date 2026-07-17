@@ -3,6 +3,7 @@ package com.android.messaging.data.conversation.platform
 import android.content.Context
 import androidx.core.net.toUri
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetails
 import com.android.messaging.datamodel.BugleDatabaseOperations
 import com.android.messaging.datamodel.DataModel
@@ -58,7 +59,7 @@ internal class MessageDetailsPlatformSourceImpl @Inject constructor(
         }
 
         return ConversationMessageDetails.Debug(
-            messageId = message.messageId,
+            messageId = MessageId.fromOrNull(message.messageId),
             telephonyUri = telephonyUri,
             conversationId = ConversationId.fromOrNull(conversationId),
             conversationTelephonyThreadId = conversationTelephonyThreadId,

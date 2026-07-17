@@ -25,6 +25,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.ui.common.components.safeDrawingContentPadding
 import com.android.messaging.ui.conversation.CONVERSATION_MESSAGES_LIST_TEST_TAG
@@ -72,7 +73,7 @@ internal fun ConversationMessages(
     modifier: Modifier = Modifier,
     messages: ImmutableList<ConversationMessageUiModel>,
     listState: LazyListState,
-    selectedMessageIds: ImmutableSet<String> = persistentSetOf(),
+    selectedMessageIds: ImmutableSet<MessageId> = persistentSetOf(),
     showIncomingParticipantIdentity: Boolean = true,
     youTubeLinkPreviewsEnabled: Boolean = false,
     subscriptions: ImmutableList<Subscription> = persistentListOf(),
@@ -80,11 +81,11 @@ internal fun ConversationMessages(
     additionalTopContentPadding: Dp = 0.dp,
     onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
-    onMessageClick: (String) -> Unit,
-    onMessageAvatarClick: (String) -> Unit,
-    onMessageDownloadClick: (String) -> Unit,
-    onMessageLongClick: (String) -> Unit,
-    onMessageResendClick: (String) -> Unit,
+    onMessageClick: (MessageId) -> Unit,
+    onMessageAvatarClick: (MessageId) -> Unit,
+    onMessageDownloadClick: (MessageId) -> Unit,
+    onMessageLongClick: (MessageId) -> Unit,
+    onMessageResendClick: (MessageId) -> Unit,
     onSimSelectorClick: () -> Unit = {},
 ) {
     val configuration = LocalConfiguration.current
@@ -142,23 +143,23 @@ internal fun ConversationMessages(
 private fun LazyListScope.conversationMessageItems(
     displayMessages: List<ConversationMessageUiModel>,
     timeZone: TimeZone,
-    selectedMessageIds: ImmutableSet<String>,
+    selectedMessageIds: ImmutableSet<MessageId>,
     isSelectionMode: Boolean,
     showIncomingParticipantIdentity: Boolean,
     youTubeLinkPreviewsEnabled: Boolean,
     simDisplayNameByParticipantId: ImmutableMap<String, String>,
     onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
-    onMessageClick: (String) -> Unit,
-    onMessageAvatarClick: (String) -> Unit,
-    onMessageDownloadClick: (String) -> Unit,
-    onMessageLongClick: (String) -> Unit,
-    onMessageResendClick: (String) -> Unit,
+    onMessageClick: (MessageId) -> Unit,
+    onMessageAvatarClick: (MessageId) -> Unit,
+    onMessageDownloadClick: (MessageId) -> Unit,
+    onMessageLongClick: (MessageId) -> Unit,
+    onMessageResendClick: (MessageId) -> Unit,
     onSimSelectorClick: () -> Unit,
 ) {
     itemsIndexed(
         items = displayMessages,
-        key = { _, message -> message.messageId },
+        key = { _, message -> message.messageId.value },
         contentType = { index, _ ->
             conversationMessagesItemContentType(
                 messages = displayMessages,
@@ -301,11 +302,11 @@ private fun ConversationMessagesItem(
     simDisplayNameByParticipantId: ImmutableMap<String, String>,
     onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
-    onMessageClick: (String) -> Unit,
-    onMessageAvatarClick: (String) -> Unit,
-    onMessageDownloadClick: (String) -> Unit,
-    onMessageLongClick: (String) -> Unit,
-    onMessageResendClick: (String) -> Unit,
+    onMessageClick: (MessageId) -> Unit,
+    onMessageAvatarClick: (MessageId) -> Unit,
+    onMessageDownloadClick: (MessageId) -> Unit,
+    onMessageLongClick: (MessageId) -> Unit,
+    onMessageResendClick: (MessageId) -> Unit,
     onSimSelectorClick: () -> Unit,
 ) {
     val presentation = rememberConversationMessagesItemPresentation(
@@ -517,7 +518,7 @@ private fun ConversationMessagesPreview() {
         ConversationMessages(
             messages = previewMessages(),
             listState = LazyListState(),
-            selectedMessageIds = persistentSetOf("outgoing-delivered"),
+            selectedMessageIds = persistentSetOf(MessageId("outgoing-delivered")),
             showIncomingParticipantIdentity = true,
             subscriptions = previewSubscriptions(),
             currentSendSimDisplayName = "Personal",

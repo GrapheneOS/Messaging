@@ -8,6 +8,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.ui.conversation.composer.model.ConversationComposerUiState
 import com.android.messaging.ui.conversation.composer.model.ConversationSimSelectorUiState
@@ -139,8 +140,8 @@ internal fun previewConversationScreenContentSelectionUiState(): ConversationScr
         composer = previewComposerUiState(),
         selection = ConversationMessageSelectionUiState(
             selectedMessageIds = persistentSetOf(
-                "screen-group-attachments",
-                "screen-group-failed",
+                MessageId("screen-group-attachments"),
+                MessageId("screen-group-failed"),
             ),
             availableActions = persistentSetOf(
                 ConversationMessageSelectionAction.Copy,
