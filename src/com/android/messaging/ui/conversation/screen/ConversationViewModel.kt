@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.media.model.ConversationCapturedMedia
 import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
@@ -85,7 +86,7 @@ internal interface ConversationScreenModel {
 
     fun onCallClick()
 
-    fun onSimSelected(selfParticipantId: String)
+    fun onSimSelected(selfParticipantId: ParticipantId)
 
     fun onExternalUriClicked(uri: String)
 
@@ -554,7 +555,7 @@ internal class ConversationViewModel @Inject constructor(
         }
     }
 
-    override fun onSimSelected(selfParticipantId: String) {
+    override fun onSimSelected(selfParticipantId: ParticipantId) {
         if (selfParticipantId.isBlank()) return
         val conversationId = conversationIdFlow.value?.takeIf { it.isNotBlank() } ?: return
 

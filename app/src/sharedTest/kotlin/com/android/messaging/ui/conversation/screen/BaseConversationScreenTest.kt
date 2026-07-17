@@ -8,6 +8,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
@@ -70,7 +71,7 @@ internal abstract class BaseConversationScreenTest {
                     onNavigateToMessageDetails = {},
                     onNavigateBack = {},
                     pendingDraft = pendingDraft,
-                    pendingSelfParticipantId = pendingSelfParticipantId,
+                    pendingSelfParticipantId = ParticipantId.fromOrNull(pendingSelfParticipantId),
                     pendingStartupAttachment = pendingStartupAttachment,
                     onPendingDraftConsumed = onPendingDraftConsumed,
                     onPendingSelfParticipantIdConsumed = onPendingSelfParticipantIdConsumed,
@@ -116,7 +117,7 @@ internal abstract class BaseConversationScreenTest {
             isDeleteConversationConfirmationVisible = isDeleteConversationConfirmationVisible,
             metadata = ConversationMetadataUiState.Present(
                 title = "Weekend plan",
-                selfParticipantId = "self-1",
+                selfParticipantId = ParticipantId("self-1"),
                 avatar = ConversationMetadataUiState.Avatar.Single(
                     photoUri = null,
                     normalizedDestination = null,
@@ -168,7 +169,7 @@ internal abstract class BaseConversationScreenTest {
                 senderContactLookupKey = null,
                 senderNormalizedDestination = null,
                 senderParticipantId = null,
-                selfParticipantId = "self-1",
+                selfParticipantId = ParticipantId("self-1"),
                 canClusterWithPrevious = false,
                 canClusterWithNext = false,
                 canCopyMessageToClipboard = !latestMessageIncoming,

@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.entry.newchat
 
 import app.cash.turbine.test
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.entry.model.NewChatEffect
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.ConversationResolutionOutcome
@@ -165,7 +166,7 @@ internal class NewChatViewModelConversationResolutionTest : BaseNewChatViewModel
                 assertEquals(
                     NewChatEffect.NavigateToConversation(
                         conversationId = CONVERSATION_ID,
-                        selfParticipantId = "self-1",
+                        selfParticipantId = ParticipantId("self-1"),
                     ),
                     awaitItem(),
                 )

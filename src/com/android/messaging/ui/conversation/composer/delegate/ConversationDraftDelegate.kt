@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.composer.delegate
 import android.app.Activity
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.data.conversation.model.draft.ConversationDraftPendingAttachment
@@ -69,7 +70,7 @@ internal interface ConversationDraftDelegate : ConversationScreenDelegate<Conver
 
     fun onSelfParticipantIdChanged(
         conversationId: ConversationId,
-        selfParticipantId: String,
+        selfParticipantId: ParticipantId,
     )
 
     fun seedDraft(
@@ -184,7 +185,7 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
 
     override fun onSelfParticipantIdChanged(
         conversationId: ConversationId,
-        selfParticipantId: String,
+        selfParticipantId: ParticipantId,
     ) {
         conversationDraftEditorDelegate.onSelfParticipantIdChanged(
             conversationId = conversationId,

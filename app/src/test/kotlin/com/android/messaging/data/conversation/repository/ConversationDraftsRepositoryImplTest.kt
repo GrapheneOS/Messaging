@@ -7,6 +7,7 @@ import android.net.Uri
 import app.cash.turbine.test
 import com.android.messaging.data.conversation.mapper.ConversationDraftMessageDataMapperImpl
 import com.android.messaging.data.conversation.mapper.ConversationMessageDataDraftMapperImpl
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.store.ConversationDraftStore
 import com.android.messaging.datamodel.MessagingContentProvider
@@ -77,11 +78,11 @@ class ConversationDraftsRepositoryImplTest {
 
             every {
                 conversationDraftStore.getSelfParticipantId(CONVERSATION_ID)
-            } returns "self-1"
+            } returns ParticipantId("self-1")
             every {
                 conversationDraftStore.readDraftMessage(
                     conversationId = CONVERSATION_ID,
-                    selfParticipantId = "self-1",
+                    selfParticipantId = ParticipantId("self-1"),
                 )
             } returns MessageData.createDraftSmsMessage(
                 CONVERSATION_ID.value,
@@ -127,11 +128,11 @@ class ConversationDraftsRepositoryImplTest {
 
             every {
                 conversationDraftStore.getSelfParticipantId(CONVERSATION_ID)
-            } returns "self-1"
+            } returns ParticipantId("self-1")
             every {
                 conversationDraftStore.readDraftMessage(
                     conversationId = CONVERSATION_ID,
-                    selfParticipantId = "self-1",
+                    selfParticipantId = ParticipantId("self-1"),
                 )
             } answers {
                 currentDraftMessage
@@ -231,11 +232,11 @@ class ConversationDraftsRepositoryImplTest {
 
             every {
                 conversationDraftStore.getSelfParticipantId(CONVERSATION_ID)
-            } returns "self-1"
+            } returns ParticipantId("self-1")
             every {
                 conversationDraftStore.readDraftMessage(
                     conversationId = CONVERSATION_ID,
-                    selfParticipantId = "self-1",
+                    selfParticipantId = ParticipantId("self-1"),
                 )
             } returns createDraftAudioMessageData()
             stubObserverRegistration(
@@ -270,11 +271,11 @@ class ConversationDraftsRepositoryImplTest {
 
             every {
                 conversationDraftStore.getSelfParticipantId(CONVERSATION_ID)
-            } returns "self-1"
+            } returns ParticipantId("self-1")
             every {
                 conversationDraftStore.readDraftMessage(
                     conversationId = CONVERSATION_ID,
-                    selfParticipantId = "self-1",
+                    selfParticipantId = ParticipantId("self-1"),
                 )
             } returns createDraftImageMessageData()
             stubObserverRegistration(
@@ -301,7 +302,7 @@ class ConversationDraftsRepositoryImplTest {
 
             every {
                 conversationDraftStore.getSelfParticipantId(CONVERSATION_ID)
-            } returns "self-1"
+            } returns ParticipantId("self-1")
             every {
                 conversationDraftStore.updateDraftMessage(
                     conversationId = CONVERSATION_ID,
@@ -313,7 +314,7 @@ class ConversationDraftsRepositoryImplTest {
                 conversationId = CONVERSATION_ID,
                 draft = ConversationDraft(
                     messageText = "Hello",
-                    selfParticipantId = "",
+                    selfParticipantId = ParticipantId(""),
                 ),
             )
 
@@ -338,7 +339,7 @@ class ConversationDraftsRepositoryImplTest {
                 conversationId = CONVERSATION_ID,
                 draft = ConversationDraft(
                     messageText = "Hello",
-                    selfParticipantId = "",
+                    selfParticipantId = ParticipantId(""),
                 ),
             )
 
@@ -368,7 +369,7 @@ class ConversationDraftsRepositoryImplTest {
                 conversationId = CONVERSATION_ID,
                 draft = ConversationDraft(
                     messageText = "Hello",
-                    selfParticipantId = "self-2",
+                    selfParticipantId = ParticipantId("self-2"),
                 ),
             )
 

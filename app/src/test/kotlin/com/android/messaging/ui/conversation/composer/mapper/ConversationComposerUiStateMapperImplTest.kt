@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.composer.mapper
 
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerDisabledReason
@@ -238,7 +239,7 @@ internal class ConversationComposerUiStateMapperImplTest {
             draftState = ConversationDraftState(
                 draft = ConversationDraft(
                     messageText = messageText,
-                    selfParticipantId = "sub-b",
+                    selfParticipantId = ParticipantId("sub-b"),
                 ),
             ),
             attachments = persistentListOf(),
@@ -392,7 +393,7 @@ internal class ConversationComposerUiStateMapperImplTest {
             audioRecording = ConversationAudioRecordingUiState(),
             draftState = ConversationDraftState(
                 draft = ConversationDraft(
-                    selfParticipantId = FIRST_SELF_PARTICIPANT_ID,
+                    selfParticipantId = ParticipantId(FIRST_SELF_PARTICIPANT_ID),
                 ),
             ),
             attachments = persistentListOf(),
@@ -499,7 +500,7 @@ internal class ConversationComposerUiStateMapperImplTest {
             audioRecording = ConversationAudioRecordingUiState(),
             draftState = ConversationDraftState(
                 draft = ConversationDraft(
-                    selfParticipantId = "sub-b",
+                    selfParticipantId = ParticipantId("sub-b"),
                 ),
             ),
             attachments = persistentListOf(),
@@ -599,7 +600,7 @@ internal class ConversationComposerUiStateMapperImplTest {
         slotId: Int,
     ): Subscription {
         return Subscription(
-            selfParticipantId = selfParticipantId,
+            selfParticipantId = ParticipantId(selfParticipantId),
             subId = subId,
             label = ConversationSubscriptionLabel.Slot(slotId = slotId),
             displayDestination = null,
@@ -611,7 +612,7 @@ internal class ConversationComposerUiStateMapperImplTest {
     private companion object {
         private const val FIRST_SELF_PARTICIPANT_ID = "self-participant-1"
         private const val SECOND_SELF_PARTICIPANT_ID = "self-participant-2"
-        private const val STALE_SELF_PARTICIPANT_ID = "self-participant-gone"
+        private val STALE_SELF_PARTICIPANT_ID = ParticipantId("self-participant-gone")
         private const val FIRST_SUB_ID = 1
         private const val SECOND_SUB_ID = 2
         private const val STALE_SUB_ID = 99

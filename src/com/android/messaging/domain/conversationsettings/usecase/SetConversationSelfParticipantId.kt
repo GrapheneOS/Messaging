@@ -1,12 +1,13 @@
 package com.android.messaging.domain.conversationsettings.usecase
 
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
 import javax.inject.Inject
 
 internal fun interface SetConversationSelfParticipantId {
-    suspend operator fun invoke(conversationId: ConversationId, selfParticipantId: String)
+    suspend operator fun invoke(conversationId: ConversationId, selfParticipantId: ParticipantId)
 }
 
 internal class SetConversationSelfParticipantIdImpl @Inject constructor(
@@ -16,9 +17,9 @@ internal class SetConversationSelfParticipantIdImpl @Inject constructor(
 
     override suspend fun invoke(
         conversationId: ConversationId,
-        selfParticipantId: String,
+        selfParticipantId: ParticipantId,
     ) {
-        if (conversationId.isBlank() || selfParticipantId.isEmpty()) return
+        if (conversationId.isBlank() || selfParticipantId.isBlank()) return
 
         simSelectionRepository.setSelectedSelfId(
             conversationId = conversationId,

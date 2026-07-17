@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.entry.newchat
 
 import androidx.lifecycle.SavedStateHandle
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
@@ -131,7 +132,7 @@ internal abstract class BaseNewChatViewModelTest {
         slotId: Int = 1,
     ): Subscription {
         return Subscription(
-            selfParticipantId = selfParticipantId,
+            selfParticipantId = ParticipantId(selfParticipantId),
             subId = subId,
             label = ConversationSubscriptionLabel.Slot(slotId = slotId),
             displayDestination = null,

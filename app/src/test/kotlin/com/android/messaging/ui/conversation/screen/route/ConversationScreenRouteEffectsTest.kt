@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.screen.route
 
 import androidx.lifecycle.Lifecycle
 import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.testutil.TestLifecycleOwner
@@ -165,7 +166,9 @@ internal class ConversationScreenRouteEffectsTest : BaseConversationScreenTest()
 
         composeTestRule.runOnIdle {
             verify(exactly = 1) {
-                screenModel.model.onSimSelected(selfParticipantId = SELF_PARTICIPANT_ID)
+                screenModel.model.onSimSelected(
+                    selfParticipantId = ParticipantId(SELF_PARTICIPANT_ID)
+                )
             }
             assertEquals(1, selfParticipantConsumedCount)
         }

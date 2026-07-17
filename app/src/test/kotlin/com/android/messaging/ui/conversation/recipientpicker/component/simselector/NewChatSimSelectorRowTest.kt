@@ -10,6 +10,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.ui.conversation.TEST_ATT_SUBSCRIPTION_NAME
 import com.android.messaging.ui.conversation.TEST_VERIZON_SUBSCRIPTION_NAME
 import com.android.messaging.ui.conversation.composer.model.ConversationSimSelectorUiState
@@ -35,7 +36,7 @@ internal class NewChatSimSelectorRowTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private val onSimSelected = mockk<(String) -> Unit>(relaxed = true)
+    private val onSimSelected = mockk<(ParticipantId) -> Unit>(relaxed = true)
 
     @Before
     fun setUpNewChatSimSelectorRowTest() {

@@ -6,6 +6,7 @@ import android.content.ContentResolver
 import android.database.ContentObserver
 import android.net.Uri
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.data.conversationsettings.model.ConversationSettingsData
 import com.android.messaging.data.conversationsettings.model.SNOOZE_NEVER_EXPIRES
@@ -92,7 +93,7 @@ internal class ConversationSettingsRepositoryImpl @Inject constructor(
             isArchived = metadata?.isArchived ?: false,
             isSnoozed = notificationRepository.isSnoozed(conversationId),
             participants = participants.toImmutableList(),
-            dbSelfParticipantId = metadata?.selfParticipantId.orEmpty(),
+            dbSelfParticipantId = metadata?.selfParticipantId ?: ParticipantId(""),
         )
     }
 

@@ -30,6 +30,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.ui.common.text.asLtrText
@@ -65,7 +66,7 @@ internal fun LazyListScope.simSwitchItem(
 private fun SimSwitchItem(
     subscriptions: ImmutableList<Subscription>,
     selected: Subscription,
-    onSimSelected: (String) -> Unit,
+    onSimSelected: (ParticipantId) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -148,7 +149,7 @@ private fun SimSwitchItemMenu(
     subscriptions: ImmutableList<Subscription>,
     expanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
-    onSimSelected: (String) -> Unit,
+    onSimSelected: (ParticipantId) -> Unit,
 ) {
     Box {
         IconButton(onClick = { onExpandedChange(true) }) {
@@ -175,7 +176,7 @@ private fun SimSwitchItemMenu(
 @Composable
 private fun SimSelectorPopupContent(
     subscriptions: ImmutableList<Subscription>,
-    onSimSelected: (String) -> Unit,
+    onSimSelected: (ParticipantId) -> Unit,
 ) {
     Column {
         subscriptions.forEach { subscription ->
@@ -232,7 +233,7 @@ private fun SimSelectorRow(
 @Composable
 private fun SimSwitchItemPreview() {
     val subscription = Subscription(
-        selfParticipantId = "1",
+        selfParticipantId = ParticipantId("1"),
         subId = 1,
         label = ConversationSubscriptionLabel.Slot(slotId = 1),
         displayDestination = "+31 6 1234 5678",

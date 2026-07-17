@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.metadata.delegate
 import app.cash.turbine.test
 import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepository
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
 import com.android.messaging.data.conversation.repository.ConversationsRepository
@@ -257,7 +258,7 @@ class ConversationMetadataDelegateImplTest {
             val metadata = firstArg<ConversationMetadata>()
             ConversationMetadataUiState.Present(
                 title = "Carol",
-                selfParticipantId = "self-1",
+                selfParticipantId = ParticipantId("self-1"),
                 avatar = ConversationMetadataUiState.Avatar.Single(
                     photoUri = metadata.otherParticipantPhotoUri,
                     normalizedDestination = metadata.otherParticipantNormalizedDestination,

@@ -1,5 +1,6 @@
 package com.android.messaging.ui.subscription.delegate
 
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
 import com.android.messaging.data.subscription.resolveSelectedSubscription
 import com.android.messaging.datamodel.data.ParticipantData
@@ -17,8 +18,8 @@ import kotlinx.coroutines.launch
 internal interface SimSelectionDelegate {
     val state: StateFlow<SimSelectionUiState>
     fun bind(scope: CoroutineScope)
-    fun select(selfParticipantId: String)
-    fun currentSelectedSelfParticipantId(): String?
+    fun select(selfParticipantId: ParticipantId)
+    fun currentSelectedSelfParticipantId(): ParticipantId?
 }
 
 internal class SimSelectionDelegateImpl @Inject constructor(
@@ -27,7 +28,7 @@ internal class SimSelectionDelegateImpl @Inject constructor(
     private val defaultDispatcher: CoroutineDispatcher,
 ) : SimSelectionDelegate {
 
-    private val requestedSelfParticipantId = MutableStateFlow<String?>(null)
+    private val requestedSelfParticipantId = MutableStateFlow<ParticipantId?>(null)
 
     private val _state = MutableStateFlow(SimSelectionUiState())
     override val state: StateFlow<SimSelectionUiState> = _state.asStateFlow()
@@ -60,11 +61,11 @@ internal class SimSelectionDelegateImpl @Inject constructor(
         }
     }
 
-    override fun select(selfParticipantId: String) {
+    override fun select(selfParticipantId: ParticipantId) {
         requestedSelfParticipantId.value = selfParticipantId
     }
 
-    override fun currentSelectedSelfParticipantId(): String? {
+    override fun currentSelectedSelfParticipantId(): ParticipantId? {
         val currentState = _state.value
         val selectedSubscription = currentState.subscriptions
             .firstOrNull { subscription ->

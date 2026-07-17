@@ -1,11 +1,12 @@
 package com.android.messaging.data.subscription.model
 
 import androidx.compose.runtime.Immutable
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
 
 @Immutable
 internal data class Subscription(
-    val selfParticipantId: String,
+    val selfParticipantId: ParticipantId,
     val subId: Int,
     val label: ConversationSubscriptionLabel,
     val displayDestination: String?,

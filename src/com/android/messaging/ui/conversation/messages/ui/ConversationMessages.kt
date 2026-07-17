@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.ui.common.components.safeDrawingContentPadding
 import com.android.messaging.ui.conversation.CONVERSATION_MESSAGES_LIST_TEST_TAG
@@ -144,7 +145,7 @@ private fun LazyListScope.conversationMessageItems(
     selectedMessageIds: ImmutableSet<MessageId>,
     isSelectionMode: Boolean,
     showIncomingParticipantIdentity: Boolean,
-    simDisplayNameByParticipantId: ImmutableMap<String, String>,
+    simDisplayNameByParticipantId: ImmutableMap<ParticipantId, String>,
     onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onMessageClick: (MessageId) -> Unit,
@@ -230,7 +231,7 @@ private fun conversationMessagesContentPadding(
 @Composable
 private fun rememberSimDisplayNameByParticipantId(
     subscriptions: ImmutableList<Subscription>,
-): ImmutableMap<String, String> {
+): ImmutableMap<ParticipantId, String> {
     val resources = LocalResources.current
 
     return remember(subscriptions, resources) {
@@ -294,7 +295,7 @@ private fun ConversationMessagesItem(
     isSelectionMode: Boolean,
     isSelected: Boolean,
     showIncomingParticipantIdentity: Boolean,
-    simDisplayNameByParticipantId: ImmutableMap<String, String>,
+    simDisplayNameByParticipantId: ImmutableMap<ParticipantId, String>,
     onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onMessageClick: (MessageId) -> Unit,

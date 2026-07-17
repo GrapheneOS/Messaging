@@ -1,5 +1,6 @@
 package com.android.messaging.data.conversation.mapper
 
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.datamodel.data.MessageData
@@ -11,7 +12,7 @@ import kotlinx.collections.immutable.toImmutableList
 internal interface ConversationMessageDataDraftMapper {
     fun map(
         messageData: MessageData,
-        fallbackSelfParticipantId: String? = null,
+        fallbackSelfParticipantId: ParticipantId? = null,
     ): ConversationDraft
 }
 
@@ -20,15 +21,15 @@ internal class ConversationMessageDataDraftMapperImpl @Inject constructor() :
 
     override fun map(
         messageData: MessageData,
-        fallbackSelfParticipantId: String?,
+        fallbackSelfParticipantId: ParticipantId?,
     ): ConversationDraft {
         return ConversationDraft(
             messageText = messageData.messageText,
             subjectText = messageData.mmsSubject.orEmpty(),
-            selfParticipantId = messageData
-                .selfId
+            selfParticipantId = ParticipantId.fromOrNull(messageData.selfId)
                 ?.takeIf { it.isNotBlank() }
-                ?: fallbackSelfParticipantId.orEmpty(),
+                ?: fallbackSelfParticipantId
+                ?: ParticipantId(""),
             attachments = messageData.parts
                 .asSequence()
                 .filter { it.isAttachment }

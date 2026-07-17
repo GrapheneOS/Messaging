@@ -4,6 +4,7 @@ import android.database.ContentObserver
 import android.database.Cursor
 import android.database.MatrixCursor
 import app.cash.turbine.test
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.DatabaseHelper.MessageColumns
 import com.android.messaging.datamodel.MessagingContentProvider
@@ -108,7 +109,7 @@ internal class ConversationsRepositoryMetadataTest : BaseConversationsRepository
                 val metadata = awaitItem()
 
                 assertEquals("Carol, Dave, Erin", metadata?.conversationName)
-                assertEquals("self-2", metadata?.selfParticipantId)
+                assertEquals(ParticipantId("self-2"), metadata?.selfParticipantId)
                 assertEquals(true, metadata?.isGroupConversation)
                 assertEquals(3, metadata?.participantCount)
                 assertEquals(false, metadata?.isArchived)

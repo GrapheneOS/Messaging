@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.android.messaging.data.conversation.mapper.ConversationMessageDataDraftMapper
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryLaunchRequest
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryStartupAttachment
@@ -19,7 +20,7 @@ internal interface ConversationEntryScreenModel {
 
     fun onConversationNavigationRequested(
         conversationId: ConversationId,
-        pendingSelfParticipantId: String?,
+        pendingSelfParticipantId: ParticipantId?,
     )
 
     fun onLaunchRequest(launchRequest: ConversationEntryLaunchRequest)
@@ -45,7 +46,7 @@ internal class ConversationEntryViewModel @Inject constructor(
 
     override fun onConversationNavigationRequested(
         conversationId: ConversationId,
-        pendingSelfParticipantId: String?,
+        pendingSelfParticipantId: ParticipantId?,
     ) {
         updateUiState(
             _uiState.value.copy(
@@ -159,7 +160,9 @@ internal class ConversationEntryViewModel @Inject constructor(
             conversationId = ConversationId.fromOrNull(savedStateHandle[CONVERSATION_ID_KEY]),
             pendingDraft = pendingDraftData?.let(conversationMessageDataDraftMapper::map),
             pendingScrollPosition = savedStateHandle[PENDING_SCROLL_POSITION_KEY],
-            pendingSelfParticipantId = savedStateHandle[PENDING_SELF_PARTICIPANT_ID_KEY],
+            pendingSelfParticipantId = ParticipantId.fromOrNull(
+                savedStateHandle[PENDING_SELF_PARTICIPANT_ID_KEY],
+            ),
             pendingStartupAttachment = buildStartupAttachmentOrNull(
                 contentUri = startupAttachmentUri,
                 contentType = startupAttachmentType,
@@ -191,7 +194,8 @@ internal class ConversationEntryViewModel @Inject constructor(
         }
 
         if (previousUiState.pendingSelfParticipantId != uiState.pendingSelfParticipantId) {
-            savedStateHandle[PENDING_SELF_PARTICIPANT_ID_KEY] = uiState.pendingSelfParticipantId
+            savedStateHandle[PENDING_SELF_PARTICIPANT_ID_KEY] =
+                uiState.pendingSelfParticipantId?.value
         }
 
         if (

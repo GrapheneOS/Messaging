@@ -44,7 +44,7 @@ private const val PREVIEW_AVATAR_PNG_BASE64 =
 internal fun previewSubscriptions(): ImmutableList<Subscription> {
     return persistentListOf(
         previewSubscription(
-            selfParticipantId = "self-1",
+            selfParticipantId = ParticipantId("self-1"),
             subId = 1,
             label = ConversationSubscriptionLabel.Named(name = "Personal"),
             displayDestination = "+31 6 1234 5678",
@@ -52,7 +52,7 @@ internal fun previewSubscriptions(): ImmutableList<Subscription> {
             color = 0xff1e88e5.toInt(),
         ),
         previewSubscription(
-            selfParticipantId = "self-2",
+            selfParticipantId = ParticipantId("self-2"),
             subId = 2,
             label = ConversationSubscriptionLabel.Named(name = "Work"),
             displayDestination = "+372 5555 0101",
@@ -63,7 +63,7 @@ internal fun previewSubscriptions(): ImmutableList<Subscription> {
 }
 
 internal fun previewSubscription(
-    selfParticipantId: String = "self-1",
+    selfParticipantId: ParticipantId = ParticipantId("self-1"),
     subId: Int = 1,
     label: ConversationSubscriptionLabel = ConversationSubscriptionLabel.Named(name = "Personal"),
     displayDestination: String? = "+31 6 1234 5678",
@@ -96,7 +96,7 @@ internal fun previewMetadata(
 ): ConversationMetadataUiState.Present {
     return ConversationMetadataUiState.Present(
         title = title,
-        selfParticipantId = "self-1",
+        selfParticipantId = ParticipantId("self-1"),
         avatar = ConversationMetadataUiState.Avatar.Single(
             photoUri = null,
             normalizedDestination = null,
@@ -115,7 +115,7 @@ internal fun previewMetadata(
 internal fun previewGroupMetadata(): ConversationMetadataUiState.Present {
     return ConversationMetadataUiState.Present(
         title = "Project group",
-        selfParticipantId = "self-1",
+        selfParticipantId = ParticipantId("self-1"),
         avatar = ConversationMetadataUiState.Avatar.Group,
         participantCount = 4,
         otherParticipantDisplayDestination = null,
@@ -135,7 +135,7 @@ internal fun previewComposerUiState(
         attachments = persistentListOf(),
         messageText = messageText,
         subjectText = subjectText,
-        selfParticipantId = "self-1",
+        selfParticipantId = ParticipantId("self-1"),
         simSelector = previewSimSelectorUiState(),
         isMessageFieldEnabled = true,
         isAttachmentActionEnabled = true,
@@ -356,7 +356,7 @@ internal fun previewOutgoingMessage(
         isIncoming = false,
         senderDisplayName = null,
         senderParticipantId = ParticipantId("self-1"),
-        selfParticipantId = "self-1",
+        selfParticipantId = ParticipantId("self-1"),
     )
 }
 
@@ -512,7 +512,7 @@ private fun previewMessage(
     isIncoming: Boolean,
     senderDisplayName: String?,
     senderParticipantId: ParticipantId?,
-    selfParticipantId: String? = null,
+    selfParticipantId: ParticipantId? = null,
     mmsDownload: MmsDownloadUiModel? = null,
     protocol: ConversationMessageUiModel.Protocol = ConversationMessageUiModel.Protocol.SMS,
     canDownloadMessage: Boolean = false,

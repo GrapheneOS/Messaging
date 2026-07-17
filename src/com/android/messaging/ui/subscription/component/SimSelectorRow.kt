@@ -32,6 +32,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.ui.core.MessagingPreviewColumn
 import com.android.messaging.ui.subscription.model.SimOptionUiModel
 import com.android.messaging.ui.subscription.model.SimSelectorUiState
@@ -47,7 +48,7 @@ internal fun SimSelectorRow(
     prefixText: String,
     chipContentDescription: String,
     selectedContentDescription: String,
-    onSimSelected: (String) -> Unit,
+    onSimSelected: (ParticipantId) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (!uiState.isAvailable) {
@@ -142,9 +143,9 @@ private fun SimSelectorChip(
 private fun SimSelectorDropdown(
     expanded: Boolean,
     options: ImmutableList<SimOptionUiModel>,
-    selectedId: String,
+    selectedId: ParticipantId,
     selectedContentDescription: String,
-    onSimSelected: (String) -> Unit,
+    onSimSelected: (ParticipantId) -> Unit,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -233,14 +234,14 @@ private fun SimSelectorDropdownItemText(
 private fun previewSimSelectorUiState(): SimSelectorUiState {
     val options = persistentListOf(
         SimOptionUiModel(
-            id = "self_1",
+            id = ParticipantId("self_1"),
             label = "SIM 1",
             destination = "+31 6 1234 5678",
             slotLabel = "1",
             accentColor = null,
         ),
         SimOptionUiModel(
-            id = "self_2",
+            id = ParticipantId("self_2"),
             label = "Work",
             destination = "+31 6 8765 4321",
             slotLabel = "2",
@@ -250,7 +251,7 @@ private fun previewSimSelectorUiState(): SimSelectorUiState {
 
     return SimSelectorUiState(
         options = options,
-        selectedId = "self_1",
+        selectedId = ParticipantId("self_1"),
     )
 }
 

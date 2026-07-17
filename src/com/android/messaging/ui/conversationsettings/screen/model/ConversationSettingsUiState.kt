@@ -15,7 +15,7 @@ internal data class ConversationSettingsUiState(
     val isSnoozed: Boolean = false,
     val participants: ImmutableList<ParticipantUiState> = persistentListOf(),
     val otherParticipant: ParticipantUiState? = null,
-    val selfParticipantId: String = "",
+    val selfParticipantId: ParticipantId = ParticipantId(""),
     val availableSubscriptions: ImmutableList<Subscription> = persistentListOf(),
     val selectedSubscription: Subscription? = null,
     val isSimSwitchAvailable: Boolean = false,

@@ -6,6 +6,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalResources
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.ui.subscription.model.SimOptionUiModel
@@ -37,7 +38,7 @@ internal fun ConversationSubscriptionLabel.resolveDisplayName(
 @Composable
 internal fun rememberSimSelectorUiState(
     subscriptions: ImmutableList<Subscription>,
-    selectedSelfParticipantId: String?,
+    selectedSelfParticipantId: ParticipantId?,
 ): SimSelectorUiState {
     val resources = LocalResources.current
 

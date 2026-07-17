@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.messages.ui.message
 
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
@@ -28,7 +29,7 @@ class ResolveConversationMessageSimDisplayNameTest {
 
     @Test
     fun returnsNullWhenSelfParticipantIdMissingFromMap() {
-        val message = message(selfParticipantId = "unknown", isIncoming = false)
+        val message = message(selfParticipantId = ParticipantId("unknown"), isIncoming = false)
 
         val result = resolveConversationMessageSimDisplayName(
             message = message,
@@ -113,12 +114,12 @@ class ResolveConversationMessageSimDisplayNameTest {
     }
 
     private fun message(
-        selfParticipantId: String?,
+        selfParticipantId: ParticipantId?,
         isIncoming: Boolean,
         mmsDownload: MmsDownloadUiModel? = null,
     ): ConversationMessageUiModel {
         return ConversationMessageUiModel(
-            messageId = MessageId("id-${selfParticipantId.orEmpty()}-$isIncoming"),
+            messageId = MessageId("id-${selfParticipantId?.value.orEmpty()}-$isIncoming"),
             conversationId = ConversationId("conversation"),
             text = "text",
             parts = persistentListOf(
@@ -159,8 +160,8 @@ class ResolveConversationMessageSimDisplayNameTest {
     }
 
     private companion object {
-        private const val SIM_1_ID = "self-sim-1"
-        private const val SIM_2_ID = "self-sim-2"
+        private val SIM_1_ID = ParticipantId("self-sim-1")
+        private val SIM_2_ID = ParticipantId("self-sim-2")
         private const val SIM_1_NAME = "SIM 1"
         private const val SIM_2_NAME = "SIM 2"
 

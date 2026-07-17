@@ -4,6 +4,7 @@ import android.net.Uri
 import app.cash.turbine.test
 import com.android.messaging.data.conversation.mapper.ConversationDraftMessageDataMapper
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
@@ -171,7 +172,7 @@ class SendConversationDraftImplTest {
             )
             val draft = ConversationDraft(
                 messageText = "Hello",
-                selfParticipantId = "self-1",
+                selfParticipantId = ParticipantId("self-1"),
             )
             val useCase = createUseCase(
                 repository = repository,
@@ -191,7 +192,7 @@ class SendConversationDraftImplTest {
             coVerify(exactly = 1) {
                 repository.getConversationSendData(
                     conversationId = CONVERSATION_ID,
-                    requestedSelfParticipantId = "self-1",
+                    requestedSelfParticipantId = ParticipantId("self-1"),
                 )
             }
             verify(exactly = 1) {

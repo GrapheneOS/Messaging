@@ -55,7 +55,9 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor(
             senderParticipantId = ParticipantId
                 .fromOrNull(data.participantId)
                 ?.takeIf { it.isNotBlank() },
-            selfParticipantId = data.selfParticipantId?.takeIf { it.isNotBlank() },
+            selfParticipantId = ParticipantId
+                .fromOrNull(data.selfParticipantId)
+                ?.takeIf { it.isNotBlank() },
             canClusterWithPrevious = data.canClusterWithPreviousMessage,
             canClusterWithNext = data.canClusterWithNextMessage,
             canCopyMessageToClipboard = data.canCopyMessageToClipboard,

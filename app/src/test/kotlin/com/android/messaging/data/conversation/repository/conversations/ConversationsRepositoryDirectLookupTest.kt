@@ -4,6 +4,7 @@ import android.database.Cursor
 import android.database.MatrixCursor
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetails
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetailsData
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
@@ -41,7 +42,7 @@ internal class ConversationsRepositoryDirectLookupTest : BaseConversationsReposi
         ) {
             val result = createRepository().getConversationSendData(
                 conversationId = ConversationId(" "),
-                requestedSelfParticipantId = "self-1",
+                requestedSelfParticipantId = ParticipantId("self-1"),
             )
 
             assertNull(result)
@@ -116,11 +117,11 @@ internal class ConversationsRepositoryDirectLookupTest : BaseConversationsReposi
 
             val result = createRepository().getConversationSendData(
                 conversationId = CONVERSATION_ID,
-                requestedSelfParticipantId = "requested-self",
+                requestedSelfParticipantId = ParticipantId("requested-self"),
             )
 
             assertEquals("Project", result?.metadata?.conversationName)
-            assertEquals("metadata-self", result?.metadata?.selfParticipantId)
+            assertEquals(ParticipantId("metadata-self"), result?.metadata?.selfParticipantId)
             assertTrue(requireNotNull(result).participants.isLoaded)
             assertEquals("requested-self", result.selfParticipant?.id)
             assertEquals(listOf("requested-self"), participantSelectionArgsSlot.captured.toList())
@@ -179,7 +180,7 @@ internal class ConversationsRepositoryDirectLookupTest : BaseConversationsReposi
 
             val result = createRepository().getConversationSendData(
                 conversationId = CONVERSATION_ID,
-                requestedSelfParticipantId = "",
+                requestedSelfParticipantId = ParticipantId(""),
             )
 
             assertEquals("metadata-self", result?.selfParticipant?.id)
