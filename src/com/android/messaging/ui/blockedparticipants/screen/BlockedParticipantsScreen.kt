@@ -37,6 +37,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.ui.blockedparticipants.common.BlockedParticipantItem
 import com.android.messaging.ui.blockedparticipants.common.BlockedParticipantsTopAppBar
 import com.android.messaging.ui.blockedparticipants.common.ItemDividerHorizontalInset
@@ -159,7 +160,7 @@ private fun BlockedParticipantsList(
     ) {
         itemsIndexed(
             items = uiState.participants,
-            key = { _, participant -> participant.participantId },
+            key = { _, participant -> participant.participantId.value },
         ) { index, participant ->
             Column {
                 if (index > 0) {
@@ -248,7 +249,7 @@ private fun BlockedParticipantsContentPreview() {
                 isLoading = false,
                 participants = persistentListOf(
                     BlockedParticipantUiState(
-                        participantId = "1",
+                        participantId = ParticipantId("1"),
                         conversationId = ConversationId("c1"),
                         avatarUri = null,
                         displayName = "Spam Caller",
@@ -261,7 +262,7 @@ private fun BlockedParticipantsContentPreview() {
                         isContactSaved = true,
                     ),
                     BlockedParticipantUiState(
-                        participantId = "2",
+                        participantId = ParticipantId("2"),
                         conversationId = ConversationId("c2"),
                         avatarUri = null,
                         displayName = "+31 6 0000 1111",
@@ -274,7 +275,7 @@ private fun BlockedParticipantsContentPreview() {
                         isContactSaved = false,
                     ),
                 ),
-                selectedParticipantIds = persistentSetOf("2"),
+                selectedParticipantIds = persistentSetOf(ParticipantId("2")),
             ),
             onAction = {},
             onNavigateBack = {},

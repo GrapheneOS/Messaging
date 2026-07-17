@@ -5,6 +5,7 @@ package com.android.messaging.ui.conversation.preview
 import androidx.core.net.toUri
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentType
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
@@ -330,7 +331,7 @@ internal fun previewIncomingMessage(
         status = status,
         isIncoming = true,
         senderDisplayName = "Ada Lovelace",
-        senderParticipantId = "participant-ada",
+        senderParticipantId = ParticipantId("participant-ada"),
         mmsDownload = mmsDownload,
         protocol = protocol,
         canDownloadMessage = canDownloadMessage,
@@ -353,7 +354,7 @@ internal fun previewOutgoingMessage(
         status = status,
         isIncoming = false,
         senderDisplayName = null,
-        senderParticipantId = "self-1",
+        senderParticipantId = ParticipantId("self-1"),
         selfParticipantId = "self-1",
     )
 }
@@ -509,7 +510,7 @@ private fun previewMessage(
     status: ConversationMessageUiModel.Status,
     isIncoming: Boolean,
     senderDisplayName: String?,
-    senderParticipantId: String?,
+    senderParticipantId: ParticipantId?,
     selfParticipantId: String? = null,
     mmsDownload: MmsDownloadUiModel? = null,
     protocol: ConversationMessageUiModel.Protocol = ConversationMessageUiModel.Protocol.SMS,

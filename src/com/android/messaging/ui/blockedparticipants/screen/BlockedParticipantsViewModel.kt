@@ -2,6 +2,7 @@ package com.android.messaging.ui.blockedparticipants.screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.ui.blockedparticipants.screen.delegate.BlockedParticipantsDelegate
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantUiState
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsAction as Action
@@ -88,7 +89,7 @@ internal class BlockedParticipantsViewModel @Inject constructor(
         }
     }
 
-    private fun handleParticipantClicked(participantId: String) {
+    private fun handleParticipantClicked(participantId: ParticipantId) {
         val state = uiState.value
 
         if (state.selectedParticipantIds.isNotEmpty()) {

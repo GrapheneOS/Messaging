@@ -8,6 +8,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.ui.conversation.composer.model.ConversationComposerUiState
 import com.android.messaging.ui.conversation.composer.model.ConversationSimSelectorUiState
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
@@ -263,7 +264,7 @@ private fun previewScreenContentRichMessages(): ImmutableList<ConversationMessag
             status = Status.Outgoing.Delivered,
         )
             .withPreviewDisplayTime(displayTimestamp = PREVIEW_SCREEN_CONTENT_YESTERDAY_MILLIS)
-            .withPreviewSelfParticipant(selfParticipantId = "self-2"),
+            .withPreviewSelfParticipant(selfParticipantId = ParticipantId("self-2")),
         previewIncomingMessage(
             messageId = "screen-group-attachments",
             text = "Photos, a file, a vCard, and the voice note are attached.",
@@ -401,10 +402,10 @@ private fun ConversationMessageUiModel.withPreviewGrouping(
 }
 
 private fun ConversationMessageUiModel.withPreviewSelfParticipant(
-    selfParticipantId: String,
+    selfParticipantId: ParticipantId,
 ): ConversationMessageUiModel {
     return copy(
         senderParticipantId = selfParticipantId,
-        selfParticipantId = selfParticipantId,
+        selfParticipantId = selfParticipantId.value,
     )
 }
