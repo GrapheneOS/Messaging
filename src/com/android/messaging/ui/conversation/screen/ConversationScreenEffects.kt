@@ -29,6 +29,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.common.components.snackbar.showActionSnackbar
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
@@ -45,7 +46,7 @@ internal fun ConversationScreenEffects(
     screenModel: ConversationScreenModel,
     snackbarHostState: SnackbarHostState,
     hostBoundsState: State<ComposeRect?>,
-    onNavigateToMessageDetails: (messageId: String) -> Unit,
+    onNavigateToMessageDetails: (messageId: MessageId) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -92,7 +93,7 @@ private suspend fun ConversationScreenModel.handleConversationScreenEffect(
     hostBoundsState: State<ComposeRect?>,
     effect: ConversationScreenEffect,
     launchRoleRequest: (Intent) -> Unit,
-    onNavigateToMessageDetails: (messageId: String) -> Unit,
+    onNavigateToMessageDetails: (messageId: MessageId) -> Unit,
     onNavigateBack: () -> Unit,
     onDraftSent: () -> Unit,
 ) {

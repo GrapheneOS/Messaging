@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.common.components.contentSurfaceShape
 import com.android.messaging.ui.conversation.CONVERSATION_LOADING_INDICATOR_TEST_TAG
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
@@ -62,11 +63,11 @@ internal fun ConversationScreenContent(
     onPendingScrollPositionConsumed: () -> Unit,
     onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
-    onMessageClick: (String) -> Unit,
-    onMessageAvatarClick: (String) -> Unit,
-    onMessageDownloadClick: (String) -> Unit,
-    onMessageLongClick: (String) -> Unit,
-    onMessageResendClick: (String) -> Unit,
+    onMessageClick: (MessageId) -> Unit,
+    onMessageAvatarClick: (MessageId) -> Unit,
+    onMessageDownloadClick: (MessageId) -> Unit,
+    onMessageLongClick: (MessageId) -> Unit,
+    onMessageResendClick: (MessageId) -> Unit,
     onSimSelectorClick: () -> Unit,
     onUnblockClick: () -> Unit,
 ) {
@@ -170,11 +171,11 @@ private fun ConversationScreenPresentContent(
     onPendingScrollPositionConsumed: () -> Unit,
     onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
-    onMessageClick: (String) -> Unit,
-    onMessageAvatarClick: (String) -> Unit,
-    onMessageDownloadClick: (String) -> Unit,
-    onMessageLongClick: (String) -> Unit,
-    onMessageResendClick: (String) -> Unit,
+    onMessageClick: (MessageId) -> Unit,
+    onMessageAvatarClick: (MessageId) -> Unit,
+    onMessageDownloadClick: (MessageId) -> Unit,
+    onMessageLongClick: (MessageId) -> Unit,
+    onMessageResendClick: (MessageId) -> Unit,
     onSimSelectorClick: () -> Unit,
     additionalTopContentPadding: Dp,
 ) {

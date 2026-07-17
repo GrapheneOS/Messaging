@@ -5,6 +5,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.data.media.model.AttachmentToSave
 import com.android.messaging.data.media.repository.ConversationAttachmentsRepository
@@ -40,13 +41,13 @@ internal interface ConversationMessageSelectionDelegate :
     ConversationScreenDelegate<ConversationMessageSelectionUiState> {
     val effects: Flow<Effect>
 
-    fun onMessageClick(messageId: String)
+    fun onMessageClick(messageId: MessageId)
 
-    fun onMessageDownloadClick(messageId: String)
+    fun onMessageDownloadClick(messageId: MessageId)
 
-    fun onMessageLongClick(messageId: String)
+    fun onMessageLongClick(messageId: MessageId)
 
-    fun onMessageResendClick(messageId: String)
+    fun onMessageResendClick(messageId: MessageId)
 
     fun onMessageSelectionActionClick(action: ConversationMessageSelectionAction)
 
@@ -101,21 +102,21 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
         )
     }
 
-    override fun onMessageClick(messageId: String) {
+    override fun onMessageClick(messageId: MessageId) {
         if (state.value.isSelectionMode) {
             toggleMessageSelection(messageId = messageId)
         }
     }
 
-    override fun onMessageDownloadClick(messageId: String) {
+    override fun onMessageDownloadClick(messageId: MessageId) {
         downloadMessageWhenActionRequirementsSatisfied(messageId = messageId)
     }
 
-    override fun onMessageLongClick(messageId: String) {
+    override fun onMessageLongClick(messageId: MessageId) {
         toggleMessageSelection(messageId = messageId)
     }
 
-    override fun onMessageResendClick(messageId: String) {
+    override fun onMessageResendClick(messageId: MessageId) {
         resendMessageWhenActionRequirementsSatisfied(messageId = messageId)
     }
 
@@ -288,7 +289,7 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
         resendMessageWhenActionRequirementsSatisfied(messageId = selectedMessage.messageId)
     }
 
-    private fun downloadMessageWhenActionRequirementsSatisfied(messageId: String) {
+    private fun downloadMessageWhenActionRequirementsSatisfied(messageId: MessageId) {
         runMessageActionWhenRequirementsSatisfied(
             messageAction = MessageActionRequiringReadiness.Download(
                 messageId = messageId,
@@ -297,7 +298,7 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
     }
 
     private fun requestDeleteMessagesWhenActionRequirementsSatisfied(
-        messageIds: ImmutableSet<String>,
+        messageIds: ImmutableSet<MessageId>,
     ) {
         runWhenConversationActionRequirementsSatisfied(
             isSending = false,
@@ -313,7 +314,7 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
     }
 
     private fun deleteMessagesWhenActionRequirementsSatisfied(
-        messageIds: ImmutableSet<String>,
+        messageIds: ImmutableSet<MessageId>,
     ) {
         runWhenConversationActionRequirementsSatisfied(
             isSending = false,
@@ -325,7 +326,7 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
         )
     }
 
-    private fun resendMessageWhenActionRequirementsSatisfied(messageId: String) {
+    private fun resendMessageWhenActionRequirementsSatisfied(messageId: MessageId) {
         runMessageActionWhenRequirementsSatisfied(
             messageAction = MessageActionRequiringReadiness.Resend(
                 messageId = messageId,
@@ -495,7 +496,7 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
         )
     }
 
-    private fun toggleMessageSelection(messageId: String) {
+    private fun toggleMessageSelection(messageId: MessageId) {
         if (messageId.isBlank()) {
             return
         }
@@ -620,22 +621,22 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
 }
 
 private data class ConversationMessageSelectionState(
-    val selectedMessageIds: ImmutableSet<String> = persistentSetOf(),
-    val pendingDeleteMessageIds: ImmutableSet<String> = persistentSetOf(),
+    val selectedMessageIds: ImmutableSet<MessageId> = persistentSetOf(),
+    val pendingDeleteMessageIds: ImmutableSet<MessageId> = persistentSetOf(),
 )
 
 private sealed interface MessageActionRequiringReadiness {
-    val messageId: String
+    val messageId: MessageId
     val isSending: Boolean
 
     data class Download(
-        override val messageId: String,
+        override val messageId: MessageId,
     ) : MessageActionRequiringReadiness {
         override val isSending: Boolean = false
     }
 
     data class Resend(
-        override val messageId: String,
+        override val messageId: MessageId,
     ) : MessageActionRequiringReadiness {
         override val isSending: Boolean = true
     }

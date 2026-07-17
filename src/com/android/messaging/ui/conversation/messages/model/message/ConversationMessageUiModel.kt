@@ -4,13 +4,14 @@ import android.net.Uri
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.datamodel.data.ParticipantData
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
 internal data class ConversationMessageUiModel(
-    val messageId: String,
+    val messageId: MessageId,
     val conversationId: ConversationId,
     val text: String?,
     val parts: ImmutableList<ConversationMessagePartUiModel>,

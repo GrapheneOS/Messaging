@@ -31,6 +31,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetails
 import com.android.messaging.ui.conversation.messagedetails.model.MessageDetailsUiState
 import com.android.messaging.ui.conversation.preview.previewIncomingMessage
@@ -40,7 +41,7 @@ import kotlinx.collections.immutable.persistentListOf
 @Composable
 internal fun MessageDetailsScreen(
     conversationId: ConversationId,
-    messageId: String,
+    messageId: MessageId,
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit = {},
     screenModel: MessageDetailsScreenModel = hiltViewModel<MessageDetailsViewModel>(),

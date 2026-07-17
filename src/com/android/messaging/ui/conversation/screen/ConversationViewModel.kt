@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.media.model.ConversationCapturedMedia
 import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
@@ -75,11 +76,11 @@ internal interface ConversationScreenModel {
         partId: String,
     )
 
-    fun onMessageClick(messageId: String)
-    fun onMessageAvatarClick(messageId: String)
-    fun onMessageDownloadClick(messageId: String)
-    fun onMessageLongClick(messageId: String)
-    fun onMessageResendClick(messageId: String)
+    fun onMessageClick(messageId: MessageId)
+    fun onMessageAvatarClick(messageId: MessageId)
+    fun onMessageDownloadClick(messageId: MessageId)
+    fun onMessageLongClick(messageId: MessageId)
+    fun onMessageResendClick(messageId: MessageId)
     fun onMessageSelectionActionClick(action: ConversationMessageSelectionAction)
 
     fun onCallClick()
@@ -485,11 +486,11 @@ internal class ConversationViewModel @Inject constructor(
         }
     }
 
-    override fun onMessageClick(messageId: String) {
+    override fun onMessageClick(messageId: MessageId) {
         conversationMessageSelectionDelegate.onMessageClick(messageId = messageId)
     }
 
-    override fun onMessageAvatarClick(messageId: String) {
+    override fun onMessageAvatarClick(messageId: MessageId) {
         val message = when (val messagesState = conversationMessagesDelegate.state.value) {
             is ConversationMessagesUiState.Present -> {
                 messagesState
@@ -519,15 +520,15 @@ internal class ConversationViewModel @Inject constructor(
         }
     }
 
-    override fun onMessageDownloadClick(messageId: String) {
+    override fun onMessageDownloadClick(messageId: MessageId) {
         conversationMessageSelectionDelegate.onMessageDownloadClick(messageId = messageId)
     }
 
-    override fun onMessageLongClick(messageId: String) {
+    override fun onMessageLongClick(messageId: MessageId) {
         conversationMessageSelectionDelegate.onMessageLongClick(messageId = messageId)
     }
 
-    override fun onMessageResendClick(messageId: String) {
+    override fun onMessageResendClick(messageId: MessageId) {
         conversationMessageSelectionDelegate.onMessageResendClick(messageId = messageId)
     }
 

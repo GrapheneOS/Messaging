@@ -32,6 +32,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.conversation.CONVERSATION_SELECTION_OVERFLOW_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.conversationMessageSelectionActionButtonTestTag
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
@@ -307,7 +308,7 @@ private fun ConversationSelectionTopAppBarSingleMessagePreview() {
     MessagingPreviewTheme {
         ConversationSelectionTopAppBar(
             selection = ConversationMessageSelectionUiState(
-                selectedMessageIds = persistentSetOf("message-1"),
+                selectedMessageIds = persistentSetOf(MessageId("message-1")),
                 availableActions = persistentSetOf(
                     ConversationMessageSelectionAction.Copy,
                     ConversationMessageSelectionAction.Delete,
@@ -327,7 +328,11 @@ private fun ConversationSelectionTopAppBarMultiMessagePreview() {
     MessagingPreviewTheme {
         ConversationSelectionTopAppBar(
             selection = ConversationMessageSelectionUiState(
-                selectedMessageIds = persistentSetOf("message-1", "message-2", "message-3"),
+                selectedMessageIds = persistentSetOf(
+                    MessageId("message-1"),
+                    MessageId("message-2"),
+                    MessageId("message-3")
+                ),
                 availableActions = persistentSetOf(
                     ConversationMessageSelectionAction.Delete,
                     ConversationMessageSelectionAction.SaveAttachment,
