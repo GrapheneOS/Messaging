@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationsettings.screen.support
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState
@@ -7,8 +8,8 @@ import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiS
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
-internal const val ROOT_CONVERSATION_ID = "conversation-1"
-internal const val PARTICIPANT_CONVERSATION_ID = "conversation-2"
+internal val ROOT_CONVERSATION_ID = ConversationId("conversation-1")
+internal val PARTICIPANT_CONVERSATION_ID = ConversationId("conversation-2")
 
 internal const val FINISH_RESULT_CODE = 1
 

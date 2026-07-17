@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.messagedetails
 import android.content.ClipboardManager
 import androidx.lifecycle.SavedStateHandle
 import com.android.messaging.data.appsettings.repository.AppSettingsRepository
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetails
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetailsResult
 import com.android.messaging.data.conversation.repository.ConversationsRepository
@@ -50,7 +51,7 @@ internal class MessageDetailsViewModelTest {
 
         coEvery {
             conversationsRepository.getMessageDetails(
-                conversationId = "c",
+                conversationId = ConversationId("c"),
                 messageId = "m",
             )
         } returns ConversationMessageDetailsResult(
@@ -68,7 +69,7 @@ internal class MessageDetailsViewModelTest {
 
         val viewModel = createViewModel()
         viewModel.onArguments(
-            conversationId = "c",
+            conversationId = ConversationId("c"),
             messageId = "m",
         )
         advanceUntilIdle()
@@ -76,7 +77,7 @@ internal class MessageDetailsViewModelTest {
         assertEquals(content, viewModel.uiState.value)
         coVerify {
             conversationsRepository.getMessageDetails(
-                conversationId = "c",
+                conversationId = ConversationId("c"),
                 messageId = "m",
             )
         }
@@ -93,7 +94,7 @@ internal class MessageDetailsViewModelTest {
     fun onArguments_whenMapperReturnsUnavailable_exposesUnavailable() = runTest {
         coEvery {
             conversationsRepository.getMessageDetails(
-                conversationId = "c",
+                conversationId = ConversationId("c"),
                 messageId = "m",
             )
         } returns null
@@ -108,7 +109,7 @@ internal class MessageDetailsViewModelTest {
 
         val viewModel = createViewModel()
         viewModel.onArguments(
-            conversationId = "c",
+            conversationId = ConversationId("c"),
             messageId = "m",
         )
         advanceUntilIdle()
@@ -122,7 +123,7 @@ internal class MessageDetailsViewModelTest {
         val viewModel = createViewModel(savedStateHandle)
 
         viewModel.onArguments(
-            conversationId = "c",
+            conversationId = ConversationId("c"),
             messageId = "m",
         )
 

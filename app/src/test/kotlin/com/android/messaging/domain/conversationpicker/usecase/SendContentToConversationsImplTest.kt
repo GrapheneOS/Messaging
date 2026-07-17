@@ -1,5 +1,6 @@
 package com.android.messaging.domain.conversationpicker.usecase
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.domain.conversation.usecase.draft.SendConversationDraft
 import com.android.messaging.domain.conversation.usecase.draft.exception.BlankConversationIdException
@@ -26,7 +27,7 @@ internal class SendContentToConversationsImplTest {
     private val sendConversationDraft = mockk<SendConversationDraft>()
     private val testDispatcher = StandardTestDispatcher()
 
-    private val sentConversationIds = mutableListOf<String>()
+    private val sentConversationIds = mutableListOf<ConversationId>()
 
     private val sendContentToConversations = SendContentToConversationsImpl(
         sendConversationDraft = sendConversationDraft,
@@ -37,25 +38,31 @@ internal class SendContentToConversationsImplTest {
     fun invoke_allSendsSucceed_returnsSuccess() = runTest(testDispatcher) {
         recordSends { flowOf(Unit) }
 
-        val result = sendContentToConversations(DRAFT, linkedSetOf("a", "b"))
+        val result = sendContentToConversations(
+            draft = DRAFT,
+            conversationIds = linkedSetOf(ConversationId("a"), ConversationId("b")),
+        )
 
         assertEquals(SendContentResult.Success, result)
-        assertEquals(listOf("a", "b"), sentConversationIds)
+        assertEquals(listOf(ConversationId("a"), ConversationId("b")), sentConversationIds)
     }
 
     @Test
     fun invoke_firstSendFails_stillAttemptsRestAndReturnsFailure() = runTest(testDispatcher) {
         recordSends { conversationId ->
             when (conversationId) {
-                "a" -> flow { throw BlankConversationIdException() }
+                ConversationId("a") -> flow { throw BlankConversationIdException() }
                 else -> flowOf(Unit)
             }
         }
 
-        val result = sendContentToConversations(DRAFT, linkedSetOf("a", "b"))
+        val result = sendContentToConversations(
+            draft = DRAFT,
+            conversationIds = linkedSetOf(ConversationId("a"), ConversationId("b")),
+        )
 
         assertEquals(SendContentResult.Failure, result)
-        assertEquals(listOf("a", "b"), sentConversationIds)
+        assertEquals(listOf(ConversationId("a"), ConversationId("b")), sentConversationIds)
     }
 
     @Test
@@ -68,9 +75,9 @@ internal class SendContentToConversationsImplTest {
         assertTrue(sentConversationIds.isEmpty())
     }
 
-    private fun recordSends(response: (conversationId: String) -> Flow<Unit>) {
+    private fun recordSends(response: (conversationId: ConversationId) -> Flow<Unit>) {
         every { sendConversationDraft(any(), any()) } answers {
-            val conversationId = firstArg<String>()
+            val conversationId = ConversationId(firstArg<String>())
             sentConversationIds += conversationId
             response(conversationId)
         }

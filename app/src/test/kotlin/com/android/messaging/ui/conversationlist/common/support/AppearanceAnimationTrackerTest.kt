@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationlist.common.support
 
+import com.android.messaging.data.conversation.model.ConversationId
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
@@ -13,7 +14,7 @@ class AppearanceAnimationTrackerTest {
     @Test
     fun computeEntering_firstFrame_hasNoEnteringConversations() {
         val entering = tracker.computeEntering(
-            setOf("a", "b"),
+            setOf(ConversationId("a"), ConversationId("b")),
             isListAtTop = true,
             excludedConversationIds = emptySet(),
         )
@@ -23,23 +24,23 @@ class AppearanceAnimationTrackerTest {
 
     @Test
     fun computeEntering_afterCommit_marksOnlyAddedConversations() {
-        tracker.commitFrame(setOf("a", "b"))
+        tracker.commitFrame(setOf(ConversationId("a"), ConversationId("b")))
 
         val entering = tracker.computeEntering(
-            setOf("a", "b", "c"),
+            setOf(ConversationId("a"), ConversationId("b"), ConversationId("c")),
             isListAtTop = true,
             excludedConversationIds = emptySet(),
         )
 
-        assertEquals(setOf("c"), entering.keys)
+        assertEquals(setOf(ConversationId("c")), entering.keys)
     }
 
     @Test
     fun computeEntering_whenListNotAtTop_marksNoEnteringConversations() {
-        tracker.commitFrame(setOf("a", "b"))
+        tracker.commitFrame(setOf(ConversationId("a"), ConversationId("b")))
 
         val entering = tracker.computeEntering(
-            setOf("a", "b", "c"),
+            setOf(ConversationId("a"), ConversationId("b"), ConversationId("c")),
             isListAtTop = false,
             excludedConversationIds = emptySet(),
         )
@@ -49,12 +50,12 @@ class AppearanceAnimationTrackerTest {
 
     @Test
     fun computeEntering_excludedConversation_marksNoEnteringToken() {
-        tracker.commitFrame(setOf("a", "b"))
+        tracker.commitFrame(setOf(ConversationId("a"), ConversationId("b")))
 
         val entering = tracker.computeEntering(
-            setOf("a", "b", "c"),
+            setOf(ConversationId("a"), ConversationId("b"), ConversationId("c")),
             isListAtTop = true,
-            excludedConversationIds = setOf("c"),
+            excludedConversationIds = setOf(ConversationId("c")),
         )
 
         assertTrue(entering.isEmpty())
@@ -62,54 +63,62 @@ class AppearanceAnimationTrackerTest {
 
     @Test
     fun onAnimationFinished_withActiveToken_clearsToken() {
-        tracker.commitFrame(setOf("a"))
+        tracker.commitFrame(setOf(ConversationId("a")))
 
-        val token = tracker.commitFrame(setOf("a", "b")).getValue("b")
-        tracker.onAnimationFinished("b", token)
+        val token = tracker.commitFrame(
+            setOf(ConversationId("a"), ConversationId("b"))
+        ).getValue(ConversationId("b"))
+        tracker.onAnimationFinished(ConversationId("b"), token)
 
-        assertNull(tracker.tokenFor("b", emptyMap()))
+        assertNull(tracker.tokenFor(ConversationId("b"), emptyMap()))
     }
 
     @Test
     fun tokenFor_afterFinish_doesNotReplayWhileStillEntering() {
-        tracker.commitFrame(setOf("a"))
+        tracker.commitFrame(setOf(ConversationId("a")))
 
-        val entering = tracker.commitFrame(setOf("a", "b"))
-        val token = entering.getValue("b")
-        tracker.onAnimationFinished("b", token)
+        val entering = tracker.commitFrame(setOf(ConversationId("a"), ConversationId("b")))
+        val token = entering.getValue(ConversationId("b"))
+        tracker.onAnimationFinished(ConversationId("b"), token)
 
-        assertNull(tracker.tokenFor("b", entering))
+        assertNull(tracker.tokenFor(ConversationId("b"), entering))
     }
 
     @Test
     fun tokenFor_afterReentry_returnsFreshToken() {
-        tracker.commitFrame(setOf("a"))
+        tracker.commitFrame(setOf(ConversationId("a")))
 
-        val firstToken = tracker.commitFrame(setOf("a", "b")).getValue("b")
-        tracker.onAnimationFinished("b", firstToken)
-        tracker.commitFrame(setOf("a"))
+        val firstToken = tracker.commitFrame(
+            setOf(ConversationId("a"), ConversationId("b"))
+        ).getValue(ConversationId("b"))
+        tracker.onAnimationFinished(ConversationId("b"), firstToken)
+        tracker.commitFrame(setOf(ConversationId("a")))
 
-        val reentering = tracker.commitFrame(setOf("a", "b"))
-        val secondToken = reentering.getValue("b")
-        assertSame(secondToken, tracker.tokenFor("b", reentering))
+        val reentering = tracker.commitFrame(setOf(ConversationId("a"), ConversationId("b")))
+        val secondToken = reentering.getValue(ConversationId("b"))
+        assertSame(secondToken, tracker.tokenFor(ConversationId("b"), reentering))
     }
 
     @Test
     fun onAnimationFinished_withStaleToken_keepsActiveToken() {
-        tracker.commitFrame(setOf("a"))
+        tracker.commitFrame(setOf(ConversationId("a")))
 
-        val staleToken = tracker.commitFrame(setOf("a", "b")).getValue("b")
-        tracker.commitFrame(setOf("a"))
+        val staleToken = tracker.commitFrame(
+            setOf(ConversationId("a"), ConversationId("b"))
+        ).getValue(ConversationId("b"))
+        tracker.commitFrame(setOf(ConversationId("a")))
 
-        val activeToken = tracker.commitFrame(setOf("a", "b")).getValue("b")
-        tracker.onAnimationFinished("b", staleToken)
+        val activeToken = tracker.commitFrame(
+            setOf(ConversationId("a"), ConversationId("b"))
+        ).getValue(ConversationId("b"))
+        tracker.onAnimationFinished(ConversationId("b"), staleToken)
 
-        assertSame(activeToken, tracker.tokenFor("b", emptyMap()))
+        assertSame(activeToken, tracker.tokenFor(ConversationId("b"), emptyMap()))
     }
 
     private fun AppearanceAnimationTracker.commitFrame(
-        conversationIds: Set<String>,
-    ): Map<String, AppearanceAnimationToken> {
+        conversationIds: Set<ConversationId>,
+    ): Map<ConversationId, AppearanceAnimationToken> {
         val entering = computeEntering(
             conversationIds,
             isListAtTop = true,

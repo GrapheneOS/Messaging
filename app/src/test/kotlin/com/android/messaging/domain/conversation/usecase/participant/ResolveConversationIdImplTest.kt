@@ -1,5 +1,6 @@
 package com.android.messaging.domain.conversation.usecase.participant
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.datamodel.action.GetOrCreateConversationAction
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveConversationIdResult
@@ -104,7 +105,7 @@ class ResolveConversationIdImplTest {
 
             assertEquals(
                 ResolveConversationIdResult.Resolved(
-                    conversationId = "conversation-123",
+                    conversationId = ConversationId("conversation-123"),
                 ),
                 result,
             )

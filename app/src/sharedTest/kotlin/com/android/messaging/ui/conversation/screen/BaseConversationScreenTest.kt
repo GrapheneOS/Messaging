@@ -6,6 +6,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
@@ -43,7 +44,7 @@ internal abstract class BaseConversationScreenTest {
 
     protected fun setContent(
         screenModel: ConversationScreenModel,
-        conversationId: () -> String? = { CONVERSATION_ID },
+        conversationId: () -> ConversationId? = { CONVERSATION_ID },
         launchGeneration: () -> Int? = { 1 },
         cancelIncomingNotification: Boolean = true,
         lifecycleOwner: LifecycleOwner? = null,

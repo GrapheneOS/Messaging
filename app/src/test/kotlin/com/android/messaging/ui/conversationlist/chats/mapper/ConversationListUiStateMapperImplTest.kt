@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversationlist.chats.mapper
 
 import android.content.Context
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.domain.conversation.usecase.avatar.ResolveAvatarUri
@@ -72,7 +73,7 @@ internal class ConversationListUiStateMapperImplTest {
         val state = mapper.map(
             snapshot = snapshotOf(
                 conversationItem(
-                    conversationId = "pinned",
+                    conversationId = ConversationId("pinned"),
                     isPinned = true,
                 ),
             ),
@@ -89,7 +90,7 @@ internal class ConversationListUiStateMapperImplTest {
         val state = mapper.map(
             snapshot = snapshotOf(
                 conversationItem(
-                    conversationId = "plain",
+                    conversationId = ConversationId("plain"),
                     isPinned = false,
                 ),
             ),
@@ -104,7 +105,7 @@ internal class ConversationListUiStateMapperImplTest {
     @Test
     fun map_noSelection_leavesToggleStatesNull() {
         val state = mapper.map(
-            snapshot = snapshotOf(conversationItem(conversationId = "a")),
+            snapshot = snapshotOf(conversationItem(conversationId = ConversationId("a"))),
             selectedConversationIds = persistentListOf(),
             isScrollToTopVisible = false,
             isDebugEnabled = false,
@@ -122,13 +123,13 @@ internal class ConversationListUiStateMapperImplTest {
         val state = mapper.map(
             snapshot = snapshotOf(
                 conversationItem(
-                    conversationId = "selected",
+                    conversationId = ConversationId("selected"),
                     isPinned = true,
                     isSnoozed = true,
                     isRead = false,
                 ),
             ),
-            selectedConversationIds = persistentListOf("selected"),
+            selectedConversationIds = persistentListOf(ConversationId("selected")),
             isScrollToTopVisible = false,
             isDebugEnabled = false,
         )
@@ -144,17 +145,20 @@ internal class ConversationListUiStateMapperImplTest {
         val state = mapper.map(
             snapshot = snapshotOf(
                 conversationItem(
-                    conversationId = "first",
+                    conversationId = ConversationId("first"),
                     isPinned = false,
                     isSnoozed = false,
                 ),
                 conversationItem(
-                    conversationId = "second",
+                    conversationId = ConversationId("second"),
                     isPinned = true,
                     isSnoozed = true,
                 ),
             ),
-            selectedConversationIds = persistentListOf("first", "second"),
+            selectedConversationIds = persistentListOf(
+                ConversationId("first"),
+                ConversationId("second")
+            ),
             isScrollToTopVisible = false,
             isDebugEnabled = false,
         )
@@ -168,10 +172,10 @@ internal class ConversationListUiStateMapperImplTest {
     fun map_selection_exposesSelectedCount() {
         val state = mapper.map(
             snapshot = snapshotOf(
-                conversationItem(conversationId = "a"),
-                conversationItem(conversationId = "b"),
+                conversationItem(conversationId = ConversationId("a")),
+                conversationItem(conversationId = ConversationId("b")),
             ),
-            selectedConversationIds = persistentListOf("a", "b"),
+            selectedConversationIds = persistentListOf(ConversationId("a"), ConversationId("b")),
             isScrollToTopVisible = false,
             isDebugEnabled = false,
         )
@@ -184,7 +188,7 @@ internal class ConversationListUiStateMapperImplTest {
         val state = mapper.map(
             snapshot = snapshotOf(
                 conversationItem(
-                    conversationId = "group",
+                    conversationId = ConversationId("group"),
                     senderName = "Jane",
                 ),
             ),
@@ -201,7 +205,7 @@ internal class ConversationListUiStateMapperImplTest {
         val state = mapper.map(
             snapshot = snapshotOf(
                 conversationItem(
-                    conversationId = "a",
+                    conversationId = ConversationId("a"),
                     isDraftVisible = true,
                     draftSnippet = "Draft body",
                     draftSubject = "Draft subject",
@@ -225,7 +229,7 @@ internal class ConversationListUiStateMapperImplTest {
         val state = mapper.map(
             snapshot = snapshotOf(
                 conversationItem(
-                    conversationId = "mms",
+                    conversationId = ConversationId("mms"),
                     status = ConversationListMessageStatus.IncomingAwaitingManualDownload,
                 ),
             ),
@@ -247,7 +251,7 @@ internal class ConversationListUiStateMapperImplTest {
         val state = mapper.map(
             snapshot = snapshotOf(
                 conversationItem(
-                    conversationId = "mms",
+                    conversationId = ConversationId("mms"),
                     status = ConversationListMessageStatus.IncomingAwaitingManualDownload,
                 ),
             ),
@@ -270,7 +274,7 @@ internal class ConversationListUiStateMapperImplTest {
         val state = mapper.map(
             snapshot = snapshotOf(
                 conversationItem(
-                    conversationId = "a",
+                    conversationId = ConversationId("a"),
                     contactId = 42L,
                     lookupKey = "lookup",
                 ),
@@ -291,11 +295,11 @@ internal class ConversationListUiStateMapperImplTest {
     fun map_selectedBlockedConversation_propagatesScreenState() {
         val state = mapper.map(
             snapshot = ConversationListSnapshot(
-                items = persistentListOf(conversationItem(conversationId = "a")),
+                items = persistentListOf(conversationItem(conversationId = ConversationId("a"))),
                 blockedDestinations = persistentSetOf("+1555000a"),
                 hasFirstSyncCompleted = true,
             ),
-            selectedConversationIds = persistentListOf("a"),
+            selectedConversationIds = persistentListOf(ConversationId("a")),
             isScrollToTopVisible = true,
             isDebugEnabled = true,
         )

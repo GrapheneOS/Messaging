@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.composer.delegate.draft
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.send.ConversationSendData
 import com.android.messaging.data.conversation.repository.ConversationDraftsRepository
@@ -69,7 +70,7 @@ internal abstract class BaseConversationDraftDelegateTest {
         val dispatcher = mainDispatcherRule.testDispatcher
         val applicationScope = TestScope(dispatcher)
         val delegateScope = TestScope(dispatcher)
-        val draftFlows = mutableMapOf<String, MutableSharedFlow<ConversationDraft>>()
+        val draftFlows = mutableMapOf<ConversationId, MutableSharedFlow<ConversationDraft>>()
         val conversationDraftsRepository = createConversationDraftsRepositoryMock(
             draftFlows = draftFlows,
             observeFailure = observeFailure,
@@ -93,7 +94,7 @@ internal abstract class BaseConversationDraftDelegateTest {
             sendConversationDraft = sendConversationDraft,
             defaultDispatcher = dispatcher,
         )
-        val conversationIdFlow = MutableStateFlow<String?>(null)
+        val conversationIdFlow = MutableStateFlow<ConversationId?>(null)
 
         delegate.bind(
             scope = delegateScope,
@@ -126,7 +127,7 @@ internal abstract class BaseConversationDraftDelegateTest {
     }
 
     protected fun createConversationDraftsRepositoryMock(
-        draftFlows: MutableMap<String, MutableSharedFlow<ConversationDraft>>,
+        draftFlows: MutableMap<ConversationId, MutableSharedFlow<ConversationDraft>>,
         observeFailure: Exception? = null,
     ): ConversationDraftsRepository {
         val repository = mockk<ConversationDraftsRepository>()
@@ -136,7 +137,7 @@ internal abstract class BaseConversationDraftDelegateTest {
                     throw exception
                 }
             }
-            draftFlows.getOrPut(firstArg()) {
+            draftFlows.getOrPut(ConversationId(firstArg())) {
                 MutableSharedFlow(
                     replay = 1,
                     extraBufferCapacity = 16,
@@ -207,13 +208,13 @@ internal abstract class BaseConversationDraftDelegateTest {
     protected data class DelegateHarness(
         val delegate: ConversationDraftDelegateImpl,
         val conversationDraftsRepository: ConversationDraftsRepository,
-        val draftFlows: MutableMap<String, MutableSharedFlow<ConversationDraft>>,
-        val conversationIdFlow: MutableStateFlow<String?>,
+        val draftFlows: MutableMap<ConversationId, MutableSharedFlow<ConversationDraft>>,
+        val conversationIdFlow: MutableStateFlow<ConversationId?>,
         val delegateScope: TestScope,
         val applicationScope: TestScope,
     ) {
         suspend fun emitDraft(
-            conversationId: String,
+            conversationId: ConversationId,
             draft: ConversationDraft,
         ) {
             draftFlows.getOrPut(conversationId) {

@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationlist.delegate
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.ui.conversationlist.snapshotOfIds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -17,27 +18,27 @@ class ConversationListSelectionDelegateImplTest {
 
     @Test
     fun toggle_addsThenRemovesConversation() {
-        delegate.toggle("a")
-        delegate.toggle("b")
+        delegate.toggle(ConversationId("a"))
+        delegate.toggle(ConversationId("b"))
 
-        assertEquals(listOf("a", "b"), delegate.selectedIds.value)
+        assertEquals(listOf("a", "b"), delegate.selectedIds.value.map { it.value })
 
-        delegate.toggle("a")
+        delegate.toggle(ConversationId("a"))
 
-        assertEquals(listOf("b"), delegate.selectedIds.value)
+        assertEquals(listOf("b"), delegate.selectedIds.value.map { it.value })
     }
 
     @Test
     fun toggle_blankConversationId_isIgnored() {
-        delegate.toggle("   ")
+        delegate.toggle(ConversationId("   "))
 
         assertTrue(delegate.selectedIds.value.isEmpty())
     }
 
     @Test
     fun clear_removesAllSelection() {
-        delegate.toggle("a")
-        delegate.toggle("b")
+        delegate.toggle(ConversationId("a"))
+        delegate.toggle(ConversationId("b"))
 
         delegate.clear()
 
@@ -50,12 +51,12 @@ class ConversationListSelectionDelegateImplTest {
         delegate.bind(backgroundScope, snapshot)
         runCurrent()
 
-        delegate.toggle("a")
-        delegate.toggle("b")
+        delegate.toggle(ConversationId("a"))
+        delegate.toggle(ConversationId("b"))
 
         snapshot.value = snapshotOfIds("a")
         runCurrent()
 
-        assertEquals(listOf("a"), delegate.selectedIds.value)
+        assertEquals(listOf("a"), delegate.selectedIds.value.map { it.value })
     }
 }

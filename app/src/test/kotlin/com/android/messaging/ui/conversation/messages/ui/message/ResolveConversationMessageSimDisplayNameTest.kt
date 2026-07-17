@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.messages.ui.message
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
@@ -117,7 +118,7 @@ class ResolveConversationMessageSimDisplayNameTest {
     ): ConversationMessageUiModel {
         return ConversationMessageUiModel(
             messageId = "id-${selfParticipantId.orEmpty()}-$isIncoming",
-            conversationId = "conversation",
+            conversationId = ConversationId("conversation"),
             text = "text",
             parts = persistentListOf(
                 ConversationMessagePartUiModel.Text(text = "text"),

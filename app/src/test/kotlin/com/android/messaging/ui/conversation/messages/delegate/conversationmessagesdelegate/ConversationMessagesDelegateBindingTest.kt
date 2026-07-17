@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.messages.delegate.conversationmessagesdelegate
 
 import app.cash.turbine.test
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagesUiState
@@ -68,7 +69,7 @@ internal class ConversationMessagesDelegateBindingTest : BaseConversationMessage
             val reboundMessage = messageUiModel(messageId = "rebound")
             givenConversationMessages(
                 messages = flowOf(messagesOf(reboundMessage)),
-                conversationId = "conversation-rebound",
+                conversationId = ConversationId("conversation-rebound"),
             )
 
             val delegate = createBoundDelegate(
@@ -76,7 +77,7 @@ internal class ConversationMessagesDelegateBindingTest : BaseConversationMessage
             )
             delegate.bind(
                 scope = backgroundScope,
-                conversationIdFlow = MutableStateFlow("conversation-rebound"),
+                conversationIdFlow = MutableStateFlow(ConversationId("conversation-rebound")),
             )
             runCurrent()
 
@@ -87,7 +88,7 @@ internal class ConversationMessagesDelegateBindingTest : BaseConversationMessage
             verify(exactly = 0) {
                 @Suppress("UnusedFlow")
                 conversationsRepository.getConversationMessages(
-                    conversationId = "conversation-rebound",
+                    conversationId = ConversationId("conversation-rebound"),
                 )
             }
         }
@@ -98,7 +99,7 @@ internal class ConversationMessagesDelegateBindingTest : BaseConversationMessage
         runTest(context = mainDispatcherRule.testDispatcher) {
             val message = messageUiModel(messageId = "message-1")
             givenConversationMessages(messages = flowOf(messagesOf(message)))
-            val conversationIdFlow = MutableStateFlow<String?>(CONVERSATION_ID)
+            val conversationIdFlow = MutableStateFlow<ConversationId?>(CONVERSATION_ID)
             val delegate = createBoundDelegate(conversationIdFlow = conversationIdFlow)
             runCurrent()
 
@@ -117,13 +118,13 @@ internal class ConversationMessagesDelegateBindingTest : BaseConversationMessage
             givenConversationMessages(messages = flowOf(messagesOf(firstMessage)))
             givenConversationMessages(
                 messages = flowOf(messagesOf(secondMessage)),
-                conversationId = "conversation-2",
+                conversationId = ConversationId("conversation-2"),
             )
-            val conversationIdFlow = MutableStateFlow<String?>(CONVERSATION_ID)
+            val conversationIdFlow = MutableStateFlow<ConversationId?>(CONVERSATION_ID)
             val delegate = createBoundDelegate(conversationIdFlow = conversationIdFlow)
             runCurrent()
 
-            conversationIdFlow.value = "conversation-2"
+            conversationIdFlow.value = ConversationId("conversation-2")
             runCurrent()
 
             assertEquals(
@@ -132,11 +133,15 @@ internal class ConversationMessagesDelegateBindingTest : BaseConversationMessage
             )
             verify(exactly = 1) {
                 @Suppress("UnusedFlow")
-                conversationsRepository.getConversationMessages(conversationId = CONVERSATION_ID)
+                conversationsRepository.getConversationMessages(
+                    conversationId = CONVERSATION_ID
+                )
             }
             verify(exactly = 1) {
                 @Suppress("UnusedFlow")
-                conversationsRepository.getConversationMessages(conversationId = "conversation-2")
+                conversationsRepository.getConversationMessages(
+                    conversationId = ConversationId("conversation-2")
+                )
             }
         }
     }
@@ -149,9 +154,9 @@ internal class ConversationMessagesDelegateBindingTest : BaseConversationMessage
             val pendingSecondMessages = MutableSharedFlow<List<ConversationMessageData>>(replay = 1)
             givenConversationMessages(
                 messages = pendingSecondMessages,
-                conversationId = "conversation-2",
+                conversationId = ConversationId("conversation-2"),
             )
-            val conversationIdFlow = MutableStateFlow<String?>(CONVERSATION_ID)
+            val conversationIdFlow = MutableStateFlow<ConversationId?>(CONVERSATION_ID)
             val delegate = createBoundDelegate(conversationIdFlow = conversationIdFlow)
             runCurrent()
             assertEquals(
@@ -159,7 +164,7 @@ internal class ConversationMessagesDelegateBindingTest : BaseConversationMessage
                 delegate.state.value,
             )
 
-            conversationIdFlow.value = "conversation-2"
+            conversationIdFlow.value = ConversationId("conversation-2")
             runCurrent()
             assertEquals(ConversationMessagesUiState.Loading, delegate.state.value)
 
@@ -182,14 +187,14 @@ internal class ConversationMessagesDelegateBindingTest : BaseConversationMessage
             val secondMessage = messageUiModel(messageId = "second")
             givenConversationMessages(
                 messages = flowOf(messagesOf(secondMessage)),
-                conversationId = "conversation-2",
+                conversationId = ConversationId("conversation-2"),
             )
-            val conversationIdFlow = MutableStateFlow<String?>(CONVERSATION_ID)
+            val conversationIdFlow = MutableStateFlow<ConversationId?>(CONVERSATION_ID)
             val delegate = createBoundDelegate(conversationIdFlow = conversationIdFlow)
             runCurrent()
             assertEquals(ConversationMessagesUiState.Loading, delegate.state.value)
 
-            conversationIdFlow.value = "conversation-2"
+            conversationIdFlow.value = ConversationId("conversation-2")
             runCurrent()
             assertEquals(
                 ConversationMessagesUiState.Present(persistentListOf(secondMessage)),

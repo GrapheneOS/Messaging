@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationlist.mapper
 
 import android.content.Context
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.domain.conversation.usecase.avatar.ResolveAvatarUri
 import com.android.messaging.domain.conversation.usecase.participant.CanShowOrAddContact
@@ -50,7 +51,7 @@ internal class ConversationListContentUiStateMapperImplTest {
     @Test
     fun map_itemsPresent_producesContentItems() {
         val content = mapper.map(
-            snapshot = snapshotOf(conversationItem(conversationId = "a")),
+            snapshot = snapshotOf(conversationItem(conversationId = ConversationId("a"))),
             selectedConversationIds = persistentListOf(),
         )
 
@@ -85,7 +86,7 @@ internal class ConversationListContentUiStateMapperImplTest {
     fun map_itemsPresentBeforeFirstSync_stillProducesItems() {
         val content = mapper.map(
             snapshot = ConversationListSnapshot(
-                items = persistentListOf(conversationItem(conversationId = "a")),
+                items = persistentListOf(conversationItem(conversationId = ConversationId("a"))),
                 blockedDestinations = persistentSetOf(),
                 hasFirstSyncCompleted = false,
             ),
@@ -98,8 +99,8 @@ internal class ConversationListContentUiStateMapperImplTest {
     @Test
     fun map_selectedConversation_marksItemSelected() {
         val content = mapper.map(
-            snapshot = snapshotOf(conversationItem(conversationId = "a")),
-            selectedConversationIds = persistentListOf("a"),
+            snapshot = snapshotOf(conversationItem(conversationId = ConversationId("a"))),
+            selectedConversationIds = persistentListOf(ConversationId("a")),
         )
 
         val items = (content as ConversationListContentUiState.Items).items

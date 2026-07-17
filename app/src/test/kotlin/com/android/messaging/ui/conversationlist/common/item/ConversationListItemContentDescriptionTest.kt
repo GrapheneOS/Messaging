@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationlist.common.item
 
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
 import com.android.messaging.ui.conversationlist.common.support.previewConversationListItem
 import org.junit.Assert.assertEquals
@@ -13,7 +14,7 @@ class ConversationListItemContentDescriptionTest {
     @Test
     fun contentDescriptionSpec_oneOnOneIncomingSuccessful_usesSenderDescription() {
         val item = previewConversationListItem(
-            conversationId = "one_on_one_incoming",
+            conversationId = ConversationId("one_on_one_incoming"),
             title = "Bob",
             snippetText = "Hello there",
             senderName = "Bob",
@@ -36,7 +37,7 @@ class ConversationListItemContentDescriptionTest {
     @Test
     fun contentDescriptionSpec_groupIncomingSuccessful_usesSenderAndGroupDescription() {
         val item = previewConversationListItem(
-            conversationId = "group_incoming",
+            conversationId = ConversationId("group_incoming"),
             title = "Family",
             snippetText = "Hello there",
             senderName = "Alice",
@@ -58,7 +59,7 @@ class ConversationListItemContentDescriptionTest {
     @Test
     fun contentDescriptionSpec_outgoingSending_usesSendingDescription() {
         val item = previewConversationListItem(
-            conversationId = "sending",
+            conversationId = ConversationId("sending"),
             title = "Bob",
             snippetText = "On my way",
             status = ConversationListMessageStatus.Sending,
@@ -78,7 +79,7 @@ class ConversationListItemContentDescriptionTest {
     @Test
     fun contentDescriptionSpec_draft_usesOutgoingDraftDescription() {
         val item = previewConversationListItem(
-            conversationId = "draft",
+            conversationId = ConversationId("draft"),
             title = "Bob",
             snippetText = "Draft body",
             status = ConversationListMessageStatus.Draft,
@@ -98,7 +99,7 @@ class ConversationListItemContentDescriptionTest {
     @Test
     fun contentDescriptionSpec_failedDraft_appendsFailedDraftDescription() {
         val item = previewConversationListItem(
-            conversationId = "failed_draft",
+            conversationId = ConversationId("failed_draft"),
             title = "Bob",
             snippetText = "Draft body",
             status = ConversationListMessageStatus.Failed(rawTelephonyStatus = 0),
@@ -119,7 +120,7 @@ class ConversationListItemContentDescriptionTest {
     @Test
     fun badgeContentDescriptionResIds_visibleBadges_returnsStatusLabels() {
         val item = previewConversationListItem(
-            conversationId = "badges",
+            conversationId = ConversationId("badges"),
             title = "Bob",
             snippetText = "Hello",
             isUnread = true,
@@ -144,7 +145,7 @@ class ConversationListItemContentDescriptionTest {
     @Test
     fun badgeContentDescriptionResIds_mutedAndSnoozed_prefersMutedStatus() {
         val item = previewConversationListItem(
-            conversationId = "muted_snoozed",
+            conversationId = ConversationId("muted_snoozed"),
             title = "Bob",
             snippetText = "Hello",
             isMuted = true,

@@ -2,6 +2,7 @@ package com.android.messaging.data.conversation.repository.conversations
 
 import android.database.Cursor
 import android.database.MatrixCursor
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetails
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetailsData
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
@@ -38,7 +39,7 @@ internal class ConversationsRepositoryDirectLookupTest : BaseConversationsReposi
             context = mainDispatcherRule.testDispatcher,
         ) {
             val result = createRepository().getConversationSendData(
-                conversationId = " ",
+                conversationId = ConversationId(" "),
                 requestedSelfParticipantId = "self-1",
             )
 
@@ -54,9 +55,11 @@ internal class ConversationsRepositoryDirectLookupTest : BaseConversationsReposi
         runTest(
             context = mainDispatcherRule.testDispatcher,
         ) {
-            val metadataUri = MessagingContentProvider.buildConversationMetadataUri(CONVERSATION_ID)
+            val metadataUri = MessagingContentProvider.buildConversationMetadataUri(
+                CONVERSATION_ID.value
+            )
             val participantsUri = MessagingContentProvider
-                .buildConversationParticipantsUri(CONVERSATION_ID)
+                .buildConversationParticipantsUri(CONVERSATION_ID.value)
             val participantSelectionArgsSlot = slot<Array<String>>()
             every {
                 contentResolver.query(
@@ -128,9 +131,11 @@ internal class ConversationsRepositoryDirectLookupTest : BaseConversationsReposi
         runTest(
             context = mainDispatcherRule.testDispatcher,
         ) {
-            val metadataUri = MessagingContentProvider.buildConversationMetadataUri(CONVERSATION_ID)
+            val metadataUri = MessagingContentProvider.buildConversationMetadataUri(
+                CONVERSATION_ID.value
+            )
             val participantsUri = MessagingContentProvider
-                .buildConversationParticipantsUri(CONVERSATION_ID)
+                .buildConversationParticipantsUri(CONVERSATION_ID.value)
             val participantSelectionArgsSlot = slot<Array<String>>()
             every {
                 contentResolver.query(
@@ -186,9 +191,11 @@ internal class ConversationsRepositoryDirectLookupTest : BaseConversationsReposi
         runTest(
             context = mainDispatcherRule.testDispatcher,
         ) {
-            val messagesUri = MessagingContentProvider.buildConversationMessagesUri(CONVERSATION_ID)
+            val messagesUri = MessagingContentProvider.buildConversationMessagesUri(
+                CONVERSATION_ID.value
+            )
             val participantsUri = MessagingContentProvider
-                .buildConversationParticipantsUri(CONVERSATION_ID)
+                .buildConversationParticipantsUri(CONVERSATION_ID.value)
             every {
                 contentResolver.query(
                     messagesUri,
@@ -273,7 +280,7 @@ internal class ConversationsRepositoryDirectLookupTest : BaseConversationsReposi
             context = mainDispatcherRule.testDispatcher,
         ) {
             val result = createRepository().getMessageDetails(
-                conversationId = "",
+                conversationId = ConversationId(""),
                 messageId = "message-1",
             )
 

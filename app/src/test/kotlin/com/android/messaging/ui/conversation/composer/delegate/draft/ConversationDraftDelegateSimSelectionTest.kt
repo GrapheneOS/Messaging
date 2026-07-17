@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.composer.delegate.draft
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.repository.ConversationDraftsRepository
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
@@ -64,7 +65,7 @@ internal class ConversationDraftDelegateSimSelectionTest {
     @Test
     fun simPickedBeforeDraftEditorBindsToConversationIsUsedWhenSendingDraft() = runTest {
         val delegate = createDelegate()
-        val conversationIdFlow = MutableStateFlow<String?>(CONVERSATION_ID)
+        val conversationIdFlow = MutableStateFlow<ConversationId?>(CONVERSATION_ID)
 
         delegate.bind(scope = backgroundScope, conversationIdFlow = conversationIdFlow)
         delegate.onSelfParticipantIdChanged(
@@ -83,7 +84,7 @@ internal class ConversationDraftDelegateSimSelectionTest {
     @Test
     fun simPickedAfterDraftEditorBindsToConversationIsUsedWhenSendingDraft() = runTest {
         val delegate = createDelegate()
-        val conversationIdFlow = MutableStateFlow<String?>(CONVERSATION_ID)
+        val conversationIdFlow = MutableStateFlow<ConversationId?>(CONVERSATION_ID)
 
         delegate.bind(scope = backgroundScope, conversationIdFlow = conversationIdFlow)
         runCurrent()
@@ -102,7 +103,7 @@ internal class ConversationDraftDelegateSimSelectionTest {
     @Test
     fun simPickedBeforeDraftEditorBindsOverridesSeededDraftSelfParticipantId() = runTest {
         val delegate = createDelegate()
-        val conversationIdFlow = MutableStateFlow<String?>(CONVERSATION_ID)
+        val conversationIdFlow = MutableStateFlow<ConversationId?>(CONVERSATION_ID)
 
         delegate.bind(scope = backgroundScope, conversationIdFlow = conversationIdFlow)
         delegate.seedDraft(
@@ -128,11 +129,11 @@ internal class ConversationDraftDelegateSimSelectionTest {
     @Test
     fun simPickedForAnotherConversationIsNotAppliedToBoundConversation() = runTest {
         val delegate = createDelegate()
-        val conversationIdFlow = MutableStateFlow<String?>(CONVERSATION_ID)
+        val conversationIdFlow = MutableStateFlow<ConversationId?>(CONVERSATION_ID)
 
         delegate.bind(scope = backgroundScope, conversationIdFlow = conversationIdFlow)
         delegate.onSelfParticipantIdChanged(
-            conversationId = "another-conversation",
+            conversationId = ConversationId("another-conversation"),
             selfParticipantId = PICKED_SELF_PARTICIPANT_ID,
         )
         runCurrent()
@@ -162,7 +163,7 @@ internal class ConversationDraftDelegateSimSelectionTest {
     }
 
     private companion object {
-        private const val CONVERSATION_ID = "conversation-1"
+        private val CONVERSATION_ID = ConversationId("conversation-1")
         private const val PICKED_SELF_PARTICIPANT_ID = "self-participant-2"
         private const val SEEDED_SELF_PARTICIPANT_ID = "self-participant-1"
     }

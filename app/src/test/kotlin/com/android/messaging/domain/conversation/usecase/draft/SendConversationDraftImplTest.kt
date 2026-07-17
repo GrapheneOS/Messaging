@@ -3,6 +3,7 @@ package com.android.messaging.domain.conversation.usecase.draft
 import android.net.Uri
 import app.cash.turbine.test
 import com.android.messaging.data.conversation.mapper.ConversationDraftMessageDataMapper
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
@@ -92,7 +93,7 @@ class SendConversationDraftImplTest {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val exception = collectFailure(
                 createUseCase().invoke(
-                    conversationId = " ",
+                    conversationId = ConversationId(" "),
                     draft = ConversationDraft(
                         messageText = "Hello",
                     ),
@@ -644,7 +645,7 @@ class SendConversationDraftImplTest {
 
     private fun createMessageData(): MessageData {
         return MessageData.createDraftSmsMessage(
-            CONVERSATION_ID,
+            CONVERSATION_ID.value,
             "self-1",
             "Hello",
         )
@@ -652,7 +653,7 @@ class SendConversationDraftImplTest {
 
     private fun createMessageDataWithAttachments(attachmentCount: Int): MessageData {
         return MessageData.createDraftMmsMessage(
-            CONVERSATION_ID,
+            CONVERSATION_ID.value,
             "self-1",
             "Hello",
             "",
