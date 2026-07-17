@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationsettings.screen.support
 
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState
@@ -16,9 +17,9 @@ internal const val FINISH_RESULT_CODE = 1
 internal const val MOTHER_NAME = "Mother"
 internal const val FATHER_NAME = "Father"
 
-internal const val MOTHER_PARTICIPANT_ID = "mother"
-internal const val FATHER_PARTICIPANT_ID = "father"
-internal const val TEST_PARTICIPANT_ID = "test_participant"
+internal val MOTHER_PARTICIPANT_ID = ParticipantId("mother")
+internal val FATHER_PARTICIPANT_ID = ParticipantId("father")
+internal val TEST_PARTICIPANT_ID = ParticipantId("test_participant")
 
 internal const val ONE_TO_ONE_TITLE = MOTHER_NAME
 internal const val GROUP_TITLE = "Family"
@@ -85,7 +86,7 @@ internal fun groupState(): ConversationSettingsUiState {
 }
 
 internal fun participant(
-    id: String = TEST_PARTICIPANT_ID,
+    id: ParticipantId = TEST_PARTICIPANT_ID,
     displayName: String = MOTHER_NAME,
     displayDestination: String = TEST_DESTINATION,
     isBlocked: Boolean = false,

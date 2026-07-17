@@ -13,6 +13,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.testutil.TEST_WAIT_TIMEOUT_MILLIS
 import com.android.messaging.ui.conversation.conversationSettingsParticipantRowTestTag
 import com.android.messaging.ui.conversationsettings.screen.model.ParticipantConversationSettingsAction as ParticipantAction
@@ -126,7 +127,7 @@ internal class ParticipantsListTest : ConversationSettingsTestBase() {
             .assertDoesNotExist()
     }
 
-    private fun clickParticipantRow(participantId: String) {
+    private fun clickParticipantRow(participantId: ParticipantId) {
         composeTestRule
             .onNodeWithTag(testTag = conversationSettingsParticipantRowTestTag(participantId))
             .performScrollTo()
