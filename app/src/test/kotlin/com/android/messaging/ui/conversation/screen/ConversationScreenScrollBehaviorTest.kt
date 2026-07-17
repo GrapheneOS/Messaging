@@ -7,6 +7,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performScrollToIndex
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.CONVERSATION_MESSAGES_LIST_TEST_TAG
 import com.android.messaging.ui.conversation.conversationMessageItemTestTag
@@ -45,7 +46,7 @@ internal class ConversationScreenScrollBehaviorTest : BaseConversationScreenTest
         composeTestRule.waitForIdle()
 
         composeTestRule
-            .onNodeWithTag(conversationMessageItemTestTag(messageId = "message-31"))
+            .onNodeWithTag(conversationMessageItemTestTag(messageId = MessageId("message-31")))
             .assertIsDisplayed()
     }
 
@@ -78,7 +79,9 @@ internal class ConversationScreenScrollBehaviorTest : BaseConversationScreenTest
             .performScrollToIndex(index = 20)
         composeTestRule.waitForIdle()
         composeTestRule
-            .onNodeWithTag(conversationMessageItemTestTag(messageId = "conversation-1-message-30"))
+            .onNodeWithTag(
+                conversationMessageItemTestTag(messageId = MessageId("conversation-1-message-30"))
+            )
             .assertDoesNotExist()
 
         composeTestRule.runOnIdle {
@@ -98,7 +101,9 @@ internal class ConversationScreenScrollBehaviorTest : BaseConversationScreenTest
         composeTestRule.waitForIdle()
 
         composeTestRule
-            .onNodeWithTag(conversationMessageItemTestTag(messageId = "conversation-2-message-5"))
+            .onNodeWithTag(
+                conversationMessageItemTestTag(messageId = MessageId("conversation-2-message-5"))
+            )
             .assertIsDisplayed()
     }
 
@@ -123,7 +128,7 @@ internal class ConversationScreenScrollBehaviorTest : BaseConversationScreenTest
         composeTestRule.waitForIdle()
 
         composeTestRule
-            .onNodeWithTag(conversationMessageItemTestTag(messageId = "message-6"))
+            .onNodeWithTag(conversationMessageItemTestTag(messageId = MessageId("message-6")))
             .assertIsDisplayed()
         composeTestRule.runOnIdle {
             assertEquals(1, consumedCount)

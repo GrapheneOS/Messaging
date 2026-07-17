@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.navigation
 
 import androidx.navigation3.runtime.NavKey
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -239,13 +240,13 @@ class ConversationNavigationReducerImplTest {
         reducer.navigateToMessageDetails(
             backStack = backStack,
             conversationId = ConversationId("c"),
-            messageId = "m",
+            messageId = MessageId("m"),
         )
 
         assertEquals(
             MessageDetailsNavKey(
                 conversationId = ConversationId("c"),
-                messageId = "m",
+                messageId = MessageId("m"),
             ),
             backStack.last(),
         )
@@ -258,14 +259,14 @@ class ConversationNavigationReducerImplTest {
             ConversationNavKey(conversationId = ConversationId("c")),
             MessageDetailsNavKey(
                 conversationId = ConversationId("c"),
-                messageId = "m",
+                messageId = MessageId("m"),
             ),
         )
 
         reducer.navigateToMessageDetails(
             backStack = backStack,
             conversationId = ConversationId("c"),
-            messageId = "m",
+            messageId = MessageId("m"),
         )
 
         assertEquals(2, backStack.size)

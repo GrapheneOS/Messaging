@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.messages.delegate.selection
 
 import android.content.ClipData
 import app.cash.turbine.test
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
@@ -45,7 +46,7 @@ internal class ConversationMessageSelectionDelegateMessageActionsTest :
                     ),
                 )
                 advanceUntilIdle()
-                harness.delegate.onMessageLongClick(messageId = "message-1")
+                harness.delegate.onMessageLongClick(messageId = MessageId("message-1"))
                 advanceUntilIdle()
 
                 harness.delegate.onMessageSelectionActionClick(
@@ -80,7 +81,7 @@ internal class ConversationMessageSelectionDelegateMessageActionsTest :
                     ),
                 )
                 advanceUntilIdle()
-                harness.delegate.onMessageLongClick(messageId = "message-1")
+                harness.delegate.onMessageLongClick(messageId = MessageId("message-1"))
                 advanceUntilIdle()
 
                 harness.delegate.onMessageSelectionActionClick(
@@ -89,7 +90,9 @@ internal class ConversationMessageSelectionDelegateMessageActionsTest :
                 advanceUntilIdle()
 
                 verify(exactly = 1) {
-                    harness.conversationsRepository.downloadMessage(messageId = "message-1")
+                    harness.conversationsRepository.downloadMessage(
+                        messageId = MessageId("message-1")
+                    )
                 }
                 assertEquals(
                     ConversationMessageSelectionUiState(),
@@ -109,7 +112,7 @@ internal class ConversationMessageSelectionDelegateMessageActionsTest :
             coEvery {
                 harness.createForwardedMessage.invoke(
                     conversationId = CONVERSATION_ID,
-                    messageId = "message-1",
+                    messageId = MessageId("message-1"),
                 )
             } returns forwardedMessage
 
@@ -121,7 +124,7 @@ internal class ConversationMessageSelectionDelegateMessageActionsTest :
                     ),
                 )
                 advanceUntilIdle()
-                harness.delegate.onMessageLongClick(messageId = "message-1")
+                harness.delegate.onMessageLongClick(messageId = MessageId("message-1"))
                 advanceUntilIdle()
 
                 harness.delegate.effects.test {
@@ -157,7 +160,7 @@ internal class ConversationMessageSelectionDelegateMessageActionsTest :
                     createMessageUiModel(messageId = "message-1"),
                 )
                 advanceUntilIdle()
-                harness.delegate.onMessageLongClick(messageId = "message-1")
+                harness.delegate.onMessageLongClick(messageId = MessageId("message-1"))
                 advanceUntilIdle()
 
                 harness.delegate.effects.test {
@@ -168,7 +171,7 @@ internal class ConversationMessageSelectionDelegateMessageActionsTest :
 
                     assertEquals(
                         ConversationScreenEffect.NavigateToMessageDetails(
-                            messageId = "message-1",
+                            messageId = MessageId("message-1"),
                         ),
                         awaitItem(),
                     )

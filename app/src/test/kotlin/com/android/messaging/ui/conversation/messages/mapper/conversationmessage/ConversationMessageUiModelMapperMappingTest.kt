@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.messages.mapper.conversationmessag
 
 import android.net.Uri
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
@@ -53,7 +54,7 @@ internal class ConversationMessageUiModelMapperMappingTest :
 
         assertEquals(
             ConversationMessageUiModel(
-                messageId = "message-7",
+                messageId = MessageId("message-7"),
                 conversationId = ConversationId("conversation-3"),
                 text = "Hello there",
                 parts = persistentListOf(),
@@ -90,7 +91,7 @@ internal class ConversationMessageUiModelMapperMappingTest :
             messageData(messageId = null, conversationId = null),
         )
 
-        assertEquals("", uiModel.messageId)
+        assertEquals(MessageId(""), uiModel.messageId)
         assertEquals(ConversationId(""), uiModel.conversationId)
     }
 

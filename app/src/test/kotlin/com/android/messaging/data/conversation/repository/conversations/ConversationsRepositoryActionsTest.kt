@@ -1,6 +1,7 @@
 package com.android.messaging.data.conversation.repository.conversations
 
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.datamodel.action.DeleteConversationAction
 import com.android.messaging.datamodel.action.DeleteMessageAction
 import com.android.messaging.datamodel.action.RedownloadMmsAction
@@ -45,7 +46,12 @@ internal class ConversationsRepositoryActionsTest : BaseConversationsRepositoryT
     @Test
     fun deleteMessages_skipsBlankIdsAndDelegatesNonBlankIds() {
         createRepository().deleteMessages(
-            messageIds = listOf("message-1", "", " ", "message-2"),
+            messageIds = listOf(
+                MessageId("message-1"),
+                MessageId(""),
+                MessageId(" "),
+                MessageId("message-2")
+            ),
         )
 
         verify(exactly = 1) {
@@ -66,10 +72,10 @@ internal class ConversationsRepositoryActionsTest : BaseConversationsRepositoryT
     fun messageActions_skipBlankIdsAndDelegateNonBlankIds() {
         val repository = createRepository()
 
-        repository.downloadMessage(messageId = "")
-        repository.downloadMessage(messageId = "message-download")
-        repository.resendMessage(messageId = " ")
-        repository.resendMessage(messageId = "message-resend")
+        repository.downloadMessage(messageId = MessageId(""))
+        repository.downloadMessage(messageId = MessageId("message-download"))
+        repository.resendMessage(messageId = MessageId(" "))
+        repository.resendMessage(messageId = MessageId("message-resend"))
 
         verify(exactly = 0) {
             RedownloadMmsAction.redownloadMessage("")

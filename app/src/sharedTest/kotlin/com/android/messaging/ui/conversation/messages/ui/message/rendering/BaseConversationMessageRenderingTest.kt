@@ -9,6 +9,7 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
@@ -130,7 +131,7 @@ internal abstract class BaseConversationMessageRenderingTest {
         protocol: ConversationMessageUiModel.Protocol = ConversationMessageUiModel.Protocol.SMS,
     ): ConversationMessageUiModel {
         return ConversationMessageUiModel(
-            messageId = messageId,
+            messageId = MessageId(messageId),
             conversationId = CONVERSATION_ID,
             text = text,
             parts = parts,
@@ -192,7 +193,7 @@ internal abstract class BaseConversationMessageRenderingTest {
     protected fun clickBubble(messageId: String = DEFAULT_MESSAGE_ID) {
         composeTestRule
             .onNodeWithTag(
-                testTag = conversationMessageBubbleTestTag(messageId = messageId),
+                testTag = conversationMessageBubbleTestTag(messageId = MessageId(messageId)),
             )
             .performClick()
     }
@@ -200,7 +201,7 @@ internal abstract class BaseConversationMessageRenderingTest {
     protected fun longClickBubble(messageId: String = DEFAULT_MESSAGE_ID) {
         composeTestRule
             .onNodeWithTag(
-                testTag = conversationMessageBubbleTestTag(messageId = messageId),
+                testTag = conversationMessageBubbleTestTag(messageId = MessageId(messageId)),
             )
             .performSemanticsAction(SemanticsActions.OnLongClick)
     }
@@ -208,7 +209,7 @@ internal abstract class BaseConversationMessageRenderingTest {
     protected fun clickSelectionRow(messageId: String = DEFAULT_MESSAGE_ID) {
         composeTestRule
             .onNodeWithTag(
-                testTag = conversationMessageSelectionRowTestTag(messageId = messageId),
+                testTag = conversationMessageSelectionRowTestTag(messageId = MessageId(messageId)),
             )
             .performClick()
     }

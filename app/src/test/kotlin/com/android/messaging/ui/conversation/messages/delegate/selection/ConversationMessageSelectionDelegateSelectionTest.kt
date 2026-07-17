@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.messages.delegate.selection
 
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
 import kotlinx.collections.immutable.persistentSetOf
@@ -33,11 +34,11 @@ internal class ConversationMessageSelectionDelegateSelectionTest :
                 )
                 advanceUntilIdle()
 
-                harness.delegate.onMessageLongClick(messageId = "message-1")
+                harness.delegate.onMessageLongClick(messageId = MessageId("message-1"))
                 advanceUntilIdle()
 
                 assertEquals(
-                    persistentSetOf("message-1"),
+                    persistentSetOf(MessageId("message-1")),
                     harness.delegate.state.value.selectedMessageIds,
                 )
                 assertEquals(
@@ -67,7 +68,7 @@ internal class ConversationMessageSelectionDelegateSelectionTest :
                 )
                 advanceUntilIdle()
 
-                harness.delegate.onMessageClick(messageId = "message-1")
+                harness.delegate.onMessageClick(messageId = MessageId("message-1"))
                 advanceUntilIdle()
 
                 assertEquals(
@@ -92,13 +93,13 @@ internal class ConversationMessageSelectionDelegateSelectionTest :
                 )
                 advanceUntilIdle()
 
-                harness.delegate.onMessageLongClick(messageId = "message-1")
+                harness.delegate.onMessageLongClick(messageId = MessageId("message-1"))
                 advanceUntilIdle()
-                harness.delegate.onMessageClick(messageId = "message-2")
+                harness.delegate.onMessageClick(messageId = MessageId("message-2"))
                 advanceUntilIdle()
 
                 assertEquals(
-                    persistentSetOf("message-1", "message-2"),
+                    persistentSetOf(MessageId("message-1"), MessageId("message-2")),
                     harness.delegate.state.value.selectedMessageIds,
                 )
                 assertEquals(
@@ -106,11 +107,11 @@ internal class ConversationMessageSelectionDelegateSelectionTest :
                     harness.delegate.state.value.availableActions,
                 )
 
-                harness.delegate.onMessageClick(messageId = "message-1")
+                harness.delegate.onMessageClick(messageId = MessageId("message-1"))
                 advanceUntilIdle()
 
                 assertEquals(
-                    persistentSetOf("message-2"),
+                    persistentSetOf(MessageId("message-2")),
                     harness.delegate.state.value.selectedMessageIds,
                 )
             } finally {
@@ -129,7 +130,7 @@ internal class ConversationMessageSelectionDelegateSelectionTest :
                     createMessageUiModel(messageId = "message-1"),
                 )
                 advanceUntilIdle()
-                harness.delegate.onMessageLongClick(messageId = "message-1")
+                harness.delegate.onMessageLongClick(messageId = MessageId("message-1"))
                 advanceUntilIdle()
                 harness.delegate.onMessageSelectionActionClick(
                     action = ConversationMessageSelectionAction.Delete,

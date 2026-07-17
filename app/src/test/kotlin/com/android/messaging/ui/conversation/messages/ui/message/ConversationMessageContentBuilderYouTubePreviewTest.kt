@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.messages.ui.message
 
 import androidx.core.net.toUri
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.conversation.messages.model.attachment.ConversationMessageAttachment
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
@@ -76,7 +77,7 @@ internal class ConversationMessageContentBuilderYouTubePreviewTest {
         parts: ImmutableList<ConversationMessagePartUiModel> = persistentListOf(),
     ): ConversationMessageUiModel {
         return ConversationMessageUiModel(
-            messageId = "message-1",
+            messageId = MessageId("message-1"),
             conversationId = ConversationId("conversation-1"),
             text = text,
             parts = parts,

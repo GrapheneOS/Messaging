@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.conversation.CONVERSATION_SELECTION_OVERFLOW_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.conversationMessageSelectionActionButtonTestTag
 import com.android.messaging.ui.conversation.screen.BaseConversationScreenTest
@@ -94,7 +95,7 @@ internal class ConversationSelectionTopAppBarResidualActionsTest : BaseConversat
                 latestMessageIncoming = false,
             ),
             selection = ConversationMessageSelectionUiState(
-                selectedMessageIds = persistentSetOf(MESSAGE_ID),
+                selectedMessageIds = persistentSetOf(MessageId(MESSAGE_ID)),
                 availableActions = persistentSetOf(*actions.toTypedArray()),
             ),
         )

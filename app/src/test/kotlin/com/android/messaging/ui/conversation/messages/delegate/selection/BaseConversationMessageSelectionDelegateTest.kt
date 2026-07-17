@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.messages.delegate.selection
 import android.content.ClipboardManager
 import android.net.Uri
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.data.media.repository.ConversationAttachmentsRepository
 import com.android.messaging.domain.conversation.usecase.action.CheckConversationActionRequirements
@@ -116,7 +117,7 @@ internal abstract class BaseConversationMessageSelectionDelegateTest {
         canSaveAttachments: Boolean = false,
     ): ConversationMessageUiModel {
         return ConversationMessageUiModel(
-            messageId = messageId,
+            messageId = MessageId(messageId),
             conversationId = CONVERSATION_ID,
             text = text,
             parts = parts,

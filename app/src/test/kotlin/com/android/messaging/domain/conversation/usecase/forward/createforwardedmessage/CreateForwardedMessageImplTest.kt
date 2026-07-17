@@ -2,6 +2,7 @@ package com.android.messaging.domain.conversation.usecase.forward.createforwarde
 
 import android.net.Uri
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.datamodel.data.MessagePartData
@@ -34,13 +35,13 @@ class CreateForwardedMessageImplTest {
             coEvery {
                 conversationsRepository.getConversationMessage(
                     conversationId = CONVERSATION_ID,
-                    messageId = MESSAGE_ID,
+                    messageId = MessageId(MESSAGE_ID),
                 )
             } returns null
 
             val result = createUseCase().invoke(
                 conversationId = CONVERSATION_ID,
-                messageId = MESSAGE_ID,
+                messageId = MessageId(MESSAGE_ID),
             )
 
             assertNull(result)
@@ -64,7 +65,7 @@ class CreateForwardedMessageImplTest {
 
             val result = createUseCase().invoke(
                 conversationId = CONVERSATION_ID,
-                messageId = MESSAGE_ID,
+                messageId = MessageId(MESSAGE_ID),
             )
 
             assertEquals(FORWARDED_SUBJECT, result?.mmsSubject)
@@ -88,7 +89,7 @@ class CreateForwardedMessageImplTest {
 
             val result = createUseCase().invoke(
                 conversationId = CONVERSATION_ID,
-                messageId = MESSAGE_ID,
+                messageId = MessageId(MESSAGE_ID),
             )
 
             assertNull(result?.mmsSubject)
@@ -112,7 +113,7 @@ class CreateForwardedMessageImplTest {
 
             val result = createUseCase().invoke(
                 conversationId = CONVERSATION_ID,
-                messageId = MESSAGE_ID,
+                messageId = MessageId(MESSAGE_ID),
             )
 
             assertEquals(emptyList<MessagePartData>(), result?.parts?.toList())
@@ -133,7 +134,7 @@ class CreateForwardedMessageImplTest {
 
             val result = createUseCase().invoke(
                 conversationId = CONVERSATION_ID,
-                messageId = MESSAGE_ID,
+                messageId = MessageId(MESSAGE_ID),
             )
 
             assertEquals(emptyList<MessagePartData>(), result?.parts?.toList())
@@ -156,7 +157,7 @@ class CreateForwardedMessageImplTest {
 
             val result = createUseCase().invoke(
                 conversationId = CONVERSATION_ID,
-                messageId = MESSAGE_ID,
+                messageId = MessageId(MESSAGE_ID),
             )
             val resultParts = result?.parts?.toList().orEmpty()
 
@@ -196,7 +197,7 @@ class CreateForwardedMessageImplTest {
 
             val result = createUseCase().invoke(
                 conversationId = CONVERSATION_ID,
-                messageId = MESSAGE_ID,
+                messageId = MessageId(MESSAGE_ID),
             )
             val resultParts = result?.parts?.toList().orEmpty()
 
@@ -235,7 +236,7 @@ class CreateForwardedMessageImplTest {
 
             val result = createUseCase().invoke(
                 conversationId = CONVERSATION_ID,
-                messageId = MESSAGE_ID,
+                messageId = MessageId(MESSAGE_ID),
             )
             val resultParts = result?.parts?.toList().orEmpty()
 
@@ -264,13 +265,13 @@ class CreateForwardedMessageImplTest {
 
             createUseCase().invoke(
                 conversationId = CONVERSATION_ID,
-                messageId = MESSAGE_ID,
+                messageId = MessageId(MESSAGE_ID),
             )
 
             coVerify(exactly = 1) {
                 conversationsRepository.getConversationMessage(
                     conversationId = CONVERSATION_ID,
-                    messageId = MESSAGE_ID,
+                    messageId = MessageId(MESSAGE_ID),
                 )
             }
         }
@@ -280,7 +281,7 @@ class CreateForwardedMessageImplTest {
         coEvery {
             conversationsRepository.getConversationMessage(
                 conversationId = CONVERSATION_ID,
-                messageId = MESSAGE_ID,
+                messageId = MessageId(MESSAGE_ID),
             )
         } returns sourceMessage
     }
