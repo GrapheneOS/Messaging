@@ -8,6 +8,7 @@ import androidx.core.net.toUri
 import com.android.messaging.data.conversation.mapper.ConversationDraftMessageDataMapper
 import com.android.messaging.data.conversation.mapper.ConversationMessageDataDraftMapper
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.store.ConversationDraftStore
 import com.android.messaging.datamodel.MessagingContentProvider
@@ -138,7 +139,7 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
     }
 
     private fun createConversationDraft(
-        selfParticipantId: String,
+        selfParticipantId: ParticipantId,
         draftMessage: MessageData?,
     ): ConversationDraft {
         return when (draftMessage) {
@@ -246,18 +247,18 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
 
     private fun bindMissingDraftParticipants(
         message: MessageData,
-        selfParticipantId: String,
+        selfParticipantId: ParticipantId,
     ): MessageData {
         if (selfParticipantId.isBlank()) {
             return message
         }
 
         if (message.selfId == null) {
-            message.bindSelfId(selfParticipantId)
+            message.bindSelfId(selfParticipantId.value)
         }
 
         if (message.participantId == null) {
-            message.bindParticipantId(selfParticipantId)
+            message.bindParticipantId(selfParticipantId.value)
         }
 
         return message

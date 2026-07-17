@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.screen.viewmodel
 
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
@@ -23,7 +24,7 @@ internal class ConversationViewModelDelegationTest : BaseConversationViewModelTe
             )
             val draft = ConversationDraft(
                 messageText = "Hello",
-                selfParticipantId = "self-1",
+                selfParticipantId = ParticipantId("self-1"),
             )
 
             viewModel.onSeedDraft(
@@ -188,6 +189,6 @@ internal class ConversationViewModelDelegationTest : BaseConversationViewModelTe
     }
 
     private companion object {
-        private const val AUDIO_RECORDING_SELF_PARTICIPANT_ID = "self-recording"
+        private val AUDIO_RECORDING_SELF_PARTICIPANT_ID = ParticipantId("self-recording")
     }
 }

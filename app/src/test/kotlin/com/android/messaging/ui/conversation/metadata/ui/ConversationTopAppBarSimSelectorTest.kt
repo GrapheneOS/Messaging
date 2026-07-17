@@ -10,6 +10,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.testutil.TEST_CALL_ACTION_PHONE_NUMBER
 import com.android.messaging.ui.conversation.CONVERSATION_OVERFLOW_BUTTON_TEST_TAG
@@ -140,7 +141,7 @@ class ConversationTopAppBarSimSelectorTest {
         setContent(
             metadata = ConversationMetadataUiState.Present(
                 title = "Weekend plan",
-                selfParticipantId = "self-1",
+                selfParticipantId = ParticipantId("self-1"),
                 avatar = ConversationMetadataUiState.Avatar.Group,
                 participantCount = 3,
                 otherParticipantDisplayDestination = null,
@@ -187,7 +188,7 @@ class ConversationTopAppBarSimSelectorTest {
     private companion object {
         private val presentMetadata = ConversationMetadataUiState.Present(
             title = "Carol",
-            selfParticipantId = "self-1",
+            selfParticipantId = ParticipantId("self-1"),
             avatar = ConversationMetadataUiState.Avatar.Single(
                 photoUri = null,
                 normalizedDestination = TEST_CALL_ACTION_PHONE_NUMBER,

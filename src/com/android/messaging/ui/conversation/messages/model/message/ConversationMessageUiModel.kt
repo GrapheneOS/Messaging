@@ -26,7 +26,7 @@ internal data class ConversationMessageUiModel(
     val senderContactLookupKey: String?,
     val senderNormalizedDestination: String?,
     val senderParticipantId: ParticipantId?,
-    val selfParticipantId: String?,
+    val selfParticipantId: ParticipantId?,
     val canClusterWithPrevious: Boolean,
     val canClusterWithNext: Boolean,
     val canCopyMessageToClipboard: Boolean,

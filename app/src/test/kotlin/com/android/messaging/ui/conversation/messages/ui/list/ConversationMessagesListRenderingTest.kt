@@ -15,6 +15,7 @@ import androidx.compose.ui.test.performTouchInput
 import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.datamodel.data.ParticipantData
@@ -246,7 +247,7 @@ internal class ConversationMessagesListRenderingTest {
 
     private fun sendSubscription(): Subscription {
         return Subscription(
-            selfParticipantId = SELF_PARTICIPANT_ID,
+            selfParticipantId = ParticipantId(SELF_PARTICIPANT_ID),
             subId = SEND_SUBSCRIPTION_ID,
             label = ConversationSubscriptionLabel.Named(name = SEND_SIM_DISPLAY_NAME),
             displayDestination = null,
@@ -275,7 +276,7 @@ internal class ConversationMessagesListRenderingTest {
             senderContactLookupKey = null,
             senderNormalizedDestination = null,
             senderParticipantId = null,
-            selfParticipantId = SELF_PARTICIPANT_ID,
+            selfParticipantId = ParticipantId(SELF_PARTICIPANT_ID),
             canClusterWithPrevious = false,
             canClusterWithNext = false,
             canCopyMessageToClipboard = true,

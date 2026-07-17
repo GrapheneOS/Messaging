@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.composer.delegate
 
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.data.conversation.model.draft.ConversationDraftPendingAttachment
@@ -82,7 +83,7 @@ internal data class DraftEditorState(
         }
     }
 
-    fun withSelfParticipantId(selfParticipantId: String): DraftEditorState {
+    fun withSelfParticipantId(selfParticipantId: ParticipantId): DraftEditorState {
         return when {
             conversationId == null -> this
             selfParticipantId.isBlank() -> this
@@ -417,7 +418,7 @@ internal data class PersistedDraftUpdate(
 internal data class ConversationDraftEdits(
     val messageText: String? = null,
     val subjectText: String? = null,
-    val selfParticipantId: String? = null,
+    val selfParticipantId: ParticipantId? = null,
     val attachments: ImmutableList<ConversationDraftAttachment>? = null,
 ) {
     val hasChanges: Boolean

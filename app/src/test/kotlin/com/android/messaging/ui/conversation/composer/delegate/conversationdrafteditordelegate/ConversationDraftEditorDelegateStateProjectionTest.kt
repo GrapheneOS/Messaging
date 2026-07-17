@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.composer.delegate.conversationdrafteditordelegate
 
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import org.junit.Assert.assertEquals
@@ -37,10 +38,10 @@ internal class ConversationDraftEditorDelegateStateProjectionTest :
 
         delegate.onSelfParticipantIdChanged(
             conversationId = CONVERSATION_ID,
-            selfParticipantId = "self-2",
+            selfParticipantId = ParticipantId("self-2"),
         )
 
-        assertEquals("self-2", delegate.state.value.draft.selfParticipantId)
+        assertEquals(ParticipantId("self-2"), delegate.state.value.draft.selfParticipantId)
         assertEquals(ConversationDraftSendProtocol.SMS, delegate.state.value.sendProtocol)
     }
 

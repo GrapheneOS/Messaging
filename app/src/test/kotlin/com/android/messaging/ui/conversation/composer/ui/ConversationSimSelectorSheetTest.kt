@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.ui.conversation.CONVERSATION_SIM_SELECTOR_SHEET_TEST_TAG
 import com.android.messaging.ui.conversation.TEST_ATT_SUBSCRIPTION_NAME
 import com.android.messaging.ui.conversation.TEST_VERIZON_SUBSCRIPTION_NAME
@@ -88,7 +89,7 @@ class ConversationSimSelectorSheetTest {
 
     @Test
     fun sheet_invokesCallbackWithSelfParticipantIdWhenRowClicked() {
-        val selections = mutableListOf<String>()
+        val selections = mutableListOf<ParticipantId>()
 
         setContent(
             uiState = ConversationSimSelectorUiState(
@@ -115,7 +116,7 @@ class ConversationSimSelectorSheetTest {
 
     private fun setContent(
         uiState: ConversationSimSelectorUiState,
-        onSimSelected: (String) -> Unit = {},
+        onSimSelected: (ParticipantId) -> Unit = {},
     ) {
         composeTestRule.setContent {
             AppTheme {

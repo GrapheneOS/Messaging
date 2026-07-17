@@ -69,7 +69,7 @@ internal class ConversationMessageUiModelMapperMappingTest :
                 senderContactLookupKey = "lookup-7",
                 senderNormalizedDestination = "+15550100",
                 senderParticipantId = ParticipantId("participant-7"),
-                selfParticipantId = "self-7",
+                selfParticipantId = ParticipantId("self-7"),
                 canClusterWithPrevious = true,
                 canClusterWithNext = false,
                 canCopyMessageToClipboard = true,

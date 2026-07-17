@@ -31,6 +31,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.ui.conversation.NEW_CHAT_CONTACT_RESOLVING_INDICATOR_TEST_TAG
 import com.android.messaging.ui.conversation.NEW_CHAT_CREATE_GROUP_NEXT_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.NEW_CHAT_NAVIGATE_BACK_BUTTON_TEST_TAG
@@ -60,7 +61,7 @@ import kotlinx.collections.immutable.persistentListOf
 
 private typealias NewChatNavigateToConversation = (
     conversationId: ConversationId,
-    selfParticipantId: String?,
+    selfParticipantId: ParticipantId?,
 ) -> Unit
 
 @Composable
@@ -153,7 +154,7 @@ private fun NewChatScreenContent(
     onLoadMore: () -> Unit = {},
     onNavigateBack: () -> Unit = {},
     onQueryChanged: (String) -> Unit = {},
-    onSimSelected: (String) -> Unit = {},
+    onSimSelected: (ParticipantId) -> Unit = {},
     pickerUiState: RecipientPickerUiState = RecipientPickerUiState(),
     resolvingRecipientDestination: String? = null,
     selectedGroupRecipients: ImmutableList<SelectedRecipient> = persistentListOf(),
@@ -241,7 +242,7 @@ private fun NewChatRecipientSelectionContent(
     onCreateGroupRecipientClick: (SelectedRecipient) -> Unit,
     onLoadMore: () -> Unit,
     onQueryChanged: (String) -> Unit,
-    onSimSelected: (String) -> Unit,
+    onSimSelected: (ParticipantId) -> Unit,
     pickerUiState: RecipientPickerUiState,
     resolvingRecipientDestination: String?,
     selectedGroupRecipients: ImmutableList<SelectedRecipient>,

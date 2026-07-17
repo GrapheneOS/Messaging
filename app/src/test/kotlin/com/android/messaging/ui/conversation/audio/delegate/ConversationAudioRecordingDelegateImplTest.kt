@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.audio.delegate
 
 import android.net.Uri
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.data.conversation.model.draft.ConversationDraftPendingAttachment
 import com.android.messaging.data.conversation.model.draft.ConversationDraftPendingAttachmentKind
@@ -92,7 +93,7 @@ class ConversationAudioRecordingDelegateImplTest {
 
             val delegate = createBoundDelegate(scope = backgroundScope)
 
-            delegate.startRecording(selfParticipantId = "self-1")
+            delegate.startRecording(selfParticipantId = ParticipantId("self-1"))
             runCurrent()
 
             assertEquals(
@@ -102,7 +103,7 @@ class ConversationAudioRecordingDelegateImplTest {
             verify(exactly = 1) {
                 @Suppress("UnusedFlow")
                 subscriptionsRepository.resolveMaxMessageSize(
-                    selfParticipantId = "self-1",
+                    selfParticipantId = ParticipantId("self-1"),
                 )
             }
             verify(exactly = 1) {
@@ -122,7 +123,7 @@ class ConversationAudioRecordingDelegateImplTest {
 
             val delegate = createBoundDelegate(scope = backgroundScope)
 
-            delegate.startLockedRecording(selfParticipantId = "self-1")
+            delegate.startLockedRecording(selfParticipantId = ParticipantId("self-1"))
             runCurrent()
 
             assertEquals(
@@ -133,7 +134,7 @@ class ConversationAudioRecordingDelegateImplTest {
             verify(exactly = 1) {
                 @Suppress("UnusedFlow")
                 subscriptionsRepository.resolveMaxMessageSize(
-                    selfParticipantId = "self-1",
+                    selfParticipantId = ParticipantId("self-1"),
                 )
             }
             verify(exactly = 1) {
@@ -159,7 +160,7 @@ class ConversationAudioRecordingDelegateImplTest {
 
             val delegate = createBoundDelegate(scope = backgroundScope)
 
-            delegate.startRecording(selfParticipantId = "self-1")
+            delegate.startRecording(selfParticipantId = ParticipantId("self-1"))
             runCurrent()
 
             assertTrue(delegate.lockRecording())
@@ -188,7 +189,7 @@ class ConversationAudioRecordingDelegateImplTest {
 
             val delegate = createBoundDelegate(scope = backgroundScope)
 
-            delegate.startRecording(selfParticipantId = "self-1")
+            delegate.startRecording(selfParticipantId = ParticipantId("self-1"))
             runCurrent()
             delegate.cancelRecording()
             maxMessageSize.complete(500_000)
@@ -224,7 +225,7 @@ class ConversationAudioRecordingDelegateImplTest {
 
             val delegate = createBoundDelegate(scope = backgroundScope)
 
-            delegate.startRecording(selfParticipantId = "self-1")
+            delegate.startRecording(selfParticipantId = ParticipantId("self-1"))
             runCurrent()
 
             assertEquals(
@@ -267,7 +268,7 @@ class ConversationAudioRecordingDelegateImplTest {
 
             val delegate = createBoundDelegate(scope = backgroundScope)
 
-            delegate.startRecording(selfParticipantId = "self-1")
+            delegate.startRecording(selfParticipantId = ParticipantId("self-1"))
             runCurrent()
             ShadowSystemClock.advanceBy(Duration.ofMillis(350))
 
@@ -310,7 +311,7 @@ class ConversationAudioRecordingDelegateImplTest {
 
             val delegate = createBoundDelegate(scope = backgroundScope)
 
-            delegate.startRecording(selfParticipantId = "self-1")
+            delegate.startRecording(selfParticipantId = ParticipantId("self-1"))
             runCurrent()
             delegate.cancelRecording()
             runCurrent()
@@ -343,7 +344,7 @@ class ConversationAudioRecordingDelegateImplTest {
 
             val delegate = createBoundDelegate(scope = backgroundScope)
 
-            delegate.startRecording(selfParticipantId = "self-1")
+            delegate.startRecording(selfParticipantId = ParticipantId("self-1"))
             runCurrent()
             ShadowSystemClock.advanceBy(Duration.ofMillis(350))
             delegate.finishRecording()
@@ -381,7 +382,7 @@ class ConversationAudioRecordingDelegateImplTest {
 
             val delegate = createBoundDelegate(scope = backgroundScope)
 
-            delegate.startRecording(selfParticipantId = "self-1")
+            delegate.startRecording(selfParticipantId = ParticipantId("self-1"))
             runCurrent()
             ShadowSystemClock.advanceBy(Duration.ofMillis(350))
 
@@ -409,7 +410,7 @@ class ConversationAudioRecordingDelegateImplTest {
 
             val delegate = createBoundDelegate(scope = backgroundScope)
 
-            delegate.startRecording(selfParticipantId = "self-1")
+            delegate.startRecording(selfParticipantId = ParticipantId("self-1"))
             runCurrent()
 
             assertTrue(delegate.lockRecording())
@@ -430,7 +431,7 @@ class ConversationAudioRecordingDelegateImplTest {
 
             val delegate = createBoundDelegate(scope = backgroundScope)
 
-            delegate.startRecording(selfParticipantId = "self-1")
+            delegate.startRecording(selfParticipantId = ParticipantId("self-1"))
             runCurrent()
             ShadowSystemClock.advanceBy(Duration.ofMillis(250))
             delegate.finishRecording()

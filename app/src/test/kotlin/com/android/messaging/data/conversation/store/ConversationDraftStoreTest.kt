@@ -1,5 +1,6 @@
 package com.android.messaging.data.conversation.store
 
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.datamodel.DataModel
 import com.android.messaging.datamodel.DatabaseWrapper
 import com.android.messaging.datamodel.data.ConversationListItemData
@@ -69,7 +70,7 @@ class ConversationDraftStoreTest {
 
         val selfParticipantId = store.getSelfParticipantId(conversationId = CONVERSATION_ID)
 
-        assertEquals(SELF_PARTICIPANT_ID, selfParticipantId)
+        assertEquals(ParticipantId(SELF_PARTICIPANT_ID), selfParticipantId)
     }
 
     private companion object {

@@ -14,6 +14,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.common.components.snackbar.MessagingSnackbarHost
 import com.android.messaging.ui.conversation.composer.ui.ConversationComposerSection
@@ -36,7 +37,7 @@ internal fun ConversationScreen(
     onNavigateBack: () -> Unit,
     pendingDraft: ConversationDraft? = null,
     pendingScrollPosition: Int? = null,
-    pendingSelfParticipantId: String? = null,
+    pendingSelfParticipantId: ParticipantId? = null,
     pendingStartupAttachment: ConversationEntryStartupAttachment? = null,
     onPendingDraftConsumed: () -> Unit = {},
     onPendingScrollPositionConsumed: () -> Unit = {},
@@ -298,7 +299,7 @@ private fun ConversationScreenBottomBar(
 private fun ConversationScreenSimSelectorSheet(
     simSheetState: ConversationSimSheetState,
     uiState: ConversationScreenScaffoldUiState,
-    onSimSelected: (String) -> Unit,
+    onSimSelected: (ParticipantId) -> Unit,
 ) {
     if (!simSheetState.isVisible || !uiState.composer.simSelector.isAvailable) {
         return

@@ -146,7 +146,7 @@ internal abstract class BaseConversationMessageRenderingTest {
             senderContactLookupKey = senderContactLookupKey,
             senderNormalizedDestination = senderNormalizedDestination,
             senderParticipantId = senderParticipantId,
-            selfParticipantId = SELF_PARTICIPANT_ID,
+            selfParticipantId = ParticipantId(SELF_PARTICIPANT_ID),
             canClusterWithPrevious = canClusterWithPrevious,
             canClusterWithNext = canClusterWithNext,
             canCopyMessageToClipboard = !isIncoming,

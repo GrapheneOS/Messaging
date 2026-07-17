@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.composer.mapper
 
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.subscription.model.Subscription
@@ -130,7 +131,7 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
 
     private fun buildSimSelectorUiState(
         subscriptions: ImmutableList<Subscription>,
-        selfParticipantId: String,
+        selfParticipantId: ParticipantId,
         areSubscriptionsLoaded: Boolean,
         defaultSmsSubscriptionId: Int,
     ): ConversationSimSelectorUiState {

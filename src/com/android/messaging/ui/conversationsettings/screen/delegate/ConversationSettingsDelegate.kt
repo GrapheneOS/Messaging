@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversationsettings.screen.delegate
 
 import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepository
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.data.conversationsettings.model.SnoozeOption
 import com.android.messaging.data.conversationsettings.repository.ConversationNotificationRepository
@@ -34,7 +35,7 @@ internal interface ConversationSettingsDelegate :
     ConversationSettingsScreenDelegate<ConversationSettingsUiState> {
     fun setDestinationBlocked(blocked: Boolean)
     fun setArchived(archived: Boolean)
-    fun setSelfParticipantId(selfParticipantId: String)
+    fun setSelfParticipantId(selfParticipantId: ParticipantId)
     fun snooze(option: SnoozeOption)
     fun unsnooze()
 }
@@ -126,7 +127,7 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
         }
     }
 
-    override fun setSelfParticipantId(selfParticipantId: String) {
+    override fun setSelfParticipantId(selfParticipantId: ParticipantId) {
         if (_state.value.selfParticipantId == selfParticipantId) return
         val conversationId = currentConversationId() ?: return
 

@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.composer.delegate.drafteditorstate
 
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftEdits
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.Assert.assertEquals
@@ -27,7 +28,7 @@ internal class ConversationDraftEditsTest : BaseDraftEditorStateTest() {
 
     @Test
     fun hasChanges_withSelfParticipantIdSet_returnsTrue() {
-        assertTrue(ConversationDraftEdits(selfParticipantId = "sim-1").hasChanges)
+        assertTrue(ConversationDraftEdits(selfParticipantId = ParticipantId("sim-1")).hasChanges)
     }
 
     @Test
@@ -54,7 +55,7 @@ internal class ConversationDraftEditsTest : BaseDraftEditorStateTest() {
         val edits = ConversationDraftEdits(
             messageText = "new-message",
             subjectText = "new-subject",
-            selfParticipantId = "sim-2",
+            selfParticipantId = ParticipantId("sim-2"),
             attachments = persistentListOf(attachment("content://attachment/9")),
         )
 
@@ -86,7 +87,7 @@ internal class ConversationDraftEditsTest : BaseDraftEditorStateTest() {
         val edits = ConversationDraftEdits(
             messageText = "message",
             subjectText = "subject",
-            selfParticipantId = "sim-1",
+            selfParticipantId = ParticipantId("sim-1"),
             attachments = base.attachments,
         )
 
@@ -104,7 +105,7 @@ internal class ConversationDraftEditsTest : BaseDraftEditorStateTest() {
         val edits = ConversationDraftEdits(
             messageText = "different-message",
             subjectText = "different-subject",
-            selfParticipantId = "sim-2",
+            selfParticipantId = ParticipantId("sim-2"),
             attachments = persistentListOf(attachment("content://attachment/edit")),
         )
 
@@ -112,7 +113,7 @@ internal class ConversationDraftEditsTest : BaseDraftEditorStateTest() {
 
         assertEquals("different-message", normalized.messageText)
         assertEquals("different-subject", normalized.subjectText)
-        assertEquals("sim-2", normalized.selfParticipantId)
+        assertEquals(ParticipantId("sim-2"), normalized.selfParticipantId)
         assertEquals(listOf(attachment("content://attachment/edit")), normalized.attachments)
     }
 

@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.screen.viewmodel
 
 import app.cash.turbine.test
 import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.domain.conversation.usecase.participant.CanAddMoreConversationParticipants
@@ -51,7 +52,7 @@ internal class ConversationViewModelUiStateTest : BaseConversationViewModelTest(
 
             val metadataState = ConversationMetadataUiState.Present(
                 title = "Weekend plan",
-                selfParticipantId = "self-1",
+                selfParticipantId = ParticipantId("self-1"),
                 avatar = ConversationMetadataUiState.Avatar.Single(
                     photoUri = null,
                     normalizedDestination = null,
@@ -137,7 +138,7 @@ internal class ConversationViewModelUiStateTest : BaseConversationViewModelTest(
 
                 metadataDelegate.stateFlow.value = ConversationMetadataUiState.Present(
                     title = "Weekend plan",
-                    selfParticipantId = "self-1",
+                    selfParticipantId = ParticipantId("self-1"),
                     avatar = ConversationMetadataUiState.Avatar.Single(
                         photoUri = null,
                         normalizedDestination = null,
@@ -179,7 +180,7 @@ internal class ConversationViewModelUiStateTest : BaseConversationViewModelTest(
 
             metadataDelegate.stateFlow.value = ConversationMetadataUiState.Present(
                 title = "Weekend plan",
-                selfParticipantId = "self-1",
+                selfParticipantId = ParticipantId("self-1"),
                 avatar = ConversationMetadataUiState.Avatar.Group,
                 participantCount = 2,
                 otherParticipantDisplayDestination = null,
@@ -213,7 +214,7 @@ internal class ConversationViewModelUiStateTest : BaseConversationViewModelTest(
 
             metadataDelegate.stateFlow.value = ConversationMetadataUiState.Present(
                 title = "Weekend plan",
-                selfParticipantId = "self-1",
+                selfParticipantId = ParticipantId("self-1"),
                 avatar = ConversationMetadataUiState.Avatar.Group,
                 participantCount = 10,
                 otherParticipantDisplayDestination = null,

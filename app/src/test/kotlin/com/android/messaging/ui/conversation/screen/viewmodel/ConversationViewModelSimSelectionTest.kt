@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.screen.viewmodel
 
 import androidx.lifecycle.SavedStateHandle
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
@@ -349,7 +350,7 @@ internal class ConversationViewModelSimSelectionTest {
 
     private fun firstSubscription(): Subscription {
         return Subscription(
-            selfParticipantId = FIRST_SELF_PARTICIPANT_ID,
+            selfParticipantId = ParticipantId(FIRST_SELF_PARTICIPANT_ID),
             subId = FIRST_SUB_ID,
             label = ConversationSubscriptionLabel.Named(name = "SIM 1"),
             displayDestination = null,
@@ -360,7 +361,7 @@ internal class ConversationViewModelSimSelectionTest {
 
     private fun secondSubscription(): Subscription {
         return Subscription(
-            selfParticipantId = SECOND_SELF_PARTICIPANT_ID,
+            selfParticipantId = ParticipantId(SECOND_SELF_PARTICIPANT_ID),
             subId = SECOND_SUB_ID,
             label = ConversationSubscriptionLabel.Named(name = "SIM 2"),
             displayDestination = null,
@@ -373,7 +374,7 @@ internal class ConversationViewModelSimSelectionTest {
         private val CONVERSATION_ID = ConversationId("conversation-1")
         private const val ATTACHMENT_PART_ID = "attachment-part-1"
         private const val ATTACHMENT_URI = "content://example/attachment/1"
-        private const val PICKED_SELF_PARTICIPANT_ID = "self-participant-2"
+        private val PICKED_SELF_PARTICIPANT_ID = ParticipantId("self-participant-2")
         private const val FIRST_SELF_PARTICIPANT_ID = "self-participant-1"
         private const val SECOND_SELF_PARTICIPANT_ID = "self-participant-2"
         private const val DEFAULT_SUB_ID = -1

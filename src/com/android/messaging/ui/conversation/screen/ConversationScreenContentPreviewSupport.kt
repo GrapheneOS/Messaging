@@ -407,6 +407,6 @@ private fun ConversationMessageUiModel.withPreviewSelfParticipant(
 ): ConversationMessageUiModel {
     return copy(
         senderParticipantId = selfParticipantId,
-        selfParticipantId = selfParticipantId.value,
+        selfParticipantId = selfParticipantId,
     )
 }
