@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performScrollToIndex
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.CONVERSATION_MESSAGES_LIST_TEST_TAG
 import com.android.messaging.ui.conversation.conversationMessageItemTestTag
@@ -82,7 +83,7 @@ internal class ConversationScreenScrollBehaviorTest : BaseConversationScreenTest
 
         composeTestRule.runOnIdle {
             conversationState = Pair(
-                "conversation-2",
+                ConversationId("conversation-2"),
                 2,
             )
             screenModel.scaffoldUiStateFlow.value = createPresentUiState(

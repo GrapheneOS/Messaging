@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.database.ContentObserver
 import android.net.Uri
 import app.cash.turbine.test
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.recipient.ConversationRecipient
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.data.ParticipantData
@@ -49,7 +50,7 @@ class ConversationParticipantsRepositoryImplTest {
         ) {
             val registeredObserver = slot<ContentObserver>()
             val expectedUri = MessagingContentProvider.buildConversationParticipantsUri(
-                CONVERSATION_ID,
+                CONVERSATION_ID.value,
             )
             val repository = createRepository()
 
@@ -92,7 +93,7 @@ class ConversationParticipantsRepositoryImplTest {
         ) {
             val registeredObserver = slot<ContentObserver>()
             val expectedUri = MessagingContentProvider.buildConversationParticipantsUri(
-                CONVERSATION_ID,
+                CONVERSATION_ID.value,
             )
             val repository = createRepository()
 
@@ -174,7 +175,7 @@ class ConversationParticipantsRepositoryImplTest {
         ) {
             val registeredObserver = slot<ContentObserver>()
             val expectedUri = MessagingContentProvider.buildConversationParticipantsUri(
-                CONVERSATION_ID,
+                CONVERSATION_ID.value,
             )
             val repository = createRepository()
             var currentCursor = createParticipantsCursor(

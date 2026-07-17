@@ -2,6 +2,7 @@ package com.android.messaging.data.conversation.store
 
 import android.content.ContentValues
 import android.database.sqlite.SQLiteStatement
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.datamodel.BugleDatabaseOperations
 import com.android.messaging.datamodel.BugleNotifications
 import com.android.messaging.datamodel.DataModel
@@ -72,18 +73,18 @@ internal class ConversationReadStoreTest {
                 DatabaseHelper.MESSAGES_TABLE,
                 capture(values),
                 any(),
-                match { arguments -> arguments.contentEquals(arrayOf(CONVERSATION_ID)) },
+                match { arguments -> arguments.contentEquals(arrayOf(CONVERSATION_ID.value)) },
             )
         }
 
         assertEquals(1, values.captured.getAsInteger(DatabaseHelper.MessageColumns.READ))
         assertEquals(1, values.captured.getAsInteger(DatabaseHelper.MessageColumns.SEEN))
 
-        verify { MessagingContentProvider.notifyMessagesChanged(CONVERSATION_ID) }
+        verify { MessagingContentProvider.notifyMessagesChanged(CONVERSATION_ID.value) }
         verify {
             BugleNotifications.cancel(
                 PendingIntentConstants.SMS_NOTIFICATION_ID,
-                CONVERSATION_ID,
+                CONVERSATION_ID.value,
             )
         }
     }
@@ -100,7 +101,7 @@ internal class ConversationReadStoreTest {
         verify {
             BugleNotifications.cancel(
                 PendingIntentConstants.SMS_NOTIFICATION_ID,
-                CONVERSATION_ID,
+                CONVERSATION_ID.value,
             )
         }
     }
@@ -114,7 +115,7 @@ internal class ConversationReadStoreTest {
         verify {
             BugleDatabaseOperations.getQueryConversationsLatestMessageStatement(
                 database,
-                CONVERSATION_ID,
+                CONVERSATION_ID.value,
             )
         }
         verify {
@@ -126,7 +127,7 @@ internal class ConversationReadStoreTest {
             )
         }
         assertEquals(0, values.captured.getAsInteger(DatabaseHelper.MessageColumns.READ))
-        verify { MessagingContentProvider.notifyMessagesChanged(CONVERSATION_ID) }
+        verify { MessagingContentProvider.notifyMessagesChanged(CONVERSATION_ID.value) }
     }
 
     @Test
@@ -140,7 +141,7 @@ internal class ConversationReadStoreTest {
     }
 
     private companion object {
-        private const val CONVERSATION_ID = "conversation-42"
+        private val CONVERSATION_ID = ConversationId("conversation-42")
         private const val MESSAGE_ID = "message-24"
         private const val THREAD_ID = 7L
     }

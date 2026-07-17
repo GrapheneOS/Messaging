@@ -19,7 +19,7 @@ class ConversationMessageDataDraftMapperImplTest {
     @Test
     fun map_preservesSourceFieldsWhenSelfParticipantIdIsPresent() {
         val messageData = MessageData.createDraftSmsMessage(
-            CONVERSATION_ID,
+            CONVERSATION_ID.value,
             "self-1",
             "Hello",
         )
@@ -59,7 +59,7 @@ class ConversationMessageDataDraftMapperImplTest {
     @Test
     fun map_usesFallbackSelfParticipantIdWhenSourceSelfIdIsNull() {
         val messageData = MessageData.createDraftMessage(
-            CONVERSATION_ID,
+            CONVERSATION_ID.value,
             null,
             null,
         )
@@ -75,7 +75,7 @@ class ConversationMessageDataDraftMapperImplTest {
     @Test
     fun map_usesFallbackSelfParticipantIdWhenSourceSelfIdIsBlank() {
         val messageData = MessageData.createDraftSmsMessage(
-            CONVERSATION_ID,
+            CONVERSATION_ID.value,
             "",
             "Hello",
         )
@@ -91,7 +91,7 @@ class ConversationMessageDataDraftMapperImplTest {
     @Test
     fun map_normalizesUnspecifiedAttachmentDimensionsToNull() {
         val messageData = MessageData.createDraftSmsMessage(
-            CONVERSATION_ID,
+            CONVERSATION_ID.value,
             "self-1",
             "",
         )
@@ -117,7 +117,7 @@ class ConversationMessageDataDraftMapperImplTest {
     @Test
     fun map_dropsAttachmentsWithBlankContentTypeOrUri() {
         val messageData = MessageData.createDraftSmsMessage(
-            CONVERSATION_ID,
+            CONVERSATION_ID.value,
             "self-1",
             "Hello",
         )
@@ -164,7 +164,7 @@ class ConversationMessageDataDraftMapperImplTest {
     @Test
     fun map_dropsAttachmentsBackedByPhotoPickerUris() {
         val messageData = MessageData.createDraftSmsMessage(
-            CONVERSATION_ID,
+            CONVERSATION_ID.value,
             "self-1",
             "Hello",
         )

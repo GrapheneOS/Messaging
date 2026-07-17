@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.android.messaging.R
 import com.android.messaging.data.contact.formatter.ContactDestinationFormatter
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.recipient.ConversationRecipient
 import com.android.messaging.data.conversation.repository.ConversationParticipantsRepository
 import com.android.messaging.domain.conversation.usecase.participant.IsConversationRecipientLimitExceeded
@@ -199,13 +200,13 @@ class AddParticipantsViewModelTest {
                 advanceUntilIdle()
                 resolutionDelegate.outcomesSource.emit(
                     ConversationResolutionOutcome.Resolved(
-                        conversationId = "conversation-2",
+                        conversationId = ConversationId("conversation-2"),
                     ),
                 )
 
                 assertEquals(
                     AddParticipantsEffect.NavigateToConversation(
-                        conversationId = "conversation-2",
+                        conversationId = ConversationId("conversation-2"),
                     ),
                     awaitItem(),
                 )

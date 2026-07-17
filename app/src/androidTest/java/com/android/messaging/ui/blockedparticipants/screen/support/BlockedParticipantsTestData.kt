@@ -1,5 +1,6 @@
 package com.android.messaging.ui.blockedparticipants.screen.support
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantUiState
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsUiState
 import kotlinx.collections.immutable.ImmutableList
@@ -54,19 +55,19 @@ internal fun defaultParticipants(): ImmutableList<BlockedParticipantUiState> {
     return listOf(
         participant(
             participantId = PARTICIPANT_ID_1,
-            conversationId = CONVERSATION_ID_1,
+            conversationId = ConversationId(CONVERSATION_ID_1),
             displayName = DISPLAY_NAME_1,
             destination = DESTINATION_1,
         ),
         participant(
             participantId = PARTICIPANT_ID_2,
-            conversationId = CONVERSATION_ID_2,
+            conversationId = ConversationId(CONVERSATION_ID_2),
             displayName = DISPLAY_NAME_2,
             destination = DESTINATION_2,
         ),
         participant(
             participantId = PARTICIPANT_ID_3,
-            conversationId = CONVERSATION_ID_3,
+            conversationId = ConversationId(CONVERSATION_ID_3),
             displayName = DISPLAY_NAME_3,
             destination = DESTINATION_3,
         ),
@@ -75,7 +76,7 @@ internal fun defaultParticipants(): ImmutableList<BlockedParticipantUiState> {
 
 internal fun participant(
     participantId: String = PARTICIPANT_ID_1,
-    conversationId: String = CONVERSATION_ID_1,
+    conversationId: ConversationId = ConversationId(CONVERSATION_ID_1),
     displayName: String = DISPLAY_NAME_1,
     destination: String? = DESTINATION_1,
     details: String? = destination,

@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
 import com.android.messaging.datamodel.data.ParticipantData
@@ -391,7 +392,7 @@ internal abstract class BaseConversationViewModelTest {
 
     protected data class BindCall(
         val scope: CoroutineScope,
-        val conversationIdFlow: StateFlow<String?>,
+        val conversationIdFlow: StateFlow<ConversationId?>,
     )
 
     protected data class DraftDelegateMock(
@@ -454,7 +455,7 @@ internal abstract class BaseConversationViewModelTest {
 
     protected data class FocusBindCall(
         val scope: CoroutineScope,
-        val conversationIdFlow: StateFlow<String?>,
+        val conversationIdFlow: StateFlow<ConversationId?>,
     )
 
     protected data class FocusDelegateMock(

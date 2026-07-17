@@ -38,7 +38,7 @@ class ConversationDraftStoreTest {
     @Test
     fun getSelfParticipantId_whenConversationIsMissing_returnsNull() {
         every {
-            ConversationListItemData.getExistingConversation(databaseWrapper, CONVERSATION_ID)
+            ConversationListItemData.getExistingConversation(databaseWrapper, CONVERSATION_ID.value)
         } returns null
 
         val selfParticipantId = store.getSelfParticipantId(conversationId = CONVERSATION_ID)
@@ -51,7 +51,7 @@ class ConversationDraftStoreTest {
         val conversation = mockk<ConversationListItemData>()
         every { conversation.selfId } returns "  "
         every {
-            ConversationListItemData.getExistingConversation(databaseWrapper, CONVERSATION_ID)
+            ConversationListItemData.getExistingConversation(databaseWrapper, CONVERSATION_ID.value)
         } returns conversation
 
         val selfParticipantId = store.getSelfParticipantId(conversationId = CONVERSATION_ID)
@@ -64,7 +64,7 @@ class ConversationDraftStoreTest {
         val conversation = mockk<ConversationListItemData>()
         every { conversation.selfId } returns SELF_PARTICIPANT_ID
         every {
-            ConversationListItemData.getExistingConversation(databaseWrapper, CONVERSATION_ID)
+            ConversationListItemData.getExistingConversation(databaseWrapper, CONVERSATION_ID.value)
         } returns conversation
 
         val selfParticipantId = store.getSelfParticipantId(conversationId = CONVERSATION_ID)

@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.screen.viewmodel
 
 import androidx.lifecycle.SavedStateHandle
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
@@ -369,7 +370,7 @@ internal class ConversationViewModelSimSelectionTest {
     }
 
     private companion object {
-        private const val CONVERSATION_ID = "conversation-1"
+        private val CONVERSATION_ID = ConversationId("conversation-1")
         private const val ATTACHMENT_PART_ID = "attachment-part-1"
         private const val ATTACHMENT_URI = "content://example/attachment/1"
         private const val PICKED_SELF_PARTICIPANT_ID = "self-participant-2"

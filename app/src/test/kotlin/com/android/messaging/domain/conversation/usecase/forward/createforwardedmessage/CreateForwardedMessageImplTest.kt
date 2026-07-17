@@ -1,6 +1,7 @@
 package com.android.messaging.domain.conversation.usecase.forward.createforwardedmessage
 
 import android.net.Uri
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.datamodel.data.MessagePartData
@@ -337,7 +338,7 @@ class CreateForwardedMessageImplTest {
     }
 
     private companion object {
-        private const val CONVERSATION_ID = "conversation-1"
+        private val CONVERSATION_ID = ConversationId("conversation-1")
         private const val FORWARDED_SUBJECT = "Fwd: Original subject"
         private const val IMAGE_CONTENT_TYPE = "image/jpeg"
         private const val IMAGE_URI = "content://media/image/1"

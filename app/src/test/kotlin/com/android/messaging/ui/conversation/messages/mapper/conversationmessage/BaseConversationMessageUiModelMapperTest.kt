@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.messages.mapper.conversationmessage
 
 import android.net.Uri
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentType
 import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.datamodel.data.MessageData
@@ -45,7 +46,7 @@ internal abstract class BaseConversationMessageUiModelMapperTest {
 
     protected fun messageData(
         messageId: String? = "message-1",
-        conversationId: String? = "conversation-1",
+        conversationId: ConversationId? = ConversationId("conversation-1"),
         text: String? = null,
         parts: List<MessagePartData>? = emptyList(),
         sentTimestamp: Long = 0L,
@@ -74,7 +75,7 @@ internal abstract class BaseConversationMessageUiModelMapperTest {
     ): ConversationMessageData {
         val mock = mockk<ConversationMessageData>()
         every { mock.messageId } returns messageId
-        every { mock.conversationId } returns conversationId
+        every { mock.conversationId } returns conversationId?.value
         every { mock.text } returns text
         every { mock.parts } returns parts
         every { mock.sentTimeStamp } returns sentTimestamp

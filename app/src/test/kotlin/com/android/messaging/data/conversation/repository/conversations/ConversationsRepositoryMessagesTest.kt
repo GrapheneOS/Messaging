@@ -35,7 +35,9 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
             val registeredObservers = mutableListOf<ContentObserver>()
             val capturedProjections = mutableListOf<Array<String>?>()
             val repository = createRepository()
-            val expectedUri = MessagingContentProvider.buildConversationMessagesUri(CONVERSATION_ID)
+            val expectedUri = MessagingContentProvider.buildConversationMessagesUri(
+                CONVERSATION_ID.value
+            )
 
             stubObserverRegistration(
                 registeredObservers = registeredObservers,
@@ -77,7 +79,9 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
             val registeredObservers = mutableListOf<ContentObserver>()
             val capturedProjections = mutableListOf<Array<String>?>()
             val repository = createRepository()
-            val expectedUri = MessagingContentProvider.buildConversationMessagesUri(CONVERSATION_ID)
+            val expectedUri = MessagingContentProvider.buildConversationMessagesUri(
+                CONVERSATION_ID.value
+            )
             val messagesInUiOrder = listOf(
                 messageRow(
                     messageId = "pair-1",
@@ -214,7 +218,9 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
             val registeredObservers = mutableListOf<ContentObserver>()
             val capturedProjections = mutableListOf<Array<String>?>()
             val repository = createRepository()
-            val expectedUri = MessagingContentProvider.buildConversationMessagesUri(CONVERSATION_ID)
+            val expectedUri = MessagingContentProvider.buildConversationMessagesUri(
+                CONVERSATION_ID.value
+            )
             val firstMessage = messageRow(
                 messageId = "first",
                 participantId = "participant-a",
@@ -295,7 +301,9 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
             val registeredObservers = mutableListOf<ContentObserver>()
             val capturedProjections = mutableListOf<Array<String>?>()
             val repository = createRepository()
-            val expectedUri = MessagingContentProvider.buildConversationMessagesUri(CONVERSATION_ID)
+            val expectedUri = MessagingContentProvider.buildConversationMessagesUri(
+                CONVERSATION_ID.value
+            )
             val singleMessage = messageRow(
                 messageId = "only",
                 participantId = "participant-a",
@@ -339,7 +347,9 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
             val registeredObservers = mutableListOf<ContentObserver>()
             val capturedProjections = mutableListOf<Array<String>?>()
             val repository = createRepository()
-            val expectedUri = MessagingContentProvider.buildConversationMessagesUri(CONVERSATION_ID)
+            val expectedUri = MessagingContentProvider.buildConversationMessagesUri(
+                CONVERSATION_ID.value
+            )
             val messagesInUiOrder = listOf(
                 messageRow(
                     messageId = "msg-a",
@@ -411,7 +421,9 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
             val registeredObservers = mutableListOf<ContentObserver>()
             val capturedProjections = mutableListOf<Array<String>?>()
             val repository = createRepository()
-            val expectedUri = MessagingContentProvider.buildConversationMessagesUri(CONVERSATION_ID)
+            val expectedUri = MessagingContentProvider.buildConversationMessagesUri(
+                CONVERSATION_ID.value
+            )
 
             stubObserverRegistration(
                 registeredObservers = registeredObservers,

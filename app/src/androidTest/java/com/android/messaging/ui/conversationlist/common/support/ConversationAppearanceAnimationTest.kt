@@ -13,6 +13,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.unit.dp
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
@@ -127,7 +128,7 @@ internal class ConversationAppearanceAnimationTest {
                 listState = listState,
                 excludedConversationIds = persistentSetOf(),
             )
-            val newConversationToken = tokens.tokenFor(newConversationId)
+            val newConversationToken = tokens.tokenFor(ConversationId(newConversationId))
 
             SideEffect {
                 newConversationTokens += newConversationToken
@@ -142,7 +143,7 @@ internal class ConversationAppearanceAnimationTest {
 
         composeRule.runOnIdle {
             val newItem = previewConversationListItem(
-                conversationId = newConversationId,
+                conversationId = ConversationId(newConversationId),
                 title = "New conversation",
                 snippetText = "New message",
             )
@@ -162,7 +163,7 @@ internal class ConversationAppearanceAnimationTest {
     private fun AppearanceTokenProbe(
         items: ImmutableList<ConversationListItemUiModel>,
         listState: LazyListState,
-        excludedConversationIds: ImmutableSet<String>,
+        excludedConversationIds: ImmutableSet<ConversationId>,
         onComposed: () -> Unit,
     ) {
         rememberAppearanceAnimationTokens(

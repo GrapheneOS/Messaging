@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.messages.delegate.selection
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
 import kotlinx.collections.immutable.persistentSetOf
@@ -135,7 +136,7 @@ internal class ConversationMessageSelectionDelegateSelectionTest :
                 )
                 advanceUntilIdle()
 
-                harness.conversationIdFlow.value = "conversation-2"
+                harness.conversationIdFlow.value = ConversationId("conversation-2")
                 advanceUntilIdle()
 
                 assertEquals(

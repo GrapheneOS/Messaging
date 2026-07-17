@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.composer.delegate.conversationdrafteditordelegate
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import org.junit.Assert.assertEquals
@@ -84,12 +85,12 @@ internal class ConversationDraftEditorDelegateStateProjectionTest :
     fun reset_marksVisibleDraftAsCheckingUntilPersistedDraftArrives() {
         val delegate = createDelegate()
 
-        delegate.reset(conversationId = "conversation-loading")
+        delegate.reset(conversationId = ConversationId("conversation-loading"))
         assertTrue(delegate.state.value.draft.isCheckingDraft)
 
         delegate.applyPersistedDraftUpdate(
             persistedDraftUpdate = persistedDraftUpdate(
-                conversationId = "conversation-loading",
+                conversationId = ConversationId("conversation-loading"),
             ),
         )
         assertFalse(delegate.state.value.draft.isCheckingDraft)

@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationlist.delegate
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.ui.conversationlist.conversationItem
 import kotlinx.collections.immutable.persistentListOf
@@ -16,8 +17,8 @@ internal class ConversationListOptimisticReducerTest {
     @Test
     fun apply_emptyOverrides_returnsItemsUnchanged() {
         val items = persistentListOf(
-            conversationItem("a"),
-            conversationItem("b"),
+            conversationItem(ConversationId("a")),
+            conversationItem(ConversationId("b")),
         )
 
         val result = reducer.apply(
@@ -30,17 +31,17 @@ internal class ConversationListOptimisticReducerTest {
 
     @Test
     fun apply_archivedOverride_removesItem() {
-        val archivedItem = conversationItem("a")
+        val archivedItem = conversationItem(ConversationId("a"))
         val items = persistentListOf(
             archivedItem,
-            conversationItem("b"),
+            conversationItem(ConversationId("b")),
         )
 
         val result = reducer.apply(
             items = items,
             overrides = ConversationListOptimisticOverrides(
                 archiveById = persistentMapOf(
-                    "a" to ConversationArchiveOverride.Archived(archivedItem),
+                    ConversationId("a") to ConversationArchiveOverride.Archived(archivedItem),
                 ),
             ),
         )
@@ -51,14 +52,14 @@ internal class ConversationListOptimisticReducerTest {
     @Test
     fun apply_readOverride_updatesStateWithoutReordering() {
         val items = persistentListOf(
-            conversationItem("a", isRead = false, timestamp = 1_000L),
-            conversationItem("b", timestamp = 2_000L),
+            conversationItem(ConversationId("a"), isRead = false, timestamp = 1_000L),
+            conversationItem(ConversationId("b"), timestamp = 2_000L),
         )
 
         val result = reducer.apply(
             items = items,
             overrides = ConversationListOptimisticOverrides(
-                readById = persistentMapOf("a" to true),
+                readById = persistentMapOf(ConversationId("a") to true),
             ),
         )
 
@@ -69,33 +70,33 @@ internal class ConversationListOptimisticReducerTest {
     @Test
     fun apply_pinOverride_reordersByPinThenTimestamp() {
         val items = persistentListOf(
-            conversationItem("a", timestamp = 3_000L),
-            conversationItem("b", isPinned = true, timestamp = 2_000L),
-            conversationItem("c", timestamp = 1_000L),
+            conversationItem(ConversationId("a"), timestamp = 3_000L),
+            conversationItem(ConversationId("b"), isPinned = true, timestamp = 2_000L),
+            conversationItem(ConversationId("c"), timestamp = 1_000L),
         )
 
         val result = reducer.apply(
             items = items,
             overrides = ConversationListOptimisticOverrides(
-                pinnedById = persistentMapOf("c" to true),
+                pinnedById = persistentMapOf(ConversationId("c") to true),
             ),
         )
 
         assertEquals(listOf("b", "c", "a"), result.conversationIds())
-        assertTrue(result.first { it.conversationId == "c" }.isPinned)
+        assertTrue(result.first { it.conversationId == ConversationId("c") }.isPinned)
     }
 
     @Test
     fun apply_unpinOverride_movesItemIntoTimestampOrder() {
         val items = persistentListOf(
-            conversationItem("a", isPinned = true, timestamp = 1_000L),
-            conversationItem("b", timestamp = 3_000L),
+            conversationItem(ConversationId("a"), isPinned = true, timestamp = 1_000L),
+            conversationItem(ConversationId("b"), timestamp = 3_000L),
         )
 
         val result = reducer.apply(
             items = items,
             overrides = ConversationListOptimisticOverrides(
-                pinnedById = persistentMapOf("a" to false),
+                pinnedById = persistentMapOf(ConversationId("a") to false),
             ),
         )
 
@@ -106,7 +107,7 @@ internal class ConversationListOptimisticReducerTest {
     @Test
     fun apply_restoringItemMissingFromRawSnapshot_keepsItVisibleAndOrdered() {
         val restoringItem = conversationItem(
-            conversationId = "c",
+            conversationId = ConversationId("c"),
             isPinned = true,
             isRead = false,
             timestamp = 2_000L,
@@ -114,17 +115,17 @@ internal class ConversationListOptimisticReducerTest {
 
         val result = reducer.apply(
             items = persistentListOf(
-                conversationItem("a", timestamp = 3_000L),
-                conversationItem("b", timestamp = 1_000L),
+                conversationItem(ConversationId("a"), timestamp = 3_000L),
+                conversationItem(ConversationId("b"), timestamp = 1_000L),
             ),
             overrides = ConversationListOptimisticOverrides(
                 archiveById = persistentMapOf(
-                    "c" to ConversationArchiveOverride.Restoring(
+                    ConversationId("c") to ConversationArchiveOverride.Restoring(
                         item = restoringItem,
                         awaitingRemoval = false,
                     ),
                 ),
-                readById = persistentMapOf("c" to true),
+                readById = persistentMapOf(ConversationId("c") to true),
             ),
         )
 
@@ -134,14 +135,14 @@ internal class ConversationListOptimisticReducerTest {
 
     @Test
     fun apply_restoringItemAlreadyInRawSnapshot_doesNotDuplicateCachedItem() {
-        val cachedItem = conversationItem("a", isRead = false)
-        val rawItem = conversationItem("a", isRead = true)
+        val cachedItem = conversationItem(ConversationId("a"), isRead = false)
+        val rawItem = conversationItem(ConversationId("a"), isRead = true)
 
         val result = reducer.apply(
             items = persistentListOf(rawItem),
             overrides = ConversationListOptimisticOverrides(
                 archiveById = persistentMapOf(
-                    "a" to ConversationArchiveOverride.Restoring(
+                    ConversationId("a") to ConversationArchiveOverride.Restoring(
                         item = cachedItem,
                         awaitingRemoval = false,
                     ),
@@ -155,35 +156,35 @@ internal class ConversationListOptimisticReducerTest {
 
     @Test
     fun prune_archivedItemMissingFromRawSnapshot_keepsItForUndo() {
-        val archivedItem = conversationItem("a")
+        val archivedItem = conversationItem(ConversationId("a"))
         val archivedOverride = ConversationArchiveOverride.Archived(archivedItem)
 
         val pruned = reducer.prune(
             items = persistentListOf(),
             overrides = ConversationListOptimisticOverrides(
-                archiveById = persistentMapOf("a" to archivedOverride),
+                archiveById = persistentMapOf(ConversationId("a") to archivedOverride),
             ),
         )
 
-        assertEquals(archivedOverride, pruned.archiveById["a"])
+        assertEquals(archivedOverride, pruned.archiveById[ConversationId("a")])
     }
 
     @Test
     fun prune_restoreRace_retainsOverridesUntilRawSnapshotCatchesUp() {
         val cachedItem = conversationItem(
-            conversationId = "a",
+            conversationId = ConversationId("a"),
             isPinned = false,
             isRead = false,
         )
         var overrides = ConversationListOptimisticOverrides(
             archiveById = persistentMapOf(
-                "a" to ConversationArchiveOverride.Restoring(
+                ConversationId("a") to ConversationArchiveOverride.Restoring(
                     item = cachedItem,
                     awaitingRemoval = true,
                 ),
             ),
-            readById = persistentMapOf("a" to true),
-            pinnedById = persistentMapOf("a" to true),
+            readById = persistentMapOf(ConversationId("a") to true),
+            pinnedById = persistentMapOf(ConversationId("a") to true),
         )
 
         overrides = reducer.prune(
@@ -195,7 +196,7 @@ internal class ConversationListOptimisticReducerTest {
                 item = cachedItem,
                 awaitingRemoval = true,
             ),
-            overrides.archiveById["a"],
+            overrides.archiveById[ConversationId("a")],
         )
 
         overrides = reducer.prune(
@@ -207,23 +208,23 @@ internal class ConversationListOptimisticReducerTest {
                 item = cachedItem,
                 awaitingRemoval = false,
             ),
-            overrides.archiveById["a"],
+            overrides.archiveById[ConversationId("a")],
         )
-        assertTrue(overrides.readById.getValue("a"))
-        assertTrue(overrides.pinnedById.getValue("a"))
+        assertTrue(overrides.readById.getValue(ConversationId("a")))
+        assertTrue(overrides.pinnedById.getValue(ConversationId("a")))
 
         overrides = reducer.prune(
             items = persistentListOf(cachedItem),
             overrides = overrides,
         )
-        assertFalse("a" in overrides.archiveById)
-        assertTrue(overrides.readById.getValue("a"))
-        assertTrue(overrides.pinnedById.getValue("a"))
+        assertFalse(ConversationId("a") in overrides.archiveById)
+        assertTrue(overrides.readById.getValue(ConversationId("a")))
+        assertTrue(overrides.pinnedById.getValue(ConversationId("a")))
 
         overrides = reducer.prune(
             items = persistentListOf(
                 conversationItem(
-                    conversationId = "a",
+                    conversationId = ConversationId("a"),
                     isPinned = true,
                     isRead = true,
                 ),
@@ -238,8 +239,8 @@ internal class ConversationListOptimisticReducerTest {
         val pruned = reducer.prune(
             items = persistentListOf(),
             overrides = ConversationListOptimisticOverrides(
-                readById = persistentMapOf("a" to true),
-                pinnedById = persistentMapOf("a" to true),
+                readById = persistentMapOf(ConversationId("a") to true),
+                pinnedById = persistentMapOf(ConversationId("a") to true),
             ),
         )
 
@@ -247,6 +248,6 @@ internal class ConversationListOptimisticReducerTest {
     }
 
     private fun List<ConversationListItem>.conversationIds(): List<String> {
-        return map(ConversationListItem::conversationId)
+        return map { item -> item.conversationId.value }
     }
 }

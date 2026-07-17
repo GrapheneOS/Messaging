@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationlist.chats
 
 import app.cash.turbine.test
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
 import com.android.messaging.data.debug.DebugFeaturesProvider
@@ -44,7 +45,9 @@ class ConversationListViewModelTest {
     private val debugFeaturesProvider = mockk<DebugFeaturesProvider>()
 
     private val snapshotFlow = MutableStateFlow<ConversationListSnapshot?>(null)
-    private val selectedIdsFlow = MutableStateFlow<ImmutableList<String>>(persistentListOf())
+    private val selectedIdsFlow = MutableStateFlow<ImmutableList<ConversationId>>(
+        persistentListOf(),
+    )
 
     @Test
     fun init_bindsDelegates() {
@@ -57,8 +60,8 @@ class ConversationListViewModelTest {
     @Test
     fun archiveClicked_archivesOptimisticallyPersistsAndEmitsStatusEffect() {
         runTest(context = mainDispatcherRule.testDispatcher) {
-            selectedIdsFlow.value = persistentListOf("a")
-            snapshotFlow.value = snapshotOf(conversationItem("a"))
+            selectedIdsFlow.value = persistentListOf(ConversationId("a"))
+            snapshotFlow.value = snapshotOf(conversationItem(ConversationId("a")))
 
             val viewModel = createViewModel()
             viewModel.effects.test {
@@ -66,7 +69,7 @@ class ConversationListViewModelTest {
 
                 assertEquals(
                     Effect.ArchiveStatusChanged(
-                        conversationIds = persistentListOf("a"),
+                        conversationIds = persistentListOf(ConversationId("a")),
                         isArchived = true,
                     ),
                     awaitItem(),
@@ -75,8 +78,8 @@ class ConversationListViewModelTest {
             }
             advanceUntilIdle()
 
-            verify { optimisticSnapshotDelegate.remove(listOf("a")) }
-            coVerify { actionsDelegate.setArchived(listOf("a"), isArchived = true) }
+            verify { optimisticSnapshotDelegate.remove(listOf(ConversationId("a"))) }
+            coVerify { actionsDelegate.setArchived(listOf(ConversationId("a")), isArchived = true) }
             verify { selectionDelegate.clear() }
         }
     }
@@ -84,22 +87,24 @@ class ConversationListViewModelTest {
     @Test
     fun swipeToggleRead_marksUnreadConversationReadOptimisticallyAndPersists() {
         runTest(context = mainDispatcherRule.testDispatcher) {
-            snapshotFlow.value = snapshotOf(conversationItem("a", isRead = false))
+            snapshotFlow.value = snapshotOf(conversationItem(ConversationId("a"), isRead = false))
 
             val viewModel = createViewModel()
-            viewModel.onAction(Action.ConversationSwipedToToggleRead("a"))
+            viewModel.onAction(Action.ConversationSwipedToToggleRead(ConversationId("a")))
             advanceUntilIdle()
 
-            verify { optimisticSnapshotDelegate.markRead(listOf("a"), isRead = true) }
-            coVerify { actionsDelegate.setRead(listOf("a"), isRead = true) }
+            verify {
+                optimisticSnapshotDelegate.markRead(listOf(ConversationId("a")), isRead = true)
+            }
+            coVerify { actionsDelegate.setRead(listOf(ConversationId("a")), isRead = true) }
         }
     }
 
     @Test
     fun pinClicked_emitsPrepareAnimationEffectForSelection() {
         runTest(context = mainDispatcherRule.testDispatcher) {
-            selectedIdsFlow.value = persistentListOf("a")
-            snapshotFlow.value = snapshotOf(conversationItem("a"))
+            selectedIdsFlow.value = persistentListOf(ConversationId("a"))
+            snapshotFlow.value = snapshotOf(conversationItem(ConversationId("a")))
 
             val viewModel = createViewModel()
             viewModel.effects.test {
@@ -107,7 +112,7 @@ class ConversationListViewModelTest {
 
                 assertEquals(
                     Effect.PreparePinAnimation(
-                        conversationIds = persistentListOf("a"),
+                        conversationIds = persistentListOf(ConversationId("a")),
                         isPinned = true,
                     ),
                     awaitItem(),
@@ -123,14 +128,14 @@ class ConversationListViewModelTest {
             val viewModel = createViewModel()
             viewModel.onAction(
                 Action.PinAnimationPrepared(
-                    conversationIds = persistentListOf("a"),
+                    conversationIds = persistentListOf(ConversationId("a")),
                     isPinned = true,
                 ),
             )
             advanceUntilIdle()
 
-            verify { optimisticSnapshotDelegate.pin(listOf("a"), isPinned = true) }
-            coVerify { actionsDelegate.setPinned(listOf("a"), isPinned = true) }
+            verify { optimisticSnapshotDelegate.pin(listOf(ConversationId("a")), isPinned = true) }
+            coVerify { actionsDelegate.setPinned(listOf(ConversationId("a")), isPinned = true) }
             verify { selectionDelegate.clear() }
         }
     }
@@ -138,13 +143,13 @@ class ConversationListViewModelTest {
     @Test
     fun conversationClicked_withoutSelection_emitsOpenConversation() {
         runTest(context = mainDispatcherRule.testDispatcher) {
-            snapshotFlow.value = snapshotOf(conversationItem("a"))
+            snapshotFlow.value = snapshotOf(conversationItem(ConversationId("a")))
 
             val viewModel = createViewModel()
             viewModel.effects.test {
-                viewModel.onAction(Action.ConversationClicked("a"))
+                viewModel.onAction(Action.ConversationClicked(ConversationId("a")))
 
-                assertEquals(Effect.OpenConversation("a"), awaitItem())
+                assertEquals(Effect.OpenConversation(ConversationId("a")), awaitItem())
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -168,11 +173,15 @@ class ConversationListViewModelTest {
         val viewModel = createViewModel()
         viewModel.onAction(
             Action.ArchiveSnackbarDismissed(
-                conversationIds = persistentListOf("a", "b"),
+                conversationIds = persistentListOf(ConversationId("a"), ConversationId("b")),
             ),
         )
 
-        verify { optimisticSnapshotDelegate.discardRemoval(listOf("a", "b")) }
+        verify {
+            optimisticSnapshotDelegate.discardRemoval(
+                listOf(ConversationId("a"), ConversationId("b")),
+            )
+        }
     }
 
     @Test
@@ -181,14 +190,16 @@ class ConversationListViewModelTest {
             val viewModel = createViewModel()
             viewModel.onAction(
                 Action.ArchiveUndoClicked(
-                    conversationIds = persistentListOf("a"),
+                    conversationIds = persistentListOf(ConversationId("a")),
                     isArchived = true,
                 ),
             )
             advanceUntilIdle()
 
-            verify { optimisticSnapshotDelegate.restore(listOf("a")) }
-            coVerify { actionsDelegate.setArchived(listOf("a"), isArchived = false) }
+            verify { optimisticSnapshotDelegate.restore(listOf(ConversationId("a"))) }
+            coVerify {
+                actionsDelegate.setArchived(listOf(ConversationId("a")), isArchived = false)
+            }
         }
     }
 
@@ -198,14 +209,14 @@ class ConversationListViewModelTest {
             val viewModel = createViewModel()
             viewModel.onAction(
                 Action.ArchiveUndoClicked(
-                    conversationIds = persistentListOf("a"),
+                    conversationIds = persistentListOf(ConversationId("a")),
                     isArchived = false,
                 ),
             )
             advanceUntilIdle()
 
-            verify { optimisticSnapshotDelegate.remove(listOf("a")) }
-            coVerify { actionsDelegate.setArchived(listOf("a"), isArchived = true) }
+            verify { optimisticSnapshotDelegate.remove(listOf(ConversationId("a"))) }
+            coVerify { actionsDelegate.setArchived(listOf(ConversationId("a")), isArchived = true) }
         }
     }
 

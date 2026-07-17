@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.composer.delegate.conversationdrafteditordelegate
 
 import app.cash.turbine.test
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.composer.delegate.DraftSaveRequest
 import com.android.messaging.ui.conversation.composer.model.ConversationDraftState
@@ -87,7 +88,7 @@ internal class ConversationDraftEditorDelegateSaveTest :
 
         delegate.applyPersistedDraftUpdate(
             persistedDraftUpdate = persistedDraftUpdate(
-                conversationId = "conversation-other",
+                conversationId = ConversationId("conversation-other"),
                 persistedDraft = draft(messageText = "other text"),
             ),
         )

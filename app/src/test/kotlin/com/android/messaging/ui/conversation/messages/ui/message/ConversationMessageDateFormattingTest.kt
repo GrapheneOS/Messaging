@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.messages.ui.message
 
 import android.content.Context
 import android.text.format.DateUtils
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import io.mockk.every
 import io.mockk.mockk
@@ -131,7 +132,7 @@ internal class ConversationMessageDateFormattingTest {
     private fun message(displayTimestamp: Long): ConversationMessageUiModel {
         return ConversationMessageUiModel(
             messageId = "message-1",
-            conversationId = "conversation-1",
+            conversationId = ConversationId("conversation-1"),
             text = "Hello",
             parts = persistentListOf(),
             sentTimestamp = displayTimestamp,

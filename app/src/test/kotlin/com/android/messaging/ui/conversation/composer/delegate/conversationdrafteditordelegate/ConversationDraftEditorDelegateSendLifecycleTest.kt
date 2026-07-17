@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.composer.delegate.conversationdrafteditordelegate
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.composer.delegate.DraftSendRequest
 import org.junit.Assert.assertEquals
@@ -73,7 +74,7 @@ internal class ConversationDraftEditorDelegateSendLifecycleTest :
 
         val didMarkSending = delegate.markSendingForSendRequest(
             sendRequest = DraftSendRequest(
-                conversationId = "conversation-other",
+                conversationId = ConversationId("conversation-other"),
                 draft = draft(messageText = "hi"),
             ),
         )
@@ -123,7 +124,7 @@ internal class ConversationDraftEditorDelegateSendLifecycleTest :
             ),
         )
 
-        delegate.markConversationDraftAsIdle(conversationId = "conversation-other")
+        delegate.markConversationDraftAsIdle(conversationId = ConversationId("conversation-other"))
 
         assertTrue(delegate.state.value.draft.isSending)
     }
@@ -150,7 +151,7 @@ internal class ConversationDraftEditorDelegateSendLifecycleTest :
 
         delegate.clearConversationDraftAfterSend(
             sendRequest = DraftSendRequest(
-                conversationId = "conversation-other",
+                conversationId = ConversationId("conversation-other"),
                 draft = draft(messageText = "hi"),
             ),
         )

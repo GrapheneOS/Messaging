@@ -34,7 +34,9 @@ internal class ConversationsRepositoryMetadataTest : BaseConversationsRepository
             val registeredObservers = mutableListOf<ContentObserver>()
             val capturedProjections = mutableListOf<Array<String>?>()
             val repository = createRepository()
-            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(CONVERSATION_ID)
+            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(
+                CONVERSATION_ID.value
+            )
 
             stubObserverRegistration(
                 registeredObservers = registeredObservers,
@@ -82,7 +84,9 @@ internal class ConversationsRepositoryMetadataTest : BaseConversationsRepository
             val registeredObservers = mutableListOf<ContentObserver>()
             val capturedProjections = mutableListOf<Array<String>?>()
             val repository = createRepository()
-            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(CONVERSATION_ID)
+            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(
+                CONVERSATION_ID.value
+            )
 
             stubObserverRegistration(
                 registeredObservers = registeredObservers,
@@ -128,7 +132,9 @@ internal class ConversationsRepositoryMetadataTest : BaseConversationsRepository
             val registeredObservers = mutableListOf<ContentObserver>()
             val capturedProjections = mutableListOf<Array<String>?>()
             val repository = createRepository()
-            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(CONVERSATION_ID)
+            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(
+                CONVERSATION_ID.value
+            )
 
             stubObserverRegistration(
                 registeredObservers = registeredObservers,
@@ -166,9 +172,11 @@ internal class ConversationsRepositoryMetadataTest : BaseConversationsRepository
             val metadataProjections = mutableListOf<Array<String>?>()
             val participantsProjections = mutableListOf<Array<String>?>()
             val repository = createRepository()
-            val metadataUri = MessagingContentProvider.buildConversationMetadataUri(CONVERSATION_ID)
+            val metadataUri = MessagingContentProvider.buildConversationMetadataUri(
+                CONVERSATION_ID.value
+            )
             val participantsUri = MessagingContentProvider
-                .buildConversationParticipantsUri(CONVERSATION_ID)
+                .buildConversationParticipantsUri(CONVERSATION_ID.value)
 
             stubObserverRegistration(
                 registeredObservers = registeredObservers,
@@ -248,7 +256,9 @@ internal class ConversationsRepositoryMetadataTest : BaseConversationsRepository
             val registeredObservers = mutableListOf<ContentObserver>()
             val capturedProjections = mutableListOf<Array<String>?>()
             val repository = createRepository()
-            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(CONVERSATION_ID)
+            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(
+                CONVERSATION_ID.value
+            )
 
             stubObserverRegistration(
                 registeredObservers = registeredObservers,
