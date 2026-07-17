@@ -2,8 +2,6 @@ package com.android.messaging.ui.conversation.messages.ui.attachment.rendering
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithText
-import com.android.common.test.helpers.targetContext
-import com.android.messaging.R
 import io.mockk.verify
 import org.junit.Test
 import org.junit.runner.RunWith

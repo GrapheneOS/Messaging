@@ -7,7 +7,6 @@ import com.android.messaging.data.contact.formatter.ContactDestinationFormatter
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.recipient.ConversationRecipient
 import com.android.messaging.data.conversation.repository.ConversationParticipantsRepository
-import com.android.messaging.domain.conversation.usecase.participant.IsConversationRecipientLimitExceeded
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsEffect
