@@ -9,6 +9,7 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.conversationMessageBubbleTestTag
@@ -118,7 +119,7 @@ internal abstract class BaseConversationMessageRenderingTest {
         senderContactId: Long = ParticipantData.PARTICIPANT_CONTACT_ID_NOT_RESOLVED,
         senderContactLookupKey: String? = null,
         senderNormalizedDestination: String? = null,
-        senderParticipantId: String? = null,
+        senderParticipantId: ParticipantId? = null,
         canClusterWithPrevious: Boolean = false,
         canClusterWithNext: Boolean = false,
         canDownloadMessage: Boolean = false,

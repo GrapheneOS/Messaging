@@ -5,6 +5,7 @@ import app.cash.turbine.test
 import com.android.messaging.R
 import com.android.messaging.data.contact.formatter.ContactDestinationFormatter
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.recipient.ConversationRecipient
 import com.android.messaging.data.conversation.repository.ConversationParticipantsRepository
 import com.android.messaging.testutil.MainDispatcherRule
@@ -318,7 +319,7 @@ class AddParticipantsViewModelTest {
     @Suppress("SameParameterValue")
     private fun participant(destination: String): ConversationRecipient {
         return ConversationRecipient(
-            id = destination,
+            id = ParticipantId(destination),
             displayName = destination,
             destination = destination,
         )
