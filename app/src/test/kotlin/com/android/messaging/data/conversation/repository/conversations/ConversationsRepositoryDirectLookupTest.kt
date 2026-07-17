@@ -3,6 +3,7 @@ package com.android.messaging.data.conversation.repository.conversations
 import android.database.Cursor
 import android.database.MatrixCursor
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetails
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetailsData
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
@@ -263,7 +264,7 @@ internal class ConversationsRepositoryDirectLookupTest : BaseConversationsReposi
 
             val result = createRepository().getMessageDetails(
                 conversationId = CONVERSATION_ID,
-                messageId = "message-1",
+                messageId = MessageId("message-1"),
             )
 
             assertEquals("message-1", result?.message?.messageId)
@@ -281,7 +282,7 @@ internal class ConversationsRepositoryDirectLookupTest : BaseConversationsReposi
         ) {
             val result = createRepository().getMessageDetails(
                 conversationId = ConversationId(""),
-                messageId = "message-1",
+                messageId = MessageId("message-1"),
             )
 
             assertNull(result)

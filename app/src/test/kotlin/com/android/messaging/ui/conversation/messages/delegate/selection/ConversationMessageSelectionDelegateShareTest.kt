@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.messages.delegate.selection
 
 import app.cash.turbine.test
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
 import kotlinx.collections.immutable.persistentListOf
@@ -34,7 +35,7 @@ internal class ConversationMessageSelectionDelegateShareTest :
                     ),
                 )
                 advanceUntilIdle()
-                harness.delegate.onMessageLongClick(messageId = "message-1")
+                harness.delegate.onMessageLongClick(messageId = MessageId("message-1"))
                 advanceUntilIdle()
 
                 harness.delegate.effects.test {
@@ -76,7 +77,7 @@ internal class ConversationMessageSelectionDelegateShareTest :
                     ),
                 )
                 advanceUntilIdle()
-                harness.delegate.onMessageLongClick(messageId = "message-1")
+                harness.delegate.onMessageLongClick(messageId = MessageId("message-1"))
                 advanceUntilIdle()
 
                 harness.delegate.effects.test {

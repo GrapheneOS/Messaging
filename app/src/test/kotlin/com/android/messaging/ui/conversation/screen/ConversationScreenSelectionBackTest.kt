@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.screen
 
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
 import io.mockk.verify
@@ -21,7 +22,7 @@ internal class ConversationScreenSelectionBackTest : BaseConversationScreenTest(
                 latestMessageIncoming = false,
             ),
             selection = ConversationMessageSelectionUiState(
-                selectedMessageIds = persistentSetOf("message-2"),
+                selectedMessageIds = persistentSetOf(MessageId("message-2")),
                 availableActions = persistentSetOf(
                     ConversationMessageSelectionAction.Delete,
                 ),

@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
 import com.android.messaging.datamodel.data.ParticipantData
@@ -361,7 +362,7 @@ internal abstract class BaseConversationViewModelTest {
 
     protected fun createMessageUiModel(): ConversationMessageUiModel {
         return ConversationMessageUiModel(
-            messageId = MESSAGE_ID,
+            messageId = MessageId(MESSAGE_ID),
             conversationId = CONVERSATION_ID,
             text = "Hello",
             parts = persistentListOf(),
