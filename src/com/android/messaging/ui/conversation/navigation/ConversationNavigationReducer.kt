@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.navigation
 
 import androidx.navigation3.runtime.NavKey
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 
 internal interface ConversationNavigationReducer {
     fun navigateToAddParticipants(
@@ -17,7 +18,7 @@ internal interface ConversationNavigationReducer {
     fun navigateToMessageDetails(
         backStack: MutableList<NavKey>,
         conversationId: ConversationId,
-        messageId: String,
+        messageId: MessageId,
     )
 
     fun navigateToRecipientPicker(
@@ -67,7 +68,7 @@ internal class ConversationNavigationReducerImpl : ConversationNavigationReducer
     override fun navigateToMessageDetails(
         backStack: MutableList<NavKey>,
         conversationId: ConversationId,
-        messageId: String,
+        messageId: MessageId,
     ) {
         MessageDetailsNavKey(
             conversationId = conversationId,

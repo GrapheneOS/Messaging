@@ -6,6 +6,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.ui.conversation.messagedetails.mapper.MessageDetailsUiStateMapper
 import com.android.messaging.ui.conversation.messagedetails.model.MessageDetailsUiState as State
@@ -21,7 +22,7 @@ import kotlinx.coroutines.launch
 internal interface MessageDetailsScreenModel {
     val uiState: StateFlow<State>
 
-    fun onArguments(conversationId: ConversationId, messageId: String)
+    fun onArguments(conversationId: ConversationId, messageId: MessageId)
 
     fun onCopy(value: String)
 }
@@ -41,9 +42,8 @@ internal class MessageDetailsViewModel @Inject constructor(
     private val conversationIdFlow: MutableStateFlow<ConversationId?> = MutableStateFlow(
         ConversationId.fromOrNull(savedStateHandle[CONVERSATION_ID_KEY]),
     )
-    private val messageIdFlow: StateFlow<String?> = savedStateHandle.getStateFlow(
-        key = MESSAGE_ID_KEY,
-        initialValue = null,
+    private val messageIdFlow: MutableStateFlow<MessageId?> = MutableStateFlow(
+        MessageId.fromOrNull(savedStateHandle[MESSAGE_ID_KEY]),
     )
 
     init {
@@ -68,14 +68,15 @@ internal class MessageDetailsViewModel @Inject constructor(
 
     override fun onArguments(
         conversationId: ConversationId,
-        messageId: String,
+        messageId: MessageId,
     ) {
         if (conversationIdFlow.value != conversationId) {
             conversationIdFlow.value = conversationId
             savedStateHandle[CONVERSATION_ID_KEY] = conversationId.value
         }
         if (messageIdFlow.value != messageId) {
-            savedStateHandle[MESSAGE_ID_KEY] = messageId
+            messageIdFlow.value = messageId
+            savedStateHandle[MESSAGE_ID_KEY] = messageId.value
         }
     }
 
@@ -104,7 +105,7 @@ internal class MessageDetailsViewModel @Inject constructor(
 
     private data class MessageDetailsArguments(
         val conversationId: ConversationId?,
-        val messageId: String?,
+        val messageId: MessageId?,
     )
 
     private companion object {

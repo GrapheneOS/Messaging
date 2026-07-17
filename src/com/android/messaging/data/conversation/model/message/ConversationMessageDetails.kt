@@ -1,6 +1,7 @@
 package com.android.messaging.data.conversation.model.message
 
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
 import kotlinx.collections.immutable.ImmutableList
 
@@ -27,7 +28,7 @@ internal data class ConversationMessageDetails(
     }
 
     data class Debug(
-        val messageId: String?,
+        val messageId: MessageId?,
         val telephonyUri: String?,
         val conversationId: ConversationId?,
         val conversationTelephonyThreadId: Long?,

@@ -5,6 +5,7 @@ package com.android.messaging.ui.conversation.preview
 import androidx.core.net.toUri
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentType
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
@@ -518,7 +519,7 @@ private fun previewMessage(
     canSaveAttachments: Boolean = false,
 ): ConversationMessageUiModel {
     return ConversationMessageUiModel(
-        messageId = messageId,
+        messageId = MessageId(messageId),
         conversationId = ConversationId("conversation-1"),
         text = text,
         parts = parts,

@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation
 
 import androidx.compose.ui.semantics.SemanticsPropertyKey
 import androidx.compose.ui.semantics.SemanticsPropertyReceiver
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
 
 internal const val CONVERSATION_COMPOSE_BAR_TEST_TAG = "conversation_compose_bar"
@@ -76,20 +77,20 @@ internal fun conversationSimSelectorItemTestTag(selfParticipantId: String): Stri
     return "conversation_sim_selector_item_$selfParticipantId"
 }
 
-internal fun conversationMessageItemTestTag(messageId: String): String {
-    return "conversation_message_item_$messageId"
+internal fun conversationMessageItemTestTag(messageId: MessageId): String {
+    return "conversation_message_item_${messageId.value}"
 }
 
 internal fun conversationSettingsParticipantRowTestTag(participantId: ParticipantId): String {
     return "conversation_settings_participant_row_${participantId.value}"
 }
 
-internal fun conversationMessageBubbleTestTag(messageId: String): String {
-    return "conversation_message_bubble_$messageId"
+internal fun conversationMessageBubbleTestTag(messageId: MessageId): String {
+    return "conversation_message_bubble_${messageId.value}"
 }
 
-internal fun conversationMessageSelectionRowTestTag(messageId: String): String {
-    return "conversation_message_selection_row_$messageId"
+internal fun conversationMessageSelectionRowTestTag(messageId: MessageId): String {
+    return "conversation_message_selection_row_${messageId.value}"
 }
 
 internal fun conversationMessageSelectionActionButtonTestTag(action: String): String {

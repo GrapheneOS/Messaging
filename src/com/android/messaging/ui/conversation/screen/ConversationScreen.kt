@@ -13,6 +13,7 @@ import androidx.compose.ui.geometry.Rect as ComposeRect
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.common.components.snackbar.MessagingSnackbarHost
 import com.android.messaging.ui.conversation.composer.ui.ConversationComposerSection
@@ -31,7 +32,7 @@ internal fun ConversationScreen(
     cancelIncomingNotification: Boolean = true,
     onAddPeopleClick: () -> Unit,
     onConversationDetailsClick: () -> Unit,
-    onNavigateToMessageDetails: (messageId: String) -> Unit,
+    onNavigateToMessageDetails: (messageId: MessageId) -> Unit,
     onNavigateBack: () -> Unit,
     pendingDraft: ConversationDraft? = null,
     pendingScrollPosition: Int? = null,

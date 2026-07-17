@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.navigation
 
 import androidx.navigation3.runtime.NavKey
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -25,7 +26,7 @@ internal data class AddParticipantsNavKey(
 @Serializable
 internal data class MessageDetailsNavKey(
     val conversationId: ConversationId,
-    val messageId: String,
+    val messageId: MessageId,
 ) : NavKey
 
 @Serializable

@@ -5,6 +5,7 @@ import android.database.ContentObserver
 import android.net.Uri
 import com.android.messaging.data.conversation.mapper.ConversationMessageDetailsMapper
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetailsData
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetailsResult
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
@@ -58,19 +59,19 @@ internal interface ConversationsRepository {
 
     suspend fun getConversationMessage(
         conversationId: ConversationId,
-        messageId: String,
+        messageId: MessageId,
     ): ConversationMessageData?
 
-    fun deleteMessages(messageIds: Collection<String>)
+    fun deleteMessages(messageIds: Collection<MessageId>)
 
-    fun downloadMessage(messageId: String)
+    fun downloadMessage(messageId: MessageId)
 
     suspend fun getMessageDetails(
         conversationId: ConversationId,
-        messageId: String,
+        messageId: MessageId,
     ): ConversationMessageDetailsResult?
 
-    fun resendMessage(messageId: String)
+    fun resendMessage(messageId: MessageId)
 
     suspend fun archiveConversation(conversationId: ConversationId)
 
@@ -173,7 +174,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
 
     override suspend fun getConversationMessage(
         conversationId: ConversationId,
-        messageId: String,
+        messageId: MessageId,
     ): ConversationMessageData? {
         return withContext(context = messagingDbDispatcher) {
             getConversationMessageData(
@@ -183,22 +184,22 @@ internal class ConversationsRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun deleteMessages(messageIds: Collection<String>) {
+    override fun deleteMessages(messageIds: Collection<MessageId>) {
         messageIds
             .asSequence()
-            .filter(String::isNotBlank)
-            .forEach(DeleteMessageAction::deleteMessage)
+            .filter(MessageId::isNotBlank)
+            .forEach { DeleteMessageAction.deleteMessage(it.value) }
     }
 
-    override fun downloadMessage(messageId: String) {
+    override fun downloadMessage(messageId: MessageId) {
         messageId
             .takeIf { it.isNotBlank() }
-            ?.let(RedownloadMmsAction::redownloadMessage)
+            ?.let { RedownloadMmsAction.redownloadMessage(it.value) }
     }
 
     override suspend fun getMessageDetails(
         conversationId: ConversationId,
-        messageId: String,
+        messageId: MessageId,
     ): ConversationMessageDetailsResult? {
         return withContext(context = messagingDbDispatcher) {
             val data = loadMessageDetailsData(
@@ -218,10 +219,10 @@ internal class ConversationsRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun resendMessage(messageId: String) {
+    override fun resendMessage(messageId: MessageId) {
         messageId
             .takeIf { it.isNotBlank() }
-            ?.let(ResendMessageAction::resendMessage)
+            ?.let { ResendMessageAction.resendMessage(it.value) }
     }
 
     override suspend fun archiveConversation(conversationId: ConversationId) {
@@ -318,7 +319,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
 
     private fun getConversationMessageData(
         conversationId: ConversationId,
-        messageId: String,
+        messageId: MessageId,
     ): ConversationMessageData? {
         return when {
             conversationId.isBlank() || messageId.isBlank() -> null
@@ -327,7 +328,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
                 MessagingContentProvider
                     .buildConversationMessagesUri(conversationId.value)
                     .let(::queryConversationMessages)
-                    .firstOrNull { it.messageId == messageId }
+                    .firstOrNull { it.messageId == messageId.value }
             }
         }
     }
@@ -392,7 +393,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
 
     private fun loadMessageDetailsData(
         conversationId: ConversationId,
-        messageId: String,
+        messageId: MessageId,
     ): ConversationMessageDetailsData? {
         val message = getConversationMessageData(
             conversationId = conversationId,
