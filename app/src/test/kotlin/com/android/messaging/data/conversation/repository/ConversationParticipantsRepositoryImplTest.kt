@@ -4,7 +4,6 @@ import android.content.ContentResolver
 import android.database.ContentObserver
 import android.net.Uri
 import app.cash.turbine.test
-import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.recipient.ConversationRecipient
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.data.ParticipantData

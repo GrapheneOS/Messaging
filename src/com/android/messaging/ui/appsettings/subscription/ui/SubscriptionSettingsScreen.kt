@@ -41,7 +41,6 @@ import com.android.messaging.ui.appsettings.common.SettingsCategoryHeader
 import com.android.messaging.ui.appsettings.common.SettingsClickableItem
 import com.android.messaging.ui.appsettings.common.SettingsSwitchItem
 import com.android.messaging.ui.appsettings.common.SettingsTopAppBar
-import com.android.messaging.ui.appsettings.screen.SettingsScreenModel
 import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionUiState
 import com.android.messaging.ui.common.text.asLtrText

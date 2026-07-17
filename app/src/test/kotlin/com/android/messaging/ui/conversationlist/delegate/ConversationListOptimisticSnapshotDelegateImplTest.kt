@@ -1,7 +1,6 @@
 package com.android.messaging.ui.conversationlist.delegate
 
 import com.android.messaging.data.conversation.model.ConversationId
-import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListMode
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
