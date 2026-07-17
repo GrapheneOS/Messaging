@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.messages.mapper
 
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.datamodel.data.MessagePartData
@@ -50,7 +51,9 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor(
             senderContactLookupKey = data.senderContactLookupKey,
             senderNormalizedDestination = data.senderNormalizedDestination
                 ?.takeIf { it.isNotBlank() },
-            senderParticipantId = data.participantId?.takeIf { it.isNotBlank() },
+            senderParticipantId = ParticipantId
+                .fromOrNull(data.participantId)
+                ?.takeIf { it.isNotBlank() },
             selfParticipantId = data.selfParticipantId?.takeIf { it.isNotBlank() },
             canClusterWithPrevious = data.canClusterWithPreviousMessage,
             canClusterWithNext = data.canClusterWithNextMessage,

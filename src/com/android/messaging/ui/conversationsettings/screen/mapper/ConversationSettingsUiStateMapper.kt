@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationsettings.screen.mapper
 
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversationsettings.model.ConversationSettingsData
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.datamodel.data.ParticipantData
@@ -91,7 +92,7 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
         )
 
         return ParticipantUiState(
-            id = participant.id,
+            id = ParticipantId(participant.id),
             avatarUri = participant.profilePhotoUri?.takeIf(String::isNotBlank),
             displayName = displayName,
             details = details,

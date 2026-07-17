@@ -65,6 +65,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.ui.common.components.safeDrawingContentPadding
 import com.android.messaging.ui.common.text.asLtrText
 import com.android.messaging.ui.conversation.ConversationActivity
@@ -640,7 +641,7 @@ private fun ConversationSettingsContentPreview() {
                 conversationTitle = "Family",
                 participants = persistentListOf(
                     ParticipantUiState(
-                        id = "p1",
+                        id = ParticipantId("p1"),
                         avatarUri = null,
                         displayName = "Mother",
                         details = "+31 6 1234 5678",
@@ -653,7 +654,7 @@ private fun ConversationSettingsContentPreview() {
                         isContactSaved = true,
                     ),
                     ParticipantUiState(
-                        id = "p2",
+                        id = ParticipantId("p2"),
                         avatarUri = null,
                         displayName = "Father",
                         details = "+31 6 8765 4321",
