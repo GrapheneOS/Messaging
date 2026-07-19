@@ -6,6 +6,7 @@ import com.android.messaging.data.conversationlist.model.ConversationListSnapsho
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
 import com.android.messaging.data.debug.DebugFeaturesProvider
 import com.android.messaging.testutil.MainDispatcherRule
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversationlist.chats.mapper.ConversationListUiStateMapper
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListEffect as Effect
@@ -67,12 +68,11 @@ class ConversationListViewModelTest {
             viewModel.effects.test {
                 viewModel.onAction(Action.ArchiveClicked)
 
-                assertEquals(
+                assertThat(awaitItem()).isEqualTo(
                     Effect.ArchiveStatusChanged(
                         conversationIds = persistentListOf(ConversationId("a")),
                         isArchived = true,
-                    ),
-                    awaitItem(),
+                    )
                 )
                 cancelAndIgnoreRemainingEvents()
             }
@@ -110,12 +110,11 @@ class ConversationListViewModelTest {
             viewModel.effects.test {
                 viewModel.onAction(Action.PinClicked)
 
-                assertEquals(
+                assertThat(awaitItem()).isEqualTo(
                     Effect.PreparePinAnimation(
                         conversationIds = persistentListOf(ConversationId("a")),
                         isPinned = true,
-                    ),
-                    awaitItem(),
+                    )
                 )
                 cancelAndIgnoreRemainingEvents()
             }
@@ -149,7 +148,7 @@ class ConversationListViewModelTest {
             viewModel.effects.test {
                 viewModel.onAction(Action.ConversationClicked(ConversationId("a")))
 
-                assertEquals(Effect.OpenConversation(ConversationId("a")), awaitItem())
+                assertThat(awaitItem()).isEqualTo(Effect.OpenConversation(ConversationId("a")))
                 cancelAndIgnoreRemainingEvents()
             }
         }

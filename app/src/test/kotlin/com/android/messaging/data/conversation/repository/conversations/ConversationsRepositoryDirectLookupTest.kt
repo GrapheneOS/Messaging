@@ -16,6 +16,7 @@ import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.testutil.createParticipantsCursor
 import com.android.messaging.testutil.participantRow
 import io.mockk.every
@@ -121,7 +122,9 @@ internal class ConversationsRepositoryDirectLookupTest : BaseConversationsReposi
             )
 
             assertEquals("Project", result?.metadata?.conversationName)
-            assertEquals(ParticipantId("metadata-self"), result?.metadata?.selfParticipantId)
+            assertThat(result?.metadata?.selfParticipantId).isEqualTo(
+                ParticipantId("metadata-self"),
+            )
             assertTrue(requireNotNull(result).participants.isLoaded)
             assertEquals("requested-self", result.selfParticipant?.id)
             assertEquals(listOf("requested-self"), participantSelectionArgsSlot.captured.toList())

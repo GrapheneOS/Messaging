@@ -7,6 +7,7 @@ import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryLaunchRequest
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryStartupAttachment
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryUiState
@@ -101,7 +102,9 @@ internal class ConversationEntryViewModelTest {
         )
 
         assertEquals(CONVERSATION_ID, viewModel.uiState.value.conversationId)
-        assertEquals(ParticipantId("self-1"), viewModel.uiState.value.pendingSelfParticipantId)
+        assertThat(viewModel.uiState.value.pendingSelfParticipantId).isEqualTo(
+            ParticipantId("self-1"),
+        )
     }
 
     @Test
@@ -132,7 +135,9 @@ internal class ConversationEntryViewModelTest {
             viewModel.uiState.value.pendingDraft,
         )
         assertEquals(3, viewModel.uiState.value.pendingScrollPosition)
-        assertEquals(ParticipantId("self-1"), viewModel.uiState.value.pendingSelfParticipantId)
+        assertThat(viewModel.uiState.value.pendingSelfParticipantId).isEqualTo(
+            ParticipantId("self-1"),
+        )
         assertEquals(
             ConversationEntryStartupAttachment(
                 contentType = "image/png",
@@ -202,9 +207,8 @@ internal class ConversationEntryViewModelTest {
         val recreatedViewModel = createViewModel(savedStateHandle = savedStateHandle)
 
         assertEquals(CONVERSATION_ID, recreatedViewModel.uiState.value.conversationId)
-        assertEquals(
+        assertThat(recreatedViewModel.uiState.value.pendingSelfParticipantId).isEqualTo(
             ParticipantId("self-1"),
-            recreatedViewModel.uiState.value.pendingSelfParticipantId
         )
     }
 

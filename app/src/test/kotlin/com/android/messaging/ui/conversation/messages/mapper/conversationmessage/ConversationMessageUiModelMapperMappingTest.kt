@@ -5,6 +5,7 @@ import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.datamodel.data.MessageData
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel.Protocol
@@ -52,7 +53,7 @@ internal class ConversationMessageUiModelMapperMappingTest :
             ),
         )
 
-        assertEquals(
+        assertThat(uiModel).isEqualTo(
             ConversationMessageUiModel(
                 messageId = MessageId("message-7"),
                 conversationId = ConversationId("conversation-3"),
@@ -80,8 +81,7 @@ internal class ConversationMessageUiModelMapperMappingTest :
                 mmsDownload = null,
                 mmsSubject = "Subject line",
                 protocol = Protocol.SMS,
-            ),
-            uiModel,
+            )
         )
     }
 
@@ -91,8 +91,8 @@ internal class ConversationMessageUiModelMapperMappingTest :
             messageData(messageId = null, conversationId = null),
         )
 
-        assertEquals(MessageId(""), uiModel.messageId)
-        assertEquals(ConversationId(""), uiModel.conversationId)
+        assertThat(uiModel.messageId).isEqualTo(MessageId(""))
+        assertThat(uiModel.conversationId).isEqualTo(ConversationId(""))
     }
 
     @Test

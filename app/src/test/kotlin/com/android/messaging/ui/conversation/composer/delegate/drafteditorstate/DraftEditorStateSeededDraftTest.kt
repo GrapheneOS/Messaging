@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.composer.delegate.drafteditorstate
 
 import com.android.messaging.data.conversation.model.ParticipantId
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversation.composer.delegate.DraftEditorState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -40,7 +41,7 @@ internal class DraftEditorStateSeededDraftTest : BaseDraftEditorStateTest() {
         val state = loadedState(persistedDraft = draft(selfParticipantId = "sim-persisted"))
             .withSeededDraft(draft(messageText = "seed", selfParticipantId = "   "))
 
-        assertEquals(ParticipantId("sim-persisted"), state.effectiveDraft.selfParticipantId)
+        assertThat(state.effectiveDraft.selfParticipantId).isEqualTo(ParticipantId("sim-persisted"))
     }
 
     @Test
@@ -48,7 +49,7 @@ internal class DraftEditorStateSeededDraftTest : BaseDraftEditorStateTest() {
         val state = loadedState(persistedDraft = draft(selfParticipantId = "sim-persisted"))
             .withSeededDraft(draft(messageText = "seed", selfParticipantId = "sim-seed"))
 
-        assertEquals(ParticipantId("sim-seed"), state.effectiveDraft.selfParticipantId)
+        assertThat(state.effectiveDraft.selfParticipantId).isEqualTo(ParticipantId("sim-seed"))
     }
 
     @Test

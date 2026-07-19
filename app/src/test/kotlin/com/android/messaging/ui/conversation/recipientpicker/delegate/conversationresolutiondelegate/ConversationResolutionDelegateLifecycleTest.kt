@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.recipientpicker.delegate.conversat
 import app.cash.turbine.test
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveConversationIdResult
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.ConversationResolutionOutcome
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.ConversationResolutionState
 import io.mockk.coEvery
@@ -178,11 +179,10 @@ internal class ConversationResolutionDelegateLifecycleTest :
                 )
                 runCurrent()
 
-                assertEquals(
+                assertThat(awaitItem()).isEqualTo(
                     ConversationResolutionOutcome.Resolved(
                         conversationId = ConversationId("conversation-second"),
-                    ),
-                    awaitItem(),
+                    )
                 )
                 assertEquals(ConversationResolutionState.Idle, delegate.state.value)
                 expectNoEvents()

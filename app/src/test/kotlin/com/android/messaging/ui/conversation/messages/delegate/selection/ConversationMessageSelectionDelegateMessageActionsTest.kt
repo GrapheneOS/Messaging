@@ -5,6 +5,7 @@ import app.cash.turbine.test
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
@@ -169,11 +170,10 @@ internal class ConversationMessageSelectionDelegateMessageActionsTest :
                     )
                     advanceUntilIdle()
 
-                    assertEquals(
+                    assertThat(awaitItem()).isEqualTo(
                         ConversationScreenEffect.NavigateToMessageDetails(
                             messageId = MessageId("message-1"),
-                        ),
-                        awaitItem(),
+                        )
                     )
                     cancelAndIgnoreRemainingEvents()
                 }

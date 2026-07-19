@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.composer.delegate.drafteditorstate
 
 import com.android.messaging.data.conversation.model.ParticipantId
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftEdits
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.Assert.assertEquals
@@ -113,7 +114,7 @@ internal class ConversationDraftEditsTest : BaseDraftEditorStateTest() {
 
         assertEquals("different-message", normalized.messageText)
         assertEquals("different-subject", normalized.subjectText)
-        assertEquals(ParticipantId("sim-2"), normalized.selfParticipantId)
+        assertThat(normalized.selfParticipantId).isEqualTo(ParticipantId("sim-2"))
         assertEquals(listOf(attachment("content://attachment/edit")), normalized.attachments)
     }
 

@@ -4,6 +4,7 @@ import androidx.navigation3.runtime.NavKey
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
+import com.android.messaging.testutil.assertThat
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -243,12 +244,11 @@ class ConversationNavigationReducerImplTest {
             messageId = MessageId("m"),
         )
 
-        assertEquals(
+        assertThat(backStack.last()).isEqualTo(
             MessageDetailsNavKey(
                 conversationId = ConversationId("c"),
                 messageId = MessageId("m"),
-            ),
-            backStack.last(),
+            )
         )
         assertEquals(2, backStack.size)
     }

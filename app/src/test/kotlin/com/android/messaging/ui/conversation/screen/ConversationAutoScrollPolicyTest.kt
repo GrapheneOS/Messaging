@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.screen
 
 import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.testutil.assertThat
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -18,13 +19,12 @@ class ConversationAutoScrollPolicyTest {
             ),
         )
 
-        assertEquals(
+        assertThat(decision).isEqualTo(
             ConversationAutoScrollDecision(
                 shouldScrollToLatestMessage = false,
                 shouldShowNewMessageSnackbar = false,
                 updatedLatestMessageId = MessageId("message-1"),
-            ),
-            decision,
+            )
         )
     }
 
@@ -62,13 +62,12 @@ class ConversationAutoScrollPolicyTest {
             ),
         )
 
-        assertEquals(
+        assertThat(decision).isEqualTo(
             ConversationAutoScrollDecision(
                 shouldScrollToLatestMessage = false,
                 shouldShowNewMessageSnackbar = true,
                 updatedLatestMessageId = MessageId("message-2"),
-            ),
-            decision,
+            )
         )
     }
 
@@ -84,13 +83,12 @@ class ConversationAutoScrollPolicyTest {
             ),
         )
 
-        assertEquals(
+        assertThat(decision).isEqualTo(
             ConversationAutoScrollDecision(
                 shouldScrollToLatestMessage = true,
                 shouldShowNewMessageSnackbar = false,
                 updatedLatestMessageId = MessageId("message-2"),
-            ),
-            decision,
+            )
         )
     }
 
@@ -106,13 +104,12 @@ class ConversationAutoScrollPolicyTest {
             ),
         )
 
-        assertEquals(
+        assertThat(decision).isEqualTo(
             ConversationAutoScrollDecision(
                 shouldScrollToLatestMessage = true,
                 shouldShowNewMessageSnackbar = false,
                 updatedLatestMessageId = MessageId("message-2"),
-            ),
-            decision,
+            )
         )
     }
 }

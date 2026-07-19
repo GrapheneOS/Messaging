@@ -5,6 +5,7 @@ import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.domain.conversationpicker.model.SendTarget
 import com.android.messaging.testutil.TEST_RESOLVED_CONVERSATION_ID
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.testutil.contactTarget
 import com.android.messaging.testutil.conversationTarget
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerAction as Action
@@ -29,7 +30,7 @@ internal class ConversationPickerViewModelEffectTest : BaseConversationPickerVie
                         conversationTarget(conversationId = ConversationId("42")),
                     ),
                 )
-                assertEquals(Effect.OpenConversation(ConversationId("42")), awaitItem())
+                assertThat(awaitItem()).isEqualTo(Effect.OpenConversation(ConversationId("42")))
                 cancelAndIgnoreRemainingEvents()
             }
         }
