@@ -20,7 +20,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,8 +29,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.R
-import com.android.messaging.data.conversation.model.ConversationId
-import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetails
 import com.android.messaging.ui.conversation.messagedetails.model.MessageDetailsUiState
 import com.android.messaging.ui.conversation.preview.previewIncomingMessage
@@ -40,20 +37,11 @@ import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun MessageDetailsScreen(
-    conversationId: ConversationId,
-    messageId: MessageId,
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit = {},
     screenModel: MessageDetailsScreenModel = hiltViewModel<MessageDetailsViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
-
-    LaunchedEffect(conversationId, messageId, screenModel) {
-        screenModel.onArguments(
-            conversationId = conversationId,
-            messageId = messageId,
-        )
-    }
 
     MessageDetailsScaffold(
         uiState = uiState,
