@@ -4,6 +4,7 @@ import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
 import com.android.messaging.testutil.TEST_CALL_ACTION_PHONE_NUMBER
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversation.metadata.model.ConversationMetadataUiState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -36,7 +37,7 @@ class ConversationMetadataUiStateMapperImplTest {
             ),
         )
 
-        assertEquals(
+        assertThat(result).isEqualTo(
             ConversationMetadataUiState.Present(
                 title = "Carol",
                 selfParticipantId = ParticipantId("self-1"),
@@ -52,8 +53,7 @@ class ConversationMetadataUiStateMapperImplTest {
                 isArchived = false,
                 isBlocked = false,
                 composerAvailability = ConversationComposerAvailability.Editable,
-            ),
-            result,
+            )
         )
     }
 

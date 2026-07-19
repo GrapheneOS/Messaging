@@ -3,6 +3,7 @@ package com.android.messaging.ui.appsettings.screen
 import app.cash.turbine.test
 import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.testutil.MainDispatcherRule
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.appsettings.general.delegate.AppSettingsDelegate
 import com.android.messaging.ui.appsettings.general.model.AppSettingsUiState
 import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
@@ -284,7 +285,9 @@ class SettingsViewModelTest {
             viewModel.effects.test {
                 viewModel.onAction(Action.WirelessAlertsClicked(subId = SubId(1)))
 
-                assertEquals(SettingsScreenEffect.OpenWirelessAlerts(subId = SubId(1)), awaitItem())
+                assertThat(awaitItem()).isEqualTo(
+                    SettingsScreenEffect.OpenWirelessAlerts(subId = SubId(1)),
+                )
                 cancelAndIgnoreRemainingEvents()
             }
         }

@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.composer.delegate.drafteditorstate
 
 import com.android.messaging.data.conversation.model.ParticipantId
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversation.composer.delegate.DraftEditorState
 import com.android.messaging.ui.conversation.composer.delegate.DraftSaveRequest
 import org.junit.Assert.assertEquals
@@ -97,6 +98,6 @@ internal class DraftEditorStateTextEditsTest : BaseDraftEditorStateTest() {
         val state = loadedState(persistedDraft = draft(selfParticipantId = "sim-1"))
             .withSelfParticipantId(ParticipantId("sim-2"))
 
-        assertEquals(ParticipantId("sim-2"), state.effectiveDraft.selfParticipantId)
+        assertThat(state.effectiveDraft.selfParticipantId).isEqualTo(ParticipantId("sim-2"))
     }
 }

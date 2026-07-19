@@ -5,6 +5,7 @@ import com.android.messaging.datamodel.action.GetOrCreateConversationAction
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveConversationIdResult
 import com.android.messaging.testutil.MainDispatcherRule
+import com.android.messaging.testutil.assertThat
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -103,11 +104,10 @@ class ResolveConversationIdImplTest {
                 destinations = listOf(" 123 ", " alice@example.com ", ""),
             )
 
-            assertEquals(
+            assertThat(result).isEqualTo(
                 ResolveConversationIdResult.Resolved(
                     conversationId = ConversationId("conversation-123"),
-                ),
-                result,
+                )
             )
             assertEquals(2, capturedParticipants.captured.size)
             assertEquals("123", capturedParticipants.captured[0].sendDestination)

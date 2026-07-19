@@ -11,6 +11,7 @@ import com.android.messaging.domain.conversation.usecase.draft.ResolveConversati
 import com.android.messaging.domain.conversation.usecase.draft.ResolveDraftAttachmentsWithinLimit
 import com.android.messaging.domain.conversation.usecase.draft.SendConversationDraft
 import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftDelegateImpl
 import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftEditorDelegateImpl
 import io.mockk.coEvery
@@ -79,7 +80,7 @@ internal class ConversationDraftDelegateSimSelectionTest {
         delegate.onSendClick()
         runCurrent()
 
-        assertEquals(PICKED_SELF_PARTICIPANT_ID, sentDraft.captured.selfParticipantId)
+        assertThat(sentDraft.captured.selfParticipantId).isEqualTo(PICKED_SELF_PARTICIPANT_ID)
     }
 
     @Test
@@ -98,7 +99,7 @@ internal class ConversationDraftDelegateSimSelectionTest {
         delegate.onSendClick()
         runCurrent()
 
-        assertEquals(PICKED_SELF_PARTICIPANT_ID, sentDraft.captured.selfParticipantId)
+        assertThat(sentDraft.captured.selfParticipantId).isEqualTo(PICKED_SELF_PARTICIPANT_ID)
     }
 
     @Test
@@ -124,7 +125,7 @@ internal class ConversationDraftDelegateSimSelectionTest {
         runCurrent()
 
         assertEquals("hello", sentDraft.captured.messageText)
-        assertEquals(PICKED_SELF_PARTICIPANT_ID, sentDraft.captured.selfParticipantId)
+        assertThat(sentDraft.captured.selfParticipantId).isEqualTo(PICKED_SELF_PARTICIPANT_ID)
     }
 
     @Test
@@ -143,7 +144,7 @@ internal class ConversationDraftDelegateSimSelectionTest {
         delegate.onSendClick()
         runCurrent()
 
-        assertEquals(ParticipantId(""), sentDraft.captured.selfParticipantId)
+        assertThat(sentDraft.captured.selfParticipantId).isEqualTo(ParticipantId(""))
     }
 
     private fun TestScope.createDelegate(): ConversationDraftDelegateImpl {

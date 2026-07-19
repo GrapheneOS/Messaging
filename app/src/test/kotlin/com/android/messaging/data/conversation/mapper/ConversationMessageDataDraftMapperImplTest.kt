@@ -6,6 +6,7 @@ import com.android.messaging.data.conversation.model.draft.ConversationDraftAtta
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.datamodel.data.MessagePartData
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
+import com.android.messaging.testutil.assertThat
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -42,7 +43,7 @@ class ConversationMessageDataDraftMapperImplTest {
 
         assertEquals("Hello", draft.messageText)
         assertEquals("Subject", draft.subjectText)
-        assertEquals(ParticipantId("self-1"), draft.selfParticipantId)
+        assertThat(draft.selfParticipantId).isEqualTo(ParticipantId("self-1"))
         assertEquals(
             listOf(
                 createAttachment(
@@ -70,7 +71,7 @@ class ConversationMessageDataDraftMapperImplTest {
             fallbackSelfParticipantId = ParticipantId("fallback-self"),
         )
 
-        assertEquals(ParticipantId("fallback-self"), draft.selfParticipantId)
+        assertThat(draft.selfParticipantId).isEqualTo(ParticipantId("fallback-self"))
     }
 
     @Test
@@ -86,7 +87,7 @@ class ConversationMessageDataDraftMapperImplTest {
             fallbackSelfParticipantId = ParticipantId("fallback-self"),
         )
 
-        assertEquals(ParticipantId("fallback-self"), draft.selfParticipantId)
+        assertThat(draft.selfParticipantId).isEqualTo(ParticipantId("fallback-self"))
     }
 
     @Test

@@ -4,6 +4,7 @@ import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
+import com.android.messaging.testutil.assertThat
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -41,7 +42,7 @@ internal class ConversationDraftEditorDelegateStateProjectionTest :
             selfParticipantId = ParticipantId("self-2"),
         )
 
-        assertEquals(ParticipantId("self-2"), delegate.state.value.draft.selfParticipantId)
+        assertThat(delegate.state.value.draft.selfParticipantId).isEqualTo(ParticipantId("self-2"))
         assertEquals(ConversationDraftSendProtocol.SMS, delegate.state.value.sendProtocol)
     }
 
