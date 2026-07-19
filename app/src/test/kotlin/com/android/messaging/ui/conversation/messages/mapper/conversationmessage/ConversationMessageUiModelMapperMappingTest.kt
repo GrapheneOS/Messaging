@@ -25,7 +25,7 @@ internal class ConversationMessageUiModelMapperMappingTest :
     fun map_mapsEveryScalarFieldOntoUiModel() {
         val avatarUri = Uri.parse("content://avatar/7")
 
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(
                 messageId = "message-7",
                 conversationId = ConversationId("conversation-3"),
@@ -86,25 +86,28 @@ internal class ConversationMessageUiModelMapperMappingTest :
     }
 
     @Test
-    fun map_withNullMessageIdAndConversationId_substitutesEmptyStrings() {
-        val uiModel = mapper.map(
-            messageData(messageId = null, conversationId = null),
-        )
+    fun map_withBlankMessageId_dropsMessage() {
+        assertNull(mapper.map(messageData(messageId = null)))
+        assertNull(mapper.map(messageData(messageId = "")))
+        assertNull(mapper.map(messageData(messageId = "   ")))
+    }
 
-        assertThat(uiModel.messageId).isEqualTo(MessageId(""))
-        assertThat(uiModel.conversationId).isEqualTo(ConversationId(""))
+    @Test
+    fun map_withBlankConversationId_dropsMessage() {
+        assertNull(mapper.map(messageData(conversationId = null)))
+        assertNull(mapper.map(messageData(conversationId = ConversationId(""))))
     }
 
     @Test
     fun map_withNullParts_returnsEmptyPartsList() {
-        val uiModel = mapper.map(messageData(parts = null))
+        val uiModel = mapPresent(messageData(parts = null))
 
         assertEquals(persistentListOf<ConversationMessagePartUiModel>(), uiModel.parts)
     }
 
     @Test
     fun map_withBlankSenderIdentifiers_mapsThemToNull() {
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(
                 senderNormalizedDestination = "   ",
                 senderParticipantId = "",

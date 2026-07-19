@@ -17,7 +17,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
 
     @Test
     fun map_textPart_mapsToTextPartWithPartText() {
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(
                 parts = listOf(messagePart(contentType = "text/plain", text = "Hi Ada")),
             ),
@@ -31,7 +31,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
 
     @Test
     fun map_textPartWithNullText_mapsToTextPartWithEmptyText() {
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(
                 parts = listOf(messagePart(contentType = "text/html", text = null)),
             ),
@@ -47,7 +47,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
     fun map_audioPart_mapsToAudioAttachmentPreservingMediaFields() {
         val contentUri = Uri.parse("content://audio/1")
 
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(
                 parts = listOf(
                     messagePart(
@@ -79,7 +79,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
     fun map_imagePart_mapsToImageAttachment() {
         val contentUri = Uri.parse("content://image/1")
 
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(
                 parts = listOf(
                     messagePart(
@@ -111,7 +111,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
     fun map_videoPart_mapsToVideoAttachment() {
         val contentUri = Uri.parse("content://video/1")
 
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(
                 parts = listOf(
                     messagePart(
@@ -142,7 +142,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
     fun map_vCardPart_mapsToVCardAttachmentUsingVCardMapper() {
         val contentUri = Uri.parse("content://vcard/1")
 
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(
                 parts = listOf(
                     messagePart(contentType = "text/x-vCard", contentUri = contentUri),
@@ -172,7 +172,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
     fun map_unknownContentType_mapsToFileAttachment() {
         val contentUri = Uri.parse("content://file/1")
 
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(
                 parts = listOf(
                     messagePart(contentType = "application/pdf", contentUri = contentUri),
@@ -196,7 +196,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
 
     @Test
     fun map_nullContentType_mapsToFileAttachmentWithEmptyContentType() {
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(parts = listOf(messagePart(contentType = null))),
         )
 
@@ -218,7 +218,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
     fun map_multipleParts_preservesOrderAndTypes() {
         val imageUri = Uri.parse("content://image/2")
 
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(
                 parts = listOf(
                     messagePart(contentType = "text/plain", text = "caption"),
@@ -244,7 +244,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
 
     @Test
     fun map_withMediaPartHavingContentUri_marksAttachmentsSaveable() {
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(
                 parts = listOf(
                     messagePart(
@@ -260,7 +260,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
 
     @Test
     fun map_withTextPartsOnly_marksAttachmentsNotSaveable() {
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(
                 parts = listOf(
                     messagePart(
@@ -277,7 +277,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
 
     @Test
     fun map_withMediaPartMissingContentUri_marksAttachmentsNotSaveable() {
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(
                 parts = listOf(messagePart(contentType = "image/jpeg", contentUri = null)),
             ),
@@ -288,7 +288,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
 
     @Test
     fun map_withBlankContentTypePart_marksAttachmentsNotSaveable() {
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(
                 parts = listOf(
                     messagePart(
@@ -304,7 +304,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
 
     @Test
     fun map_withTextCaptionBeforeSaveableMediaParts_marksAttachmentsSaveable() {
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(
                 parts = listOf(
                     messagePart(contentType = "text/plain", text = "caption"),
@@ -321,7 +321,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
 
     @Test
     fun map_withSaveableMediaBeforeTextCaptionParts_marksAttachmentsSaveable() {
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(
                 parts = listOf(
                     messagePart(
@@ -338,7 +338,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
 
     @Test
     fun map_withVCardPartHavingContentUri_marksAttachmentsSaveable() {
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(
                 parts = listOf(
                     messagePart(
@@ -356,7 +356,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
     fun map_oggAudioPart_mapsToAudioAttachment() {
         val contentUri = Uri.parse("content://audio/ogg")
 
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(
                 parts = listOf(
                     messagePart(contentType = "application/ogg", contentUri = contentUri),
@@ -382,7 +382,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
     fun map_vCardPartWithLowercaseContentType_mapsToVCardAttachment() {
         val contentUri = Uri.parse("content://vcard/lowercase")
 
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(
                 parts = listOf(
                     messagePart(contentType = "text/x-vcard", contentUri = contentUri),

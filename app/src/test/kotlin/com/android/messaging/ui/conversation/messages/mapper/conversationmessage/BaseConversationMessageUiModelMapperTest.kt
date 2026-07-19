@@ -9,6 +9,7 @@ import com.android.messaging.datamodel.data.MessagePartData
 import com.android.messaging.ui.conversation.attachment.mapper.ConversationVCardAttachmentUiModelMapper
 import com.android.messaging.ui.conversation.attachment.model.ConversationVCardAttachmentUiModel
 import com.android.messaging.ui.conversation.messages.mapper.ConversationMessageUiModelMapperImpl
+import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.util.OsUtil
 import io.mockk.every
 import io.mockk.mockk
@@ -43,6 +44,10 @@ internal abstract class BaseConversationMessageUiModelMapperTest {
     protected val mapper = ConversationMessageUiModelMapperImpl(
         conversationVCardAttachmentUiModelMapper = conversationVCardAttachmentUiModelMapper,
     )
+
+    protected fun mapPresent(data: ConversationMessageData): ConversationMessageUiModel {
+        return requireNotNull(mapper.map(data))
+    }
 
     protected fun messageData(
         messageId: String? = "message-1",

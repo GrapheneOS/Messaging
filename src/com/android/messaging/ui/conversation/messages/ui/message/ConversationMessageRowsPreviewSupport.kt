@@ -4,6 +4,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageContent
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel.Status
@@ -21,14 +22,14 @@ internal const val PREVIEW_ROWS_OVERFLOW_TEXT =
     "SupercalifragilisticexpialidociousRowsPreviewTokenWithoutNaturalBreaks1234567890"
 
 internal data class RowsStatusPreviewItem(
-    val messageId: String,
+    val messageId: MessageId,
     val text: String,
     val status: Status,
     val metadataText: String?,
 )
 
 internal data class RowsMmsDownloadPreviewItem(
-    val messageId: String,
+    val messageId: MessageId,
     val status: Status.Incoming,
     val downloadState: MmsDownloadUiModel.State,
     val canDownloadMessage: Boolean,
@@ -40,61 +41,61 @@ internal data class RowsMmsDownloadPreviewItem(
 internal fun conversationMessageRowsOutgoingStatusPreviewItems(): List<RowsStatusPreviewItem> {
     return listOf(
         RowsStatusPreviewItem(
-            messageId = "rows-status-complete",
+            messageId = MessageId("rows-status-complete"),
             text = "Complete outgoing row.",
             status = Status.Outgoing.Complete,
             metadataText = "18:01",
         ),
         RowsStatusPreviewItem(
-            messageId = "rows-status-delivered",
+            messageId = MessageId("rows-status-delivered"),
             text = "Delivered outgoing row.",
             status = Status.Outgoing.Delivered,
             metadataText = "18:02 \u2022 Delivered",
         ),
         RowsStatusPreviewItem(
-            messageId = "rows-status-draft",
+            messageId = MessageId("rows-status-draft"),
             text = "Draft outgoing row.",
             status = Status.Outgoing.Draft,
             metadataText = "18:03",
         ),
         RowsStatusPreviewItem(
-            messageId = "rows-status-yet-to-send",
+            messageId = MessageId("rows-status-yet-to-send"),
             text = "Queued outgoing row.",
             status = Status.Outgoing.YetToSend,
             metadataText = "18:04 \u2022 Sending",
         ),
         RowsStatusPreviewItem(
-            messageId = "rows-status-sending",
+            messageId = MessageId("rows-status-sending"),
             text = "Sending outgoing row.",
             status = Status.Outgoing.Sending,
             metadataText = "18:05 \u2022 Sending",
         ),
         RowsStatusPreviewItem(
-            messageId = "rows-status-resending",
+            messageId = MessageId("rows-status-resending"),
             text = "Retrying outgoing row.",
             status = Status.Outgoing.Resending,
             metadataText = "18:06 \u2022 Retrying",
         ),
         RowsStatusPreviewItem(
-            messageId = "rows-status-awaiting-retry",
+            messageId = MessageId("rows-status-awaiting-retry"),
             text = "Awaiting retry outgoing row.",
             status = Status.Outgoing.AwaitingRetry,
             metadataText = "18:07 \u2022 Failed",
         ),
         RowsStatusPreviewItem(
-            messageId = "rows-status-failed",
+            messageId = MessageId("rows-status-failed"),
             text = "Failed outgoing row.",
             status = Status.Outgoing.Failed,
             metadataText = "18:08 \u2022 Failed",
         ),
         RowsStatusPreviewItem(
-            messageId = "rows-status-failed-emergency",
+            messageId = MessageId("rows-status-failed-emergency"),
             text = "Emergency-number failure row.",
             status = Status.Outgoing.FailedEmergencyNumber,
             metadataText = "18:09 \u2022 Failed",
         ),
         RowsStatusPreviewItem(
-            messageId = "rows-status-unknown",
+            messageId = MessageId("rows-status-unknown"),
             text = "Unknown outgoing row.",
             status = Status.Unknown,
             metadataText = "18:10",
@@ -105,19 +106,19 @@ internal fun conversationMessageRowsOutgoingStatusPreviewItems(): List<RowsStatu
 internal fun conversationMessageRowsMmsDownloadPreviewItems(): List<RowsMmsDownloadPreviewItem> {
     return listOf(
         RowsMmsDownloadPreviewItem(
-            messageId = "rows-mms-awaiting",
+            messageId = MessageId("rows-mms-awaiting"),
             status = Status.Incoming.YetToManualDownload,
             downloadState = MmsDownloadUiModel.State.AwaitingManualDownload,
             canDownloadMessage = true,
         ),
         RowsMmsDownloadPreviewItem(
-            messageId = "rows-mms-awaiting-disabled",
+            messageId = MessageId("rows-mms-awaiting-disabled"),
             status = Status.Incoming.YetToManualDownload,
             downloadState = MmsDownloadUiModel.State.AwaitingManualDownload,
             canDownloadMessage = false,
         ),
         RowsMmsDownloadPreviewItem(
-            messageId = "rows-mms-downloading",
+            messageId = MessageId("rows-mms-downloading"),
             status = Status.Incoming.ManualDownloading,
             downloadState = MmsDownloadUiModel.State.Downloading,
             canDownloadMessage = false,
@@ -125,37 +126,37 @@ internal fun conversationMessageRowsMmsDownloadPreviewItems(): List<RowsMmsDownl
             isSelectionMode = true,
         ),
         RowsMmsDownloadPreviewItem(
-            messageId = "rows-mms-auto-downloading",
+            messageId = MessageId("rows-mms-auto-downloading"),
             status = Status.Incoming.AutoDownloading,
             downloadState = MmsDownloadUiModel.State.Downloading,
             canDownloadMessage = false,
         ),
         RowsMmsDownloadPreviewItem(
-            messageId = "rows-mms-retrying",
+            messageId = MessageId("rows-mms-retrying"),
             status = Status.Incoming.RetryingManualDownload,
             downloadState = MmsDownloadUiModel.State.Downloading,
             canDownloadMessage = false,
         ),
         RowsMmsDownloadPreviewItem(
-            messageId = "rows-mms-auto-retrying",
+            messageId = MessageId("rows-mms-auto-retrying"),
             status = Status.Incoming.RetryingAutoDownload,
             downloadState = MmsDownloadUiModel.State.Downloading,
             canDownloadMessage = false,
         ),
         RowsMmsDownloadPreviewItem(
-            messageId = "rows-mms-failed",
+            messageId = MessageId("rows-mms-failed"),
             status = Status.Incoming.DownloadFailed,
             downloadState = MmsDownloadUiModel.State.DownloadFailed,
             canDownloadMessage = true,
         ),
         RowsMmsDownloadPreviewItem(
-            messageId = "rows-mms-failed-disabled",
+            messageId = MessageId("rows-mms-failed-disabled"),
             status = Status.Incoming.DownloadFailed,
             downloadState = MmsDownloadUiModel.State.DownloadFailed,
             canDownloadMessage = false,
         ),
         RowsMmsDownloadPreviewItem(
-            messageId = "rows-mms-expired",
+            messageId = MessageId("rows-mms-expired"),
             status = Status.Incoming.ExpiredOrNotAvailable,
             downloadState = MmsDownloadUiModel.State.ExpiredOrUnavailable,
             canDownloadMessage = false,

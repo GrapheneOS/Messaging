@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel.Status
 import com.android.messaging.ui.conversation.messages.model.message.MmsDownloadUiModel
@@ -23,7 +24,7 @@ internal const val PREVIEW_OVERFLOW_BUBBLE_TEXT =
     "SupercalifragilisticexpialidociousPreviewTokenWithoutNaturalBreaks1234567890"
 
 internal data class BubbleMmsDownloadPreviewItem(
-    val messageId: String,
+    val messageId: MessageId,
     val status: Status.Incoming,
     val downloadState: MmsDownloadUiModel.State,
     val canDownloadMessage: Boolean,
@@ -72,38 +73,38 @@ internal fun conversationMessageBubbleMmsDownloadPreviewItems():
     List<BubbleMmsDownloadPreviewItem> {
     return listOf(
         BubbleMmsDownloadPreviewItem(
-            messageId = "bubble-mms-awaiting",
+            messageId = MessageId("bubble-mms-awaiting"),
             status = Status.Incoming.YetToManualDownload,
             downloadState = MmsDownloadUiModel.State.AwaitingManualDownload,
             canDownloadMessage = true,
         ),
         BubbleMmsDownloadPreviewItem(
-            messageId = "bubble-mms-awaiting-disabled",
+            messageId = MessageId("bubble-mms-awaiting-disabled"),
             status = Status.Incoming.YetToManualDownload,
             downloadState = MmsDownloadUiModel.State.AwaitingManualDownload,
             canDownloadMessage = false,
         ),
         BubbleMmsDownloadPreviewItem(
-            messageId = "bubble-mms-downloading",
+            messageId = MessageId("bubble-mms-downloading"),
             status = Status.Incoming.ManualDownloading,
             downloadState = MmsDownloadUiModel.State.Downloading,
             canDownloadMessage = false,
             isSelected = true,
         ),
         BubbleMmsDownloadPreviewItem(
-            messageId = "bubble-mms-failed",
+            messageId = MessageId("bubble-mms-failed"),
             status = Status.Incoming.DownloadFailed,
             downloadState = MmsDownloadUiModel.State.DownloadFailed,
             canDownloadMessage = true,
         ),
         BubbleMmsDownloadPreviewItem(
-            messageId = "bubble-mms-failed-disabled",
+            messageId = MessageId("bubble-mms-failed-disabled"),
             status = Status.Incoming.DownloadFailed,
             downloadState = MmsDownloadUiModel.State.DownloadFailed,
             canDownloadMessage = false,
         ),
         BubbleMmsDownloadPreviewItem(
-            messageId = "bubble-mms-expired",
+            messageId = MessageId("bubble-mms-expired"),
             status = Status.Incoming.ExpiredOrNotAvailable,
             downloadState = MmsDownloadUiModel.State.ExpiredOrUnavailable,
             canDownloadMessage = false,
