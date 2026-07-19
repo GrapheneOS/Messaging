@@ -7,7 +7,7 @@ import com.android.messaging.data.conversation.model.metadata.ConversationSubscr
 @Immutable
 internal data class Subscription(
     val selfParticipantId: ParticipantId,
-    val subId: Int,
+    val subId: SubId,
     val label: ConversationSubscriptionLabel,
     val displayDestination: String?,
     val displaySlotId: Int,

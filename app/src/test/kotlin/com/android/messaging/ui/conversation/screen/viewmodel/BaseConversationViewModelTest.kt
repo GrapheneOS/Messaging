@@ -8,6 +8,7 @@ import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.domain.conversation.usecase.action.CreateDefaultSmsRoleRequest
@@ -187,7 +188,7 @@ internal abstract class BaseConversationViewModelTest {
         state: ConversationSubscriptionSelectionState = ConversationSubscriptionSelectionState(
             subscriptions = persistentListOf(),
             areSubscriptionsLoaded = false,
-            defaultSmsSubscriptionId = ParticipantData.DEFAULT_SELF_SUB_ID,
+            defaultSmsSubscriptionId = SubId(ParticipantData.DEFAULT_SELF_SUB_ID),
         ),
     ): SubscriptionSelectionDelegateMock {
         val stateFlow = MutableStateFlow(state)

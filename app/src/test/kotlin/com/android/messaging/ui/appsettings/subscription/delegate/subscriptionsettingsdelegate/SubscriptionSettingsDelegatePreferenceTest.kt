@@ -1,5 +1,6 @@
 package com.android.messaging.ui.appsettings.subscription.delegate.subscriptionsettingsdelegate
 
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscriptionsettings.model.SubscriptionBooleanPref
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
@@ -18,12 +19,12 @@ internal class SubscriptionSettingsDelegatePreferenceTest : BaseSubscriptionSett
     ) {
         val delegate = createBoundDelegate()
 
-        delegate.onAutoRetrieveMmsChanged(subId = 5, enabled = true)
+        delegate.onAutoRetrieveMmsChanged(subId = SubId(5), enabled = true)
         runCurrent()
 
         coVerify(exactly = 1) {
             repository.setSubscriptionBooleanPref(
-                subId = 5,
+                subId = SubId(5),
                 pref = SubscriptionBooleanPref.AUTO_RETRIEVE_MMS,
                 enabled = true,
             )
@@ -36,12 +37,12 @@ internal class SubscriptionSettingsDelegatePreferenceTest : BaseSubscriptionSett
     ) {
         val delegate = createBoundDelegate()
 
-        delegate.onAutoRetrieveMmsWhenRoamingChanged(subId = 5, enabled = false)
+        delegate.onAutoRetrieveMmsWhenRoamingChanged(subId = SubId(5), enabled = false)
         runCurrent()
 
         coVerify(exactly = 1) {
             repository.setSubscriptionBooleanPref(
-                subId = 5,
+                subId = SubId(5),
                 pref = SubscriptionBooleanPref.AUTO_RETRIEVE_MMS_WHEN_ROAMING,
                 enabled = false,
             )
@@ -54,12 +55,12 @@ internal class SubscriptionSettingsDelegatePreferenceTest : BaseSubscriptionSett
     ) {
         val delegate = createBoundDelegate()
 
-        delegate.onDeliveryReportsChanged(subId = 5, enabled = true)
+        delegate.onDeliveryReportsChanged(subId = SubId(5), enabled = true)
         runCurrent()
 
         coVerify(exactly = 1) {
             repository.setSubscriptionBooleanPref(
-                subId = 5,
+                subId = SubId(5),
                 pref = SubscriptionBooleanPref.DELIVERY_REPORTS,
                 enabled = true,
             )
@@ -72,12 +73,12 @@ internal class SubscriptionSettingsDelegatePreferenceTest : BaseSubscriptionSett
     ) {
         val delegate = createBoundDelegate()
 
-        delegate.onGroupMmsChanged(subId = 5, enabled = false)
+        delegate.onGroupMmsChanged(subId = SubId(5), enabled = false)
         runCurrent()
 
         coVerify(exactly = 1) {
             repository.setSubscriptionBooleanPref(
-                subId = 5,
+                subId = SubId(5),
                 pref = SubscriptionBooleanPref.GROUP_MMS,
                 enabled = false,
             )
@@ -91,12 +92,12 @@ internal class SubscriptionSettingsDelegatePreferenceTest : BaseSubscriptionSett
         givenSecondLoadProducesReloadedState()
         val delegate = createBoundDelegate()
 
-        delegate.onGroupMmsChanged(subId = 5, enabled = true)
+        delegate.onGroupMmsChanged(subId = SubId(5), enabled = true)
         runCurrent()
 
         coVerifyOrder {
             repository.setSubscriptionBooleanPref(
-                subId = 5,
+                subId = SubId(5),
                 pref = SubscriptionBooleanPref.GROUP_MMS,
                 enabled = true,
             )
@@ -111,7 +112,7 @@ internal class SubscriptionSettingsDelegatePreferenceTest : BaseSubscriptionSett
     ) {
         val delegate = createDelegate()
 
-        delegate.onGroupMmsChanged(subId = 5, enabled = true)
+        delegate.onGroupMmsChanged(subId = SubId(5), enabled = true)
         runCurrent()
 
         coVerify(exactly = 0) {
@@ -127,11 +128,11 @@ internal class SubscriptionSettingsDelegatePreferenceTest : BaseSubscriptionSett
         givenSecondLoadProducesReloadedState()
         val delegate = createBoundDelegate()
 
-        delegate.onPhoneNumberChanged(subId = 3, phoneNumber = "+15550001")
+        delegate.onPhoneNumberChanged(subId = SubId(3), phoneNumber = "+15550001")
         runCurrent()
 
         coVerifyOrder {
-            setSubscriptionPhoneNumber(subId = 3, phoneNumber = "+15550001")
+            setSubscriptionPhoneNumber(subId = SubId(3), phoneNumber = "+15550001")
             repository.getSubscriptionSettings()
         }
         assertEquals(reloadedState, delegate.state.value)
@@ -143,7 +144,7 @@ internal class SubscriptionSettingsDelegatePreferenceTest : BaseSubscriptionSett
     ) {
         val delegate = createDelegate()
 
-        delegate.onPhoneNumberChanged(subId = 3, phoneNumber = "+15550001")
+        delegate.onPhoneNumberChanged(subId = SubId(3), phoneNumber = "+15550001")
         runCurrent()
 
         coVerify(exactly = 0) { setSubscriptionPhoneNumber(any(), any()) }

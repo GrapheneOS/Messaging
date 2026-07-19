@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.ui.common.text.asLtrText
 import com.android.messaging.ui.conversationsettings.common.settingsCardShape
@@ -234,7 +235,7 @@ private fun SimSelectorRow(
 private fun SimSwitchItemPreview() {
     val subscription = Subscription(
         selfParticipantId = ParticipantId("1"),
-        subId = 1,
+        subId = SubId(1),
         label = ConversationSubscriptionLabel.Slot(slotId = 1),
         displayDestination = "+31 6 1234 5678",
         displaySlotId = 1,

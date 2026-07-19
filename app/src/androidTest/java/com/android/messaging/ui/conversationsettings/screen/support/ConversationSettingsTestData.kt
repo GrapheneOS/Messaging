@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversationsettings.screen.support
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState
 import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
@@ -115,7 +116,7 @@ internal fun subscription(
 ): Subscription {
     return Subscription(
         selfParticipantId = id,
-        subId = slotId,
+        subId = SubId(slotId),
         label = ConversationSubscriptionLabel.Slot(slotId = slotId),
         displayDestination = destination,
         displaySlotId = slotId,

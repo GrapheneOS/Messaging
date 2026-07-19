@@ -76,7 +76,7 @@ internal class SimSelectionDelegateImpl @Inject constructor(
         // Only bind a real, sendable subscription. Debug-emulated SIMs carry a placeholder
         // self participant id that is not backed by a participant row, so binding it would
         // break message sending; fall back to the conversation's own self instead.
-        return when (selectedSubscription.subId) {
+        return when (selectedSubscription.subId.value) {
             ParticipantData.DEFAULT_SELF_SUB_ID -> null
             else -> selectedSubscription.selfParticipantId
         }

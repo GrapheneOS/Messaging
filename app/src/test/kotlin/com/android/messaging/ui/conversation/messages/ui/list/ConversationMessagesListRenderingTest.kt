@@ -17,6 +17,7 @@ import com.android.messaging.R
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
@@ -248,7 +249,7 @@ internal class ConversationMessagesListRenderingTest {
     private fun sendSubscription(): Subscription {
         return Subscription(
             selfParticipantId = ParticipantId(SELF_PARTICIPANT_ID),
-            subId = SEND_SUBSCRIPTION_ID,
+            subId = SubId(SEND_SUBSCRIPTION_ID),
             label = ConversationSubscriptionLabel.Named(name = SEND_SIM_DISPLAY_NAME),
             displayDestination = null,
             displaySlotId = SEND_SUBSCRIPTION_SLOT,

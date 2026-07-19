@@ -11,6 +11,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import com.android.messaging.R
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.ui.appsettings.screen.SettingsScreenModel
 import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionUiState
@@ -116,7 +117,7 @@ class SubscriptionSettingsScreenTest {
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
-            screenModel.onAction(Action.AutoRetrieveMmsChanged(1, false))
+            screenModel.onAction(Action.AutoRetrieveMmsChanged(SubId(1), false))
         }
     }
 
@@ -181,7 +182,7 @@ class SubscriptionSettingsScreenTest {
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
-            screenModel.onAction(Action.DeliveryReportsChanged(1, true))
+            screenModel.onAction(Action.DeliveryReportsChanged(SubId(1), true))
         }
     }
 
@@ -214,7 +215,7 @@ class SubscriptionSettingsScreenTest {
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
-            screenModel.onAction(Action.WirelessAlertsClicked(1))
+            screenModel.onAction(Action.WirelessAlertsClicked(SubId(1)))
         }
     }
 
@@ -301,7 +302,7 @@ class SubscriptionSettingsScreenTest {
         isDefaultSmsApp: Boolean = true,
     ): SubscriptionUiState {
         return SubscriptionUiState(
-            subId = subId,
+            subId = SubId(subId),
             displayName = "SIM 1",
             displayDetail = displayDetail,
             phoneNumber = phoneNumber,

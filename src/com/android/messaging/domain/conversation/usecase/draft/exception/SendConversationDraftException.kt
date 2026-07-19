@@ -1,6 +1,7 @@
 package com.android.messaging.domain.conversation.usecase.draft.exception
 
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.subscription.model.SubId
 
 internal sealed class SendConversationDraftException(
     message: String,
@@ -33,18 +34,19 @@ internal class UnknownConversationRecipientException(
 
 internal class MissingSelfPhoneNumberForGroupMmsException(
     conversationId: ConversationId,
-    selfSubId: Int,
+    selfSubId: SubId,
 ) : SendConversationDraftException(
     message = "Missing self phone number for group MMS in conversation ${conversationId.value} " +
-        "on subId $selfSubId.",
+        "on subId ${selfSubId.value}.",
 )
 
 internal class ConversationSimNotReadyException(
     conversationId: ConversationId,
-    selfSubId: Int,
+    selfSubId: SubId,
     cause: Throwable,
 ) : SendConversationDraftException(
-    message = "SIM is not ready for conversation ${conversationId.value} on subId $selfSubId.",
+    message = "SIM is not ready for conversation ${conversationId.value} " +
+        "on subId ${selfSubId.value}.",
     cause = cause,
 )
 
