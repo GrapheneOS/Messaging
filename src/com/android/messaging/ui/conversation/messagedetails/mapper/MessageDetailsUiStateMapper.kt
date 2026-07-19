@@ -21,12 +21,14 @@ internal class MessageDetailsUiStateMapperImpl @Inject constructor(
         message: ConversationMessageData?,
         details: ConversationMessageDetails?,
     ): MessageDetailsUiState {
-        if (message == null || details == null) {
+        val preview = message?.let(conversationMessageUiModelMapper::map)
+
+        if (preview == null || details == null) {
             return MessageDetailsUiState.Unavailable
         }
 
         return MessageDetailsUiState.Content(
-            preview = conversationMessageUiModelMapper.map(data = message),
+            preview = preview,
             details = details,
         )
     }

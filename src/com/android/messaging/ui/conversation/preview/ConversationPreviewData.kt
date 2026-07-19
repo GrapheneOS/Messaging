@@ -289,7 +289,7 @@ internal fun previewMessagesUiState(): ConversationMessagesUiState.Present {
 internal fun previewMessages(): ImmutableList<ConversationMessageUiModel> {
     return persistentListOf(
         previewIncomingMessage(
-            messageId = "incoming-mms",
+            messageId = MessageId("incoming-mms"),
             text = "Here are the photos and voice note.",
             status = ConversationMessageUiModel.Status.Incoming.Complete,
             parts = persistentListOf(
@@ -299,12 +299,12 @@ internal fun previewMessages(): ImmutableList<ConversationMessageUiModel> {
             canSaveAttachments = true,
         ),
         previewOutgoingMessage(
-            messageId = "outgoing-delivered",
+            messageId = MessageId("outgoing-delivered"),
             text = "Received. I will forward them to the group.",
             status = ConversationMessageUiModel.Status.Outgoing.Delivered,
         ),
         previewIncomingMessage(
-            messageId = "incoming-download",
+            messageId = MessageId("incoming-download"),
             text = null,
             status = ConversationMessageUiModel.Status.Incoming.YetToManualDownload,
             mmsDownload = previewMmsDownloadUiModel(),
@@ -315,7 +315,7 @@ internal fun previewMessages(): ImmutableList<ConversationMessageUiModel> {
 }
 
 internal fun previewIncomingMessage(
-    messageId: String = "incoming-1",
+    messageId: MessageId = MessageId("incoming-1"),
     text: String? = "Can you review this before tonight?",
     status: ConversationMessageUiModel.Status = ConversationMessageUiModel.Status.Incoming.Complete,
     parts: ImmutableList<ConversationMessagePartUiModel> = persistentListOf(
@@ -342,7 +342,7 @@ internal fun previewIncomingMessage(
 }
 
 internal fun previewOutgoingMessage(
-    messageId: String = "outgoing-1",
+    messageId: MessageId = MessageId("outgoing-1"),
     text: String? = "I am on my way.",
     status: ConversationMessageUiModel.Status = ConversationMessageUiModel.Status.Outgoing.Complete,
     parts: ImmutableList<ConversationMessagePartUiModel> = persistentListOf(
@@ -506,7 +506,7 @@ internal fun previewMmsDownloadUiModel(
 }
 
 private fun previewMessage(
-    messageId: String,
+    messageId: MessageId,
     text: String?,
     parts: ImmutableList<ConversationMessagePartUiModel>,
     status: ConversationMessageUiModel.Status,
@@ -520,7 +520,7 @@ private fun previewMessage(
     canSaveAttachments: Boolean = false,
 ): ConversationMessageUiModel {
     return ConversationMessageUiModel(
-        messageId = MessageId(messageId),
+        messageId = messageId,
         conversationId = ConversationId("conversation-1"),
         text = text,
         parts = parts,

@@ -19,17 +19,24 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 internal interface ConversationMessageUiModelMapper {
-    fun map(data: ConversationMessageData): ConversationMessageUiModel
+    fun map(data: ConversationMessageData): ConversationMessageUiModel?
 }
 
 internal class ConversationMessageUiModelMapperImpl @Inject constructor(
     private val conversationVCardAttachmentUiModelMapper: ConversationVCardAttachmentUiModelMapper,
 ) : ConversationMessageUiModelMapper {
 
-    override fun map(data: ConversationMessageData): ConversationMessageUiModel {
+    override fun map(data: ConversationMessageData): ConversationMessageUiModel? {
+        val messageId = data.messageId?.takeIf { it.isNotBlank() }
+        val conversationId = data.conversationId?.takeIf { it.isNotBlank() }
+
+        if (messageId == null || conversationId == null) {
+            return null
+        }
+
         return ConversationMessageUiModel(
-            messageId = MessageId(data.messageId ?: ""),
-            conversationId = ConversationId(data.conversationId ?: ""),
+            messageId = MessageId(messageId),
+            conversationId = ConversationId(conversationId),
             text = data.text,
             parts = data
                 .parts

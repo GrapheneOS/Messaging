@@ -136,7 +136,7 @@ internal class ConversationMessagesDelegateImpl @Inject constructor(
             .map { messages ->
                 messages
                     .asSequence()
-                    .map(conversationMessageUiModelMapper::map)
+                    .mapNotNull(conversationMessageUiModelMapper::map)
                     .toImmutableList()
             }
             .flatMapLatest { messages ->
