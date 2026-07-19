@@ -225,20 +225,20 @@ private fun previewDisabledComposerUiState(): ConversationComposerUiState {
 private fun previewScreenContentDirectMessages(): ImmutableList<ConversationMessageUiModel> {
     return persistentListOf(
         previewIncomingMessage(
-            messageId = "screen-direct-address",
+            messageId = MessageId("screen-direct-address"),
             text = "The address is 1600 Amphitheatre Parkway. Meet near the main entrance.",
         ).withPreviewDisplayTime(displayTimestamp = PREVIEW_SCREEN_CONTENT_OLDER_MILLIS),
         previewOutgoingMessage(
-            messageId = "screen-direct-delivered",
+            messageId = MessageId("screen-direct-delivered"),
             text = "Got it. I am leaving in five minutes.",
             status = Status.Outgoing.Delivered,
         ).withPreviewDisplayTime(displayTimestamp = PREVIEW_SCREEN_CONTENT_YESTERDAY_MILLIS),
         previewIncomingMessage(
-            messageId = "screen-direct-long",
+            messageId = MessageId("screen-direct-long"),
             text = PREVIEW_SCREEN_CONTENT_LONG_TEXT,
         ).withPreviewDisplayTime(displayTimestamp = PREVIEW_SCREEN_CONTENT_NOW_MILLIS),
         previewOutgoingMessage(
-            messageId = "screen-direct-overflow",
+            messageId = MessageId("screen-direct-overflow"),
             text = PREVIEW_SCREEN_CONTENT_OVERFLOW_TEXT,
             status = Status.Outgoing.Sending,
         ).withPreviewDisplayTime(displayTimestamp = PREVIEW_SCREEN_CONTENT_NOW_MILLIS),
@@ -248,26 +248,26 @@ private fun previewScreenContentDirectMessages(): ImmutableList<ConversationMess
 private fun previewScreenContentRichMessages(): ImmutableList<ConversationMessageUiModel> {
     return persistentListOf(
         previewIncomingMessage(
-            messageId = "screen-group-start",
+            messageId = MessageId("screen-group-start"),
             text = "I started a group thread so everyone has the same context.",
         )
             .withPreviewDisplayTime(displayTimestamp = PREVIEW_SCREEN_CONTENT_OLDER_MILLIS)
             .withPreviewGrouping(canClusterWithNext = true),
         previewIncomingMessage(
-            messageId = "screen-group-clustered",
+            messageId = MessageId("screen-group-clustered"),
             text = "Second incoming row in the same participant cluster.",
         )
             .withPreviewDisplayTime(displayTimestamp = PREVIEW_SCREEN_CONTENT_OLDER_MILLIS)
             .withPreviewGrouping(canClusterWithPrevious = true),
         previewOutgoingMessage(
-            messageId = "screen-group-work-sim",
+            messageId = MessageId("screen-group-work-sim"),
             text = "Replying from the work SIM so the thread shows the SIM annotation.",
             status = Status.Outgoing.Delivered,
         )
             .withPreviewDisplayTime(displayTimestamp = PREVIEW_SCREEN_CONTENT_YESTERDAY_MILLIS)
             .withPreviewSelfParticipant(selfParticipantId = ParticipantId("self-2")),
         previewIncomingMessage(
-            messageId = "screen-group-attachments",
+            messageId = MessageId("screen-group-attachments"),
             text = "Photos, a file, a vCard, and the voice note are attached.",
             parts = persistentListOf(
                 ConversationMessagePartUiModel.Text(
@@ -285,7 +285,7 @@ private fun previewScreenContentRichMessages(): ImmutableList<ConversationMessag
             .copy(mmsSubject = "Site visit")
             .withPreviewDisplayTime(displayTimestamp = PREVIEW_SCREEN_CONTENT_NOW_MILLIS),
         previewOutgoingMessage(
-            messageId = "screen-group-failed",
+            messageId = MessageId("screen-group-failed"),
             text = "This outgoing message failed and can be resent.",
             status = Status.Outgoing.Failed,
         ).withPreviewDisplayTime(displayTimestamp = PREVIEW_SCREEN_CONTENT_NOW_MILLIS),
@@ -295,28 +295,28 @@ private fun previewScreenContentRichMessages(): ImmutableList<ConversationMessag
 private fun previewScreenContentDateSeparatedMessages(): ImmutableList<ConversationMessageUiModel> {
     return persistentListOf(
         previewOutgoingMessage(
-            messageId = "screen-history-old-outgoing",
+            messageId = MessageId("screen-history-old-outgoing"),
             text = "Older outgoing message before a date boundary.",
             status = Status.Outgoing.Complete,
         ).withPreviewDisplayTime(displayTimestamp = PREVIEW_SCREEN_CONTENT_OLDER_MILLIS),
         previewIncomingMessage(
-            messageId = "screen-history-yesterday-incoming",
+            messageId = MessageId("screen-history-yesterday-incoming"),
             text = "Yesterday's incoming message starts another separated group.",
         ).withPreviewDisplayTime(displayTimestamp = PREVIEW_SCREEN_CONTENT_YESTERDAY_MILLIS),
         previewIncomingMessage(
-            messageId = "screen-history-today-incoming",
+            messageId = MessageId("screen-history-today-incoming"),
             text = "First message today with sender identity visible.",
         )
             .withPreviewDisplayTime(displayTimestamp = PREVIEW_SCREEN_CONTENT_NOW_MILLIS)
             .withPreviewGrouping(canClusterWithNext = true),
         previewIncomingMessage(
-            messageId = "screen-history-today-cluster",
+            messageId = MessageId("screen-history-today-cluster"),
             text = "Clustered continuation on the same day.",
         )
             .withPreviewDisplayTime(displayTimestamp = PREVIEW_SCREEN_CONTENT_NOW_MILLIS)
             .withPreviewGrouping(canClusterWithPrevious = true, canClusterWithNext = true),
         previewIncomingMessage(
-            messageId = "screen-history-today-cluster-end",
+            messageId = MessageId("screen-history-today-cluster-end"),
             text = "Final clustered continuation row.",
         )
             .withPreviewDisplayTime(displayTimestamp = PREVIEW_SCREEN_CONTENT_NOW_MILLIS)
@@ -327,35 +327,35 @@ private fun previewScreenContentDateSeparatedMessages(): ImmutableList<Conversat
 private fun previewScreenContentMmsDownloadMessages(): ImmutableList<ConversationMessageUiModel> {
     return persistentListOf(
         previewMmsDownloadMessage(
-            messageId = "screen-mms-awaiting",
+            messageId = MessageId("screen-mms-awaiting"),
             status = Status.Incoming.YetToManualDownload,
             state = MmsDownloadUiModel.State.AwaitingManualDownload,
             canDownloadMessage = true,
             displayTimestamp = PREVIEW_SCREEN_CONTENT_OLDER_MILLIS,
         ),
         previewMmsDownloadMessage(
-            messageId = "screen-mms-manual-downloading",
+            messageId = MessageId("screen-mms-manual-downloading"),
             status = Status.Incoming.ManualDownloading,
             state = MmsDownloadUiModel.State.Downloading,
             canDownloadMessage = false,
             displayTimestamp = PREVIEW_SCREEN_CONTENT_YESTERDAY_MILLIS,
         ),
         previewMmsDownloadMessage(
-            messageId = "screen-mms-auto-downloading",
+            messageId = MessageId("screen-mms-auto-downloading"),
             status = Status.Incoming.AutoDownloading,
             state = MmsDownloadUiModel.State.Downloading,
             canDownloadMessage = false,
             displayTimestamp = PREVIEW_SCREEN_CONTENT_YESTERDAY_MILLIS,
         ),
         previewMmsDownloadMessage(
-            messageId = "screen-mms-failed",
+            messageId = MessageId("screen-mms-failed"),
             status = Status.Incoming.DownloadFailed,
             state = MmsDownloadUiModel.State.DownloadFailed,
             canDownloadMessage = true,
             displayTimestamp = PREVIEW_SCREEN_CONTENT_NOW_MILLIS,
         ),
         previewMmsDownloadMessage(
-            messageId = "screen-mms-expired",
+            messageId = MessageId("screen-mms-expired"),
             status = Status.Incoming.ExpiredOrNotAvailable,
             state = MmsDownloadUiModel.State.ExpiredOrUnavailable,
             canDownloadMessage = false,
@@ -365,7 +365,7 @@ private fun previewScreenContentMmsDownloadMessages(): ImmutableList<Conversatio
 }
 
 private fun previewMmsDownloadMessage(
-    messageId: String,
+    messageId: MessageId,
     status: Status.Incoming,
     state: MmsDownloadUiModel.State,
     canDownloadMessage: Boolean,
