@@ -14,6 +14,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.android.messaging.R
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.ui.appsettings.common.SettingsClickableItem
 import com.android.messaging.ui.appsettings.common.SettingsTopAppBar
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionUiState
@@ -28,7 +29,7 @@ internal fun SettingsMainScreen(
     subscriptions: ImmutableList<SubscriptionUiState>,
     onNavigateBack: () -> Unit,
     onGeneralSettingsClick: () -> Unit,
-    onSubscriptionClick: (subId: Int, title: String) -> Unit,
+    onSubscriptionClick: (subId: SubId, title: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -60,7 +61,10 @@ internal fun SettingsMainScreen(
                 }
             }
 
-            itemsIndexed(subscriptions, key = { _, item -> item.subId }) { index, subscription ->
+            itemsIndexed(
+                items = subscriptions,
+                key = { _, item -> item.subId.value },
+            ) { index, subscription ->
                 SettingsClickableItem(
                     title = subscription.displayName,
                     summary = subscription.displayDetail.asLtrText(),
@@ -97,12 +101,12 @@ private fun SettingsMainScreenMultiSimPreview() {
         SettingsMainScreen(
             subscriptions = persistentListOf(
                 SubscriptionUiState(
-                    subId = 1,
+                    subId = SubId(1),
                     displayName = "SIM 1",
                     displayDetail = "+31 6 1234 5678",
                 ),
                 SubscriptionUiState(
-                    subId = 2,
+                    subId = SubId(2),
                     displayName = "Travel SIM",
                     displayDetail = "+372 5555 0101",
                 ),

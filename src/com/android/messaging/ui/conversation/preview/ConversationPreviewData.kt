@@ -10,6 +10,7 @@ import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentType
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.data.vcard.model.VCardAvatarPhoto
 import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
@@ -45,7 +46,7 @@ internal fun previewSubscriptions(): ImmutableList<Subscription> {
     return persistentListOf(
         previewSubscription(
             selfParticipantId = ParticipantId("self-1"),
-            subId = 1,
+            subId = SubId(1),
             label = ConversationSubscriptionLabel.Named(name = "Personal"),
             displayDestination = "+31 6 1234 5678",
             displaySlotId = 1,
@@ -53,7 +54,7 @@ internal fun previewSubscriptions(): ImmutableList<Subscription> {
         ),
         previewSubscription(
             selfParticipantId = ParticipantId("self-2"),
-            subId = 2,
+            subId = SubId(2),
             label = ConversationSubscriptionLabel.Named(name = "Work"),
             displayDestination = "+372 5555 0101",
             displaySlotId = 2,
@@ -64,7 +65,7 @@ internal fun previewSubscriptions(): ImmutableList<Subscription> {
 
 internal fun previewSubscription(
     selfParticipantId: ParticipantId = ParticipantId("self-1"),
-    subId: Int = 1,
+    subId: SubId = SubId(1),
     label: ConversationSubscriptionLabel = ConversationSubscriptionLabel.Named(name = "Personal"),
     displayDestination: String? = "+31 6 1234 5678",
     displaySlotId: Int = 1,

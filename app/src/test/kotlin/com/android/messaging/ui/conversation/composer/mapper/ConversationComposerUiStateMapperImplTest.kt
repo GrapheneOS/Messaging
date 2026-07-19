@@ -5,6 +5,7 @@ import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerDisabledReason
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.datamodel.MessageTextStats
 import com.android.messaging.datamodel.data.ParticipantData
@@ -78,7 +79,7 @@ internal class ConversationComposerUiStateMapperImplTest {
             composerAvailability = ConversationComposerAvailability.Editable,
             subscriptions = persistentListOf(),
             areSubscriptionsLoaded = true,
-            defaultSmsSubscriptionId = ParticipantData.DEFAULT_SELF_SUB_ID,
+            defaultSmsSubscriptionId = SubId(ParticipantData.DEFAULT_SELF_SUB_ID),
         )
 
         assertTrue(uiState.isSendEnabled)
@@ -95,7 +96,7 @@ internal class ConversationComposerUiStateMapperImplTest {
             composerAvailability = ConversationComposerAvailability.Editable,
             subscriptions = persistentListOf(),
             areSubscriptionsLoaded = true,
-            defaultSmsSubscriptionId = ParticipantData.DEFAULT_SELF_SUB_ID,
+            defaultSmsSubscriptionId = SubId(ParticipantData.DEFAULT_SELF_SUB_ID),
         )
 
         assertFalse(uiState.isSendEnabled)
@@ -116,7 +117,7 @@ internal class ConversationComposerUiStateMapperImplTest {
             composerAvailability = ConversationComposerAvailability.Editable,
             subscriptions = persistentListOf(),
             areSubscriptionsLoaded = true,
-            defaultSmsSubscriptionId = ParticipantData.DEFAULT_SELF_SUB_ID,
+            defaultSmsSubscriptionId = SubId(ParticipantData.DEFAULT_SELF_SUB_ID),
         )
 
         assertFalse(uiState.isAttachmentActionEnabled)
@@ -142,7 +143,7 @@ internal class ConversationComposerUiStateMapperImplTest {
             composerAvailability = unavailableAvailability,
             subscriptions = persistentListOf(),
             areSubscriptionsLoaded = true,
-            defaultSmsSubscriptionId = ParticipantData.DEFAULT_SELF_SUB_ID,
+            defaultSmsSubscriptionId = SubId(ParticipantData.DEFAULT_SELF_SUB_ID),
         )
         val availableUiState = mapper.map(
             audioRecording = ConversationAudioRecordingUiState(),
@@ -157,7 +158,7 @@ internal class ConversationComposerUiStateMapperImplTest {
             composerAvailability = ConversationComposerAvailability.Editable,
             subscriptions = persistentListOf(),
             areSubscriptionsLoaded = true,
-            defaultSmsSubscriptionId = ParticipantData.DEFAULT_SELF_SUB_ID,
+            defaultSmsSubscriptionId = SubId(ParticipantData.DEFAULT_SELF_SUB_ID),
         )
 
         assertFalse(unavailableUiState.isMessageFieldEnabled)
@@ -178,7 +179,7 @@ internal class ConversationComposerUiStateMapperImplTest {
             composerAvailability = ConversationComposerAvailability.Editable,
             subscriptions = persistentListOf(),
             areSubscriptionsLoaded = true,
-            defaultSmsSubscriptionId = ParticipantData.DEFAULT_SELF_SUB_ID,
+            defaultSmsSubscriptionId = SubId(ParticipantData.DEFAULT_SELF_SUB_ID),
         )
 
         assertEquals(ConversationDraftSendProtocol.MMS, uiState.sendProtocol)
@@ -196,7 +197,7 @@ internal class ConversationComposerUiStateMapperImplTest {
             composerAvailability = ConversationComposerAvailability.Editable,
             subscriptions = persistentListOf(),
             areSubscriptionsLoaded = true,
-            defaultSmsSubscriptionId = ParticipantData.DEFAULT_SELF_SUB_ID,
+            defaultSmsSubscriptionId = SubId(ParticipantData.DEFAULT_SELF_SUB_ID),
         )
 
         assertEquals(ConversationDraftSendProtocol.SMS, uiState.sendProtocol)
@@ -220,7 +221,7 @@ internal class ConversationComposerUiStateMapperImplTest {
             composerAvailability = ConversationComposerAvailability.Editable,
             subscriptions = persistentListOf(),
             areSubscriptionsLoaded = true,
-            defaultSmsSubscriptionId = ParticipantData.DEFAULT_SELF_SUB_ID,
+            defaultSmsSubscriptionId = SubId(ParticipantData.DEFAULT_SELF_SUB_ID),
         )
 
         assertNull(uiState.segmentCounter)
@@ -257,7 +258,7 @@ internal class ConversationComposerUiStateMapperImplTest {
                 ),
             ),
             areSubscriptionsLoaded = true,
-            defaultSmsSubscriptionId = FIRST_SUB_ID,
+            defaultSmsSubscriptionId = SubId(FIRST_SUB_ID),
         )
 
         assertEquals(
@@ -293,7 +294,7 @@ internal class ConversationComposerUiStateMapperImplTest {
             composerAvailability = ConversationComposerAvailability.Editable,
             subscriptions = persistentListOf(),
             areSubscriptionsLoaded = true,
-            defaultSmsSubscriptionId = ParticipantData.DEFAULT_SELF_SUB_ID,
+            defaultSmsSubscriptionId = SubId(ParticipantData.DEFAULT_SELF_SUB_ID),
         )
 
         assertEquals(
@@ -324,7 +325,7 @@ internal class ConversationComposerUiStateMapperImplTest {
             composerAvailability = ConversationComposerAvailability.Editable,
             subscriptions = persistentListOf(),
             areSubscriptionsLoaded = true,
-            defaultSmsSubscriptionId = ParticipantData.DEFAULT_SELF_SUB_ID,
+            defaultSmsSubscriptionId = SubId(ParticipantData.DEFAULT_SELF_SUB_ID),
         )
 
         assertNull(uiState.segmentCounter)
@@ -348,7 +349,7 @@ internal class ConversationComposerUiStateMapperImplTest {
             composerAvailability = ConversationComposerAvailability.Editable,
             subscriptions = persistentListOf(),
             areSubscriptionsLoaded = true,
-            defaultSmsSubscriptionId = ParticipantData.DEFAULT_SELF_SUB_ID,
+            defaultSmsSubscriptionId = SubId(ParticipantData.DEFAULT_SELF_SUB_ID),
         )
 
         assertEquals(
@@ -378,7 +379,7 @@ internal class ConversationComposerUiStateMapperImplTest {
             composerAvailability = ConversationComposerAvailability.Editable,
             subscriptions = persistentListOf(firstSubscription, secondSubscription),
             areSubscriptionsLoaded = true,
-            defaultSmsSubscriptionId = SECOND_SUB_ID,
+            defaultSmsSubscriptionId = SubId(SECOND_SUB_ID),
         )
 
         assertEquals(secondSubscription, uiState.simSelector.selectedSubscription)
@@ -400,7 +401,7 @@ internal class ConversationComposerUiStateMapperImplTest {
             composerAvailability = ConversationComposerAvailability.Editable,
             subscriptions = persistentListOf(firstSubscription, secondSubscription),
             areSubscriptionsLoaded = true,
-            defaultSmsSubscriptionId = SECOND_SUB_ID,
+            defaultSmsSubscriptionId = SubId(SECOND_SUB_ID),
         )
 
         assertEquals(firstSubscription, uiState.simSelector.selectedSubscription)
@@ -418,7 +419,7 @@ internal class ConversationComposerUiStateMapperImplTest {
             composerAvailability = ConversationComposerAvailability.Editable,
             subscriptions = persistentListOf(firstSubscription, secondSubscription),
             areSubscriptionsLoaded = true,
-            defaultSmsSubscriptionId = ParticipantData.DEFAULT_SELF_SUB_ID,
+            defaultSmsSubscriptionId = SubId(ParticipantData.DEFAULT_SELF_SUB_ID),
         )
 
         assertEquals(firstSubscription, uiState.simSelector.selectedSubscription)
@@ -436,7 +437,7 @@ internal class ConversationComposerUiStateMapperImplTest {
             composerAvailability = ConversationComposerAvailability.Editable,
             subscriptions = persistentListOf(firstSubscription, secondSubscription),
             areSubscriptionsLoaded = true,
-            defaultSmsSubscriptionId = STALE_SUB_ID,
+            defaultSmsSubscriptionId = SubId(STALE_SUB_ID),
         )
 
         assertEquals(firstSubscription, uiState.simSelector.selectedSubscription)
@@ -458,7 +459,7 @@ internal class ConversationComposerUiStateMapperImplTest {
             composerAvailability = ConversationComposerAvailability.Editable,
             subscriptions = persistentListOf(firstSubscription, secondSubscription),
             areSubscriptionsLoaded = true,
-            defaultSmsSubscriptionId = SECOND_SUB_ID,
+            defaultSmsSubscriptionId = SubId(SECOND_SUB_ID),
         )
 
         assertEquals(secondSubscription, uiState.simSelector.selectedSubscription)
@@ -473,7 +474,7 @@ internal class ConversationComposerUiStateMapperImplTest {
             composerAvailability = ConversationComposerAvailability.Editable,
             subscriptions = persistentListOf(),
             areSubscriptionsLoaded = false,
-            defaultSmsSubscriptionId = SECOND_SUB_ID,
+            defaultSmsSubscriptionId = SubId(SECOND_SUB_ID),
         )
 
         assertNull(uiState.simSelector.selectedSubscription)
@@ -507,7 +508,7 @@ internal class ConversationComposerUiStateMapperImplTest {
             composerAvailability = ConversationComposerAvailability.Editable,
             subscriptions = subscriptions,
             areSubscriptionsLoaded = true,
-            defaultSmsSubscriptionId = FIRST_SUB_ID,
+            defaultSmsSubscriptionId = SubId(FIRST_SUB_ID),
         )
 
         assertEquals(matchingSubscription, uiState.simSelector.selectedSubscription)
@@ -526,7 +527,7 @@ internal class ConversationComposerUiStateMapperImplTest {
             composerAvailability = ConversationComposerAvailability.Editable,
             subscriptions = persistentListOf(),
             areSubscriptionsLoaded = true,
-            defaultSmsSubscriptionId = ParticipantData.DEFAULT_SELF_SUB_ID,
+            defaultSmsSubscriptionId = SubId(ParticipantData.DEFAULT_SELF_SUB_ID),
         )
         val singleUiState = mapper.map(
             audioRecording = ConversationAudioRecordingUiState(),
@@ -543,7 +544,7 @@ internal class ConversationComposerUiStateMapperImplTest {
                 ),
             ),
             areSubscriptionsLoaded = true,
-            defaultSmsSubscriptionId = FIRST_SUB_ID,
+            defaultSmsSubscriptionId = SubId(FIRST_SUB_ID),
         )
 
         assertFalse(emptyUiState.simSelector.isAvailable)
@@ -572,7 +573,7 @@ internal class ConversationComposerUiStateMapperImplTest {
             composerAvailability = ConversationComposerAvailability.Editable,
             subscriptions = persistentListOf(),
             areSubscriptionsLoaded = true,
-            defaultSmsSubscriptionId = ParticipantData.DEFAULT_SELF_SUB_ID,
+            defaultSmsSubscriptionId = SubId(ParticipantData.DEFAULT_SELF_SUB_ID),
         )
 
         assertEquals(attachments, uiState.attachments)
@@ -601,7 +602,7 @@ internal class ConversationComposerUiStateMapperImplTest {
     ): Subscription {
         return Subscription(
             selfParticipantId = ParticipantId(selfParticipantId),
-            subId = subId,
+            subId = SubId(subId),
             label = ConversationSubscriptionLabel.Slot(slotId = slotId),
             displayDestination = null,
             displaySlotId = slotId,

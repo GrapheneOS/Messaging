@@ -6,6 +6,7 @@ import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.data.conversation.model.send.ConversationSendData
 import com.android.messaging.data.conversation.repository.ConversationsRepository
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
 import com.android.messaging.datamodel.action.InsertNewMessageAction
 import com.android.messaging.datamodel.data.MessageData
@@ -145,7 +146,7 @@ internal class SendConversationDraftImpl @Inject constructor(
         conversationId: ConversationId,
         draft: ConversationDraft,
         sendData: ConversationSendData,
-        selfSubId: Int,
+        selfSubId: SubId,
         shouldSendAsMms: Boolean,
     ) {
         validateKnownRecipients(
@@ -199,14 +200,15 @@ internal class SendConversationDraftImpl @Inject constructor(
         }
     }
 
-    private fun resolveSelfSubId(sendData: ConversationSendData): Int {
-        return sendData.selfParticipant?.subId ?: ParticipantData.DEFAULT_SELF_SUB_ID
+    private fun resolveSelfSubId(sendData: ConversationSendData): SubId {
+        val subId = sendData.selfParticipant?.subId ?: ParticipantData.DEFAULT_SELF_SUB_ID
+        return SubId(subId)
     }
 
     private fun validateGroupMmsSelfNumber(
         conversationId: ConversationId,
         sendData: ConversationSendData,
-        selfSubId: Int,
+        selfSubId: SubId,
         shouldSendAsMms: Boolean,
     ) {
         if (!sendData.metadata.isGroupConversation || !shouldSendAsMms) {
@@ -214,7 +216,7 @@ internal class SendConversationDraftImpl @Inject constructor(
         }
 
         try {
-            val selfPhoneNumber = PhoneUtils.get(selfSubId).getSelfRawNumber(true)
+            val selfPhoneNumber = PhoneUtils.get(selfSubId.value).getSelfRawNumber(true)
             if (selfPhoneNumber.isNullOrBlank()) {
                 throw MissingSelfPhoneNumberForGroupMmsException(
                     conversationId = conversationId,
@@ -249,7 +251,7 @@ internal class SendConversationDraftImpl @Inject constructor(
     private fun validateMappedMessageForSend(
         conversationId: ConversationId,
         message: MessageData,
-        selfSubId: Int,
+        selfSubId: SubId,
         ignoreMessageSizeLimit: Boolean,
     ) {
         if (ignoreMessageSizeLimit) {
@@ -271,10 +273,11 @@ internal class SendConversationDraftImpl @Inject constructor(
         }
     }
 
-    private fun resolveMaxMessageSize(selfSubId: Int): Int {
+    private fun resolveMaxMessageSize(selfSubId: SubId): Int {
+        val subId = selfSubId.value
         return when {
-            selfSubId <= ParticipantData.DEFAULT_SELF_SUB_ID -> MmsConfig.getMaxMaxMessageSize()
-            else -> MmsConfig.get(selfSubId).maxMessageSize
+            subId <= ParticipantData.DEFAULT_SELF_SUB_ID -> MmsConfig.getMaxMaxMessageSize()
+            else -> MmsConfig.get(subId).maxMessageSize
         }
     }
 

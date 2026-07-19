@@ -11,6 +11,7 @@ import android.net.Uri
 import android.telephony.SubscriptionManager
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
 import com.android.messaging.datamodel.MessagingContentProvider
@@ -45,9 +46,9 @@ import kotlinx.coroutines.flow.map
 internal interface SubscriptionsRepository {
     fun observeActiveSubscriptions(): Flow<ImmutableList<Subscription>>
 
-    fun observeDefaultSmsSubscriptionId(): Flow<Int>
+    fun observeDefaultSmsSubscriptionId(): Flow<SubId>
 
-    fun getDefaultSmsSubscriptionId(): Int
+    fun getDefaultSmsSubscriptionId(): SubId
 
     fun resolveAttachmentLimit(): Int
 
@@ -88,7 +89,7 @@ internal class SubscriptionsRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun observeDefaultSmsSubscriptionId(): Flow<Int> {
+    override fun observeDefaultSmsSubscriptionId(): Flow<SubId> {
         return callbackFlow {
             val receiver = object : BroadcastReceiver() {
                 override fun onReceive(context: Context, intent: Intent) {
@@ -126,8 +127,8 @@ internal class SubscriptionsRepositoryImpl @Inject constructor(
             .flowOn(defaultDispatcher)
     }
 
-    override fun getDefaultSmsSubscriptionId(): Int {
-        return PhoneUtils.getDefault().defaultSmsSubscriptionId
+    override fun getDefaultSmsSubscriptionId(): SubId {
+        return SubId(PhoneUtils.getDefault().defaultSmsSubscriptionId)
     }
 
     override fun resolveAttachmentLimit(): Int {
@@ -220,7 +221,7 @@ internal class SubscriptionsRepositoryImpl @Inject constructor(
     ): Subscription {
         return Subscription(
             selfParticipantId = ParticipantId("$FAKE_SIM_ID_PREFIX$slotId"),
-            subId = ParticipantData.DEFAULT_SELF_SUB_ID,
+            subId = SubId(ParticipantData.DEFAULT_SELF_SUB_ID),
             label = ConversationSubscriptionLabel.DebugFake(slotId = slotId),
             displayDestination = null,
             displaySlotId = slotId,
@@ -329,7 +330,7 @@ internal class SubscriptionsRepositoryImpl @Inject constructor(
 
         return Subscription(
             selfParticipantId = ParticipantId(id),
-            subId = subId,
+            subId = SubId(subId),
             label = when {
                 subscriptionName.isNullOrBlank() -> ConversationSubscriptionLabel.Slot(
                     slotId = slotId,

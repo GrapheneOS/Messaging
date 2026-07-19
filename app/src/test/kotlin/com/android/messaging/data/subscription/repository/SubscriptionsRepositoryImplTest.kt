@@ -9,6 +9,7 @@ import android.telephony.SubscriptionManager
 import app.cash.turbine.test
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
 import com.android.messaging.datamodel.MessagingContentProvider
@@ -97,7 +98,7 @@ class SubscriptionsRepositoryImplTest {
                     listOf(
                         Subscription(
                             selfParticipantId = ParticipantId("self-slot-1"),
-                            subId = 1,
+                            subId = SubId(1),
                             label = ConversationSubscriptionLabel.Named(name = "Carrier A"),
                             displayDestination = "+1 555 0100",
                             displaySlotId = 1,
@@ -105,7 +106,7 @@ class SubscriptionsRepositoryImplTest {
                         ),
                         Subscription(
                             selfParticipantId = ParticipantId("self-slot-2"),
-                            subId = 2,
+                            subId = SubId(2),
                             label = ConversationSubscriptionLabel.Named(name = "Carrier B"),
                             displayDestination = "+1 555 0200",
                             displaySlotId = 2,
@@ -159,7 +160,7 @@ class SubscriptionsRepositoryImplTest {
                     listOf(
                         Subscription(
                             selfParticipantId = ParticipantId("active"),
-                            subId = 1,
+                            subId = SubId(1),
                             label = ConversationSubscriptionLabel.Named(name = "Active"),
                             displayDestination = "+1 555 0002",
                             displaySlotId = 1,
