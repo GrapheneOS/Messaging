@@ -2,6 +2,7 @@ package com.android.messaging.ui.appsettings.subscription.mapper.subscriptionset
 
 import com.android.messaging.R
 import com.android.messaging.data.subscription.model.SubId
+import com.android.messaging.testutil.assertThat
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -34,7 +35,7 @@ internal class SubscriptionSettingsUiStateMapperSelectionTest :
 
         assertEquals(false, uiState.isMultiSim)
         assertEquals(1, uiState.subscriptions.size)
-        assertEquals(SubId(5), uiState.subscriptions.first().subId)
+        assertThat(uiState.subscriptions.first().subId).isEqualTo(SubId(5))
         assertEquals(
             context.getString(R.string.advanced_settings),
             uiState.subscriptions.first().displayName,
@@ -52,7 +53,7 @@ internal class SubscriptionSettingsUiStateMapperSelectionTest :
         )
 
         assertEquals(1, uiState.subscriptions.size)
-        assertEquals(SubId(3), uiState.subscriptions.first().subId)
+        assertThat(uiState.subscriptions.first().subId).isEqualTo(SubId(3))
     }
 
     @Test
@@ -90,7 +91,7 @@ internal class SubscriptionSettingsUiStateMapperSelectionTest :
 
         assertEquals(true, uiState.isMultiSim)
         assertEquals(1, uiState.subscriptions.size)
-        assertEquals(SubId(9), uiState.subscriptions.first().subId)
+        assertThat(uiState.subscriptions.first().subId).isEqualTo(SubId(9))
         assertEquals(
             context.getString(R.string.advanced_settings),
             uiState.subscriptions.first().displayName,
@@ -109,7 +110,7 @@ internal class SubscriptionSettingsUiStateMapperSelectionTest :
 
         assertEquals(true, uiState.isMultiSim)
         assertEquals(1, uiState.subscriptions.size)
-        assertEquals(SubId(3), uiState.subscriptions.first().subId)
+        assertThat(uiState.subscriptions.first().subId).isEqualTo(SubId(3))
         assertEquals(
             context.getString(R.string.advanced_settings),
             uiState.subscriptions.first().displayName,

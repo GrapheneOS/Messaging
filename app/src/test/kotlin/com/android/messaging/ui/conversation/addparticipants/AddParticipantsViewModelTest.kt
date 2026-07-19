@@ -10,6 +10,7 @@ import com.android.messaging.data.conversation.model.recipient.ConversationRecip
 import com.android.messaging.data.conversation.repository.ConversationParticipantsRepository
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsEffect
 import com.android.messaging.ui.conversation.recipientpicker.delegate.ConversationResolutionDelegate
 import com.android.messaging.ui.conversation.recipientpicker.delegate.SelectedRecipientsDelegate
@@ -204,11 +205,10 @@ class AddParticipantsViewModelTest {
                     ),
                 )
 
-                assertEquals(
+                assertThat(awaitItem()).isEqualTo(
                     AddParticipantsEffect.NavigateToConversation(
                         conversationId = ConversationId("conversation-2"),
-                    ),
-                    awaitItem(),
+                    )
                 )
                 verify(exactly = 1) {
                     selectedRecipientsDelegate.clear()

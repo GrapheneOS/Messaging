@@ -13,6 +13,7 @@ import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.testutil.TEST_CALL_ACTION_PHONE_NUMBER
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.testutil.createParticipantsCursor
 import com.android.messaging.testutil.participantRow
 import io.mockk.verify
@@ -109,7 +110,7 @@ internal class ConversationsRepositoryMetadataTest : BaseConversationsRepository
                 val metadata = awaitItem()
 
                 assertEquals("Carol, Dave, Erin", metadata?.conversationName)
-                assertEquals(ParticipantId("self-2"), metadata?.selfParticipantId)
+                assertThat(metadata?.selfParticipantId).isEqualTo(ParticipantId("self-2"))
                 assertEquals(true, metadata?.isGroupConversation)
                 assertEquals(3, metadata?.participantCount)
                 assertEquals(false, metadata?.isArchived)

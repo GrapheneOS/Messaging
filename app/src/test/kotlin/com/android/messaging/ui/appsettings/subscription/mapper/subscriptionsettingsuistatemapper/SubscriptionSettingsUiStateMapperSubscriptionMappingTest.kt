@@ -2,6 +2,7 @@ package com.android.messaging.ui.appsettings.subscription.mapper.subscriptionset
 
 import com.android.messaging.R
 import com.android.messaging.data.subscription.model.SubId
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionUiState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -37,7 +38,7 @@ internal class SubscriptionSettingsUiStateMapperSubscriptionMappingTest :
             ),
         )
 
-        assertEquals(
+        assertThat(uiState.subscriptions.first()).isEqualTo(
             SubscriptionUiState(
                 subId = SubId(7),
                 displayName = context.getString(R.string.advanced_settings),
@@ -52,8 +53,7 @@ internal class SubscriptionSettingsUiStateMapperSubscriptionMappingTest :
                 deliveryReportsEnabled = false,
                 isWirelessAlertsSupported = true,
                 isDefaultSmsApp = true,
-            ),
-            uiState.subscriptions.first(),
+            )
         )
     }
 

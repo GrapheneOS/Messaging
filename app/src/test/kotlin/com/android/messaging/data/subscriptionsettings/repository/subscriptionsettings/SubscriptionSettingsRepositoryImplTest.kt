@@ -16,6 +16,7 @@ import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.sms.MmsConfig
 import com.android.messaging.testutil.MainDispatcherRule
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.testutil.createParticipantsCursor
 import com.android.messaging.testutil.participantRow
 import com.android.messaging.ui.UIIntents
@@ -172,9 +173,8 @@ internal class SubscriptionSettingsRepositoryImplTest {
             assertTrue(result.isDefaultSmsApp)
             assertEquals(1, result.activeSubscriptionCount)
             assertTrue(result.isCellBroadcastAppEnabled)
-            assertEquals(
+            assertThat(result.defaultSelfSubscription.subId).isEqualTo(
                 SubId(ParticipantData.DEFAULT_SELF_SUB_ID),
-                result.defaultSelfSubscription.subId
             )
             assertEquals("+15550100", result.defaultSelfSubscription.savedPhoneNumber)
             assertEquals("+15550200", result.defaultSelfSubscription.defaultPhoneNumber)
@@ -258,7 +258,7 @@ internal class SubscriptionSettingsRepositoryImplTest {
                 selectionArgsSlot.captured.toList(),
             )
             assertEquals(1, result.nonDefaultActiveSelfSubscriptions.size)
-            assertEquals(SubId(7), result.nonDefaultActiveSelfSubscriptions.single().subId)
+            assertThat(result.nonDefaultActiveSelfSubscriptions.single().subId).isEqualTo(SubId(7))
             assertEquals(
                 "Carrier B",
                 result.nonDefaultActiveSelfSubscriptions.single().subscriptionName,

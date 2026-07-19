@@ -18,6 +18,7 @@ import com.android.messaging.debug.DebugSimEmulationMode
 import com.android.messaging.debug.DebugSimEmulationSource
 import com.android.messaging.sms.MmsConfig
 import com.android.messaging.testutil.MainDispatcherRule
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.testutil.createParticipantsCursor
 import com.android.messaging.testutil.participantRow
 import io.mockk.every
@@ -233,7 +234,7 @@ class SubscriptionsRepositoryImplTest {
             repository.observeActiveSubscriptions().test {
                 val items = awaitItem()
                 assertEquals(1, items.size)
-                assertEquals(ParticipantId("real"), items.single().selfParticipantId)
+                assertThat(items.single().selfParticipantId).isEqualTo(ParticipantId("real"))
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -264,7 +265,7 @@ class SubscriptionsRepositoryImplTest {
             repository.observeActiveSubscriptions().test {
                 val items = awaitItem()
                 assertEquals(1, items.size)
-                assertEquals(ParticipantId("real"), items.single().selfParticipantId)
+                assertThat(items.single().selfParticipantId).isEqualTo(ParticipantId("real"))
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -345,7 +346,7 @@ class SubscriptionsRepositoryImplTest {
                 val items = awaitItem()
                 assertEquals(2, items.size)
                 val bySlot = items.associateBy { it.displaySlotId }
-                assertEquals(ParticipantId("real"), bySlot[2]?.selfParticipantId)
+                assertThat(bySlot[2]?.selfParticipantId).isEqualTo(ParticipantId("real"))
                 assertTrue(
                     bySlot[1]?.selfParticipantId?.value.orEmpty().startsWith("debug_sim_emulated_"),
                 )
@@ -380,7 +381,7 @@ class SubscriptionsRepositoryImplTest {
                 val items = awaitItem()
                 assertEquals(2, items.size)
                 val bySlot = items.associateBy { it.displaySlotId }
-                assertEquals(ParticipantId("real"), bySlot[1]?.selfParticipantId)
+                assertThat(bySlot[1]?.selfParticipantId).isEqualTo(ParticipantId("real"))
                 assertTrue(
                     bySlot[2]?.selfParticipantId?.value.orEmpty().startsWith("debug_sim_emulated_"),
                 )

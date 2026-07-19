@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversationlist.delegate
 
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListItem
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversationlist.conversationItem
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
@@ -166,7 +167,7 @@ internal class ConversationListOptimisticReducerTest {
             ),
         )
 
-        assertEquals(archivedOverride, pruned.archiveById[ConversationId("a")])
+        assertThat(pruned.archiveById[ConversationId("a")]).isEqualTo(archivedOverride)
     }
 
     @Test
@@ -191,24 +192,22 @@ internal class ConversationListOptimisticReducerTest {
             items = persistentListOf(cachedItem),
             overrides = overrides,
         )
-        assertEquals(
+        assertThat(overrides.archiveById[ConversationId("a")]).isEqualTo(
             ConversationArchiveOverride.Restoring(
                 item = cachedItem,
                 awaitingRemoval = true,
-            ),
-            overrides.archiveById[ConversationId("a")],
+            )
         )
 
         overrides = reducer.prune(
             items = persistentListOf(),
             overrides = overrides,
         )
-        assertEquals(
+        assertThat(overrides.archiveById[ConversationId("a")]).isEqualTo(
             ConversationArchiveOverride.Restoring(
                 item = cachedItem,
                 awaitingRemoval = false,
-            ),
-            overrides.archiveById[ConversationId("a")],
+            )
         )
         assertTrue(overrides.readById.getValue(ConversationId("a")))
         assertTrue(overrides.pinnedById.getValue(ConversationId("a")))

@@ -5,6 +5,7 @@ import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationpicker.model.TargetConversation
 import com.android.messaging.data.phone.formatter.PhoneNumberFormatter
 import com.android.messaging.domain.conversation.usecase.avatar.ResolveAvatarUri
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversationpicker.model.TargetUiState
 import io.mockk.every
 import io.mockk.mockk
@@ -63,7 +64,7 @@ internal class TargetUiStateMapperImplTest {
         ).single()
 
         val conversation = result as TargetUiState.Conversation
-        assertEquals(ConversationId("1"), conversation.conversationId)
+        assertThat(conversation.conversationId).isEqualTo(ConversationId("1"))
         assertEquals("Name", conversation.displayName)
         assertEquals("canonical:+15550100", conversation.normalizedDestination)
         assertEquals("formatted:+15550100", conversation.details)
