@@ -1,6 +1,7 @@
 package com.android.messaging.ui.appsettings.subscription.mapper.subscriptionsettingsuistatemapper
 
 import com.android.messaging.R
+import com.android.messaging.data.subscription.model.SubId
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -33,7 +34,7 @@ internal class SubscriptionSettingsUiStateMapperSelectionTest :
 
         assertEquals(false, uiState.isMultiSim)
         assertEquals(1, uiState.subscriptions.size)
-        assertEquals(5, uiState.subscriptions.first().subId)
+        assertEquals(SubId(5), uiState.subscriptions.first().subId)
         assertEquals(
             context.getString(R.string.advanced_settings),
             uiState.subscriptions.first().displayName,
@@ -51,7 +52,7 @@ internal class SubscriptionSettingsUiStateMapperSelectionTest :
         )
 
         assertEquals(1, uiState.subscriptions.size)
-        assertEquals(3, uiState.subscriptions.first().subId)
+        assertEquals(SubId(3), uiState.subscriptions.first().subId)
     }
 
     @Test
@@ -67,7 +68,7 @@ internal class SubscriptionSettingsUiStateMapperSelectionTest :
         )
 
         assertEquals(true, uiState.isMultiSim)
-        assertEquals(listOf(1, 2), uiState.subscriptions.map { it.subId })
+        assertEquals(listOf(SubId(1), SubId(2)), uiState.subscriptions.map { it.subId })
         assertEquals(
             context.getString(R.string.sim_specific_settings, "Verizon"),
             uiState.subscriptions[0].displayName,
@@ -89,7 +90,7 @@ internal class SubscriptionSettingsUiStateMapperSelectionTest :
 
         assertEquals(true, uiState.isMultiSim)
         assertEquals(1, uiState.subscriptions.size)
-        assertEquals(9, uiState.subscriptions.first().subId)
+        assertEquals(SubId(9), uiState.subscriptions.first().subId)
         assertEquals(
             context.getString(R.string.advanced_settings),
             uiState.subscriptions.first().displayName,
@@ -108,7 +109,7 @@ internal class SubscriptionSettingsUiStateMapperSelectionTest :
 
         assertEquals(true, uiState.isMultiSim)
         assertEquals(1, uiState.subscriptions.size)
-        assertEquals(3, uiState.subscriptions.first().subId)
+        assertEquals(SubId(3), uiState.subscriptions.first().subId)
         assertEquals(
             context.getString(R.string.advanced_settings),
             uiState.subscriptions.first().displayName,

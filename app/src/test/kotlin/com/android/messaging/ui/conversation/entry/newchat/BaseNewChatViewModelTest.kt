@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.entry.newchat
 import androidx.lifecycle.SavedStateHandle
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
 import com.android.messaging.datamodel.data.ParticipantData
@@ -63,7 +64,7 @@ internal abstract class BaseNewChatViewModelTest {
     ): SubscriptionsRepository {
         val mock = mockk<SubscriptionsRepository>()
         every { mock.observeActiveSubscriptions() } returns MutableStateFlow(subscriptions)
-        every { mock.getDefaultSmsSubscriptionId() } returns defaultSmsSubscriptionId
+        every { mock.getDefaultSmsSubscriptionId() } returns SubId(defaultSmsSubscriptionId)
         return mock
     }
 
@@ -133,7 +134,7 @@ internal abstract class BaseNewChatViewModelTest {
     ): Subscription {
         return Subscription(
             selfParticipantId = ParticipantId(selfParticipantId),
-            subId = subId,
+            subId = SubId(subId),
             label = ConversationSubscriptionLabel.Slot(slotId = slotId),
             displayDestination = null,
             displaySlotId = slotId,

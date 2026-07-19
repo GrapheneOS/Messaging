@@ -1,5 +1,6 @@
 package com.android.messaging.data.subscriptionsettings.model
 
+import com.android.messaging.data.subscription.model.SubId
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class SubscriptionSettingsData(
@@ -11,7 +12,7 @@ internal data class SubscriptionSettingsData(
 )
 
 internal data class PerSubscriptionData(
-    val subId: Int,
+    val subId: SubId,
     val subscriptionName: String?,
     val savedPhoneNumber: String,
     val defaultPhoneNumber: String,

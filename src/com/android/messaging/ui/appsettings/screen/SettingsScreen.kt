@@ -23,6 +23,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.ui.appsettings.general.ui.AppSettingsScreen
 import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
@@ -41,7 +42,7 @@ internal fun SettingsScreen(
     effectHandler: SettingsEffectHandler,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
-    intentSubId: Int = ParticipantData.DEFAULT_SELF_SUB_ID,
+    intentSubId: SubId = SubId(ParticipantData.DEFAULT_SELF_SUB_ID),
     intentSubTitle: String? = null,
     isTopLevelIntent: Boolean = false,
     screenModel: SettingsScreenModel = viewModel<SettingsViewModel>(),
@@ -237,7 +238,7 @@ private fun buildNavigateUp(
 }
 
 private fun resolveInitialRoute(
-    intentSubId: Int,
+    intentSubId: SubId,
     intentSubTitle: String?,
     isTopLevelIntent: Boolean,
     isMultiSim: Boolean?,
@@ -298,7 +299,7 @@ private fun SettingsNavHostSubscriptionSettingsPreview() {
     MessagingPreviewTheme {
         SettingsNavHost(
             effectiveRoute = SettingsNavRoute.SubscriptionSettings(
-                subId = 1,
+                subId = SubId(1),
                 title = "SIM 1",
             ),
             uiState = previewSettingsUiState(),
@@ -317,7 +318,7 @@ private fun previewSettingsUiState(): SettingsUiState {
         areSubscriptionsLoaded = true,
         subscriptionSettings = persistentListOf(
             SubscriptionUiState(
-                subId = 1,
+                subId = SubId(1),
                 displayName = "SIM 1",
                 displayDetail = "+31 6 1234 5678",
                 phoneNumber = "+31 6 1234 5678",
@@ -330,7 +331,7 @@ private fun previewSettingsUiState(): SettingsUiState {
                 isDefaultSmsApp = true,
             ),
             SubscriptionUiState(
-                subId = 2,
+                subId = SubId(2),
                 displayName = "Travel SIM",
                 displayDetail = "+372 5555 0101",
                 isDefaultSmsApp = true,

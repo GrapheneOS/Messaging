@@ -4,6 +4,7 @@ import android.app.role.RoleManager
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.ui.BugleComponentActivity
 import com.android.messaging.ui.UIIntents
@@ -50,7 +51,7 @@ class SettingsActivity : BugleComponentActivity() {
                 SettingsScreen(
                     effectHandler = effectHandler,
                     onNavigateBack = ::finish,
-                    intentSubId = subId,
+                    intentSubId = SubId(subId),
                     intentSubTitle = subTitle,
                     isTopLevelIntent = isTopLevel,
                 )

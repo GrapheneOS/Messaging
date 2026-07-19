@@ -2,6 +2,7 @@ package com.android.messaging.ui.appsettings.screen
 
 import android.os.Parcelable
 import androidx.compose.runtime.saveable.Saver
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.ui.appsettings.screen.model.SettingsNavRoute
 import kotlinx.parcelize.Parcelize
 
@@ -39,7 +40,7 @@ private fun SettingsNavRoute.toSavedState(): SettingsNavRouteSavedState {
 
         is SettingsNavRoute.SubscriptionSettings -> {
             SettingsNavRouteSavedState.SubscriptionSettings(
-                subId = subId,
+                subId = subId.value,
                 title = title,
             )
         }
@@ -58,7 +59,7 @@ private fun SettingsNavRouteSavedState.toRoute(): SettingsNavRoute {
 
         is SettingsNavRouteSavedState.SubscriptionSettings -> {
             SettingsNavRoute.SubscriptionSettings(
-                subId = subId,
+                subId = SubId(subId),
                 title = title,
             )
         }

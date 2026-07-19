@@ -1,8 +1,10 @@
 package com.android.messaging.ui.appsettings.screen.model
 
+import com.android.messaging.data.subscription.model.SubId
+
 internal sealed interface SettingsScreenEffect {
     data class OpenWirelessAlerts(
-        val subId: Int,
+        val subId: SubId,
     ) : SettingsScreenEffect
 
     data object OpenManageDefaultApps : SettingsScreenEffect

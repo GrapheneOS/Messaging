@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
@@ -146,7 +147,8 @@ internal class ConversationViewModelSimSelectionTest {
 
         every { subscriptionsRepository.observeActiveSubscriptions() } returns emptyFlow()
         every { subscriptionsRepository.observeDefaultSmsSubscriptionId() } returns emptyFlow()
-        every { subscriptionsRepository.getDefaultSmsSubscriptionId() } returns DEFAULT_SUB_ID
+        every { subscriptionsRepository.getDefaultSmsSubscriptionId() } returns
+            SubId(DEFAULT_SUB_ID)
         every {
             simSelectionRepository.setSelectedSelfId(
                 conversationId = any(),
@@ -245,7 +247,7 @@ internal class ConversationViewModelSimSelectionTest {
             ),
         )
         every { subscriptionsRepository.observeDefaultSmsSubscriptionId() } returns flowOf(
-            SECOND_SUB_ID,
+            SubId(SECOND_SUB_ID),
         )
 
         val viewModel = createViewModel()
@@ -263,7 +265,7 @@ internal class ConversationViewModelSimSelectionTest {
                 composerAvailability = any(),
                 subscriptions = any(),
                 areSubscriptionsLoaded = true,
-                defaultSmsSubscriptionId = SECOND_SUB_ID,
+                defaultSmsSubscriptionId = SubId(SECOND_SUB_ID),
             )
         }
 
@@ -274,7 +276,7 @@ internal class ConversationViewModelSimSelectionTest {
     fun composerState_afterDefaultSmsSubscriptionChange_remapsWithNewDefault() = runTest(
         context = mainDispatcherRule.testDispatcher,
     ) {
-        val defaultSmsSubscriptionIdFlow = MutableStateFlow(FIRST_SUB_ID)
+        val defaultSmsSubscriptionIdFlow = MutableStateFlow(SubId(FIRST_SUB_ID))
         every { subscriptionsRepository.observeActiveSubscriptions() } returns flowOf(
             persistentListOf(
                 firstSubscription(),
@@ -300,11 +302,11 @@ internal class ConversationViewModelSimSelectionTest {
                 composerAvailability = any(),
                 subscriptions = any(),
                 areSubscriptionsLoaded = true,
-                defaultSmsSubscriptionId = FIRST_SUB_ID,
+                defaultSmsSubscriptionId = SubId(FIRST_SUB_ID),
             )
         }
 
-        defaultSmsSubscriptionIdFlow.value = SECOND_SUB_ID
+        defaultSmsSubscriptionIdFlow.value = SubId(SECOND_SUB_ID)
         runCurrent()
 
         verify(atLeast = 1) {
@@ -315,7 +317,7 @@ internal class ConversationViewModelSimSelectionTest {
                 composerAvailability = any(),
                 subscriptions = any(),
                 areSubscriptionsLoaded = true,
-                defaultSmsSubscriptionId = SECOND_SUB_ID,
+                defaultSmsSubscriptionId = SubId(SECOND_SUB_ID),
             )
         }
 
@@ -351,7 +353,7 @@ internal class ConversationViewModelSimSelectionTest {
     private fun firstSubscription(): Subscription {
         return Subscription(
             selfParticipantId = ParticipantId(FIRST_SELF_PARTICIPANT_ID),
-            subId = FIRST_SUB_ID,
+            subId = SubId(FIRST_SUB_ID),
             label = ConversationSubscriptionLabel.Named(name = "SIM 1"),
             displayDestination = null,
             displaySlotId = 1,
@@ -362,7 +364,7 @@ internal class ConversationViewModelSimSelectionTest {
     private fun secondSubscription(): Subscription {
         return Subscription(
             selfParticipantId = ParticipantId(SECOND_SELF_PARTICIPANT_ID),
-            subId = SECOND_SUB_ID,
+            subId = SubId(SECOND_SUB_ID),
             label = ConversationSubscriptionLabel.Named(name = "SIM 2"),
             displayDestination = null,
             displaySlotId = 2,

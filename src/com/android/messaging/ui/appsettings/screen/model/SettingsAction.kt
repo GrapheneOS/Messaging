@@ -1,34 +1,36 @@
 package com.android.messaging.ui.appsettings.screen.model
 
+import com.android.messaging.data.subscription.model.SubId
+
 internal sealed interface SettingsAction {
 
     data class AutoRetrieveMmsChanged(
-        val subId: Int,
+        val subId: SubId,
         val enabled: Boolean,
     ) : SettingsAction
 
     data class AutoRetrieveMmsWhenRoamingChanged(
-        val subId: Int,
+        val subId: SubId,
         val enabled: Boolean,
     ) : SettingsAction
 
     data class DeliveryReportsChanged(
-        val subId: Int,
+        val subId: SubId,
         val enabled: Boolean,
     ) : SettingsAction
 
     data class GroupMmsChanged(
-        val subId: Int,
+        val subId: SubId,
         val enabled: Boolean,
     ) : SettingsAction
 
     data class PhoneNumberChanged(
-        val subId: Int,
+        val subId: SubId,
         val phoneNumber: String,
     ) : SettingsAction
 
     data class WirelessAlertsClicked(
-        val subId: Int,
+        val subId: SubId,
     ) : SettingsAction
 
     data class DumpMmsChanged(
