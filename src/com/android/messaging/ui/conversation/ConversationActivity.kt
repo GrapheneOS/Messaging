@@ -11,10 +11,10 @@ import androidx.compose.runtime.setValue
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.ui.BugleComponentActivity
+import com.android.messaging.ui.MainActivity
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryLaunchRequest
 import com.android.messaging.ui.conversation.navigation.ConversationNavGraph
-import com.android.messaging.ui.conversationlist.chats.ConversationListActivity
 import com.android.messaging.ui.core.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -118,7 +118,7 @@ internal class ConversationActivity : BugleComponentActivity() {
     private fun redirectToConversationList() {
         finish()
 
-        Intent(this, ConversationListActivity::class.java)
+        Intent(this, MainActivity::class.java)
             .apply {
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
             }

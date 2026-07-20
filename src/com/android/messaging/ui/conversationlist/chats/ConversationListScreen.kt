@@ -47,10 +47,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.common.components.PrimaryActionButton
@@ -82,7 +82,7 @@ private val FabBottomReserve = 72.dp
 internal fun ConversationListScreen(
     effectHandler: ConversationListEffectHandler,
     modifier: Modifier = Modifier,
-    screenModel: ConversationListScreenModel = viewModel<ConversationListViewModel>(),
+    screenModel: ConversationListScreenModel = hiltViewModel<ConversationListViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
 

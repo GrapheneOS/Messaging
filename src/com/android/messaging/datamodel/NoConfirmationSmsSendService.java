@@ -28,7 +28,7 @@ import com.android.messaging.datamodel.action.InsertNewMessageAction;
 import com.android.messaging.datamodel.data.MessageData;
 import com.android.messaging.datamodel.data.ParticipantData;
 import com.android.messaging.ui.UIIntents;
-import com.android.messaging.ui.conversationlist.chats.ConversationListActivity;
+import com.android.messaging.ui.MainActivity;
 import com.android.messaging.util.LogUtil;
 import com.android.messaging.util.UriUtil;
 
@@ -93,7 +93,7 @@ public class NoConfirmationSmsSendService extends IntentService {
         }
 
         if (extras.getBoolean("showUI", false)) {
-            startActivity(new Intent(this, ConversationListActivity.class));
+            startActivity(new Intent(this, MainActivity.class));
         } else {
             if (TextUtils.isEmpty(message)) {
                 if (LogUtil.isLoggable(TAG, LogUtil.VERBOSE)) {
