@@ -20,7 +20,7 @@ internal interface NavigationReducer {
 
     fun reset(
         backStack: MutableList<NavKey>,
-        destination: NavKey,
+        destinations: List<NavKey>,
     )
 }
 
@@ -61,13 +61,13 @@ internal class NavigationReducerImpl : NavigationReducer {
 
     override fun reset(
         backStack: MutableList<NavKey>,
-        destination: NavKey,
+        destinations: List<NavKey>,
     ) {
-        if (backStack.size == 1 && backStack.firstOrNull() == destination) {
+        if (destinations.isEmpty() || backStack == destinations) {
             return
         }
 
         backStack.clear()
-        backStack.add(destination)
+        backStack.addAll(destinations)
     }
 }

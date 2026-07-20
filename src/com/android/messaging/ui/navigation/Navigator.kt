@@ -13,10 +13,10 @@ internal class Navigator(
     private val onFinish: () -> Unit,
 ) {
 
-    fun reset(destination: NavKey) {
+    fun reset(destinations: List<NavKey>) {
         navigationReducer.reset(
             backStack = backStack,
-            destination = destination,
+            destinations = destinations,
         )
     }
 

@@ -2,20 +2,19 @@ package com.android.messaging.ui.conversation
 
 import android.content.Intent
 import android.os.Bundle
-import android.text.TextUtils
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.android.messaging.data.conversation.model.ConversationId
-import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.ui.BugleComponentActivity
 import com.android.messaging.ui.MainActivity
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryLaunchRequest
-import com.android.messaging.ui.conversation.navigation.ConversationNavGraph
+import com.android.messaging.ui.conversation.navigation.conversationLaunchBackStack
 import com.android.messaging.ui.core.AppTheme
+import com.android.messaging.ui.host.AppNavGraph
+import com.android.messaging.ui.host.toConversationLaunchRequest
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -41,9 +40,13 @@ internal class ConversationActivity : BugleComponentActivity() {
 
         setContent {
             AppTheme {
-                ConversationNavGraph(
+                AppNavGraph(
+                    startDestinations = conversationLaunchBackStack(
+                        rootDestinations = emptyList(),
+                        launchRequest = launchRequest,
+                    ),
+                    conversationRootDestinations = emptyList(),
                     launchRequest = launchRequest,
-                    onConversationDetailsClick = ::launchConversationDetails,
                     onFinish = ::finishAfterTransition,
                 )
             }
@@ -63,15 +66,6 @@ internal class ConversationActivity : BugleComponentActivity() {
         outState.putInt(LAUNCH_GENERATION_STATE_KEY, launchGeneration)
     }
 
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if (resultCode == FINISH_RESULT_CODE) {
-            finish()
-        }
-    }
-
     private fun applyIntent(
         intent: Intent,
         launchGeneration: Int,
@@ -88,29 +82,10 @@ internal class ConversationActivity : BugleComponentActivity() {
             return true
         }
 
-        launchRequest = ConversationEntryLaunchRequest(
+        launchRequest = intent.toConversationLaunchRequest(
             launchGeneration = launchGeneration,
-            conversationId = intent
-                .getStringExtra(UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID)
-                .let(ConversationId::fromOrNull),
-            draftData = intent.getParcelableExtra(
-                UIIntents.UI_INTENT_EXTRA_DRAFT_DATA,
-                MessageData::class.java,
-            ),
-            startupAttachmentUri = intent
-                .getStringExtra(UIIntents.UI_INTENT_EXTRA_ATTACHMENT_URI)
-                ?.takeUnless(TextUtils::isEmpty),
-            startupAttachmentType = intent
-                .getStringExtra(UIIntents.UI_INTENT_EXTRA_ATTACHMENT_TYPE)
-                ?.takeUnless(TextUtils::isEmpty),
-            messagePosition = intent
-                .getIntExtra(UIIntents.UI_INTENT_EXTRA_MESSAGE_POSITION, -1)
-                .takeIf { position -> position >= 0 },
             isLaunchedFromBubble = isLaunchedFromBubble,
         )
-
-        intent.removeExtra(UIIntents.UI_INTENT_EXTRA_DRAFT_DATA)
-        intent.removeExtra(UIIntents.UI_INTENT_EXTRA_MESSAGE_POSITION)
 
         return false
     }
@@ -123,13 +98,6 @@ internal class ConversationActivity : BugleComponentActivity() {
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
             .let(::startActivity)
-    }
-
-    private fun launchConversationDetails(conversationId: ConversationId) {
-        UIIntents.get().launchPeopleAndOptionsActivity(
-            this,
-            conversationId.value,
-        )
     }
 
     companion object {

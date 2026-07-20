@@ -75,7 +75,9 @@
             android:name=".ui.MainActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="false"
+            android:launchMode="singleTop"
             android:screenOrientation="user"
+            android:windowSoftInputMode="stateHidden|adjustResize"
             android:theme="@style/Theme.Compose" />
 
         <activity-alias
