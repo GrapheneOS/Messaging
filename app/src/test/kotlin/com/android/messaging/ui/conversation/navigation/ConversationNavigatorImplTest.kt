@@ -5,23 +5,22 @@ import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.testutil.assertThat
+import com.android.messaging.ui.navigation.NavigationReducerImpl
+import com.android.messaging.ui.navigation.NavigatorImpl
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class ConversationNavigationReducerImplTest {
+class ConversationNavigatorImplTest {
 
-    private val reducer: ConversationNavigationReducer = ConversationNavigationReducerImpl()
+    private var didFinish = false
 
     @Test
     fun navigateToConversation_replacesNewChatEntryFlowWithConversation() {
         val backStack = mutableListOf<NavKey>(NewChatNavKey)
 
-        reducer.navigateToConversation(
-            backStack = backStack,
-            conversationId = CONVERSATION_ID,
-        )
+        navigator(backStack = backStack).navigateToConversation(conversationId = CONVERSATION_ID)
 
         assertEquals(
             listOf(
@@ -38,10 +37,7 @@ class ConversationNavigationReducerImplTest {
             RecipientPickerNavKey(mode = RecipientPickerMode.CREATE_GROUP),
         )
 
-        reducer.navigateToConversation(
-            backStack = backStack,
-            conversationId = CONVERSATION_ID,
-        )
+        navigator(backStack = backStack).navigateToConversation(conversationId = CONVERSATION_ID)
 
         assertEquals(
             listOf(
@@ -57,8 +53,7 @@ class ConversationNavigationReducerImplTest {
             ConversationNavKey(conversationId = CONVERSATION_ID),
         )
 
-        reducer.navigateToConversation(
-            backStack = backStack,
+        navigator(backStack = backStack).navigateToConversation(
             conversationId = ConversationId("conversation-2"),
         )
 
@@ -78,8 +73,7 @@ class ConversationNavigationReducerImplTest {
             RecipientPickerNavKey(mode = RecipientPickerMode.ADD_PARTICIPANTS),
         )
 
-        reducer.navigateToRecipientPicker(
-            backStack = backStack,
+        navigator(backStack = backStack).navigateToRecipientPicker(
             mode = RecipientPickerMode.ADD_PARTICIPANTS,
         )
 
@@ -98,8 +92,7 @@ class ConversationNavigationReducerImplTest {
             ConversationNavKey(conversationId = CONVERSATION_ID),
         )
 
-        reducer.navigateToAddParticipants(
-            backStack = backStack,
+        navigator(backStack = backStack).navigateToAddParticipants(
             conversationId = CONVERSATION_ID,
         )
 
@@ -119,8 +112,7 @@ class ConversationNavigationReducerImplTest {
             AddParticipantsNavKey(conversationId = CONVERSATION_ID),
         )
 
-        reducer.navigateToAddParticipants(
-            backStack = backStack,
+        navigator(backStack = backStack).navigateToAddParticipants(
             conversationId = CONVERSATION_ID,
         )
 
@@ -134,25 +126,25 @@ class ConversationNavigationReducerImplTest {
     }
 
     @Test
-    fun popBackStack_returnsFalseWhenBackStackHasSingleEntry() {
+    fun back_finishesWhenBackStackHasSingleEntry() {
         val backStack = mutableListOf<NavKey>(NewChatNavKey)
 
-        val wasPopped = reducer.popBackStack(backStack = backStack)
+        navigator(backStack = backStack).back()
 
-        assertFalse(wasPopped)
+        assertTrue(didFinish)
         assertEquals(listOf(NewChatNavKey), backStack)
     }
 
     @Test
-    fun popBackStack_removesLastEntryWhenBackStackHasMultipleEntries() {
+    fun back_removesLastEntryWhenBackStackHasMultipleEntries() {
         val backStack = mutableListOf(
             NewChatNavKey,
             ConversationNavKey(conversationId = CONVERSATION_ID),
         )
 
-        val wasPopped = reducer.popBackStack(backStack = backStack)
+        navigator(backStack = backStack).back()
 
-        assertTrue(wasPopped)
+        assertFalse(didFinish)
         assertEquals(
             listOf(NewChatNavKey),
             backStack,
@@ -166,8 +158,7 @@ class ConversationNavigationReducerImplTest {
             AddParticipantsNavKey(conversationId = CONVERSATION_ID),
         )
 
-        reducer.replaceCurrentConversation(
-            backStack = backStack,
+        navigator(backStack = backStack).replaceCurrentConversation(
             conversationId = ConversationId("conversation-2"),
         )
 
@@ -186,8 +177,7 @@ class ConversationNavigationReducerImplTest {
             AddParticipantsNavKey(conversationId = CONVERSATION_ID),
         )
 
-        reducer.replaceCurrentConversation(
-            backStack = backStack,
+        navigator(backStack = backStack).replaceCurrentConversation(
             conversationId = ConversationId("conversation-2"),
         )
 
@@ -201,58 +191,12 @@ class ConversationNavigationReducerImplTest {
     }
 
     @Test
-    fun resetBackStack_keepsMatchingDestinationsUntouched() {
-        val backStack = mutableListOf<NavKey>(NewChatNavKey)
-
-        reducer.resetBackStack(
-            backStack = backStack,
-            destinations = listOf(NewChatNavKey),
-        )
-
-        assertEquals(listOf(NewChatNavKey), backStack)
-    }
-
-    @Test
-    fun resetBackStack_replacesExistingEntriesWithDestinations() {
-        val backStack = mutableListOf(
-            NewChatNavKey,
-            ConversationNavKey(conversationId = CONVERSATION_ID),
-        )
-
-        reducer.resetBackStack(
-            backStack = backStack,
-            destinations = listOf(
-                ConversationNavKey(conversationId = ConversationId("conversation-2")),
-            ),
-        )
-
-        assertEquals(
-            listOf(
-                ConversationNavKey(conversationId = ConversationId("conversation-2")),
-            ),
-            backStack,
-        )
-    }
-
-    @Test
-    fun resetBackStack_keepsBackStackWhenDestinationsAreEmpty() {
-        val backStack = mutableListOf<NavKey>(NewChatNavKey)
-
-        reducer.resetBackStack(
-            backStack = backStack,
-            destinations = emptyList(),
-        )
-
-        assertEquals(listOf(NewChatNavKey), backStack)
-    }
-
-    @Test
     fun navigateToNewChat_pushesNewChatDestination() {
         val backStack = mutableListOf<NavKey>(
             ConversationNavKey(conversationId = CONVERSATION_ID),
         )
 
-        reducer.navigateToNewChat(backStack = backStack)
+        navigator(backStack = backStack).navigateToNewChat()
 
         assertEquals(
             listOf(
@@ -269,8 +213,7 @@ class ConversationNavigationReducerImplTest {
             ConversationNavKey(conversationId = ConversationId("c")),
         )
 
-        reducer.navigateToMessageDetails(
-            backStack = backStack,
+        navigator(backStack = backStack).navigateToMessageDetails(
             conversationId = ConversationId("c"),
             messageId = MessageId("m"),
         )
@@ -294,12 +237,21 @@ class ConversationNavigationReducerImplTest {
             ),
         )
 
-        reducer.navigateToMessageDetails(
-            backStack = backStack,
+        navigator(backStack = backStack).navigateToMessageDetails(
             conversationId = ConversationId("c"),
             messageId = MessageId("m"),
         )
 
         assertEquals(2, backStack.size)
+    }
+
+    private fun navigator(backStack: MutableList<NavKey>): ConversationNavigator {
+        return ConversationNavigatorImpl(
+            navigator = NavigatorImpl(
+                backStack = backStack,
+                navigationReducer = NavigationReducerImpl(),
+                onFinish = { didFinish = true },
+            ),
+        )
     }
 }

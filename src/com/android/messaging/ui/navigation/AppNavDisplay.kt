@@ -3,6 +3,7 @@ package com.android.messaging.ui.navigation
 import androidx.compose.foundation.background
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavEntry
@@ -18,12 +19,16 @@ internal fun AppNavDisplay(
     entryProvider: (NavKey) -> NavEntry<NavKey>,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    sceneStrategy: SceneStrategy<NavKey> = SinglePaneSceneStrategy(),
+    sceneStrategy: SceneStrategy<NavKey> = remember { SinglePaneSceneStrategy() },
 ) {
-    val entryDecorators = listOf(
-        rememberSaveableStateHolderNavEntryDecorator(),
-        rememberViewModelStoreNavEntryDecorator<NavKey>(),
-    )
+    val saveableStateHolderDecorator = rememberSaveableStateHolderNavEntryDecorator<NavKey>()
+    val viewModelStoreDecorator = rememberViewModelStoreNavEntryDecorator<NavKey>()
+    val entryDecorators = remember(saveableStateHolderDecorator, viewModelStoreDecorator) {
+        listOf(saveableStateHolderDecorator, viewModelStoreDecorator)
+    }
+    val sceneStrategies = remember(sceneStrategy) {
+        listOf(sceneStrategy)
+    }
 
     NavDisplay(
         backStack = backStack,
@@ -32,7 +37,7 @@ internal fun AppNavDisplay(
         ),
         onBack = { onBack() },
         entryDecorators = entryDecorators,
-        sceneStrategies = listOf(sceneStrategy),
+        sceneStrategies = sceneStrategies,
         entryProvider = entryProvider,
     )
 }
