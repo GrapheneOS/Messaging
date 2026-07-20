@@ -17,6 +17,8 @@ internal interface ConversationNavigationReducer {
         conversationId: ConversationId,
     )
 
+    fun navigateToNewChat(backStack: MutableList<NavKey>)
+
     fun navigateToMessageDetails(
         backStack: MutableList<NavKey>,
         conversationId: ConversationId,
@@ -37,7 +39,7 @@ internal interface ConversationNavigationReducer {
 
     fun resetBackStack(
         backStack: MutableList<NavKey>,
-        destination: NavKey,
+        destinations: List<NavKey>,
     )
 }
 
@@ -64,6 +66,13 @@ internal class ConversationNavigationReducerImpl(
         navigationReducer.push(
             backStack = backStack,
             destination = ConversationNavKey(conversationId = conversationId),
+        )
+    }
+
+    override fun navigateToNewChat(backStack: MutableList<NavKey>) {
+        navigationReducer.push(
+            backStack = backStack,
+            destination = NewChatNavKey,
         )
     }
 
@@ -118,11 +127,11 @@ internal class ConversationNavigationReducerImpl(
 
     override fun resetBackStack(
         backStack: MutableList<NavKey>,
-        destination: NavKey,
+        destinations: List<NavKey>,
     ) {
         navigationReducer.reset(
             backStack = backStack,
-            destination = destination,
+            destinations = destinations,
         )
     }
 

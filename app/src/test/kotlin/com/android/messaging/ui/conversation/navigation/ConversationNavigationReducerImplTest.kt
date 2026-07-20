@@ -201,19 +201,19 @@ class ConversationNavigationReducerImplTest {
     }
 
     @Test
-    fun resetBackStack_keepsSingleMatchingDestinationUntouched() {
+    fun resetBackStack_keepsMatchingDestinationsUntouched() {
         val backStack = mutableListOf<NavKey>(NewChatNavKey)
 
         reducer.resetBackStack(
             backStack = backStack,
-            destination = NewChatNavKey,
+            destinations = listOf(NewChatNavKey),
         )
 
         assertEquals(listOf(NewChatNavKey), backStack)
     }
 
     @Test
-    fun resetBackStack_replacesExistingEntriesWithDestination() {
+    fun resetBackStack_replacesExistingEntriesWithDestinations() {
         val backStack = mutableListOf(
             NewChatNavKey,
             ConversationNavKey(conversationId = CONVERSATION_ID),
@@ -221,12 +221,43 @@ class ConversationNavigationReducerImplTest {
 
         reducer.resetBackStack(
             backStack = backStack,
-            destination = ConversationNavKey(conversationId = ConversationId("conversation-2")),
+            destinations = listOf(
+                ConversationNavKey(conversationId = ConversationId("conversation-2")),
+            ),
         )
 
         assertEquals(
             listOf(
                 ConversationNavKey(conversationId = ConversationId("conversation-2")),
+            ),
+            backStack,
+        )
+    }
+
+    @Test
+    fun resetBackStack_keepsBackStackWhenDestinationsAreEmpty() {
+        val backStack = mutableListOf<NavKey>(NewChatNavKey)
+
+        reducer.resetBackStack(
+            backStack = backStack,
+            destinations = emptyList(),
+        )
+
+        assertEquals(listOf(NewChatNavKey), backStack)
+    }
+
+    @Test
+    fun navigateToNewChat_pushesNewChatDestination() {
+        val backStack = mutableListOf<NavKey>(
+            ConversationNavKey(conversationId = CONVERSATION_ID),
+        )
+
+        reducer.navigateToNewChat(backStack = backStack)
+
+        assertEquals(
+            listOf(
+                ConversationNavKey(conversationId = CONVERSATION_ID),
+                NewChatNavKey,
             ),
             backStack,
         )

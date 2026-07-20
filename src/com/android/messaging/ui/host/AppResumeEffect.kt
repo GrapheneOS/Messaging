@@ -20,7 +20,7 @@ internal fun AppResumeEffect(
 
     LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
         if (shouldShowOnboarding()) {
-            navigator.reset(destination = OnboardingNavKey)
+            navigator.reset(destinations = listOf(OnboardingNavKey))
             return@LifecycleEventEffect
         }
 
