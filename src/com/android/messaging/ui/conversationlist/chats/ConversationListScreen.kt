@@ -81,6 +81,8 @@ private val FabBottomReserve = 72.dp
 @Composable
 internal fun ConversationListScreen(
     effectHandler: ConversationListEffectHandler,
+    onNavigateToConversation: (ConversationId) -> Unit,
+    onNavigateToNewChat: () -> Unit,
     modifier: Modifier = Modifier,
     screenModel: ConversationListScreenModel = hiltViewModel<ConversationListViewModel>(),
 ) {
@@ -105,6 +107,8 @@ internal fun ConversationListScreen(
         snackbarHostState = snackbarHostState,
         pinAnimationController = pinAnimationController,
         onAction = screenModel::onAction,
+        onNavigateToConversation = onNavigateToConversation,
+        onNavigateToNewChat = onNavigateToNewChat,
         onConfirmBlock = { conversationId, destination ->
             pendingBlockConversationId = conversationId
             pendingBlockDestination = destination
@@ -194,6 +198,8 @@ private fun ConversationListEffects(
     snackbarHostState: SnackbarHostState,
     pinAnimationController: OverlayReorderAnimationController<Model, ConversationId>,
     onAction: (Action) -> Unit,
+    onNavigateToConversation: (ConversationId) -> Unit,
+    onNavigateToNewChat: () -> Unit,
     onConfirmBlock: (conversationId: ConversationId, destination: String) -> Unit,
 ) {
     val context = LocalContext.current
@@ -205,6 +211,8 @@ private fun ConversationListEffects(
     val currentUndoLabel by rememberUpdatedState(undoLabel)
     val currentOnAction by rememberUpdatedState(onAction)
     val currentOnConfirmBlock by rememberUpdatedState(onConfirmBlock)
+    val currentOnNavigateToConversation by rememberUpdatedState(onNavigateToConversation)
+    val currentOnNavigateToNewChat by rememberUpdatedState(onNavigateToNewChat)
 
     LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
         currentOnAction(Action.ScreenResumed)
@@ -213,6 +221,14 @@ private fun ConversationListEffects(
     LaunchedEffect(effects) {
         effects.collect { effect ->
             when (effect) {
+                is Effect.OpenConversation -> {
+                    currentOnNavigateToConversation(effect.conversationId)
+                }
+
+                is Effect.StartChat -> {
+                    currentOnNavigateToNewChat()
+                }
+
                 is Effect.ConfirmBlock -> {
                     currentOnConfirmBlock(
                         effect.conversationId,
@@ -220,18 +236,8 @@ private fun ConversationListEffects(
                     )
                 }
 
-                is Effect.ArchiveStatusChanged -> {
-                    snackbarScope.launchArchivedSnackbar(
-                        snackbarHostState = snackbarHostState,
-                        context = currentContext,
-                        undoLabel = currentUndoLabel,
-                        effect = effect,
-                        onAction = currentOnAction,
-                    )
-                }
-
-                is Effect.ConversationBlocked -> {
-                    snackbarScope.launchBlockedSnackbar(
+                is Effect.ArchiveStatusChanged, is Effect.ConversationBlocked -> {
+                    snackbarScope.launchSnackbarForEffect(
                         snackbarHostState = snackbarHostState,
                         context = currentContext,
                         undoLabel = currentUndoLabel,
@@ -282,6 +288,34 @@ private fun preparePinAnimation(
     )
 
     controller.markCommitted()
+}
+
+private fun CoroutineScope.launchSnackbarForEffect(
+    snackbarHostState: SnackbarHostState,
+    context: Context,
+    undoLabel: String,
+    effect: Effect,
+    onAction: (Action) -> Unit,
+) {
+    when (effect) {
+        is Effect.ArchiveStatusChanged -> launchArchivedSnackbar(
+            snackbarHostState = snackbarHostState,
+            context = context,
+            undoLabel = undoLabel,
+            effect = effect,
+            onAction = onAction,
+        )
+
+        is Effect.ConversationBlocked -> launchBlockedSnackbar(
+            snackbarHostState = snackbarHostState,
+            context = context,
+            undoLabel = undoLabel,
+            effect = effect,
+            onAction = onAction,
+        )
+
+        else -> Unit
+    }
 }
 
 private fun CoroutineScope.launchArchivedSnackbar(

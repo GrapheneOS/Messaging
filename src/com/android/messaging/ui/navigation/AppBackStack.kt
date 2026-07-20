@@ -7,6 +7,8 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
 
 @Composable
-internal fun rememberAppBackStack(startDestination: NavKey): NavBackStack<NavKey> {
-    return key(startDestination) { rememberNavBackStack(startDestination) }
+internal fun rememberAppBackStack(startDestinations: List<NavKey>): NavBackStack<NavKey> {
+    return key(startDestinations.first()) {
+        rememberNavBackStack(elements = startDestinations.toTypedArray())
+    }
 }

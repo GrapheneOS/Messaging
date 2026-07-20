@@ -18,35 +18,35 @@ internal class AppBackStackTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private var startDestination: NavKey = ConversationListNavKey
+    private var startDestinations: List<NavKey> = listOf(ConversationListNavKey)
     private lateinit var backStack: NavBackStack<NavKey>
 
     @Test
     fun restoredBackStackIsDroppedWhenStartDestinationChanges() {
-        restoreWithStartDestination(restoredStartDestination = OnboardingNavKey)
+        restoreWithStartDestinations(restoredStartDestinations = listOf(OnboardingNavKey))
 
         assertEquals(listOf(OnboardingNavKey), backStack.toList())
     }
 
     @Test
     fun restoredBackStackIsKeptWhenStartDestinationIsTheSame() {
-        restoreWithStartDestination(restoredStartDestination = ConversationListNavKey)
+        restoreWithStartDestinations(restoredStartDestinations = listOf(ConversationListNavKey))
 
         assertEquals(listOf(ConversationListNavKey, OnboardingNavKey), backStack.toList())
     }
 
-    private fun restoreWithStartDestination(restoredStartDestination: NavKey) {
+    private fun restoreWithStartDestinations(restoredStartDestinations: List<NavKey>) {
         val restorationTester = StateRestorationTester(composeTestRule)
 
         restorationTester.setContent {
-            backStack = rememberAppBackStack(startDestination = startDestination)
+            backStack = rememberAppBackStack(startDestinations = startDestinations)
         }
 
         composeTestRule.runOnIdle {
             backStack.add(OnboardingNavKey)
         }
 
-        startDestination = restoredStartDestination
+        startDestinations = restoredStartDestinations
         restorationTester.emulateSavedInstanceStateRestore()
         composeTestRule.waitForIdle()
     }

@@ -91,10 +91,10 @@ public class UIIntentsImpl extends UIIntents {
     private Intent getConversationActivityIntent(final Context context,
             final String conversationId, final MessageData draft,
             final boolean withCustomTransition) {
-        final Intent intent = new Intent(context, ConversationActivity.class);
+        final Intent intent = new Intent(context, MainActivity.class);
 
-        // Always try to reuse the same ConversationActivity in the current task so that we don't
-        // have two conversation activities in the back stack.
+        // Always try to reuse the same MainActivity in the current task so that we don't
+        // have two conversation hosts in the back stack.
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
         // Otherwise we're starting a new conversation
@@ -105,7 +105,7 @@ public class UIIntentsImpl extends UIIntents {
             intent.putExtra(UI_INTENT_EXTRA_DRAFT_DATA, draft);
 
             // If draft attachments came from an external content provider via a share intent, we
-            // need to propagate the URI permissions through to ConversationActivity. This requires
+            // need to propagate the URI permissions through to MainActivity. This requires
             // putting the URIs into the ClipData (setData also works, but accepts only one URI).
             ClipData clipData = null;
             for (final MessagePartData partData : draft.getParts()) {
@@ -346,12 +346,14 @@ public class UIIntentsImpl extends UIIntents {
     @Override
     public Intent getShortcutIntentForConversationActivity(final Context context,
                                                            final String conversationId) {
-        Intent conversationActivityIntent = UIIntents.get().getIntentForConversationActivity(
-                context, conversationId, null);
-        conversationActivityIntent.setData(
-                MessagingContentProvider.buildConversationMetadataUri(conversationId));
-        conversationActivityIntent.setAction(Intent.ACTION_VIEW);
-        return conversationActivityIntent;
+        // Bubbles render the shortcut's own intent target, so this stays on the embeddable
+        // ConversationActivity: retargeting it breaks shortcuts already pushed to devices.
+        final Intent intent = new Intent(context, ConversationActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra(UI_INTENT_EXTRA_CONVERSATION_ID, conversationId);
+        intent.setData(MessagingContentProvider.buildConversationMetadataUri(conversationId));
+        intent.setAction(Intent.ACTION_VIEW);
+        return intent;
     }
 
     @Override
