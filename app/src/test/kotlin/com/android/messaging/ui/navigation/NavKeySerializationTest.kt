@@ -12,6 +12,8 @@ import com.android.messaging.ui.conversation.navigation.MessageDetailsNavKey
 import com.android.messaging.ui.conversation.navigation.NewChatNavKey
 import com.android.messaging.ui.conversation.navigation.RecipientPickerMode
 import com.android.messaging.ui.conversation.navigation.RecipientPickerNavKey
+import com.android.messaging.ui.conversationlist.navigation.ConversationListNavKey
+import com.android.messaging.ui.onboarding.navigation.OnboardingNavKey
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,8 +25,13 @@ class NavKeySerializationTest {
     private val serializer = NavKeySerializer<NavKey>()
 
     @Test
-    fun conversationGraphNavKey_roundTripsThroughSavedState() {
-        assertRoundTrips(ConversationGraphNavKey)
+    fun conversationListNavKey_roundTripsThroughSavedState() {
+        assertRoundTrips(ConversationListNavKey)
+    }
+
+    @Test
+    fun onboardingNavKey_roundTripsThroughSavedState() {
+        assertRoundTrips(OnboardingNavKey)
     }
 
     @Test
