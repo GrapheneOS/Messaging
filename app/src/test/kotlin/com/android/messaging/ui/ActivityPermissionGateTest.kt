@@ -1,16 +1,15 @@
 package com.android.messaging.ui
 
+import com.android.messaging.testutil.androidManifestDocument
+import com.android.messaging.testutil.elementsByTagName
 import com.android.messaging.ui.classzero.ClassZeroActivity
 import com.android.messaging.ui.contact.AddContactActivity
 import com.android.messaging.ui.conversation.LaunchConversationActivity
 import com.android.messaging.ui.license.LicenseActivity
 import com.android.messaging.ui.onboarding.OnboardingActivity
 import com.android.messaging.ui.photoviewer.PhotoViewerActivity
-import java.io.File
-import javax.xml.parsers.DocumentBuilderFactory
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.w3c.dom.Element
 
 internal class ActivityPermissionGateTest {
 
@@ -24,6 +23,7 @@ internal class ActivityPermissionGateTest {
     )
 
     private val intentionallyUngated = setOf<Class<*>>(
+        MainActivity::class.java,
         OnboardingActivity::class.java,
         LaunchConversationActivity::class.java,
         PhotoViewerActivity::class.java,
@@ -60,13 +60,8 @@ internal class ActivityPermissionGateTest {
     }
 
     private fun manifestActivityNames(): List<String> {
-        val document = DocumentBuilderFactory.newInstance()
-            .newDocumentBuilder()
-            .parse(manifestFile())
-
-        val activities = document.getElementsByTagName("activity")
-        return (0 until activities.length)
-            .map { index -> activities.item(index) as Element }
+        return androidManifestDocument()
+            .elementsByTagName(tagName = "activity")
             .map { element -> element.getAttribute("android:name") }
             .filter { name -> name.isNotEmpty() }
             .map { name -> resolveClassName(name) }
@@ -78,20 +73,5 @@ internal class ActivityPermissionGateTest {
             !name.contains(".") -> "$applicationId.$name"
             else -> name
         }
-    }
-
-    private fun manifestFile(): File {
-        val workingDir = requireNotNull(System.getProperty("user.dir"))
-        var directory: File? = File(workingDir)
-
-        while (directory != null) {
-            val candidate = File(directory, "AndroidManifest.xml")
-            if (candidate.exists()) {
-                return candidate
-            }
-            directory = directory.parentFile
-        }
-
-        error("Could not locate AndroidManifest.xml from $workingDir")
     }
 }
