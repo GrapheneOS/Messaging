@@ -9,39 +9,33 @@ import androidx.compose.ui.platform.LocalView
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
-import com.android.messaging.ui.conversation.navigation.ConversationNavRouteState
 import com.android.messaging.ui.conversation.navigation.conversationEntries
+import com.android.messaging.ui.conversation.navigation.rememberConversationNavigator
 import com.android.messaging.ui.conversationlist.chats.ConversationListEffectHandlerImpl
 import com.android.messaging.ui.conversationlist.chats.ConversationListScreen
 import com.android.messaging.ui.conversationlist.navigation.ConversationListNavKey
-import com.android.messaging.ui.navigation.Navigator
+import com.android.messaging.ui.navigation.LocalNavigator
 import com.android.messaging.ui.onboarding.navigation.OnboardingNavKey
 import com.android.messaging.ui.onboarding.screen.OnboardingScreen
 import com.android.messaging.ui.onboarding.screen.rememberOnboardingEffectHandler
 
-internal fun appNavEntryProvider(
-    navigator: Navigator,
-    conversationRouteState: ConversationNavRouteState,
-): (NavKey) -> NavEntry<NavKey> {
+internal fun appNavEntryProvider(): (NavKey) -> NavEntry<NavKey> {
     return entryProvider {
         entry<ConversationListNavKey>(
-            content = conversationListRouteContent(
-                conversationRouteState = conversationRouteState,
-            ),
+            content = conversationListRouteContent(),
         )
         entry<OnboardingNavKey>(
-            content = onboardingRouteContent(navigator = navigator),
+            content = onboardingRouteContent(),
         )
-        conversationEntries(routeState = conversationRouteState)
+        conversationEntries()
     }
 }
 
-private fun conversationListRouteContent(
-    conversationRouteState: ConversationNavRouteState,
-): @Composable (ConversationListNavKey) -> Unit {
+private fun conversationListRouteContent(): @Composable (ConversationListNavKey) -> Unit {
     return {
         val activity = checkNotNull(LocalActivity.current)
         val hostView = LocalView.current
+        val navigator = rememberConversationNavigator()
         val effectHandler = remember(activity, hostView) {
             ConversationListEffectHandlerImpl(
                 activity = activity,
@@ -52,25 +46,18 @@ private fun conversationListRouteContent(
         ConversationListScreen(
             effectHandler = effectHandler,
             onNavigateToConversation = { conversationId ->
-                conversationRouteState.navigationReducer.value.navigateToConversation(
-                    backStack = conversationRouteState.backStack,
-                    conversationId = conversationId,
-                )
+                navigator.navigateToConversation(conversationId = conversationId)
             },
-            onNavigateToNewChat = {
-                conversationRouteState.navigationReducer.value.navigateToNewChat(
-                    backStack = conversationRouteState.backStack,
-                )
-            },
+            onNavigateToNewChat = navigator::navigateToNewChat,
             modifier = Modifier.fillMaxSize(),
         )
     }
 }
 
-private fun onboardingRouteContent(
-    navigator: Navigator,
-): @Composable (OnboardingNavKey) -> Unit {
+private fun onboardingRouteContent(): @Composable (OnboardingNavKey) -> Unit {
     return {
+        val navigator = LocalNavigator.current
+
         OnboardingScreen(
             effectHandler = rememberOnboardingEffectHandler(),
             onNavigateBack = navigator::back,

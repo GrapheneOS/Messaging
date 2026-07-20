@@ -9,7 +9,7 @@ import androidx.navigation3.runtime.NavKey
 import com.android.messaging.testutil.TestLifecycleOwner
 import com.android.messaging.ui.conversationlist.navigation.ConversationListNavKey
 import com.android.messaging.ui.navigation.NavigationReducerImpl
-import com.android.messaging.ui.navigation.Navigator
+import com.android.messaging.ui.navigation.NavigatorImpl
 import com.android.messaging.ui.onboarding.navigation.OnboardingNavKey
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -84,7 +84,7 @@ internal class AppResumeEffectTest {
             )
         }
 
-        val navigator = Navigator(
+        val navigator = NavigatorImpl(
             backStack = backStack,
             navigationReducer = NavigationReducerImpl(),
             onFinish = {},
