@@ -651,7 +651,9 @@ public class ConversationMessageData {
                 + MessageData.BUGLE_STATUS_INCOMING_COMPLETE + ", "
                 + MessageData.BUGLE_STATUS_INCOMING_YET_TO_MANUAL_DOWNLOAD + ")"
                 + " AND "
-                + DatabaseHelper.MessageColumns.SEEN + " = 0)"
+                + DatabaseHelper.MessageColumns.SEEN + " = 0"
+                + " AND "
+                + DatabaseHelper.PARTICIPANTS_TABLE + "." + ParticipantColumns.BLOCKED + " = 0)"
                 + ")"
                 + NOTIFICATION_QUERY_SQL_GROUP_BY;
     }

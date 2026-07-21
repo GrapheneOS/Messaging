@@ -136,10 +136,10 @@ public class ProcessDownloadedMmsAction extends Action {
 
     // This is called for fast failing downloading (due to airplane mode or mobile data )
     public static void processMessageDownloadFastFailed(final String messageId,
-            final Uri notificationUri, final String conversationId, final String participantId,
-            final String contentLocation, final int subId, final String subPhoneNumber,
-            final int statusIfFailed, final boolean autoDownload, final String transactionId,
-            final int resultCode) {
+                                                        final Uri notificationUri, final String conversationId, final String participantId,
+                                                        final String contentLocation, final int subId, final String subPhoneNumber,
+                                                        final int statusIfFailed, final boolean autoDownload, final String transactionId,
+                                                        final int resultCode) {
         Assert.notNull(messageId);
         Assert.notNull(notificationUri);
         Assert.notNull(conversationId);
@@ -163,8 +163,8 @@ public class ProcessDownloadedMmsAction extends Action {
     }
 
     public static void processDownloadActionFailure(final String messageId, final int status,
-            final int rawStatus, final String conversationId, final String participantId,
-            final int statusIfFailed, final int subId, final String transactionId) {
+                                                    final int rawStatus, final String conversationId, final String participantId,
+                                                    final int statusIfFailed, final int subId, final String transactionId) {
         Assert.notNull(messageId);
         Assert.notNull(conversationId);
         Assert.notNull(participantId);
@@ -184,7 +184,7 @@ public class ProcessDownloadedMmsAction extends Action {
     }
 
     public static void sendDeferredRespStatus(final String messageId, final String transactionId,
-            final String contentLocation, final int subId) {
+                                              final String contentLocation, final int subId) {
         final ProcessDownloadedMmsAction action = new ProcessDownloadedMmsAction();
         final Bundle params = action.actionParameters;
         params.putString(KEY_MESSAGE_ID, messageId);
@@ -473,7 +473,8 @@ public class ProcessDownloadedMmsAction extends Action {
 
                 // TODO: Also write these values to the telephony provider
                 mms.mRead = messageInFocusedConversation;
-                mms.mSeen = messageInObservableConversation;
+                // Align with standard SMS: seen = read || messageInObservableConversation || blocked
+                mms.mSeen = mms.mRead || messageInObservableConversation || blockedSender;
 
                 // Translate to our format
                 message = MmsUtils.createMmsMessage(mms, conversationId, senderParticipantId,
