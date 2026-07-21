@@ -8,10 +8,26 @@ import com.android.messaging.datamodel.data.MessagePartData
 import com.android.messaging.ui.conversation.attachment.mapper.ConversationVCardAttachmentUiModelMapper
 import com.android.messaging.ui.conversation.attachment.model.ConversationVCardAttachmentUiModel
 import com.android.messaging.ui.conversation.messages.mapper.ConversationMessageUiModelMapperImpl
+import com.android.messaging.util.OsUtil
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
+import org.junit.After
+import org.junit.Before
 
 internal abstract class BaseConversationMessageUiModelMapperTest {
+
+    @Before
+    fun mockOsUtil() {
+        mockkStatic(OsUtil::class)
+        every { OsUtil.isSecondaryUser() } returns false
+    }
+
+    @After
+    fun unmockOsUtil() {
+        unmockkStatic(OsUtil::class)
+    }
 
     protected val vCardUiModel = ConversationVCardAttachmentUiModel(
         type = ConversationVCardAttachmentType.CONTACT,
