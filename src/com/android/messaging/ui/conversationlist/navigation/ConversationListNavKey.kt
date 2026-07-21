@@ -5,3 +5,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 internal data object ConversationListNavKey : NavKey
+
+@Serializable
+internal data object ArchivedConversationListNavKey : NavKey

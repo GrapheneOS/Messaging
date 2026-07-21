@@ -20,21 +20,6 @@ internal class ArchivedConversationListEffectHandlerImpl(
 
     override fun handle(effect: Effect) {
         when (effect) {
-            is Effect.OpenConversation -> {
-                UIIntents.get().launchConversationActivity(
-                    activity,
-                    effect.conversationId.value,
-                    null,
-                )
-            }
-
-            is Effect.OpenConversationSettings -> {
-                UIIntents.get().launchPeopleAndOptionsActivity(
-                    activity,
-                    effect.conversationId.value,
-                )
-            }
-
             is Effect.PlaceCall -> {
                 UIIntents.get().launchPhoneCallActivity(
                     activity,
@@ -57,7 +42,7 @@ internal class ArchivedConversationListEffectHandlerImpl(
                 DebugUtils.showDebugOptions(activity)
             }
 
-            is Effect.ConversationsUnarchived -> Unit
+            else -> Unit
         }
     }
 }

@@ -114,19 +114,6 @@
             </intent-filter>
         </activity>
 
-        <!-- Displays a list of archived conversations -->
-        <activity
-            android:name=".ui.conversationlist.archived.ArchivedConversationListActivity"
-            android:configChanges="orientation|screenSize|keyboardHidden"
-            android:screenOrientation="user"
-            android:label="@string/archived_activity_title"
-            android:theme="@style/Theme.Compose"
-            android:parentActivityName="com.android.messaging.ui.MainActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.android.messaging.ui.MainActivity" />
-        </activity>
-
         <!-- Displays the contents of a single conversation -->
         <activity
             android:name=".ui.conversation.ConversationActivity"
@@ -221,21 +208,6 @@
                 <data android:mimeType="application/ogg" />
             </intent-filter>
         </activity-alias>
-
-        <!-- People & Options -->
-        <activity
-            android:name=".ui.conversationsettings.ConversationSettingsActivity"
-            android:allowEmbedded="true"
-            android:configChanges="orientation|screenSize|keyboardHidden"
-            android:label="@string/people_and_options_activity_title"
-            android:parentActivityName="com.android.messaging.ui.conversation.ConversationActivity"
-            android:resizeableActivity="true"
-            android:screenOrientation="user"
-            android:theme="@style/Theme.Compose">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.android.messaging.ui.conversation.ConversationActivity" />
-        </activity>
 
         <!-- License -->
         <activity
