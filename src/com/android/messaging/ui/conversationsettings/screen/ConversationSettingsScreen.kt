@@ -59,16 +59,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.ui.common.components.safeDrawingContentPadding
 import com.android.messaging.ui.common.text.asLtrText
-import com.android.messaging.ui.conversation.ConversationActivity
 import com.android.messaging.ui.conversation.conversationSettingsParticipantRowTestTag
 import com.android.messaging.ui.conversationsettings.common.ConversationHeader
 import com.android.messaging.ui.conversationsettings.common.ConversationSettingsItem
@@ -99,9 +98,10 @@ private const val SLIDE_OFFSET_DIVISOR = 3
 @Composable
 internal fun ConversationSettingsScreen(
     effectHandler: ConversationSettingsEffectHandler,
-    onNavigateBack: (Int?) -> Unit,
+    onNavigateBack: () -> Unit,
+    onCloseAfterArchive: () -> Unit,
     modifier: Modifier = Modifier,
-    screenModel: ConversationSettingsScreenModel = viewModel<ConversationSettingsViewModel>(),
+    screenModel: ConversationSettingsScreenModel = hiltViewModel<ConversationSettingsViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
     val rootConversationId = screenModel.rootConversationId
@@ -130,12 +130,10 @@ internal fun ConversationSettingsScreen(
         }
     }
 
-    var resultCode by remember { mutableStateOf<Int?>(null) }
     val navigateUp: () -> Unit = {
-        if (isRootRoute()) {
-            onNavigateBack(resultCode)
-        } else {
-            currentRoute = NavRoute.Conversation
+        when {
+            isRootRoute() -> onNavigateBack()
+            else -> currentRoute = NavRoute.Conversation
         }
     }
 
@@ -149,10 +147,10 @@ internal fun ConversationSettingsScreen(
                 }
 
                 NavEvent.CloseAfterArchive -> {
-                    if (isRootRoute()) {
-                        resultCode = ConversationActivity.FINISH_RESULT_CODE
+                    when {
+                        isRootRoute() -> onCloseAfterArchive()
+                        else -> navigateUp()
                     }
-                    navigateUp()
                 }
             }
         }

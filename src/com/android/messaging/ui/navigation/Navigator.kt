@@ -19,6 +19,8 @@ internal interface Navigator {
     fun reset(destinations: List<NavKey>)
 
     fun back()
+
+    fun finish()
 }
 
 internal class NavigatorImpl(
@@ -53,6 +55,10 @@ internal class NavigatorImpl(
             return
         }
 
+        onFinish()
+    }
+
+    override fun finish() {
         onFinish()
     }
 }
