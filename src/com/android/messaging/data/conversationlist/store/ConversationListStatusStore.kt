@@ -1,7 +1,7 @@
 package com.android.messaging.data.conversationlist.store
 
+import com.android.messaging.data.secondaryuser.SecondaryUserNotifier
 import com.android.messaging.datamodel.DataModel
-import com.android.messaging.receiver.SmsReceiver
 import javax.inject.Inject
 
 internal interface ConversationListStatusStore {
@@ -9,7 +9,9 @@ internal interface ConversationListStatusStore {
     fun setNewestConversationVisible(isVisible: Boolean)
 }
 
-internal class ConversationListStatusStoreImpl @Inject constructor() : ConversationListStatusStore {
+internal class ConversationListStatusStoreImpl @Inject constructor(
+    private val secondaryUserNotifier: SecondaryUserNotifier,
+) : ConversationListStatusStore {
 
     override fun hasFirstSyncCompleted(): Boolean {
         val dataModel = DataModel.get()
@@ -21,7 +23,7 @@ internal class ConversationListStatusStoreImpl @Inject constructor() : Conversat
         dataModel.isConversationListScrolledToNewestConversation = isVisible
 
         if (isVisible) {
-            SmsReceiver.cancelSecondaryUserNotification()
+            secondaryUserNotifier.cancel()
         }
     }
 }

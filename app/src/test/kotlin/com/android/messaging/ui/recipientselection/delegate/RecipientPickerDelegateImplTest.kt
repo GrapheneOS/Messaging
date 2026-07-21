@@ -6,6 +6,7 @@ import com.android.messaging.data.contact.model.Contact
 import com.android.messaging.data.contact.model.ContactDestination
 import com.android.messaging.data.contact.model.ContactsPage
 import com.android.messaging.data.contact.repository.ContactsRepository
+import com.android.messaging.data.phone.formatter.PhoneNumberFormatterImpl
 import com.android.messaging.domain.contacts.usecase.IsReadContactsPermissionGranted
 import com.android.messaging.sms.MmsSmsUtils
 import com.android.messaging.testutil.MainDispatcherRule
@@ -438,7 +439,10 @@ class RecipientPickerDelegateImplTest {
         isPermissionGranted: Boolean = true,
     ): RecipientPickerDelegateImpl {
         return RecipientPickerDelegateImpl(
-            contactDestinationFormatter = ContactDestinationFormatterImpl(),
+            contactDestinationFormatter = ContactDestinationFormatterImpl(
+                PhoneNumberFormatterImpl(phoneUtilsInstance),
+            ),
+            phoneNumberFormatter = PhoneNumberFormatterImpl(phoneUtilsInstance),
             contactUiModelMapper = ContactUiModelMapperImpl(),
             contactsRepository = mockContactsRepository(pages = pages),
             isReadContactsPermissionGranted = mockIsReadContactsPermissionGranted(
