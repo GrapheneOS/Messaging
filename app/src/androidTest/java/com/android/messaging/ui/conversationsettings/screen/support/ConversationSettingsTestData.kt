@@ -13,8 +13,6 @@ import kotlinx.collections.immutable.persistentListOf
 internal val ROOT_CONVERSATION_ID = ConversationId("conversation-1")
 internal val PARTICIPANT_CONVERSATION_ID = ConversationId("conversation-2")
 
-internal const val FINISH_RESULT_CODE = 1
-
 internal const val MOTHER_NAME = "Mother"
 internal const val FATHER_NAME = "Father"
 

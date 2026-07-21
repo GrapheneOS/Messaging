@@ -107,7 +107,7 @@ class ConversationNavigatorImplTest {
 
     @Test
     fun navigateToAddParticipants_doesNotDuplicateExistingTopDestination() {
-        val backStack = mutableListOf(
+        val backStack = mutableListOf<NavKey>(
             ConversationNavKey(conversationId = CONVERSATION_ID),
             AddParticipantsNavKey(conversationId = CONVERSATION_ID),
         )
@@ -153,7 +153,7 @@ class ConversationNavigatorImplTest {
 
     @Test
     fun replaceCurrentConversation_removesAddParticipantsAndReplacesExistingConversation() {
-        val backStack = mutableListOf(
+        val backStack = mutableListOf<NavKey>(
             ConversationNavKey(conversationId = CONVERSATION_ID),
             AddParticipantsNavKey(conversationId = CONVERSATION_ID),
         )
@@ -229,7 +229,7 @@ class ConversationNavigatorImplTest {
 
     @Test
     fun navigateToMessageDetails_whenAlreadyOnTop_doesNotDuplicate() {
-        val backStack = mutableListOf(
+        val backStack = mutableListOf<NavKey>(
             ConversationNavKey(conversationId = ConversationId("c")),
             MessageDetailsNavKey(
                 conversationId = ConversationId("c"),

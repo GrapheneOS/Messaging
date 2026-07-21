@@ -6,6 +6,7 @@ import androidx.compose.runtime.remember
 import androidx.navigation3.runtime.NavKey
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.ui.conversationsettings.navigation.ConversationSettingsNavKey
 import com.android.messaging.ui.navigation.LocalNavigator
 import com.android.messaging.ui.navigation.Navigator
 
@@ -25,7 +26,11 @@ internal interface ConversationNavigator {
 
     fun navigateToRecipientPicker(mode: RecipientPickerMode)
 
+    fun navigateToConversationSettings(conversationId: ConversationId)
+
     fun replaceCurrentConversation(conversationId: ConversationId)
+
+    fun closeConversation(conversationId: ConversationId)
 
     fun back()
 }
@@ -67,6 +72,12 @@ internal class ConversationNavigatorImpl(
         navigator.push(destination = RecipientPickerNavKey(mode = mode))
     }
 
+    override fun navigateToConversationSettings(conversationId: ConversationId) {
+        navigator.push(
+            destination = ConversationSettingsNavKey(conversationId = conversationId),
+        )
+    }
+
     override fun replaceCurrentConversation(conversationId: ConversationId) {
         if (backStack.lastOrNull() is AddParticipantsNavKey) {
             backStack.removeAt(backStack.lastIndex)
@@ -85,8 +96,25 @@ internal class ConversationNavigatorImpl(
         backStack.add(updatedConversation)
     }
 
+    override fun closeConversation(conversationId: ConversationId) {
+        val remainingDestinations = backStack.dropLastWhile { navKey ->
+            navKey.belongsToConversation(conversationId)
+        }
+
+        if (remainingDestinations.isEmpty()) {
+            navigator.finish()
+            return
+        }
+
+        navigator.reset(destinations = remainingDestinations)
+    }
+
     override fun back() {
         navigator.back()
+    }
+
+    private fun NavKey.belongsToConversation(conversationId: ConversationId): Boolean {
+        return this is ConversationScopedNavKey && this.conversationId == conversationId
     }
 
     private fun removeTrailingConversationEntryDestinations() {
