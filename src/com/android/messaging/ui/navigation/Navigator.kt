@@ -6,6 +6,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.navigation3.runtime.NavKey
+import com.android.messaging.data.conversation.model.ConversationId
 
 @Stable
 internal interface Navigator {
@@ -19,6 +20,8 @@ internal interface Navigator {
     fun reset(destinations: List<NavKey>)
 
     fun back()
+
+    fun closeConversation(conversationId: ConversationId)
 
     fun finish()
 }
@@ -58,8 +61,25 @@ internal class NavigatorImpl(
         onFinish()
     }
 
+    override fun closeConversation(conversationId: ConversationId) {
+        val remainingDestinations = backStack.dropLastWhile { navKey ->
+            navKey.belongsToConversation(conversationId)
+        }
+
+        if (remainingDestinations.isEmpty()) {
+            onFinish()
+            return
+        }
+
+        reset(destinations = remainingDestinations)
+    }
+
     override fun finish() {
         onFinish()
+    }
+
+    private fun NavKey.belongsToConversation(conversationId: ConversationId): Boolean {
+        return this is ConversationScopedNavKey && this.conversationId == conversationId
     }
 }
 

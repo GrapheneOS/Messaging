@@ -100,6 +100,7 @@ internal fun ConversationSettingsScreen(
     effectHandler: ConversationSettingsEffectHandler,
     onNavigateBack: () -> Unit,
     onCloseAfterArchive: () -> Unit,
+    onNavigateToConversation: (ConversationId) -> Unit,
     modifier: Modifier = Modifier,
     screenModel: ConversationSettingsScreenModel = hiltViewModel<ConversationSettingsViewModel>(),
 ) {
@@ -140,6 +141,10 @@ internal fun ConversationSettingsScreen(
     LaunchedEffect(screenModel) {
         screenModel.navigationEvents.collect { event ->
             when (event) {
+                is NavEvent.OpenParticipantChat -> {
+                    onNavigateToConversation(event.conversationId)
+                }
+
                 is NavEvent.OpenParticipantInfo -> {
                     currentRoute = NavRoute.ParticipantInfo(
                         conversationId = event.conversationId,

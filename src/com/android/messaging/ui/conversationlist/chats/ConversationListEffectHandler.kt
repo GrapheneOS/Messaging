@@ -20,10 +20,6 @@ internal class ConversationListEffectHandlerImpl(
 
     override fun handle(effect: Effect) {
         when (effect) {
-            Effect.OpenBlockedParticipants -> {
-                UIIntents.get().launchBlockedParticipantsActivity(activity)
-            }
-
             Effect.OpenSettings -> {
                 UIIntents.get().launchSettingsActivity(activity)
             }

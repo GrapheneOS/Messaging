@@ -16,6 +16,7 @@ import com.android.messaging.ui.conversation.entry.model.ConversationEntryUiStat
 import com.android.messaging.ui.conversation.messagedetails.MessageDetailsScreen
 import com.android.messaging.ui.conversation.recipientpicker.RecipientPickerScreen
 import com.android.messaging.ui.conversation.screen.ConversationScreen
+import com.android.messaging.ui.navigation.LocalNavigator
 import com.android.messaging.ui.navigation.SeededViewModelStoreOwner
 
 internal fun EntryProviderScope<NavKey>.conversationEntries() {
@@ -44,6 +45,7 @@ private fun conversationScreenRouteContent(): @Composable (ConversationNavKey) -
         val entryModel = entryNavState.model
         val entryUiState by entryModel.uiState.collectAsStateWithLifecycle()
         val navigator = rememberConversationNavigator()
+        val appNavigator = LocalNavigator.current
         val pendingPayload = pendingLaunchPayloadForConversation(
             entryUiState = entryUiState,
             conversationId = conversationId,
@@ -65,7 +67,7 @@ private fun conversationScreenRouteContent(): @Composable (ConversationNavKey) -
                     messageId = messageId,
                 )
             },
-            onNavigateBack = navigator::back,
+            onNavigateBack = appNavigator::back,
             pendingDraft = pendingPayload.draft,
             pendingScrollPosition = pendingPayload.scrollPosition,
             pendingSelfParticipantId = pendingPayload.selfParticipantId,
@@ -90,9 +92,10 @@ private fun newChatRouteContent(): @Composable (NewChatNavKey) -> Unit {
     return {
         val entryModel = LocalConversationEntryNavState.current.model
         val navigator = rememberConversationNavigator()
+        val appNavigator = LocalNavigator.current
 
         NewChatScreen(
-            onNavigateBack = navigator::back,
+            onNavigateBack = appNavigator::back,
             onNavigateToConversation = { conversationId, selfParticipantId ->
                 entryModel.onConversationNavigationRequested(
                     conversationId = conversationId,
@@ -107,10 +110,11 @@ private fun newChatRouteContent(): @Composable (NewChatNavKey) -> Unit {
 private fun addParticipantsRouteContent(): @Composable (AddParticipantsNavKey) -> Unit {
     return { navKey ->
         val navigator = rememberConversationNavigator()
+        val appNavigator = LocalNavigator.current
 
         AddParticipantsScreen(
             conversationId = navKey.conversationId,
-            onNavigateBack = navigator::back,
+            onNavigateBack = appNavigator::back,
             onNavigateToConversation = { resolvedConversationId ->
                 navigator.replaceCurrentConversation(conversationId = resolvedConversationId)
             },
@@ -120,7 +124,7 @@ private fun addParticipantsRouteContent(): @Composable (AddParticipantsNavKey) -
 
 private fun messageDetailsRouteContent(): @Composable (MessageDetailsNavKey) -> Unit {
     return { navKey ->
-        val navigator = rememberConversationNavigator()
+        val navigator = LocalNavigator.current
         val defaultArgs = remember(navKey) {
             messageDetailsDefaultArgs(navKey = navKey)
         }

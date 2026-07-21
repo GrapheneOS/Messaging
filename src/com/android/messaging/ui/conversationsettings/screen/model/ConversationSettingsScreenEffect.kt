@@ -9,10 +9,6 @@ internal sealed interface ConversationSettingsScreenEffect {
         val conversationTitle: String,
     ) : ConversationSettingsScreenEffect
 
-    data class OpenParticipantChat(
-        val conversationId: ConversationId,
-    ) : ConversationSettingsScreenEffect
-
     data class CopyToClipboard(
         val text: String,
     ) : ConversationSettingsScreenEffect

@@ -7,14 +7,6 @@ internal sealed interface ArchivedConversationListEffect {
 
     data object OpenDebugOptions : ArchivedConversationListEffect
 
-    data class OpenConversation(
-        val conversationId: ConversationId,
-    ) : ArchivedConversationListEffect
-
-    data class OpenConversationSettings(
-        val conversationId: ConversationId,
-    ) : ArchivedConversationListEffect
-
     data class PlaceCall(
         val destination: String,
     ) : ArchivedConversationListEffect

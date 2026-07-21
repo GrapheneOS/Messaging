@@ -13,8 +13,8 @@ import com.android.messaging.data.subscription.repository.SubscriptionsRepositor
 import com.android.messaging.datamodel.ParticipantRefresh
 import com.android.messaging.di.core.ApplicationCoroutineScope
 import com.android.messaging.domain.conversationsettings.usecase.SetConversationSelfParticipantId
-import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversationsettings.common.ConversationSettingsScreenDelegate
+import com.android.messaging.ui.conversationsettings.navigation.CONVERSATION_SETTINGS_CONVERSATION_ID_ARG
 import com.android.messaging.ui.conversationsettings.screen.mapper.ConversationSettingsUiStateMapper
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState
 import javax.inject.Inject
@@ -55,7 +55,7 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
 ) : ConversationSettingsDelegate {
 
     override val rootConversationId: ConversationId = requireNotNull(
-        ConversationId.fromOrNull(savedStateHandle[UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID]),
+        ConversationId.fromOrNull(savedStateHandle[CONVERSATION_SETTINGS_CONVERSATION_ID_ARG]),
     ) { "conversationId is required" }
 
     private val _state = MutableStateFlow(ConversationSettingsUiState(rootConversationId))

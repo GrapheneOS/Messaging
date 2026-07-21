@@ -8,10 +8,6 @@ internal sealed interface BlockedParticipantsScreenEffect {
         val messageResId: Int,
     ) : BlockedParticipantsScreenEffect
 
-    data class OpenParticipantChat(
-        val conversationId: ConversationId,
-    ) : BlockedParticipantsScreenEffect
-
     data class PlacePhoneCall(
         val destination: String,
     ) : BlockedParticipantsScreenEffect

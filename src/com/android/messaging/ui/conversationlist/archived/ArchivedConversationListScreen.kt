@@ -36,6 +36,7 @@ import com.android.messaging.ui.common.components.snackbar.MessagingSnackbarHost
 import com.android.messaging.ui.common.components.snackbar.showActionSnackbar
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListAction as Action
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListEffect as Effect
+import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListNavEvent as NavEvent
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListUiState as State
 import com.android.messaging.ui.conversationlist.common.dialog.ConversationListDeleteDialog
 import com.android.messaging.ui.conversationlist.common.item.ConversationSwipeKind
@@ -73,13 +74,17 @@ internal fun ArchivedConversationListScreen(
 
     var pendingDelete by remember { mutableStateOf(false) }
 
+    ArchivedConversationListNavEvents(
+        navigationEvents = screenModel.navigationEvents,
+        onNavigateToConversation = onNavigateToConversation,
+        onNavigateToConversationSettings = onNavigateToConversationSettings,
+    )
+
     ArchivedConversationListEffects(
         effects = screenModel.effects,
         effectHandler = effectHandler,
         snackbarHostState = snackbarHostState,
         onAction = screenModel::onAction,
-        onNavigateToConversation = onNavigateToConversation,
-        onNavigateToConversationSettings = onNavigateToConversationSettings,
     )
 
     ArchivedConversationListScaffold(
@@ -105,13 +110,37 @@ internal fun ArchivedConversationListScreen(
 }
 
 @Composable
+private fun ArchivedConversationListNavEvents(
+    navigationEvents: Flow<NavEvent>,
+    onNavigateToConversation: (ConversationId) -> Unit,
+    onNavigateToConversationSettings: (ConversationId) -> Unit,
+) {
+    val currentOnNavigateToConversation by rememberUpdatedState(onNavigateToConversation)
+    val currentOnNavigateToConversationSettings by rememberUpdatedState(
+        onNavigateToConversationSettings,
+    )
+
+    LaunchedEffect(navigationEvents) {
+        navigationEvents.collect { event ->
+            when (event) {
+                is NavEvent.OpenConversation -> {
+                    currentOnNavigateToConversation(event.conversationId)
+                }
+
+                is NavEvent.OpenConversationSettings -> {
+                    currentOnNavigateToConversationSettings(event.conversationId)
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun ArchivedConversationListEffects(
     effects: Flow<Effect>,
     effectHandler: ArchivedConversationListEffectHandler,
     snackbarHostState: SnackbarHostState,
     onAction: (Action) -> Unit,
-    onNavigateToConversation: (ConversationId) -> Unit,
-    onNavigateToConversationSettings: (ConversationId) -> Unit,
 ) {
     val context = LocalContext.current
     val undoLabel = stringResource(R.string.snack_bar_undo)
@@ -121,22 +150,10 @@ private fun ArchivedConversationListEffects(
     val currentEffectHandler by rememberUpdatedState(effectHandler)
     val currentUndoLabel by rememberUpdatedState(undoLabel)
     val currentOnAction by rememberUpdatedState(onAction)
-    val currentOnNavigateToConversation by rememberUpdatedState(onNavigateToConversation)
-    val currentOnNavigateToConversationSettings by rememberUpdatedState(
-        onNavigateToConversationSettings,
-    )
 
     LaunchedEffect(effects) {
         effects.collect { effect ->
             when (effect) {
-                is Effect.OpenConversation -> {
-                    currentOnNavigateToConversation(effect.conversationId)
-                }
-
-                is Effect.OpenConversationSettings -> {
-                    currentOnNavigateToConversationSettings(effect.conversationId)
-                }
-
                 is Effect.ConversationsUnarchived -> {
                     snackbarScope.launchUnarchivedSnackbar(
                         snackbarHostState = snackbarHostState,

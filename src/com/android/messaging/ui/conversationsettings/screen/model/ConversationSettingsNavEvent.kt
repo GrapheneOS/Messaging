@@ -4,6 +4,10 @@ import com.android.messaging.data.conversation.model.ConversationId
 
 internal sealed interface ConversationSettingsNavEvent {
 
+    data class OpenParticipantChat(
+        val conversationId: ConversationId,
+    ) : ConversationSettingsNavEvent
+
     data class OpenParticipantInfo(
         val conversationId: ConversationId,
     ) : ConversationSettingsNavEvent
