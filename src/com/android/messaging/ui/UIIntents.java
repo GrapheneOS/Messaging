@@ -172,8 +172,6 @@ public abstract class UIIntents {
     /**
      * Launch an activity to show blocked participants.
      */
-    public abstract void launchBlockedParticipantsActivity(final Context context);
-
     /**
      * Launch an activity to show a class zero message
      */

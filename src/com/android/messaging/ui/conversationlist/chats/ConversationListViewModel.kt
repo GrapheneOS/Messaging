@@ -12,6 +12,7 @@ import com.android.messaging.data.debug.DebugFeaturesProvider
 import com.android.messaging.ui.conversationlist.chats.mapper.ConversationListUiStateMapper
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListEffect as Effect
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListNavEvent as NavEvent
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState as State
 import com.android.messaging.ui.conversationlist.delegate.ConversationListActionsDelegate
 import com.android.messaging.ui.conversationlist.delegate.ConversationListOptimisticSnapshotDelegate
@@ -33,6 +34,7 @@ import kotlinx.coroutines.launch
 
 internal interface ConversationListScreenModel {
     val effects: Flow<Effect>
+    val navigationEvents: Flow<NavEvent>
     val uiState: StateFlow<State>
 
     fun onAction(action: Action)
@@ -56,6 +58,9 @@ internal class ConversationListViewModel @Inject constructor(
 
     private val _effects = Channel<Effect>(Channel.BUFFERED)
     override val effects: Flow<Effect> = _effects.receiveAsFlow()
+
+    private val _navigationEvents = Channel<NavEvent>(Channel.BUFFERED)
+    override val navigationEvents: Flow<NavEvent> = _navigationEvents.receiveAsFlow()
 
     override val uiState: StateFlow<State> = combine(
         snapshot.filterNotNull(),
@@ -200,7 +205,7 @@ internal class ConversationListViewModel @Inject constructor(
     private fun onListAction(action: Action.ListAction) {
         when (action) {
             is Action.AvatarMessageClicked -> {
-                _effects.trySend(Effect.OpenConversation(action.conversationId))
+                _navigationEvents.trySend(NavEvent.OpenConversation(action.conversationId))
             }
 
             is Action.AvatarCallClicked -> {
@@ -224,7 +229,7 @@ internal class ConversationListViewModel @Inject constructor(
             }
 
             is Action.AvatarInfoClicked -> {
-                _effects.trySend(Effect.OpenConversationSettings(action.conversationId))
+                _navigationEvents.trySend(NavEvent.OpenConversationSettings(action.conversationId))
             }
 
             is Action.ConversationSwipedToArchive -> {
@@ -244,7 +249,7 @@ internal class ConversationListViewModel @Inject constructor(
             }
 
             else -> {
-                _effects.trySend(Effect.OpenConversation(conversationId))
+                _navigationEvents.trySend(NavEvent.OpenConversation(conversationId))
             }
         }
     }
@@ -316,11 +321,11 @@ internal class ConversationListViewModel @Inject constructor(
     private fun onNavigationAction(action: Action.NavigationAction) {
         when (action) {
             Action.ArchivedConversationsClicked -> {
-                _effects.trySend(Effect.OpenArchivedConversations)
+                _navigationEvents.trySend(NavEvent.OpenArchivedConversations)
             }
 
             Action.BlockedParticipantsClicked -> {
-                _effects.trySend(Effect.OpenBlockedParticipants)
+                _navigationEvents.trySend(NavEvent.OpenBlockedParticipants)
             }
 
             Action.DebugOptionsClicked -> {
@@ -336,7 +341,7 @@ internal class ConversationListViewModel @Inject constructor(
             }
 
             Action.StartChatClicked -> {
-                _effects.trySend(Effect.StartChat)
+                _navigationEvents.trySend(NavEvent.OpenNewChat)
             }
         }
     }

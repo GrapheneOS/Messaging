@@ -175,7 +175,7 @@ internal class ConversationSettingsViewModel @Inject constructor(
         when (result) {
             is ResolveConversationIdResult.Resolved -> {
                 if (shouldOpenChat) {
-                    emitEffect(Effect.OpenParticipantChat(result.conversationId))
+                    emitNavigationEvent(NavEvent.OpenParticipantChat(result.conversationId))
                 } else {
                     emitNavigationEvent(NavEvent.OpenParticipantInfo(result.conversationId))
                 }
