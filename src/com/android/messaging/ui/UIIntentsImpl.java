@@ -46,7 +46,6 @@ import com.android.messaging.receiver.ConversationReadReceiver;
 import com.android.messaging.receiver.NotificationReceiver;
 import com.android.messaging.sms.MmsSmsUtils;
 import com.android.messaging.ui.appsettings.SettingsActivity;
-import com.android.messaging.ui.blockedparticipants.BlockedParticipantsActivity;
 import com.android.messaging.ui.classzero.ClassZeroActivity;
 import com.android.messaging.ui.contact.AddContactActivity;
 import com.android.messaging.ui.conversation.ConversationActivity;
@@ -214,12 +213,6 @@ public class UIIntentsImpl extends UIIntents {
     @Override
     public void launchSettingsActivity(final Context context) {
         final Intent intent = new Intent(context, SettingsActivity.class);
-        context.startActivity(intent);
-    }
-
-    @Override
-    public void launchBlockedParticipantsActivity(final Context context) {
-        final Intent intent = new Intent(context, BlockedParticipantsActivity.class);
         context.startActivity(intent);
     }
 

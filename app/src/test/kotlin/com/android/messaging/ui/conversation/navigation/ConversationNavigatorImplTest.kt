@@ -8,13 +8,9 @@ import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.navigation.NavigationReducerImpl
 import com.android.messaging.ui.navigation.NavigatorImpl
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ConversationNavigatorImplTest {
-
-    private var didFinish = false
 
     @Test
     fun navigateToConversation_replacesNewChatEntryFlowWithConversation() {
@@ -126,27 +122,15 @@ class ConversationNavigatorImplTest {
     }
 
     @Test
-    fun back_finishesWhenBackStackHasSingleEntry() {
+    fun replaceWithConversation_swapsTheCurrentDestination() {
         val backStack = mutableListOf<NavKey>(NewChatNavKey)
 
-        navigator(backStack = backStack).back()
-
-        assertTrue(didFinish)
-        assertEquals(listOf(NewChatNavKey), backStack)
-    }
-
-    @Test
-    fun back_removesLastEntryWhenBackStackHasMultipleEntries() {
-        val backStack = mutableListOf(
-            NewChatNavKey,
-            ConversationNavKey(conversationId = CONVERSATION_ID),
+        navigator(backStack = backStack).replaceWithConversation(
+            conversationId = CONVERSATION_ID,
         )
 
-        navigator(backStack = backStack).back()
-
-        assertFalse(didFinish)
         assertEquals(
-            listOf(NewChatNavKey),
+            listOf(ConversationNavKey(conversationId = CONVERSATION_ID)),
             backStack,
         )
     }
@@ -250,7 +234,7 @@ class ConversationNavigatorImplTest {
             navigator = NavigatorImpl(
                 backStack = backStack,
                 navigationReducer = NavigationReducerImpl(),
-                onFinish = { didFinish = true },
+                onFinish = {},
             ),
         )
     }

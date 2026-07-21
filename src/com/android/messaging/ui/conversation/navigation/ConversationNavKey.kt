@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.navigation
 import androidx.navigation3.runtime.NavKey
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.ui.navigation.ConversationScopedNavKey
 import kotlinx.serialization.Serializable
 
 @Serializable

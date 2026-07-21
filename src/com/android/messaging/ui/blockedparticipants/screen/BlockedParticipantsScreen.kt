@@ -33,8 +33,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.ParticipantId
@@ -45,6 +45,7 @@ import com.android.messaging.ui.blockedparticipants.common.ScreenContentPadding
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantUiState
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsAction as Action
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsNavEvent as NavEvent
+import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsScreenEffect as Effect
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsUiState as State
 import com.android.messaging.ui.common.components.contentSurfaceShape
 import com.android.messaging.ui.common.components.safeDrawingContentPadding
@@ -56,12 +57,15 @@ import kotlinx.collections.immutable.persistentSetOf
 internal fun BlockedParticipantsScreen(
     effectHandler: BlockedParticipantsEffectHandler,
     onNavigateBack: () -> Unit,
+    onNavigateToConversation: (ConversationId) -> Unit,
     modifier: Modifier = Modifier,
-    screenModel: BlockedParticipantsScreenModel = viewModel<BlockedParticipantsViewModel>(),
+    screenModel: BlockedParticipantsScreenModel = hiltViewModel<BlockedParticipantsViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
 
     val currentEffectHandler by rememberUpdatedState(effectHandler)
+    val currentOnNavigateToConversation by rememberUpdatedState(onNavigateToConversation)
+
     LaunchedEffect(screenModel) {
         screenModel.effects.collect { effect ->
             currentEffectHandler.handle(effect)
@@ -73,6 +77,10 @@ internal fun BlockedParticipantsScreen(
         screenModel.navigationEvents.collect { event ->
             when (event) {
                 NavEvent.CloseAfterLastUnblock -> currentOnNavigateBack()
+
+                is NavEvent.OpenParticipantChat -> {
+                    currentOnNavigateToConversation(event.conversationId)
+                }
             }
         }
     }

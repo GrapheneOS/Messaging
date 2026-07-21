@@ -9,6 +9,7 @@ import androidx.navigation3.runtime.NavKey
 import com.android.messaging.ui.conversation.navigation.rememberConversationNavigator
 import com.android.messaging.ui.conversationsettings.screen.ConversationSettingsScreen
 import com.android.messaging.ui.conversationsettings.screen.rememberConversationSettingsEffectHandler
+import com.android.messaging.ui.navigation.LocalNavigator
 import com.android.messaging.ui.navigation.SeededViewModelStoreOwner
 
 internal fun EntryProviderScope<NavKey>.conversationSettingsEntry() {
@@ -21,7 +22,8 @@ private fun conversationSettingsRouteContent(): @Composable (ConversationSetting
     return { navKey ->
         val activity = checkNotNull(LocalActivity.current)
         val hostView = LocalView.current
-        val navigator = rememberConversationNavigator()
+        val navigator = LocalNavigator.current
+        val conversationNavigator = rememberConversationNavigator()
         val effectHandler = rememberConversationSettingsEffectHandler(
             activity = activity,
             hostView = hostView,
@@ -36,6 +38,9 @@ private fun conversationSettingsRouteContent(): @Composable (ConversationSetting
                 onNavigateBack = navigator::back,
                 onCloseAfterArchive = {
                     navigator.closeConversation(conversationId = navKey.conversationId)
+                },
+                onNavigateToConversation = { conversationId ->
+                    conversationNavigator.navigateToConversation(conversationId = conversationId)
                 },
             )
         }

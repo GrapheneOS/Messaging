@@ -81,10 +81,7 @@ private val FabBottomReserve = 72.dp
 @Composable
 internal fun ConversationListScreen(
     effectHandler: ConversationListEffectHandler,
-    onNavigateToConversation: (ConversationId) -> Unit,
-    onNavigateToNewChat: () -> Unit,
-    onNavigateToConversationSettings: (ConversationId) -> Unit,
-    onNavigateToArchivedConversations: () -> Unit,
+    navigation: ConversationListNavigation,
     modifier: Modifier = Modifier,
     screenModel: ConversationListScreenModel = hiltViewModel<ConversationListViewModel>(),
 ) {
@@ -106,6 +103,11 @@ internal fun ConversationListScreen(
         screenModel.onAction(Action.ScreenResumed)
     }
 
+    ConversationListNavEvents(
+        navigationEvents = screenModel.navigationEvents,
+        navigation = navigation,
+    )
+
     ConversationListEffects(
         effects = screenModel.effects,
         effectHandler = effectHandler,
@@ -113,10 +115,6 @@ internal fun ConversationListScreen(
         snackbarHostState = snackbarHostState,
         pinAnimationController = pinAnimationController,
         onAction = screenModel::onAction,
-        onNavigateToConversation = onNavigateToConversation,
-        onNavigateToNewChat = onNavigateToNewChat,
-        onNavigateToConversationSettings = onNavigateToConversationSettings,
-        onNavigateToArchivedConversations = onNavigateToArchivedConversations,
         onConfirmBlock = { conversationId, destination ->
             pendingBlockConversationId = conversationId
             pendingBlockDestination = destination
@@ -206,10 +204,6 @@ private fun ConversationListEffects(
     snackbarHostState: SnackbarHostState,
     pinAnimationController: OverlayReorderAnimationController<Model, ConversationId>,
     onAction: (Action) -> Unit,
-    onNavigateToConversation: (ConversationId) -> Unit,
-    onNavigateToNewChat: () -> Unit,
-    onNavigateToConversationSettings: (ConversationId) -> Unit,
-    onNavigateToArchivedConversations: () -> Unit,
     onConfirmBlock: (conversationId: ConversationId, destination: String) -> Unit,
 ) {
     val context = LocalContext.current
@@ -221,30 +215,10 @@ private fun ConversationListEffects(
     val currentUndoLabel by rememberUpdatedState(undoLabel)
     val currentOnAction by rememberUpdatedState(onAction)
     val currentOnConfirmBlock by rememberUpdatedState(onConfirmBlock)
-    val currentOnNavigateToConversation by rememberUpdatedState(onNavigateToConversation)
-    val currentOnNavigateToNewChat by rememberUpdatedState(onNavigateToNewChat)
-    val currentOnConversationSettings by rememberUpdatedState(onNavigateToConversationSettings)
-    val currentOnArchivedConversations by rememberUpdatedState(onNavigateToArchivedConversations)
 
     LaunchedEffect(effects) {
         effects.collect { effect ->
             when (effect) {
-                is Effect.OpenConversation -> {
-                    currentOnNavigateToConversation(effect.conversationId)
-                }
-
-                is Effect.StartChat -> {
-                    currentOnNavigateToNewChat()
-                }
-
-                is Effect.OpenConversationSettings -> {
-                    currentOnConversationSettings(effect.conversationId)
-                }
-
-                is Effect.OpenArchivedConversations -> {
-                    currentOnArchivedConversations()
-                }
-
                 is Effect.ConfirmBlock -> {
                     currentOnConfirmBlock(
                         effect.conversationId,

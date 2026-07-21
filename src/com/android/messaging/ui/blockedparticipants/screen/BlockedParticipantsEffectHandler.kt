@@ -24,15 +24,6 @@ internal class BlockedParticipantsEffectHandlerImpl(
                 UiUtils.showToastAtBottom(effect.messageResId)
             }
 
-            is Effect.OpenParticipantChat -> {
-                UIIntents.get().launchConversationActivity(
-                    activity,
-                    effect.conversationId.value,
-                    null,
-                )
-                activity.finish()
-            }
-
             is Effect.PlacePhoneCall -> {
                 UIIntents.get().launchPhoneCallActivity(
                     activity,

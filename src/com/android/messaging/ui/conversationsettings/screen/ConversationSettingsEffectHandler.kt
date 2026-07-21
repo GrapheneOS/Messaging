@@ -63,15 +63,6 @@ internal class ConversationSettingsEffectHandlerImpl(
                 activity.startActivity(intent)
             }
 
-            is Effect.OpenParticipantChat -> {
-                val intent = UIIntents.get().getIntentForConversationActivity(
-                    activity,
-                    effect.conversationId.value,
-                    null,
-                )
-                activity.startActivity(intent)
-            }
-
             is Effect.CopyToClipboard -> {
                 clipboardManager.setPrimaryClip(ClipData.newPlainText(null, effect.text))
             }

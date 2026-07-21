@@ -5,9 +5,6 @@ import kotlinx.collections.immutable.ImmutableList
 
 internal sealed interface ConversationListEffect {
 
-    data object StartChat : ConversationListEffect
-    data object OpenArchivedConversations : ConversationListEffect
-    data object OpenBlockedParticipants : ConversationListEffect
     data object OpenSettings : ConversationListEffect
     data object OpenDebugOptions : ConversationListEffect
     data object ScrollToTop : ConversationListEffect
@@ -20,14 +17,6 @@ internal sealed interface ConversationListEffect {
     data class PreparePinAnimation(
         val conversationIds: ImmutableList<ConversationId>,
         val isPinned: Boolean,
-    ) : ConversationListEffect
-
-    data class OpenConversation(
-        val conversationId: ConversationId,
-    ) : ConversationListEffect
-
-    data class OpenConversationSettings(
-        val conversationId: ConversationId,
     ) : ConversationListEffect
 
     data class PlaceCall(

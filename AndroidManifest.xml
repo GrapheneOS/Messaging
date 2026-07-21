@@ -129,21 +129,6 @@
                 android:value="com.android.messaging.ui.MainActivity" />
         </activity>
 
-        <!-- Blocked Participants -->
-        <activity
-            android:name=".ui.blockedparticipants.BlockedParticipantsActivity"
-            android:allowEmbedded="true"
-            android:configChanges="orientation|screenSize|keyboardHidden"
-            android:label="@string/blocked_contacts_title"
-            android:parentActivityName="com.android.messaging.ui.MainActivity"
-            android:resizeableActivity="true"
-            android:screenOrientation="user"
-            android:theme="@style/Theme.Compose">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.android.messaging.ui.MainActivity" />
-        </activity>
-
         <!-- Full-screen photo viewer -->
         <activity
             android:name=".ui.photoviewer.PhotoViewerActivity"
