@@ -38,6 +38,13 @@ public class ActionService {
     }
 
     /**
+     * Execute an action synchronously instead of posting it over the ActionService
+     */
+    public void executeActionImmediately(final Action action) {
+        ActionServiceImpl.executeActionImmediately(action);
+    }
+
+    /**
      * Schedule a delayed action by posting it over the the ActionService
      */
     public void scheduleAction(final Action action, final int code,

@@ -2,10 +2,10 @@ package com.android.messaging.ui.conversationpicker.mapper
 
 import com.android.messaging.data.contact.formatter.ContactDestinationFormatter
 import com.android.messaging.data.conversationpicker.model.TargetConversation
+import com.android.messaging.data.phone.formatter.PhoneNumberFormatter
 import com.android.messaging.domain.conversation.usecase.avatar.ResolveAvatarUri
 import com.android.messaging.ui.conversationpicker.formatter.targetDetailsTextOrNull
 import com.android.messaging.ui.conversationpicker.model.TargetUiState
-import com.android.messaging.util.PhoneUtils
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -18,6 +18,7 @@ internal interface TargetUiStateMapper {
 
 internal class TargetUiStateMapperImpl @Inject constructor(
     private val contactDestinationFormatter: ContactDestinationFormatter,
+    private val phoneNumberFormatter: PhoneNumberFormatter,
     private val resolveAvatarUri: ResolveAvatarUri,
 ) : TargetUiStateMapper {
 
@@ -38,7 +39,7 @@ internal class TargetUiStateMapperImpl @Inject constructor(
             ?.takeUnless { conversation.isGroup }
 
         val formattedDestination = otherParticipantDestination
-            ?.let { PhoneUtils.getDefault().formatForDisplay(it) }
+            ?.let(phoneNumberFormatter::formatForDisplay)
 
         val canonicalDestination = otherParticipantDestination
             ?.let(contactDestinationFormatter::canonicalize)

@@ -5,6 +5,7 @@ import com.android.messaging.data.contact.formatter.ContactDestinationFormatter
 import com.android.messaging.data.contact.model.Contact
 import com.android.messaging.data.contact.model.ContactsPage
 import com.android.messaging.data.contact.repository.ContactsRepository
+import com.android.messaging.data.phone.formatter.PhoneNumberFormatter
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.domain.contacts.usecase.IsReadContactsPermissionGranted
 import com.android.messaging.ui.contact.mapper.ContactUiModelMapper
@@ -53,6 +54,7 @@ internal interface RecipientPickerDelegate {
 
 internal class RecipientPickerDelegateImpl @Inject constructor(
     private val contactDestinationFormatter: ContactDestinationFormatter,
+    private val phoneNumberFormatter: PhoneNumberFormatter,
     private val contactUiModelMapper: ContactUiModelMapper,
     private val contactsRepository: ContactsRepository,
     private val isReadContactsPermissionGranted: IsReadContactsPermissionGranted,
@@ -470,7 +472,7 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
         return when {
             candidate.isExcludedBy(excludedDestinations) -> null
             isAlreadyAContactDestination -> null
-            else -> candidate.toListItem()
+            else -> candidate.toListItem(phoneNumberFormatter)
         }
     }
 
@@ -564,11 +566,11 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
             return destinationIdentity.isExcludedBy(excludedDestinations = excludedDestinations)
         }
 
-        fun toListItem(): RecipientPickerListItem.SyntheticPhone {
-            val phoneUtils = PhoneUtils.getDefault()
-            val displayName = phoneUtils.formatForDisplayUsingSimCountry(rawQuery).orEmpty()
-            val normalizedForDisplay =
-                phoneUtils.formatNormalizedDestinationUsingSimCountry(rawQuery).orEmpty()
+        fun toListItem(
+            phoneNumberFormatter: PhoneNumberFormatter,
+        ): RecipientPickerListItem.SyntheticPhone {
+            val displayName = phoneNumberFormatter.formatForDisplayUsingSimCountry(rawQuery)
+            val secondaryText = phoneNumberFormatter.formatNormalizedUsingSimCountry(rawQuery)
 
             return RecipientPickerListItem.SyntheticPhone(
                 id = "$SYNTHETIC_RECIPIENT_ID_PREFIX$rawQuery",
@@ -576,7 +578,7 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
                 destination = rawQuery,
                 normalizedDestination = destinationIdentity.normalizedDestination,
                 displayName = displayName,
-                secondaryText = normalizedForDisplay,
+                secondaryText = secondaryText,
             )
         }
     }

@@ -24,15 +24,11 @@ import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
 
 import com.android.messaging.datamodel.BoundCursorLoader;
-import com.android.messaging.datamodel.BugleNotifications;
-import com.android.messaging.datamodel.DataModel;
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns;
 import com.android.messaging.datamodel.MessagingContentProvider;
-import com.android.messaging.datamodel.SyncManager;
 import com.android.messaging.datamodel.binding.BindableData;
 import com.android.messaging.datamodel.binding.BindingBase;
 import com.android.messaging.datamodel.data.ConversationListItemData.ConversationListViewColumns;
-import com.android.messaging.receiver.SmsReceiver;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.LogUtil;
 
@@ -178,10 +174,6 @@ public class ConversationListData extends BindableData {
         mLoaderManager.initLoader(BLOCKED_PARTICIPANTS_AVAILABLE_LOADER, mArgs, loaderCallbacks);
     }
 
-    public void handleSecondaryUserMessagesSeen() {
-        SmsReceiver.cancelSecondaryUserNotification();
-    }
-
     @Override
     protected void unregisterListeners() {
         mListener = null;
@@ -194,20 +186,4 @@ public class ConversationListData extends BindableData {
         }
     }
 
-    public boolean getHasFirstSyncCompleted() {
-        final SyncManager syncManager = DataModel.get().getSyncManager();
-        return syncManager.getHasFirstSyncCompleted();
-    }
-
-    public void setScrolledToNewestConversation(boolean scrolledToNewestConversation) {
-        DataModel.get().setConversationListScrolledToNewestConversation(
-                scrolledToNewestConversation);
-        if (scrolledToNewestConversation) {
-            handleSecondaryUserMessagesSeen();
-        }
-    }
-
-    public HashSet<String> getBlockedParticipants() {
-        return mBlockedParticipants;
-    }
 }
