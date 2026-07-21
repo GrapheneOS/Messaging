@@ -103,9 +103,9 @@ public abstract class UIIntents {
     public static final String ACTION_MESSAGE_READ = "com.android.messaging.action.MESSAGE_READ";
 
     /**
-     * Launch the permission check activity
+     * Launch the onboarding activity (SMS warning, followed by the permission check)
      */
-    public abstract void launchPermissionCheckActivity(final Context context);
+    public abstract void launchOnboardingActivity(final Context context);
 
     public abstract void launchConversationListActivity(final Context context);
 
