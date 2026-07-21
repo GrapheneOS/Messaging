@@ -12,6 +12,7 @@ import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsEffect
+import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsNavEvent
 import com.android.messaging.ui.conversation.recipientpicker.delegate.ConversationResolutionDelegate
 import com.android.messaging.ui.conversation.recipientpicker.delegate.SelectedRecipientsDelegate
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.ConversationResolutionOutcome
@@ -197,7 +198,7 @@ class AddParticipantsViewModelTest {
                 conversationResolutionDelegate = resolutionDelegate.mock,
             )
 
-            viewModel.effects.test {
+            viewModel.navigationEvents.test {
                 advanceUntilIdle()
                 resolutionDelegate.outcomesSource.emit(
                     ConversationResolutionOutcome.Resolved(
@@ -206,7 +207,7 @@ class AddParticipantsViewModelTest {
                 )
 
                 assertThat(awaitItem()).isEqualTo(
-                    AddParticipantsEffect.NavigateToConversation(
+                    AddParticipantsNavEvent.OpenConversation(
                         conversationId = ConversationId("conversation-2"),
                     )
                 )

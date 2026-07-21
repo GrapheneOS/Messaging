@@ -10,7 +10,7 @@ import com.android.messaging.ui.conversationlist.chats.model.ConversationListNav
 import kotlinx.coroutines.flow.Flow
 
 @Stable
-internal class ConversationListNavigation(
+internal class ConversationListNavigationCallbacks(
     val onNavigateToConversation: (ConversationId) -> Unit,
     val onNavigateToNewChat: () -> Unit,
     val onNavigateToConversationSettings: (ConversationId) -> Unit,
@@ -21,7 +21,7 @@ internal class ConversationListNavigation(
 @Composable
 internal fun ConversationListNavEvents(
     navigationEvents: Flow<NavEvent>,
-    navigation: ConversationListNavigation,
+    navigation: ConversationListNavigationCallbacks,
 ) {
     val currentNavigation by rememberUpdatedState(navigation)
 

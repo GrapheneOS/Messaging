@@ -45,7 +45,6 @@ import com.android.messaging.ui.blockedparticipants.common.ScreenContentPadding
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantUiState
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsAction as Action
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsNavEvent as NavEvent
-import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsScreenEffect as Effect
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsUiState as State
 import com.android.messaging.ui.common.components.contentSurfaceShape
 import com.android.messaging.ui.common.components.safeDrawingContentPadding
