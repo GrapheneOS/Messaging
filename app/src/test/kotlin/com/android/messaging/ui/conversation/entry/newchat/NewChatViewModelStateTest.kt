@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.entry.newchat
 
 import app.cash.turbine.test
 import com.android.messaging.ui.conversation.entry.model.NewChatEffect
+import com.android.messaging.ui.conversation.entry.model.NewChatNavEvent
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.ConversationResolutionState
 import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerUiState
 import com.android.messaging.ui.recipientselection.model.picker.SelectedRecipient
@@ -172,10 +173,10 @@ internal class NewChatViewModelStateTest : BaseNewChatViewModelTest() {
             val viewModel = createViewModel(conversationResolutionDelegate = resolution.mock)
             advanceUntilIdle()
 
-            viewModel.effects.test {
+            viewModel.navigationEvents.test {
                 viewModel.onNavigateBack()
                 advanceUntilIdle()
-                assertEquals(NewChatEffect.NavigateBack, awaitItem())
+                assertEquals(NewChatNavEvent.Close, awaitItem())
                 cancelAndIgnoreRemainingEvents()
             }
             verify(exactly = 1) { resolution.mock.cancel() }

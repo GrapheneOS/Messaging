@@ -3,11 +3,28 @@ package com.android.messaging.ui.conversationlist.chats
 import android.app.Activity
 import android.graphics.Point
 import android.view.View
+import androidx.activity.compose.LocalActivity
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalView
 import androidx.core.net.toUri
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListEffect as Effect
 import com.android.messaging.util.ContactUtil
 import com.android.messaging.util.DebugUtils
+
+@Composable
+internal fun rememberConversationListEffectHandler(): ConversationListEffectHandler {
+    val activity = checkNotNull(LocalActivity.current)
+    val hostView = LocalView.current
+
+    return remember(activity, hostView) {
+        ConversationListEffectHandlerImpl(
+            activity = activity,
+            hostView = hostView,
+        )
+    }
+}
 
 internal interface ConversationListEffectHandler {
     fun handle(effect: Effect)

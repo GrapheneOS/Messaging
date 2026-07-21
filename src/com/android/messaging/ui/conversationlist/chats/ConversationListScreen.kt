@@ -81,7 +81,7 @@ private val FabBottomReserve = 72.dp
 @Composable
 internal fun ConversationListScreen(
     effectHandler: ConversationListEffectHandler,
-    navigation: ConversationListNavigation,
+    navigation: ConversationListNavigationCallbacks,
     modifier: Modifier = Modifier,
     screenModel: ConversationListScreenModel = hiltViewModel<ConversationListViewModel>(),
 ) {

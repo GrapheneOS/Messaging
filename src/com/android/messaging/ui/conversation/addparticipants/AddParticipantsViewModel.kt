@@ -11,6 +11,7 @@ import com.android.messaging.data.conversation.repository.ConversationParticipan
 import com.android.messaging.di.core.MainDispatcher
 import com.android.messaging.domain.conversation.usecase.participant.IsConversationRecipientLimitExceeded
 import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsEffect
+import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsNavEvent
 import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsUiState
 import com.android.messaging.ui.conversation.recipientpicker.delegate.ConversationResolutionDelegate
 import com.android.messaging.ui.conversation.recipientpicker.delegate.SelectedRecipientsDelegate
@@ -43,6 +44,7 @@ import kotlinx.coroutines.launch
 
 internal interface AddParticipantsScreenModel {
     val effects: Flow<AddParticipantsEffect>
+    val navigationEvents: Flow<AddParticipantsNavEvent>
     val uiState: StateFlow<AddParticipantsUiState>
 
     fun onConversationIdChanged(conversationId: ConversationId)
@@ -77,6 +79,11 @@ internal class AddParticipantsViewModel @Inject constructor(
     )
 
     override val effects = effectsChannel.receiveAsFlow()
+
+    private val navigationEventsChannel = Channel<AddParticipantsNavEvent>(
+        capacity = Channel.BUFFERED,
+    )
+    override val navigationEvents = navigationEventsChannel.receiveAsFlow()
 
     override val uiState: StateFlow<AddParticipantsUiState> = combine(
         localUiState,
@@ -246,8 +253,8 @@ internal class AddParticipantsViewModel @Inject constructor(
                     when (outcome) {
                         is ConversationResolutionOutcome.Resolved -> {
                             selectedRecipientsDelegate.clear()
-                            sendEffect(
-                                effect = AddParticipantsEffect.NavigateToConversation(
+                            navigationEventsChannel.trySend(
+                                AddParticipantsNavEvent.OpenConversation(
                                     conversationId = outcome.conversationId,
                                 ),
                             )

@@ -13,7 +13,7 @@ import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.testutil.TEST_WAIT_TIMEOUT_MILLIS
 import com.android.messaging.ui.conversation.ADD_PARTICIPANTS_CONFIRM_BUTTON_TEST_TAG
-import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsEffect
+import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsNavEvent
 import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsUiState
 import com.android.messaging.ui.core.AppTheme
 import com.android.messaging.ui.recipientselection.model.picker.SelectedRecipient
@@ -103,20 +103,22 @@ class AddParticipantsScreenTest {
     }
 
     @Test
-    fun navigateEffect_forwardsConversationId() {
-        val effectsFlow = MutableSharedFlow<AddParticipantsEffect>(extraBufferCapacity = 1)
-        val model = createScreenModel(effectsFlow = effectsFlow)
+    fun navigationEvent_forwardsConversationId() {
+        val navigationEventsFlow = MutableSharedFlow<AddParticipantsNavEvent>(
+            extraBufferCapacity = 1,
+        )
+        val model = createScreenModel(navigationEventsFlow = navigationEventsFlow)
         val onNavigateToConversation = mockk<(ConversationId) -> Unit>(relaxed = true)
 
         setContent(
             model = model,
             onNavigateToConversation = onNavigateToConversation,
         )
-        waitForEffectsCollector(effectsFlow = effectsFlow)
+        waitForNavigationEventsCollector(navigationEventsFlow = navigationEventsFlow)
 
         composeTestRule.runOnIdle {
-            effectsFlow.tryEmit(
-                AddParticipantsEffect.NavigateToConversation(
+            navigationEventsFlow.tryEmit(
+                AddParticipantsNavEvent.OpenConversation(
                     conversationId = TARGET_CONVERSATION_ID,
                 ),
             )
@@ -197,27 +199,30 @@ class AddParticipantsScreenTest {
     }
 
     private fun createScreenModel(
-        effectsFlow: MutableSharedFlow<AddParticipantsEffect> = MutableSharedFlow(),
+        navigationEventsFlow: MutableSharedFlow<AddParticipantsNavEvent> = MutableSharedFlow(),
     ): AddParticipantsScreenModel {
         return createScreenModel(
             initialUiState = defaultUiState,
-            effectsFlow = effectsFlow,
+            navigationEventsFlow = navigationEventsFlow,
         )
     }
 
     private fun createScreenModel(
         initialUiState: AddParticipantsUiState,
-        effectsFlow: MutableSharedFlow<AddParticipantsEffect> = MutableSharedFlow(),
+        navigationEventsFlow: MutableSharedFlow<AddParticipantsNavEvent> = MutableSharedFlow(),
     ): AddParticipantsScreenModel {
         return mockk<AddParticipantsScreenModel>(relaxed = true) {
-            every { effects } returns effectsFlow
+            every { effects } returns MutableSharedFlow()
+            every { navigationEvents } returns navigationEventsFlow
             every { uiState } returns MutableStateFlow(value = initialUiState)
         }
     }
 
-    private fun waitForEffectsCollector(effectsFlow: MutableSharedFlow<AddParticipantsEffect>) {
+    private fun waitForNavigationEventsCollector(
+        navigationEventsFlow: MutableSharedFlow<AddParticipantsNavEvent>,
+    ) {
         composeTestRule.waitUntil(timeoutMillis = TEST_WAIT_TIMEOUT_MILLIS) {
-            effectsFlow.subscriptionCount.value == 1
+            navigationEventsFlow.subscriptionCount.value == 1
         }
     }
 

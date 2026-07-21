@@ -36,7 +36,6 @@ import com.android.messaging.ui.common.components.snackbar.MessagingSnackbarHost
 import com.android.messaging.ui.common.components.snackbar.showActionSnackbar
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListAction as Action
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListEffect as Effect
-import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListNavEvent as NavEvent
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListUiState as State
 import com.android.messaging.ui.conversationlist.common.dialog.ConversationListDeleteDialog
 import com.android.messaging.ui.conversationlist.common.item.ConversationSwipeKind
@@ -106,32 +105,6 @@ internal fun ArchivedConversationListScreen(
             },
             onDismiss = { pendingDelete = false },
         )
-    }
-}
-
-@Composable
-private fun ArchivedConversationListNavEvents(
-    navigationEvents: Flow<NavEvent>,
-    onNavigateToConversation: (ConversationId) -> Unit,
-    onNavigateToConversationSettings: (ConversationId) -> Unit,
-) {
-    val currentOnNavigateToConversation by rememberUpdatedState(onNavigateToConversation)
-    val currentOnNavigateToConversationSettings by rememberUpdatedState(
-        onNavigateToConversationSettings,
-    )
-
-    LaunchedEffect(navigationEvents) {
-        navigationEvents.collect { event ->
-            when (event) {
-                is NavEvent.OpenConversation -> {
-                    currentOnNavigateToConversation(event.conversationId)
-                }
-
-                is NavEvent.OpenConversationSettings -> {
-                    currentOnNavigateToConversationSettings(event.conversationId)
-                }
-            }
-        }
     }
 }
 
