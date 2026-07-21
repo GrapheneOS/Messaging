@@ -20,17 +20,6 @@ internal class ConversationListEffectHandlerImpl(
 
     override fun handle(effect: Effect) {
         when (effect) {
-            is Effect.OpenConversationSettings -> {
-                UIIntents.get().launchPeopleAndOptionsActivity(
-                    activity,
-                    effect.conversationId.value,
-                )
-            }
-
-            Effect.OpenArchivedConversations -> {
-                UIIntents.get().launchArchivedConversationsActivity(activity)
-            }
-
             Effect.OpenBlockedParticipants -> {
                 UIIntents.get().launchBlockedParticipantsActivity(activity)
             }

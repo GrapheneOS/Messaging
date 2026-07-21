@@ -51,10 +51,8 @@ import com.android.messaging.ui.classzero.ClassZeroActivity;
 import com.android.messaging.ui.contact.AddContactActivity;
 import com.android.messaging.ui.conversation.ConversationActivity;
 import com.android.messaging.ui.conversation.LaunchConversationActivity;
-import com.android.messaging.ui.conversationlist.archived.ArchivedConversationListActivity;
 import com.android.messaging.ui.conversationpicker.host.forward.ForwardMessageActivity;
 import com.android.messaging.ui.conversationpicker.host.widget.WidgetPickConversationActivity;
-import com.android.messaging.ui.conversationsettings.ConversationSettingsActivity;
 import com.android.messaging.ui.debug.DebugMmsConfigActivity;
 import com.android.messaging.ui.photoviewer.PhotoViewerActivity;
 import com.android.messaging.ui.vcarddetail.VCardDetailActivity;
@@ -220,25 +218,9 @@ public class UIIntentsImpl extends UIIntents {
     }
 
     @Override
-    public void launchArchivedConversationsActivity(final Context context) {
-        final Intent intent = new Intent(context, ArchivedConversationListActivity.class);
-        context.startActivity(intent);
-    }
-
-    @Override
     public void launchBlockedParticipantsActivity(final Context context) {
         final Intent intent = new Intent(context, BlockedParticipantsActivity.class);
         context.startActivity(intent);
-    }
-
-    @Override
-    public void launchPeopleAndOptionsActivity(
-            final Activity activity,
-            final String conversationId
-    ) {
-        final Intent intent = new Intent(activity, ConversationSettingsActivity.class);
-        intent.putExtra(UI_INTENT_EXTRA_CONVERSATION_ID, conversationId);
-        activity.startActivityForResult(intent, 0);
     }
 
     @Override

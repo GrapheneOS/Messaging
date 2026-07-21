@@ -162,23 +162,12 @@ public abstract class UIIntents {
             final Uri avatarUri, final String destination);
 
     /**
-     * Launch an activity to show people & options for a given conversation.
-     */
-    public abstract void launchPeopleAndOptionsActivity(final Activity context,
-            final String conversationId);
-
-    /**
      * Launch an external activity to handle a phone call
      * @param phoneNumber the phone number to call
      * @param clickPosition is the location tapped to start this launch for transition use
      */
     public abstract void launchPhoneCallActivity(final Context context, final String phoneNumber,
                                                  final Point clickPosition);
-
-    /**
-     * Launch an activity to show archived conversations.
-     */
-    public abstract void launchArchivedConversationsActivity(final Context context);
 
     /**
      * Launch an activity to show blocked participants.
