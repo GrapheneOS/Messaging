@@ -1,9 +1,7 @@
 package com.android.messaging.ui.conversationsettings.navigation
 
-import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalView
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.android.messaging.ui.conversation.navigation.rememberConversationNavigator
@@ -12,7 +10,7 @@ import com.android.messaging.ui.conversationsettings.screen.rememberConversation
 import com.android.messaging.ui.navigation.LocalNavigator
 import com.android.messaging.ui.navigation.SeededViewModelStoreOwner
 
-internal fun EntryProviderScope<NavKey>.conversationSettingsEntry() {
+internal fun EntryProviderScope<NavKey>.conversationSettingsEntries() {
     entry<ConversationSettingsNavKey>(
         content = conversationSettingsRouteContent(),
     )
@@ -20,14 +18,9 @@ internal fun EntryProviderScope<NavKey>.conversationSettingsEntry() {
 
 private fun conversationSettingsRouteContent(): @Composable (ConversationSettingsNavKey) -> Unit {
     return { navKey ->
-        val activity = checkNotNull(LocalActivity.current)
-        val hostView = LocalView.current
         val navigator = LocalNavigator.current
         val conversationNavigator = rememberConversationNavigator()
-        val effectHandler = rememberConversationSettingsEffectHandler(
-            activity = activity,
-            hostView = hostView,
-        )
+        val effectHandler = rememberConversationSettingsEffectHandler()
         val defaultArgs = remember(navKey) {
             conversationSettingsDefaultArgs(navKey = navKey)
         }

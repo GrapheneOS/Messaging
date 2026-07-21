@@ -231,6 +231,7 @@ class NewChatScreenTest {
     private fun createScreenModel(initialUiState: NewChatUiState): NewChatScreenModel {
         return mockk<NewChatScreenModel>(relaxed = true) {
             every { effects } returns MutableSharedFlow()
+            every { navigationEvents } returns MutableSharedFlow()
             every { uiState } returns MutableStateFlow(value = initialUiState)
         }
     }

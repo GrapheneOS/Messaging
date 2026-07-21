@@ -5,6 +5,7 @@ import android.app.role.RoleManager
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
@@ -14,7 +15,8 @@ import com.android.messaging.ui.onboarding.screen.model.OnboardingScreenEffect a
 import dagger.hilt.android.EntryPointAccessors
 
 @Composable
-internal fun rememberOnboardingEffectHandler(activity: Activity): OnboardingEffectHandler {
+internal fun rememberOnboardingEffectHandler(): OnboardingEffectHandler {
+    val activity = checkNotNull(LocalActivity.current)
     val context = LocalContext.current.applicationContext
 
     return remember(activity, context) {

@@ -38,6 +38,7 @@ import com.android.messaging.ui.conversation.NEW_CHAT_NAVIGATE_BACK_BUTTON_TEST_
 import com.android.messaging.ui.conversation.NEW_CHAT_TOP_APP_BAR_TITLE_TEST_TAG
 import com.android.messaging.ui.conversation.composer.model.ConversationSimSelectorUiState
 import com.android.messaging.ui.conversation.entry.model.NewChatEffect
+import com.android.messaging.ui.conversation.entry.model.NewChatNavEvent
 import com.android.messaging.ui.conversation.entry.model.NewChatUiState
 import com.android.messaging.ui.conversation.newChatContactDestinationRowTestTag
 import com.android.messaging.ui.conversation.newChatContactRowTestTag
@@ -119,19 +120,25 @@ private fun NewChatScreenEffects(
     }
 
     LaunchedEffect(screenModel) {
-        screenModel.effects.collect { effect ->
-            when (effect) {
-                NewChatEffect.NavigateBack -> {
+        screenModel.navigationEvents.collect { event ->
+            when (event) {
+                NewChatNavEvent.Close -> {
                     latestOnNavigateBack.value()
                 }
 
-                is NewChatEffect.NavigateToConversation -> {
+                is NewChatNavEvent.OpenConversation -> {
                     latestOnNavigateToConversation.value(
-                        effect.conversationId,
-                        effect.selfParticipantId,
+                        event.conversationId,
+                        event.selfParticipantId,
                     )
                 }
+            }
+        }
+    }
 
+    LaunchedEffect(screenModel) {
+        screenModel.effects.collect { effect ->
+            when (effect) {
                 is NewChatEffect.ShowMessage -> {
                     UiUtils.showToastAtBottom(effect.messageResId)
                 }

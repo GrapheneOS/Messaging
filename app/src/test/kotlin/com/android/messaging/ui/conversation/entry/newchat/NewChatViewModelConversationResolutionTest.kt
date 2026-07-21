@@ -6,6 +6,7 @@ import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversation.entry.model.NewChatEffect
+import com.android.messaging.ui.conversation.entry.model.NewChatNavEvent
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.ConversationResolutionOutcome
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.ConversationResolutionState
 import io.mockk.verify
@@ -85,13 +86,13 @@ internal class NewChatViewModelConversationResolutionTest : BaseNewChatViewModel
             val viewModel = createViewModel(conversationResolutionDelegate = resolution.mock)
             advanceUntilIdle()
 
-            viewModel.effects.test {
+            viewModel.navigationEvents.test {
                 resolution.outcomes.emit(
                     ConversationResolutionOutcome.Resolved(conversationId = CONVERSATION_ID),
                 )
                 advanceUntilIdle()
                 assertEquals(
-                    NewChatEffect.NavigateToConversation(
+                    NewChatNavEvent.OpenConversation(
                         conversationId = CONVERSATION_ID,
                         selfParticipantId = null,
                     ),
@@ -157,7 +158,7 @@ internal class NewChatViewModelConversationResolutionTest : BaseNewChatViewModel
             )
             advanceUntilIdle()
 
-            viewModel.effects.test {
+            viewModel.navigationEvents.test {
                 viewModel.onContactClicked(destination = DESTINATION)
                 advanceUntilIdle()
                 resolution.outcomes.emit(
@@ -165,7 +166,7 @@ internal class NewChatViewModelConversationResolutionTest : BaseNewChatViewModel
                 )
                 advanceUntilIdle()
                 assertThat(awaitItem()).isEqualTo(
-                    NewChatEffect.NavigateToConversation(
+                    NewChatNavEvent.OpenConversation(
                         conversationId = CONVERSATION_ID,
                         selfParticipantId = ParticipantId("self-1"),
                     )

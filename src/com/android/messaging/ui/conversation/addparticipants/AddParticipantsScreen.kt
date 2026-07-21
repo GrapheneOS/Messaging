@@ -31,6 +31,7 @@ import com.android.messaging.ui.conversation.ADD_PARTICIPANTS_CONFIRM_BUTTON_TES
 import com.android.messaging.ui.conversation.addParticipantsContactDestinationRowTestTag
 import com.android.messaging.ui.conversation.addParticipantsContactRowTestTag
 import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsEffect
+import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsNavEvent
 import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsUiState
 import com.android.messaging.ui.conversation.recipientpicker.component.RecipientSelectionContent
 import com.android.messaging.ui.core.MessagingPreviewTheme
@@ -45,6 +46,7 @@ import com.android.messaging.ui.recipientselection.preview.previewRecipientPicke
 import com.android.messaging.ui.recipientselection.preview.previewSelectedRecipient
 import com.android.messaging.util.UiUtils
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.flow.Flow
 
 @Composable
 internal fun AddParticipantsScreen(
@@ -55,19 +57,19 @@ internal fun AddParticipantsScreen(
     screenModel: AddParticipantsScreenModel = hiltViewModel<AddParticipantsViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
-    val latestOnNavigateToConversation = rememberUpdatedState(onNavigateToConversation)
 
     LaunchedEffect(conversationId, screenModel) {
         screenModel.onConversationIdChanged(conversationId = conversationId)
     }
 
+    AddParticipantsNavEvents(
+        navigationEvents = screenModel.navigationEvents,
+        onNavigateToConversation = onNavigateToConversation,
+    )
+
     LaunchedEffect(screenModel) {
         screenModel.effects.collect { effect ->
             when (effect) {
-                is AddParticipantsEffect.NavigateToConversation -> {
-                    latestOnNavigateToConversation.value(effect.conversationId)
-                }
-
                 is AddParticipantsEffect.ShowMessage -> {
                     UiUtils.showToastAtBottom(effect.messageResId)
                 }
@@ -235,5 +237,23 @@ private fun AddParticipantsRecipientSelectionContentPreview() {
             onQueryChanged = { _ -> },
             onRecipientClick = { _ -> },
         )
+    }
+}
+
+@Composable
+private fun AddParticipantsNavEvents(
+    navigationEvents: Flow<AddParticipantsNavEvent>,
+    onNavigateToConversation: (ConversationId) -> Unit,
+) {
+    val currentOnNavigateToConversation by rememberUpdatedState(onNavigateToConversation)
+
+    LaunchedEffect(navigationEvents) {
+        navigationEvents.collect { event ->
+            when (event) {
+                is AddParticipantsNavEvent.OpenConversation -> {
+                    currentOnNavigateToConversation(event.conversationId)
+                }
+            }
+        }
     }
 }

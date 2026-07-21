@@ -13,6 +13,7 @@ import com.android.messaging.di.core.MainDispatcher
 import com.android.messaging.domain.conversation.usecase.participant.IsConversationRecipientLimitExceeded
 import com.android.messaging.ui.conversation.composer.model.ConversationSimSelectorUiState
 import com.android.messaging.ui.conversation.entry.model.NewChatEffect
+import com.android.messaging.ui.conversation.entry.model.NewChatNavEvent
 import com.android.messaging.ui.conversation.entry.model.NewChatUiState
 import com.android.messaging.ui.conversation.recipientpicker.delegate.ConversationResolutionDelegate
 import com.android.messaging.ui.conversation.recipientpicker.delegate.SelectedRecipientsDelegate
@@ -39,6 +40,7 @@ import kotlinx.coroutines.launch
 
 internal interface NewChatScreenModel {
     val effects: Flow<NewChatEffect>
+    val navigationEvents: Flow<NewChatNavEvent>
     val uiState: StateFlow<NewChatUiState>
 
     fun onContactClicked(destination: String)
@@ -71,6 +73,9 @@ internal class NewChatViewModel @Inject constructor(
     private var pendingSelfParticipantId: ParticipantId? = null
 
     override val effects = effectsChannel.receiveAsFlow()
+
+    private val navigationEventsChannel = Channel<NewChatNavEvent>(capacity = Channel.BUFFERED)
+    override val navigationEvents = navigationEventsChannel.receiveAsFlow()
 
     override val uiState: StateFlow<NewChatUiState> = combine(
         localUiState,
@@ -190,7 +195,7 @@ internal class NewChatViewModel @Inject constructor(
         }
 
         conversationResolutionDelegate.cancel()
-        sendEffect(effect = NewChatEffect.NavigateBack)
+        navigationEventsChannel.trySend(NewChatNavEvent.Close)
     }
 
     override fun onQueryChanged(query: String) {
@@ -257,8 +262,8 @@ internal class NewChatViewModel @Inject constructor(
 
         selectedRecipientsDelegate.clear()
 
-        sendEffect(
-            effect = NewChatEffect.NavigateToConversation(
+        navigationEventsChannel.trySend(
+            NewChatNavEvent.OpenConversation(
                 conversationId = conversationId,
                 selfParticipantId = pendingSelfParticipantId,
             ),
