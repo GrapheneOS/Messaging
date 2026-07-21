@@ -83,6 +83,8 @@ internal fun ConversationListScreen(
     effectHandler: ConversationListEffectHandler,
     onNavigateToConversation: (ConversationId) -> Unit,
     onNavigateToNewChat: () -> Unit,
+    onNavigateToConversationSettings: (ConversationId) -> Unit,
+    onNavigateToArchivedConversations: () -> Unit,
     modifier: Modifier = Modifier,
     screenModel: ConversationListScreenModel = hiltViewModel<ConversationListViewModel>(),
 ) {
@@ -100,6 +102,10 @@ internal fun ConversationListScreen(
     var pendingBlockDestination by remember { mutableStateOf<String?>(null) }
     var pendingSnooze by remember { mutableStateOf(false) }
 
+    LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
+        screenModel.onAction(Action.ScreenResumed)
+    }
+
     ConversationListEffects(
         effects = screenModel.effects,
         effectHandler = effectHandler,
@@ -109,6 +115,8 @@ internal fun ConversationListScreen(
         onAction = screenModel::onAction,
         onNavigateToConversation = onNavigateToConversation,
         onNavigateToNewChat = onNavigateToNewChat,
+        onNavigateToConversationSettings = onNavigateToConversationSettings,
+        onNavigateToArchivedConversations = onNavigateToArchivedConversations,
         onConfirmBlock = { conversationId, destination ->
             pendingBlockConversationId = conversationId
             pendingBlockDestination = destination
@@ -200,6 +208,8 @@ private fun ConversationListEffects(
     onAction: (Action) -> Unit,
     onNavigateToConversation: (ConversationId) -> Unit,
     onNavigateToNewChat: () -> Unit,
+    onNavigateToConversationSettings: (ConversationId) -> Unit,
+    onNavigateToArchivedConversations: () -> Unit,
     onConfirmBlock: (conversationId: ConversationId, destination: String) -> Unit,
 ) {
     val context = LocalContext.current
@@ -213,10 +223,8 @@ private fun ConversationListEffects(
     val currentOnConfirmBlock by rememberUpdatedState(onConfirmBlock)
     val currentOnNavigateToConversation by rememberUpdatedState(onNavigateToConversation)
     val currentOnNavigateToNewChat by rememberUpdatedState(onNavigateToNewChat)
-
-    LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
-        currentOnAction(Action.ScreenResumed)
-    }
+    val currentOnConversationSettings by rememberUpdatedState(onNavigateToConversationSettings)
+    val currentOnArchivedConversations by rememberUpdatedState(onNavigateToArchivedConversations)
 
     LaunchedEffect(effects) {
         effects.collect { effect ->
@@ -227,6 +235,14 @@ private fun ConversationListEffects(
 
                 is Effect.StartChat -> {
                     currentOnNavigateToNewChat()
+                }
+
+                is Effect.OpenConversationSettings -> {
+                    currentOnConversationSettings(effect.conversationId)
+                }
+
+                is Effect.OpenArchivedConversations -> {
+                    currentOnArchivedConversations()
                 }
 
                 is Effect.ConfirmBlock -> {

@@ -27,9 +27,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.common.components.contentSurfaceShape
 import com.android.messaging.ui.common.components.snackbar.MessagingSnackbarHost
 import com.android.messaging.ui.common.components.snackbar.showActionSnackbar
@@ -60,9 +61,11 @@ private val ArchivedSwipeSpec = ConversationListSwipeSpec(
 internal fun ArchivedConversationListScreen(
     effectHandler: ArchivedConversationListEffectHandler,
     onNavigateBack: () -> Unit,
+    onNavigateToConversation: (ConversationId) -> Unit,
+    onNavigateToConversationSettings: (ConversationId) -> Unit,
     modifier: Modifier = Modifier,
     screenModel: ArchivedConversationListScreenModel =
-        viewModel<ArchivedConversationListViewModel>(),
+        hiltViewModel<ArchivedConversationListViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
@@ -75,6 +78,8 @@ internal fun ArchivedConversationListScreen(
         effectHandler = effectHandler,
         snackbarHostState = snackbarHostState,
         onAction = screenModel::onAction,
+        onNavigateToConversation = onNavigateToConversation,
+        onNavigateToConversationSettings = onNavigateToConversationSettings,
     )
 
     ArchivedConversationListScaffold(
@@ -105,6 +110,8 @@ private fun ArchivedConversationListEffects(
     effectHandler: ArchivedConversationListEffectHandler,
     snackbarHostState: SnackbarHostState,
     onAction: (Action) -> Unit,
+    onNavigateToConversation: (ConversationId) -> Unit,
+    onNavigateToConversationSettings: (ConversationId) -> Unit,
 ) {
     val context = LocalContext.current
     val undoLabel = stringResource(R.string.snack_bar_undo)
@@ -114,10 +121,22 @@ private fun ArchivedConversationListEffects(
     val currentEffectHandler by rememberUpdatedState(effectHandler)
     val currentUndoLabel by rememberUpdatedState(undoLabel)
     val currentOnAction by rememberUpdatedState(onAction)
+    val currentOnNavigateToConversation by rememberUpdatedState(onNavigateToConversation)
+    val currentOnNavigateToConversationSettings by rememberUpdatedState(
+        onNavigateToConversationSettings,
+    )
 
     LaunchedEffect(effects) {
         effects.collect { effect ->
             when (effect) {
+                is Effect.OpenConversation -> {
+                    currentOnNavigateToConversation(effect.conversationId)
+                }
+
+                is Effect.OpenConversationSettings -> {
+                    currentOnNavigateToConversationSettings(effect.conversationId)
+                }
+
                 is Effect.ConversationsUnarchived -> {
                     snackbarScope.launchUnarchivedSnackbar(
                         snackbarHostState = snackbarHostState,
