@@ -2,7 +2,6 @@ package com.android.messaging.ui.conversationsettings.screen
 
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsNavEvent
 import com.android.messaging.ui.conversationsettings.screen.support.ConversationSettingsTestBase
-import com.android.messaging.ui.conversationsettings.screen.support.FINISH_RESULT_CODE
 import com.android.messaging.ui.conversationsettings.screen.support.PARTICIPANT_CONVERSATION_ID
 import com.android.messaging.ui.conversationsettings.screen.support.ROOT_CONVERSATION_ID
 import io.mockk.verify
@@ -41,12 +40,13 @@ internal class ConversationSettingsNavigationTest : ConversationSettingsTestBase
     }
 
     @Test
-    fun closeAfterArchive_fromRoot_navigatesBackWithFinishResult() {
+    fun closeAfterArchive_fromRoot_closesTheConversation() {
         renderScreen()
 
         emitNavEvent(ConversationSettingsNavEvent.CloseAfterArchive)
 
-        assertEquals(listOf(FINISH_RESULT_CODE), onNavigateBackCalls)
+        assertEquals(1, onCloseAfterArchiveCalls)
+        assertEquals(0, onNavigateBackCalls)
     }
 
     @Test
@@ -65,6 +65,6 @@ internal class ConversationSettingsNavigationTest : ConversationSettingsTestBase
         composeTestRule.waitForIdle()
 
         verify(atLeast = 2) { screenModel.setConversationId(ROOT_CONVERSATION_ID) }
-        assertEquals(listOf<Int?>(), onNavigateBackCalls)
+        assertEquals(0, onNavigateBackCalls)
     }
 }

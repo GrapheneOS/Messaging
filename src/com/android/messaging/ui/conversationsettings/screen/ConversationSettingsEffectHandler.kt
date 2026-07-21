@@ -8,11 +8,34 @@ import android.graphics.Point
 import android.net.Uri
 import android.provider.Settings
 import android.view.View
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import com.android.messaging.di.conversationsettings.ConversationSettingsEntryPoint
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsScreenEffect as Effect
 import com.android.messaging.util.ContactUtil
 import com.android.messaging.util.NotificationChannelUtil
 import com.android.messaging.util.UiUtils
+import dagger.hilt.android.EntryPointAccessors
+
+@Composable
+internal fun rememberConversationSettingsEffectHandler(
+    activity: Activity,
+    hostView: View,
+): ConversationSettingsEffectHandler {
+    val context = LocalContext.current.applicationContext
+
+    return remember(activity, hostView, context) {
+        ConversationSettingsEffectHandlerImpl(
+            activity = activity,
+            hostView = hostView,
+            clipboardManager = EntryPointAccessors
+                .fromApplication(context, ConversationSettingsEntryPoint::class.java)
+                .clipboardManager(),
+        )
+    }
+}
 
 internal interface ConversationSettingsEffectHandler {
     fun handle(effect: Effect)

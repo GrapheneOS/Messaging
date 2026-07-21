@@ -28,7 +28,8 @@ internal abstract class ConversationSettingsTestBase {
     protected val navEventsFlow = MutableSharedFlow<ConversationSettingsNavEvent>(
         extraBufferCapacity = 1,
     )
-    protected val onNavigateBackCalls = mutableListOf<Int?>()
+    protected var onNavigateBackCalls = 0
+    protected var onCloseAfterArchiveCalls = 0
 
     protected lateinit var screenModel: ConversationSettingsScreenModel
     protected lateinit var effectHandler: ConversationSettingsEffectHandler
@@ -49,7 +50,8 @@ internal abstract class ConversationSettingsTestBase {
             AppTheme {
                 ConversationSettingsScreen(
                     effectHandler = effectHandler,
-                    onNavigateBack = onNavigateBackCalls::add,
+                    onNavigateBack = { onNavigateBackCalls += 1 },
+                    onCloseAfterArchive = { onCloseAfterArchiveCalls += 1 },
                     screenModel = screenModel,
                 )
             }

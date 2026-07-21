@@ -23,8 +23,13 @@ internal fun AppNavDisplay(
 ) {
     val saveableStateHolderDecorator = rememberSaveableStateHolderNavEntryDecorator<NavKey>()
     val viewModelStoreDecorator = rememberViewModelStoreNavEntryDecorator<NavKey>()
-    val entryDecorators = remember(saveableStateHolderDecorator, viewModelStoreDecorator) {
-        listOf(saveableStateHolderDecorator, viewModelStoreDecorator)
+    val paneTitleDecorator = rememberPaneTitleNavEntryDecorator()
+    val entryDecorators = remember(
+        saveableStateHolderDecorator,
+        viewModelStoreDecorator,
+        paneTitleDecorator,
+    ) {
+        listOf(saveableStateHolderDecorator, viewModelStoreDecorator, paneTitleDecorator)
     }
     val sceneStrategies = remember(sceneStrategy) {
         listOf(sceneStrategy)

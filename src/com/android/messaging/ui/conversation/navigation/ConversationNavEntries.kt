@@ -1,9 +1,5 @@
 package com.android.messaging.ui.conversation.navigation
 
-import android.content.Intent
-import androidx.activity.compose.LocalActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -13,8 +9,6 @@ import androidx.navigation3.runtime.NavKey
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
-import com.android.messaging.ui.UIIntents
-import com.android.messaging.ui.conversation.ConversationActivity
 import com.android.messaging.ui.conversation.addparticipants.AddParticipantsScreen
 import com.android.messaging.ui.conversation.entry.NewChatScreen
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryStartupAttachment
@@ -22,7 +16,6 @@ import com.android.messaging.ui.conversation.entry.model.ConversationEntryUiStat
 import com.android.messaging.ui.conversation.messagedetails.MessageDetailsScreen
 import com.android.messaging.ui.conversation.recipientpicker.RecipientPickerScreen
 import com.android.messaging.ui.conversation.screen.ConversationScreen
-import com.android.messaging.ui.conversationsettings.ConversationSettingsActivity
 import com.android.messaging.ui.navigation.SeededViewModelStoreOwner
 
 internal fun EntryProviderScope<NavKey>.conversationEntries() {
@@ -55,7 +48,6 @@ private fun conversationScreenRouteContent(): @Composable (ConversationNavKey) -
             entryUiState = entryUiState,
             conversationId = conversationId,
         )
-        val openConversationDetails = rememberConversationDetailsLauncher(navigator = navigator)
 
         ConversationScreen(
             conversationId = conversationId,
@@ -64,7 +56,9 @@ private fun conversationScreenRouteContent(): @Composable (ConversationNavKey) -
             onAddPeopleClick = {
                 navigator.navigateToAddParticipants(conversationId = conversationId)
             },
-            onConversationDetailsClick = { openConversationDetails(conversationId) },
+            onConversationDetailsClick = {
+                navigator.navigateToConversationSettings(conversationId = conversationId)
+            },
             onNavigateToMessageDetails = { messageId ->
                 navigator.navigateToMessageDetails(
                     conversationId = conversationId,
@@ -89,26 +83,6 @@ private fun conversationScreenRouteContent(): @Composable (ConversationNavKey) -
                 entryModel.onStartupAttachmentConsumed(conversationId = conversationId)
             },
         )
-    }
-}
-
-@Composable
-private fun rememberConversationDetailsLauncher(
-    navigator: ConversationNavigator,
-): (ConversationId) -> Unit {
-    val activity = checkNotNull(LocalActivity.current)
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult(),
-    ) { result ->
-        if (result.resultCode == ConversationActivity.FINISH_RESULT_CODE) {
-            navigator.back()
-        }
-    }
-
-    return { conversationId ->
-        val intent = Intent(activity, ConversationSettingsActivity::class.java)
-        intent.putExtra(UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID, conversationId.value)
-        launcher.launch(intent)
     }
 }
 
