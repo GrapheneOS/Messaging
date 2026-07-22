@@ -37,10 +37,6 @@ internal class ConversationListEffectHandlerImpl(
 
     override fun handle(effect: Effect) {
         when (effect) {
-            Effect.OpenSettings -> {
-                UIIntents.get().launchSettingsActivity(activity)
-            }
-
             Effect.OpenDebugOptions -> {
                 DebugUtils.showDebugOptions(activity)
             }
