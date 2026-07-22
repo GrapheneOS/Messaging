@@ -37,12 +37,26 @@ internal fun ConversationMmsDownloadBody(
         isSelected = isSelected,
         contentColor = contentColor,
     )
+    val isSecondaryUserReferral = isSecondaryUserDownloadReferral(
+        state = download.state,
+        isSecondaryUser = download.isSecondaryUser,
+    )
 
     ConversationMmsDownloadBodyContent(
-        titleText = stringResource(id = mmsDownloadTitleResId(state = download.state)),
+        titleText = stringResource(
+            id = mmsDownloadTitleResId(
+                state = download.state,
+                isSecondaryUserReferral = isSecondaryUserReferral,
+            ),
+        ),
         infoText = rememberMmsDownloadInfoText(download = download),
         statusLineText = rememberMmsDownloadStatusLineText(
-            statusText = stringResource(id = mmsDownloadStatusResId(state = download.state)),
+            statusText = stringResource(
+                id = mmsDownloadStatusResId(
+                    state = download.state,
+                    isSecondaryUserReferral = isSecondaryUserReferral,
+                ),
+            ),
             simDisplayName = simDisplayName,
         ),
         contentColor = contentColor,
@@ -50,6 +64,7 @@ internal fun ConversationMmsDownloadBody(
         statusColor = mmsDownloadStatusColor(
             state = download.state,
             canDownloadMessage = canDownloadMessage,
+            isSecondaryUserReferral = isSecondaryUserReferral,
             isSelected = isSelected,
             contentColor = contentColor,
             supportingColor = supportingColor,
@@ -144,28 +159,37 @@ private fun rememberMmsDownloadStatusLineText(
 private fun mmsDownloadStatusColor(
     state: MmsDownloadUiModel.State,
     canDownloadMessage: Boolean,
+    isSecondaryUserReferral: Boolean,
     isSelected: Boolean,
     contentColor: Color,
     supportingColor: Color,
 ): Color {
+    val canRetryDownload = canDownloadMessage &&
+        (
+            state == MmsDownloadUiModel.State.AwaitingManualDownload ||
+                state == MmsDownloadUiModel.State.DownloadFailed
+            )
+    val isDownloadError = state == MmsDownloadUiModel.State.DownloadFailed ||
+        state == MmsDownloadUiModel.State.ExpiredOrUnavailable
+
     return when {
         isSelected -> contentColor
-        state == MmsDownloadUiModel.State.AwaitingManualDownload && canDownloadMessage -> {
-            MaterialTheme.colorScheme.primary
-        }
-        state == MmsDownloadUiModel.State.DownloadFailed && canDownloadMessage -> {
-            MaterialTheme.colorScheme.primary
-        }
-        state == MmsDownloadUiModel.State.DownloadFailed -> MaterialTheme.colorScheme.error
-        state == MmsDownloadUiModel.State.ExpiredOrUnavailable -> {
-            MaterialTheme.colorScheme.error
-        }
+        isSecondaryUserReferral -> supportingColor
+        canRetryDownload -> MaterialTheme.colorScheme.primary
+        isDownloadError -> MaterialTheme.colorScheme.error
         else -> supportingColor
     }
 }
 
 @StringRes
-private fun mmsDownloadTitleResId(state: MmsDownloadUiModel.State): Int {
+private fun mmsDownloadTitleResId(
+    state: MmsDownloadUiModel.State,
+    isSecondaryUserReferral: Boolean,
+): Int {
+    if (isSecondaryUserReferral) {
+        return R.string.message_title_download_secondary_user
+    }
+
     return when (state) {
         MmsDownloadUiModel.State.AwaitingManualDownload -> {
             R.string.message_title_manual_download
@@ -179,7 +203,14 @@ private fun mmsDownloadTitleResId(state: MmsDownloadUiModel.State): Int {
 }
 
 @StringRes
-private fun mmsDownloadStatusResId(state: MmsDownloadUiModel.State): Int {
+private fun mmsDownloadStatusResId(
+    state: MmsDownloadUiModel.State,
+    isSecondaryUserReferral: Boolean,
+): Int {
+    if (isSecondaryUserReferral) {
+        return R.string.message_status_download_secondary_user
+    }
+
     return when (state) {
         MmsDownloadUiModel.State.AwaitingManualDownload -> {
             R.string.message_status_download
@@ -189,6 +220,18 @@ private fun mmsDownloadStatusResId(state: MmsDownloadUiModel.State): Int {
         MmsDownloadUiModel.State.ExpiredOrUnavailable -> {
             R.string.message_status_download_error
         }
+    }
+}
+
+private fun isSecondaryUserDownloadReferral(
+    state: MmsDownloadUiModel.State,
+    isSecondaryUser: Boolean,
+): Boolean {
+    return isSecondaryUser && when (state) {
+        MmsDownloadUiModel.State.AwaitingManualDownload -> true
+        MmsDownloadUiModel.State.DownloadFailed -> true
+        MmsDownloadUiModel.State.Downloading -> false
+        MmsDownloadUiModel.State.ExpiredOrUnavailable -> false
     }
 }
 

@@ -2,6 +2,8 @@ package com.android.messaging.ui.conversation.messages.mapper.conversationmessag
 
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.ui.conversation.messages.model.message.MmsDownloadUiModel
+import com.android.messaging.util.OsUtil
+import io.mockk.every
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -27,6 +29,30 @@ internal class ConversationMessageUiModelMapperMmsDownloadTest :
                 state = MmsDownloadUiModel.State.AwaitingManualDownload,
                 sizeBytes = 2_048L,
                 expiryTimestamp = 1_700_000_000_000L,
+                isSecondaryUser = false,
+            ),
+            uiModel.mmsDownload,
+        )
+    }
+
+    @Test
+    fun map_awaitingManualDownloadStatusAsSecondaryUser_buildsSecondaryUserMmsDownload() {
+        every { OsUtil.isSecondaryUser() } returns true
+
+        val uiModel = mapper.map(
+            messageData(
+                status = MessageData.BUGLE_STATUS_INCOMING_YET_TO_MANUAL_DOWNLOAD,
+                smsMessageSize = 2_048,
+                mmsExpiry = 1_700_000_000_000L,
+            ),
+        )
+
+        assertEquals(
+            MmsDownloadUiModel(
+                state = MmsDownloadUiModel.State.AwaitingManualDownload,
+                sizeBytes = 2_048L,
+                expiryTimestamp = 1_700_000_000_000L,
+                isSecondaryUser = true,
             ),
             uiModel.mmsDownload,
         )

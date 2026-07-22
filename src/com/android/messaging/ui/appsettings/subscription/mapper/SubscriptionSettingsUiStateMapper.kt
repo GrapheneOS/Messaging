@@ -6,6 +6,7 @@ import com.android.messaging.data.subscriptionsettings.model.PerSubscriptionData
 import com.android.messaging.data.subscriptionsettings.model.SubscriptionSettingsData
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionSettingsUiState
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionUiState
+import com.android.messaging.util.OsUtil
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
@@ -121,6 +122,7 @@ internal class SubscriptionSettingsUiStateMapperImpl @Inject constructor(
             deliveryReportsEnabled = perSub.deliveryReportsEnabled,
             isWirelessAlertsSupported = perSub.showCellBroadcast && isCellBroadcastAppEnabled,
             isDefaultSmsApp = isDefaultSmsApp,
+            isSecondaryUser = OsUtil.isSecondaryUser(),
         )
     }
 }

@@ -197,6 +197,10 @@
     <string name="message_status_downloading">Downloading&#8230;</string>
     <!-- Timestamp line for MMS for expired or invalid message. -->
     <string name="message_status_download_error">Message expired or not available</string>
+    <!-- Title line for an MMS that only the Owner user can download. -->
+    <string name="message_title_download_secondary_user">MMS not available for this user</string>
+    <!-- Timestamp line for an MMS that only the Owner user can download. -->
+    <string name="message_status_download_secondary_user">Download it from the Owner user</string>
     <!-- Display this info line with an MMS notification -->
     <string name="mms_info">size: <xliff:g id="messageSize">%1$s</xliff:g>, expiration: <xliff:g id="messageExpire">%2$s</xliff:g></string>
     <!-- While sending a message, if it has invalid recipient, display this message. -->
@@ -494,6 +498,8 @@
     <!-- Title for the preference for whether or not to auto-retrieve MMS when roaming -->
     <string name="auto_retrieve_mms_when_roaming_pref_title">Roaming auto-retrieve</string>
     <string name="auto_retrieve_mms_when_roaming_pref_summary">Automatically retrieve MMS when roaming</string>
+    <!-- Auto-retrieve MMS summary shown to secondary users, who can't download MMS. -->
+    <string name="auto_retrieve_mms_secondary_user_summary">Only the Owner user can download MMS</string>
     <string name="group_mms_pref_title">Group messaging</string>
     <string name="group_mms_pref_summary">Use MMS to send a single message when there are multiple recipients</string>
     <!-- Preference title: SMS disabled (Messaging is not default SMS app) -->

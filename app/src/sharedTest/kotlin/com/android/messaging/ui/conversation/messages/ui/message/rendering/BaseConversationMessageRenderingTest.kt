@@ -162,11 +162,13 @@ internal abstract class BaseConversationMessageRenderingTest {
         state: MmsDownloadUiModel.State = MmsDownloadUiModel.State.AwaitingManualDownload,
         sizeBytes: Long = MMS_SIZE_BYTES,
         expiryTimestamp: Long = MMS_EXPIRY_TIMESTAMP,
+        isSecondaryUser: Boolean = false,
     ): MmsDownloadUiModel {
         return MmsDownloadUiModel(
             state = state,
             sizeBytes = sizeBytes,
             expiryTimestamp = expiryTimestamp,
+            isSecondaryUser = isSecondaryUser,
         )
     }
 

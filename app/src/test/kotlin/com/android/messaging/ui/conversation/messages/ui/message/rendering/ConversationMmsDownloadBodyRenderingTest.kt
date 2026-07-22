@@ -83,6 +83,86 @@ internal class ConversationMmsDownloadBodyRenderingTest :
     }
 
     @Test
+    fun secondaryUserAwaitingManualDownload_rendersOwnerUserReferral() {
+        setMmsDownloadBodyContent(
+            download = mmsDownload(
+                state = MmsDownloadUiModel.State.AwaitingManualDownload,
+                isSecondaryUser = true,
+            ),
+            canDownloadMessage = true,
+        )
+
+        composeTestRule
+            .onNodeWithText(
+                text = stringResourceText(R.string.message_title_download_secondary_user)
+            )
+            .assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText(
+                text = stringResourceText(R.string.message_status_download_secondary_user)
+            )
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun secondaryUserDownloadFailed_rendersOwnerUserReferral() {
+        setMmsDownloadBodyContent(
+            download = mmsDownload(
+                state = MmsDownloadUiModel.State.DownloadFailed,
+                isSecondaryUser = true,
+            ),
+            canDownloadMessage = true,
+        )
+
+        composeTestRule
+            .onNodeWithText(
+                text = stringResourceText(R.string.message_title_download_secondary_user)
+            )
+            .assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText(
+                text = stringResourceText(R.string.message_status_download_secondary_user),
+            )
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun secondaryUserDownloading_rendersRegularDownloadingStatus() {
+        setMmsDownloadBodyContent(
+            download = mmsDownload(
+                state = MmsDownloadUiModel.State.Downloading,
+                isSecondaryUser = true,
+            ),
+            canDownloadMessage = false,
+        )
+
+        composeTestRule
+            .onNodeWithText(text = stringResourceText(R.string.message_title_downloading))
+            .assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText(text = stringResourceText(R.string.message_status_downloading))
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun secondaryUserExpiredOrUnavailable_rendersUnavailableStatus() {
+        setMmsDownloadBodyContent(
+            download = mmsDownload(
+                state = MmsDownloadUiModel.State.ExpiredOrUnavailable,
+                isSecondaryUser = true,
+            ),
+            canDownloadMessage = false,
+        )
+
+        composeTestRule
+            .onNodeWithText(text = stringResourceText(R.string.message_title_download_failed))
+            .assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText(text = stringResourceText(R.string.message_status_download_error))
+            .assertIsDisplayed()
+    }
+
+    @Test
     fun simDisplayName_presentAppendsSimAnnotation() {
         val statusLine = buildStatusLineText(
             statusText = stringResourceText(R.string.message_status_download),

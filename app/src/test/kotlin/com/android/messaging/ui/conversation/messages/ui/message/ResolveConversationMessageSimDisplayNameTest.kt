@@ -152,6 +152,7 @@ class ResolveConversationMessageSimDisplayNameTest {
             state = MmsDownloadUiModel.State.AwaitingManualDownload,
             sizeBytes = 0L,
             expiryTimestamp = 0L,
+            isSecondaryUser = false,
         )
     }
 
