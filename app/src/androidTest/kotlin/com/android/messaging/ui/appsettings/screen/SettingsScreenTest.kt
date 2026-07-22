@@ -279,6 +279,7 @@ class SettingsScreenTest {
                     SettingsScreen(
                         effectHandler = effectHandler,
                         onNavigateBack = {},
+                        onNavigateToLicenses = {},
                         intentSubId = SubId(intentSubId),
                         intentSubTitle = intentSubTitle,
                         isTopLevelIntent = isTopLevelIntent,

@@ -63,6 +63,7 @@ internal fun BlockedParticipantsScreen(
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
 
     val currentEffectHandler by rememberUpdatedState(effectHandler)
+    val currentOnNavigateBack by rememberUpdatedState(onNavigateBack)
     val currentOnNavigateToConversation by rememberUpdatedState(onNavigateToConversation)
 
     LaunchedEffect(screenModel) {
@@ -71,7 +72,6 @@ internal fun BlockedParticipantsScreen(
         }
     }
 
-    val currentOnNavigateBack by rememberUpdatedState(onNavigateBack)
     LaunchedEffect(screenModel) {
         screenModel.navigationEvents.collect { event ->
             when (event) {
