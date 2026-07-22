@@ -74,16 +74,6 @@ public abstract class UIIntents {
     // Conversation self id
     public static final String UI_INTENT_EXTRA_CONVERSATION_SELF_ID = "conversation_self_id";
 
-    // Subscription id
-    public static final String UI_INTENT_EXTRA_SUB_ID = "sub_id";
-
-    // Per-Subscription setting activity title
-    public static final String UI_INTENT_EXTRA_PER_SUBSCRIPTION_SETTING_TITLE =
-            "per_sub_setting_title";
-
-    // Is application settings launched as the top level settings activity?
-    public static final String UI_INTENT_EXTRA_TOP_LEVEL_SETTINGS = "top_level_settings";
-
     // Sending attachment uri from widget
     public static final String UI_INTENT_EXTRA_ATTACHMENT_URI = "attachment_uri";
 
@@ -129,18 +119,6 @@ public abstract class UIIntents {
             String conversationId, String smsBody);
 
     /**
-     * Launch an activity to show a conversation as a new task.
-     */
-    public abstract void launchConversationActivityNewTask(final Context context,
-            final String conversationId);
-
-    /**
-     * Launch an activity to start a new conversation
-     */
-    public abstract void launchCreateNewConversationActivity(final Context context,
-            final MessageData draft);
-
-    /**
      * Launch debug activity to set MMS config options.
      */
     public abstract void launchDebugMmsConfigActivity(final Context context);
@@ -164,9 +142,6 @@ public abstract class UIIntents {
     public abstract void launchPhoneCallActivity(final Context context, final String phoneNumber,
                                                  final Point clickPosition);
 
-    /**
-     * Launch an activity to show blocked participants.
-     */
     /**
      * Launch an activity to show a class zero message
      */
@@ -216,11 +191,6 @@ public abstract class UIIntents {
      * Get an intent to launch the wireless alert viewer.
      */
     public abstract Intent getWirelessAlertsIntent();
-
-    /**
-     * Get an intent to launch the dialog for changing the default SMS App.
-     */
-    public abstract Intent getChangeDefaultSmsAppIntent(final Activity activity);
 
     /**
      * Broadcast conversation self id change so it may be reflected in the message compose UI.
@@ -292,11 +262,6 @@ public abstract class UIIntents {
      * Get an intent for the LaunchConversationActivity.
      */
     public abstract Intent getLaunchConversationActivityIntent(final Context context);
-
-    /**
-     *  Tell MediaScanner to re-scan the specified volume.
-     */
-    public abstract void kickMediaScanner(final Context context, final String volume);
 
     /**
      * Launch to browser for a url.

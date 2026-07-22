@@ -63,26 +63,6 @@ class ConversationNavigatorImplTest {
     }
 
     @Test
-    fun navigateToRecipientPicker_doesNotDuplicateExistingTopDestination() {
-        val backStack = mutableListOf(
-            NewChatNavKey,
-            RecipientPickerNavKey(mode = RecipientPickerMode.ADD_PARTICIPANTS),
-        )
-
-        navigator(backStack = backStack).navigateToRecipientPicker(
-            mode = RecipientPickerMode.ADD_PARTICIPANTS,
-        )
-
-        assertEquals(
-            listOf(
-                NewChatNavKey,
-                RecipientPickerNavKey(mode = RecipientPickerMode.ADD_PARTICIPANTS),
-            ),
-            backStack,
-        )
-    }
-
-    @Test
     fun navigateToAddParticipants_appendsDestinationWhenItIsNotAlreadyOnTop() {
         val backStack = mutableListOf<NavKey>(
             ConversationNavKey(conversationId = CONVERSATION_ID),

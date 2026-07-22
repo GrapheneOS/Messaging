@@ -24,8 +24,6 @@ internal interface ConversationNavigator {
         messageId: MessageId,
     )
 
-    fun navigateToRecipientPicker(mode: RecipientPickerMode)
-
     fun navigateToConversationSettings(conversationId: ConversationId)
 
     fun replaceCurrentConversation(conversationId: ConversationId)
@@ -72,10 +70,6 @@ internal class ConversationNavigatorImpl(
                 messageId = messageId,
             ),
         )
-    }
-
-    override fun navigateToRecipientPicker(mode: RecipientPickerMode) {
-        navigator.push(destination = RecipientPickerNavKey(mode = mode))
     }
 
     override fun navigateToConversationSettings(conversationId: ConversationId) {
