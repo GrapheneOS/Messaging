@@ -1,12 +1,10 @@
 package com.android.messaging.ui.conversationlist.chats
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListNavEvent as NavEvent
+import com.android.messaging.ui.core.CollectEvents
 import kotlinx.coroutines.flow.Flow
 
 @Stable
@@ -24,24 +22,20 @@ internal fun ConversationListNavEvents(
     navigationEvents: Flow<NavEvent>,
     navigation: ConversationListNavigationCallbacks,
 ) {
-    val currentNavigation by rememberUpdatedState(navigation)
+    CollectEvents(events = navigationEvents) { event ->
+        with(navigation) {
+            when (event) {
+                NavEvent.OpenNewChat -> onNavigateToNewChat()
+                NavEvent.OpenArchivedConversations -> onNavigateToArchivedConversations()
+                NavEvent.OpenBlockedParticipants -> onNavigateToBlockedParticipants()
+                NavEvent.OpenSettings -> onNavigateToSettings()
 
-    LaunchedEffect(navigationEvents) {
-        navigationEvents.collect { event ->
-            with(currentNavigation) {
-                when (event) {
-                    NavEvent.OpenNewChat -> onNavigateToNewChat()
-                    NavEvent.OpenArchivedConversations -> onNavigateToArchivedConversations()
-                    NavEvent.OpenBlockedParticipants -> onNavigateToBlockedParticipants()
-                    NavEvent.OpenSettings -> onNavigateToSettings()
+                is NavEvent.OpenConversation -> {
+                    onNavigateToConversation(event.conversationId)
+                }
 
-                    is NavEvent.OpenConversation -> {
-                        onNavigateToConversation(event.conversationId)
-                    }
-
-                    is NavEvent.OpenConversationSettings -> {
-                        onNavigateToConversationSettings(event.conversationId)
-                    }
+                is NavEvent.OpenConversationSettings -> {
+                    onNavigateToConversationSettings(event.conversationId)
                 }
             }
         }

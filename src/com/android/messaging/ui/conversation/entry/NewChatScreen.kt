@@ -19,9 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -37,14 +35,13 @@ import com.android.messaging.ui.conversation.NEW_CHAT_CREATE_GROUP_NEXT_BUTTON_T
 import com.android.messaging.ui.conversation.NEW_CHAT_NAVIGATE_BACK_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.NEW_CHAT_TOP_APP_BAR_TITLE_TEST_TAG
 import com.android.messaging.ui.conversation.composer.model.ConversationSimSelectorUiState
-import com.android.messaging.ui.conversation.entry.model.NewChatEffect
 import com.android.messaging.ui.conversation.entry.model.NewChatNavEvent
-import com.android.messaging.ui.conversation.entry.model.NewChatUiState
 import com.android.messaging.ui.conversation.newChatContactDestinationRowTestTag
 import com.android.messaging.ui.conversation.newChatContactRowTestTag
 import com.android.messaging.ui.conversation.preview.previewSimSelectorUiState
 import com.android.messaging.ui.conversation.recipientpicker.component.RecipientSelectionContent
 import com.android.messaging.ui.conversation.recipientpicker.component.simselector.NewChatSimSelectorRow
+import com.android.messaging.ui.core.CollectEvents
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerUiState
 import com.android.messaging.ui.recipientselection.model.picker.SelectedRecipient
@@ -56,7 +53,6 @@ import com.android.messaging.ui.recipientselection.model.selection.RecipientSele
 import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionStrings
 import com.android.messaging.ui.recipientselection.preview.previewRecipientPickerUiState
 import com.android.messaging.ui.recipientselection.preview.previewSelectedRecipient
-import com.android.messaging.util.UiUtils
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -67,6 +63,7 @@ private typealias NewChatNavigateToConversation = (
 
 @Composable
 internal fun NewChatScreen(
+    effectHandler: NewChatEffectHandler,
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit = {},
     onNavigateToConversation: NewChatNavigateToConversation = { _, _ -> },
@@ -74,12 +71,27 @@ internal fun NewChatScreen(
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
 
-    NewChatScreenEffects(
-        uiState = uiState,
-        screenModel = screenModel,
-        onNavigateBack = onNavigateBack,
-        onNavigateToConversation = onNavigateToConversation,
+    BackHandler(enabled = uiState.isCreatingGroup || uiState.isResolvingConversation) {
+        screenModel.onNavigateBack()
+    }
+
+    CollectEvents(
+        events = screenModel.effects,
+        onEvent = effectHandler::handle,
     )
+
+    CollectEvents(events = screenModel.navigationEvents) { event ->
+        when (event) {
+            NewChatNavEvent.Close -> onNavigateBack()
+
+            is NewChatNavEvent.OpenConversation -> {
+                onNavigateToConversation(
+                    event.conversationId,
+                    event.selfParticipantId,
+                )
+            }
+        }
+    }
 
     NewChatScreenContent(
         modifier = modifier,
@@ -101,50 +113,6 @@ internal fun NewChatScreen(
         selectedGroupRecipients = uiState.selectedGroupRecipients,
         simSelectorUiState = uiState.simSelectorState,
     )
-}
-
-@Composable
-private fun NewChatScreenEffects(
-    uiState: NewChatUiState,
-    screenModel: NewChatScreenModel,
-    onNavigateBack: () -> Unit,
-    onNavigateToConversation: NewChatNavigateToConversation,
-) {
-    val latestOnNavigateBack = rememberUpdatedState(newValue = onNavigateBack)
-    val latestOnNavigateToConversation = rememberUpdatedState(
-        newValue = onNavigateToConversation,
-    )
-
-    BackHandler(enabled = uiState.isCreatingGroup || uiState.isResolvingConversation) {
-        screenModel.onNavigateBack()
-    }
-
-    LaunchedEffect(screenModel) {
-        screenModel.navigationEvents.collect { event ->
-            when (event) {
-                NewChatNavEvent.Close -> {
-                    latestOnNavigateBack.value()
-                }
-
-                is NewChatNavEvent.OpenConversation -> {
-                    latestOnNavigateToConversation.value(
-                        event.conversationId,
-                        event.selfParticipantId,
-                    )
-                }
-            }
-        }
-    }
-
-    LaunchedEffect(screenModel) {
-        screenModel.effects.collect { effect ->
-            when (effect) {
-                is NewChatEffect.ShowMessage -> {
-                    UiUtils.showToastAtBottom(effect.messageResId)
-                }
-            }
-        }
-    }
 }
 
 @Composable

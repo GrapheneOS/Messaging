@@ -13,9 +13,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,6 +26,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.data.vcarddetail.model.VCardFieldAction
 import com.android.messaging.ui.common.components.contentSurfaceShape
 import com.android.messaging.ui.common.components.safeDrawingContentPadding
+import com.android.messaging.ui.core.CollectEvents
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import com.android.messaging.ui.vcarddetail.common.VCardContactCard
 import com.android.messaging.ui.vcarddetail.common.VCardDetailTopAppBar
@@ -49,12 +48,10 @@ internal fun VCardDetailScreen(
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
 
-    val currentEffectHandler by rememberUpdatedState(effectHandler)
-    LaunchedEffect(screenModel) {
-        screenModel.effects.collect { effect ->
-            currentEffectHandler.handle(effect)
-        }
-    }
+    CollectEvents(
+        events = screenModel.effects,
+        onEvent = effectHandler::handle,
+    )
 
     LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
         screenModel.refresh()
