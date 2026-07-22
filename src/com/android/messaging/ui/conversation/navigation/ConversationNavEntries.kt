@@ -10,9 +10,11 @@ import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.conversation.addparticipants.AddParticipantsScreen
+import com.android.messaging.ui.conversation.addparticipants.rememberAddParticipantsEffectHandler
 import com.android.messaging.ui.conversation.entry.NewChatScreen
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryStartupAttachment
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryUiState
+import com.android.messaging.ui.conversation.entry.rememberNewChatEffectHandler
 import com.android.messaging.ui.conversation.messagedetails.MessageDetailsScreen
 import com.android.messaging.ui.conversation.recipientpicker.RecipientPickerScreen
 import com.android.messaging.ui.conversation.screen.ConversationScreen
@@ -94,6 +96,7 @@ private fun newChatRouteContent(): @Composable (NewChatNavKey) -> Unit {
         val appNavigator = LocalNavigator.current
 
         NewChatScreen(
+            effectHandler = rememberNewChatEffectHandler(),
             onNavigateBack = appNavigator::back,
             onNavigateToConversation = { conversationId, selfParticipantId ->
                 entryModel.onConversationNavigationRequested(
@@ -112,6 +115,7 @@ private fun addParticipantsRouteContent(): @Composable (AddParticipantsNavKey) -
         val appNavigator = LocalNavigator.current
 
         AddParticipantsScreen(
+            effectHandler = rememberAddParticipantsEffectHandler(),
             conversationId = navKey.conversationId,
             onNavigateBack = appNavigator::back,
             onNavigateToConversation = { resolvedConversationId ->

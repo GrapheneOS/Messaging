@@ -10,7 +10,6 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -30,10 +29,10 @@ import com.android.messaging.ui.appsettings.screen.model.SettingsUiState
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionUiState
 import com.android.messaging.ui.appsettings.subscription.ui.SubscriptionSettingsScreen
 import com.android.messaging.ui.common.components.horizontalSlideContentTransform
+import com.android.messaging.ui.core.CollectEvents
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.flow.Flow
 
 @Composable
 internal fun SettingsScreen(
@@ -63,16 +62,16 @@ internal fun SettingsScreen(
         screenModel.refreshState()
     }
 
-    LaunchedEffect(screenModel) {
-        screenModel.effects.collect { effect ->
-            effectHandler.handle(effect)
+    CollectEvents(
+        events = screenModel.effects,
+        onEvent = effectHandler::handle,
+    )
+
+    CollectEvents(events = screenModel.navigationEvents) { event ->
+        when (event) {
+            SettingsNavEvent.OpenLicenses -> onNavigateToLicenses()
         }
     }
-
-    SettingsNavEvents(
-        navigationEvents = screenModel.navigationEvents,
-        onNavigateToLicenses = onNavigateToLicenses,
-    )
 
     // For single-SIM go directly to app settings
     val effectiveRoute = if (uiState.isMultiSim == false && currentRoute is SettingsNavRoute.Main) {
@@ -112,22 +111,6 @@ internal fun SettingsScreen(
         onRouteChange = { currentRoute = it },
         modifier = modifier,
     )
-}
-
-@Composable
-private fun SettingsNavEvents(
-    navigationEvents: Flow<SettingsNavEvent>,
-    onNavigateToLicenses: () -> Unit,
-) {
-    val currentOnNavigateToLicenses by rememberUpdatedState(onNavigateToLicenses)
-
-    LaunchedEffect(navigationEvents) {
-        navigationEvents.collect { event ->
-            when (event) {
-                SettingsNavEvent.OpenLicenses -> currentOnNavigateToLicenses()
-            }
-        }
-    }
 }
 
 @Composable

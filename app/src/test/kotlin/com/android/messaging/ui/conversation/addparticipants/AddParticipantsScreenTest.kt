@@ -180,6 +180,7 @@ class AddParticipantsScreenTest {
         composeTestRule.setContent {
             AppTheme {
                 AddParticipantsScreen(
+                    effectHandler = mockk(relaxed = true),
                     conversationId = CONVERSATION_ID,
                     onNavigateBack = onNavigateBack,
                     onNavigateToConversation = onNavigateToConversation,

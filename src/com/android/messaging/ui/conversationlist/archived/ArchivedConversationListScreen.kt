@@ -36,6 +36,7 @@ import com.android.messaging.ui.common.components.snackbar.MessagingSnackbarHost
 import com.android.messaging.ui.common.components.snackbar.showActionSnackbar
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListAction as Action
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListEffect as Effect
+import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListNavEvent as NavEvent
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListUiState as State
 import com.android.messaging.ui.conversationlist.common.dialog.ConversationListDeleteDialog
 import com.android.messaging.ui.conversationlist.common.item.ConversationSwipeKind
@@ -47,6 +48,7 @@ import com.android.messaging.ui.conversationlist.common.status.ConversationListL
 import com.android.messaging.ui.conversationlist.common.status.ConversationListStatusMessage
 import com.android.messaging.ui.conversationlist.common.support.previewConversationListItems
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
+import com.android.messaging.ui.core.CollectEvents
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -73,11 +75,17 @@ internal fun ArchivedConversationListScreen(
 
     var pendingDelete by remember { mutableStateOf(false) }
 
-    ArchivedConversationListNavEvents(
-        navigationEvents = screenModel.navigationEvents,
-        onNavigateToConversation = onNavigateToConversation,
-        onNavigateToConversationSettings = onNavigateToConversationSettings,
-    )
+    CollectEvents(events = screenModel.navigationEvents) { event ->
+        when (event) {
+            is NavEvent.OpenConversation -> {
+                onNavigateToConversation(event.conversationId)
+            }
+
+            is NavEvent.OpenConversationSettings -> {
+                onNavigateToConversationSettings(event.conversationId)
+            }
+        }
+    }
 
     ArchivedConversationListEffects(
         effects = screenModel.effects,

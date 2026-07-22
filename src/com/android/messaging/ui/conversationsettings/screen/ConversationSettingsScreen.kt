@@ -41,7 +41,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
@@ -85,6 +84,7 @@ import com.android.messaging.ui.conversationsettings.screen.model.ParticipantCon
 import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
 import com.android.messaging.ui.conversationsettings.screen.model.saveableKey
 import com.android.messaging.ui.conversationsettings.screen.model.targetConversationId
+import com.android.messaging.ui.core.CollectEvents
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -118,12 +118,10 @@ internal fun ConversationSettingsScreen(
         screenModel.refreshState()
     }
 
-    val currentEffectHandler by rememberUpdatedState(effectHandler)
-    LaunchedEffect(screenModel) {
-        screenModel.effects.collect { effect ->
-            currentEffectHandler.handle(effect)
-        }
-    }
+    CollectEvents(
+        events = screenModel.effects,
+        onEvent = effectHandler::handle,
+    )
 
     val navigateUp: () -> Unit = {
         when {
@@ -132,24 +130,20 @@ internal fun ConversationSettingsScreen(
         }
     }
 
-    LaunchedEffect(screenModel) {
-        screenModel.navigationEvents.collect { event ->
-            when (event) {
-                is NavEvent.OpenParticipantChat -> {
-                    onNavigateToConversation(event.conversationId)
-                }
+    CollectEvents(events = screenModel.navigationEvents) { event ->
+        when (event) {
+            is NavEvent.OpenParticipantChat -> {
+                onNavigateToConversation(event.conversationId)
+            }
 
-                is NavEvent.OpenParticipantInfo -> {
-                    currentRoute = NavRoute.ParticipantInfo(
-                        conversationId = event.conversationId,
-                    )
-                }
+            is NavEvent.OpenParticipantInfo -> {
+                currentRoute = NavRoute.ParticipantInfo(conversationId = event.conversationId)
+            }
 
-                NavEvent.CloseAfterArchive -> {
-                    when {
-                        isRootRoute() -> onCloseAfterArchive()
-                        else -> navigateUp()
-                    }
+            NavEvent.CloseAfterArchive -> {
+                when {
+                    isRootRoute() -> onCloseAfterArchive()
+                    else -> navigateUp()
                 }
             }
         }
