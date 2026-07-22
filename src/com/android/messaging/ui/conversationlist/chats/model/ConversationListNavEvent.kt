@@ -7,6 +7,7 @@ internal sealed interface ConversationListNavEvent {
     data object OpenNewChat : ConversationListNavEvent
     data object OpenArchivedConversations : ConversationListNavEvent
     data object OpenBlockedParticipants : ConversationListNavEvent
+    data object OpenSettings : ConversationListNavEvent
 
     data class OpenConversation(
         val conversationId: ConversationId,

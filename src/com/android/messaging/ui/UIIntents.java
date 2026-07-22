@@ -146,11 +146,6 @@ public abstract class UIIntents {
     public abstract void launchDebugMmsConfigActivity(final Context context);
 
     /**
-     * Launch an activity to change settings.
-     */
-    public abstract void launchSettingsActivity(final Context context);
-
-    /**
      * Launch an activity to add a contact with a given destination.
      */
     public abstract void launchAddContactActivity(final Context context, final String destination);

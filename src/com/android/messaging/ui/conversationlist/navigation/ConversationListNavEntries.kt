@@ -6,6 +6,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
+import com.android.messaging.ui.appsettings.navigation.SettingsNavKey
 import com.android.messaging.ui.blockedparticipants.navigation.BlockedParticipantsNavKey
 import com.android.messaging.ui.conversation.navigation.rememberConversationNavigator
 import com.android.messaging.ui.conversationlist.archived.ArchivedConversationListScreen
@@ -44,6 +45,9 @@ private fun conversationListRouteContent(): @Composable (ConversationListNavKey)
                 },
                 onNavigateToBlockedParticipants = {
                     appNavigator.push(destination = BlockedParticipantsNavKey)
+                },
+                onNavigateToSettings = {
+                    appNavigator.push(destination = SettingsNavKey)
                 },
             )
         }

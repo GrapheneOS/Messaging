@@ -5,7 +5,6 @@ import kotlinx.collections.immutable.ImmutableList
 
 internal sealed interface ConversationListEffect {
 
-    data object OpenSettings : ConversationListEffect
     data object OpenDebugOptions : ConversationListEffect
     data object ScrollToTop : ConversationListEffect
 

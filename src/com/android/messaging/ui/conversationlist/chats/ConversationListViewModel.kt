@@ -337,7 +337,7 @@ internal class ConversationListViewModel @Inject constructor(
             }
 
             Action.SettingsClicked -> {
-                _effects.trySend(Effect.OpenSettings)
+                _navigationEvents.trySend(NavEvent.OpenSettings)
             }
 
             Action.StartChatClicked -> {
