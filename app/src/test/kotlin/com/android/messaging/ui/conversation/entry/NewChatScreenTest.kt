@@ -223,7 +223,10 @@ class NewChatScreenTest {
     private fun setContent(screenModel: NewChatScreenModel) {
         composeTestRule.setContent {
             AppTheme {
-                NewChatScreen(screenModel = screenModel)
+                NewChatScreen(
+                    effectHandler = mockk(relaxed = true),
+                    screenModel = screenModel,
+                )
             }
         }
     }

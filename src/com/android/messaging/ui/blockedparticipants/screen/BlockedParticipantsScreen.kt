@@ -20,11 +20,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,6 +46,7 @@ import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticip
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsUiState as State
 import com.android.messaging.ui.common.components.contentSurfaceShape
 import com.android.messaging.ui.common.components.safeDrawingContentPadding
+import com.android.messaging.ui.core.CollectEvents
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
@@ -62,25 +61,15 @@ internal fun BlockedParticipantsScreen(
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
 
-    val currentEffectHandler by rememberUpdatedState(effectHandler)
-    val currentOnNavigateBack by rememberUpdatedState(onNavigateBack)
-    val currentOnNavigateToConversation by rememberUpdatedState(onNavigateToConversation)
+    CollectEvents(
+        events = screenModel.effects,
+        onEvent = effectHandler::handle,
+    )
 
-    LaunchedEffect(screenModel) {
-        screenModel.effects.collect { effect ->
-            currentEffectHandler.handle(effect)
-        }
-    }
-
-    LaunchedEffect(screenModel) {
-        screenModel.navigationEvents.collect { event ->
-            when (event) {
-                NavEvent.CloseAfterLastUnblock -> currentOnNavigateBack()
-
-                is NavEvent.OpenParticipantChat -> {
-                    currentOnNavigateToConversation(event.conversationId)
-                }
-            }
+    CollectEvents(events = screenModel.navigationEvents) { event ->
+        when (event) {
+            is NavEvent.CloseAfterLastUnblock -> onNavigateBack()
+            is NavEvent.OpenParticipantChat -> onNavigateToConversation(event.conversationId)
         }
     }
 
