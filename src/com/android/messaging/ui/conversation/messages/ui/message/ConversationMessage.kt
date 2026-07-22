@@ -215,6 +215,7 @@ private fun rememberConversationMessageContent(
         message.text,
         message.mmsSubject,
         message.parts,
+        message.isYouTubePreviewEnabled,
         subjectText,
     ) {
         buildConversationMessageContent(

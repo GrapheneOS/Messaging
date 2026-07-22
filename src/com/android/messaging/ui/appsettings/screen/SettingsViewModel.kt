@@ -71,6 +71,56 @@ internal class SettingsViewModel @Inject constructor(
 
     override fun onAction(action: Action) {
         when (action) {
+            is Action.AutoRetrieveMmsChanged,
+            is Action.AutoRetrieveMmsWhenRoamingChanged,
+            is Action.DeliveryReportsChanged,
+            is Action.GroupMmsChanged,
+            is Action.PhoneNumberChanged,
+            -> {
+                onSubscriptionAction(action)
+            }
+
+            is Action.WirelessAlertsClicked -> {
+                emitEffect(Effect.OpenWirelessAlerts(action.subId))
+            }
+
+            is Action.DumpMmsChanged -> {
+                appSettingsDelegate.onDumpMmsChanged(action.enabled)
+            }
+
+            is Action.DumpSmsChanged -> {
+                appSettingsDelegate.onDumpSmsChanged(action.enabled)
+            }
+
+            is Action.SendSoundChanged -> {
+                appSettingsDelegate.onSendSoundChanged(action.enabled)
+            }
+
+            is Action.YouTubeLinkPreviewsChanged -> {
+                appSettingsDelegate.onYouTubeLinkPreviewsChanged(action.enabled)
+            }
+
+            is Action.DefaultSmsAppClicked -> {
+                val effect = if (action.isCurrentlyDefault) {
+                    Effect.OpenManageDefaultApps
+                } else {
+                    Effect.RequestDefaultSmsApp
+                }
+                emitEffect(effect)
+            }
+
+            is Action.NotificationsClicked -> {
+                emitEffect(Effect.OpenNotificationSettings)
+            }
+
+            is Action.LicensesClicked -> {
+                emitEffect(Effect.OpenLicenses)
+            }
+        }
+    }
+
+    private fun onSubscriptionAction(action: Action) {
+        when (action) {
             is Action.AutoRetrieveMmsChanged -> {
                 subscriptionSettingsDelegate.onAutoRetrieveMmsChanged(
                     subId = action.subId,
@@ -106,38 +156,7 @@ internal class SettingsViewModel @Inject constructor(
                 )
             }
 
-            is Action.WirelessAlertsClicked -> {
-                emitEffect(Effect.OpenWirelessAlerts(action.subId))
-            }
-
-            is Action.DumpMmsChanged -> {
-                appSettingsDelegate.onDumpMmsChanged(action.enabled)
-            }
-
-            is Action.DumpSmsChanged -> {
-                appSettingsDelegate.onDumpSmsChanged(action.enabled)
-            }
-
-            is Action.SendSoundChanged -> {
-                appSettingsDelegate.onSendSoundChanged(action.enabled)
-            }
-
-            is Action.DefaultSmsAppClicked -> {
-                val effect = if (action.isCurrentlyDefault) {
-                    Effect.OpenManageDefaultApps
-                } else {
-                    Effect.RequestDefaultSmsApp
-                }
-                emitEffect(effect)
-            }
-
-            is Action.NotificationsClicked -> {
-                emitEffect(Effect.OpenNotificationSettings)
-            }
-
-            is Action.LicensesClicked -> {
-                emitEffect(Effect.OpenLicenses)
-            }
+            else -> Unit
         }
     }
 

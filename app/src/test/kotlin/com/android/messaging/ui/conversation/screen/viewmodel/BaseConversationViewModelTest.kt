@@ -383,6 +383,7 @@ internal abstract class BaseConversationViewModelTest {
             canForwardMessage = false,
             canResendMessage = false,
             canSaveAttachments = false,
+            isYouTubePreviewEnabled = false,
             mmsDownload = null,
             mmsSubject = null,
             protocol = ConversationMessageUiModel.Protocol.SMS,

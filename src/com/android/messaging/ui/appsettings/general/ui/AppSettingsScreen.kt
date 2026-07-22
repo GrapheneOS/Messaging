@@ -28,6 +28,7 @@ internal fun AppSettingsScreen(
     appSettings: AppSettingsUiState,
     onAction: (Action) -> Unit,
     onNavigateBack: () -> Unit,
+    onPrivacyClick: () -> Unit,
     modifier: Modifier = Modifier,
     isTopLevel: Boolean = false,
     onAdvancedClick: (() -> Unit)? = null,
@@ -56,6 +57,7 @@ internal fun AppSettingsScreen(
             coreSettingsItems(
                 appSettings = appSettings,
                 onAction = onAction,
+                onPrivacyClick = onPrivacyClick,
             )
 
             if (isTopLevel && onAdvancedClick != null) {
@@ -75,6 +77,7 @@ internal fun AppSettingsScreen(
 private fun LazyListScope.coreSettingsItems(
     appSettings: AppSettingsUiState,
     onAction: (Action) -> Unit,
+    onPrivacyClick: () -> Unit,
 ) {
     item(key = "default_sms_app") {
         SettingsClickableItem(
@@ -102,6 +105,13 @@ private fun LazyListScope.coreSettingsItems(
             onCheckedChange = {
                 onAction(Action.SendSoundChanged(it))
             },
+        )
+    }
+
+    item(key = "privacy") {
+        SettingsClickableItem(
+            title = stringResource(R.string.privacy_settings_activity_title),
+            onClick = onPrivacyClick,
         )
     }
 }
@@ -179,6 +189,7 @@ private fun AppSettingsScreenTopLevelPreview() {
             ),
             onAction = {},
             onNavigateBack = {},
+            onPrivacyClick = {},
             isTopLevel = true,
             onAdvancedClick = {},
         )
@@ -200,6 +211,7 @@ private fun AppSettingsScreenDebugPreview() {
             ),
             onAction = {},
             onNavigateBack = {},
+            onPrivacyClick = {},
         )
     }
 }

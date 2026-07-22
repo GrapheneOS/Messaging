@@ -138,6 +138,7 @@ internal abstract class BaseConversationMessageSelectionDelegateTest {
             canForwardMessage = canForwardMessage,
             canResendMessage = canResendMessage,
             canSaveAttachments = canSaveAttachments,
+            isYouTubePreviewEnabled = false,
             mmsDownload = null,
             mmsSubject = null,
             protocol = ConversationMessageUiModel.Protocol.SMS,

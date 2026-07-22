@@ -21,6 +21,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
             messageData(
                 parts = listOf(messagePart(contentType = "text/plain", text = "Hi Ada")),
             ),
+            isYouTubePreviewEnabled = false,
         )
 
         assertEquals(
@@ -35,6 +36,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
             messageData(
                 parts = listOf(messagePart(contentType = "text/html", text = null)),
             ),
+            isYouTubePreviewEnabled = false,
         )
 
         assertEquals(
@@ -59,6 +61,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
                     ),
                 ),
             ),
+            isYouTubePreviewEnabled = false,
         )
 
         assertEquals(
@@ -91,6 +94,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
                     ),
                 ),
             ),
+            isYouTubePreviewEnabled = false,
         )
 
         assertEquals(
@@ -122,6 +126,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
                     ),
                 ),
             ),
+            isYouTubePreviewEnabled = false,
         )
 
         assertEquals(
@@ -148,6 +153,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
                     messagePart(contentType = "text/x-vCard", contentUri = contentUri),
                 ),
             ),
+            isYouTubePreviewEnabled = false,
         )
 
         assertEquals(
@@ -178,6 +184,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
                     messagePart(contentType = "application/pdf", contentUri = contentUri),
                 ),
             ),
+            isYouTubePreviewEnabled = false,
         )
 
         assertEquals(
@@ -198,6 +205,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
     fun map_nullContentType_mapsToFileAttachmentWithEmptyContentType() {
         val uiModel = mapper.map(
             messageData(parts = listOf(messagePart(contentType = null))),
+            isYouTubePreviewEnabled = false,
         )
 
         assertEquals(
@@ -225,6 +233,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
                     messagePart(contentType = "image/png", contentUri = imageUri),
                 ),
             ),
+            isYouTubePreviewEnabled = false,
         )
 
         assertEquals(
@@ -253,6 +262,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
                     ),
                 ),
             ),
+            isYouTubePreviewEnabled = false,
         )
 
         assertTrue(uiModel.canSaveAttachments)
@@ -270,6 +280,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
                     ),
                 ),
             ),
+            isYouTubePreviewEnabled = false,
         )
 
         assertFalse(uiModel.canSaveAttachments)
@@ -281,6 +292,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
             messageData(
                 parts = listOf(messagePart(contentType = "image/jpeg", contentUri = null)),
             ),
+            isYouTubePreviewEnabled = false,
         )
 
         assertFalse(uiModel.canSaveAttachments)
@@ -297,6 +309,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
                     ),
                 ),
             ),
+            isYouTubePreviewEnabled = false,
         )
 
         assertFalse(uiModel.canSaveAttachments)
@@ -314,6 +327,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
                     ),
                 ),
             ),
+            isYouTubePreviewEnabled = false,
         )
 
         assertTrue(uiModel.canSaveAttachments)
@@ -331,6 +345,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
                     messagePart(contentType = "text/plain", text = "caption"),
                 ),
             ),
+            isYouTubePreviewEnabled = false,
         )
 
         assertTrue(uiModel.canSaveAttachments)
@@ -347,6 +362,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
                     ),
                 ),
             ),
+            isYouTubePreviewEnabled = false,
         )
 
         assertTrue(uiModel.canSaveAttachments)
@@ -362,6 +378,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
                     messagePart(contentType = "application/ogg", contentUri = contentUri),
                 ),
             ),
+            isYouTubePreviewEnabled = false,
         )
 
         assertEquals(
@@ -388,6 +405,7 @@ internal class ConversationMessageUiModelMapperPartsTest :
                     messagePart(contentType = "text/x-vcard", contentUri = contentUri),
                 ),
             ),
+            isYouTubePreviewEnabled = false,
         )
 
         assertEquals(

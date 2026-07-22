@@ -5,6 +5,7 @@ import android.content.ClipboardManager
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.messaging.data.appsettings.repository.AppSettingsRepository
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.ui.conversation.messagedetails.mapper.MessageDetailsUiStateMapper
 import com.android.messaging.ui.conversation.messagedetails.model.MessageDetailsUiState as State
@@ -28,6 +29,7 @@ internal interface MessageDetailsScreenModel {
 @HiltViewModel
 internal class MessageDetailsViewModel @Inject constructor(
     private val conversationsRepository: ConversationsRepository,
+    private val appSettingsRepository: AppSettingsRepository,
     private val messageDetailsUiStateMapper: MessageDetailsUiStateMapper,
     private val clipboardManager: ClipboardManager,
     private val savedStateHandle: SavedStateHandle,
@@ -94,6 +96,7 @@ internal class MessageDetailsViewModel @Inject constructor(
         return messageDetailsUiStateMapper.map(
             message = result?.message,
             details = result?.details,
+            isYouTubePreviewEnabled = appSettingsRepository.isYouTubeLinkPreviewsEnabled(),
         )
     }
 

@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.messagedetails
 
 import android.content.ClipboardManager
 import androidx.lifecycle.SavedStateHandle
+import com.android.messaging.data.appsettings.repository.AppSettingsRepository
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetails
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetailsResult
 import com.android.messaging.data.conversation.repository.ConversationsRepository
@@ -28,6 +29,9 @@ internal class MessageDetailsViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val conversationsRepository = mockk<ConversationsRepository>()
+    private val appSettingsRepository = mockk<AppSettingsRepository> {
+        coEvery { isYouTubeLinkPreviewsEnabled() } returns false
+    }
     private val messageDetailsUiStateMapper = mockk<MessageDetailsUiStateMapper>()
     private val clipboardManager = mockk<ClipboardManager>()
 
@@ -58,6 +62,7 @@ internal class MessageDetailsViewModelTest {
             messageDetailsUiStateMapper.map(
                 message = message,
                 details = details,
+                isYouTubePreviewEnabled = false,
             )
         } returns content
 
@@ -79,6 +84,7 @@ internal class MessageDetailsViewModelTest {
             messageDetailsUiStateMapper.map(
                 message = message,
                 details = details,
+                isYouTubePreviewEnabled = false,
             )
         }
     }
@@ -96,6 +102,7 @@ internal class MessageDetailsViewModelTest {
             messageDetailsUiStateMapper.map(
                 message = null,
                 details = null,
+                isYouTubePreviewEnabled = false,
             )
         } returns MessageDetailsUiState.Unavailable
 
@@ -128,6 +135,7 @@ internal class MessageDetailsViewModelTest {
     ): MessageDetailsViewModel {
         return MessageDetailsViewModel(
             conversationsRepository = conversationsRepository,
+            appSettingsRepository = appSettingsRepository,
             messageDetailsUiStateMapper = messageDetailsUiStateMapper,
             clipboardManager = clipboardManager,
             savedStateHandle = savedStateHandle,

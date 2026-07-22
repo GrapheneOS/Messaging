@@ -20,6 +20,7 @@ internal class ConversationMessageUiModelMapperMmsDownloadTest :
                 smsMessageSize = 2_048,
                 mmsExpiry = 1_700_000_000_000L,
             ),
+            isYouTubePreviewEnabled = false,
         )
 
         assertEquals(
@@ -42,7 +43,7 @@ internal class ConversationMessageUiModelMapperMmsDownloadTest :
         )
 
         downloadingStatuses.forEach { status ->
-            val uiModel = mapper.map(messageData(status = status))
+            val uiModel = mapper.map(messageData(status = status), isYouTubePreviewEnabled = false)
 
             assertEquals(
                 "status=$status",
@@ -56,6 +57,7 @@ internal class ConversationMessageUiModelMapperMmsDownloadTest :
     fun map_downloadFailedStatus_buildsDownloadFailedMmsDownload() {
         val uiModel = mapper.map(
             messageData(status = MessageData.BUGLE_STATUS_INCOMING_DOWNLOAD_FAILED),
+            isYouTubePreviewEnabled = false,
         )
 
         assertEquals(
@@ -68,6 +70,7 @@ internal class ConversationMessageUiModelMapperMmsDownloadTest :
     fun map_expiredStatus_buildsExpiredOrUnavailableMmsDownload() {
         val uiModel = mapper.map(
             messageData(status = MessageData.BUGLE_STATUS_INCOMING_EXPIRED_OR_NOT_AVAILABLE),
+            isYouTubePreviewEnabled = false,
         )
 
         assertEquals(
@@ -85,7 +88,7 @@ internal class ConversationMessageUiModelMapperMmsDownloadTest :
         )
 
         nonDownloadStatuses.forEach { status ->
-            val uiModel = mapper.map(messageData(status = status))
+            val uiModel = mapper.map(messageData(status = status), isYouTubePreviewEnabled = false)
 
             assertNull("status=$status", uiModel.mmsDownload)
         }

@@ -7,6 +7,7 @@ internal enum class AppBooleanPref(
     @param:StringRes val keyResId: Int,
 ) {
     SEND_SOUND(R.string.send_sound_pref_key),
+    YOUTUBE_LINK_PREVIEWS(R.string.youtube_link_previews_pref_key),
     DUMP_SMS(R.string.dump_sms_pref_key),
     DUMP_MMS(R.string.dump_mms_pref_key),
 }

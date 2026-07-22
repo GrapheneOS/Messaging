@@ -43,6 +43,10 @@ internal sealed interface SettingsAction {
         val enabled: Boolean,
     ) : SettingsAction
 
+    data class YouTubeLinkPreviewsChanged(
+        val enabled: Boolean,
+    ) : SettingsAction
+
     data class DefaultSmsAppClicked(
         val isCurrentlyDefault: Boolean,
     ) : SettingsAction

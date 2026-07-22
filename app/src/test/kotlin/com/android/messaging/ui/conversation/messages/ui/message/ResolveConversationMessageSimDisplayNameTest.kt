@@ -141,6 +141,7 @@ class ResolveConversationMessageSimDisplayNameTest {
             canForwardMessage = false,
             canResendMessage = false,
             canSaveAttachments = false,
+            isYouTubePreviewEnabled = false,
             mmsDownload = mmsDownload,
             mmsSubject = null,
             protocol = ConversationMessageUiModel.Protocol.SMS,

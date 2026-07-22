@@ -537,6 +537,7 @@ private fun previewMessage(
         canForwardMessage = true,
         canResendMessage = status == ConversationMessageUiModel.Status.Outgoing.Failed,
         canSaveAttachments = canSaveAttachments,
+        isYouTubePreviewEnabled = true,
         mmsDownload = mmsDownload,
         mmsSubject = null,
         protocol = protocol,
