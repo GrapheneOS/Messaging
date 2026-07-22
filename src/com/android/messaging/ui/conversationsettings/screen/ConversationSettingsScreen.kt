@@ -2,11 +2,6 @@ package com.android.messaging.ui.conversationsettings.screen
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -66,6 +61,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.ParticipantId
+import com.android.messaging.ui.common.components.horizontalSlideContentTransform
 import com.android.messaging.ui.common.components.safeDrawingContentPadding
 import com.android.messaging.ui.common.text.asLtrText
 import com.android.messaging.ui.conversation.conversationSettingsParticipantRowTestTag
@@ -92,8 +88,6 @@ import com.android.messaging.ui.conversationsettings.screen.model.targetConversa
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-
-private const val SLIDE_OFFSET_DIVISOR = 3
 
 @Composable
 internal fun ConversationSettingsScreen(
@@ -191,14 +185,9 @@ private fun ConversationSettingsNavHost(
         targetState = route,
         modifier = modifier.background(MaterialTheme.colorScheme.background),
         transitionSpec = {
-            val isForward = targetState.depth > initialState.depth
-            if (isForward) {
-                (slideInHorizontally { it / SLIDE_OFFSET_DIVISOR } + fadeIn()) togetherWith
-                    (slideOutHorizontally { -it / SLIDE_OFFSET_DIVISOR } + fadeOut())
-            } else {
-                (slideInHorizontally { -it / SLIDE_OFFSET_DIVISOR } + fadeIn()) togetherWith
-                    (slideOutHorizontally { it / SLIDE_OFFSET_DIVISOR } + fadeOut())
-            }
+            horizontalSlideContentTransform(
+                isForward = targetState.depth > initialState.depth,
+            )
         },
         label = "conversation_settings_navigation",
     ) { animatedRoute ->

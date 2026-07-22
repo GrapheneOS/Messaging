@@ -2,11 +2,6 @@ package com.android.messaging.ui.appsettings.screen
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -32,11 +27,10 @@ import com.android.messaging.ui.appsettings.screen.model.SettingsNavRoute
 import com.android.messaging.ui.appsettings.screen.model.SettingsUiState
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionUiState
 import com.android.messaging.ui.appsettings.subscription.ui.SubscriptionSettingsScreen
+import com.android.messaging.ui.common.components.horizontalSlideContentTransform
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-
-private const val SLIDE_OFFSET_DIVISOR = 3
 
 @Composable
 internal fun SettingsScreen(
@@ -123,14 +117,9 @@ private fun SettingsNavHost(
         targetState = effectiveRoute,
         modifier = modifier.background(MaterialTheme.colorScheme.background),
         transitionSpec = {
-            val isForward = targetState.depth > initialState.depth
-            if (isForward) {
-                (slideInHorizontally { it / SLIDE_OFFSET_DIVISOR } + fadeIn()) togetherWith
-                    (slideOutHorizontally { -it / SLIDE_OFFSET_DIVISOR } + fadeOut())
-            } else {
-                (slideInHorizontally { -it / SLIDE_OFFSET_DIVISOR } + fadeIn()) togetherWith
-                    (slideOutHorizontally { it / SLIDE_OFFSET_DIVISOR } + fadeOut())
-            }
+            horizontalSlideContentTransform(
+                isForward = targetState.depth > initialState.depth,
+            )
         },
         label = "settings_navigation",
     ) { route ->

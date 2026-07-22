@@ -2,6 +2,7 @@ package com.android.messaging.ui.onboarding.screen
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -44,6 +45,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.R
+import com.android.messaging.ui.common.components.horizontalSlideContentTransform
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import com.android.messaging.ui.onboarding.screen.model.OnboardingAction as Action
 import com.android.messaging.ui.onboarding.screen.model.OnboardingScreenEffect as Effect
@@ -132,19 +134,12 @@ private fun OnboardingContent(
                 .padding(ScreenPadding),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Column(
+            OnboardingStepContent(
+                uiState = uiState,
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) {
-                when (uiState) {
-                    is State.SmsWarning -> SmsWarningStep()
-                    is State.Permissions -> PermissionsStep(uiState = uiState)
-                }
-            }
+                    .fillMaxWidth(),
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -153,6 +148,33 @@ private fun OnboardingContent(
                 onAction = onAction,
                 onNavigateBack = onNavigateBack,
             )
+        }
+    }
+}
+
+@Composable
+private fun OnboardingStepContent(
+    uiState: State,
+    modifier: Modifier = Modifier,
+) {
+    AnimatedContent(
+        targetState = uiState,
+        modifier = modifier,
+        transitionSpec = { horizontalSlideContentTransform(isForward = true) },
+        contentKey = { it::class },
+        label = "onboarding_step",
+    ) { state ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            when (state) {
+                is State.SmsWarning -> SmsWarningStep()
+                is State.Permissions -> PermissionsStep(uiState = state)
+            }
         }
     }
 }
