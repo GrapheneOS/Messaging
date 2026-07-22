@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationlist.chats.mapper
 
 import android.content.Context
+import com.android.messaging.R
 import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.domain.conversation.usecase.avatar.ResolveAvatarUri
@@ -15,14 +16,19 @@ import com.android.messaging.ui.conversationlist.mapper.ConversationListItemUiMa
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
 import com.android.messaging.ui.conversationlist.snapshotOf
+import com.android.messaging.util.OsUtil
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 
 internal class ConversationListUiStateMapperImplTest {
@@ -49,6 +55,17 @@ internal class ConversationListUiStateMapperImplTest {
         canAddContact = canAddContact,
         contentMapper = contentMapper,
     )
+
+    @Before
+    fun setUp() {
+        mockkStatic(OsUtil::class)
+        every { OsUtil.isSecondaryUser() } returns false
+    }
+
+    @After
+    fun tearDown() {
+        unmockkStatic(OsUtil::class)
+    }
 
     @Test
     fun map_pinnedConversation_marksItemPinned() {
@@ -219,7 +236,29 @@ internal class ConversationListUiStateMapperImplTest {
 
         val item = singleItem(state)
         assertEquals(ConversationListMessageStatus.IncomingAwaitingManualDownload, item.status)
+        assertEquals(R.string.message_title_manual_download, item.mmsDownloadTitleResId)
         assertFalse(item.isOutgoing)
+    }
+
+    @Test
+    fun map_incomingMmsDownloadStatusAsSecondaryUser_referralsToOwnerUser() {
+        every { OsUtil.isSecondaryUser() } returns true
+
+        val state = mapper.map(
+            snapshot = snapshotOf(
+                conversationItem(
+                    conversationId = "mms",
+                    status = ConversationListMessageStatus.IncomingAwaitingManualDownload,
+                ),
+            ),
+            selectedConversationIds = persistentListOf(),
+            isScrollToTopVisible = false,
+            isDebugEnabled = false,
+        )
+
+        val item = singleItem(state)
+        assertEquals(ConversationListMessageStatus.IncomingAwaitingManualDownload, item.status)
+        assertEquals(R.string.message_title_download_secondary_user, item.mmsDownloadTitleResId)
     }
 
     @Test

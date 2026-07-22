@@ -54,7 +54,10 @@ internal fun previewConversationListItem(
         subject = subject,
         timestampMillis = PREVIEW_TIMESTAMP_MILLIS,
         status = status,
-        mmsDownloadTitleResId = conversationListMmsDownloadTitleResId(status),
+        mmsDownloadTitleResId = conversationListMmsDownloadTitleResId(
+            status = status,
+            isSecondaryUser = false,
+        ),
         isOutgoing = isOutgoing,
         isUnread = isUnread,
         isEnterprise = isEnterprise,
