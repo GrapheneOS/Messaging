@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.messaging.ui.appsettings.general.delegate.AppSettingsDelegate
 import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
+import com.android.messaging.ui.appsettings.screen.model.SettingsNavEvent as NavEvent
 import com.android.messaging.ui.appsettings.screen.model.SettingsScreenEffect as Effect
 import com.android.messaging.ui.appsettings.screen.model.SettingsUiState
 import com.android.messaging.ui.appsettings.subscription.delegate.SubscriptionSettingsDelegate
@@ -20,6 +21,7 @@ import kotlinx.coroutines.launch
 
 internal interface SettingsScreenModel {
     val effects: Flow<Effect>
+    val navigationEvents: Flow<NavEvent>
     val uiState: StateFlow<SettingsUiState>
 
     fun refreshState()
@@ -35,6 +37,9 @@ internal class SettingsViewModel @Inject constructor(
 
     private val _effects = MutableSharedFlow<Effect>(extraBufferCapacity = 1)
     override val effects: Flow<Effect> = _effects.asSharedFlow()
+
+    private val _navigationEvents = MutableSharedFlow<NavEvent>(extraBufferCapacity = 1)
+    override val navigationEvents: Flow<NavEvent> = _navigationEvents.asSharedFlow()
 
     override val uiState: StateFlow<SettingsUiState> = combine(
         subscriptionSettingsDelegate.state,
@@ -109,7 +114,7 @@ internal class SettingsViewModel @Inject constructor(
             }
 
             is Action.LicensesClicked -> {
-                emitEffect(Effect.OpenLicenses)
+                _navigationEvents.tryEmit(NavEvent.OpenLicenses)
             }
         }
     }
