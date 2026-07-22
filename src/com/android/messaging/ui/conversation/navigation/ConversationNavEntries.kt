@@ -30,7 +30,6 @@ internal fun EntryProviderScope<NavKey>.conversationEntries() {
         content = addParticipantsRouteContent(),
     )
     entry<MessageDetailsNavKey>(
-        metadata = messageDetailsTransitionMetadata(),
         content = messageDetailsRouteContent(),
     )
     entry<RecipientPickerNavKey> { navKey ->

@@ -1,5 +1,6 @@
-package com.android.messaging.ui.conversation.navigation
+package com.android.messaging.ui.common.components
 
+import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.FiniteAnimationSpec
@@ -10,38 +11,34 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.ui.unit.IntOffset
-import androidx.navigation3.ui.NavDisplay
 
-internal fun messageDetailsTransitionMetadata(): Map<String, Any> {
-    return NavDisplay.transitionSpec {
-        slideInFromRight() togetherWith slideOutToLeft()
-    } + NavDisplay.popTransitionSpec {
-        slideInFromLeft() togetherWith slideOutToRight()
-    } + NavDisplay.predictivePopTransitionSpec { _ ->
-        slideInFromLeft() togetherWith slideOutToRight()
+internal fun horizontalSlideContentTransform(isForward: Boolean): ContentTransform {
+    return when {
+        isForward -> slideInFromRight() togetherWith slideOutToLeft()
+        else -> slideInFromLeft() togetherWith slideOutToRight()
     }
 }
 
-private fun slideInFromRight(): EnterTransition {
+internal fun slideInFromRight(): EnterTransition {
     val slide = slideInHorizontally(animationSpec = slideSpec()) { fullWidth -> fullWidth }
     return slide + fadeIn(animationSpec = fadeSpec())
 }
 
-private fun slideOutToLeft(): ExitTransition {
+internal fun slideOutToLeft(): ExitTransition {
     val slide = slideOutHorizontally(animationSpec = slideSpec()) { fullWidth ->
         -fullWidth / SLIDE_PARALLAX_DIVISOR
     }
     return slide + fadeOut(animationSpec = fadeSpec())
 }
 
-private fun slideInFromLeft(): EnterTransition {
+internal fun slideInFromLeft(): EnterTransition {
     val slide = slideInHorizontally(animationSpec = slideSpec()) { fullWidth ->
         -fullWidth / SLIDE_PARALLAX_DIVISOR
     }
     return slide + fadeIn(animationSpec = fadeSpec())
 }
 
-private fun slideOutToRight(): ExitTransition {
+internal fun slideOutToRight(): ExitTransition {
     val slide = slideOutHorizontally(animationSpec = slideSpec()) { fullWidth -> fullWidth }
     return slide + fadeOut(animationSpec = fadeSpec())
 }
