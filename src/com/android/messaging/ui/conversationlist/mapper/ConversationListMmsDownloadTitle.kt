@@ -3,12 +3,27 @@ package com.android.messaging.ui.conversationlist.mapper
 import androidx.annotation.StringRes
 import com.android.messaging.R
 import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
+import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus.MmsDownload
 
 @StringRes
 internal fun conversationListMmsDownloadTitleResId(
     status: ConversationListMessageStatus,
+    isSecondaryUser: Boolean,
 ): Int? {
-    return when (status) {
+    val downloadStatus = status as? MmsDownload ?: return null
+
+    return when {
+        isSecondaryUser && downloadStatus.isSecondaryUserDownloadReferral() -> {
+            R.string.message_title_download_secondary_user
+        }
+
+        else -> downloadStatus.regularTitleResId()
+    }
+}
+
+@StringRes
+private fun MmsDownload.regularTitleResId(): Int {
+    return when (this) {
         ConversationListMessageStatus.IncomingAwaitingManualDownload -> {
             R.string.message_title_manual_download
         }
@@ -22,7 +37,14 @@ internal fun conversationListMmsDownloadTitleResId(
         -> {
             R.string.message_title_download_failed
         }
+    }
+}
 
-        else -> null
+private fun MmsDownload.isSecondaryUserDownloadReferral(): Boolean {
+    return when (this) {
+        ConversationListMessageStatus.IncomingAwaitingManualDownload -> true
+        ConversationListMessageStatus.IncomingDownloadFailed -> true
+        ConversationListMessageStatus.IncomingDownloading -> false
+        ConversationListMessageStatus.IncomingExpiredOrUnavailable -> false
     }
 }

@@ -13,6 +13,7 @@ import com.android.messaging.ui.conversationlist.model.ConversationListItemUiMod
 import com.android.messaging.ui.conversationlist.model.ConversationListPreviewUiModel
 import com.android.messaging.ui.conversationlist.model.ConversationListSnippetUiModel
 import com.android.messaging.util.ContentType
+import com.android.messaging.util.OsUtil
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
@@ -55,7 +56,10 @@ internal class ConversationListItemUiMapperImpl @Inject constructor(
             subject = activeSubject(),
             timestampMillis = latestMessage.timestamp,
             status = status,
-            mmsDownloadTitleResId = conversationListMmsDownloadTitleResId(status),
+            mmsDownloadTitleResId = conversationListMmsDownloadTitleResId(
+                status = status,
+                isSecondaryUser = OsUtil.isSecondaryUser(),
+            ),
             isOutgoing = isOutgoing,
             isUnread = !latestMessage.isRead,
             isEnterprise = participant.isEnterprise,
