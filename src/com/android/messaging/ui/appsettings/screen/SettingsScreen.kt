@@ -19,10 +19,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.ui.appsettings.general.ui.AppSettingsScreen
@@ -46,7 +46,7 @@ internal fun SettingsScreen(
     intentSubId: SubId = SubId(ParticipantData.DEFAULT_SELF_SUB_ID),
     intentSubTitle: String? = null,
     isTopLevelIntent: Boolean = false,
-    screenModel: SettingsScreenModel = viewModel<SettingsViewModel>(),
+    screenModel: SettingsScreenModel = hiltViewModel<SettingsViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
 

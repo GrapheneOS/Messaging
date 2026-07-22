@@ -143,7 +143,7 @@
             android:name=".ui.appsettings.SettingsActivity"
             android:allowEmbedded="true"
             android:configChanges="orientation|screenSize|keyboardHidden"
-            android:exported="true"
+            android:exported="false"
             android:label="@string/settings_activity_title"
             android:parentActivityName="com.android.messaging.ui.MainActivity"
             android:resizeableActivity="true"
@@ -152,16 +152,18 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.android.messaging.ui.MainActivity" />
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
         </activity>
 
         <activity-alias
             android:name=".ui.appsettings.ApplicationSettingsActivity"
             android:exported="true"
-            android:targetActivity=".ui.appsettings.SettingsActivity" />
+            android:label="@string/settings_activity_title"
+            android:targetActivity=".ui.appsettings.SettingsActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity-alias>
 
         <!-- Handles sharing intent -->
         <activity

@@ -5,10 +5,31 @@ import android.app.role.RoleManager
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.provider.Settings
+import androidx.activity.compose.LocalActivity
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import com.android.messaging.di.appsettings.SettingsEntryPoint
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.appsettings.screen.model.SettingsScreenEffect as Effect
 import com.android.messaging.ui.license.LicenseActivity
 import com.android.messaging.util.LogUtil
+import dagger.hilt.android.EntryPointAccessors
+
+@Composable
+internal fun rememberSettingsEffectHandler(): SettingsEffectHandler {
+    val activity = checkNotNull(LocalActivity.current)
+    val context = LocalContext.current.applicationContext
+
+    return remember(activity, context) {
+        SettingsEffectHandlerImpl(
+            activity = activity,
+            roleManager = EntryPointAccessors
+                .fromApplication(context, SettingsEntryPoint::class.java)
+                .roleManager(),
+        )
+    }
+}
 
 internal interface SettingsEffectHandler {
     fun handle(effect: Effect)

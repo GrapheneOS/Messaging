@@ -45,7 +45,6 @@ import com.android.messaging.datamodel.data.MessagePartData;
 import com.android.messaging.receiver.ConversationReadReceiver;
 import com.android.messaging.receiver.NotificationReceiver;
 import com.android.messaging.sms.MmsSmsUtils;
-import com.android.messaging.ui.appsettings.SettingsActivity;
 import com.android.messaging.ui.classzero.ClassZeroActivity;
 import com.android.messaging.ui.contact.AddContactActivity;
 import com.android.messaging.ui.conversation.ConversationActivity;
@@ -207,12 +206,6 @@ public class UIIntentsImpl extends UIIntents {
         if (avatarUri != null) {
             intent.putExtra(AddContactActivity.EXTRA_AVATAR_URI, avatarUri.toString());
         }
-        context.startActivity(intent);
-    }
-
-    @Override
-    public void launchSettingsActivity(final Context context) {
-        final Intent intent = new Intent(context, SettingsActivity.class);
         context.startActivity(intent);
     }
 

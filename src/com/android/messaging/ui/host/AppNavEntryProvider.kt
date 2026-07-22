@@ -3,6 +3,7 @@ package com.android.messaging.ui.host
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
+import com.android.messaging.ui.appsettings.navigation.settingsEntries
 import com.android.messaging.ui.blockedparticipants.navigation.blockedParticipantsEntries
 import com.android.messaging.ui.conversation.navigation.conversationEntries
 import com.android.messaging.ui.conversationlist.navigation.ConversationListNavKey
@@ -17,5 +18,6 @@ internal fun appNavEntryProvider(): (NavKey) -> NavEntry<NavKey> {
         conversationEntries()
         conversationSettingsEntries()
         blockedParticipantsEntries()
+        settingsEntries()
     }
 }
