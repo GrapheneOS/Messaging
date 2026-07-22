@@ -12,7 +12,6 @@ import androidx.compose.ui.platform.LocalContext
 import com.android.messaging.di.appsettings.SettingsEntryPoint
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.appsettings.screen.model.SettingsScreenEffect as Effect
-import com.android.messaging.ui.license.LicenseActivity
 import com.android.messaging.util.LogUtil
 import dagger.hilt.android.EntryPointAccessors
 
@@ -65,11 +64,6 @@ internal class SettingsEffectHandlerImpl(
             is Effect.RequestDefaultSmsApp -> {
                 val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_SMS)
                 activity.startActivityForResult(intent, REQUEST_DEFAULT_SMS_APP)
-            }
-
-            is Effect.OpenLicenses -> {
-                val intent = Intent(activity, LicenseActivity::class.java)
-                activity.startActivity(intent)
             }
         }
     }

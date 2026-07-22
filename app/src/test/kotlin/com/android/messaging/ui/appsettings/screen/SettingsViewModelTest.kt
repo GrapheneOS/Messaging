@@ -7,6 +7,7 @@ import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.appsettings.general.delegate.AppSettingsDelegate
 import com.android.messaging.ui.appsettings.general.model.AppSettingsUiState
 import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
+import com.android.messaging.ui.appsettings.screen.model.SettingsNavEvent
 import com.android.messaging.ui.appsettings.screen.model.SettingsScreenEffect
 import com.android.messaging.ui.appsettings.screen.model.SettingsUiState
 import com.android.messaging.ui.appsettings.subscription.delegate.SubscriptionSettingsDelegate
@@ -308,15 +309,15 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun onLicensesClick_emitsOpenLicenses() {
+    fun onLicensesClick_emitsOpenLicensesNavEvent() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val viewModel = createViewModel()
             advanceUntilIdle()
 
-            viewModel.effects.test {
+            viewModel.navigationEvents.test {
                 viewModel.onAction(Action.LicensesClicked)
 
-                assertEquals(SettingsScreenEffect.OpenLicenses, awaitItem())
+                assertEquals(SettingsNavEvent.OpenLicenses, awaitItem())
                 cancelAndIgnoreRemainingEvents()
             }
         }

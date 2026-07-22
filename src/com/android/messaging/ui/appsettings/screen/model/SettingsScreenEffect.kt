@@ -10,5 +10,4 @@ internal sealed interface SettingsScreenEffect {
     data object OpenManageDefaultApps : SettingsScreenEffect
     data object RequestDefaultSmsApp : SettingsScreenEffect
     data object OpenNotificationSettings : SettingsScreenEffect
-    data object OpenLicenses : SettingsScreenEffect
 }

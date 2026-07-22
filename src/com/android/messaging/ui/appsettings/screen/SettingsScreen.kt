@@ -10,6 +10,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -23,6 +24,7 @@ import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.ui.appsettings.general.ui.AppSettingsScreen
 import com.android.messaging.ui.appsettings.privacy.ui.PrivacySettingsScreen
 import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
+import com.android.messaging.ui.appsettings.screen.model.SettingsNavEvent
 import com.android.messaging.ui.appsettings.screen.model.SettingsNavRoute
 import com.android.messaging.ui.appsettings.screen.model.SettingsUiState
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionUiState
@@ -36,6 +38,7 @@ import kotlinx.collections.immutable.persistentListOf
 internal fun SettingsScreen(
     effectHandler: SettingsEffectHandler,
     onNavigateBack: () -> Unit,
+    onNavigateToLicenses: () -> Unit,
     modifier: Modifier = Modifier,
     intentSubId: SubId = SubId(ParticipantData.DEFAULT_SELF_SUB_ID),
     intentSubTitle: String? = null,
@@ -44,6 +47,7 @@ internal fun SettingsScreen(
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
 
+    val currentOnNavigateToLicenses by rememberUpdatedState(onNavigateToLicenses)
     var currentRoute by rememberSaveable(stateSaver = SettingsNavRouteSavedState.Saver) {
         mutableStateOf(
             resolveInitialRoute(
@@ -59,8 +63,18 @@ internal fun SettingsScreen(
         screenModel.refreshState()
     }
 
-    LaunchedEffect(screenModel, effectHandler) {
-        screenModel.effects.collect(effectHandler::handle)
+    LaunchedEffect(screenModel) {
+        screenModel.effects.collect { effect ->
+            effectHandler.handle(effect)
+        }
+    }
+
+    LaunchedEffect(screenModel) {
+        screenModel.navigationEvents.collect { event ->
+            when (event) {
+                SettingsNavEvent.OpenLicenses -> currentOnNavigateToLicenses()
+            }
+        }
     }
 
     // For single-SIM go directly to app settings

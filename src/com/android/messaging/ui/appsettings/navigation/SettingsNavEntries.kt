@@ -5,6 +5,7 @@ import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.android.messaging.ui.appsettings.screen.SettingsScreen
 import com.android.messaging.ui.appsettings.screen.rememberSettingsEffectHandler
+import com.android.messaging.ui.license.navigation.LicenseNavKey
 import com.android.messaging.ui.navigation.LocalNavigator
 
 internal fun EntryProviderScope<NavKey>.settingsEntries() {
@@ -21,6 +22,9 @@ private fun settingsRouteContent(): @Composable (SettingsNavKey) -> Unit {
         SettingsScreen(
             effectHandler = effectHandler,
             onNavigateBack = navigator::back,
+            onNavigateToLicenses = {
+                navigator.push(destination = LicenseNavKey)
+            },
         )
     }
 }
