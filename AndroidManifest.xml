@@ -236,10 +236,11 @@
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:screenOrientation="user"
             android:label="@string/vcard_detail_activity_title"
+            android:parentActivityName="com.android.messaging.ui.MainActivity"
             android:theme="@style/Theme.Compose">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".ui.conversation.ConversationActivity" />
+                android:value="com.android.messaging.ui.MainActivity" />
         </activity>
 
         <!-- Test activity that we use to host fragments/views. Unfortunately, apparently necessary

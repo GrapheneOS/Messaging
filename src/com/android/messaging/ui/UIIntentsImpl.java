@@ -30,9 +30,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract.Contacts;
 import android.provider.ContactsContract.Intents;
-import android.provider.MediaStore;
 import android.provider.Settings;
-import android.provider.Telephony;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 
@@ -154,15 +152,6 @@ public class UIIntentsImpl extends UIIntents {
     }
 
     @Override
-    public void launchConversationActivityNewTask(
-            final Context context, final String conversationId) {
-        final Intent intent = getConversationActivityIntent(context, conversationId, null,
-                false /* withCustomTransition */);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(intent);
-    }
-
-    @Override
     public void launchConversationActivityWithParentStack(final Context context,
                 final String conversationId, final String smsBody) {
         final MessageData messageData = TextUtils.isEmpty(smsBody)
@@ -173,14 +162,6 @@ public class UIIntentsImpl extends UIIntents {
                         getConversationActivityIntent(context, conversationId, messageData,
                                 false /* withCustomTransition */))
                 .startActivities();
-    }
-
-    @Override
-    public void launchCreateNewConversationActivity(final Context context,
-            final MessageData draft) {
-        final Intent intent = getConversationActivityIntent(context, null, draft,
-                false /* withCustomTransition */);
-        context.startActivity(intent);
     }
 
     @Override
@@ -406,13 +387,6 @@ public class UIIntentsImpl extends UIIntents {
     }
 
     @Override
-    public Intent getChangeDefaultSmsAppIntent(final Activity activity) {
-        final Intent intent = new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
-        intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, activity.getPackageName());
-        return intent;
-    }
-
-    @Override
     public void launchBrowserForUrl(final Context context, final String url) {
         final Intent intent = getViewUrlIntent(url);
         startExternalActivity(context, intent);
@@ -435,14 +409,6 @@ public class UIIntentsImpl extends UIIntents {
         final Intent intent = new Intent(context, LaunchConversationActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NO_HISTORY);
         return intent;
-    }
-
-    @Override
-    public void kickMediaScanner(final Context context, final String volume) {
-        final Intent intent = new Intent(MEDIA_SCANNER_SCAN_ACTION)
-            .putExtra(MediaStore.MEDIA_SCANNER_VOLUME, volume)
-            .setClassName(MEDIA_SCANNER_PACKAGE, MEDIA_SCANNER_CLASS);
-        context.startService(intent);
     }
 
     @Override
