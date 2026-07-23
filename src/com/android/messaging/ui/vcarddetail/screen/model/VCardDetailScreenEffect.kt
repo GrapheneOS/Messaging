@@ -19,6 +19,4 @@ internal sealed interface VCardDetailScreenEffect {
     data class ShowMessage(
         val messageResId: Int,
     ) : VCardDetailScreenEffect
-
-    data object Close : VCardDetailScreenEffect
 }

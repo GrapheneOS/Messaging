@@ -49,13 +49,6 @@ internal class VCardDetailEffectHandlerImplTest {
     }
 
     @Test
-    fun handle_close_finishesActivity() {
-        handler.handle(Effect.Close)
-
-        verify { activity.finish() }
-    }
-
-    @Test
     fun handle_launchSaveToContacts_launchesSaveActivityWithScratchUri() {
         val uriSlot = slot<Uri>()
         every {

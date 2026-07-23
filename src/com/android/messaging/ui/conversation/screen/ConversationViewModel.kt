@@ -38,6 +38,7 @@ import com.android.messaging.ui.conversation.screen.model.ConversationMessageSel
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaffoldUiState
+import com.android.messaging.util.ContentType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
@@ -434,7 +435,7 @@ internal class ConversationViewModel @Inject constructor(
 
         viewModelScope.launch(defaultDispatcher) {
             _effects.emit(
-                ConversationScreenEffect.OpenAttachmentPreview(
+                attachmentPreviewEffect(
                     contentType = startupAttachment.contentType,
                     contentUri = startupAttachment.contentUri,
                     imageCollectionUri = imageCollectionUri,
@@ -450,7 +451,7 @@ internal class ConversationViewModel @Inject constructor(
 
         viewModelScope.launch(defaultDispatcher) {
             _effects.emit(
-                ConversationScreenEffect.OpenAttachmentPreview(
+                attachmentPreviewEffect(
                     contentType = attachment.contentType,
                     contentUri = attachment.contentUri,
                     imageCollectionUri = imageCollectionUri,
@@ -477,7 +478,7 @@ internal class ConversationViewModel @Inject constructor(
 
         viewModelScope.launch(defaultDispatcher) {
             _effects.emit(
-                ConversationScreenEffect.OpenAttachmentPreview(
+                attachmentPreviewEffect(
                     contentType = contentType,
                     contentUri = contentUri,
                     imageCollectionUri = imageCollectionUri,
@@ -823,6 +824,28 @@ internal class ConversationViewModel @Inject constructor(
     private companion object {
         private const val CONVERSATION_ID_KEY = "conversation_id"
         private const val STATEFLOW_STOP_TIMEOUT_MILLIS = 5_000L
+    }
+}
+
+private fun attachmentPreviewEffect(
+    contentType: String,
+    contentUri: String,
+    imageCollectionUri: String?,
+    initialPhotoOccurrenceIndex: Int = 0,
+): ConversationScreenEffect {
+    return when {
+        ContentType.isVCardType(contentType) -> {
+            ConversationScreenEffect.NavigateToVCardDetail(uri = contentUri)
+        }
+
+        else -> {
+            ConversationScreenEffect.OpenAttachmentPreview(
+                contentType = contentType,
+                contentUri = contentUri,
+                imageCollectionUri = imageCollectionUri,
+                initialPhotoOccurrenceIndex = initialPhotoOccurrenceIndex,
+            )
+        }
     }
 }
 

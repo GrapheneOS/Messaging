@@ -7,6 +7,7 @@ import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.navigation.NavigationReducerImpl
 import com.android.messaging.ui.navigation.NavigatorImpl
+import com.android.messaging.ui.vcarddetail.navigation.VCardDetailNavKey
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -206,6 +207,22 @@ class ConversationNavigatorImplTest {
             messageId = MessageId("m"),
         )
 
+        assertEquals(2, backStack.size)
+    }
+
+    @Test
+    fun navigateToVCardDetail_appendsVCardDetailDestination() {
+        val backStack = mutableListOf<NavKey>(
+            ConversationNavKey(conversationId = ConversationId("c")),
+        )
+
+        navigator(backStack = backStack).navigateToVCardDetail(
+            uri = "content://scratch/contact.vcf",
+        )
+
+        assertThat(backStack.last()).isEqualTo(
+            VCardDetailNavKey(uri = "content://scratch/contact.vcf"),
+        )
         assertEquals(2, backStack.size)
     }
 

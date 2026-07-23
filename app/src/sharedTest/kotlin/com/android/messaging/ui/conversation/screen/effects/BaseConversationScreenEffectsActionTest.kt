@@ -99,6 +99,7 @@ internal abstract class BaseConversationScreenEffectsActionTest {
             bottom = 100f,
         ),
         onNavigateToMessageDetails: (MessageId) -> Unit = {},
+        onNavigateToVCardDetail: (String) -> Unit = {},
         onNavigateBack: () -> Unit = {},
     ) {
         snackbarHostState = SnackbarHostState()
@@ -124,6 +125,7 @@ internal abstract class BaseConversationScreenEffectsActionTest {
                             snackbarHostState = snackbarHostState,
                             hostBoundsState = hostBoundsState,
                             onNavigateToMessageDetails = onNavigateToMessageDetails,
+                            onNavigateToVCardDetail = onNavigateToVCardDetail,
                             onNavigateBack = onNavigateBack,
                         )
                     }

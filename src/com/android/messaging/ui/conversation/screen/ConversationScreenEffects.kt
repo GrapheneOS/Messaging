@@ -47,6 +47,7 @@ internal fun ConversationScreenEffects(
     snackbarHostState: SnackbarHostState,
     hostBoundsState: State<ComposeRect?>,
     onNavigateToMessageDetails: (messageId: MessageId) -> Unit,
+    onNavigateToVCardDetail: (uri: String) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -65,6 +66,7 @@ internal fun ConversationScreenEffects(
         defaultSmsRoleLauncher::launch,
     )
     val currentOnNavigateToMessageDetails = rememberUpdatedState(onNavigateToMessageDetails)
+    val currentOnNavigateToVCardDetail = rememberUpdatedState(onNavigateToVCardDetail)
     val currentOnNavigateBack = rememberUpdatedState(onNavigateBack)
 
     LaunchedEffect(screenModel) {
@@ -77,6 +79,7 @@ internal fun ConversationScreenEffects(
                 effect = effect,
                 launchRoleRequest = currentLaunchRoleRequest.value,
                 onNavigateToMessageDetails = currentOnNavigateToMessageDetails.value,
+                onNavigateToVCardDetail = currentOnNavigateToVCardDetail.value,
                 onNavigateBack = currentOnNavigateBack.value,
                 onDraftSent = { draftSentTick.intValue++ },
             )
@@ -94,6 +97,7 @@ private suspend fun ConversationScreenModel.handleConversationScreenEffect(
     effect: ConversationScreenEffect,
     launchRoleRequest: (Intent) -> Unit,
     onNavigateToMessageDetails: (messageId: MessageId) -> Unit,
+    onNavigateToVCardDetail: (uri: String) -> Unit,
     onNavigateBack: () -> Unit,
     onDraftSent: () -> Unit,
 ) {
@@ -102,6 +106,10 @@ private suspend fun ConversationScreenModel.handleConversationScreenEffect(
 
         is ConversationScreenEffect.NavigateToMessageDetails -> {
             onNavigateToMessageDetails(effect.messageId)
+        }
+
+        is ConversationScreenEffect.NavigateToVCardDetail -> {
+            onNavigateToVCardDetail(effect.uri)
         }
 
         is ConversationScreenEffect.RequestDefaultSmsRole -> {

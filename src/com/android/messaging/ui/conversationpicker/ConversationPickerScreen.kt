@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -50,6 +51,7 @@ import com.android.messaging.ui.common.components.composer.MESSAGE_COMPOSE_FIELD
 import com.android.messaging.ui.common.components.composer.MessageComposeBar
 import com.android.messaging.ui.common.components.composer.MessageSendButton
 import com.android.messaging.ui.common.components.contentSurfaceShape
+import com.android.messaging.ui.common.components.horizontalSlideContentTransform
 import com.android.messaging.ui.common.components.imeAwareBottomBarInsets
 import com.android.messaging.ui.common.components.mediapreview.MediaPreviewBackground
 import com.android.messaging.ui.common.components.safeDrawingContentPadding
@@ -164,24 +166,56 @@ private fun PickerContent(
         onAction = onAction,
     )
 
-    if (uiState.draft.isReviewing) {
-        PickerReviewScaffold(
-            uiState = uiState,
-            onAction = onAction,
-            labels = labels,
-            modifier = modifier,
-        )
-    } else {
-        PickerScaffold(
-            uiState = uiState,
-            searchState = searchState,
-            onAction = onAction,
-            onNavigateBack = onNavigateBack,
-            onGrantContactsPermission = onGrantContactsPermission,
-            allowMultiSelect = allowMultiSelect,
-            labels = labels,
-            modifier = modifier,
-        )
+    AnimatedPickerContent(
+        uiState = uiState,
+        searchState = searchState,
+        onAction = onAction,
+        onNavigateBack = onNavigateBack,
+        onGrantContactsPermission = onGrantContactsPermission,
+        allowMultiSelect = allowMultiSelect,
+        labels = labels,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun AnimatedPickerContent(
+    uiState: State,
+    searchState: TextFieldState,
+    onAction: (Action) -> Unit,
+    onNavigateBack: () -> Unit,
+    onGrantContactsPermission: () -> Unit,
+    allowMultiSelect: Boolean,
+    labels: ConversationPickerLabels,
+    modifier: Modifier = Modifier,
+) {
+    AnimatedContent(
+        targetState = uiState.draft.isReviewing,
+        modifier = modifier.background(MaterialTheme.colorScheme.background),
+        transitionSpec = { horizontalSlideContentTransform(isForward = targetState) },
+        label = "picker_review",
+    ) { isReviewing ->
+        when {
+            isReviewing -> {
+                PickerReviewScaffold(
+                    uiState = uiState,
+                    onAction = onAction,
+                    labels = labels,
+                )
+            }
+
+            else -> {
+                PickerScaffold(
+                    uiState = uiState,
+                    searchState = searchState,
+                    onAction = onAction,
+                    onNavigateBack = onNavigateBack,
+                    onGrantContactsPermission = onGrantContactsPermission,
+                    allowMultiSelect = allowMultiSelect,
+                    labels = labels,
+                )
+            }
+        }
     }
 }
 
