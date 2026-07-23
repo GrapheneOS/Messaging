@@ -174,12 +174,6 @@ public abstract class UIIntents {
             Rect initialPhotoBounds, Uri photosUri, int initialPhotoOccurrenceIndex);
 
     /**
-     * Get a ACTION_VIEW intent
-     * @param url display the data in the url to users
-     */
-    public abstract Intent getViewUrlIntent(final String url);
-
-    /**
      * Get an intent to launch the wireless alert viewer.
      */
     public abstract Intent getWirelessAlertsIntent();

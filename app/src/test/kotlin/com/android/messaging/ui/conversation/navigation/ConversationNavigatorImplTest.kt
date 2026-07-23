@@ -28,23 +28,6 @@ class ConversationNavigatorImplTest {
     }
 
     @Test
-    fun navigateToConversation_removesRecipientPickerEntryFlowBeforeNavigating() {
-        val backStack = mutableListOf(
-            NewChatNavKey,
-            RecipientPickerNavKey(mode = RecipientPickerMode.CREATE_GROUP),
-        )
-
-        navigator(backStack = backStack).navigateToConversation(conversationId = CONVERSATION_ID)
-
-        assertEquals(
-            listOf(
-                ConversationNavKey(conversationId = CONVERSATION_ID),
-            ),
-            backStack,
-        )
-    }
-
-    @Test
     fun navigateToConversation_appendsWhenAlreadyInsideConversationFlow() {
         val backStack = mutableListOf<NavKey>(
             ConversationNavKey(conversationId = CONVERSATION_ID),

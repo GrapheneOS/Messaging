@@ -243,12 +243,6 @@ public class UIIntentsImpl extends UIIntents {
     }
 
     @Override
-    public Intent getViewUrlIntent(final String url) {
-        final Uri uri = Uri.parse(url);
-        return new Intent(Intent.ACTION_VIEW, uri);
-    }
-
-    @Override
     public void broadcastConversationSelfIdChange(final Context context,
             final String conversationId, final String conversationSelfId) {
         final Intent intent = new Intent(CONVERSATION_SELF_ID_CHANGE_BROADCAST_ACTION);
@@ -376,7 +370,7 @@ public class UIIntentsImpl extends UIIntents {
 
     @Override
     public void launchBrowserForUrl(final Context context, final String url) {
-        final Intent intent = getViewUrlIntent(url);
+        final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
         startExternalActivity(context, intent);
     }
 

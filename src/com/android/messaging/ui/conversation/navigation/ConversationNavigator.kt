@@ -116,7 +116,6 @@ internal class ConversationNavigatorImpl(
     private fun NavKey?.isConversationEntryDestination(): Boolean {
         return when (this) {
             is NewChatNavKey -> true
-            is RecipientPickerNavKey -> true
             else -> false
         }
     }
