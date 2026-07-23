@@ -12,12 +12,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect as ComposeRect
 import androidx.compose.ui.platform.LocalContext
@@ -32,6 +30,7 @@ import com.android.messaging.R
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.common.components.snackbar.showActionSnackbar
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
+import com.android.messaging.ui.core.CollectEvents
 import com.android.messaging.util.BuglePrefs
 import com.android.messaging.util.ContactUtil
 import com.android.messaging.util.LogUtil
@@ -55,28 +54,18 @@ internal fun ConversationScreenEffects(
         screenModel.onDefaultSmsRoleRequestResult(resultCode = result.resultCode)
     }
     val draftSentTick = remember { mutableIntStateOf(0) }
-    val currentContext = rememberUpdatedState(context)
-    val currentView = rememberUpdatedState(view)
-    val currentSnackbarHostState = rememberUpdatedState(snackbarHostState)
-    val currentHostBoundsState = rememberUpdatedState(hostBoundsState)
-    val currentLaunchRoleRequest = rememberUpdatedState<(Intent) -> Unit>(
-        defaultSmsRoleLauncher::launch,
-    )
-    val currentOnNavigateToVCardDetail = rememberUpdatedState(onNavigateToVCardDetail)
 
-    LaunchedEffect(screenModel) {
-        screenModel.effects.collect { effect ->
-            screenModel.handleConversationScreenEffect(
-                context = currentContext.value,
-                view = currentView.value,
-                snackbarHostState = currentSnackbarHostState.value,
-                hostBoundsState = currentHostBoundsState.value,
-                effect = effect,
-                launchRoleRequest = currentLaunchRoleRequest.value,
-                onNavigateToVCardDetail = currentOnNavigateToVCardDetail.value,
-                onDraftSent = { draftSentTick.intValue++ },
-            )
-        }
+    CollectEvents(events = screenModel.effects) { effect ->
+        screenModel.handleConversationScreenEffect(
+            context = context,
+            view = view,
+            snackbarHostState = snackbarHostState,
+            hostBoundsState = hostBoundsState,
+            effect = effect,
+            launchRoleRequest = defaultSmsRoleLauncher::launch,
+            onNavigateToVCardDetail = onNavigateToVCardDetail,
+            onDraftSent = { draftSentTick.intValue++ },
+        )
     }
 
     SendingMessageAnnouncement(triggerKey = draftSentTick.intValue)
