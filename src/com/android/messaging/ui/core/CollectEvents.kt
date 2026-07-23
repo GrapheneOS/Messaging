@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 @Composable
 internal fun <T> CollectEvents(
     events: Flow<T>,
-    onEvent: (T) -> Unit,
+    onEvent: suspend (T) -> Unit,
 ) {
     val currentOnEvent by rememberUpdatedState(onEvent)
 
