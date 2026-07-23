@@ -53,12 +53,7 @@ internal class ConversationScreenScrollBehaviorTest : BaseConversationScreenTest
     @Test
     fun conversationChange_resetsListStateToLatestMessage() {
         val screenModel = createScreenModel()
-        var conversationState by mutableStateOf(
-            Pair(
-                CONVERSATION_ID,
-                1,
-            ),
-        )
+        var activeConversationId by mutableStateOf(CONVERSATION_ID)
         screenModel.scaffoldUiStateFlow.value = createPresentUiState(
             messages = createMessages(
                 count = 30,
@@ -70,8 +65,7 @@ internal class ConversationScreenScrollBehaviorTest : BaseConversationScreenTest
 
         setContent(
             screenModel = screenModel.model,
-            conversationId = { conversationState.first },
-            launchGeneration = { conversationState.second },
+            conversationId = { activeConversationId },
         )
 
         composeTestRule
@@ -85,10 +79,7 @@ internal class ConversationScreenScrollBehaviorTest : BaseConversationScreenTest
             .assertDoesNotExist()
 
         composeTestRule.runOnIdle {
-            conversationState = Pair(
-                ConversationId("conversation-2"),
-                2,
-            )
+            activeConversationId = ConversationId("conversation-2")
             screenModel.scaffoldUiStateFlow.value = createPresentUiState(
                 messages = createMessages(
                     count = 5,

@@ -3,11 +3,7 @@ package com.android.messaging.ui.host
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation3.runtime.NavKey
@@ -21,15 +17,17 @@ import com.android.messaging.ui.navigation.AppNavDisplay
 import com.android.messaging.ui.navigation.LocalNavigator
 import com.android.messaging.ui.navigation.NavigationReducer
 import com.android.messaging.ui.navigation.NavigationReducerImpl
-import com.android.messaging.ui.navigation.Navigator
 import com.android.messaging.ui.navigation.rememberAppBackStack
 import com.android.messaging.ui.navigation.rememberNavigator
+import kotlinx.coroutines.flow.Flow
 
 @Composable
 internal fun AppNavGraph(
     startDestinations: List<NavKey>,
     conversationRootDestinations: List<NavKey>,
-    launchRequest: ConversationEntryLaunchRequest?,
+    isLaunchedFromBubble: Boolean,
+    initialLaunchRequest: ConversationEntryLaunchRequest?,
+    launchRequests: Flow<ConversationEntryLaunchRequest?>,
     shouldShowOnboarding: () -> Boolean,
     onAppResumed: () -> Unit,
     onFinish: () -> Unit,
@@ -38,9 +36,6 @@ internal fun AppNavGraph(
     navigationReducer: NavigationReducer = defaultNavigationReducer,
 ) {
     val backStack = rememberAppBackStack(startDestinations = startDestinations)
-    val processedLaunchGeneration = rememberSaveable {
-        mutableStateOf(value = launchRequest?.launchGeneration)
-    }
     val navigator = rememberNavigator(
         backStack = backStack,
         navigationReducer = navigationReducer,
@@ -49,7 +44,7 @@ internal fun AppNavGraph(
     val entryProvider = remember { appNavEntryProvider() }
     val entryNavState = ConversationEntryNavState(
         model = entryModel,
-        isLaunchedFromBubble = launchRequest?.isLaunchedFromBubble == true,
+        isLaunchedFromBubble = isLaunchedFromBubble,
     )
 
     AppResumeEffect(
@@ -59,15 +54,16 @@ internal fun AppNavGraph(
         onAppResumed = onAppResumed,
     )
 
-    AppNavGraphLaunchEffect(
-        launchRequest = launchRequest,
+    AppNavLaunchEffects(
+        initialLaunchRequest = initialLaunchRequest,
+        launchRequests = launchRequests,
         onLaunchRequest = entryModel::onLaunchRequest,
-        onLaunchBackStackUpdate = { currentLaunchRequest ->
-            applyLaunchToBackStack(
-                navigator = navigator,
-                conversationRootDestinations = conversationRootDestinations,
-                launchRequest = currentLaunchRequest,
-                processedLaunchGeneration = processedLaunchGeneration,
+        onLaunchBackStack = { launchRequest ->
+            navigator.reset(
+                destinations = conversationLaunchBackStack(
+                    rootDestinations = conversationRootDestinations,
+                    launchRequest = launchRequest,
+                ),
             )
         },
     )
@@ -86,39 +82,22 @@ internal fun AppNavGraph(
 }
 
 @Composable
-private fun AppNavGraphLaunchEffect(
-    launchRequest: ConversationEntryLaunchRequest?,
+internal fun AppNavLaunchEffects(
+    initialLaunchRequest: ConversationEntryLaunchRequest?,
+    launchRequests: Flow<ConversationEntryLaunchRequest?>,
     onLaunchRequest: (ConversationEntryLaunchRequest) -> Unit,
-    onLaunchBackStackUpdate: (ConversationEntryLaunchRequest?) -> Unit,
+    onLaunchBackStack: (ConversationEntryLaunchRequest?) -> Unit,
 ) {
-    val currentOnLaunchRequest = rememberUpdatedState(newValue = onLaunchRequest)
-    val currentOnLaunchBackStackUpdate = rememberUpdatedState(newValue = onLaunchBackStackUpdate)
-
-    LaunchedEffect(launchRequest) {
-        launchRequest?.let(currentOnLaunchRequest.value)
-        currentOnLaunchBackStackUpdate.value(launchRequest)
-    }
-}
-
-private fun applyLaunchToBackStack(
-    navigator: Navigator,
-    conversationRootDestinations: List<NavKey>,
-    launchRequest: ConversationEntryLaunchRequest?,
-    processedLaunchGeneration: MutableState<Int?>,
-) {
-    val launchGeneration = launchRequest?.launchGeneration
-
-    if (processedLaunchGeneration.value == launchGeneration) {
-        return
+    LaunchedEffect(Unit) {
+        initialLaunchRequest?.let(onLaunchRequest)
     }
 
-    processedLaunchGeneration.value = launchGeneration
-    navigator.reset(
-        destinations = conversationLaunchBackStack(
-            rootDestinations = conversationRootDestinations,
-            launchRequest = launchRequest,
-        ),
-    )
+    LaunchedEffect(launchRequests) {
+        launchRequests.collect { launchRequest ->
+            launchRequest?.let(onLaunchRequest)
+            onLaunchBackStack(launchRequest)
+        }
+    }
 }
 
 private val defaultNavigationReducer: NavigationReducer = NavigationReducerImpl()

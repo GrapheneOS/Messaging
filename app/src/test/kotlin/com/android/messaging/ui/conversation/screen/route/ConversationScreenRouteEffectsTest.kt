@@ -38,7 +38,6 @@ internal class ConversationScreenRouteEffectsTest : BaseConversationScreenTest()
         setContent(
             screenModel = screenModel.model,
             conversationId = { null },
-            launchGeneration = { 3 },
             pendingDraft = pendingDraft,
             pendingSelfParticipantId = SELF_PARTICIPANT_ID,
             pendingStartupAttachment = pendingAttachment,
@@ -74,55 +73,7 @@ internal class ConversationScreenRouteEffectsTest : BaseConversationScreenTest()
     }
 
     @Test
-    fun pendingPayloads_withoutLaunchGenerationAreIgnored() {
-        val screenModel = createScreenModel()
-        var draftConsumedCount = 0
-        var selfParticipantConsumedCount = 0
-        var attachmentConsumedCount = 0
-        val pendingDraft = ConversationDraft(
-            messageText = "Pending",
-        )
-        val pendingAttachment = ConversationEntryStartupAttachment(
-            contentType = "image/png",
-            contentUri = "content://media/image/10",
-        )
-
-        setContent(
-            screenModel = screenModel.model,
-            launchGeneration = { null },
-            pendingDraft = pendingDraft,
-            pendingSelfParticipantId = SELF_PARTICIPANT_ID,
-            pendingStartupAttachment = pendingAttachment,
-            onPendingDraftConsumed = {
-                draftConsumedCount += 1
-            },
-            onPendingSelfParticipantIdConsumed = {
-                selfParticipantConsumedCount += 1
-            },
-            onPendingStartupAttachmentConsumed = {
-                attachmentConsumedCount += 1
-            },
-        )
-        composeTestRule.waitForIdle()
-
-        composeTestRule.runOnIdle {
-            verify(exactly = 0) {
-                screenModel.model.onSeedDraft(any(), any())
-            }
-            verify(exactly = 0) {
-                screenModel.model.onSimSelected(any())
-            }
-            verify(exactly = 0) {
-                screenModel.model.onOpenStartupAttachment(any(), any())
-            }
-            assertEquals(0, draftConsumedCount)
-            assertEquals(0, selfParticipantConsumedCount)
-            assertEquals(0, attachmentConsumedCount)
-        }
-    }
-
-    @Test
-    fun pendingDraft_withConversationAndLaunchGenerationSeedsDraftAndNotifiesConsumption() {
+    fun pendingDraft_withConversationSeedsDraftAndNotifiesConsumption() {
         val screenModel = createScreenModel()
         var draftConsumedCount = 0
         val pendingDraft = ConversationDraft(
@@ -175,7 +126,7 @@ internal class ConversationScreenRouteEffectsTest : BaseConversationScreenTest()
     }
 
     @Test
-    fun pendingStartupAttachment_withConversationAndLaunchGenerationOpensAndNotifiesConsumption() {
+    fun pendingStartupAttachment_withConversationOpensAndNotifiesConsumption() {
         val screenModel = createScreenModel()
         var attachmentConsumedCount = 0
         val pendingAttachment = ConversationEntryStartupAttachment(

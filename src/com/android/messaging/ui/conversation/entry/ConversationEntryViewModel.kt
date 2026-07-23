@@ -57,17 +57,8 @@ internal class ConversationEntryViewModel @Inject constructor(
     }
 
     override fun onLaunchRequest(launchRequest: ConversationEntryLaunchRequest) {
-        val processedLaunchGeneration = savedStateHandle.get<Int>(
-            PROCESSED_LAUNCH_GENERATION_KEY,
-        )
-
-        if (processedLaunchGeneration == launchRequest.launchGeneration) {
-            return
-        }
-
         updateUiState(
             ConversationEntryUiState(
-                launchGeneration = launchRequest.launchGeneration,
                 conversationId = launchRequest.conversationId,
                 pendingDraft = launchRequest.draftData?.let { messageData ->
                     conversationMessageDataDraftMapper.map(messageData = messageData)
@@ -81,7 +72,6 @@ internal class ConversationEntryViewModel @Inject constructor(
         )
         savedStateHandle[PENDING_DRAFT_DATA_KEY] = launchRequest.draftData
         savedStateHandle[PENDING_SCROLL_POSITION_KEY] = launchRequest.messagePosition
-        savedStateHandle[PROCESSED_LAUNCH_GENERATION_KEY] = launchRequest.launchGeneration
     }
 
     override fun onDraftPayloadConsumed(conversationId: ConversationId) {
@@ -155,7 +145,6 @@ internal class ConversationEntryViewModel @Inject constructor(
         )
 
         return ConversationEntryUiState(
-            launchGeneration = savedStateHandle[LAUNCH_GENERATION_KEY],
             conversationId = ConversationId.fromOrNull(savedStateHandle[CONVERSATION_ID_KEY]),
             pendingDraft = pendingDraftData?.let(conversationMessageDataDraftMapper::map),
             pendingScrollPosition = savedStateHandle[PENDING_SCROLL_POSITION_KEY],
@@ -184,10 +173,6 @@ internal class ConversationEntryViewModel @Inject constructor(
         previousUiState: ConversationEntryUiState,
         uiState: ConversationEntryUiState,
     ) {
-        if (previousUiState.launchGeneration != uiState.launchGeneration) {
-            savedStateHandle[LAUNCH_GENERATION_KEY] = uiState.launchGeneration
-        }
-
         if (previousUiState.conversationId != uiState.conversationId) {
             savedStateHandle[CONVERSATION_ID_KEY] = uiState.conversationId?.value
         }
@@ -234,15 +219,10 @@ internal class ConversationEntryViewModel @Inject constructor(
 
     private companion object {
         private const val CONVERSATION_ID_KEY = "conversation_id"
-        private const val LAUNCH_GENERATION_KEY = "launch_generation"
         private const val PENDING_DRAFT_DATA_KEY = "pending_draft_data"
         private const val PENDING_SCROLL_POSITION_KEY = "pending_scroll_position"
         private const val PENDING_SELF_PARTICIPANT_ID_KEY = "pending_self_participant_id"
         private const val PENDING_STARTUP_ATTACHMENT_TYPE_KEY = "pending_startup_attachment_type"
         private const val PENDING_STARTUP_ATTACHMENT_URI_KEY = "pending_startup_attachment_uri"
-
-        // Tracks the last launch request handled by this ViewModel even when the
-        // same launch generation remains in uiState for downstream side effects
-        private const val PROCESSED_LAUNCH_GENERATION_KEY = "processed_launch_generation"
     }
 }

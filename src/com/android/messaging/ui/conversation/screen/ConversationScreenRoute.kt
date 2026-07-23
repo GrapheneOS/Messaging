@@ -90,7 +90,6 @@ internal fun rememberAudioRecordingStartRequest(
 @Composable
 internal fun ConversationScreenRouteEffects(
     conversationId: ConversationId?,
-    launchGeneration: Int?,
     cancelIncomingNotification: Boolean,
     pendingDraft: ConversationDraft?,
     pendingSelfParticipantId: ParticipantId?,
@@ -109,7 +108,6 @@ internal fun ConversationScreenRouteEffects(
 ) {
     ConversationPendingLaunchEffects(
         conversationId = conversationId,
-        launchGeneration = launchGeneration,
         pendingDraft = pendingDraft,
         pendingSelfParticipantId = pendingSelfParticipantId,
         pendingStartupAttachment = pendingStartupAttachment,
@@ -154,7 +152,6 @@ internal fun ConversationScreenRouteEffects(
 @Composable
 private fun ConversationPendingLaunchEffects(
     conversationId: ConversationId?,
-    launchGeneration: Int?,
     pendingDraft: ConversationDraft?,
     pendingSelfParticipantId: ParticipantId?,
     pendingStartupAttachment: ConversationEntryStartupAttachment?,
@@ -167,8 +164,8 @@ private fun ConversationPendingLaunchEffects(
         screenModel.onConversationIdChanged(conversationId = conversationId)
     }
 
-    LaunchedEffect(conversationId, launchGeneration, pendingDraft, screenModel) {
-        if (conversationId != null && launchGeneration != null && pendingDraft != null) {
+    LaunchedEffect(conversationId, pendingDraft, screenModel) {
+        if (conversationId != null && pendingDraft != null) {
             screenModel.onSeedDraft(
                 conversationId = conversationId,
                 draft = pendingDraft,
@@ -179,13 +176,11 @@ private fun ConversationPendingLaunchEffects(
 
     LaunchedEffect(
         conversationId,
-        launchGeneration,
         pendingSelfParticipantId,
         screenModel,
     ) {
         if (
             conversationId != null &&
-            launchGeneration != null &&
             pendingSelfParticipantId != null
         ) {
             screenModel.onSimSelected(selfParticipantId = pendingSelfParticipantId)
@@ -195,13 +190,11 @@ private fun ConversationPendingLaunchEffects(
 
     LaunchedEffect(
         conversationId,
-        launchGeneration,
         pendingStartupAttachment,
         screenModel,
     ) {
         if (
             conversationId != null &&
-            launchGeneration != null &&
             pendingStartupAttachment != null
         ) {
             screenModel.onOpenStartupAttachment(
