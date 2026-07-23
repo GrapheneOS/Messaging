@@ -6,13 +6,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
 import com.android.messaging.domain.onboarding.usecase.ShouldShowOnboarding
-import com.android.messaging.ui.conversation.entry.model.ConversationEntryLaunchRequest
+import com.android.messaging.ui.conversation.entry.model.ConversationEntryLaunchRequest as LaunchRequest
 import com.android.messaging.ui.conversation.navigation.conversationLaunchBackStack
 import com.android.messaging.ui.conversationlist.navigation.ConversationListNavKey
 import com.android.messaging.ui.core.AppTheme
@@ -23,6 +20,9 @@ import com.android.messaging.ui.onboarding.navigation.OnboardingNavKey
 import com.android.messaging.util.BugleActivityUtil
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 
 @AndroidEntryPoint
 internal class MainActivity : ComponentActivity() {
@@ -30,28 +30,31 @@ internal class MainActivity : ComponentActivity() {
     @Inject
     lateinit var shouldShowOnboarding: ShouldShowOnboarding
 
-    private var launchGeneration = 0
-    private var launchRequest: ConversationEntryLaunchRequest? by mutableStateOf(value = null)
+    private val launchRequests = Channel<LaunchRequest?>(Channel.BUFFERED)
+    private val launchRequestFlow: Flow<LaunchRequest?> = launchRequests.receiveAsFlow()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         enableEdgeToEdge()
 
-        launchGeneration = savedInstanceState?.getInt(LAUNCH_GENERATION_STATE_KEY) ?: 0
-        applyIntent(
-            intent = intent,
-            launchGeneration = launchGeneration,
-        )
+        val initialLaunchRequest = when (savedInstanceState) {
+            null -> launchRequestForIntent(intent)
+            else -> null
+        }
 
-        val startDestinations = startDestinations()
+        val startDestinations = startDestinations(
+            initialLaunchRequest = initialLaunchRequest
+        )
 
         setContent {
             AppTheme {
                 AppNavGraph(
                     startDestinations = startDestinations,
                     conversationRootDestinations = listOf(ConversationListNavKey),
-                    launchRequest = launchRequest,
+                    isLaunchedFromBubble = false,
+                    initialLaunchRequest = initialLaunchRequest,
+                    launchRequests = launchRequestFlow,
                     shouldShowOnboarding = shouldShowOnboarding::invoke,
                     onAppResumed = ::resumeDataModel,
                     onFinish = ::finish,
@@ -64,40 +67,25 @@ internal class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
 
-        launchGeneration += 1
-        applyIntent(intent = intent, launchGeneration = launchGeneration)
-    }
+        this.intent = intent
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
+        when {
+            shouldShowOnboarding() -> Unit
 
-        outState.putInt(LAUNCH_GENERATION_STATE_KEY, launchGeneration)
-    }
+            intent.goToConversationList() -> launchRequests.trySend(null)
 
-    private fun applyIntent(
-        intent: Intent,
-        launchGeneration: Int,
-    ) {
-        setIntent(intent)
-
-        if (shouldShowOnboarding()) {
-            return
+            intent.hasConversationLaunchPayload() -> {
+                launchRequests.trySend(intent.toConversationLaunchRequest())
+            }
         }
+    }
 
-        val goToConversationList = intent.getBooleanExtra(
-            UIIntents.UI_INTENT_EXTRA_GOTO_CONVERSATION_LIST,
-            false,
-        )
-
-        launchRequest = when {
-            goToConversationList -> null
-
-            intent.hasConversationLaunchPayload() -> intent.toConversationLaunchRequest(
-                launchGeneration = launchGeneration,
-                isLaunchedFromBubble = false,
-            )
-
-            else -> launchRequest
+    private fun launchRequestForIntent(intent: Intent): LaunchRequest? {
+        return when {
+            shouldShowOnboarding() -> null
+            intent.goToConversationList() -> null
+            intent.hasConversationLaunchPayload() -> intent.toConversationLaunchRequest()
+            else -> null
         }
     }
 
@@ -105,18 +93,20 @@ internal class MainActivity : ComponentActivity() {
         BugleActivityUtil.onActivityResume(this, this)
     }
 
-    private fun startDestinations(): List<NavKey> {
+    private fun startDestinations(
+        initialLaunchRequest: LaunchRequest?,
+    ): List<NavKey> {
         if (shouldShowOnboarding()) {
             return listOf(OnboardingNavKey)
         }
 
         return conversationLaunchBackStack(
             rootDestinations = listOf(ConversationListNavKey),
-            launchRequest = launchRequest,
+            launchRequest = initialLaunchRequest,
         )
     }
 
-    private companion object {
-        private const val LAUNCH_GENERATION_STATE_KEY = "launch_generation"
+    private fun Intent.goToConversationList(): Boolean {
+        return getBooleanExtra(UIIntents.UI_INTENT_EXTRA_GOTO_CONVERSATION_LIST, false)
     }
 }

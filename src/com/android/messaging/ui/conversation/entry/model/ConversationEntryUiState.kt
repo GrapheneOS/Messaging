@@ -7,7 +7,6 @@ import com.android.messaging.data.conversation.model.draft.ConversationDraft
 
 @Immutable
 internal data class ConversationEntryUiState(
-    val launchGeneration: Int? = null,
     val conversationId: ConversationId? = null,
     val pendingDraft: ConversationDraft? = null,
     val pendingScrollPosition: Int? = null,

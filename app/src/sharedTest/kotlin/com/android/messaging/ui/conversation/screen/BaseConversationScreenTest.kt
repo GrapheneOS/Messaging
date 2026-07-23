@@ -47,7 +47,6 @@ internal abstract class BaseConversationScreenTest {
     protected fun setContent(
         screenModel: ConversationScreenModel,
         conversationId: () -> ConversationId? = { CONVERSATION_ID },
-        launchGeneration: () -> Int? = { 1 },
         cancelIncomingNotification: Boolean = true,
         lifecycleOwner: LifecycleOwner? = null,
         onAddPeopleClick: () -> Unit = {},
@@ -64,7 +63,6 @@ internal abstract class BaseConversationScreenTest {
             val content: @Composable () -> Unit = {
                 ConversationScreen(
                     conversationId = conversationId(),
-                    launchGeneration = launchGeneration(),
                     cancelIncomingNotification = cancelIncomingNotification,
                     onAddPeopleClick = onAddPeopleClick,
                     onConversationDetailsClick = {},

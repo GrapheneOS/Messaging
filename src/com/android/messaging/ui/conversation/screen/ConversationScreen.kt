@@ -29,7 +29,6 @@ import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaf
 internal fun ConversationScreen(
     modifier: Modifier = Modifier,
     conversationId: ConversationId? = null,
-    launchGeneration: Int? = null,
     cancelIncomingNotification: Boolean = true,
     onAddPeopleClick: () -> Unit,
     onConversationDetailsClick: () -> Unit,
@@ -65,7 +64,6 @@ internal fun ConversationScreen(
 
     ConversationScreenRouteEffects(
         conversationId = conversationId,
-        launchGeneration = launchGeneration,
         cancelIncomingNotification = cancelIncomingNotification,
         pendingDraft = pendingDraft,
         pendingSelfParticipantId = pendingSelfParticipantId,

@@ -50,7 +50,6 @@ private fun conversationScreenRouteContent(): @Composable (ConversationNavKey) -
 
         ConversationScreen(
             conversationId = conversationId,
-            launchGeneration = entryUiState.launchGeneration,
             cancelIncomingNotification = !entryNavState.isLaunchedFromBubble,
             onAddPeopleClick = {
                 navigator.navigateToAddParticipants(conversationId = conversationId)

@@ -13,12 +13,8 @@ internal fun Intent.hasConversationLaunchPayload(): Boolean {
         hasExtra(UIIntents.UI_INTENT_EXTRA_ATTACHMENT_URI)
 }
 
-internal fun Intent.toConversationLaunchRequest(
-    launchGeneration: Int,
-    isLaunchedFromBubble: Boolean,
-): ConversationEntryLaunchRequest {
+internal fun Intent.toConversationLaunchRequest(): ConversationEntryLaunchRequest {
     val launchRequest = ConversationEntryLaunchRequest(
-        launchGeneration = launchGeneration,
         conversationId = getStringExtra(
             UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID
         ).let(ConversationId::fromOrNull),
@@ -36,7 +32,6 @@ internal fun Intent.toConversationLaunchRequest(
             UIIntents.UI_INTENT_EXTRA_MESSAGE_POSITION,
             -1,
         ).takeIf { position -> position >= 0 },
-        isLaunchedFromBubble = isLaunchedFromBubble,
     )
 
     removeExtra(UIIntents.UI_INTENT_EXTRA_DRAFT_DATA)

@@ -35,7 +35,6 @@ internal class ConversationEntryViewModelTest {
 
         viewModel.onLaunchRequest(
             launchRequest = ConversationEntryLaunchRequest(
-                launchGeneration = 4,
                 conversationId = CONVERSATION_ID,
                 draftData = draftData,
                 startupAttachmentUri = "content://media/1",
@@ -46,7 +45,6 @@ internal class ConversationEntryViewModelTest {
 
         assertEquals(
             ConversationEntryUiState(
-                launchGeneration = 4,
                 conversationId = CONVERSATION_ID,
                 pendingDraft = mappedDraft,
                 pendingScrollPosition = 12,
@@ -63,7 +61,7 @@ internal class ConversationEntryViewModelTest {
     }
 
     @Test
-    fun launchRequest_ignoresDuplicateGeneration() {
+    fun launchRequest_appliesEveryRequestUnconditionally() {
         val draftData = mockk<MessageData>()
         val mapper = createMapper(
             draftData = draftData,
@@ -73,21 +71,19 @@ internal class ConversationEntryViewModelTest {
 
         viewModel.onLaunchRequest(
             launchRequest = ConversationEntryLaunchRequest(
-                launchGeneration = 1,
                 conversationId = CONVERSATION_ID,
                 draftData = draftData,
             ),
         )
         viewModel.onLaunchRequest(
             launchRequest = ConversationEntryLaunchRequest(
-                launchGeneration = 1,
                 conversationId = ConversationId("conversation-2"),
                 draftData = draftData,
             ),
         )
 
-        assertEquals(CONVERSATION_ID, viewModel.uiState.value.conversationId)
-        verify(exactly = 1) {
+        assertEquals(ConversationId("conversation-2"), viewModel.uiState.value.conversationId)
+        verify(exactly = 2) {
             mapper.map(messageData = draftData)
         }
     }
@@ -112,7 +108,6 @@ internal class ConversationEntryViewModelTest {
         val viewModel = createViewModel()
         viewModel.onLaunchRequest(
             launchRequest = ConversationEntryLaunchRequest(
-                launchGeneration = 1,
                 conversationId = CONVERSATION_ID,
                 draftData = mockk(),
                 startupAttachmentUri = "content://media/1",
@@ -166,7 +161,6 @@ internal class ConversationEntryViewModelTest {
 
         createViewModel(mapper = mapper, savedStateHandle = savedStateHandle).onLaunchRequest(
             launchRequest = ConversationEntryLaunchRequest(
-                launchGeneration = 4,
                 conversationId = CONVERSATION_ID,
                 draftData = draftData,
                 startupAttachmentUri = "content://media/1",
@@ -182,7 +176,6 @@ internal class ConversationEntryViewModelTest {
 
         assertEquals(
             ConversationEntryUiState(
-                launchGeneration = 4,
                 conversationId = CONVERSATION_ID,
                 pendingDraft = mappedDraft,
                 pendingScrollPosition = 12,
@@ -210,30 +203,6 @@ internal class ConversationEntryViewModelTest {
         assertThat(recreatedViewModel.uiState.value.pendingSelfParticipantId).isEqualTo(
             ParticipantId("self-1"),
         )
-    }
-
-    @Test
-    fun duplicateLaunchGeneration_isIgnoredAfterViewModelRecreation() {
-        val savedStateHandle = SavedStateHandle()
-
-        createViewModel(savedStateHandle = savedStateHandle).onLaunchRequest(
-            launchRequest = ConversationEntryLaunchRequest(
-                launchGeneration = 1,
-                conversationId = CONVERSATION_ID,
-                draftData = mockk(),
-            ),
-        )
-
-        val recreatedViewModel = createViewModel(savedStateHandle = savedStateHandle)
-        recreatedViewModel.onLaunchRequest(
-            launchRequest = ConversationEntryLaunchRequest(
-                launchGeneration = 1,
-                conversationId = ConversationId("conversation-2"),
-                draftData = mockk(),
-            ),
-        )
-
-        assertEquals(CONVERSATION_ID, recreatedViewModel.uiState.value.conversationId)
     }
 
     private fun createViewModel(
