@@ -15,11 +15,6 @@ internal data class ConversationNavKey(
 ) : ConversationScopedNavKey
 
 @Serializable
-internal data class RecipientPickerNavKey(
-    val mode: RecipientPickerMode,
-) : NavKey
-
-@Serializable
 internal data class AddParticipantsNavKey(
     override val conversationId: ConversationId,
 ) : ConversationScopedNavKey
@@ -29,9 +24,3 @@ internal data class MessageDetailsNavKey(
     override val conversationId: ConversationId,
     val messageId: MessageId,
 ) : ConversationScopedNavKey
-
-@Serializable
-internal enum class RecipientPickerMode {
-    CREATE_GROUP,
-    ADD_PARTICIPANTS,
-}
