@@ -16,7 +16,6 @@ import com.android.messaging.ui.conversation.entry.model.ConversationEntryStartu
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryUiState
 import com.android.messaging.ui.conversation.entry.rememberNewChatEffectHandler
 import com.android.messaging.ui.conversation.messagedetails.MessageDetailsScreen
-import com.android.messaging.ui.conversation.recipientpicker.RecipientPickerScreen
 import com.android.messaging.ui.conversation.screen.ConversationScreen
 import com.android.messaging.ui.navigation.LocalNavigator
 import com.android.messaging.ui.navigation.SeededViewModelStoreOwner
@@ -34,9 +33,6 @@ internal fun EntryProviderScope<NavKey>.conversationEntries() {
     entry<MessageDetailsNavKey>(
         content = messageDetailsRouteContent(),
     )
-    entry<RecipientPickerNavKey> { navKey ->
-        RecipientPickerScreen(mode = navKey.mode)
-    }
 }
 
 private fun conversationScreenRouteContent(): @Composable (ConversationNavKey) -> Unit {
