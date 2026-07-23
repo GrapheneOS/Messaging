@@ -5,14 +5,15 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.navigation3.runtime.NavKey
 import com.android.messaging.domain.onboarding.usecase.ShouldShowOnboarding
 import com.android.messaging.ui.MainActivity
 import com.android.messaging.ui.UIIntents
-import com.android.messaging.ui.conversation.entry.model.ConversationEntryLaunchRequest as LaunchRequest
-import com.android.messaging.ui.conversation.navigation.conversationLaunchBackStack
+import com.android.messaging.ui.conversation.entry.ConversationLaunchStore
+import com.android.messaging.ui.conversation.entry.submitIntent
+import com.android.messaging.ui.conversation.navigation.conversationRoute
 import com.android.messaging.ui.core.AppTheme
 import com.android.messaging.ui.host.AppNavGraph
-import com.android.messaging.ui.host.toConversationLaunchRequest
 import com.android.messaging.util.BugleActivityUtil
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -26,8 +27,11 @@ internal class ConversationActivity : ComponentActivity() {
     @Inject
     lateinit var shouldShowOnboarding: ShouldShowOnboarding
 
-    private val launchRequests = Channel<LaunchRequest?>(Channel.BUFFERED)
-    private val launchRequestFlow: Flow<LaunchRequest?> = launchRequests.receiveAsFlow()
+    @Inject
+    lateinit var launchStore: ConversationLaunchStore
+
+    private val launchDestinations = Channel<List<NavKey>>(Channel.BUFFERED)
+    private val launchDestinationFlow: Flow<List<NavKey>> = launchDestinations.receiveAsFlow()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,25 +41,20 @@ internal class ConversationActivity : ComponentActivity() {
             return
         }
 
-        val request = intent.toConversationLaunchRequest()
-        val initialLaunchRequest = when (savedInstanceState) {
-            null -> request
-            else -> null
+        if (savedInstanceState == null) {
+            launchStore.submitIntent(intent = intent)
         }
+
+        val startDestinations = conversationRoute(intent).orEmpty()
 
         enableEdgeToEdge()
 
         setContent {
             AppTheme {
                 AppNavGraph(
-                    startDestinations = conversationLaunchBackStack(
-                        rootDestinations = emptyList(),
-                        launchRequest = request,
-                    ),
-                    conversationRootDestinations = emptyList(),
+                    startDestinations = startDestinations,
                     isLaunchedFromBubble = isLaunchedFromBubble,
-                    initialLaunchRequest = initialLaunchRequest,
-                    launchRequests = launchRequestFlow,
+                    launchDestinations = launchDestinationFlow,
                     shouldShowOnboarding = shouldShowOnboarding::invoke,
                     onAppResumed = ::resumeDataModel,
                     onFinish = ::finishAfterTransition,
@@ -74,7 +73,9 @@ internal class ConversationActivity : ComponentActivity() {
             return
         }
 
-        launchRequests.trySend(intent.toConversationLaunchRequest())
+        val route = conversationRoute(intent) ?: return
+        launchStore.submitIntent(intent = intent)
+        launchDestinations.trySend(route)
     }
 
     private fun resumeDataModel() {

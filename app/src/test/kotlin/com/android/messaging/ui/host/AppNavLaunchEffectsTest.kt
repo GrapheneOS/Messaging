@@ -1,12 +1,12 @@
 package com.android.messaging.ui.host
 
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.navigation3.runtime.NavKey
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
-import com.android.messaging.ui.conversation.entry.model.ConversationEntryLaunchRequest
+import com.android.messaging.ui.conversation.navigation.ConversationNavKey
+import com.android.messaging.ui.conversationlist.navigation.ConversationListNavKey
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -21,85 +21,36 @@ internal class AppNavLaunchEffectsTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun initialLaunchRequest_isSeededOnceAndDoesNotResetBackStack() {
-        val request = ConversationEntryLaunchRequest(conversationId = CONVERSATION_ID)
-        val seeded = mutableListOf<ConversationEntryLaunchRequest>()
-        val backStackResets = mutableListOf<ConversationEntryLaunchRequest?>()
-        val recomposeTrigger = mutableStateOf(value = 0)
-
-        composeTestRule.setContent {
-            @Suppress("UNUSED_EXPRESSION")
-            recomposeTrigger.value
-
-            AppNavLaunchEffects(
-                initialLaunchRequest = request,
-                launchRequests = emptyFlow(),
-                onLaunchRequest = { seeded += it },
-                onLaunchBackStack = { backStackResets += it },
-            )
-        }
-
-        composeTestRule.runOnIdle {
-            repeat(times = 3) { recomposeTrigger.value += 1 }
-        }
-        composeTestRule.waitForIdle()
-
-        composeTestRule.runOnIdle {
-            assertEquals(listOf(request), seeded)
-            assertEquals(emptyList<ConversationEntryLaunchRequest?>(), backStackResets)
-        }
-    }
-
-    @Test
-    fun nullInitialLaunchRequest_isNotSeeded() {
-        val seeded = mutableListOf<ConversationEntryLaunchRequest>()
+    fun launchDestinations_resetTheBackStackPerEmission() {
+        val channel = Channel<List<NavKey>>(Channel.BUFFERED)
+        val launchDestinations: Flow<List<NavKey>> = channel.receiveAsFlow()
+        val resets = mutableListOf<List<NavKey>>()
 
         composeTestRule.setContent {
             AppNavLaunchEffects(
-                initialLaunchRequest = null,
-                launchRequests = emptyFlow(),
-                onLaunchRequest = { seeded += it },
-                onLaunchBackStack = {},
+                launchDestinations = launchDestinations,
+                onResetBackStack = { resets += it },
             )
         }
         composeTestRule.waitForIdle()
 
+        val listOnly = listOf<NavKey>(ConversationListNavKey)
+        val listAndConversation = listOf(
+            ConversationListNavKey,
+            ConversationNavKey(CONVERSATION_ID),
+        )
+
         composeTestRule.runOnIdle {
-            assertEquals(emptyList<ConversationEntryLaunchRequest>(), seeded)
+            channel.trySend(listAndConversation)
         }
-    }
-
-    @Test
-    fun launchRequests_seedPayloadAndResetBackStackPerEmission() {
-        val channel = Channel<ConversationEntryLaunchRequest?>(Channel.BUFFERED)
-        val launchRequests: Flow<ConversationEntryLaunchRequest?> = channel.receiveAsFlow()
-        val request = ConversationEntryLaunchRequest(conversationId = CONVERSATION_ID)
-        val seeded = mutableListOf<ConversationEntryLaunchRequest>()
-        val backStackResets = mutableListOf<ConversationEntryLaunchRequest?>()
-
-        composeTestRule.setContent {
-            AppNavLaunchEffects(
-                initialLaunchRequest = null,
-                launchRequests = launchRequests,
-                onLaunchRequest = { seeded += it },
-                onLaunchBackStack = { backStackResets += it },
-            )
+        composeTestRule.waitForIdle()
+        composeTestRule.runOnIdle {
+            channel.trySend(listOnly)
         }
         composeTestRule.waitForIdle()
 
         composeTestRule.runOnIdle {
-            channel.trySend(request)
-        }
-        composeTestRule.waitForIdle()
-
-        composeTestRule.runOnIdle {
-            channel.trySend(null)
-        }
-        composeTestRule.waitForIdle()
-
-        composeTestRule.runOnIdle {
-            assertEquals(listOf(request), seeded)
-            assertEquals(listOf(request, null), backStackResets)
+            assertEquals(listOf(listAndConversation, listOnly), resets)
         }
     }
 }

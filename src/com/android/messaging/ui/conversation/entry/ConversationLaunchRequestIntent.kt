@@ -1,4 +1,4 @@
-package com.android.messaging.ui.host
+package com.android.messaging.ui.conversation.entry
 
 import android.content.Intent
 import android.text.TextUtils
