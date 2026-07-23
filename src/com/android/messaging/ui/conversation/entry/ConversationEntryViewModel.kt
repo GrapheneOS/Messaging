@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.entry
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.android.messaging.data.conversation.mapper.ConversationMessageDataDraftMapper
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.ParticipantId
@@ -14,6 +15,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 internal interface ConversationEntryScreenModel {
     val uiState: StateFlow<ConversationEntryUiState>
@@ -22,8 +24,6 @@ internal interface ConversationEntryScreenModel {
         conversationId: ConversationId,
         pendingSelfParticipantId: ParticipantId?,
     )
-
-    fun onLaunchRequest(launchRequest: ConversationEntryLaunchRequest)
 
     fun onDraftPayloadConsumed(conversationId: ConversationId)
 
@@ -38,11 +38,18 @@ internal interface ConversationEntryScreenModel {
 internal class ConversationEntryViewModel @Inject constructor(
     private val conversationMessageDataDraftMapper: ConversationMessageDataDraftMapper,
     private val savedStateHandle: SavedStateHandle,
+    launchStore: ConversationLaunchStore,
 ) : ViewModel(),
     ConversationEntryScreenModel {
 
     private val _uiState = MutableStateFlow(restoreUiState())
     override val uiState = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            launchStore.requests.collect(::onLaunchRequest)
+        }
+    }
 
     override fun onConversationNavigationRequested(
         conversationId: ConversationId,
@@ -56,7 +63,7 @@ internal class ConversationEntryViewModel @Inject constructor(
         )
     }
 
-    override fun onLaunchRequest(launchRequest: ConversationEntryLaunchRequest) {
+    private fun onLaunchRequest(launchRequest: ConversationEntryLaunchRequest) {
         updateUiState(
             ConversationEntryUiState(
                 conversationId = launchRequest.conversationId,
