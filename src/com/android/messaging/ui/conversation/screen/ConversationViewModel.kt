@@ -37,6 +37,7 @@ import com.android.messaging.ui.conversation.screen.model.ConversationMediaPicke
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
+import com.android.messaging.ui.conversation.screen.model.ConversationScreenNavEvent as NavEvent
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaffoldUiState
 import com.android.messaging.util.ContentType
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -49,11 +50,13 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 internal interface ConversationScreenModel {
     val effects: Flow<ConversationScreenEffect>
+    val navigationEvents: Flow<NavEvent>
     val mediaPickerOverlayUiState: StateFlow<ConversationMediaPickerOverlayUiState>
     val scaffoldUiState: StateFlow<ConversationScreenScaffoldUiState>
 
@@ -166,8 +169,10 @@ internal class ConversationViewModel @Inject constructor(
     private val _effects = MutableSharedFlow<ConversationScreenEffect>(
         extraBufferCapacity = 1,
     )
+    private val _navigationEvents = MutableSharedFlow<NavEvent>(extraBufferCapacity = 1)
 
     override val effects = _effects.asSharedFlow()
+    override val navigationEvents = _navigationEvents.asSharedFlow()
 
     init {
         initializeDelegates()
@@ -352,29 +357,27 @@ internal class ConversationViewModel @Inject constructor(
             conversationIdFlow = conversationIdFlow,
         )
         conversationSubscriptionSelectionDelegate.bind(scope = viewModelScope)
-        bindDelegateEffects()
+        bindDelegateStreams()
     }
 
-    private fun bindDelegateEffects() {
+    private fun bindDelegateStreams() {
         viewModelScope.launch(defaultDispatcher) {
-            conversationDraftDelegate.effects.collect(_effects::emit)
+            merge(
+                conversationDraftDelegate.effects,
+                conversationMediaPickerDelegate.effects,
+                conversationMessageSelectionDelegate.effects,
+                conversationMetadataDelegate.effects,
+            ).collect(_effects::emit)
         }
         viewModelScope.launch(defaultDispatcher) {
-            conversationMediaPickerDelegate.effects.collect(_effects::emit)
-        }
-        viewModelScope.launch(defaultDispatcher) {
-            conversationMessageSelectionDelegate.effects.collect(_effects::emit)
-        }
-        viewModelScope.launch(defaultDispatcher) {
-            conversationMetadataDelegate.effects.collect(_effects::emit)
+            merge(
+                conversationMessageSelectionDelegate.navigationEvents,
+                conversationMetadataDelegate.navigationEvents,
+            ).collect(_navigationEvents::emit)
         }
     }
 
     override fun onConversationIdChanged(conversationId: ConversationId?) {
-        updateConversationId(conversationId = conversationId)
-    }
-
-    private fun updateConversationId(conversationId: ConversationId?) {
         if (conversationId != conversationIdFlow.value) {
             conversationMessageSelectionDelegate.dismissMessageSelection()
             conversationIdFlow.value = conversationId
@@ -433,15 +436,13 @@ internal class ConversationViewModel @Inject constructor(
             .buildConversationImagesUri(conversationId.value)
             ?.toString()
 
-        viewModelScope.launch(defaultDispatcher) {
-            _effects.emit(
-                attachmentPreviewEffect(
-                    contentType = startupAttachment.contentType,
-                    contentUri = startupAttachment.contentUri,
-                    imageCollectionUri = imageCollectionUri,
-                ),
-            )
-        }
+        emitEffect(
+            attachmentPreviewEffect(
+                contentType = startupAttachment.contentType,
+                contentUri = startupAttachment.contentUri,
+                imageCollectionUri = imageCollectionUri,
+            ),
+        )
     }
 
     override fun onAttachmentClicked(attachment: ComposerAttachmentUiModel.Resolved) {
@@ -449,15 +450,13 @@ internal class ConversationViewModel @Inject constructor(
             ?.let { MessagingContentProvider.buildDraftImagesUri(it.value) }
             ?.toString()
 
-        viewModelScope.launch(defaultDispatcher) {
-            _effects.emit(
-                attachmentPreviewEffect(
-                    contentType = attachment.contentType,
-                    contentUri = attachment.contentUri,
-                    imageCollectionUri = imageCollectionUri,
-                ),
-            )
-        }
+        emitEffect(
+            attachmentPreviewEffect(
+                contentType = attachment.contentType,
+                contentUri = attachment.contentUri,
+                imageCollectionUri = imageCollectionUri,
+            ),
+        )
     }
 
     override fun onMessageAttachmentClicked(
@@ -476,16 +475,14 @@ internal class ConversationViewModel @Inject constructor(
                 contentUri = contentUri,
             )
 
-        viewModelScope.launch(defaultDispatcher) {
-            _effects.emit(
-                attachmentPreviewEffect(
-                    contentType = contentType,
-                    contentUri = contentUri,
-                    imageCollectionUri = imageCollectionUri,
-                    initialPhotoOccurrenceIndex = initialPhotoOccurrenceIndex,
-                ),
-            )
-        }
+        emitEffect(
+            attachmentPreviewEffect(
+                contentType = contentType,
+                contentUri = contentUri,
+                imageCollectionUri = imageCollectionUri,
+                initialPhotoOccurrenceIndex = initialPhotoOccurrenceIndex,
+            ),
+        )
     }
 
     override fun onMessageClick(messageId: MessageId) {
@@ -510,16 +507,14 @@ internal class ConversationViewModel @Inject constructor(
             return
         }
 
-        viewModelScope.launch(defaultDispatcher) {
-            _effects.emit(
-                ConversationScreenEffect.ShowOrAddParticipantContact(
-                    contactId = message.senderContactId,
-                    contactLookupKey = message.senderContactLookupKey,
-                    avatarUri = message.senderAvatarUri,
-                    normalizedDestination = message.senderNormalizedDestination,
-                ),
-            )
-        }
+        emitEffect(
+            ConversationScreenEffect.ShowOrAddParticipantContact(
+                contactId = message.senderContactId,
+                contactLookupKey = message.senderContactLookupKey,
+                avatarUri = message.senderAvatarUri,
+                normalizedDestination = message.senderNormalizedDestination,
+            ),
+        )
     }
 
     override fun onMessageDownloadClick(messageId: MessageId) {
@@ -547,13 +542,11 @@ internal class ConversationViewModel @Inject constructor(
             ?.takeIf(canPlacePhoneCall::invoke)
             ?: return
 
-        viewModelScope.launch(defaultDispatcher) {
-            _effects.emit(
-                ConversationScreenEffect.PlacePhoneCall(
-                    phoneNumber = phoneNumber,
-                ),
-            )
-        }
+        emitEffect(
+            ConversationScreenEffect.PlacePhoneCall(
+                phoneNumber = phoneNumber,
+            ),
+        )
     }
 
     override fun onSimSelected(selfParticipantId: ParticipantId) {
@@ -570,13 +563,11 @@ internal class ConversationViewModel @Inject constructor(
     }
 
     override fun onExternalUriClicked(uri: String) {
-        viewModelScope.launch(defaultDispatcher) {
-            _effects.emit(
-                ConversationScreenEffect.OpenExternalUri(
-                    uri = uri,
-                ),
-            )
-        }
+        emitEffect(
+            ConversationScreenEffect.OpenExternalUri(
+                uri = uri,
+            ),
+        )
     }
 
     override fun onPhotoPickerMediaSelected(contentUris: List<String>) {
@@ -688,25 +679,16 @@ internal class ConversationViewModel @Inject constructor(
     }
 
     override fun onDefaultSmsRolePromptActionClick() {
-        viewModelScope.launch(defaultDispatcher) {
-            when (val requestIntent = createDefaultSmsRoleRequest()) {
-                null -> {
-                    _effects.emit(
-                        ConversationScreenEffect.ShowMessage(
-                            messageResId = R.string.activity_not_found_message,
-                        ),
-                    )
-                }
+        val effect = when (val requestIntent = createDefaultSmsRoleRequest()) {
+            null -> ConversationScreenEffect.ShowMessage(
+                messageResId = R.string.activity_not_found_message,
+            )
 
-                else -> {
-                    _effects.emit(
-                        ConversationScreenEffect.LaunchDefaultSmsRoleRequest(
-                            intent = requestIntent,
-                        ),
-                    )
-                }
-            }
+            else -> ConversationScreenEffect.LaunchDefaultSmsRoleRequest(
+                intent = requestIntent,
+            )
         }
+        emitEffect(effect)
     }
 
     override fun onDefaultSmsRoleRequestResult(resultCode: Int) {
@@ -718,13 +700,11 @@ internal class ConversationViewModel @Inject constructor(
             return
         }
 
-        viewModelScope.launch(defaultDispatcher) {
-            _effects.emit(
-                ConversationScreenEffect.ShowMessage(
-                    messageResId = R.string.toast_after_setting_default_sms_app,
-                ),
-            )
-        }
+        emitEffect(
+            ConversationScreenEffect.ShowMessage(
+                messageResId = R.string.toast_after_setting_default_sms_app,
+            ),
+        )
     }
 
     private fun handlePendingDefaultSmsRoleRequestResult(resultCode: Int): Boolean {
@@ -742,13 +722,11 @@ internal class ConversationViewModel @Inject constructor(
     }
 
     override fun onDefaultSmsRoleRequestLaunchFailed() {
-        viewModelScope.launch(defaultDispatcher) {
-            _effects.emit(
-                ConversationScreenEffect.ShowMessage(
-                    messageResId = R.string.activity_not_found_message,
-                ),
-            )
-        }
+        emitEffect(
+            ConversationScreenEffect.ShowMessage(
+                messageResId = R.string.activity_not_found_message,
+            ),
+        )
     }
 
     override fun persistDraft() {
@@ -819,6 +797,12 @@ internal class ConversationViewModel @Inject constructor(
         conversationDraftDelegate.flushDraft()
 
         super.onCleared()
+    }
+
+    private fun emitEffect(effect: ConversationScreenEffect) {
+        viewModelScope.launch(defaultDispatcher) {
+            _effects.emit(effect)
+        }
     }
 
     private companion object {

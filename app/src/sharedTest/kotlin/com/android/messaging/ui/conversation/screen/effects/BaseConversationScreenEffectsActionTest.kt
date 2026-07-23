@@ -25,8 +25,10 @@ import com.android.messaging.ui.conversation.screen.ConversationScreenEffects
 import com.android.messaging.ui.conversation.screen.ConversationScreenModel
 import com.android.messaging.ui.conversation.screen.model.ConversationMediaPickerOverlayUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
+import com.android.messaging.ui.conversation.screen.model.ConversationScreenNavEvent
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaffoldUiState
 import com.android.messaging.ui.core.AppTheme
+import com.android.messaging.ui.core.CollectEvents
 import io.mockk.CapturingSlot
 import io.mockk.clearAllMocks
 import io.mockk.every
@@ -46,6 +48,7 @@ internal abstract class BaseConversationScreenEffectsActionTest {
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
     protected lateinit var effectsFlow: MutableSharedFlow<ConversationScreenEffect>
+    protected lateinit var navigationEventsFlow: MutableSharedFlow<ConversationScreenNavEvent>
     protected lateinit var screenModel: ConversationScreenModel
     protected lateinit var snackbarHostState: SnackbarHostState
     protected lateinit var hostBoundsState: MutableState<ComposeRect?>
@@ -62,8 +65,10 @@ internal abstract class BaseConversationScreenEffectsActionTest {
         clearAllMocks()
 
         effectsFlow = MutableSharedFlow(extraBufferCapacity = EFFECT_BUFFER_CAPACITY)
+        navigationEventsFlow = MutableSharedFlow(extraBufferCapacity = EFFECT_BUFFER_CAPACITY)
         screenModel = mockk(relaxed = true)
         every { screenModel.effects } returns effectsFlow
+        every { screenModel.navigationEvents } returns navigationEventsFlow
         every { screenModel.mediaPickerOverlayUiState } returns MutableStateFlow(
             ConversationMediaPickerOverlayUiState(),
         )
@@ -120,13 +125,20 @@ internal abstract class BaseConversationScreenEffectsActionTest {
                                 )
                             }
                         }
+                        CollectEvents(events = screenModel.navigationEvents) { event ->
+                            when (event) {
+                                ConversationScreenNavEvent.CloseConversation -> onNavigateBack()
+
+                                is ConversationScreenNavEvent.NavigateToMessageDetails -> {
+                                    onNavigateToMessageDetails(event.messageId)
+                                }
+                            }
+                        }
                         ConversationScreenEffects(
                             screenModel = screenModel,
                             snackbarHostState = snackbarHostState,
                             hostBoundsState = hostBoundsState,
-                            onNavigateToMessageDetails = onNavigateToMessageDetails,
                             onNavigateToVCardDetail = onNavigateToVCardDetail,
-                            onNavigateBack = onNavigateBack,
                         )
                     }
                 }
@@ -138,6 +150,13 @@ internal abstract class BaseConversationScreenEffectsActionTest {
     protected fun emitEffect(effect: ConversationScreenEffect) {
         composeTestRule.runOnIdle {
             assertTrue(effectsFlow.tryEmit(effect))
+        }
+        composeTestRule.waitForIdle()
+    }
+
+    protected fun emitNavigationEvent(event: ConversationScreenNavEvent) {
+        composeTestRule.runOnIdle {
+            assertTrue(navigationEventsFlow.tryEmit(event))
         }
         composeTestRule.waitForIdle()
     }

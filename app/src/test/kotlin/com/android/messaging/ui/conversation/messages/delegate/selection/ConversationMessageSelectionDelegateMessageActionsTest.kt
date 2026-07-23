@@ -9,6 +9,7 @@ import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
+import com.android.messaging.ui.conversation.screen.model.ConversationScreenNavEvent
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.just
@@ -164,14 +165,14 @@ internal class ConversationMessageSelectionDelegateMessageActionsTest :
                 harness.delegate.onMessageLongClick(messageId = MessageId("message-1"))
                 advanceUntilIdle()
 
-                harness.delegate.effects.test {
+                harness.delegate.navigationEvents.test {
                     harness.delegate.onMessageSelectionActionClick(
                         action = ConversationMessageSelectionAction.Details,
                     )
                     advanceUntilIdle()
 
                     assertThat(awaitItem()).isEqualTo(
-                        ConversationScreenEffect.NavigateToMessageDetails(
+                        ConversationScreenNavEvent.NavigateToMessageDetails(
                             messageId = MessageId("message-1"),
                         )
                     )

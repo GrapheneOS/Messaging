@@ -195,6 +195,7 @@ internal abstract class BaseConversationScreenTest {
         val model = mockk<ConversationScreenModel>(relaxed = true)
 
         every { model.effects } returns effectsFlow
+        every { model.navigationEvents } returns MutableSharedFlow()
         every { model.scaffoldUiState } returns scaffoldUiStateFlow
         every { model.mediaPickerOverlayUiState } returns mediaPickerOverlayUiStateFlow
 

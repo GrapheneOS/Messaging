@@ -8,7 +8,9 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import com.android.messaging.testutil.TEST_WAIT_TIMEOUT_MILLIS
 import com.android.messaging.ui.conversation.screen.model.ConversationMediaPickerOverlayUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
+import com.android.messaging.ui.conversation.screen.model.ConversationScreenNavEvent as NavEvent
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaffoldUiState
+import com.android.messaging.ui.core.CollectEvents
 import io.mockk.every
 import io.mockk.mockk
 import java.util.concurrent.atomic.AtomicInteger
@@ -17,6 +19,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.emptyFlow
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -49,17 +52,12 @@ class ConversationScreenEffectsTest {
             val hostBoundsState = remember(inputGeneration.value) {
                 mutableStateOf<ComposeRect?>(value = null)
             }
-            val onNavigateBack = remember(inputGeneration.value) {
-                {}
-            }
 
             ConversationScreenEffects(
                 screenModel = screenModel,
                 snackbarHostState = snackbarHostState,
                 hostBoundsState = hostBoundsState,
-                onNavigateToMessageDetails = {},
                 onNavigateToVCardDetail = {},
-                onNavigateBack = onNavigateBack,
             )
         }
 
@@ -81,22 +79,14 @@ class ConversationScreenEffectsTest {
     }
 
     @Test
-    fun collectedEffectUsesLatestCapturedNavigateBackCallback() {
-        val effectFlow = MutableSharedFlow<ConversationScreenEffect>(
-            extraBufferCapacity = 1,
-        )
-        val screenModel = mockConversationScreenModel(effectsFlow = effectFlow)
+    fun collectedNavigationEventUsesLatestCapturedNavigateBackCallback() {
+        val navEventsFlow = MutableSharedFlow<NavEvent>(extraBufferCapacity = 1)
+        val screenModel = mockConversationScreenModel(navEventsFlow = navEventsFlow)
         val staleNavigateBackCount = AtomicInteger()
         val currentNavigateBackCount = AtomicInteger()
         val inputGeneration = mutableStateOf(value = 0)
 
         composeTestRule.setContent {
-            val snackbarHostState = remember(inputGeneration.value) {
-                SnackbarHostState()
-            }
-            val hostBoundsState = remember(inputGeneration.value) {
-                mutableStateOf<ComposeRect?>(value = null)
-            }
             val onNavigateBack: () -> Unit = remember(inputGeneration.value) {
                 when (inputGeneration.value) {
                     0 -> {
@@ -113,18 +103,16 @@ class ConversationScreenEffectsTest {
                 }
             }
 
-            ConversationScreenEffects(
-                screenModel = screenModel,
-                snackbarHostState = snackbarHostState,
-                hostBoundsState = hostBoundsState,
-                onNavigateToMessageDetails = {},
-                onNavigateToVCardDetail = {},
-                onNavigateBack = onNavigateBack,
-            )
+            CollectEvents(events = screenModel.navigationEvents) { event ->
+                when (event) {
+                    is NavEvent.CloseConversation -> onNavigateBack()
+                    is NavEvent.NavigateToMessageDetails -> Unit
+                }
+            }
         }
 
         composeTestRule.waitUntil(timeoutMillis = TEST_WAIT_TIMEOUT_MILLIS) {
-            effectFlow.subscriptionCount.value == 1
+            navEventsFlow.subscriptionCount.value == 1
         }
 
         composeTestRule.runOnIdle {
@@ -133,8 +121,8 @@ class ConversationScreenEffectsTest {
         composeTestRule.waitForIdle()
 
         composeTestRule.runOnIdle {
-            assertEquals(1, effectFlow.subscriptionCount.value)
-            assertEquals(true, effectFlow.tryEmit(ConversationScreenEffect.CloseConversation))
+            assertEquals(1, navEventsFlow.subscriptionCount.value)
+            assertEquals(true, navEventsFlow.tryEmit(NavEvent.CloseConversation))
         }
 
         composeTestRule.waitUntil(timeoutMillis = TEST_WAIT_TIMEOUT_MILLIS) {
@@ -148,10 +136,12 @@ class ConversationScreenEffectsTest {
     }
 
     private fun mockConversationScreenModel(
-        effectsFlow: Flow<ConversationScreenEffect>,
+        effectsFlow: Flow<ConversationScreenEffect> = emptyFlow(),
+        navEventsFlow: Flow<NavEvent> = emptyFlow(),
     ): ConversationScreenModel {
         return mockk<ConversationScreenModel>(relaxed = true) {
             every { effects } returns effectsFlow
+            every { navigationEvents } returns navEventsFlow
             every { mediaPickerOverlayUiState } returns MutableStateFlow(
                 value = ConversationMediaPickerOverlayUiState(),
             )

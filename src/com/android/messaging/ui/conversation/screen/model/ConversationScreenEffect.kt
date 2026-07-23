@@ -2,12 +2,9 @@ package com.android.messaging.ui.conversation.screen.model
 
 import android.content.Intent
 import android.net.Uri
-import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.datamodel.data.MessageData
 
 internal sealed interface ConversationScreenEffect {
-    data object CloseConversation : ConversationScreenEffect
-
     data class RequestDefaultSmsRole(
         val isSending: Boolean,
     ) : ConversationScreenEffect
@@ -63,10 +60,6 @@ internal sealed interface ConversationScreenEffect {
         val contactLookupKey: String?,
         val avatarUri: Uri?,
         val normalizedDestination: String?,
-    ) : ConversationScreenEffect
-
-    data class NavigateToMessageDetails(
-        val messageId: MessageId,
     ) : ConversationScreenEffect
 
     data class NavigateToVCardDetail(

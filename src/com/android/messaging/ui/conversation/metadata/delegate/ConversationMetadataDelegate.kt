@@ -12,6 +12,7 @@ import com.android.messaging.ui.conversation.common.ConversationScreenDelegate
 import com.android.messaging.ui.conversation.metadata.mapper.ConversationMetadataUiStateMapper
 import com.android.messaging.ui.conversation.metadata.model.ConversationMetadataUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
+import com.android.messaging.ui.conversation.screen.model.ConversationScreenNavEvent as NavEvent
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -30,6 +31,7 @@ import kotlinx.coroutines.launch
 internal interface ConversationMetadataDelegate :
     ConversationScreenDelegate<ConversationMetadataUiState> {
     val effects: Flow<ConversationScreenEffect>
+    val navigationEvents: Flow<NavEvent>
     val isDeleteConversationConfirmationVisible: StateFlow<Boolean>
 
     fun onArchiveConversationClick()
@@ -53,12 +55,14 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
     private val _effects = MutableSharedFlow<ConversationScreenEffect>(
         extraBufferCapacity = 1,
     )
+    private val _navigationEvents = MutableSharedFlow<NavEvent>(extraBufferCapacity = 1)
     private val _state = MutableStateFlow<ConversationMetadataUiState>(
         value = ConversationMetadataUiState.Loading,
     )
     private val _isDeleteConversationConfirmationVisible = MutableStateFlow(value = false)
 
     override val effects = _effects.asSharedFlow()
+    override val navigationEvents = _navigationEvents.asSharedFlow()
     override val state = _state.asStateFlow()
     override val isDeleteConversationConfirmationVisible =
         _isDeleteConversationConfirmationVisible.asStateFlow()
@@ -112,7 +116,7 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
 
         boundScope?.launch(defaultDispatcher) {
             conversationsRepository.archiveConversation(conversationId = conversationId)
-            _effects.emit(ConversationScreenEffect.CloseConversation)
+            _navigationEvents.emit(NavEvent.CloseConversation)
         }
     }
 
@@ -206,7 +210,7 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
                 conversationId = conversationId,
                 cutoffTimestamp = cutoffTimestamp,
             )
-            _effects.emit(ConversationScreenEffect.CloseConversation)
+            _navigationEvents.emit(NavEvent.CloseConversation)
         }
     }
 

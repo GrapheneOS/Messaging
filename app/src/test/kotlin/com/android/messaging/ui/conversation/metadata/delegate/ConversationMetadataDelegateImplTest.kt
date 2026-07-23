@@ -13,6 +13,7 @@ import com.android.messaging.testutil.TEST_CALL_ACTION_PHONE_NUMBER
 import com.android.messaging.ui.conversation.metadata.mapper.ConversationMetadataUiStateMapper
 import com.android.messaging.ui.conversation.metadata.model.ConversationMetadataUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
+import com.android.messaging.ui.conversation.screen.model.ConversationScreenNavEvent
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -39,11 +40,11 @@ class ConversationMetadataDelegateImplTest {
             val harness = createHarness(conversationId = ConversationId("conversation-42"))
 
             try {
-                harness.delegate.effects.test {
+                harness.delegate.navigationEvents.test {
                     harness.delegate.onArchiveConversationClick()
                     advanceUntilIdle()
 
-                    assertEquals(ConversationScreenEffect.CloseConversation, awaitItem())
+                    assertEquals(ConversationScreenNavEvent.CloseConversation, awaitItem())
                     cancelAndIgnoreRemainingEvents()
                 }
 
@@ -173,11 +174,11 @@ class ConversationMetadataDelegateImplTest {
                 harness.delegate.onDeleteConversationClick()
                 advanceUntilIdle()
 
-                harness.delegate.effects.test {
+                harness.delegate.navigationEvents.test {
                     harness.delegate.confirmDeleteConversation()
                     advanceUntilIdle()
 
-                    assertEquals(ConversationScreenEffect.CloseConversation, awaitItem())
+                    assertEquals(ConversationScreenNavEvent.CloseConversation, awaitItem())
                     cancelAndIgnoreRemainingEvents()
                 }
 

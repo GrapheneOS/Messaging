@@ -1,7 +1,9 @@
 package com.android.messaging.ui.conversation.screen.viewmodel
 
 import app.cash.turbine.test
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
+import com.android.messaging.ui.conversation.screen.model.ConversationScreenNavEvent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -105,9 +107,65 @@ internal class ConversationViewModelEffectRelayTest : BaseConversationViewModelT
             advanceUntilIdle()
 
             viewModel.effects.test {
-                metadataDelegate.effectsFlow.emit(ConversationScreenEffect.CloseConversation)
+                metadataDelegate.effectsFlow.emit(
+                    ConversationScreenEffect.ShowMessage(
+                        messageResId = 321,
+                    ),
+                )
 
-                assertEquals(ConversationScreenEffect.CloseConversation, awaitItem())
+                assertEquals(
+                    ConversationScreenEffect.ShowMessage(
+                        messageResId = 321,
+                    ),
+                    awaitItem(),
+                )
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    @Test
+    fun metadataNavigationEvents_areExposedAsScreenNavigationEvents() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val metadataDelegate = createMetadataDelegateMock()
+            val viewModel = createViewModel(
+                metadataDelegate = metadataDelegate.mock,
+            )
+            advanceUntilIdle()
+
+            viewModel.navigationEvents.test {
+                metadataDelegate.navigationEventsFlow.emit(
+                    ConversationScreenNavEvent.CloseConversation,
+                )
+
+                assertEquals(ConversationScreenNavEvent.CloseConversation, awaitItem())
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    @Test
+    fun messageSelectionNavigationEvents_areExposedAsScreenNavigationEvents() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val messageSelectionDelegate = createMessageSelectionDelegateMock()
+            val viewModel = createViewModel(
+                messageSelectionDelegate = messageSelectionDelegate.mock,
+            )
+            advanceUntilIdle()
+
+            viewModel.navigationEvents.test {
+                messageSelectionDelegate.navigationEventsFlow.emit(
+                    ConversationScreenNavEvent.NavigateToMessageDetails(
+                        messageId = MessageId("message-1"),
+                    ),
+                )
+
+                assertEquals(
+                    ConversationScreenNavEvent.NavigateToMessageDetails(
+                        messageId = MessageId("message-1"),
+                    ),
+                    awaitItem(),
+                )
                 cancelAndIgnoreRemainingEvents()
             }
         }

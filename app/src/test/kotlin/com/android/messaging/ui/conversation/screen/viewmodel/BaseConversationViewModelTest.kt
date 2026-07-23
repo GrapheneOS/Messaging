@@ -40,6 +40,7 @@ import com.android.messaging.ui.conversation.screen.ConversationViewModel
 import com.android.messaging.ui.conversation.screen.model.ConversationAttachmentLimitWarning
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
+import com.android.messaging.ui.conversation.screen.model.ConversationScreenNavEvent
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.collections.immutable.ImmutableList
@@ -285,9 +286,11 @@ internal abstract class BaseConversationViewModelTest {
         val bindCalls = mutableListOf<BindCall>()
         val stateFlow = MutableStateFlow(ConversationMessageSelectionUiState())
         val effectsFlow = MutableSharedFlow<ConversationScreenEffect>()
+        val navigationEventsFlow = MutableSharedFlow<ConversationScreenNavEvent>()
         val mock = mockk<ConversationMessageSelectionDelegate>(relaxed = true)
         every { mock.state } returns stateFlow
         every { mock.effects } returns effectsFlow
+        every { mock.navigationEvents } returns navigationEventsFlow
         every {
             mock.bind(any(), any())
         } answers {
@@ -300,6 +303,7 @@ internal abstract class BaseConversationViewModelTest {
             mock = mock,
             stateFlow = stateFlow,
             effectsFlow = effectsFlow,
+            navigationEventsFlow = navigationEventsFlow,
             bindCalls = bindCalls,
         )
     }
@@ -310,10 +314,12 @@ internal abstract class BaseConversationViewModelTest {
             ConversationMetadataUiState.Loading,
         )
         val effectsFlow = MutableSharedFlow<ConversationScreenEffect>()
+        val navigationEventsFlow = MutableSharedFlow<ConversationScreenNavEvent>()
         val deleteConfirmationVisibleFlow = MutableStateFlow(value = false)
         val mock = mockk<ConversationMetadataDelegate>(relaxed = true)
         every { mock.state } returns stateFlow
         every { mock.effects } returns effectsFlow
+        every { mock.navigationEvents } returns navigationEventsFlow
         every {
             mock.isDeleteConversationConfirmationVisible
         } returns deleteConfirmationVisibleFlow
@@ -329,6 +335,7 @@ internal abstract class BaseConversationViewModelTest {
             mock = mock,
             stateFlow = stateFlow,
             effectsFlow = effectsFlow,
+            navigationEventsFlow = navigationEventsFlow,
             deleteConfirmationVisibleFlow = deleteConfirmationVisibleFlow,
             bindCalls = bindCalls,
         )
@@ -444,6 +451,7 @@ internal abstract class BaseConversationViewModelTest {
         val mock: ConversationMessageSelectionDelegate,
         val stateFlow: MutableStateFlow<ConversationMessageSelectionUiState>,
         val effectsFlow: MutableSharedFlow<ConversationScreenEffect>,
+        val navigationEventsFlow: MutableSharedFlow<ConversationScreenNavEvent>,
         val bindCalls: List<BindCall>,
     )
 
@@ -451,6 +459,7 @@ internal abstract class BaseConversationViewModelTest {
         val mock: ConversationMetadataDelegate,
         val stateFlow: MutableStateFlow<ConversationMetadataUiState>,
         val effectsFlow: MutableSharedFlow<ConversationScreenEffect>,
+        val navigationEventsFlow: MutableSharedFlow<ConversationScreenNavEvent>,
         val deleteConfirmationVisibleFlow: MutableStateFlow<Boolean>,
         val bindCalls: List<BindCall>,
     )
