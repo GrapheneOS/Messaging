@@ -51,7 +51,6 @@ import com.android.messaging.ui.conversationpicker.host.forward.ForwardMessageAc
 import com.android.messaging.ui.conversationpicker.host.widget.WidgetPickConversationActivity;
 import com.android.messaging.ui.debug.DebugMmsConfigActivity;
 import com.android.messaging.ui.photoviewer.PhotoViewerActivity;
-import com.android.messaging.ui.vcarddetail.VCardDetailActivity;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.ContentType;
 import com.android.messaging.util.ConversationIdSet;
@@ -71,10 +70,6 @@ public class UIIntentsImpl extends UIIntents {
     private static final String CALL_TARGET_CLICK_KEY = "touchPoint";
     private static final String CALL_TARGET_CLICK_EXTRA_KEY =
             "android.telecom.extra.OUTGOING_CALL_EXTRAS";
-    private static final String MEDIA_SCANNER_CLASS =
-            "com.android.providers.media.MediaScannerService";
-    private static final String MEDIA_SCANNER_PACKAGE = "com.android.providers.media";
-    private static final String MEDIA_SCANNER_SCAN_ACTION = "android.media.IMediaScannerService";
     private static final int MUTABLE_PENDING_INTENT_FLAGS =
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE;
 
@@ -214,13 +209,6 @@ public class UIIntentsImpl extends UIIntents {
         final Intent forwardMessageIntent = new Intent(context, ForwardMessageActivity.class)
                 .putExtra(UI_INTENT_EXTRA_DRAFT_DATA, message);
         context.startActivity(forwardMessageIntent);
-    }
-
-    @Override
-    public void launchVCardDetailActivity(final Context context, final Uri vcardUri) {
-        final Intent vcardDetailIntent = new Intent(context, VCardDetailActivity.class)
-                .putExtra(UI_INTENT_EXTRA_VCARD_URI, vcardUri);
-        context.startActivity(vcardDetailIntent);
     }
 
     @Override

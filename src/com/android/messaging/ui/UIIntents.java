@@ -62,9 +62,6 @@ public abstract class UIIntents {
     public static final String ACTION_RESET_NOTIFICATIONS =
             "com.android.messaging.reset_notifications";
 
-    // Sending VCard uri to VCard detail activity
-    public static final String UI_INTENT_EXTRA_VCARD_URI = "vcard_uri";
-
     public static final String CMAS_COMPONENT = "com.android.cellbroadcastreceiver.module";
 
     // Intent action for local broadcast receiver for conversation self id change.
@@ -151,11 +148,6 @@ public abstract class UIIntents {
      * Launch an activity to let the user forward a message
      */
     public abstract void launchForwardMessageActivity(Context context, MessageData message);
-
-    /**
-     * Launch an activity to show details for a VCard
-     */
-    public abstract void launchVCardDetailActivity(Context context, Uri vcardUri);
 
     /**
      * Launch an external activity that handles the intent to add VCard to contacts

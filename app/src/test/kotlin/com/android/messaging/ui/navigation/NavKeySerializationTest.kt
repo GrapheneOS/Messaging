@@ -14,6 +14,7 @@ import com.android.messaging.ui.conversation.navigation.RecipientPickerMode
 import com.android.messaging.ui.conversation.navigation.RecipientPickerNavKey
 import com.android.messaging.ui.conversationlist.navigation.ConversationListNavKey
 import com.android.messaging.ui.onboarding.navigation.OnboardingNavKey
+import com.android.messaging.ui.vcarddetail.navigation.VCardDetailNavKey
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -62,6 +63,11 @@ class NavKeySerializationTest {
     @Test
     fun recipientPickerNavKey_roundTripsWithMode() {
         assertRoundTrips(RecipientPickerNavKey(mode = RecipientPickerMode.ADD_PARTICIPANTS))
+    }
+
+    @Test
+    fun vCardDetailNavKey_roundTripsWithUri() {
+        assertRoundTrips(VCardDetailNavKey(uri = "content://scratch/contact.vcf"))
     }
 
     private fun assertRoundTrips(navKey: NavKey) {

@@ -99,6 +99,7 @@ internal fun ConversationScreenRouteEffects(
     permissionState: ConversationMediaPickerPermissionState,
     screenModel: ConversationScreenModel,
     onNavigateToMessageDetails: (messageId: MessageId) -> Unit,
+    onNavigateToVCardDetail: (uri: String) -> Unit,
     onNavigateBack: () -> Unit,
     onPendingDraftConsumed: () -> Unit,
     onPendingSelfParticipantIdConsumed: () -> Unit,
@@ -135,6 +136,7 @@ internal fun ConversationScreenRouteEffects(
         snackbarHostState = snackbarHostState,
         hostBoundsState = hostBoundsState,
         onNavigateToMessageDetails = onNavigateToMessageDetails,
+        onNavigateToVCardDetail = onNavigateToVCardDetail,
         onNavigateBack = onNavigateBack,
     )
 }

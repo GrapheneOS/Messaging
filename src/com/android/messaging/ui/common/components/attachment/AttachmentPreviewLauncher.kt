@@ -48,13 +48,6 @@ internal suspend fun openAttachmentPreview(
             }
         }
 
-        ContentType.isVCardType(contentType) -> {
-            UIIntents.get().launchVCardDetailActivity(
-                context,
-                normalizeAttachmentUriForIntent(attachmentUri = attachmentUri),
-            )
-        }
-
         ContentType.isVideoType(contentType) -> {
             UIIntents.get().launchFullScreenVideoViewer(
                 context,
