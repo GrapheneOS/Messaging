@@ -113,6 +113,7 @@ internal class ConversationViewModelSimSelectionTest {
             ConversationMessageSelectionUiState(),
         )
         every { conversationMessageSelectionDelegate.effects } returns emptyFlow()
+        every { conversationMessageSelectionDelegate.navigationEvents } returns emptyFlow()
         every { conversationMessageSelectionDelegate.bind(any(), any()) } just runs
         every { conversationMessageSelectionDelegate.dismissMessageSelection() } just runs
 
@@ -129,6 +130,7 @@ internal class ConversationViewModelSimSelectionTest {
             conversationMetadataDelegate.isDeleteConversationConfirmationVisible
         } returns MutableStateFlow(false)
         every { conversationMetadataDelegate.effects } returns emptyFlow()
+        every { conversationMetadataDelegate.navigationEvents } returns emptyFlow()
         every { conversationMetadataDelegate.bind(any(), any()) } just runs
 
         every { conversationFocusDelegate.bind(any(), any()) } just runs

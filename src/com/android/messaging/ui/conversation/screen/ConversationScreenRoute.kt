@@ -31,7 +31,9 @@ import com.android.messaging.ui.conversation.mediapicker.ConversationMediaPicker
 import com.android.messaging.ui.conversation.mediapicker.RefreshConversationMediaPickerPermissionsEffect
 import com.android.messaging.ui.conversation.mediapicker.model.ConversationMediaPickerPermissionState
 import com.android.messaging.ui.conversation.screen.model.ConversationMediaPickerOverlayUiState
+import com.android.messaging.ui.conversation.screen.model.ConversationScreenNavEvent
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaffoldUiState
+import com.android.messaging.ui.core.CollectEvents
 
 @Composable
 internal fun rememberOpenContactPickerCallback(
@@ -131,13 +133,21 @@ internal fun ConversationScreenRouteEffects(
         screenModel.dismissMessageSelection()
     }
 
+    CollectEvents(events = screenModel.navigationEvents) { event ->
+        when (event) {
+            ConversationScreenNavEvent.CloseConversation -> onNavigateBack()
+
+            is ConversationScreenNavEvent.NavigateToMessageDetails -> {
+                onNavigateToMessageDetails(event.messageId)
+            }
+        }
+    }
+
     ConversationScreenEffects(
         screenModel = screenModel,
         snackbarHostState = snackbarHostState,
         hostBoundsState = hostBoundsState,
-        onNavigateToMessageDetails = onNavigateToMessageDetails,
         onNavigateToVCardDetail = onNavigateToVCardDetail,
-        onNavigateBack = onNavigateBack,
     )
 }
 

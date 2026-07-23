@@ -29,7 +29,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
-import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.common.components.snackbar.showActionSnackbar
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
@@ -46,9 +45,7 @@ internal fun ConversationScreenEffects(
     screenModel: ConversationScreenModel,
     snackbarHostState: SnackbarHostState,
     hostBoundsState: State<ComposeRect?>,
-    onNavigateToMessageDetails: (messageId: MessageId) -> Unit,
     onNavigateToVCardDetail: (uri: String) -> Unit,
-    onNavigateBack: () -> Unit,
 ) {
     val context = LocalContext.current
     val view = LocalView.current
@@ -65,9 +62,7 @@ internal fun ConversationScreenEffects(
     val currentLaunchRoleRequest = rememberUpdatedState<(Intent) -> Unit>(
         defaultSmsRoleLauncher::launch,
     )
-    val currentOnNavigateToMessageDetails = rememberUpdatedState(onNavigateToMessageDetails)
     val currentOnNavigateToVCardDetail = rememberUpdatedState(onNavigateToVCardDetail)
-    val currentOnNavigateBack = rememberUpdatedState(onNavigateBack)
 
     LaunchedEffect(screenModel) {
         screenModel.effects.collect { effect ->
@@ -78,9 +73,7 @@ internal fun ConversationScreenEffects(
                 hostBoundsState = currentHostBoundsState.value,
                 effect = effect,
                 launchRoleRequest = currentLaunchRoleRequest.value,
-                onNavigateToMessageDetails = currentOnNavigateToMessageDetails.value,
                 onNavigateToVCardDetail = currentOnNavigateToVCardDetail.value,
-                onNavigateBack = currentOnNavigateBack.value,
                 onDraftSent = { draftSentTick.intValue++ },
             )
         }
@@ -96,18 +89,10 @@ private suspend fun ConversationScreenModel.handleConversationScreenEffect(
     hostBoundsState: State<ComposeRect?>,
     effect: ConversationScreenEffect,
     launchRoleRequest: (Intent) -> Unit,
-    onNavigateToMessageDetails: (messageId: MessageId) -> Unit,
     onNavigateToVCardDetail: (uri: String) -> Unit,
-    onNavigateBack: () -> Unit,
     onDraftSent: () -> Unit,
 ) {
     when (effect) {
-        ConversationScreenEffect.CloseConversation -> onNavigateBack()
-
-        is ConversationScreenEffect.NavigateToMessageDetails -> {
-            onNavigateToMessageDetails(effect.messageId)
-        }
-
         is ConversationScreenEffect.NavigateToVCardDetail -> {
             onNavigateToVCardDetail(effect.uri)
         }

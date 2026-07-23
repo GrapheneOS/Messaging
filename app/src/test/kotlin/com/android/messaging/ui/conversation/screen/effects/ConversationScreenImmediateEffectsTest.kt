@@ -9,6 +9,7 @@ import com.android.messaging.testutil.TEST_WAIT_TIMEOUT_MILLIS
 import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
+import com.android.messaging.ui.conversation.screen.model.ConversationScreenNavEvent
 import com.android.messaging.util.ContactUtil
 import com.android.messaging.util.ContentType
 import io.mockk.every
@@ -35,7 +36,7 @@ internal class ConversationScreenImmediateEffectsTest : BaseConversationScreenEf
             },
         )
 
-        emitEffect(ConversationScreenEffect.CloseConversation)
+        emitNavigationEvent(ConversationScreenNavEvent.CloseConversation)
 
         composeTestRule.runOnIdle {
             assertEquals(1, navigationCount)
@@ -188,8 +189,8 @@ internal class ConversationScreenImmediateEffectsTest : BaseConversationScreenEf
             onNavigateToMessageDetails = { messageId -> navigatedMessageId = messageId },
         )
 
-        emitEffect(
-            ConversationScreenEffect.NavigateToMessageDetails(
+        emitNavigationEvent(
+            ConversationScreenNavEvent.NavigateToMessageDetails(
                 messageId = MessageId("message-1"),
             ),
         )
