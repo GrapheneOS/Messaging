@@ -11,6 +11,7 @@ import com.android.messaging.ui.conversationlist.navigation.conversationListEntr
 import com.android.messaging.ui.conversationsettings.navigation.conversationSettingsEntries
 import com.android.messaging.ui.license.navigation.licenseEntries
 import com.android.messaging.ui.onboarding.navigation.onboardingEntries
+import com.android.messaging.ui.vcarddetail.navigation.vCardDetailEntries
 
 internal fun appNavEntryProvider(): (NavKey) -> NavEntry<NavKey> {
     return entryProvider {
@@ -18,6 +19,7 @@ internal fun appNavEntryProvider(): (NavKey) -> NavEntry<NavKey> {
         onboardingEntries(destinationAfterOnboarding = ConversationListNavKey)
         conversationEntries()
         conversationSettingsEntries()
+        vCardDetailEntries()
         blockedParticipantsEntries()
         settingsEntries()
         licenseEntries()

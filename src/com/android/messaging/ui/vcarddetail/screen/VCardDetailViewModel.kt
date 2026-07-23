@@ -10,9 +10,9 @@ import com.android.messaging.data.vcarddetail.model.VCardFieldAction
 import com.android.messaging.data.vcarddetail.repository.VCardDetailRepository
 import com.android.messaging.domain.vcarddetail.model.AddVCardToContactsResult
 import com.android.messaging.domain.vcarddetail.usecase.AddVCardToContacts
-import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.vcarddetail.screen.mapper.VCardDetailUiStateMapper
 import com.android.messaging.ui.vcarddetail.screen.model.VCardDetailAction as Action
+import com.android.messaging.ui.vcarddetail.screen.model.VCardDetailNavEvent as NavEvent
 import com.android.messaging.ui.vcarddetail.screen.model.VCardDetailScreenEffect as Effect
 import com.android.messaging.ui.vcarddetail.screen.model.VCardDetailUiState as State
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,8 +26,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
+internal const val VCARD_DETAIL_URI_ARG = "vCardUri"
+
 internal interface VCardDetailScreenModel {
     val effects: Flow<Effect>
+    val navigationEvents: Flow<NavEvent>
     val uiState: StateFlow<State>
 
     fun onAction(action: Action)
@@ -44,12 +47,15 @@ internal class VCardDetailViewModel @Inject constructor(
     VCardDetailScreenModel {
 
     private val vCardUri: String = savedStateHandle
-        .get<Uri>(UIIntents.UI_INTENT_EXTRA_VCARD_URI)
+        .get<Uri>(VCARD_DETAIL_URI_ARG)
         ?.toString()
         .orEmpty()
 
     private val _effects = Channel<Effect>(capacity = Channel.BUFFERED)
     override val effects: Flow<Effect> = _effects.receiveAsFlow()
+
+    private val _navigationEvents = Channel<NavEvent>(Channel.BUFFERED)
+    override val navigationEvents: Flow<NavEvent> = _navigationEvents.receiveAsFlow()
 
     private val _uiState = MutableStateFlow(State())
     override val uiState: StateFlow<State> = _uiState.asStateFlow()
@@ -95,7 +101,7 @@ internal class VCardDetailViewModel @Inject constructor(
 
         if (result is VCardDetailResult.Failed) {
             emitEffect(Effect.ShowMessage(R.string.failed_loading_vcard))
-            emitEffect(Effect.Close)
+            _navigationEvents.trySend(NavEvent.Close)
         }
     }
 

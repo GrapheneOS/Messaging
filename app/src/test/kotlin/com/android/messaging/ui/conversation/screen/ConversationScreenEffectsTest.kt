@@ -58,6 +58,7 @@ class ConversationScreenEffectsTest {
                 snackbarHostState = snackbarHostState,
                 hostBoundsState = hostBoundsState,
                 onNavigateToMessageDetails = {},
+                onNavigateToVCardDetail = {},
                 onNavigateBack = onNavigateBack,
             )
         }
@@ -117,6 +118,7 @@ class ConversationScreenEffectsTest {
                 snackbarHostState = snackbarHostState,
                 hostBoundsState = hostBoundsState,
                 onNavigateToMessageDetails = {},
+                onNavigateToVCardDetail = {},
                 onNavigateBack = onNavigateBack,
             )
         }

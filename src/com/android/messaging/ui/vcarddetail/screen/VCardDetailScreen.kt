@@ -19,10 +19,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.data.vcarddetail.model.VCardFieldAction
 import com.android.messaging.ui.common.components.contentSurfaceShape
 import com.android.messaging.ui.common.components.safeDrawingContentPadding
@@ -32,6 +32,7 @@ import com.android.messaging.ui.vcarddetail.common.VCardContactCard
 import com.android.messaging.ui.vcarddetail.common.VCardDetailTopAppBar
 import com.android.messaging.ui.vcarddetail.screen.model.VCardContactUiModel
 import com.android.messaging.ui.vcarddetail.screen.model.VCardDetailAction as Action
+import com.android.messaging.ui.vcarddetail.screen.model.VCardDetailNavEvent
 import com.android.messaging.ui.vcarddetail.screen.model.VCardDetailUiState as State
 import com.android.messaging.ui.vcarddetail.screen.model.VCardFieldUiModel
 import kotlinx.collections.immutable.persistentListOf
@@ -44,7 +45,7 @@ internal fun VCardDetailScreen(
     effectHandler: VCardDetailEffectHandler,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
-    screenModel: VCardDetailScreenModel = viewModel<VCardDetailViewModel>(),
+    screenModel: VCardDetailScreenModel = hiltViewModel<VCardDetailViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
 
@@ -52,6 +53,12 @@ internal fun VCardDetailScreen(
         events = screenModel.effects,
         onEvent = effectHandler::handle,
     )
+
+    CollectEvents(events = screenModel.navigationEvents) { event ->
+        when (event) {
+            VCardDetailNavEvent.Close -> onNavigateBack()
+        }
+    }
 
     LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
         screenModel.refresh()

@@ -68,4 +68,8 @@ internal sealed interface ConversationScreenEffect {
     data class NavigateToMessageDetails(
         val messageId: MessageId,
     ) : ConversationScreenEffect
+
+    data class NavigateToVCardDetail(
+        val uri: String,
+    ) : ConversationScreenEffect
 }

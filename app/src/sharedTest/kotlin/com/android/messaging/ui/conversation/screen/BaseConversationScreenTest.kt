@@ -69,6 +69,7 @@ internal abstract class BaseConversationScreenTest {
                     onAddPeopleClick = onAddPeopleClick,
                     onConversationDetailsClick = {},
                     onNavigateToMessageDetails = {},
+                    onNavigateToVCardDetail = {},
                     onNavigateBack = {},
                     pendingDraft = pendingDraft,
                     pendingSelfParticipantId = ParticipantId.fromOrNull(pendingSelfParticipantId),

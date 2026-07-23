@@ -9,6 +9,7 @@ import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.conversationsettings.navigation.ConversationSettingsNavKey
 import com.android.messaging.ui.navigation.LocalNavigator
 import com.android.messaging.ui.navigation.Navigator
+import com.android.messaging.ui.vcarddetail.navigation.VCardDetailNavKey
 
 @Stable
 internal interface ConversationNavigator {
@@ -25,6 +26,8 @@ internal interface ConversationNavigator {
     )
 
     fun navigateToConversationSettings(conversationId: ConversationId)
+
+    fun navigateToVCardDetail(uri: String)
 
     fun replaceCurrentConversation(conversationId: ConversationId)
 
@@ -76,6 +79,10 @@ internal class ConversationNavigatorImpl(
         navigator.push(
             destination = ConversationSettingsNavKey(conversationId = conversationId),
         )
+    }
+
+    override fun navigateToVCardDetail(uri: String) {
+        navigator.push(destination = VCardDetailNavKey(uri = uri))
     }
 
     override fun replaceCurrentConversation(conversationId: ConversationId) {
