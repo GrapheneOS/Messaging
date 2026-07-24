@@ -28,6 +28,7 @@ internal class ConversationScreenRenderingTest : BaseConversationScreenTest() {
                     onConversationDetailsClick = {},
                     onNavigateToMessageDetails = {},
                     onNavigateToVCardDetail = {},
+                    onNavigateToForward = {},
                     onNavigateBack = {},
                     screenModel = screenModel.model,
                 )

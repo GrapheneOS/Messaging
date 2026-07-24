@@ -8,7 +8,6 @@ import com.android.messaging.data.conversation.repository.ConversationsRepositor
 import com.android.messaging.data.media.repository.ConversationAttachmentsRepository
 import com.android.messaging.domain.conversation.usecase.action.CheckConversationActionRequirements
 import com.android.messaging.domain.conversation.usecase.action.ConversationActionRequirementsResult
-import com.android.messaging.domain.conversation.usecase.forward.CreateForwardedMessage
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.messages.delegate.ConversationMessageSelectionDelegateImpl
@@ -43,7 +42,6 @@ internal abstract class BaseConversationMessageSelectionDelegateTest {
         val conversationAttachmentsRepository =
             mockk<ConversationAttachmentsRepository>(relaxed = true)
         val conversationMessagesDelegate = mockk<ConversationMessagesDelegate>()
-        val createForwardedMessage = mockk<CreateForwardedMessage>()
         val conversationsRepository = mockk<ConversationsRepository>(relaxed = true)
         val messagesStateFlow = MutableStateFlow<ConversationMessagesUiState>(
             value = ConversationMessagesUiState.Loading,
@@ -51,16 +49,12 @@ internal abstract class BaseConversationMessageSelectionDelegateTest {
         val conversationIdFlow = MutableStateFlow<ConversationId?>(CONVERSATION_ID)
 
         every { conversationMessagesDelegate.state } returns messagesStateFlow
-        coEvery {
-            createForwardedMessage.invoke(any(), any())
-        } returns null
 
         val delegate = ConversationMessageSelectionDelegateImpl(
             checkConversationActionRequirements = actionRequirements,
             clipboardManager = clipboardManager,
             conversationAttachmentsRepository = conversationAttachmentsRepository,
             conversationMessagesDelegate = conversationMessagesDelegate,
-            createForwardedMessage = createForwardedMessage,
             conversationsRepository = conversationsRepository,
             defaultDispatcher = dispatcher,
         )
@@ -75,7 +69,6 @@ internal abstract class BaseConversationMessageSelectionDelegateTest {
             conversationAttachmentsRepository = conversationAttachmentsRepository,
             conversationIdFlow = conversationIdFlow,
             conversationsRepository = conversationsRepository,
-            createForwardedMessage = createForwardedMessage,
             messagesStateFlow = messagesStateFlow,
             scope = scope,
         )
@@ -160,7 +153,6 @@ internal abstract class BaseConversationMessageSelectionDelegateTest {
         val conversationAttachmentsRepository: ConversationAttachmentsRepository,
         val conversationIdFlow: MutableStateFlow<ConversationId?>,
         val conversationsRepository: ConversationsRepository,
-        val createForwardedMessage: CreateForwardedMessage,
         val messagesStateFlow: MutableStateFlow<ConversationMessagesUiState>,
         val scope: TestScope,
     ) {

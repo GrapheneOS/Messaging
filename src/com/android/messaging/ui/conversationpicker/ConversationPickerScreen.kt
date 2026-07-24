@@ -39,10 +39,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.core.content.ContextCompat
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.ParticipantId
@@ -91,7 +91,7 @@ internal fun ConversationPickerScreen(
     allowMultiSelect: Boolean,
     labels: ConversationPickerLabels,
     modifier: Modifier = Modifier,
-    screenModel: ConversationPickerScreenModel = viewModel<ConversationPickerViewModel>(),
+    screenModel: ConversationPickerScreenModel = hiltViewModel<ConversationPickerViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
 

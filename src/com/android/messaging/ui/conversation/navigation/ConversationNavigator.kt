@@ -6,6 +6,7 @@ import androidx.compose.runtime.remember
 import androidx.navigation3.runtime.NavKey
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.ui.conversationpicker.navigation.ForwardMessageNavKey
 import com.android.messaging.ui.conversationsettings.navigation.ConversationSettingsNavKey
 import com.android.messaging.ui.navigation.LocalNavigator
 import com.android.messaging.ui.navigation.Navigator
@@ -21,6 +22,11 @@ internal interface ConversationNavigator {
     fun navigateToNewChat()
 
     fun navigateToMessageDetails(
+        conversationId: ConversationId,
+        messageId: MessageId,
+    )
+
+    fun navigateToForward(
         conversationId: ConversationId,
         messageId: MessageId,
     )
@@ -69,6 +75,18 @@ internal class ConversationNavigatorImpl(
     ) {
         navigator.push(
             destination = MessageDetailsNavKey(
+                conversationId = conversationId,
+                messageId = messageId,
+            ),
+        )
+    }
+
+    override fun navigateToForward(
+        conversationId: ConversationId,
+        messageId: MessageId,
+    ) {
+        navigator.push(
+            destination = ForwardMessageNavKey(
                 conversationId = conversationId,
                 messageId = messageId,
             ),

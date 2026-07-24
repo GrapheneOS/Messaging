@@ -66,6 +66,12 @@ private fun conversationScreenRouteContent(): @Composable (ConversationNavKey) -
             onNavigateToVCardDetail = { uri ->
                 navigator.navigateToVCardDetail(uri = uri)
             },
+            onNavigateToForward = { messageId ->
+                navigator.navigateToForward(
+                    conversationId = conversationId,
+                    messageId = messageId,
+                )
+            },
             onNavigateBack = appNavigator::back,
             pendingDraft = pendingPayload.draft,
             pendingScrollPosition = pendingPayload.scrollPosition,

@@ -11,6 +11,7 @@ import com.android.messaging.ui.MainActivity
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversation.entry.ConversationLaunchStore
 import com.android.messaging.ui.conversation.entry.submitIntent
+import com.android.messaging.ui.conversation.navigation.NewChatNavKey
 import com.android.messaging.ui.conversation.navigation.conversationRoute
 import com.android.messaging.ui.core.AppTheme
 import com.android.messaging.ui.host.AppNavGraph
@@ -41,11 +42,11 @@ internal class ConversationActivity : ComponentActivity() {
             return
         }
 
+        val startDestinations = conversationRoute(intent) ?: listOf(NewChatNavKey)
+
         if (savedInstanceState == null) {
             launchStore.submitIntent(intent = intent)
         }
-
-        val startDestinations = conversationRoute(intent).orEmpty()
 
         enableEdgeToEdge()
 

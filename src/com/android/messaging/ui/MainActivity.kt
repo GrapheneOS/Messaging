@@ -40,11 +40,11 @@ internal class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
 
+        val startDestinations = startDestinations(intent = intent)
+
         if (savedInstanceState == null) {
             submitInitialLaunch(intent = intent)
         }
-
-        val startDestinations = startDestinations(intent = intent)
 
         setContent {
             AppTheme {

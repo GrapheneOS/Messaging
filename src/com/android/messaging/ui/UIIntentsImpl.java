@@ -47,7 +47,6 @@ import com.android.messaging.ui.classzero.ClassZeroActivity;
 import com.android.messaging.ui.contact.AddContactActivity;
 import com.android.messaging.ui.conversation.ConversationActivity;
 import com.android.messaging.ui.conversation.LaunchConversationActivity;
-import com.android.messaging.ui.conversationpicker.host.forward.ForwardMessageActivity;
 import com.android.messaging.ui.conversationpicker.host.widget.WidgetPickConversationActivity;
 import com.android.messaging.ui.debug.DebugMmsConfigActivity;
 import com.android.messaging.ui.photoviewer.PhotoViewerActivity;
@@ -202,13 +201,6 @@ public class UIIntentsImpl extends UIIntents {
                 .putExtra(UI_INTENT_EXTRA_MESSAGE_VALUES, messageValues)
                 .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
         context.startActivity(classZeroIntent);
-    }
-
-    @Override
-    public void launchForwardMessageActivity(final Context context, final MessageData message) {
-        final Intent forwardMessageIntent = new Intent(context, ForwardMessageActivity.class)
-                .putExtra(UI_INTENT_EXTRA_DRAFT_DATA, message);
-        context.startActivity(forwardMessageIntent);
     }
 
     @Override

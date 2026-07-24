@@ -38,7 +38,7 @@ internal class ConversationEntryViewModelTest {
             val draftData = mockk<MessageData>()
             val mappedDraft = ConversationDraft(messageText = "Hello")
             val mapper = createMapper(draftData = draftData, mappedDraft = mappedDraft)
-            val launchStore = ConversationLaunchStore()
+            val launchStore = ConversationLaunchStoreImpl()
             createViewModel(mapper = mapper, launchStore = launchStore).also { viewModel ->
                 launchStore.submit(
                     request = ConversationEntryLaunchRequest(
@@ -78,7 +78,7 @@ internal class ConversationEntryViewModelTest {
                 draftData = draftData,
                 mappedDraft = ConversationDraft(messageText = "First"),
             )
-            val launchStore = ConversationLaunchStore()
+            val launchStore = ConversationLaunchStoreImpl()
             val viewModel = createViewModel(mapper = mapper, launchStore = launchStore)
 
             launchStore.submit(
@@ -120,7 +120,7 @@ internal class ConversationEntryViewModelTest {
     @Test
     fun consumeCallbacks_clearOnlyMatchingPendingValues() {
         runTest(context = mainDispatcherRule.testDispatcher) {
-            val launchStore = ConversationLaunchStore()
+            val launchStore = ConversationLaunchStoreImpl()
             val viewModel = createViewModel(launchStore = launchStore)
             launchStore.submit(
                 request = ConversationEntryLaunchRequest(
@@ -178,7 +178,7 @@ internal class ConversationEntryViewModelTest {
             val mapper = createMapper(draftData = draftData, mappedDraft = mappedDraft)
             val savedStateHandle = SavedStateHandle()
 
-            val launchStore = ConversationLaunchStore()
+            val launchStore = ConversationLaunchStoreImpl()
             createViewModel(
                 mapper = mapper,
                 savedStateHandle = savedStateHandle,
@@ -198,7 +198,7 @@ internal class ConversationEntryViewModelTest {
             val recreatedViewModel = createViewModel(
                 mapper = mapper,
                 savedStateHandle = savedStateHandle,
-                launchStore = ConversationLaunchStore(),
+                launchStore = ConversationLaunchStoreImpl(),
             )
             advanceUntilIdle()
 
@@ -237,7 +237,7 @@ internal class ConversationEntryViewModelTest {
     private fun createViewModel(
         mapper: ConversationMessageDataDraftMapper = createMapper(),
         savedStateHandle: SavedStateHandle = SavedStateHandle(),
-        launchStore: ConversationLaunchStore = ConversationLaunchStore(),
+        launchStore: ConversationLaunchStore = ConversationLaunchStoreImpl(),
     ): ConversationEntryViewModel {
         return ConversationEntryViewModel(
             conversationMessageDataDraftMapper = mapper,

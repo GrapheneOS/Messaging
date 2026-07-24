@@ -12,7 +12,6 @@ import com.android.messaging.data.media.repository.ConversationAttachmentsReposi
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.domain.conversation.usecase.action.CheckConversationActionRequirements
 import com.android.messaging.domain.conversation.usecase.action.ConversationActionRequirementsResult
-import com.android.messaging.domain.conversation.usecase.forward.CreateForwardedMessage
 import com.android.messaging.ui.conversation.common.ConversationScreenDelegate
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
@@ -67,7 +66,6 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
     private val clipboardManager: ClipboardManager,
     private val conversationAttachmentsRepository: ConversationAttachmentsRepository,
     private val conversationMessagesDelegate: ConversationMessagesDelegate,
-    private val createForwardedMessage: CreateForwardedMessage,
     private val conversationsRepository: ConversationsRepository,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
@@ -251,19 +249,7 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
         val selectedMessage = singleSelectedMessageOrNull() ?: return
 
         clearMessageSelection()
-
-        boundScope?.launch(defaultDispatcher) {
-            val forwardedMessage = createForwardedMessage(
-                conversationId = selectedMessage.conversationId,
-                messageId = selectedMessage.messageId,
-            ) ?: return@launch
-
-            _effects.emit(
-                Effect.LaunchForwardMessage(
-                    message = forwardedMessage,
-                ),
-            )
-        }
+        _navigationEvents.tryEmit(NavEvent.ForwardMessage(selectedMessage.messageId))
     }
 
     private fun openSelectedMessageDetails() {
