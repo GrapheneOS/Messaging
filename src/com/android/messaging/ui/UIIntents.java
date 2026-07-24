@@ -145,11 +145,6 @@ public abstract class UIIntents {
     public abstract void launchClassZeroActivity(Context context, ContentValues messageValues);
 
     /**
-     * Launch an activity to let the user forward a message
-     */
-    public abstract void launchForwardMessageActivity(Context context, MessageData message);
-
-    /**
      * Launch an external activity that handles the intent to add VCard to contacts
      */
     public abstract void launchSaveVCardToContactsActivity(Context context, Uri vcardUri);

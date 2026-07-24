@@ -93,25 +93,6 @@ internal class ConversationScreenImmediateEffectsTest : BaseConversationScreenEf
     }
 
     @Test
-    fun launchForwardMessage_forwardsMessageToUiIntents() {
-        val uiIntents = mockk<UIIntents>(relaxed = true)
-        val message = mockk<MessageData>()
-        mockkStatic(UIIntents::class)
-        every { UIIntents.get() } returns uiIntents
-        setEffectsContent()
-
-        emitEffect(
-            ConversationScreenEffect.LaunchForwardMessage(
-                message = message,
-            ),
-        )
-
-        verify(timeout = TEST_WAIT_TIMEOUT_MILLIS, exactly = 1) {
-            uiIntents.launchForwardMessageActivity(any(), message)
-        }
-    }
-
-    @Test
     fun openVCardAttachmentPreview_navigatesToVCardDetail() {
         val contentUri = "content://attachments/contact-card"
         var navigatedUri: String? = null

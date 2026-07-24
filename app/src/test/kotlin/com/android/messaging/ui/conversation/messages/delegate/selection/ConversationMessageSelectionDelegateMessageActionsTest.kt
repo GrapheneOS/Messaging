@@ -4,11 +4,9 @@ import android.content.ClipData
 import app.cash.turbine.test
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.datamodel.data.MessageData
-import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
-import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenNavEvent
 import io.mockk.coEvery
 import io.mockk.every
@@ -107,16 +105,9 @@ internal class ConversationMessageSelectionDelegateMessageActionsTest :
     }
 
     @Test
-    fun forwardAction_emitsForwardEffectAndClearsSelection() {
+    fun forwardAction_emitsForwardNavigationEventAndClearsSelection() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val harness = createHarness()
-            val forwardedMessage = mockk<MessageData>()
-            coEvery {
-                harness.createForwardedMessage.invoke(
-                    conversationId = CONVERSATION_ID,
-                    messageId = MessageId("message-1"),
-                )
-            } returns forwardedMessage
 
             try {
                 harness.messagesStateFlow.value = createMessagesUiState(
@@ -129,15 +120,15 @@ internal class ConversationMessageSelectionDelegateMessageActionsTest :
                 harness.delegate.onMessageLongClick(messageId = MessageId("message-1"))
                 advanceUntilIdle()
 
-                harness.delegate.effects.test {
+                harness.delegate.navigationEvents.test {
                     harness.delegate.onMessageSelectionActionClick(
                         action = ConversationMessageSelectionAction.Forward,
                     )
                     advanceUntilIdle()
 
                     assertEquals(
-                        ConversationScreenEffect.LaunchForwardMessage(
-                            message = forwardedMessage,
+                        ConversationScreenNavEvent.ForwardMessage(
+                            messageId = MessageId("message-1"),
                         ),
                         awaitItem(),
                     )

@@ -121,7 +121,6 @@ private suspend fun ConversationScreenModel.handleConversationScreenEffect(
         }
 
         is ConversationScreenEffect.LaunchAddContactFlow,
-        is ConversationScreenEffect.LaunchForwardMessage,
         ConversationScreenEffect.NotifyDraftSent,
         is ConversationScreenEffect.OpenExternalUri,
         is ConversationScreenEffect.PlacePhoneCall,
@@ -150,13 +149,6 @@ private fun handleImmediateConversationScreenEffect(
             UIIntents.get().launchAddContactActivity(
                 context,
                 effect.destination,
-            )
-        }
-
-        is ConversationScreenEffect.LaunchForwardMessage -> {
-            UIIntents.get().launchForwardMessageActivity(
-                context,
-                effect.message,
             )
         }
 

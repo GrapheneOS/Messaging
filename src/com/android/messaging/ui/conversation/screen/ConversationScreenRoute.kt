@@ -101,6 +101,7 @@ internal fun ConversationScreenRouteEffects(
     screenModel: ConversationScreenModel,
     onNavigateToMessageDetails: (messageId: MessageId) -> Unit,
     onNavigateToVCardDetail: (uri: String) -> Unit,
+    onNavigateToForward: (messageId: MessageId) -> Unit,
     onNavigateBack: () -> Unit,
     onPendingDraftConsumed: () -> Unit,
     onPendingSelfParticipantIdConsumed: () -> Unit,
@@ -137,6 +138,10 @@ internal fun ConversationScreenRouteEffects(
 
             is ConversationScreenNavEvent.NavigateToMessageDetails -> {
                 onNavigateToMessageDetails(event.messageId)
+            }
+
+            is ConversationScreenNavEvent.ForwardMessage -> {
+                onNavigateToForward(event.messageId)
             }
         }
     }

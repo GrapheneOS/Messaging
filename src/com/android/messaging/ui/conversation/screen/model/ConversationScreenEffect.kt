@@ -2,7 +2,6 @@ package com.android.messaging.ui.conversation.screen.model
 
 import android.content.Intent
 import android.net.Uri
-import com.android.messaging.datamodel.data.MessageData
 
 internal sealed interface ConversationScreenEffect {
     data class RequestDefaultSmsRole(
@@ -15,10 +14,6 @@ internal sealed interface ConversationScreenEffect {
 
     data class LaunchDefaultSmsRoleRequest(
         val intent: Intent,
-    ) : ConversationScreenEffect
-
-    data class LaunchForwardMessage(
-        val message: MessageData,
     ) : ConversationScreenEffect
 
     data object NotifyDraftSent : ConversationScreenEffect

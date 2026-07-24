@@ -9,4 +9,8 @@ internal sealed interface ConversationScreenNavEvent {
     data class NavigateToMessageDetails(
         val messageId: MessageId,
     ) : ConversationScreenNavEvent
+
+    data class ForwardMessage(
+        val messageId: MessageId,
+    ) : ConversationScreenNavEvent
 }

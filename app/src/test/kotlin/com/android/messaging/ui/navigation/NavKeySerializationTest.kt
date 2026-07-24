@@ -11,6 +11,7 @@ import com.android.messaging.ui.conversation.navigation.ConversationNavKey
 import com.android.messaging.ui.conversation.navigation.MessageDetailsNavKey
 import com.android.messaging.ui.conversation.navigation.NewChatNavKey
 import com.android.messaging.ui.conversationlist.navigation.ConversationListNavKey
+import com.android.messaging.ui.conversationpicker.navigation.ForwardMessageNavKey
 import com.android.messaging.ui.onboarding.navigation.OnboardingNavKey
 import com.android.messaging.ui.vcarddetail.navigation.VCardDetailNavKey
 import org.junit.Assert.assertEquals
@@ -61,6 +62,16 @@ class NavKeySerializationTest {
     @Test
     fun vCardDetailNavKey_roundTripsWithUri() {
         assertRoundTrips(VCardDetailNavKey(uri = "content://scratch/contact.vcf"))
+    }
+
+    @Test
+    fun forwardMessageNavKey_roundTripsWithTypedIds() {
+        assertRoundTrips(
+            ForwardMessageNavKey(
+                conversationId = ConversationId("c"),
+                messageId = MessageId("m"),
+            ),
+        )
     }
 
     private fun assertRoundTrips(navKey: NavKey) {

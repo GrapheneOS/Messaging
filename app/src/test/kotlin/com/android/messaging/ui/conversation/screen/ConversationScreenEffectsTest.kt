@@ -107,6 +107,7 @@ class ConversationScreenEffectsTest {
                 when (event) {
                     is NavEvent.CloseConversation -> onNavigateBack()
                     is NavEvent.NavigateToMessageDetails -> Unit
+                    is NavEvent.ForwardMessage -> Unit
                 }
             }
         }
