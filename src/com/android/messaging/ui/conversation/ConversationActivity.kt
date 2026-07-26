@@ -8,11 +8,11 @@ import androidx.activity.enableEdgeToEdge
 import androidx.navigation3.runtime.NavKey
 import com.android.messaging.domain.onboarding.usecase.ShouldShowOnboarding
 import com.android.messaging.ui.MainActivity
-import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversation.entry.ConversationLaunchStore
 import com.android.messaging.ui.conversation.entry.submitIntent
 import com.android.messaging.ui.conversation.navigation.NewChatNavKey
 import com.android.messaging.ui.conversation.navigation.conversationRoute
+import com.android.messaging.ui.conversationlist.navigation.goToConversationList
 import com.android.messaging.ui.core.AppTheme
 import com.android.messaging.ui.host.AppNavGraph
 import com.android.messaging.util.BugleActivityUtil
@@ -91,9 +91,5 @@ internal class ConversationActivity : ComponentActivity() {
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
             .let(::startActivity)
-    }
-
-    private fun Intent.goToConversationList(): Boolean {
-        return getBooleanExtra(UIIntents.UI_INTENT_EXTRA_GOTO_CONVERSATION_LIST, false)
     }
 }

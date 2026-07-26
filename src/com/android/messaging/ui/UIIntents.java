@@ -56,6 +56,9 @@ public abstract class UIIntents {
     // For the widget to go to the ConversationList from the Conversation.
     public static final String UI_INTENT_EXTRA_GOTO_CONVERSATION_LIST = "goto_conv_list";
 
+    // For the widget to start composing a new conversation.
+    public static final String UI_INTENT_EXTRA_COMPOSE_NEW_CONVERSATION = "compose_new_conv";
+
     // Indicates whether a conversation is launched with custom transition.
     public static final String UI_INTENT_EXTRA_WITH_CUSTOM_TRANSITION = "with_custom_transition";
 
@@ -254,6 +257,12 @@ public abstract class UIIntents {
      */
     public abstract PendingIntent getWidgetPendingIntentForConversationActivity(
             final Context context, final String conversationId, final int requestCode);
+
+    /**
+     * Get a PendingIntent for the widget compose button.
+     */
+    public abstract PendingIntent getWidgetPendingIntentForNewConversation(
+            final Context context, final int requestCode);
 
     /**
      * Get a PendingIntent for the conversation widget configuration activity template.
