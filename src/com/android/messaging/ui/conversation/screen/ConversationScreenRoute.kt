@@ -22,18 +22,17 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
-import com.android.messaging.data.conversation.model.ParticipantId
-import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingPhase
-import com.android.messaging.ui.conversation.entry.model.ConversationEntryStartupAttachment
 import com.android.messaging.ui.conversation.mediapicker.ConversationMediaPickerOverlay
 import com.android.messaging.ui.conversation.mediapicker.ConversationMediaPickerState
 import com.android.messaging.ui.conversation.mediapicker.RefreshConversationMediaPickerPermissionsEffect
 import com.android.messaging.ui.conversation.mediapicker.model.ConversationMediaPickerPermissionState
 import com.android.messaging.ui.conversation.screen.model.ConversationMediaPickerOverlayUiState
+import com.android.messaging.ui.conversation.screen.model.ConversationPendingLaunchPayload
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenNavEvent
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaffoldUiState
 import com.android.messaging.ui.core.CollectEvents
+import com.android.messaging.ui.photoviewer.model.PhotoViewerLaunchRequest
 
 @Composable
 internal fun rememberOpenContactPickerCallback(
@@ -91,9 +90,7 @@ internal fun rememberAudioRecordingStartRequest(
 internal fun ConversationScreenRouteEffects(
     conversationId: ConversationId?,
     cancelIncomingNotification: Boolean,
-    pendingDraft: ConversationDraft?,
-    pendingSelfParticipantId: ParticipantId?,
-    pendingStartupAttachment: ConversationEntryStartupAttachment?,
+    pendingLaunchPayload: ConversationPendingLaunchPayload,
     scaffoldUiState: ConversationScreenScaffoldUiState,
     snackbarHostState: SnackbarHostState,
     hostBoundsState: State<ComposeRect?>,
@@ -101,6 +98,7 @@ internal fun ConversationScreenRouteEffects(
     screenModel: ConversationScreenModel,
     onNavigateToMessageDetails: (messageId: MessageId) -> Unit,
     onNavigateToVCardDetail: (uri: String) -> Unit,
+    onNavigateToPhotoViewer: (PhotoViewerLaunchRequest) -> Unit,
     onNavigateToForward: (messageId: MessageId) -> Unit,
     onNavigateBack: () -> Unit,
     onPendingDraftConsumed: () -> Unit,
@@ -109,9 +107,7 @@ internal fun ConversationScreenRouteEffects(
 ) {
     ConversationPendingLaunchEffects(
         conversationId = conversationId,
-        pendingDraft = pendingDraft,
-        pendingSelfParticipantId = pendingSelfParticipantId,
-        pendingStartupAttachment = pendingStartupAttachment,
+        pendingLaunchPayload = pendingLaunchPayload,
         screenModel = screenModel,
         onPendingDraftConsumed = onPendingDraftConsumed,
         onPendingSelfParticipantIdConsumed = onPendingSelfParticipantIdConsumed,
@@ -151,20 +147,23 @@ internal fun ConversationScreenRouteEffects(
         snackbarHostState = snackbarHostState,
         hostBoundsState = hostBoundsState,
         onNavigateToVCardDetail = onNavigateToVCardDetail,
+        onNavigateToPhotoViewer = onNavigateToPhotoViewer,
     )
 }
 
 @Composable
 private fun ConversationPendingLaunchEffects(
     conversationId: ConversationId?,
-    pendingDraft: ConversationDraft?,
-    pendingSelfParticipantId: ParticipantId?,
-    pendingStartupAttachment: ConversationEntryStartupAttachment?,
+    pendingLaunchPayload: ConversationPendingLaunchPayload,
     screenModel: ConversationScreenModel,
     onPendingDraftConsumed: () -> Unit,
     onPendingSelfParticipantIdConsumed: () -> Unit,
     onPendingStartupAttachmentConsumed: () -> Unit,
 ) {
+    val pendingDraft = pendingLaunchPayload.draft
+    val pendingSelfParticipantId = pendingLaunchPayload.selfParticipantId
+    val pendingStartupAttachment = pendingLaunchPayload.startupAttachment
+
     LaunchedEffect(conversationId, screenModel) {
         screenModel.onConversationIdChanged(conversationId = conversationId)
     }

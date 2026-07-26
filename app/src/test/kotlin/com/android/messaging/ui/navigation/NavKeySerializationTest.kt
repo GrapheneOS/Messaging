@@ -18,6 +18,9 @@ import com.android.messaging.ui.conversation.navigation.NewChatNavKey
 import com.android.messaging.ui.conversationlist.navigation.ConversationListNavKey
 import com.android.messaging.ui.conversationpicker.navigation.ForwardMessageNavKey
 import com.android.messaging.ui.onboarding.navigation.OnboardingNavKey
+import com.android.messaging.ui.photoviewer.model.PhotoViewerLaunchRequest
+import com.android.messaging.ui.photoviewer.model.PhotoViewerSourceBounds
+import com.android.messaging.ui.photoviewer.navigation.PhotoViewerNavKey
 import com.android.messaging.ui.vcarddetail.navigation.VCardDetailNavKey
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -75,6 +78,26 @@ class NavKeySerializationTest {
             ForwardMessageNavKey(
                 conversationId = ConversationId("c"),
                 messageId = MessageId("m"),
+            ),
+        )
+    }
+
+    @Test
+    fun photoViewerNavKey_roundTripsWithSourceBounds() {
+        assertRoundTrips(
+            PhotoViewerNavKey(
+                conversationId = ConversationId("c"),
+                launchRequest = PhotoViewerLaunchRequest(
+                    initialPhotoUri = "content://mms/part/1",
+                    photosUri = "content://mms/conversation/c",
+                    sourceBounds = PhotoViewerSourceBounds(
+                        left = 10,
+                        top = 20,
+                        right = 110,
+                        bottom = 220,
+                    ),
+                    initialPhotoOccurrenceIndex = 2,
+                ),
             ),
         )
     }

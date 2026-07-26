@@ -9,6 +9,7 @@ import com.android.messaging.ui.conversation.CONVERSATION_COMPOSE_BAR_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_LOADING_INDICATOR_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_MESSAGES_LIST_TEST_TAG
 import com.android.messaging.ui.conversation.composer.model.ConversationSimSelectorUiState
+import com.android.messaging.ui.conversation.screen.model.ConversationPendingLaunchPayload
 import com.android.messaging.ui.core.AppTheme
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -28,8 +29,10 @@ internal class ConversationScreenRenderingTest : BaseConversationScreenTest() {
                     onConversationDetailsClick = {},
                     onNavigateToMessageDetails = {},
                     onNavigateToVCardDetail = {},
+                    onNavigateToPhotoViewer = {},
                     onNavigateToForward = {},
                     onNavigateBack = {},
+                    pendingLaunchPayload = ConversationPendingLaunchPayload(),
                     screenModel = screenModel.model,
                 )
             }

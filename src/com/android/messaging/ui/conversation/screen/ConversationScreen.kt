@@ -15,15 +15,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
-import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.common.components.snackbar.MessagingSnackbarHost
 import com.android.messaging.ui.conversation.composer.ui.ConversationComposerSection
 import com.android.messaging.ui.conversation.composer.ui.ConversationSimSelectorSheet
-import com.android.messaging.ui.conversation.entry.model.ConversationEntryStartupAttachment
 import com.android.messaging.ui.conversation.mediapicker.rememberConversationMediaPickerPermissionState
 import com.android.messaging.ui.conversation.mediapicker.rememberConversationMediaPickerState
 import com.android.messaging.ui.conversation.metadata.ui.ConversationTopAppBar
+import com.android.messaging.ui.conversation.screen.model.ConversationPendingLaunchPayload
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaffoldUiState
+import com.android.messaging.ui.photoviewer.model.PhotoViewerLaunchRequest
 
 @Composable
 internal fun ConversationScreen(
@@ -34,12 +34,10 @@ internal fun ConversationScreen(
     onConversationDetailsClick: () -> Unit,
     onNavigateToMessageDetails: (messageId: MessageId) -> Unit,
     onNavigateToVCardDetail: (uri: String) -> Unit,
+    onNavigateToPhotoViewer: (PhotoViewerLaunchRequest) -> Unit,
     onNavigateToForward: (messageId: MessageId) -> Unit,
     onNavigateBack: () -> Unit,
-    pendingDraft: ConversationDraft? = null,
-    pendingScrollPosition: Int? = null,
-    pendingSelfParticipantId: ParticipantId? = null,
-    pendingStartupAttachment: ConversationEntryStartupAttachment? = null,
+    pendingLaunchPayload: ConversationPendingLaunchPayload,
     onPendingDraftConsumed: () -> Unit = {},
     onPendingScrollPositionConsumed: () -> Unit = {},
     onPendingSelfParticipantIdConsumed: () -> Unit = {},
@@ -66,9 +64,7 @@ internal fun ConversationScreen(
     ConversationScreenRouteEffects(
         conversationId = conversationId,
         cancelIncomingNotification = cancelIncomingNotification,
-        pendingDraft = pendingDraft,
-        pendingSelfParticipantId = pendingSelfParticipantId,
-        pendingStartupAttachment = pendingStartupAttachment,
+        pendingLaunchPayload = pendingLaunchPayload,
         scaffoldUiState = scaffoldUiState,
         snackbarHostState = snackbarHostState,
         hostBoundsState = hostBoundsState,
@@ -76,6 +72,7 @@ internal fun ConversationScreen(
         screenModel = screenModel,
         onNavigateToMessageDetails = onNavigateToMessageDetails,
         onNavigateToVCardDetail = onNavigateToVCardDetail,
+        onNavigateToPhotoViewer = onNavigateToPhotoViewer,
         onNavigateToForward = onNavigateToForward,
         onNavigateBack = onNavigateBack,
         onPendingDraftConsumed = onPendingDraftConsumed,
@@ -91,7 +88,7 @@ internal fun ConversationScreen(
         mediaPickerState = mediaPickerState,
         snackbarHostState = snackbarHostState,
         messageFieldFocusRequester = messageFieldFocusRequester,
-        pendingScrollPosition = pendingScrollPosition,
+        pendingScrollPosition = pendingLaunchPayload.scrollPosition,
         onPendingScrollPositionConsumed = onPendingScrollPositionConsumed,
         onAddPeopleClick = onAddPeopleClick,
         onConversationDetailsClick = onConversationDetailsClick,

@@ -30,12 +30,12 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.common.components.attachment.formatAudioDuration
+import com.android.messaging.ui.common.components.mediapreview.mediaOverlayContainerColor
+import com.android.messaging.ui.common.components.mediapreview.mediaOverlayContentColor
 import com.android.messaging.ui.conversation.CONVERSATION_MEDIA_CAPTURE_SHUTTER_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.mediapicker.ConversationCaptureMode
 import com.android.messaging.ui.conversation.mediapicker.camera.ConversationPhotoFlashMode
 import com.android.messaging.ui.conversation.mediapicker.component.PickerOverlayIconButton
-import com.android.messaging.ui.conversation.mediapicker.component.pickerOverlayContainerColor
-import com.android.messaging.ui.conversation.mediapicker.component.pickerOverlayContentColor
 import com.android.messaging.ui.core.MessagingPreviewColumn
 
 @Composable
@@ -155,7 +155,7 @@ private fun ConversationMediaCaptureModeToggle(
 ) {
     Surface(
         shape = CircleShape,
-        color = pickerOverlayContainerColor(alpha = 0.4f),
+        color = mediaOverlayContainerColor(alpha = 0.4f),
     ) {
         Row(
             modifier = Modifier
@@ -198,7 +198,7 @@ private fun ConversationMediaCaptureModeChip(
         shape = CircleShape,
         color = when {
             isSelected -> MaterialTheme.colorScheme.secondaryContainer
-            else -> pickerOverlayContainerColor(alpha = 0f)
+            else -> mediaOverlayContainerColor(alpha = 0f)
         },
     ) {
         Box(
@@ -210,7 +210,7 @@ private fun ConversationMediaCaptureModeChip(
                 text = label,
                 color = when {
                     isSelected -> MaterialTheme.colorScheme.onSecondaryContainer
-                    else -> pickerOverlayContentColor(alpha = 0.9f)
+                    else -> mediaOverlayContentColor(alpha = 0.9f)
                 },
                 style = MaterialTheme.typography.labelLarge,
             )

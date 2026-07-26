@@ -31,6 +31,7 @@ import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.common.components.snackbar.showActionSnackbar
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
 import com.android.messaging.ui.core.CollectEvents
+import com.android.messaging.ui.photoviewer.model.PhotoViewerLaunchRequest
 import com.android.messaging.util.BuglePrefs
 import com.android.messaging.util.ContactUtil
 import com.android.messaging.util.LogUtil
@@ -45,6 +46,7 @@ internal fun ConversationScreenEffects(
     snackbarHostState: SnackbarHostState,
     hostBoundsState: State<ComposeRect?>,
     onNavigateToVCardDetail: (uri: String) -> Unit,
+    onNavigateToPhotoViewer: (PhotoViewerLaunchRequest) -> Unit,
 ) {
     val context = LocalContext.current
     val view = LocalView.current
@@ -64,6 +66,7 @@ internal fun ConversationScreenEffects(
             effect = effect,
             launchRoleRequest = defaultSmsRoleLauncher::launch,
             onNavigateToVCardDetail = onNavigateToVCardDetail,
+            onNavigateToPhotoViewer = onNavigateToPhotoViewer,
             onDraftSent = { draftSentTick.intValue++ },
         )
     }
@@ -79,6 +82,7 @@ private suspend fun ConversationScreenModel.handleConversationScreenEffect(
     effect: ConversationScreenEffect,
     launchRoleRequest: (Intent) -> Unit,
     onNavigateToVCardDetail: (uri: String) -> Unit,
+    onNavigateToPhotoViewer: (PhotoViewerLaunchRequest) -> Unit,
     onDraftSent: () -> Unit,
 ) {
     when (effect) {
@@ -108,6 +112,7 @@ private suspend fun ConversationScreenModel.handleConversationScreenEffect(
                 context = context,
                 hostBoundsState = hostBoundsState,
                 effect = effect,
+                onNavigateToPhotoViewer = onNavigateToPhotoViewer,
             )
         }
 

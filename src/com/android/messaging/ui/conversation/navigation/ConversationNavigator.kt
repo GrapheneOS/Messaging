@@ -10,6 +10,8 @@ import com.android.messaging.ui.conversationpicker.navigation.ForwardMessageNavK
 import com.android.messaging.ui.conversationsettings.navigation.ConversationSettingsNavKey
 import com.android.messaging.ui.navigation.LocalNavigator
 import com.android.messaging.ui.navigation.Navigator
+import com.android.messaging.ui.photoviewer.model.PhotoViewerLaunchRequest
+import com.android.messaging.ui.photoviewer.navigation.PhotoViewerNavKey
 import com.android.messaging.ui.vcarddetail.navigation.VCardDetailNavKey
 
 @Stable
@@ -34,6 +36,11 @@ internal interface ConversationNavigator {
     fun navigateToConversationSettings(conversationId: ConversationId)
 
     fun navigateToVCardDetail(uri: String)
+
+    fun navigateToPhotoViewer(
+        conversationId: ConversationId,
+        launchRequest: PhotoViewerLaunchRequest,
+    )
 
     fun replaceCurrentConversation(conversationId: ConversationId)
 
@@ -100,7 +107,21 @@ internal class ConversationNavigatorImpl(
     }
 
     override fun navigateToVCardDetail(uri: String) {
-        navigator.push(destination = VCardDetailNavKey(uri = uri))
+        navigator.push(
+            destination = VCardDetailNavKey(uri = uri),
+        )
+    }
+
+    override fun navigateToPhotoViewer(
+        conversationId: ConversationId,
+        launchRequest: PhotoViewerLaunchRequest,
+    ) {
+        navigator.push(
+            destination = PhotoViewerNavKey(
+                conversationId = conversationId,
+                launchRequest = launchRequest,
+            ),
+        )
     }
 
     override fun replaceCurrentConversation(conversationId: ConversationId) {

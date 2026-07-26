@@ -54,31 +54,8 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class UiUtils {
-    /** MediaPicker transition duration in ms */
-    public static final int MEDIAPICKER_TRANSITION_DURATION =
-            getApplicationContext().getResources().getInteger(
-                    R.integer.mediapicker_transition_duration);
-    /** Short transition duration in ms */
-    public static final int ASYNCIMAGE_TRANSITION_DURATION =
-            getApplicationContext().getResources().getInteger(
-                    R.integer.asyncimage_transition_duration);
-    /** Compose transition duration in ms */
-    public static final int COMPOSE_TRANSITION_DURATION =
-            getApplicationContext().getResources().getInteger(
-                    R.integer.compose_transition_duration);
-    /** Generic duration for revealing/hiding a view */
-    public static final int REVEAL_ANIMATION_DURATION =
-            getApplicationContext().getResources().getInteger(
-                    R.integer.reveal_view_animation_duration);
-
-    public static final Interpolator DEFAULT_INTERPOLATOR = new CubicBezierInterpolator(
+    private static final Interpolator DEFAULT_INTERPOLATOR = new CubicBezierInterpolator(
             0.4f, 0.0f, 0.2f, 1.0f);
-
-    public static final Interpolator EASE_IN_INTERPOLATOR = new CubicBezierInterpolator(
-            0.4f, 0.0f, 0.8f, 0.5f);
-
-    public static final Interpolator EASE_OUT_INTERPOLATOR = new CubicBezierInterpolator(
-            0.0f, 0.0f, 0.2f, 1f);
 
     /** Show a simple toast at the bottom */
     public static void showToastAtBottom(final int messageId) {
@@ -136,6 +113,12 @@ public class UiUtils {
         return Factory.get().getApplicationContext();
     }
 
+    /** Generic duration for revealing/hiding a view in ms */
+    private static int getRevealAnimationDuration() {
+        return getApplicationContext().getResources().getInteger(
+                R.integer.reveal_view_animation_duration);
+    }
+
     public static CharSequence commaEllipsize(
             final String text,
             final TextPaint paint,
@@ -170,7 +153,7 @@ public class UiUtils {
                     new ScaleAnimation(fromScale, toScale, fromScale, toScale,
                             ScaleAnimation.RELATIVE_TO_SELF, 0.5f,
                             ScaleAnimation.RELATIVE_TO_SELF, 0.5f);
-            showHideAnimation.setDuration(REVEAL_ANIMATION_DURATION);
+            showHideAnimation.setDuration(getRevealAnimationDuration());
             showHideAnimation.setInterpolator(DEFAULT_INTERPOLATOR);
             showHideAnimation.setAnimationListener(new AnimationListener() {
                 @Override

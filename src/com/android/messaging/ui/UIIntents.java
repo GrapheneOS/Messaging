@@ -15,13 +15,11 @@
  */
 package com.android.messaging.ui;
 
-import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Point;
-import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Bundle;
 
@@ -156,20 +154,6 @@ public abstract class UIIntents {
      * Launch full screen video viewer.
      */
     public abstract void launchFullScreenVideoViewer(Context context, Uri videoUri);
-
-    /**
-     * Launch full screen photo viewer.
-     */
-    public void launchFullScreenPhotoViewer(Activity activity, Uri initialPhoto,
-            Rect initialPhotoBounds, Uri photosUri) {
-        launchFullScreenPhotoViewer(activity, initialPhoto, initialPhotoBounds, photosUri, 0);
-    }
-
-    /**
-     * Launch full screen photo viewer.
-     */
-    public abstract void launchFullScreenPhotoViewer(Activity activity, Uri initialPhoto,
-            Rect initialPhotoBounds, Uri photosUri, int initialPhotoOccurrenceIndex);
 
     /**
      * Get an intent to launch the wireless alert viewer.

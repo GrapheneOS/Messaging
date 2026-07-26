@@ -25,7 +25,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Point;
-import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract.Contacts;
@@ -49,7 +48,6 @@ import com.android.messaging.ui.conversation.ConversationActivity;
 import com.android.messaging.ui.conversation.LaunchConversationActivity;
 import com.android.messaging.ui.conversationpicker.host.widget.WidgetPickConversationActivity;
 import com.android.messaging.ui.debug.DebugMmsConfigActivity;
-import com.android.messaging.ui.photoviewer.PhotoViewerActivity;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.ContentType;
 import com.android.messaging.util.ConversationIdSet;
@@ -222,16 +220,6 @@ public class UIIntentsImpl extends UIIntents {
         intent.putExtra("SingleItemOnly", true);
         intent.setDataAndType(videoUri, ContentType.VIDEO_UNSPECIFIED);
         startExternalActivity(context, intent);
-    }
-
-    @Override
-    public void launchFullScreenPhotoViewer(final Activity activity, final Uri initialPhoto,
-            final Rect initialPhotoBounds, final Uri photosUri,
-            final int initialPhotoOccurrenceIndex) {
-        activity.startActivity(PhotoViewerActivity.createIntent(
-                activity, initialPhoto, photosUri, initialPhotoBounds,
-                initialPhotoOccurrenceIndex));
-        activity.overridePendingTransition(0, 0);
     }
 
     @Override

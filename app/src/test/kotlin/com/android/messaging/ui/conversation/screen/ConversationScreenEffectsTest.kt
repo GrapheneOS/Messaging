@@ -58,6 +58,7 @@ class ConversationScreenEffectsTest {
                 snackbarHostState = snackbarHostState,
                 hostBoundsState = hostBoundsState,
                 onNavigateToVCardDetail = {},
+                onNavigateToPhotoViewer = {},
             )
         }
 

@@ -7,16 +7,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.android.messaging.data.conversation.model.ConversationId
-import com.android.messaging.data.conversation.model.ParticipantId
-import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.conversation.addparticipants.AddParticipantsScreen
 import com.android.messaging.ui.conversation.addparticipants.rememberAddParticipantsEffectHandler
 import com.android.messaging.ui.conversation.entry.NewChatScreen
-import com.android.messaging.ui.conversation.entry.model.ConversationEntryStartupAttachment
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryUiState
 import com.android.messaging.ui.conversation.entry.rememberNewChatEffectHandler
 import com.android.messaging.ui.conversation.messagedetails.MessageDetailsScreen
 import com.android.messaging.ui.conversation.screen.ConversationScreen
+import com.android.messaging.ui.conversation.screen.model.ConversationPendingLaunchPayload
 import com.android.messaging.ui.navigation.LocalNavigator
 import com.android.messaging.ui.navigation.SeededViewModelStoreOwner
 
@@ -66,6 +64,12 @@ private fun conversationScreenRouteContent(): @Composable (ConversationNavKey) -
             onNavigateToVCardDetail = { uri ->
                 navigator.navigateToVCardDetail(uri = uri)
             },
+            onNavigateToPhotoViewer = { launchRequest ->
+                navigator.navigateToPhotoViewer(
+                    conversationId = conversationId,
+                    launchRequest = launchRequest,
+                )
+            },
             onNavigateToForward = { messageId ->
                 navigator.navigateToForward(
                     conversationId = conversationId,
@@ -73,10 +77,7 @@ private fun conversationScreenRouteContent(): @Composable (ConversationNavKey) -
                 )
             },
             onNavigateBack = appNavigator::back,
-            pendingDraft = pendingPayload.draft,
-            pendingScrollPosition = pendingPayload.scrollPosition,
-            pendingSelfParticipantId = pendingPayload.selfParticipantId,
-            pendingStartupAttachment = pendingPayload.startupAttachment,
+            pendingLaunchPayload = pendingPayload,
             onPendingDraftConsumed = {
                 entryModel.onDraftPayloadConsumed(conversationId = conversationId)
             },
@@ -159,10 +160,3 @@ private fun pendingLaunchPayloadForConversation(
         startupAttachment = entryUiState.pendingStartupAttachment,
     )
 }
-
-private data class ConversationPendingLaunchPayload(
-    val draft: ConversationDraft? = null,
-    val scrollPosition: Int? = null,
-    val selfParticipantId: ParticipantId? = null,
-    val startupAttachment: ConversationEntryStartupAttachment? = null,
-)
