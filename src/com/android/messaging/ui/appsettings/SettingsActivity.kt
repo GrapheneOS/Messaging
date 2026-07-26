@@ -2,13 +2,9 @@ package com.android.messaging.ui.appsettings
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import com.android.messaging.ui.BugleComponentActivity
-import com.android.messaging.ui.appsettings.screen.SettingsScreen
-import com.android.messaging.ui.appsettings.screen.rememberSettingsEffectHandler
-import com.android.messaging.ui.core.AppTheme
-import com.android.messaging.ui.license.LicenseActivity
+import com.android.messaging.ui.MainActivity
+import com.android.messaging.ui.appsettings.navigation.UI_INTENT_EXTRA_GOTO_SETTINGS
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -17,24 +13,13 @@ class SettingsActivity : BugleComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if (isFinishing) {
-            return
-        }
+        startActivity(
+            Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra(UI_INTENT_EXTRA_GOTO_SETTINGS, true)
+            },
+        )
 
-        enableEdgeToEdge()
-
-        setContent {
-            AppTheme {
-                SettingsScreen(
-                    effectHandler = rememberSettingsEffectHandler(),
-                    onNavigateBack = ::finish,
-                    onNavigateToLicenses = ::launchLicenseActivity,
-                )
-            }
-        }
-    }
-
-    private fun launchLicenseActivity() {
-        startActivity(Intent(this, LicenseActivity::class.java))
+        finish()
     }
 }

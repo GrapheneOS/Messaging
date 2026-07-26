@@ -13,8 +13,8 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.android.messaging.R
 import com.android.messaging.ui.appsettings.common.SettingsSwitchItem
 import com.android.messaging.ui.appsettings.common.SettingsTopAppBar
+import com.android.messaging.ui.appsettings.general.model.AppSettingsAction as Action
 import com.android.messaging.ui.appsettings.general.model.AppSettingsUiState
-import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
 import com.android.messaging.ui.core.MessagingPreviewTheme
 
 @OptIn(ExperimentalMaterial3Api::class)

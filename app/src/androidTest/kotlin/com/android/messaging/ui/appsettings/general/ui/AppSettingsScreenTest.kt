@@ -9,9 +9,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import com.android.messaging.R
+import com.android.messaging.ui.appsettings.general.model.AppSettingsAction as Action
 import com.android.messaging.ui.appsettings.general.model.AppSettingsUiState
-import com.android.messaging.ui.appsettings.screen.SettingsScreenModel
-import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
 import com.android.messaging.ui.core.AppTheme
 import io.mockk.mockk
 import io.mockk.verify
@@ -25,11 +24,11 @@ class AppSettingsScreenTest {
     @get:Rule
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
-    private lateinit var screenModel: SettingsScreenModel
+    private lateinit var onAction: (Action) -> Unit
 
     @Before
     fun setup() {
-        screenModel = mockk(relaxed = true)
+        onAction = mockk(relaxed = true)
     }
 
     @Test
@@ -57,7 +56,7 @@ class AppSettingsScreenTest {
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
-            screenModel.onAction(Action.DefaultSmsAppClicked(true))
+            onAction(Action.DefaultSmsAppClicked(true))
         }
     }
 
@@ -71,7 +70,7 @@ class AppSettingsScreenTest {
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
-            screenModel.onAction(Action.NotificationsClicked)
+            onAction(Action.NotificationsClicked)
         }
     }
 
@@ -85,7 +84,7 @@ class AppSettingsScreenTest {
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
-            screenModel.onAction(Action.SendSoundChanged(false))
+            onAction(Action.SendSoundChanged(false))
         }
     }
 
@@ -136,7 +135,7 @@ class AppSettingsScreenTest {
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
-            screenModel.onAction(Action.DumpSmsChanged(true))
+            onAction(Action.DumpSmsChanged(true))
         }
     }
 
@@ -154,7 +153,7 @@ class AppSettingsScreenTest {
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
-            screenModel.onAction(Action.DumpMmsChanged(true))
+            onAction(Action.DumpMmsChanged(true))
         }
     }
 
@@ -166,7 +165,7 @@ class AppSettingsScreenTest {
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
-            screenModel.onAction(Action.LicensesClicked)
+            onAction(Action.LicensesClicked)
         }
     }
 
@@ -178,7 +177,7 @@ class AppSettingsScreenTest {
             AppTheme {
                 AppSettingsScreen(
                     appSettings = AppSettingsUiState(),
-                    onAction = screenModel::onAction,
+                    onAction = onAction,
                     onNavigateBack = {},
                     onPrivacyClick = { privacyClicks += 1 },
                 )
@@ -204,10 +203,11 @@ class AppSettingsScreenTest {
             AppTheme {
                 AppSettingsScreen(
                     appSettings = AppSettingsUiState(),
-                    onAction = screenModel::onAction,
+                    onAction = onAction,
                     onNavigateBack = {},
                     onPrivacyClick = {},
                     isTopLevel = true,
+                    hasAdvancedSettings = true,
                     onAdvancedClick = { advancedClicks += 1 },
                 )
             }
@@ -228,11 +228,10 @@ class AppSettingsScreenTest {
             AppTheme {
                 AppSettingsScreen(
                     appSettings = AppSettingsUiState(),
-                    onAction = screenModel::onAction,
+                    onAction = onAction,
                     onNavigateBack = {},
                     onPrivacyClick = {},
                     isTopLevel = false,
-                    onAdvancedClick = null,
                 )
             }
         }
@@ -252,7 +251,7 @@ class AppSettingsScreenTest {
             AppTheme {
                 AppSettingsScreen(
                     appSettings = appSettings,
-                    onAction = screenModel::onAction,
+                    onAction = onAction,
                     onNavigateBack = {},
                     onPrivacyClick = {},
                 )

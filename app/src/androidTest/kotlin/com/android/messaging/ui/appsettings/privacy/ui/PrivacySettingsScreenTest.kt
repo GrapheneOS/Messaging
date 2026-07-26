@@ -8,9 +8,8 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.android.messaging.R
+import com.android.messaging.ui.appsettings.general.model.AppSettingsAction as Action
 import com.android.messaging.ui.appsettings.general.model.AppSettingsUiState
-import com.android.messaging.ui.appsettings.screen.SettingsScreenModel
-import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
 import com.android.messaging.ui.core.AppTheme
 import io.mockk.mockk
 import io.mockk.verify
@@ -23,11 +22,11 @@ class PrivacySettingsScreenTest {
     @get:Rule
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
-    private lateinit var screenModel: SettingsScreenModel
+    private lateinit var onAction: (Action) -> Unit
 
     @Before
     fun setup() {
-        screenModel = mockk(relaxed = true)
+        onAction = mockk(relaxed = true)
     }
 
     @Test
@@ -55,7 +54,7 @@ class PrivacySettingsScreenTest {
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
-            screenModel.onAction(Action.YouTubeLinkPreviewsChanged(true))
+            onAction(Action.YouTubeLinkPreviewsChanged(true))
         }
     }
 
@@ -64,7 +63,7 @@ class PrivacySettingsScreenTest {
             AppTheme {
                 PrivacySettingsScreen(
                     appSettings = AppSettingsUiState(),
-                    onAction = screenModel::onAction,
+                    onAction = onAction,
                     onNavigateBack = {},
                 )
             }
