@@ -85,8 +85,8 @@ public class BugleWidgetProvider extends BaseWidgetProvider {
         remoteViews.setOnClickPendingIntent(R.id.widget_header, clickIntent);
 
         // On click intent for Compose
-        clickIntent = UIIntents.get().getWidgetPendingIntentForConversationActivity(context,
-                null /*conversationId*/, WIDGET_NEW_CONVERSATION_REQUEST_CODE);
+        clickIntent = UIIntents.get().getWidgetPendingIntentForNewConversation(context,
+                WIDGET_NEW_CONVERSATION_REQUEST_CODE);
         remoteViews.setOnClickPendingIntent(R.id.widget_compose, clickIntent);
 
         // On click intent for Conversation

@@ -13,6 +13,7 @@ import com.android.messaging.ui.conversation.entry.ConversationLaunchStore
 import com.android.messaging.ui.conversation.entry.submitIntent
 import com.android.messaging.ui.conversation.navigation.conversationRoute
 import com.android.messaging.ui.conversationlist.navigation.ConversationListNavKey
+import com.android.messaging.ui.conversationlist.navigation.goToConversationList
 import com.android.messaging.ui.core.AppTheme
 import com.android.messaging.ui.host.AppNavGraph
 import com.android.messaging.ui.onboarding.navigation.OnboardingNavKey
@@ -98,14 +99,14 @@ internal class MainActivity : ComponentActivity() {
             return listOf(OnboardingNavKey)
         }
 
+        if (intent.goToConversationList()) {
+            return rootDestinations()
+        }
+
         return rootDestinations() + conversationRoute(intent).orEmpty()
     }
 
     private fun rootDestinations(): List<NavKey> {
         return listOf(ConversationListNavKey)
-    }
-
-    private fun Intent.goToConversationList(): Boolean {
-        return getBooleanExtra(UIIntents.UI_INTENT_EXTRA_GOTO_CONVERSATION_LIST, false)
     }
 }

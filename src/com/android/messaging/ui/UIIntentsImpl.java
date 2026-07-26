@@ -403,6 +403,15 @@ public class UIIntentsImpl extends UIIntents {
     }
 
     @Override
+    public PendingIntent getWidgetPendingIntentForNewConversation(final Context context,
+            final int requestCode) {
+        final Intent intent = getConversationActivityIntent(context, null, null, false);
+        intent.putExtra(UI_INTENT_EXTRA_COMPOSE_NEW_CONVERSATION, true);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        return getPendingIntentWithParentStack(context, intent, requestCode);
+    }
+
+    @Override
     public PendingIntent getWidgetPendingIntentForConversationListActivity(
             final Context context) {
         final Intent intent = getConversationListActivityIntent(context);

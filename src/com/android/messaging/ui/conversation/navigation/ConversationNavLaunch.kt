@@ -12,8 +12,18 @@ internal fun conversationRoute(intent: Intent): List<NavKey>? {
         .let(ConversationId::fromOrNull)
 
     return when {
-        conversationId != null -> listOf(ConversationNavKey(conversationId))
-        intent.hasConversationLaunchPayload() -> listOf(NewChatNavKey)
+        conversationId != null -> {
+            listOf(ConversationNavKey(conversationId))
+        }
+
+        intent.isComposeNewConversation() || intent.hasConversationLaunchPayload() -> {
+            listOf(NewChatNavKey)
+        }
+
         else -> null
     }
+}
+
+private fun Intent.isComposeNewConversation(): Boolean {
+    return getBooleanExtra(UIIntents.UI_INTENT_EXTRA_COMPOSE_NEW_CONVERSATION, false)
 }
