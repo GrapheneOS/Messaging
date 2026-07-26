@@ -19,6 +19,7 @@ import com.android.messaging.ui.conversation.messages.model.message.Conversation
 import com.android.messaging.ui.conversation.metadata.model.ConversationMetadataUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationMediaPickerOverlayUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
+import com.android.messaging.ui.conversation.screen.model.ConversationPendingLaunchPayload
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaffoldUiState
 import com.android.messaging.ui.core.AppTheme
@@ -68,15 +69,18 @@ internal abstract class BaseConversationScreenTest {
                     onConversationDetailsClick = {},
                     onNavigateToMessageDetails = {},
                     onNavigateToVCardDetail = {},
+                    onNavigateToPhotoViewer = {},
                     onNavigateToForward = {},
                     onNavigateBack = {},
-                    pendingDraft = pendingDraft,
-                    pendingSelfParticipantId = ParticipantId.fromOrNull(pendingSelfParticipantId),
-                    pendingStartupAttachment = pendingStartupAttachment,
+                    pendingLaunchPayload = ConversationPendingLaunchPayload(
+                        draft = pendingDraft,
+                        scrollPosition = pendingScrollPosition,
+                        selfParticipantId = ParticipantId.fromOrNull(pendingSelfParticipantId),
+                        startupAttachment = pendingStartupAttachment,
+                    ),
                     onPendingDraftConsumed = onPendingDraftConsumed,
                     onPendingSelfParticipantIdConsumed = onPendingSelfParticipantIdConsumed,
                     onPendingStartupAttachmentConsumed = onPendingStartupAttachmentConsumed,
-                    pendingScrollPosition = pendingScrollPosition,
                     onPendingScrollPositionConsumed = onPendingScrollPositionConsumed,
                     screenModel = screenModel,
                 )

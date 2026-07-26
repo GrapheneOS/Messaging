@@ -45,12 +45,12 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.common.components.mediapreview.MediaPreviewBackground
+import com.android.messaging.ui.common.components.mediapreview.mediaOverlayContentColor
 import com.android.messaging.ui.conversation.composer.model.ComposerAttachmentUiModel
 import com.android.messaging.ui.conversation.composer.model.ConversationSendActionButtonMode
 import com.android.messaging.ui.conversation.composer.model.toMediaPreviewItem
 import com.android.messaging.ui.conversation.composer.ui.ConversationSendActionButton
 import com.android.messaging.ui.conversation.mediapicker.component.PickerOverlayIconButton
-import com.android.messaging.ui.conversation.mediapicker.component.pickerOverlayContentColor
 import com.android.messaging.ui.conversation.preview.previewResolvedImageAttachment
 import com.android.messaging.ui.conversation.preview.previewResolvedVideoAttachment
 import com.android.messaging.ui.core.MessagingPreviewTheme
@@ -213,7 +213,7 @@ private fun ConversationMediaReviewTopBar(
             modifier = Modifier
                 .weight(weight = 1f),
             text = conversationTitle.orEmpty(),
-            color = pickerOverlayContentColor(),
+            color = mediaOverlayContentColor(),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.titleMedium,

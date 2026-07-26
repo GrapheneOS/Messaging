@@ -11,7 +11,11 @@ import androidx.core.net.toUri
 import com.android.messaging.R
 import com.android.messaging.ui.common.components.attachment.openAttachmentPreview
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
+import com.android.messaging.ui.photoviewer.model.PhotoViewerLaunchRequest
+import com.android.messaging.ui.photoviewer.model.PhotoViewerSourceBounds
+import com.android.messaging.util.ContentType
 import com.android.messaging.util.UriUtil
+import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -21,19 +25,42 @@ internal suspend fun openAttachmentPreviewEffect(
     context: Context,
     hostBoundsState: State<ComposeRect?>,
     effect: ConversationScreenEffect.OpenAttachmentPreview,
+    onNavigateToPhotoViewer: (PhotoViewerLaunchRequest) -> Unit,
 ) {
-    openAttachmentPreview(
-        context = context,
-        hostBounds = hostBoundsState.value,
-        contentUri = effect.contentUri,
-        contentType = effect.contentType,
-        imageCollectionUri = effect.imageCollectionUri,
-        initialPhotoOccurrenceIndex = effect.initialPhotoOccurrenceIndex,
-        awaitHostBounds = {
-            snapshotFlow { hostBoundsState.value }
-                .filterNotNull()
-                .first()
-        },
+    val imageCollectionUri = effect.imageCollectionUri
+    val isPhotoViewerAttachment = ContentType.isImageType(effect.contentType) &&
+        imageCollectionUri != null
+
+    if (!isPhotoViewerAttachment) {
+        openAttachmentPreview(
+            context = context,
+            contentUri = effect.contentUri,
+            contentType = effect.contentType,
+        )
+
+        return
+    }
+
+    val hostBounds = hostBoundsState.value ?: snapshotFlow { hostBoundsState.value }
+        .filterNotNull()
+        .first()
+
+    onNavigateToPhotoViewer(
+        PhotoViewerLaunchRequest(
+            initialPhotoUri = effect.contentUri,
+            photosUri = imageCollectionUri,
+            sourceBounds = hostBounds.toPhotoViewerSourceBounds(),
+            initialPhotoOccurrenceIndex = effect.initialPhotoOccurrenceIndex,
+        ),
+    )
+}
+
+private fun ComposeRect.toPhotoViewerSourceBounds(): PhotoViewerSourceBounds {
+    return PhotoViewerSourceBounds(
+        left = left.roundToInt(),
+        top = top.roundToInt(),
+        right = right.roundToInt(),
+        bottom = bottom.roundToInt(),
     )
 }
 

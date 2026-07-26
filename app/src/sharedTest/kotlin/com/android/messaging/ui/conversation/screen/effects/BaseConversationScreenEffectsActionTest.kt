@@ -141,6 +141,7 @@ internal abstract class BaseConversationScreenEffectsActionTest {
                             snackbarHostState = snackbarHostState,
                             hostBoundsState = hostBoundsState,
                             onNavigateToVCardDetail = onNavigateToVCardDetail,
+                            onNavigateToPhotoViewer = {},
                         )
                     }
                 }

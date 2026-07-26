@@ -1,8 +1,10 @@
 package com.android.messaging.ui.photoviewer.model
 
 import androidx.compose.runtime.Immutable
+import kotlinx.serialization.Serializable
 
 @Immutable
+@Serializable
 internal data class PhotoViewerSourceBounds(
     val left: Int = 0,
     val top: Int = 0,

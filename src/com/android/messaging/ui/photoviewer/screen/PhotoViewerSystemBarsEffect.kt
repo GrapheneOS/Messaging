@@ -23,26 +23,58 @@ internal fun PhotoViewerSystemBarsEffect(
             window = window,
             view = view,
         )
-    }
+    } ?: return
 
+    ImmersiveSystemBarsEffect(controller = controller)
+
+    SystemBarsVisibilityEffect(
+        controller = controller,
+        displayMode = displayMode,
+    )
+}
+
+@Composable
+private fun ImmersiveSystemBarsEffect(
+    controller: WindowInsetsControllerCompat,
+) {
     DisposableEffect(controller) {
-        controller?.systemBarsBehavior = WindowInsetsControllerCompat
+        val previousAppearance = SystemBarsAppearance(
+            isLightStatusBars = controller.isAppearanceLightStatusBars,
+            isLightNavigationBars = controller.isAppearanceLightNavigationBars,
+        )
+
+        controller.systemBarsBehavior = WindowInsetsControllerCompat
             .BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        controller.isAppearanceLightStatusBars = false
+        controller.isAppearanceLightNavigationBars = false
 
-        val systemBars = WindowInsetsCompat.Type.systemBars()
         onDispose {
-            controller?.show(systemBars)
-        }
-    }
-
-    LaunchedEffect(controller, displayMode) {
-        val systemBars = WindowInsetsCompat.Type.systemBars()
-        when (displayMode) {
-            PhotoViewerDisplayMode.Carousel -> controller?.show(systemBars)
-            PhotoViewerDisplayMode.Immersive -> controller?.hide(systemBars)
+            controller.show(WindowInsetsCompat.Type.systemBars())
+            controller.isAppearanceLightStatusBars = previousAppearance.isLightStatusBars
+            controller.isAppearanceLightNavigationBars = previousAppearance.isLightNavigationBars
         }
     }
 }
+
+@Composable
+private fun SystemBarsVisibilityEffect(
+    controller: WindowInsetsControllerCompat,
+    displayMode: PhotoViewerDisplayMode,
+) {
+    LaunchedEffect(controller, displayMode) {
+        val systemBars = WindowInsetsCompat.Type.systemBars()
+
+        when (displayMode) {
+            PhotoViewerDisplayMode.Carousel -> controller.show(systemBars)
+            PhotoViewerDisplayMode.Immersive -> controller.hide(systemBars)
+        }
+    }
+}
+
+private data class SystemBarsAppearance(
+    val isLightStatusBars: Boolean,
+    val isLightNavigationBars: Boolean,
+)
 
 private fun createWindowInsetsController(
     window: Window?,

@@ -28,12 +28,12 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.android.messaging.ui.common.components.mediapreview.mediaOverlayContainerColor
+import com.android.messaging.ui.common.components.mediapreview.mediaOverlayContentColor
 import com.android.messaging.ui.conversation.mediapicker.ConversationCaptureMode
 import com.android.messaging.ui.conversation.mediapicker.component.capture.ConversationMediaCaptureShutterPhase.Photo
 import com.android.messaging.ui.conversation.mediapicker.component.capture.ConversationMediaCaptureShutterPhase.VideoIdle
 import com.android.messaging.ui.conversation.mediapicker.component.capture.ConversationMediaCaptureShutterPhase.VideoRecording
-import com.android.messaging.ui.conversation.mediapicker.component.pickerOverlayContainerColor
-import com.android.messaging.ui.conversation.mediapicker.component.pickerOverlayContentColor
 import com.android.messaging.ui.core.MessagingPreviewColumn
 
 private val PICKER_SHUTTER_BORDER_WIDTH = 3.dp
@@ -87,7 +87,7 @@ private fun ConversationMediaCaptureShutterButtonAnimatedContent(
 
     ConversationMediaCaptureShutterButtonShell(
         modifier = modifier,
-        borderColor = pickerOverlayContentColor(),
+        borderColor = mediaOverlayContentColor(),
         isEnabled = isEnabled,
         onClick = onClick,
         outerContainerColor = visualState.outerContainerColor,
@@ -394,20 +394,20 @@ private enum class ConversationMediaCaptureShutterPhase {
     fun toVisualState(colorScheme: ColorScheme): ConversationMediaCaptureShutterVisualState {
         return when (this) {
             Photo -> ConversationMediaCaptureShutterVisualState(
-                innerShutterColor = pickerOverlayContentColor(),
+                innerShutterColor = mediaOverlayContentColor(),
                 innerShutterSize = PICKER_SHUTTER_PHOTO_INNER_SIZE,
-                outerContainerColor = pickerOverlayContainerColor(alpha = 0.2f),
+                outerContainerColor = mediaOverlayContainerColor(alpha = 0.2f),
                 outerScale = 1f,
                 recordingStopAlpha = 0f,
                 recordingStopBackgroundColor = colorScheme.error.copy(alpha = 0.3f),
                 recordingStopScale = 0.8f,
                 videoCenterDotAlpha = 0f,
-                videoCenterDotColor = pickerOverlayContentColor(),
+                videoCenterDotColor = mediaOverlayContentColor(),
                 videoCenterDotScale = 0.7f,
             )
 
             VideoIdle -> ConversationMediaCaptureShutterVisualState(
-                innerShutterColor = pickerOverlayContainerColor(alpha = 0.5f),
+                innerShutterColor = mediaOverlayContainerColor(alpha = 0.5f),
                 innerShutterSize = PICKER_SHUTTER_FULL_INNER_SIZE,
                 outerContainerColor = Color.Transparent,
                 outerScale = 1f,
@@ -415,7 +415,7 @@ private enum class ConversationMediaCaptureShutterPhase {
                 recordingStopBackgroundColor = colorScheme.error.copy(alpha = 0.3f),
                 recordingStopScale = 0.8f,
                 videoCenterDotAlpha = 1f,
-                videoCenterDotColor = pickerOverlayContentColor(),
+                videoCenterDotColor = mediaOverlayContentColor(),
                 videoCenterDotScale = 1f,
             )
 
@@ -428,7 +428,7 @@ private enum class ConversationMediaCaptureShutterPhase {
                 recordingStopBackgroundColor = colorScheme.error.copy(alpha = 0.3f),
                 recordingStopScale = 1f,
                 videoCenterDotAlpha = 0f,
-                videoCenterDotColor = pickerOverlayContentColor(),
+                videoCenterDotColor = mediaOverlayContentColor(),
                 videoCenterDotScale = 0.7f,
             )
         }

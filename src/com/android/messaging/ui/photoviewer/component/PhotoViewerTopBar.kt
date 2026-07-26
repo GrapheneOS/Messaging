@@ -45,7 +45,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.data.media.model.PhotoViewerItem
-import com.android.messaging.ui.conversation.mediapicker.component.pickerOverlayContentColor
+import com.android.messaging.ui.common.components.mediapreview.mediaOverlayContentColor
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_CLOSE_BUTTON_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_DETAILS_MENU_ITEM_TEST_TAG
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_FORWARD_MENU_ITEM_TEST_TAG
@@ -104,7 +104,7 @@ private fun PhotoViewerTopBarContent(
     onSaveClick: () -> Unit,
     onShareClick: () -> Unit,
 ) {
-    val contentColor = pickerOverlayContentColor()
+    val contentColor = mediaOverlayContentColor()
     val secondaryContentColor = contentColor.copy(alpha = 0.8f)
 
     Row(

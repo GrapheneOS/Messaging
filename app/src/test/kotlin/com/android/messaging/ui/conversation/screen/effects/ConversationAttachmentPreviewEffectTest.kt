@@ -5,7 +5,6 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
-import android.graphics.Rect
 import android.net.Uri
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Rect as ComposeRect
@@ -14,6 +13,8 @@ import com.android.messaging.R
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
 import com.android.messaging.ui.conversation.screen.openAttachmentPreviewEffect
+import com.android.messaging.ui.photoviewer.model.PhotoViewerLaunchRequest
+import com.android.messaging.ui.photoviewer.model.PhotoViewerSourceBounds
 import com.android.messaging.util.UiUtils
 import com.android.messaging.util.UriUtil
 import io.mockk.every
@@ -57,7 +58,6 @@ internal class ConversationAttachmentPreviewEffectTest {
         every { Factory.get() } returns factory
         every { factory.applicationContext } returns applicationContext
         every { applicationContext.resources } returns resources
-        every { resources.getInteger(any()) } returns 0
         every { UIIntents.get() } returns uiIntents
     }
 
@@ -67,10 +67,10 @@ internal class ConversationAttachmentPreviewEffectTest {
     }
 
     @Test
-    fun openAttachmentPreviewEffect_opensImageInternallyWhenActivityAndCollectionExist() {
+    fun openAttachmentPreviewEffect_navigatesToPhotoViewerWhenCollectionExists() {
         runTest {
             val activity = mockk<Activity>(relaxed = true)
-            val boundsSlot = slot<Rect>()
+            val launchRequests = mutableListOf<PhotoViewerLaunchRequest>()
 
             openAttachmentPreviewEffect(
                 context = activity,
@@ -82,18 +82,25 @@ internal class ConversationAttachmentPreviewEffectTest {
                     contentUri = "content://media/image/1",
                     imageCollectionUri = "content://media/images",
                 ),
+                onNavigateToPhotoViewer = launchRequests::add,
             )
 
-            verify(exactly = 1) {
-                uiIntents.launchFullScreenPhotoViewer(
-                    activity,
-                    Uri.parse("content://media/image/1"),
-                    capture(boundsSlot),
-                    Uri.parse("content://media/images"),
-                    0,
-                )
-            }
-            assertEquals(Rect(1, 3, 7, 9), boundsSlot.captured)
+            assertEquals(
+                listOf(
+                    PhotoViewerLaunchRequest(
+                        initialPhotoUri = "content://media/image/1",
+                        photosUri = "content://media/images",
+                        sourceBounds = PhotoViewerSourceBounds(
+                            left = 1,
+                            top = 3,
+                            right = 7,
+                            bottom = 9,
+                        ),
+                        initialPhotoOccurrenceIndex = 0,
+                    ),
+                ),
+                launchRequests,
+            )
             verify(exactly = 0) {
                 activity.startActivity(any())
             }
@@ -101,10 +108,11 @@ internal class ConversationAttachmentPreviewEffectTest {
     }
 
     @Test
-    fun openAttachmentPreviewEffect_fallsBackToGenericImageIntentWhenActivityIsUnavailable() {
+    fun openAttachmentPreviewEffect_fallsBackToGenericImageIntentWithoutCollection() {
         runTest {
             val context = mockk<Context>(relaxed = true)
             val intentSlot = slot<Intent>()
+            val launchRequests = mutableListOf<PhotoViewerLaunchRequest>()
             every { context.startActivity(capture(intentSlot)) } just runs
 
             openAttachmentPreviewEffect(
@@ -115,8 +123,9 @@ internal class ConversationAttachmentPreviewEffectTest {
                 effect = ConversationScreenEffect.OpenAttachmentPreview(
                     contentType = "image/png",
                     contentUri = "content://media/image/3",
-                    imageCollectionUri = "content://media/images",
+                    imageCollectionUri = null,
                 ),
+                onNavigateToPhotoViewer = launchRequests::add,
             )
 
             assertEquals(Intent.ACTION_VIEW, intentSlot.captured.action)
@@ -125,9 +134,7 @@ internal class ConversationAttachmentPreviewEffectTest {
             assertTrue(
                 intentSlot.captured.flags and Intent.FLAG_GRANT_READ_URI_PERMISSION != 0,
             )
-            verify(exactly = 0) {
-                uiIntents.launchFullScreenPhotoViewer(any(), any(), any(), any())
-            }
+            assertTrue(launchRequests.isEmpty())
         }
     }
 
@@ -150,6 +157,7 @@ internal class ConversationAttachmentPreviewEffectTest {
                     contentUri = fileUri.toString(),
                     imageCollectionUri = null,
                 ),
+                onNavigateToPhotoViewer = {},
             )
 
             assertEquals(Intent.ACTION_VIEW, intentSlot.captured.action)
@@ -177,6 +185,7 @@ internal class ConversationAttachmentPreviewEffectTest {
                     contentUri = fileUri.toString(),
                     imageCollectionUri = null,
                 ),
+                onNavigateToPhotoViewer = {},
             )
 
             verify(exactly = 1) {
@@ -189,8 +198,6 @@ internal class ConversationAttachmentPreviewEffectTest {
     fun openAttachmentPreviewEffect_showsToastWhenGenericIntentCannotBeHandled() {
         runTest {
             mockkStatic(UiUtils::class)
-            every { Factory.get() } returns factory
-            every { factory.applicationContext } returns applicationContext
             every {
                 context.startActivity(any())
             } throws ActivityNotFoundException("no handler")
@@ -208,6 +215,7 @@ internal class ConversationAttachmentPreviewEffectTest {
                     contentUri = "content://media/file/1",
                     imageCollectionUri = null,
                 ),
+                onNavigateToPhotoViewer = {},
             )
 
             verify(exactly = 1) {

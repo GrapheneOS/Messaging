@@ -43,11 +43,9 @@ internal class DatabaseWrapperStorageFullTest {
     fun setUp() {
         context = RuntimeEnvironment.getApplication().applicationContext
         resources = mockk(relaxed = true)
-        every { resources.getInteger(any()) } returns 0
         every { resources.getString(R.string.db_full) } returns "Database full"
         applicationContext = createResourceContext()
         installTestFactory(context = applicationContext)
-        UiUtils.DEFAULT_INTERPOLATOR.hashCode()
         database = mockk(relaxed = true)
         databaseWrapper = DatabaseWrapper(context, database)
         mockkStatic(DebugUtils::class)
