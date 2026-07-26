@@ -10,8 +10,8 @@ import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDe
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.scene.DialogSceneStrategy
 import androidx.navigation3.scene.SceneStrategy
-import androidx.navigation3.scene.SinglePaneSceneStrategy
 import androidx.navigation3.ui.NavDisplay
 import com.android.messaging.ui.common.components.slideInFromLeft
 import com.android.messaging.ui.common.components.slideInFromRight
@@ -24,7 +24,7 @@ internal fun AppNavDisplay(
     entryProvider: (NavKey) -> NavEntry<NavKey>,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    sceneStrategy: SceneStrategy<NavKey> = remember { SinglePaneSceneStrategy() },
+    sceneStrategies: List<SceneStrategy<NavKey>> = appSceneStrategies,
 ) {
     val saveableStateHolderDecorator = rememberSaveableStateHolderNavEntryDecorator<NavKey>()
     val viewModelStoreDecorator = rememberViewModelStoreNavEntryDecorator<NavKey>()
@@ -35,9 +35,6 @@ internal fun AppNavDisplay(
         paneTitleDecorator,
     ) {
         listOf(saveableStateHolderDecorator, viewModelStoreDecorator, paneTitleDecorator)
-    }
-    val sceneStrategies = remember(sceneStrategy) {
-        listOf(sceneStrategy)
     }
 
     NavDisplay(
@@ -54,3 +51,8 @@ internal fun AppNavDisplay(
         entryProvider = entryProvider,
     )
 }
+
+private val appSceneStrategies: List<SceneStrategy<NavKey>> = listOf(
+    OverlaySceneStrategy(),
+    DialogSceneStrategy(),
+)
