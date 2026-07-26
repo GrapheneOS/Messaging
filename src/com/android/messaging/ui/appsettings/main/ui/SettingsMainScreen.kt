@@ -1,4 +1,4 @@
-package com.android.messaging.ui.appsettings.screen
+package com.android.messaging.ui.appsettings.main.ui
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn

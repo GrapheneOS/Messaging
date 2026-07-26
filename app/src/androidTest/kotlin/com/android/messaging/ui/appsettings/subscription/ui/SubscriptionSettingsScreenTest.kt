@@ -12,8 +12,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import com.android.messaging.R
 import com.android.messaging.data.subscription.model.SubId
-import com.android.messaging.ui.appsettings.screen.SettingsScreenModel
-import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
+import com.android.messaging.ui.appsettings.subscription.model.SubscriptionSettingsAction as Action
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionUiState
 import com.android.messaging.ui.core.AppTheme
 import io.mockk.mockk
@@ -27,11 +26,11 @@ class SubscriptionSettingsScreenTest {
     @get:Rule
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
-    private lateinit var screenModel: SettingsScreenModel
+    private lateinit var onAction: (Action) -> Unit
 
     @Before
     fun setup() {
-        screenModel = mockk(relaxed = true)
+        onAction = mockk(relaxed = true)
     }
 
     @Test
@@ -117,7 +116,7 @@ class SubscriptionSettingsScreenTest {
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
-            screenModel.onAction(Action.AutoRetrieveMmsChanged(SubId(1), false))
+            onAction(Action.AutoRetrieveMmsChanged(false))
         }
     }
 
@@ -182,7 +181,7 @@ class SubscriptionSettingsScreenTest {
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
-            screenModel.onAction(Action.DeliveryReportsChanged(SubId(1), true))
+            onAction(Action.DeliveryReportsChanged(true))
         }
     }
 
@@ -215,7 +214,7 @@ class SubscriptionSettingsScreenTest {
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
-            screenModel.onAction(Action.WirelessAlertsClicked(SubId(1)))
+            onAction(Action.WirelessAlertsClicked)
         }
     }
 
@@ -280,7 +279,7 @@ class SubscriptionSettingsScreenTest {
                 SubscriptionSettingsScreen(
                     subscriptionSettings = subscriptionSettings,
                     title = "Advanced Settings",
-                    onAction = screenModel::onAction,
+                    onAction = onAction,
                     onNavigateBack = {},
                 )
             }

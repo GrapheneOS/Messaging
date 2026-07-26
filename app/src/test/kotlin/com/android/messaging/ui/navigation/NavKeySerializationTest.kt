@@ -6,6 +6,11 @@ import androidx.savedstate.serialization.decodeFromSavedState
 import androidx.savedstate.serialization.encodeToSavedState
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.data.subscription.model.SubId
+import com.android.messaging.ui.appsettings.navigation.AppSettingsNavKey
+import com.android.messaging.ui.appsettings.navigation.PrivacySettingsNavKey
+import com.android.messaging.ui.appsettings.navigation.SettingsNavKey
+import com.android.messaging.ui.appsettings.navigation.SubscriptionSettingsNavKey
 import com.android.messaging.ui.conversation.navigation.AddParticipantsNavKey
 import com.android.messaging.ui.conversation.navigation.ConversationNavKey
 import com.android.messaging.ui.conversation.navigation.MessageDetailsNavKey
@@ -70,6 +75,31 @@ class NavKeySerializationTest {
             ForwardMessageNavKey(
                 conversationId = ConversationId("c"),
                 messageId = MessageId("m"),
+            ),
+        )
+    }
+
+    @Test
+    fun settingsNavKey_roundTripsThroughSavedState() {
+        assertRoundTrips(SettingsNavKey)
+    }
+
+    @Test
+    fun appSettingsNavKey_roundTripsThroughSavedState() {
+        assertRoundTrips(AppSettingsNavKey)
+    }
+
+    @Test
+    fun privacySettingsNavKey_roundTripsThroughSavedState() {
+        assertRoundTrips(PrivacySettingsNavKey)
+    }
+
+    @Test
+    fun subscriptionSettingsNavKey_roundTripsWithTypedSubId() {
+        assertRoundTrips(
+            SubscriptionSettingsNavKey(
+                subId = SubId(1),
+                title = "SIM 1",
             ),
         )
     }

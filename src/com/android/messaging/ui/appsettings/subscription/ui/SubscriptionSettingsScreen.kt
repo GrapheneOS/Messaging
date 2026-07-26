@@ -42,7 +42,7 @@ import com.android.messaging.ui.appsettings.common.SettingsCategoryHeader
 import com.android.messaging.ui.appsettings.common.SettingsClickableItem
 import com.android.messaging.ui.appsettings.common.SettingsSwitchItem
 import com.android.messaging.ui.appsettings.common.SettingsTopAppBar
-import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
+import com.android.messaging.ui.appsettings.subscription.model.SubscriptionSettingsAction as Action
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionUiState
 import com.android.messaging.ui.common.text.asLtrText
 import com.android.messaging.ui.core.MessagingPreviewTheme
@@ -112,7 +112,7 @@ private fun SubscriptionDialogs(
             onDismiss = onDismissGroupMms,
             onConfirm = { enabled ->
                 onAction(
-                    Action.GroupMmsChanged(subscriptionSettings.subId, enabled),
+                    Action.GroupMmsChanged(enabled),
                 )
                 onDismissGroupMms()
             },
@@ -127,7 +127,7 @@ private fun SubscriptionDialogs(
             onDismiss = onDismissPhoneNumber,
             onConfirm = { phoneNumber ->
                 onAction(
-                    Action.PhoneNumberChanged(subscriptionSettings.subId, phoneNumber),
+                    Action.PhoneNumberChanged(phoneNumber),
                 )
                 onDismissPhoneNumber()
             },
@@ -188,7 +188,7 @@ private fun LazyListScope.autoRetrieveMmsItems(
         checked = subscriptionSettings.autoRetrieveMms,
         dependencyEnabled = true,
         onCheckedChange = { enabled ->
-            onAction(Action.AutoRetrieveMmsChanged(subscriptionSettings.subId, enabled))
+            onAction(Action.AutoRetrieveMmsChanged(enabled))
         },
     )
 
@@ -200,7 +200,7 @@ private fun LazyListScope.autoRetrieveMmsItems(
         checked = subscriptionSettings.autoRetrieveMmsWhenRoaming,
         dependencyEnabled = subscriptionSettings.autoRetrieveMms,
         onCheckedChange = { enabled ->
-            onAction(Action.AutoRetrieveMmsWhenRoamingChanged(subscriptionSettings.subId, enabled))
+            onAction(Action.AutoRetrieveMmsWhenRoamingChanged(enabled))
         },
     )
 }
@@ -259,7 +259,7 @@ private fun LazyListScope.advancedSettingsItems(
                 enabled = subscriptionSettings.isDefaultSmsApp,
                 onCheckedChange = { enabled ->
                     onAction(
-                        Action.DeliveryReportsChanged(subscriptionSettings.subId, enabled),
+                        Action.DeliveryReportsChanged(enabled),
                     )
                 },
             )
@@ -272,7 +272,7 @@ private fun LazyListScope.advancedSettingsItems(
                 title = stringResource(R.string.wireless_alerts_title),
                 onClick = {
                     onAction(
-                        Action.WirelessAlertsClicked(subscriptionSettings.subId),
+                        Action.WirelessAlertsClicked,
                     )
                 },
             )

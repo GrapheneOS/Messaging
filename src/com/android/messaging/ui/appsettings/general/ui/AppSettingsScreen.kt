@@ -18,8 +18,8 @@ import com.android.messaging.ui.appsettings.common.SettingsCategoryHeader
 import com.android.messaging.ui.appsettings.common.SettingsClickableItem
 import com.android.messaging.ui.appsettings.common.SettingsSwitchItem
 import com.android.messaging.ui.appsettings.common.SettingsTopAppBar
+import com.android.messaging.ui.appsettings.general.model.AppSettingsAction as Action
 import com.android.messaging.ui.appsettings.general.model.AppSettingsUiState
-import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
 import com.android.messaging.ui.core.MessagingPreviewTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,7 +31,8 @@ internal fun AppSettingsScreen(
     onPrivacyClick: () -> Unit,
     modifier: Modifier = Modifier,
     isTopLevel: Boolean = false,
-    onAdvancedClick: (() -> Unit)? = null,
+    hasAdvancedSettings: Boolean = false,
+    onAdvancedClick: () -> Unit = {},
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val title = if (isTopLevel) {
@@ -60,7 +61,7 @@ internal fun AppSettingsScreen(
                 onPrivacyClick = onPrivacyClick,
             )
 
-            if (isTopLevel && onAdvancedClick != null) {
+            if (isTopLevel && hasAdvancedSettings) {
                 advancedSettingsItem(onAdvancedClick)
             }
 
@@ -191,6 +192,7 @@ private fun AppSettingsScreenTopLevelPreview() {
             onNavigateBack = {},
             onPrivacyClick = {},
             isTopLevel = true,
+            hasAdvancedSettings = true,
             onAdvancedClick = {},
         )
     }
