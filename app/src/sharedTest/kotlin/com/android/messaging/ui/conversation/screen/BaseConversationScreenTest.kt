@@ -70,6 +70,7 @@ internal abstract class BaseConversationScreenTest {
                     onNavigateToMessageDetails = {},
                     onNavigateToVCardDetail = {},
                     onNavigateToPhotoViewer = {},
+                    onNavigateToAddContact = {},
                     onNavigateToForward = {},
                     onNavigateBack = {},
                     pendingLaunchPayload = ConversationPendingLaunchPayload(

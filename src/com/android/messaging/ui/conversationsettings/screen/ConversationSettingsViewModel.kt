@@ -4,8 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.domain.conversation.usecase.participant.ResolveContactAction
 import com.android.messaging.domain.conversation.usecase.participant.ResolveConversationId
+import com.android.messaging.domain.conversation.usecase.participant.model.ResolveContactActionResult
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveConversationIdResult
+import com.android.messaging.ui.contact.model.AddContactRequest
 import com.android.messaging.ui.conversationsettings.screen.delegate.ConversationSettingsDelegate
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsAction as Action
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsNavEvent as NavEvent
@@ -40,6 +43,7 @@ internal interface ConversationSettingsScreenModel {
 internal class ConversationSettingsViewModel @Inject constructor(
     private val delegate: ConversationSettingsDelegate,
     private val resolveConversationId: ResolveConversationId,
+    private val resolveContactAction: ResolveContactAction,
 ) : ViewModel(),
     ConversationSettingsScreenModel {
 
@@ -129,7 +133,7 @@ internal class ConversationSettingsViewModel @Inject constructor(
             }
 
             is ParticipantAction.ParticipantContactInfoClicked -> {
-                showOrAddContact(action.participant)
+                emitContactAction(participant = action.participant)
             }
         }
     }
@@ -144,15 +148,36 @@ internal class ConversationSettingsViewModel @Inject constructor(
         )
     }
 
-    private fun showOrAddContact(participant: ParticipantUiState) {
-        emitEffect(
-            Effect.ShowOrAddContact(
-                contactId = participant.contactId,
-                contactLookupKey = participant.lookupKey,
-                avatarUri = participant.avatarUri,
-                normalizedDestination = participant.normalizedDestination,
-            ),
+    private fun emitContactAction(participant: ParticipantUiState) {
+        val contactAction = resolveContactAction(
+            contactId = participant.contactId,
+            lookupKey = participant.lookupKey,
+            destination = participant.normalizedDestination,
         )
+
+        when (contactAction) {
+            is ResolveContactActionResult.ShowContactCard -> {
+                emitEffect(
+                    Effect.ShowContactCard(
+                        contactId = contactAction.contactId,
+                        contactLookupKey = contactAction.lookupKey,
+                    ),
+                )
+            }
+
+            is ResolveContactActionResult.AddContact -> {
+                emitEffect(
+                    Effect.AddContact(
+                        request = AddContactRequest(
+                            destination = contactAction.destination,
+                            avatarUri = participant.avatarUri,
+                        ),
+                    ),
+                )
+            }
+
+            ResolveContactActionResult.Unavailable -> Unit
+        }
     }
 
     override fun setConversationId(conversationId: ConversationId) {

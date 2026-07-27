@@ -16,7 +16,10 @@ import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.domain.conversation.usecase.action.CreateDefaultSmsRoleRequest
 import com.android.messaging.domain.conversation.usecase.participant.CanAddContact
 import com.android.messaging.domain.conversation.usecase.participant.CanAddMoreConversationParticipants
+import com.android.messaging.domain.conversation.usecase.participant.ResolveContactAction
+import com.android.messaging.domain.conversation.usecase.participant.model.ResolveContactActionResult
 import com.android.messaging.domain.conversation.usecase.telephony.CanPlacePhoneCall
+import com.android.messaging.ui.contact.model.AddContactRequest
 import com.android.messaging.ui.conversation.audio.delegate.ConversationAudioRecordingDelegate
 import com.android.messaging.ui.conversation.composer.delegate.ConversationComposerAttachmentsDelegate
 import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftDelegate
@@ -160,6 +163,7 @@ internal class ConversationViewModel @Inject constructor(
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
     private val savedStateHandle: SavedStateHandle,
+    private val resolveContactAction: ResolveContactAction,
 ) : ViewModel(),
     ConversationScreenModel {
 
@@ -507,14 +511,35 @@ internal class ConversationViewModel @Inject constructor(
             return
         }
 
-        emitEffect(
-            ConversationScreenEffect.ShowOrAddParticipantContact(
-                contactId = message.senderContactId,
-                contactLookupKey = message.senderContactLookupKey,
-                avatarUri = message.senderAvatarUri,
-                normalizedDestination = message.senderNormalizedDestination,
-            ),
+        val contactAction = resolveContactAction(
+            contactId = message.senderContactId,
+            lookupKey = message.senderContactLookupKey,
+            destination = message.senderNormalizedDestination,
         )
+
+        when (contactAction) {
+            is ResolveContactActionResult.ShowContactCard -> {
+                emitEffect(
+                    ConversationScreenEffect.ShowParticipantContactCard(
+                        contactId = contactAction.contactId,
+                        contactLookupKey = contactAction.lookupKey,
+                    ),
+                )
+            }
+
+            is ResolveContactActionResult.AddContact -> {
+                emitEffect(
+                    ConversationScreenEffect.AddParticipantContact(
+                        request = AddContactRequest(
+                            destination = contactAction.destination,
+                            avatarUri = message.senderAvatarUri?.toString(),
+                        ),
+                    ),
+                )
+            }
+
+            ResolveContactActionResult.Unavailable -> Unit
+        }
     }
 
     override fun onMessageDownloadClick(messageId: MessageId) {

@@ -30,6 +30,7 @@ internal class ConversationScreenRenderingTest : BaseConversationScreenTest() {
                     onNavigateToMessageDetails = {},
                     onNavigateToVCardDetail = {},
                     onNavigateToPhotoViewer = {},
+                    onNavigateToAddContact = {},
                     onNavigateToForward = {},
                     onNavigateBack = {},
                     pendingLaunchPayload = ConversationPendingLaunchPayload(),

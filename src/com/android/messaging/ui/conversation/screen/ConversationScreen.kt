@@ -16,6 +16,7 @@ import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.ui.common.components.snackbar.MessagingSnackbarHost
+import com.android.messaging.ui.contact.model.AddContactRequest
 import com.android.messaging.ui.conversation.composer.ui.ConversationComposerSection
 import com.android.messaging.ui.conversation.composer.ui.ConversationSimSelectorSheet
 import com.android.messaging.ui.conversation.mediapicker.rememberConversationMediaPickerPermissionState
@@ -35,6 +36,7 @@ internal fun ConversationScreen(
     onNavigateToMessageDetails: (messageId: MessageId) -> Unit,
     onNavigateToVCardDetail: (uri: String) -> Unit,
     onNavigateToPhotoViewer: (PhotoViewerLaunchRequest) -> Unit,
+    onNavigateToAddContact: (AddContactRequest) -> Unit,
     onNavigateToForward: (messageId: MessageId) -> Unit,
     onNavigateBack: () -> Unit,
     pendingLaunchPayload: ConversationPendingLaunchPayload,
@@ -73,6 +75,7 @@ internal fun ConversationScreen(
         onNavigateToMessageDetails = onNavigateToMessageDetails,
         onNavigateToVCardDetail = onNavigateToVCardDetail,
         onNavigateToPhotoViewer = onNavigateToPhotoViewer,
+        onNavigateToAddContact = onNavigateToAddContact,
         onNavigateToForward = onNavigateToForward,
         onNavigateBack = onNavigateBack,
         onPendingDraftConsumed = onPendingDraftConsumed,

@@ -122,17 +122,6 @@ public abstract class UIIntents {
     public abstract void launchDebugMmsConfigActivity(final Context context);
 
     /**
-     * Launch an activity to add a contact with a given destination.
-     */
-    public abstract void launchAddContactActivity(final Context context, final String destination);
-
-    /**
-     * Launch a dialog confirming whether to add the given destination to contacts.
-     */
-    public abstract void launchAddContactConfirmation(final Context context,
-            final Uri avatarUri, final String destination);
-
-    /**
      * Launch an external activity to handle a phone call
      * @param phoneNumber the phone number to call
      * @param clickPosition is the location tapped to start this launch for transition use

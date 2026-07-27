@@ -22,6 +22,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.ui.contact.model.AddContactRequest
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingPhase
 import com.android.messaging.ui.conversation.mediapicker.ConversationMediaPickerOverlay
 import com.android.messaging.ui.conversation.mediapicker.ConversationMediaPickerState
@@ -99,6 +100,7 @@ internal fun ConversationScreenRouteEffects(
     onNavigateToMessageDetails: (messageId: MessageId) -> Unit,
     onNavigateToVCardDetail: (uri: String) -> Unit,
     onNavigateToPhotoViewer: (PhotoViewerLaunchRequest) -> Unit,
+    onNavigateToAddContact: (AddContactRequest) -> Unit,
     onNavigateToForward: (messageId: MessageId) -> Unit,
     onNavigateBack: () -> Unit,
     onPendingDraftConsumed: () -> Unit,
@@ -148,6 +150,7 @@ internal fun ConversationScreenRouteEffects(
         hostBoundsState = hostBoundsState,
         onNavigateToVCardDetail = onNavigateToVCardDetail,
         onNavigateToPhotoViewer = onNavigateToPhotoViewer,
+        onNavigateToAddContact = onNavigateToAddContact,
     )
 }
 

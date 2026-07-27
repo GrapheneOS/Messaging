@@ -3,6 +3,9 @@ package com.android.messaging.ui.conversation.screen.viewmodel
 import app.cash.turbine.test
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.datamodel.data.ParticipantData
+import com.android.messaging.domain.conversation.usecase.participant.ResolveContactAction
+import com.android.messaging.domain.conversation.usecase.participant.model.ResolveContactActionResult
+import com.android.messaging.ui.contact.model.AddContactRequest
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagesUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
 import io.mockk.verify
@@ -43,7 +46,7 @@ internal class ConversationViewModelMessageInteractionTest : BaseConversationVie
     }
 
     @Test
-    fun onMessageAvatarClick_whenMessageCanShowContactCard_emitsShowOrAddParticipantContact() {
+    fun onMessageAvatarClick_whenContactIsSaved_emitsShowParticipantContactCard() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val messagesDelegate = createMessagesDelegateMock()
             messagesDelegate.stateFlow.value = ConversationMessagesUiState.Present(
@@ -56,18 +59,63 @@ internal class ConversationViewModelMessageInteractionTest : BaseConversationVie
                     ),
                 ),
             )
-            val viewModel = createViewModel(messagesDelegate = messagesDelegate.mock)
+            val viewModel = createViewModel(
+                messagesDelegate = messagesDelegate.mock,
+                resolveContactAction = ResolveContactAction { _, _, _ ->
+                    ResolveContactActionResult.ShowContactCard(
+                        contactId = 42L,
+                        lookupKey = "lookup-key",
+                    )
+                },
+            )
 
             viewModel.effects.test {
                 viewModel.onMessageAvatarClick(messageId = MessageId("message-1"))
                 advanceUntilIdle()
 
                 assertEquals(
-                    ConversationScreenEffect.ShowOrAddParticipantContact(
+                    ConversationScreenEffect.ShowParticipantContactCard(
                         contactId = 42L,
                         contactLookupKey = "lookup-key",
-                        avatarUri = null,
-                        normalizedDestination = "+15551234567",
+                    ),
+                    awaitItem(),
+                )
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    @Test
+    fun onMessageAvatarClick_whenContactIsNotSaved_emitsAddParticipantContact() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val messagesDelegate = createMessagesDelegateMock()
+            messagesDelegate.stateFlow.value = ConversationMessagesUiState.Present(
+                messages = persistentListOf(
+                    createMessageUiModel().copy(
+                        messageId = MessageId("message-1"),
+                        senderContactId = -1L,
+                        senderContactLookupKey = null,
+                        senderNormalizedDestination = "+15551234567",
+                    ),
+                ),
+            )
+            val viewModel = createViewModel(
+                messagesDelegate = messagesDelegate.mock,
+                resolveContactAction = ResolveContactAction { _, _, _ ->
+                    ResolveContactActionResult.AddContact(destination = "+15551234567")
+                },
+            )
+
+            viewModel.effects.test {
+                viewModel.onMessageAvatarClick(messageId = MessageId("message-1"))
+                advanceUntilIdle()
+
+                assertEquals(
+                    ConversationScreenEffect.AddParticipantContact(
+                        request = AddContactRequest(
+                            destination = "+15551234567",
+                            avatarUri = null,
+                        ),
                     ),
                     awaitItem(),
                 )

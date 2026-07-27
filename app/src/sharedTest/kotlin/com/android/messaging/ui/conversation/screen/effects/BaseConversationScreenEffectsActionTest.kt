@@ -21,6 +21,7 @@ import androidx.compose.ui.geometry.Rect as ComposeRect
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.testutil.TEST_WAIT_TIMEOUT_MILLIS
+import com.android.messaging.ui.contact.model.AddContactRequest
 import com.android.messaging.ui.conversation.screen.ConversationScreenEffects
 import com.android.messaging.ui.conversation.screen.ConversationScreenModel
 import com.android.messaging.ui.conversation.screen.model.ConversationMediaPickerOverlayUiState
@@ -105,6 +106,7 @@ internal abstract class BaseConversationScreenEffectsActionTest {
         ),
         onNavigateToMessageDetails: (MessageId) -> Unit = {},
         onNavigateToVCardDetail: (String) -> Unit = {},
+        onNavigateToAddContact: (AddContactRequest) -> Unit = {},
         onNavigateBack: () -> Unit = {},
     ) {
         snackbarHostState = SnackbarHostState()
@@ -142,6 +144,7 @@ internal abstract class BaseConversationScreenEffectsActionTest {
                             hostBoundsState = hostBoundsState,
                             onNavigateToVCardDetail = onNavigateToVCardDetail,
                             onNavigateToPhotoViewer = {},
+                            onNavigateToAddContact = onNavigateToAddContact,
                         )
                     }
                 }

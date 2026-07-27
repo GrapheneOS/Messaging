@@ -17,6 +17,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
@@ -48,8 +50,11 @@ private val PhotoViewerPageIndicatorBottomPadding = 24.dp
 
 @Composable
 internal fun PhotoViewerAnimatedContent(
+    modifier: Modifier,
     launchRequest: PhotoViewerLaunchRequest,
     isClosing: Boolean,
+    scrimColor: Color,
+    backgroundAlpha: Float,
     onCloseAnimationFinished: () -> Unit,
     content: @Composable () -> Unit,
 ) {
@@ -81,25 +86,37 @@ internal fun PhotoViewerAnimatedContent(
     }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .onSizeChanged { size -> rootSize = size }
-            .graphicsLayer {
-                val transform = resolvePhotoViewerTransform(
-                    sourceBounds = launchRequest.sourceBounds,
-                    rootSize = rootSize,
-                    progress = transitionProgress.value,
+            .drawBehind {
+                drawRect(
+                    color = scrimColor.copy(
+                        alpha = backgroundAlpha * transitionProgress.value,
+                    ),
                 )
-
-                alpha = transform.alpha
-                scaleX = transform.scale
-                scaleY = transform.scale
-                translationX = transform.translationX
-                translationY = transform.translationY
-                transformOrigin = TransformOrigin.Center
             },
     ) {
-        content()
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    val transform = resolvePhotoViewerTransform(
+                        sourceBounds = launchRequest.sourceBounds,
+                        rootSize = rootSize,
+                        progress = transitionProgress.value,
+                    )
+
+                    alpha = transform.alpha
+                    scaleX = transform.scale
+                    scaleY = transform.scale
+                    translationX = transform.translationX
+                    translationY = transform.translationY
+                    transformOrigin = TransformOrigin.Center
+                },
+        ) {
+            content()
+        }
     }
 }
 

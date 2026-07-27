@@ -43,7 +43,6 @@ import com.android.messaging.receiver.ConversationReadReceiver;
 import com.android.messaging.receiver.NotificationReceiver;
 import com.android.messaging.sms.MmsSmsUtils;
 import com.android.messaging.ui.classzero.ClassZeroActivity;
-import com.android.messaging.ui.contact.AddContactActivity;
 import com.android.messaging.ui.conversation.ConversationActivity;
 import com.android.messaging.ui.conversation.LaunchConversationActivity;
 import com.android.messaging.ui.conversationpicker.host.widget.WidgetPickConversationActivity;
@@ -159,27 +158,6 @@ public class UIIntentsImpl extends UIIntents {
     @Override
     public void launchDebugMmsConfigActivity(final Context context) {
         context.startActivity(new Intent(context, DebugMmsConfigActivity.class));
-    }
-
-    @Override
-    public void launchAddContactActivity(final Context context, final String destination) {
-        final Intent intent = new Intent(Intent.ACTION_INSERT_OR_EDIT);
-        final String destinationType = MmsSmsUtils.isEmailAddress(destination) ?
-                Intents.Insert.EMAIL : Intents.Insert.PHONE;
-        intent.setType(Contacts.CONTENT_ITEM_TYPE);
-        intent.putExtra(destinationType, destination);
-        startExternalActivity(context, intent);
-    }
-
-    @Override
-    public void launchAddContactConfirmation(final Context context, final Uri avatarUri,
-            final String destination) {
-        final Intent intent = new Intent(context, AddContactActivity.class);
-        intent.putExtra(AddContactActivity.EXTRA_DESTINATION, destination);
-        if (avatarUri != null) {
-            intent.putExtra(AddContactActivity.EXTRA_AVATAR_URI, avatarUri.toString());
-        }
-        context.startActivity(intent);
     }
 
     @Override

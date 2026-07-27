@@ -1,14 +1,11 @@
 package com.android.messaging.ui.photoviewer.screen
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -89,37 +86,28 @@ internal fun PhotoViewerScreenContent(
     )
     val scrimColor = MaterialTheme.colorScheme.scrim
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .drawBehind {
-                drawRect(
-                    color = scrimColor.copy(
-                        alpha = dismissDragState.backgroundAlpha,
-                    ),
-                )
-            },
+    PhotoViewerAnimatedContent(
+        modifier = modifier,
+        launchRequest = launchRequest,
+        isClosing = uiState.isClosing,
+        scrimColor = scrimColor,
+        backgroundAlpha = dismissDragState.backgroundAlpha,
+        onCloseAnimationFinished = onCloseAnimationFinished,
     ) {
-        PhotoViewerAnimatedContent(
-            launchRequest = launchRequest,
-            isClosing = uiState.isClosing,
-            onCloseAnimationFinished = onCloseAnimationFinished,
-        ) {
-            PhotoViewerContent(
-                uiState = uiState,
-                currentItem = currentItem,
-                actionsEnabled = actionsEnabled,
-                onPageSettled = onPageSettled,
-                onToggleDisplayMode = onToggleDisplayMode,
-                onEnterImmersiveMode = onEnterImmersiveMode,
-                dismissDragState = dismissDragState,
-                onMetadataClick = onMetadataClick,
-                onCloseClick = onCloseClick,
-                onForwardClick = onForwardClick,
-                onSaveClick = onSaveClick,
-                onShareClick = onShareClick,
-            )
-        }
+        PhotoViewerContent(
+            uiState = uiState,
+            currentItem = currentItem,
+            actionsEnabled = actionsEnabled,
+            onPageSettled = onPageSettled,
+            onToggleDisplayMode = onToggleDisplayMode,
+            onEnterImmersiveMode = onEnterImmersiveMode,
+            dismissDragState = dismissDragState,
+            onMetadataClick = onMetadataClick,
+            onCloseClick = onCloseClick,
+            onForwardClick = onForwardClick,
+            onSaveClick = onSaveClick,
+            onShareClick = onShareClick,
+        )
     }
 
     PhotoViewerMetadataSheet(

@@ -1,7 +1,7 @@
 package com.android.messaging.ui.conversation.screen.model
 
 import android.content.Intent
-import android.net.Uri
+import com.android.messaging.ui.contact.model.AddContactRequest
 
 internal sealed interface ConversationScreenEffect {
     data class RequestDefaultSmsRole(
@@ -50,11 +50,13 @@ internal sealed interface ConversationScreenEffect {
         val messageResId: Int,
     ) : ConversationScreenEffect
 
-    data class ShowOrAddParticipantContact(
+    data class ShowParticipantContactCard(
         val contactId: Long,
-        val contactLookupKey: String?,
-        val avatarUri: Uri?,
-        val normalizedDestination: String?,
+        val contactLookupKey: String,
+    ) : ConversationScreenEffect
+
+    data class AddParticipantContact(
+        val request: AddContactRequest,
     ) : ConversationScreenEffect
 
     data class NavigateToVCardDetail(

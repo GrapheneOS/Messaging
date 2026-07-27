@@ -57,6 +57,7 @@ class ConversationSettingsEffectHandlerTest {
             clipboardManager = activity.getSystemService(
                 Context.CLIPBOARD_SERVICE,
             ) as ClipboardManager,
+            onNavigateToAddContact = {},
         )
 
         handler.handle(

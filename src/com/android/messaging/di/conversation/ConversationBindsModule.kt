@@ -66,6 +66,8 @@ import com.android.messaging.domain.conversation.usecase.participant.IsContactSa
 import com.android.messaging.domain.conversation.usecase.participant.IsContactSavedImpl
 import com.android.messaging.domain.conversation.usecase.participant.IsConversationRecipientLimitExceeded
 import com.android.messaging.domain.conversation.usecase.participant.IsConversationRecipientLimitExceededImpl
+import com.android.messaging.domain.conversation.usecase.participant.ResolveContactAction
+import com.android.messaging.domain.conversation.usecase.participant.ResolveContactActionImpl
 import com.android.messaging.domain.conversation.usecase.participant.ResolveConversationId
 import com.android.messaging.domain.conversation.usecase.participant.ResolveConversationIdImpl
 import com.android.messaging.domain.conversation.usecase.telephony.CanPlacePhoneCall
@@ -184,6 +186,12 @@ internal abstract class ConversationBindsModule {
     abstract fun bindCanShowOrAddContact(
         impl: CanShowOrAddContactImpl,
     ): CanShowOrAddContact
+
+    @Binds
+    @Reusable
+    abstract fun bindResolveContactAction(
+        impl: ResolveContactActionImpl,
+    ): ResolveContactAction
 
     @Binds
     @Reusable

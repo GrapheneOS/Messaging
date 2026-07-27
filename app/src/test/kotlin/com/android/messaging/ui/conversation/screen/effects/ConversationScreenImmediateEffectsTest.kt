@@ -1,16 +1,19 @@
 package com.android.messaging.ui.conversation.screen.effects
 
+import android.content.Intent
 import android.graphics.Point
 import android.net.Uri
+import android.provider.ContactsContract.Contacts
+import android.provider.ContactsContract.Intents
 import android.view.View
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.testutil.TEST_WAIT_TIMEOUT_MILLIS
 import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.UIIntents
+import com.android.messaging.ui.contact.model.AddContactRequest
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenNavEvent
-import com.android.messaging.util.ContactUtil
 import com.android.messaging.util.ContentType
 import io.mockk.every
 import io.mockk.just
@@ -23,6 +26,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(RobolectricTestRunner::class)
 internal class ConversationScreenImmediateEffectsTest : BaseConversationScreenEffectsActionTest() {
@@ -75,10 +79,7 @@ internal class ConversationScreenImmediateEffectsTest : BaseConversationScreenEf
     }
 
     @Test
-    fun launchAddContactFlow_forwardsDestinationToUiIntents() {
-        val uiIntents = mockk<UIIntents>(relaxed = true)
-        mockkStatic(UIIntents::class)
-        every { UIIntents.get() } returns uiIntents
+    fun launchAddContactFlow_startsContactEditorIntentWithDestination() {
         setEffectsContent()
 
         emitEffect(
@@ -87,9 +88,17 @@ internal class ConversationScreenImmediateEffectsTest : BaseConversationScreenEf
             ),
         )
 
-        verify(timeout = TEST_WAIT_TIMEOUT_MILLIS, exactly = 1) {
-            uiIntents.launchAddContactActivity(any(), CONTACT_DESTINATION)
+        val activity = composeTestRule.activity
+        composeTestRule.waitUntil(timeoutMillis = TEST_WAIT_TIMEOUT_MILLIS) {
+            shadowOf(activity).peekNextStartedActivity() != null
         }
+        val intent = requireNotNull(shadowOf(activity).nextStartedActivity)
+        assertEquals(Intent.ACTION_INSERT_OR_EDIT, intent.action)
+        assertEquals(Contacts.CONTENT_ITEM_TYPE, intent.type)
+        assertEquals(
+            CONTACT_DESTINATION,
+            intent.getStringExtra(Intents.Insert.PHONE),
+        )
     }
 
     @Test
@@ -129,38 +138,33 @@ internal class ConversationScreenImmediateEffectsTest : BaseConversationScreenEf
     }
 
     @Test
-    fun showOrAddParticipantContact_forwardsContactDetails() {
-        val avatarUri = Uri.parse("content://avatar/1")
-        mockkStatic(ContactUtil::class)
-        every {
-            ContactUtil.showOrAddContact(
-                any<View>(),
-                42L,
-                "lookup-key",
-                avatarUri,
-                CONTACT_DESTINATION,
-            )
-        } just runs
-        setEffectsContent()
+    fun addParticipantContact_forwardsRequestToNavigation() {
+        val addContactRequests = mutableListOf<AddContactRequest>()
+        setEffectsContent(
+            onNavigateToAddContact = { request -> addContactRequests += request },
+        )
 
         emitEffect(
-            ConversationScreenEffect.ShowOrAddParticipantContact(
-                contactId = 42L,
-                contactLookupKey = "lookup-key",
-                avatarUri = avatarUri,
-                normalizedDestination = CONTACT_DESTINATION,
+            ConversationScreenEffect.AddParticipantContact(
+                request = AddContactRequest(
+                    destination = CONTACT_DESTINATION,
+                    avatarUri = "content://avatar/1",
+                ),
             ),
         )
 
-        verify(timeout = TEST_WAIT_TIMEOUT_MILLIS, exactly = 1) {
-            ContactUtil.showOrAddContact(
-                any<View>(),
-                42L,
-                "lookup-key",
-                avatarUri,
-                CONTACT_DESTINATION,
-            )
+        composeTestRule.waitUntil(timeoutMillis = TEST_WAIT_TIMEOUT_MILLIS) {
+            addContactRequests.isNotEmpty()
         }
+        assertEquals(
+            listOf(
+                AddContactRequest(
+                    destination = CONTACT_DESTINATION,
+                    avatarUri = "content://avatar/1",
+                ),
+            ),
+            addContactRequests,
+        )
     }
 
     @Test

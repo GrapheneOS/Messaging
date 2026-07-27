@@ -7,6 +7,9 @@ import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListMode
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.data.debug.DebugFeaturesProvider
+import com.android.messaging.domain.conversation.usecase.participant.ResolveContactAction
+import com.android.messaging.domain.conversation.usecase.participant.model.ResolveContactActionResult
+import com.android.messaging.ui.contact.model.AddContactRequest
 import com.android.messaging.ui.conversationlist.archived.mapper.ArchivedConversationListUiStateMapper
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListAction as Action
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListEffect as Effect
@@ -43,6 +46,7 @@ internal class ArchivedConversationListViewModel @Inject constructor(
     private val optimisticSnapshotDelegate: ConversationListOptimisticSnapshotDelegate,
     private val selectionDelegate: ConversationListSelectionDelegate,
     private val uiStateMapper: ArchivedConversationListUiStateMapper,
+    private val resolveContactAction: ResolveContactAction,
     debugFeaturesProvider: DebugFeaturesProvider,
 ) : ViewModel(),
     ArchivedConversationListScreenModel {
@@ -229,14 +233,35 @@ internal class ArchivedConversationListViewModel @Inject constructor(
     }
 
     private fun onAvatarContactClicked(avatar: ConversationListAvatarUiModel) {
-        _effects.trySend(
-            Effect.ShowOrAddContact(
-                contactId = avatar.contactId,
-                lookupKey = avatar.lookupKey,
-                avatarUri = avatar.uri,
-                destination = avatar.normalizedDestination,
-            ),
+        val contactAction = resolveContactAction(
+            contactId = avatar.contactId,
+            lookupKey = avatar.lookupKey,
+            destination = avatar.normalizedDestination,
         )
+
+        when (contactAction) {
+            is ResolveContactActionResult.ShowContactCard -> {
+                _effects.trySend(
+                    Effect.ShowContactCard(
+                        contactId = contactAction.contactId,
+                        contactLookupKey = contactAction.lookupKey,
+                    ),
+                )
+            }
+
+            is ResolveContactActionResult.AddContact -> {
+                _effects.trySend(
+                    Effect.AddContact(
+                        request = AddContactRequest(
+                            destination = contactAction.destination,
+                            avatarUri = avatar.uri,
+                        ),
+                    ),
+                )
+            }
+
+            ResolveContactActionResult.Unavailable -> Unit
+        }
     }
 
     private inline fun withSelectedIds(block: (List<ConversationId>) -> Unit) {

@@ -9,6 +9,7 @@ import androidx.navigation3.runtime.NavKey
 import com.android.messaging.R
 import com.android.messaging.ui.appsettings.navigation.SettingsNavKey
 import com.android.messaging.ui.blockedparticipants.navigation.BlockedParticipantsNavKey
+import com.android.messaging.ui.contact.navigation.navigateToAddContact
 import com.android.messaging.ui.conversation.navigation.rememberConversationNavigator
 import com.android.messaging.ui.conversationlist.archived.ArchivedConversationListScreen
 import com.android.messaging.ui.conversationlist.archived.rememberArchivedConversationListEffectHandler
@@ -32,7 +33,11 @@ private fun conversationListRouteContent(): @Composable (ConversationListNavKey)
     return {
         val navigator = rememberConversationNavigator()
         val appNavigator = LocalNavigator.current
-        val effectHandler = rememberConversationListEffectHandler()
+        val effectHandler = rememberConversationListEffectHandler(
+            onNavigateToAddContact = { request ->
+                appNavigator.navigateToAddContact(request = request)
+            },
+        )
 
         val navigation = remember(navigator, appNavigator) {
             ConversationListNavigationCallbacks(
@@ -68,7 +73,11 @@ private fun archivedConversationListRouteContent():
     return {
         val conversationNavigator = rememberConversationNavigator()
         val navigator = LocalNavigator.current
-        val effectHandler = rememberArchivedConversationListEffectHandler()
+        val effectHandler = rememberArchivedConversationListEffectHandler(
+            onNavigateToAddContact = { request ->
+                navigator.navigateToAddContact(request = request)
+            },
+        )
 
         ArchivedConversationListScreen(
             effectHandler = effectHandler,

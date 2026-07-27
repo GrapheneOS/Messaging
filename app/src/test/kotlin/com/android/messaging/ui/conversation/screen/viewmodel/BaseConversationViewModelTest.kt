@@ -14,6 +14,8 @@ import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.domain.conversation.usecase.action.CreateDefaultSmsRoleRequest
 import com.android.messaging.domain.conversation.usecase.participant.CanAddContact
 import com.android.messaging.domain.conversation.usecase.participant.CanAddMoreConversationParticipants
+import com.android.messaging.domain.conversation.usecase.participant.ResolveContactAction
+import com.android.messaging.domain.conversation.usecase.participant.model.ResolveContactActionResult
 import com.android.messaging.domain.conversation.usecase.telephony.CanPlacePhoneCall
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.testutil.TEST_CALL_ACTION_PHONE_NUMBER
@@ -79,6 +81,8 @@ internal abstract class BaseConversationViewModelTest {
             null
         },
         canAddContact: CanAddContact = CanAddContact { _, _, _ -> false },
+        resolveContactAction: ResolveContactAction =
+            ResolveContactAction { _, _, _ -> ResolveContactActionResult.Unavailable },
         canPlacePhoneCall: CanPlacePhoneCall = CanPlacePhoneCall { false },
         composerUiStateMapper: ConversationComposerUiStateMapper =
             createComposerUiStateMapperMock(mappedUiState = ConversationComposerUiState()),
@@ -101,6 +105,7 @@ internal abstract class BaseConversationViewModelTest {
             canAddMoreConversationParticipants = canAddMoreConversationParticipants,
             createDefaultSmsRoleRequest = createDefaultSmsRoleRequest,
             canAddContact = canAddContact,
+            resolveContactAction = resolveContactAction,
             canPlacePhoneCall = canPlacePhoneCall,
             defaultDispatcher = mainDispatcherRule.testDispatcher,
             savedStateHandle = SavedStateHandle(),
