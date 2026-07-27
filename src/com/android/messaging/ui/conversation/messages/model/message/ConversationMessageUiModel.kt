@@ -6,7 +6,6 @@ import androidx.compose.runtime.Stable
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
-import com.android.messaging.datamodel.data.ParticipantData
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
@@ -38,12 +37,6 @@ internal data class ConversationMessageUiModel(
     val mmsSubject: String?,
     val protocol: Protocol,
 ) {
-
-    val canShowContactCard: Boolean
-        get() {
-            return senderContactId > ParticipantData.PARTICIPANT_CONTACT_ID_NOT_RESOLVED ||
-                !senderNormalizedDestination.isNullOrBlank()
-        }
 
     @Stable
     sealed interface Status {

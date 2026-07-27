@@ -501,7 +501,6 @@ internal class ConversationViewModel @Inject constructor(
                     .firstOrNull { candidate ->
                         candidate.messageId == messageId
                     }
-                    ?.takeIf { it.canShowContactCard }
             }
 
             else -> null
