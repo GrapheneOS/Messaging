@@ -11,6 +11,8 @@ import com.android.messaging.ui.appsettings.navigation.AppSettingsNavKey
 import com.android.messaging.ui.appsettings.navigation.PrivacySettingsNavKey
 import com.android.messaging.ui.appsettings.navigation.SettingsNavKey
 import com.android.messaging.ui.appsettings.navigation.SubscriptionSettingsNavKey
+import com.android.messaging.ui.contact.model.AddContactRequest
+import com.android.messaging.ui.contact.navigation.AddContactNavKey
 import com.android.messaging.ui.conversation.navigation.AddParticipantsNavKey
 import com.android.messaging.ui.conversation.navigation.ConversationNavKey
 import com.android.messaging.ui.conversation.navigation.MessageDetailsNavKey
@@ -97,6 +99,30 @@ class NavKeySerializationTest {
                         bottom = 220,
                     ),
                     initialPhotoOccurrenceIndex = 2,
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun addContactNavKey_roundTripsWithAvatarUri() {
+        assertRoundTrips(
+            AddContactNavKey(
+                request = AddContactRequest(
+                    destination = "+15551234567",
+                    avatarUri = "content://avatar/1",
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun addContactNavKey_roundTripsWithoutAvatarUri() {
+        assertRoundTrips(
+            AddContactNavKey(
+                request = AddContactRequest(
+                    destination = "+15551234567",
+                    avatarUri = null,
                 ),
             ),
         )

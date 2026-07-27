@@ -9,9 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -36,57 +34,52 @@ import com.android.messaging.ui.core.MessagingPreviewTheme
 private val DialogPadding = 24.dp
 private val AvatarSize = 56.dp
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun AddContactConfirmationDialog(
+internal fun AddContactConfirmation(
     uiState: AddContactUiState,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    BasicAlertDialog(
+    Surface(
         modifier = modifier,
-        onDismissRequest = onDismiss,
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
-        Surface(
-            shape = MaterialTheme.shapes.extraLarge,
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        Column(
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(DialogPadding),
         ) {
-            Column(
-                modifier = Modifier
-                    .verticalScroll(rememberScrollState())
-                    .padding(DialogPadding),
+            Text(
+                text = stringResource(R.string.add_contact_confirmation_dialog_title),
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            AddContactDestination(uiState = uiState)
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(
+                onClick = onConfirm,
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
             ) {
-                Text(
-                    text = stringResource(R.string.add_contact_confirmation_dialog_title),
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                Text(text = stringResource(R.string.add_contact_confirmation))
+            }
 
-                Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-                AddContactDestination(uiState = uiState)
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Button(
-                    onClick = onConfirm,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.large,
-                ) {
-                    Text(text = stringResource(R.string.add_contact_confirmation))
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                FilledTonalButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.large,
-                ) {
-                    Text(text = stringResource(android.R.string.cancel))
-                }
+            FilledTonalButton(
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+            ) {
+                Text(text = stringResource(android.R.string.cancel))
             }
         }
     }
@@ -123,9 +116,9 @@ private fun AddContactDestination(uiState: AddContactUiState) {
 
 @PreviewLightDark
 @Composable
-private fun AddContactConfirmationDialogPhonePreview() {
+private fun AddContactConfirmationPreview() {
     MessagingPreviewTheme {
-        AddContactConfirmationDialog(
+        AddContactConfirmation(
             uiState = AddContactUiState(
                 avatarUri = null,
                 destination = "+1 555-0134",

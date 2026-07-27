@@ -29,11 +29,13 @@ import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.common.components.snackbar.showActionSnackbar
+import com.android.messaging.ui.contact.launchAddContact
+import com.android.messaging.ui.contact.model.AddContactRequest
+import com.android.messaging.ui.contact.showContactCard
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
 import com.android.messaging.ui.core.CollectEvents
 import com.android.messaging.ui.photoviewer.model.PhotoViewerLaunchRequest
 import com.android.messaging.util.BuglePrefs
-import com.android.messaging.util.ContactUtil
 import com.android.messaging.util.LogUtil
 import com.android.messaging.util.MediaUtil
 import com.android.messaging.util.UiUtils
@@ -47,6 +49,7 @@ internal fun ConversationScreenEffects(
     hostBoundsState: State<ComposeRect?>,
     onNavigateToVCardDetail: (uri: String) -> Unit,
     onNavigateToPhotoViewer: (PhotoViewerLaunchRequest) -> Unit,
+    onNavigateToAddContact: (AddContactRequest) -> Unit,
 ) {
     val context = LocalContext.current
     val view = LocalView.current
@@ -67,6 +70,7 @@ internal fun ConversationScreenEffects(
             launchRoleRequest = defaultSmsRoleLauncher::launch,
             onNavigateToVCardDetail = onNavigateToVCardDetail,
             onNavigateToPhotoViewer = onNavigateToPhotoViewer,
+            onNavigateToAddContact = onNavigateToAddContact,
             onDraftSent = { draftSentTick.intValue++ },
         )
     }
@@ -83,6 +87,7 @@ private suspend fun ConversationScreenModel.handleConversationScreenEffect(
     launchRoleRequest: (Intent) -> Unit,
     onNavigateToVCardDetail: (uri: String) -> Unit,
     onNavigateToPhotoViewer: (PhotoViewerLaunchRequest) -> Unit,
+    onNavigateToAddContact: (AddContactRequest) -> Unit,
     onDraftSent: () -> Unit,
 ) {
     when (effect) {
@@ -130,13 +135,15 @@ private suspend fun ConversationScreenModel.handleConversationScreenEffect(
         is ConversationScreenEffect.OpenExternalUri,
         is ConversationScreenEffect.PlacePhoneCall,
         is ConversationScreenEffect.ShowMessage,
-        is ConversationScreenEffect.ShowOrAddParticipantContact,
+        is ConversationScreenEffect.ShowParticipantContactCard,
+        is ConversationScreenEffect.AddParticipantContact,
         is ConversationScreenEffect.ShowSaveAttachmentsResult,
         -> {
             handleImmediateConversationScreenEffect(
                 context = context,
                 view = view,
                 effect = effect,
+                onNavigateToAddContact = onNavigateToAddContact,
                 onDraftSent = onDraftSent,
             )
         }
@@ -147,13 +154,14 @@ private fun handleImmediateConversationScreenEffect(
     context: Context,
     view: View,
     effect: ConversationScreenEffect,
+    onNavigateToAddContact: (AddContactRequest) -> Unit,
     onDraftSent: () -> Unit,
 ) {
     when (effect) {
         is ConversationScreenEffect.LaunchAddContactFlow -> {
-            UIIntents.get().launchAddContactActivity(
-                context,
-                effect.destination,
+            launchAddContact(
+                context = context,
+                destination = effect.destination,
             )
         }
 
@@ -180,14 +188,16 @@ private fun handleImmediateConversationScreenEffect(
             UiUtils.showToastAtBottom(effect.messageResId)
         }
 
-        is ConversationScreenEffect.ShowOrAddParticipantContact -> {
-            ContactUtil.showOrAddContact(
-                view,
-                effect.contactId,
-                effect.contactLookupKey,
-                effect.avatarUri,
-                effect.normalizedDestination,
+        is ConversationScreenEffect.ShowParticipantContactCard -> {
+            showContactCard(
+                hostView = view,
+                contactId = effect.contactId,
+                contactLookupKey = effect.contactLookupKey,
             )
+        }
+
+        is ConversationScreenEffect.AddParticipantContact -> {
+            onNavigateToAddContact(effect.request)
         }
 
         is ConversationScreenEffect.ShowSaveAttachmentsResult -> {

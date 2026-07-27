@@ -5,27 +5,31 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
 import android.graphics.Point
-import android.net.Uri
 import android.provider.Settings
 import android.view.View
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import com.android.messaging.di.conversationsettings.ConversationSettingsEntryPoint
 import com.android.messaging.ui.UIIntents
+import com.android.messaging.ui.contact.model.AddContactRequest
+import com.android.messaging.ui.contact.showContactCard
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsScreenEffect as Effect
-import com.android.messaging.util.ContactUtil
 import com.android.messaging.util.NotificationChannelUtil
 import com.android.messaging.util.UiUtils
 import dagger.hilt.android.EntryPointAccessors
 
 @Composable
-internal fun rememberConversationSettingsEffectHandler(): ConversationSettingsEffectHandler {
+internal fun rememberConversationSettingsEffectHandler(
+    onNavigateToAddContact: (AddContactRequest) -> Unit,
+): ConversationSettingsEffectHandler {
     val activity = checkNotNull(LocalActivity.current)
     val hostView = LocalView.current
     val context = LocalContext.current.applicationContext
+    val currentOnNavigateToAddContact = rememberUpdatedState(newValue = onNavigateToAddContact)
 
     return remember(activity, hostView, context) {
         ConversationSettingsEffectHandlerImpl(
@@ -34,6 +38,9 @@ internal fun rememberConversationSettingsEffectHandler(): ConversationSettingsEf
             clipboardManager = EntryPointAccessors
                 .fromApplication(context, ConversationSettingsEntryPoint::class.java)
                 .clipboardManager(),
+            onNavigateToAddContact = { request ->
+                currentOnNavigateToAddContact.value(request)
+            },
         )
     }
 }
@@ -46,6 +53,7 @@ internal class ConversationSettingsEffectHandlerImpl(
     private val activity: Activity,
     private val hostView: View,
     private val clipboardManager: ClipboardManager,
+    private val onNavigateToAddContact: (AddContactRequest) -> Unit,
 ) : ConversationSettingsEffectHandler {
 
     override fun handle(effect: Effect) {
@@ -80,14 +88,16 @@ internal class ConversationSettingsEffectHandlerImpl(
                 )
             }
 
-            is Effect.ShowOrAddContact -> {
-                ContactUtil.showOrAddContact(
-                    hostView,
-                    effect.contactId,
-                    effect.contactLookupKey,
-                    effect.avatarUri?.let(Uri::parse),
-                    effect.normalizedDestination,
+            is Effect.ShowContactCard -> {
+                showContactCard(
+                    hostView = hostView,
+                    contactId = effect.contactId,
+                    contactLookupKey = effect.contactLookupKey,
                 )
+            }
+
+            is Effect.AddContact -> {
+                onNavigateToAddContact(effect.request)
             }
         }
     }

@@ -5,6 +5,8 @@ import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
 import com.android.messaging.data.debug.DebugFeaturesProvider
+import com.android.messaging.domain.conversation.usecase.participant.ResolveContactAction
+import com.android.messaging.domain.conversation.usecase.participant.model.ResolveContactActionResult
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversationlist.chats.mapper.ConversationListUiStateMapper
@@ -45,6 +47,7 @@ class ConversationListViewModelTest {
     private val actionsDelegate = mockk<ConversationListActionsDelegate>()
     private val optimisticSnapshotDelegate = mockk<ConversationListOptimisticSnapshotDelegate>()
     private val debugFeaturesProvider = mockk<DebugFeaturesProvider>()
+    private val resolveContactAction = mockk<ResolveContactAction>()
 
     private val snapshotFlow = MutableStateFlow<ConversationListSnapshot?>(null)
     private val selectedIdsFlow = MutableStateFlow<ImmutableList<ConversationId>>(
@@ -247,6 +250,8 @@ class ConversationListViewModelTest {
         coEvery { actionsDelegate.unblock(any(), any()) } just runs
 
         every { debugFeaturesProvider.isEnabled() } returns false
+        every { resolveContactAction(any(), any(), any()) } returns
+            ResolveContactActionResult.Unavailable
 
         return ConversationListViewModel(
             repository = repository,
@@ -255,6 +260,7 @@ class ConversationListViewModelTest {
             actionsDelegate = actionsDelegate,
             optimisticSnapshotDelegate = optimisticSnapshotDelegate,
             debugFeaturesProvider = debugFeaturesProvider,
+            resolveContactAction = resolveContactAction,
         )
     }
 }

@@ -9,6 +9,9 @@ import com.android.messaging.data.conversationlist.model.ConversationListSnapsho
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
 import com.android.messaging.data.conversationsettings.model.SnoozeOption
 import com.android.messaging.data.debug.DebugFeaturesProvider
+import com.android.messaging.domain.conversation.usecase.participant.ResolveContactAction
+import com.android.messaging.domain.conversation.usecase.participant.model.ResolveContactActionResult
+import com.android.messaging.ui.contact.model.AddContactRequest
 import com.android.messaging.ui.conversationlist.chats.mapper.ConversationListUiStateMapper
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListEffect as Effect
@@ -47,6 +50,7 @@ internal class ConversationListViewModel @Inject constructor(
     private val selectionDelegate: ConversationListSelectionDelegate,
     private val actionsDelegate: ConversationListActionsDelegate,
     private val optimisticSnapshotDelegate: ConversationListOptimisticSnapshotDelegate,
+    private val resolveContactAction: ResolveContactAction,
     private val debugFeaturesProvider: DebugFeaturesProvider,
 ) : ViewModel(),
     ConversationListScreenModel {
@@ -270,14 +274,35 @@ internal class ConversationListViewModel @Inject constructor(
     }
 
     private fun onAvatarContactClick(avatar: ConversationListAvatarUiModel) {
-        _effects.trySend(
-            Effect.ShowOrAddContact(
-                contactId = avatar.contactId,
-                lookupKey = avatar.lookupKey,
-                avatarUri = avatar.uri,
-                destination = avatar.normalizedDestination,
-            ),
+        val contactAction = resolveContactAction(
+            contactId = avatar.contactId,
+            lookupKey = avatar.lookupKey,
+            destination = avatar.normalizedDestination,
         )
+
+        when (contactAction) {
+            is ResolveContactActionResult.ShowContactCard -> {
+                _effects.trySend(
+                    Effect.ShowContactCard(
+                        contactId = contactAction.contactId,
+                        contactLookupKey = contactAction.lookupKey,
+                    ),
+                )
+            }
+
+            is ResolveContactActionResult.AddContact -> {
+                _effects.trySend(
+                    Effect.AddContact(
+                        request = AddContactRequest(
+                            destination = contactAction.destination,
+                            avatarUri = avatar.uri,
+                        ),
+                    ),
+                )
+            }
+
+            ResolveContactActionResult.Unavailable -> Unit
+        }
     }
 
     private fun onConversationSwipedToArchive(conversationId: ConversationId) {
@@ -400,7 +425,15 @@ internal class ConversationListViewModel @Inject constructor(
     private fun onAddContactClick() {
         val destination = singleSelectedDestination() ?: return
 
-        _effects.trySend(Effect.ConfirmAddContact(destination))
+        _effects.trySend(
+            Effect.AddContact(
+                request = AddContactRequest(
+                    destination = destination,
+                    avatarUri = null,
+                ),
+            ),
+        )
+
         selectionDelegate.clear()
     }
 

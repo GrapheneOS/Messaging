@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationlist.chats.model
 
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.ui.contact.model.AddContactRequest
 import kotlinx.collections.immutable.ImmutableList
 
 internal sealed interface ConversationListEffect {
@@ -22,15 +23,13 @@ internal sealed interface ConversationListEffect {
         val destination: String,
     ) : ConversationListEffect
 
-    data class ShowOrAddContact(
+    data class ShowContactCard(
         val contactId: Long,
-        val lookupKey: String?,
-        val avatarUri: String?,
-        val destination: String?,
+        val contactLookupKey: String,
     ) : ConversationListEffect
 
-    data class ConfirmAddContact(
-        val destination: String,
+    data class AddContact(
+        val request: AddContactRequest,
     ) : ConversationListEffect
 
     data class ConfirmBlock(

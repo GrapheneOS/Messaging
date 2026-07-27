@@ -15,13 +15,6 @@
     limitations under the License.
 -->
 <resources>
-    <declare-styleable name="ContactIconView">
-        <attr name="iconSize">
-            <enum name="normal" value="0" />
-            <enum name="large" value="1" />
-            <enum name="small" value="2" />
-        </attr>
-    </declare-styleable>
     <declare-styleable name="AsyncImageView">
         <attr name="fadeIn" format="boolean" />
         <attr name="placeholderDrawable" format="reference" />

@@ -1,6 +1,13 @@
 package com.android.messaging.ui.navigation
 
+import android.graphics.Color
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
+import androidx.core.graphics.drawable.toDrawable
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.NavMetadataKey
@@ -27,12 +34,37 @@ internal data class AppOverlayScene(
     val entry: NavEntry<NavKey>,
     override val previousEntries: List<NavEntry<NavKey>>,
     override val overlaidEntries: List<NavEntry<NavKey>>,
+    val onNavigateBack: () -> Unit,
 ) : OverlayScene<NavKey> {
 
     override val entries: List<NavEntry<NavKey>> = listOf(entry)
 
     override val content: @Composable () -> Unit = {
-        entry.Content()
+        Dialog(
+            onDismissRequest = onNavigateBack,
+            properties = DialogProperties(
+                dismissOnBackPress = false,
+                dismissOnClickOutside = false,
+                usePlatformDefaultWidth = false,
+                decorFitsSystemWindows = false,
+            ),
+        ) {
+            OverlayWindowEffect()
+            entry.Content()
+        }
+    }
+}
+
+@Composable
+private fun OverlayWindowEffect() {
+    val dialogWindow = (LocalView.current.parent as? DialogWindowProvider)?.window
+
+    SideEffect {
+        dialogWindow?.apply {
+            setDimAmount(0f)
+            setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+            isNavigationBarContrastEnforced = false
+        }
     }
 }
 
@@ -54,6 +86,7 @@ internal class OverlaySceneStrategy : SceneStrategy<NavKey> {
             entry = lastEntry,
             previousEntries = overlaidEntries,
             overlaidEntries = overlaidEntries,
+            onNavigateBack = onBack,
         )
     }
 }

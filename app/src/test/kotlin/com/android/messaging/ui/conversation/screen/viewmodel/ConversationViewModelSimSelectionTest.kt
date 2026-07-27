@@ -11,6 +11,8 @@ import com.android.messaging.data.subscription.repository.SubscriptionsRepositor
 import com.android.messaging.domain.conversation.usecase.action.CreateDefaultSmsRoleRequest
 import com.android.messaging.domain.conversation.usecase.participant.CanAddContact
 import com.android.messaging.domain.conversation.usecase.participant.CanAddMoreConversationParticipants
+import com.android.messaging.domain.conversation.usecase.participant.ResolveContactAction
+import com.android.messaging.domain.conversation.usecase.participant.model.ResolveContactActionResult
 import com.android.messaging.domain.conversation.usecase.telephony.CanPlacePhoneCall
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.ui.conversation.audio.delegate.ConversationAudioRecordingDelegate
@@ -346,6 +348,9 @@ internal class ConversationViewModelSimSelectionTest {
             canAddMoreConversationParticipants = canAddMoreConversationParticipants,
             createDefaultSmsRoleRequest = createDefaultSmsRoleRequest,
             canAddContact = canAddContact,
+            resolveContactAction = ResolveContactAction { _, _, _ ->
+                ResolveContactActionResult.Unavailable
+            },
             canPlacePhoneCall = canPlacePhoneCall,
             defaultDispatcher = mainDispatcherRule.testDispatcher,
             savedStateHandle = SavedStateHandle(),

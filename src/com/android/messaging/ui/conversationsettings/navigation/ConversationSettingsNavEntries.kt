@@ -5,6 +5,7 @@ import androidx.compose.runtime.remember
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.android.messaging.R
+import com.android.messaging.ui.contact.navigation.navigateToAddContact
 import com.android.messaging.ui.conversation.navigation.rememberConversationNavigator
 import com.android.messaging.ui.conversationsettings.screen.ConversationSettingsScreen
 import com.android.messaging.ui.conversationsettings.screen.rememberConversationSettingsEffectHandler
@@ -23,7 +24,11 @@ private fun conversationSettingsRouteContent(): @Composable (ConversationSetting
     return { navKey ->
         val navigator = LocalNavigator.current
         val conversationNavigator = rememberConversationNavigator()
-        val effectHandler = rememberConversationSettingsEffectHandler()
+        val effectHandler = rememberConversationSettingsEffectHandler(
+            onNavigateToAddContact = { request ->
+                navigator.navigateToAddContact(request = request)
+            },
+        )
         val defaultArgs = remember(navKey) {
             conversationSettingsDefaultArgs(navKey = navKey)
         }

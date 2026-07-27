@@ -1,89 +1,65 @@
 package com.android.messaging.ui.photoviewer.screen
 
 import android.view.View
-import android.view.Window
+import android.view.WindowInsets
+import android.view.WindowInsetsController
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalView
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
-import com.android.messaging.ui.core.findActivityWindow
 import com.android.messaging.ui.photoviewer.screen.model.PhotoViewerDisplayMode
+
+private const val LIGHT_SYSTEM_BARS_APPEARANCE =
+    WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or
+        WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
 
 @Composable
 internal fun PhotoViewerSystemBarsEffect(
     displayMode: PhotoViewerDisplayMode,
 ) {
     val view = LocalView.current
-    val window = view.context.findActivityWindow()
-    val controller = remember(window, view) {
-        createWindowInsetsController(
-            window = window,
-            view = view,
-        )
-    } ?: return
 
-    ImmersiveSystemBarsEffect(controller = controller)
+    ImmersiveSystemBarsEffect(view = view)
 
     SystemBarsVisibilityEffect(
-        controller = controller,
+        view = view,
         displayMode = displayMode,
     )
 }
 
 @Composable
 private fun ImmersiveSystemBarsEffect(
-    controller: WindowInsetsControllerCompat,
+    view: View,
 ) {
-    DisposableEffect(controller) {
-        val previousAppearance = SystemBarsAppearance(
-            isLightStatusBars = controller.isAppearanceLightStatusBars,
-            isLightNavigationBars = controller.isAppearanceLightNavigationBars,
-        )
+    DisposableEffect(view) {
+        val controller = view.windowInsetsController ?: return@DisposableEffect onDispose { }
 
-        controller.systemBarsBehavior = WindowInsetsControllerCompat
-            .BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        controller.isAppearanceLightStatusBars = false
-        controller.isAppearanceLightNavigationBars = false
+        val previousAppearance = controller.systemBarsAppearance and LIGHT_SYSTEM_BARS_APPEARANCE
+        val previousBehavior = controller.systemBarsBehavior
+
+        controller.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        controller.setSystemBarsAppearance(0, LIGHT_SYSTEM_BARS_APPEARANCE)
 
         onDispose {
-            controller.show(WindowInsetsCompat.Type.systemBars())
-            controller.isAppearanceLightStatusBars = previousAppearance.isLightStatusBars
-            controller.isAppearanceLightNavigationBars = previousAppearance.isLightNavigationBars
+            controller.show(WindowInsets.Type.systemBars())
+            controller.systemBarsBehavior = previousBehavior
+            controller.setSystemBarsAppearance(previousAppearance, LIGHT_SYSTEM_BARS_APPEARANCE)
         }
     }
 }
 
 @Composable
 private fun SystemBarsVisibilityEffect(
-    controller: WindowInsetsControllerCompat,
+    view: View,
     displayMode: PhotoViewerDisplayMode,
 ) {
-    LaunchedEffect(controller, displayMode) {
-        val systemBars = WindowInsetsCompat.Type.systemBars()
+    LaunchedEffect(view, displayMode) {
+        val controller = view.windowInsetsController ?: return@LaunchedEffect
+        val systemBars = WindowInsets.Type.systemBars()
 
         when (displayMode) {
             PhotoViewerDisplayMode.Carousel -> controller.show(systemBars)
             PhotoViewerDisplayMode.Immersive -> controller.hide(systemBars)
         }
-    }
-}
-
-private data class SystemBarsAppearance(
-    val isLightStatusBars: Boolean,
-    val isLightNavigationBars: Boolean,
-)
-
-private fun createWindowInsetsController(
-    window: Window?,
-    view: View,
-): WindowInsetsControllerCompat? {
-    return window?.let {
-        WindowInsetsControllerCompat(
-            it,
-            view,
-        )
     }
 }

@@ -1,5 +1,6 @@
 package com.android.messaging.ui.common.components.attachment
 
+import android.content.ActivityNotFoundException
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
@@ -8,10 +9,13 @@ import androidx.core.net.toUri
 import com.android.messaging.R
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.util.ContentType
+import com.android.messaging.util.LogUtil
 import com.android.messaging.util.UiUtils
 import com.android.messaging.util.UriUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+
+private const val LOG_TAG = "AttachmentPreviewLauncher"
 
 internal suspend fun openAttachmentPreview(
     context: Context,
@@ -51,14 +55,17 @@ private fun openGenericAttachmentPreview(
     attachmentUri: Uri,
     contentType: String,
 ) {
-    runCatching {
-        Intent(Intent.ACTION_VIEW)
-            .apply {
-                setDataAndType(attachmentUri, contentType)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-            .let(context::startActivity)
-    }.onFailure {
+    val intent = Intent(Intent.ACTION_VIEW)
+        .setDataAndType(attachmentUri, contentType)
+        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+    try {
+        context.startActivity(intent)
+    } catch (exception: ActivityNotFoundException) {
+        LogUtil.w(LOG_TAG, "No activity found for the attachment preview intent", exception)
+        UiUtils.showToastAtBottom(R.string.activity_not_found_message)
+    } catch (exception: SecurityException) {
+        LogUtil.w(LOG_TAG, "Not allowed to open the attachment", exception)
         UiUtils.showToastAtBottom(R.string.activity_not_found_message)
     }
 }

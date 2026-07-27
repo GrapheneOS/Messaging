@@ -6,23 +6,29 @@ import android.view.View
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalView
-import androidx.core.net.toUri
 import com.android.messaging.ui.UIIntents
+import com.android.messaging.ui.contact.model.AddContactRequest
+import com.android.messaging.ui.contact.showContactCard
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListEffect as Effect
-import com.android.messaging.util.ContactUtil
 import com.android.messaging.util.DebugUtils
 
 @Composable
-internal fun rememberArchivedConversationListEffectHandler():
-    ArchivedConversationListEffectHandler {
+internal fun rememberArchivedConversationListEffectHandler(
+    onNavigateToAddContact: (AddContactRequest) -> Unit,
+): ArchivedConversationListEffectHandler {
     val activity = checkNotNull(LocalActivity.current)
     val hostView = LocalView.current
+    val currentOnNavigateToAddContact = rememberUpdatedState(newValue = onNavigateToAddContact)
 
     return remember(activity, hostView) {
         ArchivedConversationListEffectHandlerImpl(
             activity = activity,
             hostView = hostView,
+            onNavigateToAddContact = { request ->
+                currentOnNavigateToAddContact.value(request)
+            },
         )
     }
 }
@@ -34,6 +40,7 @@ internal interface ArchivedConversationListEffectHandler {
 internal class ArchivedConversationListEffectHandlerImpl(
     private val activity: Activity,
     private val hostView: View,
+    private val onNavigateToAddContact: (AddContactRequest) -> Unit,
 ) : ArchivedConversationListEffectHandler {
 
     override fun handle(effect: Effect) {
@@ -46,14 +53,16 @@ internal class ArchivedConversationListEffectHandlerImpl(
                 )
             }
 
-            is Effect.ShowOrAddContact -> {
-                ContactUtil.showOrAddContact(
-                    hostView,
-                    effect.contactId,
-                    effect.lookupKey,
-                    effect.avatarUri?.toUri(),
-                    effect.destination,
+            is Effect.ShowContactCard -> {
+                showContactCard(
+                    hostView = hostView,
+                    contactId = effect.contactId,
+                    contactLookupKey = effect.contactLookupKey,
                 )
+            }
+
+            is Effect.AddContact -> {
+                onNavigateToAddContact(effect.request)
             }
 
             Effect.OpenDebugOptions -> {

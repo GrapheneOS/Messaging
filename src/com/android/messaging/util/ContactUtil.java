@@ -182,30 +182,6 @@ public class ContactUtil {
     private ContactUtil() {
     }
 
-    /**
-     * Shows a contact card or add to contacts dialog for the given contact info
-     * @param view The view whose click triggered this to show
-     * @param contactId The id of the contact in the android contacts DB
-     * @param contactLookupKey The lookup key from contacts DB
-     * @param avatarUri Uri to the avatar image if available
-     * @param normalizedDestination The normalized phone number or email
-     */
-    public static void showOrAddContact(final View view, final long contactId,
-            final String contactLookupKey, final Uri avatarUri,
-            final String normalizedDestination) {
-        if (contactId > ParticipantData.PARTICIPANT_CONTACT_ID_NOT_RESOLVED
-                && !TextUtils.isEmpty(contactLookupKey)) {
-            final Uri lookupUri =
-                    ContactsContract.Contacts.getLookupUri(contactId, contactLookupKey);
-            ContactsContract.QuickContact.showQuickContact(view.getContext(), view, lookupUri,
-                    ContactsContract.QuickContact.MODE_LARGE, null);
-        } else if (!TextUtils.isEmpty(normalizedDestination) && !TextUtils.equals(
-                normalizedDestination, ParticipantData.getUnknownSenderDestination())) {
-            UIIntents.get().launchAddContactConfirmation(
-                    view.getContext(), avatarUri, normalizedDestination);
-        }
-    }
-
     @VisibleForTesting
     public static CursorQueryData getSelf(final Context context) {
         if (!ContactUtil.hasReadContactsPermission()) {

@@ -59,6 +59,7 @@ class ConversationScreenEffectsTest {
                 hostBoundsState = hostBoundsState,
                 onNavigateToVCardDetail = {},
                 onNavigateToPhotoViewer = {},
+                onNavigateToAddContact = {},
             )
         }
 
