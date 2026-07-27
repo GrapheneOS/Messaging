@@ -12,6 +12,8 @@ internal class IsContactSavedImpl @Inject constructor() : IsContactSaved {
         contactId: Long,
         lookupKey: String?,
     ): Boolean {
-        return contactId > 0 && !lookupKey.isNullOrBlank()
+        return contactId >= FIRST_CONTACTS_PROVIDER_ID && !lookupKey.isNullOrBlank()
     }
 }
+
+private const val FIRST_CONTACTS_PROVIDER_ID = 1L

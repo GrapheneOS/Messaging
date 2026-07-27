@@ -125,7 +125,7 @@ internal class ConversationViewModelMessageInteractionTest : BaseConversationVie
     }
 
     @Test
-    fun onMessageAvatarClick_whenMessageCannotShowContactCard_emitsNoEffect() {
+    fun onMessageAvatarClick_whenContactActionIsUnavailable_emitsNoEffect() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val messagesDelegate = createMessagesDelegateMock()
             messagesDelegate.stateFlow.value = ConversationMessagesUiState.Present(
