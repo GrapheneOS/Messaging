@@ -7,43 +7,38 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
-import com.android.messaging.di.core.MainDispatcher
 import com.android.messaging.ui.UIIntents
-import com.android.messaging.ui.classzero.model.ClassZeroScreenEffect
+import com.android.messaging.ui.classzero.model.ClassZeroScreenEffect as Effect
 import com.android.messaging.ui.core.AppTheme
+import com.android.messaging.ui.core.CollectEvents
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class ClassZeroActivity : ComponentActivity() {
+internal class ClassZeroActivity : ComponentActivity() {
 
-    @Inject
-    @MainDispatcher
-    lateinit var mainDispatcher: CoroutineDispatcher
-
-    private val screenModel: ClassZeroViewModel by viewModels()
+    private val screenModel: ClassZeroScreenModel by viewModels<ClassZeroViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        collectScreenModel()
         screenModel.onInitialMessageReceived(
-            messageValues = messageValuesFromIntent(intent = intent)
+            messageValues = messageValuesFromIntent(intent = intent),
         )
 
         setContent {
             AppTheme {
-                val state by screenModel.uiState.collectAsStateWithLifecycle()
-                val uiState = state
-                if (uiState != null) {
+                val uiState by screenModel.uiState.collectAsStateWithLifecycle()
+
+                CollectEvents(events = screenModel.effects) { effect ->
+                    when (effect) {
+                        Effect.Finish -> finish()
+                    }
+                }
+
+                uiState?.let { state ->
                     ClassZeroScreen(
-                        uiState = uiState,
+                        uiState = state,
                         onSaveClicked = screenModel::onSaveClicked,
                         onCancelClicked = screenModel::onCancelClicked,
                     )
@@ -58,42 +53,18 @@ class ClassZeroActivity : ComponentActivity() {
         setIntent(intent)
 
         screenModel.onNewMessageReceived(
-            messageValues = messageValuesFromIntent(
-                intent = intent,
-            ),
+            messageValues = messageValuesFromIntent(intent = intent),
         )
     }
 
     override fun onStart() {
         super.onStart()
-
         screenModel.onHostStarted()
     }
 
     override fun onStop() {
         screenModel.onHostStopped()
-
         super.onStop()
-    }
-
-    private fun collectScreenModel() {
-        lifecycleScope.launch(mainDispatcher) {
-            repeatOnLifecycle(state = Lifecycle.State.STARTED) {
-                launch(mainDispatcher) {
-                    screenModel.effects.collect { effect ->
-                        handleEffect(effect = effect)
-                    }
-                }
-            }
-        }
-    }
-
-    private fun handleEffect(effect: ClassZeroScreenEffect) {
-        when (effect) {
-            ClassZeroScreenEffect.Finish -> {
-                finish()
-            }
-        }
     }
 
     private fun messageValuesFromIntent(intent: Intent): ContentValues? {
