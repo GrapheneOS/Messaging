@@ -15,21 +15,6 @@
     limitations under the License.
 -->
 <resources>
-    <style name="ConversationComposeSendText">
-        <item name="android:textColor">@color/compose_send_text_color</item>
-        <item name="android:singleLine">false</item>
-        <item name="android:textSize">@dimen/conversation_compose_send_text_size</item>
-        <item name="android:gravity">center_vertical</item>
-        <item name="android:fontFamily">sans-serif</item>
-        <item name="android:paddingStart">@dimen/compose_message_text_box_padding_side</item>
-        <item name="android:paddingEnd">@dimen/compose_message_text_box_padding_side</item>
-        <item name="android:minHeight">@dimen/conversation_message_contact_icon_size</item>
-        <item name="android:maxLines">4</item>
-        <item name="android:background">@null</item>
-        <item name="android:scrollHorizontally">false</item>
-        <item name="android:textCursorDrawable">@null</item>
-        <item name="android:inputType">textShortMessage|textAutoCorrect|textCapSentences|textMultiLine</item>
-    </style>
 
     <style name="ConversationListNotificationBellPaddingStyle">
         <item name="android:paddingEnd">@dimen/conversation_list_notification_bell_padding</item>
@@ -42,43 +27,8 @@
       <item name="android:textAlignment">viewStart</item>
     </style>
 
-    <style name="AudioAttachmentViewPlayPauseButtonStyle">
-        <item name="android:layout_marginEnd">16dp</item>
-    </style>
-
-    <style name="AudioAttachmentTimerText">
-        <item name="android:textSize">@dimen/audio_attachment_text_size</item>
-        <item name="android:textColor">@color/audio_attachment_timer_text_color</item>
-        <item name="android:layout_marginEnd">16dp</item>
-    </style>
-
-    <style name="ConversationMessageText">
-        <item name="android:background">@null</item>
-        <item name="android:textAlignment">viewStart</item>
-    </style>
-
-    <style name="ConversationMessageViewStyle">
-        <item name="android:paddingStart">12dp</item>
-        <item name="android:paddingEnd">12dp</item>
-    </style>
-
-    <style name="SmsDeliverdBadge">
-        <item name="android:layout_marginStart">4dp</item>
-    </style>
-
     <style name="ChipDeleteIconStyle">
         <item name="android:paddingStart">8dp</item>
-    </style>
-
-    <style name="ChipIconStyle">
-        <item name="android:layout_marginEnd">12dp</item>
-    </style>
-
-    <style name="ParticipantListItem">
-        <item name="android:textSize">@dimen/participant_list_text_size</item>
-        <item name="android:textColor">@color/participant_list_text_primary</item>
-        <item name="android:background">@null</item>
-        <item name="android:layout_gravity">start|center_vertical</item>
     </style>
 
     <style name="WidgetConversationItemFailed">
@@ -121,18 +71,8 @@
         <item name="android:layout_toStartOf">@id/avatarFrame</item>
     </style>
 
-    <style name="WidgetConversationItemIncoming">
-        <item name="android:layout_marginEnd">5dp</item>
-        <item name="android:layout_alignParentStart">true</item>
-        <item name="android:layout_toStartOf">@id/date</item>
-    </style>
-
     <style name="WidgetConversationItemAttachment">
         <item name="android:layout_gravity">bottom|end</item>
-    </style>
-
-    <style name="WidgetConversationAppIcon" parent="WidgetHeaderImage">
-        <item name="android:layout_marginStart">-20dp</item>
     </style>
 
     <style name="WidgetConversationItemAvatarOutgoing">
