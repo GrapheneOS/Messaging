@@ -15,7 +15,6 @@ import com.android.messaging.ui.conversation.messages.delegate.ConversationMessa
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagesUiState
-import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.collections.immutable.ImmutableList

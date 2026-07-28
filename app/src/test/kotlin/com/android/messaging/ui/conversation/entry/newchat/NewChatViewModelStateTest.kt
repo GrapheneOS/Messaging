@@ -1,7 +1,6 @@
 package com.android.messaging.ui.conversation.entry.newchat
 
 import app.cash.turbine.test
-import com.android.messaging.ui.conversation.entry.model.NewChatEffect
 import com.android.messaging.ui.conversation.entry.model.NewChatNavEvent
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.ConversationResolutionState
 import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerUiState

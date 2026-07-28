@@ -3,15 +3,12 @@ package com.android.messaging.ui.conversation.messages.delegate.selection
 import android.content.ClipData
 import app.cash.turbine.test
 import com.android.messaging.data.conversation.model.MessageId
-import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenNavEvent
-import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.just
-import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.slot
 import io.mockk.verify

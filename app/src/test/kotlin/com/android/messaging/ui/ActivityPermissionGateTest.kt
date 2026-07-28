@@ -15,7 +15,6 @@ internal class ActivityPermissionGateTest {
 
     private val gatingBases = setOf(
         BugleComponentActivity::class.java,
-        BaseBugleActivity::class.java,
     )
 
     private val intentionallyUngated = setOf<Class<*>>(
