@@ -5,9 +5,7 @@ import android.graphics.Point
 import android.net.Uri
 import android.provider.ContactsContract.Contacts
 import android.provider.ContactsContract.Intents
-import android.view.View
 import com.android.messaging.data.conversation.model.MessageId
-import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.testutil.TEST_WAIT_TIMEOUT_MILLIS
 import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.UIIntents
@@ -16,10 +14,8 @@ import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffe
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenNavEvent
 import com.android.messaging.util.ContentType
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkStatic
-import io.mockk.runs
 import io.mockk.slot
 import io.mockk.verify
 import org.junit.Assert.assertEquals
