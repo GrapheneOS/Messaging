@@ -47,7 +47,7 @@ tasks.withType<Detekt>().configureEach {
 }
 
 android {
-    compileSdk = 36
+    compileSdk = 37
     buildToolsVersion = "36.1.0"
 
     namespace = "com.android.messaging"
@@ -56,8 +56,7 @@ android {
         versionCode = 20000000 + 13
         versionName = "13"
         minSdk = 36
-        // Do not upgrade until Compose migration finished to prevent edge-to-edge issues
-        targetSdk = 35
+        targetSdk = 37
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         ndk {
