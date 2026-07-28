@@ -7,7 +7,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import com.android.messaging.ui.photoviewer.component.PhotoViewerMetadataSheet
@@ -21,10 +20,10 @@ import com.android.messaging.ui.photoviewer.screen.model.PhotoViewerUiState
 
 @Composable
 internal fun PhotoViewerScreen(
-    modifier: Modifier = Modifier,
+    screenModel: PhotoViewerScreenModel,
     launchRequest: PhotoViewerLaunchRequest,
     onFinish: () -> Unit,
-    screenModel: PhotoViewerScreenModel = hiltViewModel<PhotoViewerViewModel>(),
+    modifier: Modifier = Modifier,
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
 

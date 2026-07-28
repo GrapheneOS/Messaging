@@ -27,7 +27,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
@@ -61,13 +60,12 @@ private val ArchivedSwipeSpec = ConversationListSwipeSpec(
 
 @Composable
 internal fun ArchivedConversationListScreen(
+    screenModel: ArchivedConversationListScreenModel,
     effectHandler: ArchivedConversationListEffectHandler,
     onNavigateBack: () -> Unit,
     onNavigateToConversation: (ConversationId) -> Unit,
     onNavigateToConversationSettings: (ConversationId) -> Unit,
     modifier: Modifier = Modifier,
-    screenModel: ArchivedConversationListScreenModel =
-        hiltViewModel<ArchivedConversationListViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()

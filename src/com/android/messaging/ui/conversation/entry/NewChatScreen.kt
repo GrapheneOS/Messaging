@@ -25,7 +25,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
@@ -63,11 +62,11 @@ private typealias NewChatNavigateToConversation = (
 
 @Composable
 internal fun NewChatScreen(
+    screenModel: NewChatScreenModel,
     effectHandler: NewChatEffectHandler,
+    onNavigateBack: () -> Unit,
+    onNavigateToConversation: NewChatNavigateToConversation,
     modifier: Modifier = Modifier,
-    onNavigateBack: () -> Unit = {},
-    onNavigateToConversation: NewChatNavigateToConversation = { _, _ -> },
-    screenModel: NewChatScreenModel = hiltViewModel<NewChatViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
 

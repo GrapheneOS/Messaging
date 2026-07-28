@@ -1,10 +1,12 @@
 package com.android.messaging.ui.blockedparticipants.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.android.messaging.R
 import com.android.messaging.ui.blockedparticipants.screen.BlockedParticipantsScreen
+import com.android.messaging.ui.blockedparticipants.screen.BlockedParticipantsViewModel
 import com.android.messaging.ui.blockedparticipants.screen.rememberBlockedParticipantsEffectHandler
 import com.android.messaging.ui.contact.navigation.navigateToAddContact
 import com.android.messaging.ui.conversation.navigation.rememberConversationNavigator
@@ -29,6 +31,7 @@ private fun blockedParticipantsRouteContent(): @Composable (BlockedParticipantsN
         )
 
         BlockedParticipantsScreen(
+            screenModel = hiltViewModel<BlockedParticipantsViewModel>(),
             effectHandler = effectHandler,
             onNavigateBack = navigator::back,
             onNavigateToConversation = { conversationId ->

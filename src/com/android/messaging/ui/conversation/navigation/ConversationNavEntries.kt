@@ -3,19 +3,24 @@ package com.android.messaging.ui.conversation.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.contact.navigation.navigateToAddContact
 import com.android.messaging.ui.conversation.addparticipants.AddParticipantsScreen
+import com.android.messaging.ui.conversation.addparticipants.AddParticipantsViewModel
 import com.android.messaging.ui.conversation.addparticipants.rememberAddParticipantsEffectHandler
 import com.android.messaging.ui.conversation.entry.ConversationEntryScreenModel
 import com.android.messaging.ui.conversation.entry.NewChatScreen
+import com.android.messaging.ui.conversation.entry.NewChatViewModel
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryUiState
 import com.android.messaging.ui.conversation.entry.rememberNewChatEffectHandler
 import com.android.messaging.ui.conversation.messagedetails.MessageDetailsScreen
+import com.android.messaging.ui.conversation.messagedetails.MessageDetailsViewModel
 import com.android.messaging.ui.conversation.screen.ConversationScreen
+import com.android.messaging.ui.conversation.screen.ConversationViewModel
 import com.android.messaging.ui.conversation.screen.model.ConversationPendingLaunchPayload
 import com.android.messaging.ui.navigation.LocalNavigator
 import com.android.messaging.ui.navigation.SeededViewModelStoreOwner
@@ -64,6 +69,7 @@ private fun ConversationRoute(
     )
 
     ConversationScreen(
+        screenModel = hiltViewModel<ConversationViewModel>(),
         conversationId = conversationId,
         cancelIncomingNotification = !isLaunchedFromBubble,
         onAddPeopleClick = {
@@ -118,9 +124,11 @@ private fun newChatRouteContent(): @Composable (NewChatNavKey) -> Unit {
         val entryModel = LocalConversationEntryNavState.current.model
         val navigator = rememberConversationNavigator()
         val appNavigator = LocalNavigator.current
+        val effectHandler = rememberNewChatEffectHandler()
 
         NewChatScreen(
-            effectHandler = rememberNewChatEffectHandler(),
+            screenModel = hiltViewModel<NewChatViewModel>(),
+            effectHandler = effectHandler,
             onNavigateBack = appNavigator::back,
             onNavigateToConversation = { conversationId, selfParticipantId ->
                 entryModel.onConversationNavigationRequested(
@@ -137,9 +145,11 @@ private fun addParticipantsRouteContent(): @Composable (AddParticipantsNavKey) -
     return { navKey ->
         val navigator = rememberConversationNavigator()
         val appNavigator = LocalNavigator.current
+        val effectHandler = rememberAddParticipantsEffectHandler()
 
         AddParticipantsScreen(
-            effectHandler = rememberAddParticipantsEffectHandler(),
+            screenModel = hiltViewModel<AddParticipantsViewModel>(),
+            effectHandler = effectHandler,
             conversationId = navKey.conversationId,
             onNavigateBack = appNavigator::back,
             onNavigateToConversation = { resolvedConversationId ->
@@ -158,6 +168,7 @@ private fun messageDetailsRouteContent(): @Composable (MessageDetailsNavKey) -> 
 
         SeededViewModelStoreOwner(defaultArgs = defaultArgs) {
             MessageDetailsScreen(
+                screenModel = hiltViewModel<MessageDetailsViewModel>(),
                 onNavigateBack = navigator::back,
             )
         }

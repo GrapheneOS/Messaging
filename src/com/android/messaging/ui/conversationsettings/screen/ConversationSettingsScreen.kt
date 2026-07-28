@@ -53,7 +53,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -91,12 +90,12 @@ import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun ConversationSettingsScreen(
+    screenModel: ConversationSettingsScreenModel,
     effectHandler: ConversationSettingsEffectHandler,
     onNavigateBack: () -> Unit,
     onCloseAfterArchive: () -> Unit,
     onNavigateToConversation: (ConversationId) -> Unit,
     modifier: Modifier = Modifier,
-    screenModel: ConversationSettingsScreenModel = hiltViewModel<ConversationSettingsViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
     val rootConversationId = screenModel.rootConversationId

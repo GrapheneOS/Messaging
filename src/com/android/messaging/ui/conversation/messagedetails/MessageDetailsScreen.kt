@@ -26,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetails
@@ -37,9 +36,9 @@ import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun MessageDetailsScreen(
+    screenModel: MessageDetailsScreenModel,
+    onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
-    onNavigateBack: () -> Unit = {},
-    screenModel: MessageDetailsScreenModel = hiltViewModel<MessageDetailsViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
 

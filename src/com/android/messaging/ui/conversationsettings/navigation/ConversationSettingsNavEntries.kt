@@ -2,12 +2,14 @@ package com.android.messaging.ui.conversationsettings.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.android.messaging.R
 import com.android.messaging.ui.contact.navigation.navigateToAddContact
 import com.android.messaging.ui.conversation.navigation.rememberConversationNavigator
 import com.android.messaging.ui.conversationsettings.screen.ConversationSettingsScreen
+import com.android.messaging.ui.conversationsettings.screen.ConversationSettingsViewModel
 import com.android.messaging.ui.conversationsettings.screen.rememberConversationSettingsEffectHandler
 import com.android.messaging.ui.navigation.LocalNavigator
 import com.android.messaging.ui.navigation.SeededViewModelStoreOwner
@@ -35,6 +37,7 @@ private fun conversationSettingsRouteContent(): @Composable (ConversationSetting
 
         SeededViewModelStoreOwner(defaultArgs = defaultArgs) {
             ConversationSettingsScreen(
+                screenModel = hiltViewModel<ConversationSettingsViewModel>(),
                 effectHandler = effectHandler,
                 onNavigateBack = navigator::back,
                 onCloseAfterArchive = {

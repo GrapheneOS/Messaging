@@ -39,7 +39,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.core.content.ContextCompat
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -84,6 +83,7 @@ import kotlinx.collections.immutable.persistentSetOf
 
 @Composable
 internal fun ConversationPickerScreen(
+    screenModel: ConversationPickerScreenModel,
     isInitialDraftLoading: Boolean,
     initialDraft: ConversationDraft?,
     effectHandler: ConversationPickerEffectHandler,
@@ -91,7 +91,6 @@ internal fun ConversationPickerScreen(
     allowMultiSelect: Boolean,
     labels: ConversationPickerLabels,
     modifier: Modifier = Modifier,
-    screenModel: ConversationPickerScreenModel = hiltViewModel<ConversationPickerViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
 

@@ -22,7 +22,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
@@ -47,12 +46,12 @@ import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun AddParticipantsScreen(
+    screenModel: AddParticipantsScreenModel,
     effectHandler: AddParticipantsEffectHandler,
     conversationId: ConversationId,
+    onNavigateBack: () -> Unit,
+    onNavigateToConversation: (ConversationId) -> Unit,
     modifier: Modifier = Modifier,
-    onNavigateBack: () -> Unit = {},
-    onNavigateToConversation: (ConversationId) -> Unit = {},
-    screenModel: AddParticipantsScreenModel = hiltViewModel<AddParticipantsViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
 

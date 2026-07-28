@@ -31,7 +31,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
@@ -53,11 +52,11 @@ import kotlinx.collections.immutable.persistentSetOf
 
 @Composable
 internal fun BlockedParticipantsScreen(
+    screenModel: BlockedParticipantsScreenModel,
     effectHandler: BlockedParticipantsEffectHandler,
     onNavigateBack: () -> Unit,
     onNavigateToConversation: (ConversationId) -> Unit,
     modifier: Modifier = Modifier,
-    screenModel: BlockedParticipantsScreenModel = hiltViewModel<BlockedParticipantsViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
 

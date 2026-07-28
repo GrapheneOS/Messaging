@@ -10,7 +10,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.geometry.Rect as ComposeRect
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
@@ -28,6 +27,7 @@ import com.android.messaging.ui.photoviewer.model.PhotoViewerLaunchRequest
 
 @Composable
 internal fun ConversationScreen(
+    screenModel: ConversationScreenModel,
     modifier: Modifier = Modifier,
     conversationId: ConversationId? = null,
     cancelIncomingNotification: Boolean = true,
@@ -40,11 +40,10 @@ internal fun ConversationScreen(
     onNavigateToForward: (messageId: MessageId) -> Unit,
     onNavigateBack: () -> Unit,
     pendingLaunchPayload: ConversationPendingLaunchPayload,
-    onPendingDraftConsumed: () -> Unit = {},
-    onPendingScrollPositionConsumed: () -> Unit = {},
-    onPendingSelfParticipantIdConsumed: () -> Unit = {},
-    onPendingStartupAttachmentConsumed: () -> Unit = {},
-    screenModel: ConversationScreenModel = hiltViewModel<ConversationViewModel>(),
+    onPendingDraftConsumed: () -> Unit,
+    onPendingScrollPositionConsumed: () -> Unit,
+    onPendingSelfParticipantIdConsumed: () -> Unit,
+    onPendingStartupAttachmentConsumed: () -> Unit,
 ) {
     val messageFieldFocusRequester = remember { FocusRequester() }
     val mediaPickerState = rememberConversationMediaPickerState()
