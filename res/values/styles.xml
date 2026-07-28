@@ -39,22 +39,6 @@
          <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>
     </style>
 
-    <style name="LaunchTheme" parent="Theme.AppCompat.DayNight.DarkActionBar">
-         <item name="colorPrimary">@color/action_bar_background_color</item>
-         <item name="colorPrimaryDark">@color/action_bar_background_color_dark</item>
-    </style>
-
-    <style name="BugleTheme.ConversationActivity" parent="@style/BugleTheme.ConversationActivityBase">
-        <item name="android:colorEdgeEffect">@color/conversation_edge_effect</item>
-    </style>
-
-    <style name="BugleTheme.ConversationActivityBase" parent="BugleTheme">
-        <item name="android:windowBackground">@color/conversation_background</item>
-        <item name="windowActionBarOverlay">true</item>
-        <item name="android:fastScrollPreviewBackgroundLeft">@drawable/contacts_fastscroll_label_left</item>
-        <item name="android:fastScrollPreviewBackgroundRight">@drawable/contacts_fastscroll_label_right</item>
-    </style>
-
     <style name="BugleTheme.DialogActivity" parent="@style/Theme.AppCompat.Light.Dialog">
         <item name="android:windowNoTitle">false</item>
         <item name="android:background">@android:color/white</item>
@@ -68,10 +52,6 @@
         <item name="android:windowNoTitle">true</item>
     </style>
 
-    <style name="BugleTheme.ConversationListActivity" parent="BugleTheme">
-        <item name="android:windowBackground">@android:color/background_light</item>
-    </style>
-
     <style name="Invisible" parent="BugleBaseTheme">
         <item name="android:windowBackground">@null</item>
         <item name="android:windowContentOverlay">@null</item>
@@ -79,15 +59,6 @@
         <item name="android:windowAnimationStyle">@null</item>
         <item name="android:windowDisablePreview">true</item>
         <item name="android:windowNoDisplay">true</item>
-    </style>
-
-    <style name="Translucent" parent="BugleBaseTheme">
-        <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:windowContentOverlay">@null</item>
-        <item name="android:windowIsTranslucent">true</item>
-        <item name="android:windowNoTitle">true</item>
-        <item name="android:windowAnimationStyle">@null</item>
-        <item name="android:windowDisablePreview">true</item>
     </style>
 
     <style name="BugleActionBar" parent="@style/Widget.AppCompat.Light.ActionBar.Solid">
@@ -102,152 +73,22 @@
       <item name="android:lines">1</item>
     </style>
 
-    <style name="ConversationActionBarTitleTextStyle" parent="BugleActionBarTitleTextStyle">
-      <item name="android:background">?android:attr/selectableItemBackgroundBorderless</item>
-    </style>
-
-    <style name="ConversationMessageText">
-        <item name="android:background">@null</item>
-    </style>
-
-    <style name="ConversationMessage" parent="ConversationMessageText">
-        <item name="android:textSize">@dimen/conversation_message_text_size</item>
-        <item name="android:textColor">@color/message_text</item>
-    </style>
-
-    <style name="ConversationMessageStatus" parent="ConversationMessageText">
-        <item name="android:textSize">@dimen/conversation_status_text_size</item>
-    </style>
-
-    <style name="ConversationMessageTitle" parent="ConversationMessageText">
-        <item name="android:textSize">@dimen/conversation_title_text_size</item>
-        <item name="android:background">@null</item>
-        <item name="android:textColor">@color/message_title_text</item>
-    </style>
-
-    <style name="ConversationMessageInfo" parent="ConversationMessageText">
-        <item name="android:textSize">@dimen/conversation_info_text_size</item>
-        <item name="android:textColor">@color/message_info_text</item>
-    </style>
-
-    <style name="ConversationComposeSendText">
-        <item name="android:textColor">@color/compose_send_text_color</item>
-        <item name="android:singleLine">false</item>
-        <item name="android:textSize">@dimen/conversation_compose_send_text_size</item>
-        <item name="android:gravity">center_vertical</item>
-        <item name="android:fontFamily">sans-serif</item>
-        <item name="android:paddingStart">@dimen/compose_message_text_box_padding_side</item>
-        <item name="android:paddingEnd">@dimen/compose_message_text_box_padding_side</item>
-        <item name="android:minHeight">@dimen/conversation_message_contact_icon_size</item>
-        <item name="android:maxLines">4</item>
-        <item name="android:background">@null</item>
-        <item name="android:scrollHorizontally">false</item>
-        <item name="android:textCursorDrawable">@null</item>
-        <item name="android:inputType">textShortMessage|textAutoCorrect|textCapSentences|textMultiLine</item>
-    </style>
-
-    <style name="AudioAttachmentTimerText">
-        <item name="android:textSize">@dimen/audio_attachment_text_size</item>
-        <item name="android:textColor">@color/audio_attachment_timer_text_color</item>
-        <item name="android:layout_marginRight">16dp</item>
-    </style>
-
-    <style name="AudioAttachmentViewStyle">
-        <item name="android:paddingStart">16dp</item>
-        <item name="android:paddingEnd">16dp</item>
-    </style>
-
-    <style name="VcardAttachmentSingleStyle">
-        <item name="android:paddingStart">@dimen/message_text_left_right_padding</item>
-        <item name="android:paddingEnd">@dimen/message_text_left_right_padding</item>
-    </style>
-
-    <style name="NotificationSenderText">
-        <item name="android:textColor">@color/notification_sender_text</item>
-    </style>
-
-    <style name="NotificationSecondaryText">
-        <item name="android:textColor">@color/notification_secondary_text</item>
-    </style>
-
-    <style name="NotificationTertiaryText">
-        <item name="android:textColor">@color/notification_tertiary_text</item>
-    </style>
-
     <style name="NotificationSubjectText">
         <item name="android:textColor">@color/notification_subject_color</item>
     </style>
 
     <!-- Styles to support RTL for pre API 17 -->
-    <style name="CameraChooserFrameStyle">
-        <item name="android:paddingStart">16dp</item>
-    </style>
 
     <style name="ConversationListNotificationBellPaddingStyle">
         <item name="android:paddingRight">@dimen/conversation_list_notification_bell_padding</item>
-    </style>
-
-    <style name="AudioAttachmentViewPlayPauseButtonStyle">
-        <item name="android:layout_marginRight">16dp</item>
-    </style>
-
-    <style name="ConversationMessageViewStyle">
-        <item name="android:paddingLeft">12dp</item>
-        <item name="android:paddingRight">12dp</item>
-    </style>
-
-    <style name="ParticipantListItem">
-        <item name="android:textSize">@dimen/participant_list_text_size</item>
-        <item name="android:textColor">@color/participant_list_text_primary</item>
-        <item name="android:background">@null</item>
-        <item name="android:layout_gravity">left|center_vertical</item>
     </style>
 
     <style name="DropDownListViewStyle" parent="Widget.AppCompat.ListView.DropDown">
       <item name="android:dividerHeight">0dp</item>
     </style>
 
-    <style name="ListEmptyText">
-        <item name="android:textSize">@dimen/list_empty_text_size</item>
-        <item name="android:textColor">@color/list_empty_text</item>
-    </style>
-
-    <style name="SmsDeliverdBadge">
-        <item name="android:layout_marginLeft">4dp</item>
-    </style>
-
-    <style name="appTitleStyle">
-        <item name="android:textColor">@android:color/black</item>
-        <item name="android:textSize">20sp</item>
-        <item name="android:ellipsize">end</item>
-    </style>
-
-    <style name="appVersionStyle">
-        <item name="android:textColor">@android:color/black</item>
-        <item name="android:textSize">14sp</item>
-        <item name="android:ellipsize">end</item>
-    </style>
-
-    <style name="appCopyrightStyle">
-        <item name="android:textColor">@android:color/black</item>
-        <item name="android:textSize">12sp</item>
-        <item name="android:ellipsize">end</item>
-    </style>
-
     <style name="ChipDeleteIconStyle">
         <item name="android:paddingLeft">8dp</item>
-    </style>
-
-    <style name="ChipIconStyle">
-        <item name="android:layout_marginRight">12dp</item>
-    </style>
-
-    <style name="ColorAccentBlueOverrideStyle">
-        <item name="colorAccent">@color/action_bar_background_color</item>
-    </style>
-
-    <style name="ColorAccentGrayOverrideStyle">
-        <item name="colorAccent">@color/search_view_text_cursor</item>
     </style>
 
     <style name="WidgetTitle" parent="@android:style/TextAppearance.Holo.Widget.ActionBar.Title">
@@ -295,22 +136,12 @@
         <item name="android:layout_toLeftOf">@id/avatarFrame</item>
     </style>
 
-    <style name="WidgetConversationItemIncoming">
-        <item name="android:layout_marginRight">5dp</item>
-        <item name="android:layout_alignParentLeft">true</item>
-        <item name="android:layout_toLeftOf">@id/date</item>
-    </style>
-
     <style name="WidgetConversationItemIncomingAvatarShadow">
         <item name="android:layout_marginLeft">4dp</item>
     </style>
 
     <style name="WidgetConversationItemOutgoingAvatarShadow">
         <item name="android:layout_marginLeft">-4dp</item>
-    </style>
-
-    <style name="WidgetConversationAppIcon" parent="WidgetHeaderImage">
-        <item name="android:layout_marginLeft">-20dp</item>
     </style>
 
     <style name="WidgetConversationItemDate">
@@ -357,12 +188,4 @@
         <item name="android:layout_height">72dp</item>
     </style>
 
-    <style name="DirectoryHeaderStyle">
-        <item name="android:paddingStart">@dimen/directory_header_padding_start</item>
-        <item name="android:paddingRight">@dimen/directory_header_padding_end</item>
-        <item name="android:paddingTop">@dimen/directory_header_padding_top</item>
-        <item name="android:paddingBottom">@dimen/directory_header_padding_bottom</item>
-        <item name="android:textSize">@dimen/directory_header_text_size</item>
-        <item name="android:textStyle">bold</item>
-    </style>
 </resources>

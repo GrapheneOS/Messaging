@@ -212,15 +212,6 @@
             android:theme="@style/Invisible">
         </activity>
 
-        <!-- Test activity that we use to host fragments/views. Unfortunately, apparently necessary
-             because Android framework test cases want activity to be in the instrumented package.
-             See http://developer.android.com/reference/android/test/ActivityInstrumentationTestCase2.html
-        -->
-        <activity
-            android:name=".ui.TestActivity"
-            android:configChanges="orientation|screenSize|keyboardHidden">
-        </activity>
-
         <activity
             android:name=".ui.debug.DebugMmsConfigActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"

@@ -26,18 +26,11 @@ import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.provider.ContactsContract.CommonDataKinds.StructuredName;
 import android.provider.ContactsContract.Contacts;
 import android.provider.ContactsContract.Directory;
-import android.provider.ContactsContract.DisplayNameSources;
 import android.provider.ContactsContract.PhoneLookup;
 import android.provider.ContactsContract.Profile;
-import android.text.TextUtils;
-import android.view.View;
 
-import com.android.ex.chips.RecipientEntry;
 import com.android.messaging.datamodel.CursorQueryData;
-import com.android.messaging.datamodel.FrequentContactsCursorQueryData;
-import com.android.messaging.datamodel.data.ParticipantData;
 import com.android.messaging.sms.MmsSmsUtils;
-import com.android.messaging.ui.UIIntents;
 import com.google.common.annotations.VisibleForTesting;
 
 /**
@@ -64,12 +57,6 @@ public class ContactUtil {
 
     // An optional _id column to query results that need to be displayed in a list view.
     public static final int INDEX_DATA_ID                 = 7;
-
-    // An optional sort_key column for displaying contact section labels.
-    public static final int INDEX_SORT_KEY                = 8;
-
-    // Lookup key column index specific to frequent contacts query.
-    public static final int INDEX_LOOKUP_KEY_FREQUENT     = 3;
 
     /**
      * Constants for listing and filtering phones.
@@ -108,15 +95,6 @@ public class ContactUtil {
             // contact id. Also we never show the results directly in a list view so we are not
             // concerned about duplicated _id's (namely, the same contact has two same phone
             // numbers)
-        };
-    }
-
-    public static class FrequentContactQuery {
-        public static final String[] PROJECTION = new String[] {
-            Contacts._ID,                       // 0
-            Contacts.DISPLAY_NAME,              // 1
-            Contacts.PHOTO_URI,                 // 2
-            Phone.LOOKUP_KEY,                   // 3
         };
     }
 
@@ -174,8 +152,6 @@ public class ContactUtil {
     public static final int INDEX_STRUCTURED_NAME_MIDDLE_NAME = 4;
     public static final int INDEX_STRUCTURED_NAME_SUFFIX = 5;
 
-    public static final long INVALID_CONTACT_ID = -1;
-
     /**
      * This class is static. No need to create an instance.
      */
@@ -189,28 +165,6 @@ public class ContactUtil {
         }
         return new CursorQueryData(context, Profile.CONTENT_URI, SelfQuery.PROJECTION, null, null,
                 null);
-    }
-
-    /**
-     * Get a list of phones sorted by contact name. One contact may have multiple phones.
-     * In that case, each phone will be returned as a separate record in the result cursor.
-     */
-    @VisibleForTesting
-    public static CursorQueryData getPhones(final Context context) {
-        if (!ContactUtil.hasReadContactsPermission()) {
-            return CursorQueryData.getEmptyQueryData();
-        }
-
-        // The AOSP Contacts provider allows adding a ContactsContract.REMOVE_DUPLICATE_ENTRIES
-        // query parameter that removes duplicate (raw) numbers. Unfortunately, we can't use that
-        // because it causes the some phones' contacts provider to return incorrect sections.
-        final Uri uri = Phone.CONTENT_URI.buildUpon().appendQueryParameter(
-                ContactsContract.DIRECTORY_PARAM_KEY, String.valueOf(Directory.DEFAULT))
-                .appendQueryParameter(Contacts.EXTRA_ADDRESS_BOOK_INDEX, "true")
-                .build();
-
-        return new CursorQueryData(context, uri, PhoneQuery.PROJECTION, null, null,
-                PhoneQuery.SORT_KEY);
     }
 
     /**
@@ -228,37 +182,6 @@ public class ContactUtil {
     }
 
     /**
-     * Returns whether the search text indicates an email based search or a phone number based one.
-     */
-    private static boolean shouldFilterForEmail(final String searchText) {
-        return searchText != null && searchText.contains("@");
-    }
-
-    /**
-     * Get a list of destinations (phone, email) matching the partial destination.
-     */
-    public static CursorQueryData filterDestination(final Context context,
-            final String destination) {
-        if (shouldFilterForEmail(destination)) {
-            return ContactUtil.filterEmails(context, destination);
-        } else {
-            return ContactUtil.filterPhones(context, destination);
-        }
-    }
-
-    /**
-     * Get a list of destinations (phone, email) matching the partial destination in work profile.
-     */
-    public static CursorQueryData filterDestinationEnterprise(final Context context,
-            final String destination) {
-        if (shouldFilterForEmail(destination)) {
-            return ContactUtil.filterEmailsEnterprise(context, destination);
-        } else {
-            return ContactUtil.filterPhonesEnterprise(context, destination);
-        }
-    }
-
-    /**
      * Get a list of phones matching a search criteria. The search may be on contact name or
      * phone number. In case search is on contact name, all matching contact's phone number
      * will be returned.
@@ -268,15 +191,6 @@ public class ContactUtil {
     @VisibleForTesting
     public static CursorQueryData filterPhones(final Context context, final String query) {
         return filterPhonesInternal(context, Phone.CONTENT_FILTER_URI, query, Directory.DEFAULT);
-    }
-
-    /**
-     * Similar to {@link #filterPhones(Context, String)}, but search in work profile instead.
-     */
-    public static CursorQueryData filterPhonesEnterprise(final Context context,
-            final String query) {
-        return filterPhonesInternal(context, Phone.ENTERPRISE_CONTENT_FILTER_URI, query,
-                Directory.ENTERPRISE_DEFAULT);
     }
 
     private static CursorQueryData filterPhonesInternal(final Context context,
@@ -310,19 +224,6 @@ public class ContactUtil {
     }
 
     /**
-     * Get frequently contacted people. This queries for Contacts.CONTENT_STREQUENT_URI, which
-     * includes both starred or frequently contacted people.
-     */
-    public static CursorQueryData getFrequentContacts(final Context context) {
-        if (!ContactUtil.hasReadContactsPermission()) {
-            return CursorQueryData.getEmptyQueryData();
-        }
-
-        return new FrequentContactsCursorQueryData(context, FrequentContactQuery.PROJECTION,
-                null, null, null);
-    }
-
-    /**
      * Get a list of emails matching a search criteria. In Bugle, since email is not a common
      * usage scenario, we should only do email search after user typed in a query indicating
      * an intention to search by email (for example, "joe@").
@@ -332,15 +233,6 @@ public class ContactUtil {
     @VisibleForTesting
     public static CursorQueryData filterEmails(final Context context, final String query) {
         return filterEmailsInternal(context, Email.CONTENT_FILTER_URI, query, Directory.DEFAULT);
-    }
-
-    /**
-     * Similar to {@link #filterEmails(Context, String)}, but search in work profile instead.
-     */
-    public static CursorQueryData filterEmailsEnterprise(final Context context,
-            final String query) {
-        return filterEmailsInternal(context, Email.ENTERPRISE_CONTENT_FILTER_URI, query,
-                Directory.ENTERPRISE_DEFAULT);
     }
 
     private static CursorQueryData filterEmailsInternal(final Context context,
@@ -434,61 +326,6 @@ public class ContactUtil {
     }
 
     /**
-     * Creates a RecipientEntry from the provided data fields (from the contacts cursor).
-     * @param firstLevel whether this item is the first entry of this contact in the list.
-     */
-    public static RecipientEntry createRecipientEntry(final String displayName,
-            final int displayNameSource, final String destination, final int destinationType,
-            final String destinationLabel, final long contactId, final String lookupKey,
-            final long dataId, final String photoThumbnailUri, final boolean firstLevel) {
-        if (firstLevel) {
-            return RecipientEntry.constructTopLevelEntry(displayName, displayNameSource,
-                    destination, destinationType, destinationLabel, contactId, null, dataId,
-                    photoThumbnailUri, true, lookupKey);
-        } else {
-            return RecipientEntry.constructSecondLevelEntry(displayName, displayNameSource,
-                    destination, destinationType, destinationLabel, contactId, null, dataId,
-                    photoThumbnailUri, true, lookupKey);
-        }
-    }
-
-    /**
-     * Creates a RecipientEntry for PhoneQuery result. The result is then displayed in the
-     * contact search drop down or as replacement chips in the chips edit box.
-     */
-    public static RecipientEntry createRecipientEntryForPhoneQuery(final Cursor cursor,
-            final boolean isFirstLevel) {
-        final long contactId = cursor.getLong(ContactUtil.INDEX_CONTACT_ID);
-        final String displayName = cursor.getString(
-                ContactUtil.INDEX_DISPLAY_NAME);
-        final String photoThumbnailUri = cursor.getString(
-                ContactUtil.INDEX_PHOTO_URI);
-        final String destination = cursor.getString(
-                ContactUtil.INDEX_PHONE_EMAIL);
-        final int destinationType = cursor.getInt(
-                ContactUtil.INDEX_PHONE_EMAIL_TYPE);
-        final String destinationLabel = cursor.getString(
-                ContactUtil.INDEX_PHONE_EMAIL_LABEL);
-        final String lookupKey = cursor.getString(
-                ContactUtil.INDEX_LOOKUP_KEY);
-
-        // PhoneQuery uses the contact id as the data id ("_id").
-        final long dataId = contactId;
-
-        return createRecipientEntry(displayName,
-                DisplayNameSources.STRUCTURED_NAME, destination, destinationType,
-                destinationLabel, contactId, lookupKey, dataId, photoThumbnailUri,
-                isFirstLevel);
-    }
-
-    /**
-     * Returns if a given contact id is valid.
-     */
-    public static boolean isValidContactId(final long contactId) {
-        return contactId >= 0;
-    }
-
-    /**
      * Returns if a given contact id belongs to managed profile.
      */
     public static boolean isEnterpriseContactId(final long contactId) {
@@ -505,7 +342,7 @@ public class ContactUtil {
     /**
      * Returns PhoneLookup URI.
      */
-    public static Uri getPhoneLookupUri() {
+    private static Uri getPhoneLookupUri() {
         return PhoneLookup.ENTERPRISE_CONTENT_FILTER_URI;
     }
 

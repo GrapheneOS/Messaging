@@ -17,102 +17,23 @@
 <resources>
 
     <dimen name="action_bar_height">56dp</dimen>
-    <dimen name="action_bar_elevation">8dp</dimen>
     <dimen name="action_bar_text_size">20sp</dimen>
-    <dimen name="conversation_message_text_size">16sp</dimen>
-    <dimen name="conversation_status_text_size">12sp</dimen>
-    <dimen name="conversation_title_text_size">12sp</dimen>
-    <dimen name="conversation_info_text_size">12sp</dimen>
-    <dimen name="conversation_compose_send_text_size">16sp</dimen>
     <dimen name="contact_icon_view_normal_size">42dp</dimen>
-    <dimen name="contact_icon_view_large_size">56dp</dimen>
-    <dimen name="contact_icon_view_small_size">12dp</dimen>
-    <dimen name="conversation_list_image_preview_corner_radius">3dp</dimen>
-    <dimen name="conversation_list_contact_icon_size">56dp</dimen>
-    <dimen name="conversation_message_contact_icon_size">42dp</dimen>
-    <dimen name="conversation_message_photo_min_size">96dp</dimen>
     <dimen name="conversation_list_notification_bell_padding">4dp</dimen>
-
-    <dimen name="message_bubble_arrow_width">9dp</dimen>
-    <dimen name="message_text_left_right_padding">14dp</dimen>
-    <dimen name="message_padding_default">18dp</dimen>
-    <dimen name="message_padding_same_author">2dp</dimen>
-    <dimen name="message_metadata_top_padding">4dp</dimen>
-    <dimen name="message_audio_attachment_padding">12dp</dimen>
-
-    <dimen name="compose_message_text_box_padding_side">8dp</dimen>
 
     <item name="letter_to_tile_ratio" type="fraction">67%</item>
     <item name="sim_identifier_to_tile_ratio" type="fraction">28%</item>
 
-    <dimen name="audio_attachment_text_size">14sp</dimen>
-    <dimen name="audio_progress_bar_height">6dp</dimen>
-
-    <!-- Videos in the message list view should at least be this big in the smallest dimension -->
-    <dimen name="video_message_min_size">320dp</dimen>
-    <dimen name="attachment_rounded_corner_radius">3dp</dimen>
-    <dimen name="progress_indicator_default_stroke_width">2dp</dimen>
-    <dimen name="progress_indicator_default_radius">12dp</dimen>
-    <dimen name="participant_list_text_size">18sp</dimen>
-    <dimen name="image_attachment_fallback_width">240dp</dimen>
-    <dimen name="image_attachment_fallback_height">240dp</dimen>
-
-    <dimen name="fab_size">56dp</dimen>
-    <dimen name="fab_padding_bottom">0dp</dimen>
-    <dimen name="fab_elevation">2dp</dimen>
-    <dimen name="fab_elevation_pressed">6dp</dimen>
-    <dimen name="fab_bottom_margin">16dp</dimen>
-    <dimen name="fab_left_right_margin">16dp</dimen>
-    <dimen name="conversation_fast_fling_threshold">10dp</dimen>
-    <dimen name="list_empty_text_size">14sp</dimen>
-    <dimen name="list_empty_text_top_margin">20dp</dimen>
-    <dimen name="list_empty_text_left_right_margin">60dp</dimen>
-
-    <dimen name="version_dialog_large_padding">24dp</dimen>
-    <dimen name="version_dialog_bottom_padding">20dp</dimen>
-    <dimen name="version_dialog_info_left_padding">14dp</dimen>
-    <dimen name="version_dialog_copyright_top_margin">20dp</dimen>
-
-    <dimen name="explode_animation_highlight_elevation">6dp</dimen>
-
-    <!-- Camera focus indicator values -->
-    <dimen name="pie_radius_start">40dp</dimen>
-    <dimen name="pie_radius_increment">30dp</dimen>
-    <dimen name="pie_touch_offset">20dp</dimen>
-    <dimen name="focus_radius_offset">8dp</dimen>
-    <dimen name="focus_inner_offset">12dp</dimen>
-    <dimen name="focus_outer_stroke">3dp</dimen>
-    <dimen name="focus_inner_stroke">2dp</dimen>
-
-    <dimen name="conversation_bubble_width_snap">20dp</dimen>
-
     <!-- Widget -->
     <dimen name="widget_margin">8dp</dimen>
-    <dimen name="widget_subtitle_margin">0dp</dimen>
-    <dimen name="widget_avatar_padding">2dp</dimen>
     <dimen name="widget_header_height">48dp</dimen>
     <dimen name="widget_header_new_conv_button_width">48dp</dimen>
     <dimen name="widget_conversation_title_size">18sp</dimen>
-    <dimen name="widget_compose_top_padding">12dp</dimen>
-    <dimen name="widget_compose_top_padding_compressed">16dp</dimen>
 
     <!-- Conversation fast-scroller -->
-    <dimen name="fastscroll_touch_slop">8dp</dimen>
     <dimen name="fastscroll_track_width">8dp</dimen>
     <dimen name="fastscroll_thumb_height">48dp</dimen>
-    <dimen name="fastscroll_preview_min_width">88dp</dimen>
-    <dimen name="fastscroll_preview_height">88dp</dimen>
     <dimen name="fastscroll_preview_corner_radius">44dp</dimen>
-    <dimen name="fastscroll_preview_padding">24dp</dimen>
-    <dimen name="fastscroll_preview_margin_top">8dp</dimen>
-    <dimen name="fastscroll_preview_margin_left_right">8dp</dimen>
-    <dimen name="fastscroll_preview_text_size">24sp</dimen>
-
-    <dimen name="directory_header_padding_start">16dp</dimen>
-    <dimen name="directory_header_padding_end">32dp</dimen>
-    <dimen name="directory_header_padding_top">18dp</dimen>
-    <dimen name="directory_header_padding_bottom">8dp</dimen>
-    <dimen name="directory_header_text_size">14sp</dimen>
 
     <dimen name="max_bubbled_activity_height">600dp</dimen>
 

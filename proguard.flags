@@ -25,12 +25,6 @@
 -keep class com.android.messaging.*.* { *; }
 -keep class com.android.messaging.*.*.* { *; }
 
-# Keep methods that have the @VisibleForAnimation annotation
--keep @interface com.android.messaging.annotation.VisibleForAnimation
--keepclassmembers class * {
-  @com.android.messaging.annotation.VisibleForAnimation *;
-}
-
 -keep public class * extends android.app.Activity
 -keep public class * extends android.app.Application
 -keep public class * extends android.app.Service
