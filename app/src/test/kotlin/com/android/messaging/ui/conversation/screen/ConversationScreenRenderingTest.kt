@@ -19,12 +19,13 @@ import org.robolectric.RobolectricTestRunner
 internal class ConversationScreenRenderingTest : BaseConversationScreenTest() {
 
     @Test
-    fun defaultOptionalParameters_renderLoadingState() {
+    fun nullConversationId_rendersLoadingState() {
         val screenModel = createScreenModel()
 
         composeTestRule.setContent {
             AppTheme {
                 ConversationScreen(
+                    screenModel = screenModel.model,
                     onAddPeopleClick = {},
                     onConversationDetailsClick = {},
                     onNavigateToMessageDetails = {},
@@ -34,7 +35,10 @@ internal class ConversationScreenRenderingTest : BaseConversationScreenTest() {
                     onNavigateToForward = {},
                     onNavigateBack = {},
                     pendingLaunchPayload = ConversationPendingLaunchPayload(),
-                    screenModel = screenModel.model,
+                    onPendingDraftConsumed = {},
+                    onPendingScrollPositionConsumed = {},
+                    onPendingSelfParticipantIdConsumed = {},
+                    onPendingStartupAttachmentConsumed = {},
                 )
             }
         }

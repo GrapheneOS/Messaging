@@ -11,6 +11,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.di.core.ApplicationCoroutineScope
 import com.android.messaging.di.core.MainDispatcher
@@ -21,6 +22,7 @@ import com.android.messaging.domain.shareintent.usecase.BuildSharedConversationD
 import com.android.messaging.ui.BugleComponentActivity
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversationpicker.ConversationPickerScreen
+import com.android.messaging.ui.conversationpicker.ConversationPickerViewModel
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerLabels
 import com.android.messaging.ui.core.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -84,6 +86,7 @@ class ShareIntentActivity : BugleComponentActivity() {
                 }
 
                 ConversationPickerScreen(
+                    screenModel = hiltViewModel<ConversationPickerViewModel>(),
                     effectHandler = effectHandler,
                     onNavigateBack = ::finish,
                     allowMultiSelect = true,

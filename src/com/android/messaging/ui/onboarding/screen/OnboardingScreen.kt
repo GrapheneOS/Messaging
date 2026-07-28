@@ -40,7 +40,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -60,11 +59,11 @@ private val ScreenPadding = 24.dp
 
 @Composable
 internal fun OnboardingScreen(
+    screenModel: OnboardingScreenModel,
     effectHandler: OnboardingEffectHandler,
     onNavigateBack: () -> Unit,
     onOnboardingComplete: () -> Unit,
     modifier: Modifier = Modifier,
-    screenModel: OnboardingScreenModel = hiltViewModel<OnboardingViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
 

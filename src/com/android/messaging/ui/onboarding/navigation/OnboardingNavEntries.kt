@@ -1,10 +1,12 @@
 package com.android.messaging.ui.onboarding.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.android.messaging.ui.navigation.LocalNavigator
 import com.android.messaging.ui.onboarding.screen.OnboardingScreen
+import com.android.messaging.ui.onboarding.screen.OnboardingViewModel
 import com.android.messaging.ui.onboarding.screen.rememberOnboardingEffectHandler
 
 internal fun EntryProviderScope<NavKey>.onboardingEntries(
@@ -25,6 +27,7 @@ private fun onboardingRouteContent(
         val effectHandler = rememberOnboardingEffectHandler()
 
         OnboardingScreen(
+            screenModel = hiltViewModel<OnboardingViewModel>(),
             effectHandler = effectHandler,
             onNavigateBack = navigator::back,
             onOnboardingComplete = {

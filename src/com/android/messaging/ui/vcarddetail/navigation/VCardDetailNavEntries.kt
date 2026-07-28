@@ -2,6 +2,7 @@ package com.android.messaging.ui.vcarddetail.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.android.messaging.R
@@ -9,6 +10,7 @@ import com.android.messaging.ui.navigation.LocalNavigator
 import com.android.messaging.ui.navigation.SeededViewModelStoreOwner
 import com.android.messaging.ui.navigation.paneTitleMetadata
 import com.android.messaging.ui.vcarddetail.screen.VCardDetailScreen
+import com.android.messaging.ui.vcarddetail.screen.VCardDetailViewModel
 import com.android.messaging.ui.vcarddetail.screen.rememberVCardDetailEffectHandler
 
 internal fun EntryProviderScope<NavKey>.vCardDetailEntries() {
@@ -26,8 +28,11 @@ private fun vCardDetailRouteContent(): @Composable (VCardDetailNavKey) -> Unit {
         }
 
         SeededViewModelStoreOwner(defaultArgs = defaultArgs) {
+            val effectHandler = rememberVCardDetailEffectHandler()
+
             VCardDetailScreen(
-                effectHandler = rememberVCardDetailEffectHandler(),
+                screenModel = hiltViewModel<VCardDetailViewModel>(),
+                effectHandler = effectHandler,
                 onNavigateBack = navigator::back,
             )
         }

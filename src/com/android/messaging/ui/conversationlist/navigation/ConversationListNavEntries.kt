@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.android.messaging.R
@@ -12,9 +13,11 @@ import com.android.messaging.ui.blockedparticipants.navigation.BlockedParticipan
 import com.android.messaging.ui.contact.navigation.navigateToAddContact
 import com.android.messaging.ui.conversation.navigation.rememberConversationNavigator
 import com.android.messaging.ui.conversationlist.archived.ArchivedConversationListScreen
+import com.android.messaging.ui.conversationlist.archived.ArchivedConversationListViewModel
 import com.android.messaging.ui.conversationlist.archived.rememberArchivedConversationListEffectHandler
 import com.android.messaging.ui.conversationlist.chats.ConversationListNavigationCallbacks
 import com.android.messaging.ui.conversationlist.chats.ConversationListScreen
+import com.android.messaging.ui.conversationlist.chats.ConversationListViewModel
 import com.android.messaging.ui.conversationlist.chats.rememberConversationListEffectHandler
 import com.android.messaging.ui.navigation.LocalNavigator
 import com.android.messaging.ui.navigation.paneTitleMetadata
@@ -61,6 +64,7 @@ private fun conversationListRouteContent(): @Composable (ConversationListNavKey)
         }
 
         ConversationListScreen(
+            screenModel = hiltViewModel<ConversationListViewModel>(),
             effectHandler = effectHandler,
             navigation = navigation,
             modifier = Modifier.fillMaxSize(),
@@ -80,6 +84,7 @@ private fun archivedConversationListRouteContent():
         )
 
         ArchivedConversationListScreen(
+            screenModel = hiltViewModel<ArchivedConversationListViewModel>(),
             effectHandler = effectHandler,
             onNavigateBack = navigator::back,
             onNavigateToConversation = { conversationId ->

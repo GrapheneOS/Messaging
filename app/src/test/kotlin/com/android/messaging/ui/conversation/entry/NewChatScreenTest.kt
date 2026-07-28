@@ -224,8 +224,10 @@ class NewChatScreenTest {
         composeTestRule.setContent {
             AppTheme {
                 NewChatScreen(
-                    effectHandler = mockk(relaxed = true),
                     screenModel = screenModel,
+                    effectHandler = mockk(relaxed = true),
+                    onNavigateBack = {},
+                    onNavigateToConversation = { _, _ -> },
                 )
             }
         }
