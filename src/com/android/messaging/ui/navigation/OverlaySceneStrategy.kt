@@ -73,20 +73,30 @@ internal class OverlaySceneStrategy : SceneStrategy<NavKey> {
     override fun SceneStrategyScope<NavKey>.calculateScene(
         entries: List<NavEntry<NavKey>>,
     ): Scene<NavKey>? {
-        val lastEntry = entries.lastOrNull()
-        val overlaidEntries = entries.dropLast(n = 1)
-        val isOverlayEntry = lastEntry != null && OverlayKey in lastEntry.metadata
-
-        if (!isOverlayEntry || overlaidEntries.isEmpty()) {
-            return null
-        }
-
-        return AppOverlayScene(
-            key = lastEntry.contentKey,
-            entry = lastEntry,
-            previousEntries = overlaidEntries,
-            overlaidEntries = overlaidEntries,
+        return overlaySceneOrNull(
+            entries = entries,
             onNavigateBack = onBack,
         )
     }
+}
+
+internal fun overlaySceneOrNull(
+    entries: List<NavEntry<NavKey>>,
+    onNavigateBack: () -> Unit,
+): AppOverlayScene? {
+    val lastEntry = entries.lastOrNull()
+    val overlaidEntries = entries.dropLast(n = 1)
+    val isOverlayEntry = lastEntry != null && OverlayKey in lastEntry.metadata
+
+    if (!isOverlayEntry || overlaidEntries.isEmpty()) {
+        return null
+    }
+
+    return AppOverlayScene(
+        key = lastEntry.contentKey,
+        entry = lastEntry,
+        previousEntries = overlaidEntries,
+        overlaidEntries = overlaidEntries,
+        onNavigateBack = onNavigateBack,
+    )
 }
