@@ -28,7 +28,7 @@ class ConversationNavigatorImplTest {
     }
 
     @Test
-    fun navigateToConversation_appendsWhenAlreadyInsideConversationFlow() {
+    fun navigateToConversation_replacesConversationAlreadyOnTop() {
         val backStack = mutableListOf<NavKey>(
             ConversationNavKey(conversationId = CONVERSATION_ID),
         )
@@ -39,7 +39,6 @@ class ConversationNavigatorImplTest {
 
         assertEquals(
             listOf(
-                ConversationNavKey(conversationId = CONVERSATION_ID),
                 ConversationNavKey(conversationId = ConversationId("conversation-2")),
             ),
             backStack,
