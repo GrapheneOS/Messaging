@@ -24,20 +24,24 @@ internal fun AppNavDisplay(
     backStack: MutableList<NavKey>,
     entryProvider: (NavKey) -> NavEntry<NavKey>,
     onBack: () -> Unit,
+    sceneStrategies: List<SceneStrategy<NavKey>>,
+    showsTwoPanes: Boolean,
     modifier: Modifier = Modifier,
-    sceneStrategies: List<SceneStrategy<NavKey>> = appSceneStrategies,
 ) {
     val saveableStateHolderDecorator = rememberSaveableStateHolderNavEntryDecorator<NavKey>()
     val viewModelStoreDecorator = rememberViewModelStoreNavEntryDecorator<NavKey>()
+    val listDetailPaneDecorator = rememberListDetailPaneNavEntryDecorator(showsTwoPanes)
     val paneTitleDecorator = rememberPaneTitleNavEntryDecorator()
     val entryDecorators = remember(
         saveableStateHolderDecorator,
         viewModelStoreDecorator,
+        listDetailPaneDecorator,
         paneTitleDecorator,
     ) {
         listOf(
             saveableStateHolderDecorator,
             viewModelStoreDecorator,
+            listDetailPaneDecorator,
             paneTitleDecorator,
         )
     }
@@ -59,7 +63,14 @@ internal fun AppNavDisplay(
     )
 }
 
-private val appSceneStrategies: List<SceneStrategy<NavKey>> = listOf(
-    OverlaySceneStrategy(),
-    DialogSceneStrategy(),
-)
+@Composable
+internal fun rememberAppSceneStrategies(
+    additionalStrategies: List<SceneStrategy<NavKey>>,
+): List<SceneStrategy<NavKey>> {
+    return remember(additionalStrategies) {
+        listOf(
+            OverlaySceneStrategy(),
+            DialogSceneStrategy(),
+        ) + additionalStrategies
+    }
+}

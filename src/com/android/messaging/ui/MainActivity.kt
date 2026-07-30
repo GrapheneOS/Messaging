@@ -14,6 +14,7 @@ import com.android.messaging.ui.appsettings.navigation.goToSettings
 import com.android.messaging.ui.conversation.entry.ConversationLaunchStore
 import com.android.messaging.ui.conversation.entry.submitIntent
 import com.android.messaging.ui.conversation.navigation.conversationRoute
+import com.android.messaging.ui.conversation.navigation.rememberConversationListDetailLayout
 import com.android.messaging.ui.conversationlist.navigation.ConversationListNavKey
 import com.android.messaging.ui.conversationlist.navigation.goToConversationList
 import com.android.messaging.ui.core.AppTheme
@@ -51,9 +52,13 @@ internal class MainActivity : ComponentActivity() {
 
         setContent {
             AppTheme {
+                val listDetailLayout = rememberConversationListDetailLayout()
+
                 AppNavGraph(
                     startDestinations = startDestinations,
                     isLaunchedFromBubble = false,
+                    additionalSceneStrategies = listOf(listDetailLayout.sceneStrategy),
+                    showsTwoPanes = listDetailLayout.showsTwoPanes,
                     launchDestinations = launchDestinationFlow,
                     shouldShowOnboarding = shouldShowOnboarding::invoke,
                     onAppResumed = ::resumeDataModel,

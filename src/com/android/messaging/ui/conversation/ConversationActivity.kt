@@ -55,6 +55,8 @@ internal class ConversationActivity : ComponentActivity() {
                 AppNavGraph(
                     startDestinations = startDestinations,
                     isLaunchedFromBubble = isLaunchedFromBubble,
+                    additionalSceneStrategies = emptyList(),
+                    showsTwoPanes = false,
                     launchDestinations = launchDestinationFlow,
                     shouldShowOnboarding = shouldShowOnboarding::invoke,
                     onAppResumed = ::resumeDataModel,

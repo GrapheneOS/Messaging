@@ -6,12 +6,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.scene.SceneStrategy
 import com.android.messaging.ui.conversation.navigation.ProvideConversationEntryNavState
 import com.android.messaging.ui.navigation.AppNavDisplay
 import com.android.messaging.ui.navigation.LocalNavigator
 import com.android.messaging.ui.navigation.NavigationReducer
 import com.android.messaging.ui.navigation.NavigationReducerImpl
 import com.android.messaging.ui.navigation.rememberAppBackStack
+import com.android.messaging.ui.navigation.rememberAppSceneStrategies
 import com.android.messaging.ui.navigation.rememberNavigator
 import kotlinx.coroutines.flow.Flow
 
@@ -19,6 +21,8 @@ import kotlinx.coroutines.flow.Flow
 internal fun AppNavGraph(
     startDestinations: List<NavKey>,
     isLaunchedFromBubble: Boolean,
+    additionalSceneStrategies: List<SceneStrategy<NavKey>>,
+    showsTwoPanes: Boolean,
     launchDestinations: Flow<List<NavKey>>,
     shouldShowOnboarding: () -> Boolean,
     onAppResumed: () -> Unit,
@@ -52,6 +56,10 @@ internal fun AppNavGraph(
                 backStack = backStack,
                 entryProvider = entryProvider,
                 onBack = navigator::back,
+                sceneStrategies = rememberAppSceneStrategies(
+                    additionalStrategies = additionalSceneStrategies,
+                ),
+                showsTwoPanes = showsTwoPanes,
                 modifier = modifier,
             )
         }

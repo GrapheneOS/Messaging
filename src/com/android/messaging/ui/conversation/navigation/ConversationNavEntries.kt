@@ -1,13 +1,17 @@
 package com.android.messaging.ui.conversation.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.ui.common.components.consumeOppositePaneInsets
 import com.android.messaging.ui.contact.navigation.navigateToAddContact
 import com.android.messaging.ui.conversation.addparticipants.AddParticipantsScreen
 import com.android.messaging.ui.conversation.addparticipants.AddParticipantsViewModel
@@ -27,6 +31,7 @@ import com.android.messaging.ui.navigation.SeededViewModelStoreOwner
 
 internal fun EntryProviderScope<NavKey>.conversationEntries() {
     entry<ConversationNavKey>(
+        metadata = conversationDetailPaneMetadata(),
         content = conversationScreenRouteContent(),
     )
     entry<NewChatNavKey>(
@@ -45,12 +50,18 @@ private fun conversationScreenRouteContent(): @Composable (ConversationNavKey) -
         val entryNavState = LocalConversationEntryNavState.current
         val entryUiState by entryNavState.model.uiState.collectAsStateWithLifecycle()
 
-        ConversationRoute(
-            conversationId = navKey.conversationId,
-            isLaunchedFromBubble = entryNavState.isLaunchedFromBubble,
-            entryModel = entryNavState.model,
-            entryUiState = entryUiState,
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .consumeOppositePaneInsets(),
+        ) {
+            ConversationRoute(
+                conversationId = navKey.conversationId,
+                isLaunchedFromBubble = entryNavState.isLaunchedFromBubble,
+                entryModel = entryNavState.model,
+                entryUiState = entryUiState,
+            )
+        }
     }
 }
 
