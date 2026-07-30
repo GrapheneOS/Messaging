@@ -94,7 +94,13 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
 
                 conversationsRepository
                     .getConversationMetadata(conversationId = conversationId)
-                    .onEach { metadata -> latestMetadata = metadata }
+                    .onEach { metadata ->
+                        if (latestMetadata != null && metadata == null) {
+                            _navigationEvents.emit(NavEvent.CloseConversation)
+                        }
+
+                        latestMetadata = metadata
+                    }
                     .map { metadata ->
                         when {
                             metadata != null -> {

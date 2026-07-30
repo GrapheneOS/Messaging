@@ -107,7 +107,7 @@ internal abstract class BaseConversationScreenEffectsActionTest {
         onNavigateToMessageDetails: (MessageId) -> Unit = {},
         onNavigateToVCardDetail: (String) -> Unit = {},
         onNavigateToAddContact: (AddContactRequest) -> Unit = {},
-        onNavigateBack: () -> Unit = {},
+        onCloseConversation: () -> Unit = {},
     ) {
         snackbarHostState = SnackbarHostState()
         hostBoundsState = mutableStateOf(initialHostBounds)
@@ -129,7 +129,9 @@ internal abstract class BaseConversationScreenEffectsActionTest {
                         }
                         CollectEvents(events = screenModel.navigationEvents) { event ->
                             when (event) {
-                                ConversationScreenNavEvent.CloseConversation -> onNavigateBack()
+                                ConversationScreenNavEvent.CloseConversation -> {
+                                    onCloseConversation()
+                                }
 
                                 is ConversationScreenNavEvent.NavigateToMessageDetails -> {
                                     onNavigateToMessageDetails(event.messageId)

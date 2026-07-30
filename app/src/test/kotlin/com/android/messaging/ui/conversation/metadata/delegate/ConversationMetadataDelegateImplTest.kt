@@ -64,7 +64,7 @@ class ConversationMetadataDelegateImplTest {
             val harness = createHarness(conversationId = ConversationId("conversation-42"))
 
             try {
-                harness.delegate.effects.test {
+                harness.delegate.navigationEvents.test {
                     harness.delegate.onUnarchiveConversationClick()
                     advanceUntilIdle()
 
@@ -75,6 +75,50 @@ class ConversationMetadataDelegateImplTest {
                 coVerify(exactly = 1) {
                     harness.conversationsRepository
                         .unarchiveConversation(conversationId = ConversationId("conversation-42"))
+                }
+            } finally {
+                harness.cancel()
+            }
+        }
+    }
+
+    @Test
+    fun archiveStatusClearedOutsideTheScreen_doesNotCloseConversation() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val harness = createHarness(conversationId = ConversationId("conversation-42"))
+
+            try {
+                harness.setMetadata(isArchived = true)
+                advanceUntilIdle()
+
+                harness.delegate.navigationEvents.test {
+                    harness.setMetadata(isArchived = false)
+                    advanceUntilIdle()
+
+                    expectNoEvents()
+                    cancelAndIgnoreRemainingEvents()
+                }
+            } finally {
+                harness.cancel()
+            }
+        }
+    }
+
+    @Test
+    fun metadataDisappears_closesConversation() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val harness = createHarness(conversationId = ConversationId("conversation-42"))
+
+            try {
+                harness.setMetadata(isArchived = false)
+                advanceUntilIdle()
+
+                harness.delegate.navigationEvents.test {
+                    harness.metadataFlow.value = null
+                    advanceUntilIdle()
+
+                    assertEquals(ConversationScreenNavEvent.CloseConversation, awaitItem())
+                    cancelAndIgnoreRemainingEvents()
                 }
             } finally {
                 harness.cancel()
@@ -294,6 +338,12 @@ class ConversationMetadataDelegateImplTest {
             metadataFlow = metadataFlow,
             scope = scope,
         )
+    }
+
+    private fun DelegateHarness.setMetadata(isArchived: Boolean) {
+        metadataFlow.value = mockk<ConversationMetadata>(relaxed = true) {
+            every { this@mockk.isArchived } returns isArchived
+        }
     }
 
     private fun DelegateHarness.setPresentState(

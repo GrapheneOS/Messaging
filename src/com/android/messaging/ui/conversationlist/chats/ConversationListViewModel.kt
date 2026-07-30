@@ -169,6 +169,10 @@ internal class ConversationListViewModel @Inject constructor(
                 destination = destination,
             )
 
+            if (success) {
+                _navigationEvents.trySend(NavEvent.CloseConversation(conversationId))
+            }
+
             _effects.trySend(
                 Effect.ConversationBlocked(
                     conversationId = conversationId,
@@ -318,14 +322,20 @@ internal class ConversationListViewModel @Inject constructor(
     }
 
     private fun onConversationSwipedToArchive(conversationId: ConversationId) {
-        val conversationIds = listOf(conversationId)
+        archive(conversationIds = listOf(conversationId))
+    }
 
+    private fun archive(conversationIds: List<ConversationId>) {
         optimisticSnapshotDelegate.remove(conversationIds)
         viewModelScope.launch {
             actionsDelegate.setArchived(
                 conversationIds = conversationIds,
                 isArchived = true,
             )
+        }
+
+        conversationIds.forEach { conversationId ->
+            _navigationEvents.trySend(NavEvent.CloseConversation(conversationId))
         }
 
         _effects.trySend(
@@ -451,22 +461,7 @@ internal class ConversationListViewModel @Inject constructor(
 
     private fun onArchiveClick() {
         withSelectedIds { conversationIds ->
-            optimisticSnapshotDelegate.remove(conversationIds)
-
-            viewModelScope.launch {
-                actionsDelegate.setArchived(
-                    conversationIds = conversationIds,
-                    isArchived = true,
-                )
-            }
-
-            _effects.trySend(
-                Effect.ArchiveStatusChanged(
-                    conversationIds = conversationIds.toImmutableList(),
-                    isArchived = true,
-                ),
-            )
-
+            archive(conversationIds = conversationIds)
             selectionDelegate.clear()
         }
     }

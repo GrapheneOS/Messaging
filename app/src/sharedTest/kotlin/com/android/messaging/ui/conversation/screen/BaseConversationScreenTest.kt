@@ -73,6 +73,7 @@ internal abstract class BaseConversationScreenTest {
                     onNavigateToAddContact = {},
                     onNavigateToForward = {},
                     onNavigateBack = {},
+                    onCloseConversation = {},
                     pendingLaunchPayload = ConversationPendingLaunchPayload(
                         draft = pendingDraft,
                         scrollPosition = pendingScrollPosition,

@@ -102,7 +102,7 @@ internal fun ConversationScreenRouteEffects(
     onNavigateToPhotoViewer: (PhotoViewerLaunchRequest) -> Unit,
     onNavigateToAddContact: (AddContactRequest) -> Unit,
     onNavigateToForward: (messageId: MessageId) -> Unit,
-    onNavigateBack: () -> Unit,
+    onCloseConversation: () -> Unit,
     onPendingDraftConsumed: () -> Unit,
     onPendingSelfParticipantIdConsumed: () -> Unit,
     onPendingStartupAttachmentConsumed: () -> Unit,
@@ -132,7 +132,7 @@ internal fun ConversationScreenRouteEffects(
 
     CollectEvents(events = screenModel.navigationEvents) { event ->
         when (event) {
-            ConversationScreenNavEvent.CloseConversation -> onNavigateBack()
+            ConversationScreenNavEvent.CloseConversation -> onCloseConversation()
 
             is ConversationScreenNavEvent.NavigateToMessageDetails -> {
                 onNavigateToMessageDetails(event.messageId)
