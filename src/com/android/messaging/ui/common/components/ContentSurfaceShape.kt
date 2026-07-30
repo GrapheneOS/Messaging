@@ -11,7 +11,19 @@ private val ZeroCornerSize = CornerSize(0.dp)
 
 internal val MaterialTheme.contentSurfaceShape: CornerBasedShape
     @Composable @ReadOnlyComposable
-    get() = shapes.large.copy(
-        bottomStart = ZeroCornerSize,
-        bottomEnd = ZeroCornerSize,
-    )
+    get() {
+        val flatShape = shapes.large.copy(
+            bottomStart = ZeroCornerSize,
+            bottomEnd = ZeroCornerSize,
+        )
+
+        if (!LocalIsListDetailPane.current) {
+            return flatShape
+        }
+
+        return when (LocalListDetailPaneSide.current) {
+            ListDetailPaneSide.Start -> flatShape.copy(topEnd = ZeroCornerSize)
+            ListDetailPaneSide.End -> flatShape.copy(topStart = ZeroCornerSize)
+            null -> flatShape
+        }
+    }
