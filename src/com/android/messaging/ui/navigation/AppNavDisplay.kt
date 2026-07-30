@@ -13,6 +13,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.scene.DialogSceneStrategy
 import androidx.navigation3.scene.SceneStrategy
 import androidx.navigation3.ui.NavDisplay
+import com.android.messaging.ui.common.components.predictiveBackContentTransform
 import com.android.messaging.ui.common.components.slideInFromLeft
 import com.android.messaging.ui.common.components.slideInFromRight
 import com.android.messaging.ui.common.components.slideOutToLeft
@@ -34,7 +35,11 @@ internal fun AppNavDisplay(
         viewModelStoreDecorator,
         paneTitleDecorator,
     ) {
-        listOf(saveableStateHolderDecorator, viewModelStoreDecorator, paneTitleDecorator)
+        listOf(
+            saveableStateHolderDecorator,
+            viewModelStoreDecorator,
+            paneTitleDecorator,
+        )
     }
 
     NavDisplay(
@@ -47,7 +52,9 @@ internal fun AppNavDisplay(
         sceneStrategies = sceneStrategies,
         transitionSpec = { slideInFromRight() togetherWith slideOutToLeft() },
         popTransitionSpec = { slideInFromLeft() togetherWith slideOutToRight() },
-        predictivePopTransitionSpec = { slideInFromLeft() togetherWith slideOutToRight() },
+        predictivePopTransitionSpec = { swipeEdge ->
+            predictiveBackContentTransform(swipeEdge = swipeEdge)
+        },
         entryProvider = entryProvider,
     )
 }
