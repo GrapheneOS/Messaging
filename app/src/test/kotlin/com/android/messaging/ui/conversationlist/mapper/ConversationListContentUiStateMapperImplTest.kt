@@ -53,6 +53,7 @@ internal class ConversationListContentUiStateMapperImplTest {
         val content = mapper.map(
             snapshot = snapshotOf(conversationItem(conversationId = ConversationId("a"))),
             selectedConversationIds = persistentListOf(),
+            openedConversationId = null,
         )
 
         assertTrue(content is ConversationListContentUiState.Items)
@@ -63,6 +64,7 @@ internal class ConversationListContentUiStateMapperImplTest {
         val content = mapper.map(
             snapshot = snapshotOf(),
             selectedConversationIds = persistentListOf(),
+            openedConversationId = null,
         )
 
         assertEquals(ConversationListContentUiState.Empty, content)
@@ -77,6 +79,7 @@ internal class ConversationListContentUiStateMapperImplTest {
                 hasFirstSyncCompleted = false,
             ),
             selectedConversationIds = persistentListOf(),
+            openedConversationId = null,
         )
 
         assertEquals(ConversationListContentUiState.WaitingForSync, content)
@@ -91,6 +94,7 @@ internal class ConversationListContentUiStateMapperImplTest {
                 hasFirstSyncCompleted = false,
             ),
             selectedConversationIds = persistentListOf(),
+            openedConversationId = null,
         )
 
         assertTrue(content is ConversationListContentUiState.Items)
@@ -101,6 +105,7 @@ internal class ConversationListContentUiStateMapperImplTest {
         val content = mapper.map(
             snapshot = snapshotOf(conversationItem(conversationId = ConversationId("a"))),
             selectedConversationIds = persistentListOf(ConversationId("a")),
+            openedConversationId = null,
         )
 
         val items = (content as ConversationListContentUiState.Items).items

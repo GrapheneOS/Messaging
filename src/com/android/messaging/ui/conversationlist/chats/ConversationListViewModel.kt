@@ -57,6 +57,7 @@ internal class ConversationListViewModel @Inject constructor(
 
     private val isScrollToTopVisible = MutableStateFlow(false)
     private val isDebugEnabled = MutableStateFlow(debugFeaturesProvider.isEnabled())
+    private val openedConversationId = MutableStateFlow<ConversationId?>(value = null)
 
     private val snapshot: StateFlow<ConversationListSnapshot?> = optimisticSnapshotDelegate.snapshot
 
@@ -69,12 +70,14 @@ internal class ConversationListViewModel @Inject constructor(
     override val uiState: StateFlow<State> = combine(
         snapshot.filterNotNull(),
         selectionDelegate.selectedIds,
+        openedConversationId,
         isScrollToTopVisible,
         isDebugEnabled,
-    ) { snapshot, selectedIds, isScrollToTopVisible, isDebugEnabled ->
+    ) { snapshot, selectedIds, openedId, isScrollToTopVisible, isDebugEnabled ->
         uiStateMapper.map(
             snapshot = snapshot,
             selectedConversationIds = selectedIds,
+            openedConversationId = openedId,
             isScrollToTopVisible = isScrollToTopVisible,
             isDebugEnabled = isDebugEnabled,
         )
@@ -105,6 +108,7 @@ internal class ConversationListViewModel @Inject constructor(
             is Action.NavigationAction -> onNavigationAction(action)
             is Action.SelectionAction -> onSelectionAction(action)
             is Action.SnackbarAction -> onSnackbarAction(action)
+            is Action.PaneStateAction -> onPaneStateAction(action)
         }
     }
 
@@ -143,6 +147,14 @@ internal class ConversationListViewModel @Inject constructor(
                         destination = action.destination,
                     )
                 }
+            }
+        }
+    }
+
+    private fun onPaneStateAction(action: Action.PaneStateAction) {
+        when (action) {
+            is Action.OpenedConversationChanged -> {
+                openedConversationId.value = action.conversationId
             }
         }
     }

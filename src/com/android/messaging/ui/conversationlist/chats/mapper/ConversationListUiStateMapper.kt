@@ -17,6 +17,7 @@ internal interface ConversationListUiStateMapper {
     fun map(
         snapshot: ConversationListSnapshot,
         selectedConversationIds: ImmutableList<ConversationId>,
+        openedConversationId: ConversationId?,
         isScrollToTopVisible: Boolean,
         isDebugEnabled: Boolean,
     ): ConversationListUiState
@@ -30,12 +31,14 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
     override fun map(
         snapshot: ConversationListSnapshot,
         selectedConversationIds: ImmutableList<ConversationId>,
+        openedConversationId: ConversationId?,
         isScrollToTopVisible: Boolean,
         isDebugEnabled: Boolean,
     ): ConversationListUiState {
         val content = contentMapper.map(
             snapshot = snapshot,
             selectedConversationIds = selectedConversationIds,
+            openedConversationId = openedConversationId,
         )
 
         val selection = mapSelectionState(

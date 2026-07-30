@@ -18,7 +18,11 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
 internal interface ConversationListItemUiMapper {
-    fun map(item: ConversationListItem, isSelected: Boolean): ConversationListItemUiModel
+    fun map(
+        item: ConversationListItem,
+        isSelected: Boolean,
+        isOpened: Boolean,
+    ): ConversationListItemUiModel
 }
 
 internal class ConversationListItemUiMapperImpl @Inject constructor(
@@ -32,12 +36,17 @@ internal class ConversationListItemUiMapperImpl @Inject constructor(
     override fun map(
         item: ConversationListItem,
         isSelected: Boolean,
+        isOpened: Boolean,
     ): ConversationListItemUiModel {
-        return item.toItemUiModel(isSelected)
+        return item.toItemUiModel(
+            isSelected = isSelected,
+            isOpened = isOpened,
+        )
     }
 
     private fun ConversationListItem.toItemUiModel(
         isSelected: Boolean,
+        isOpened: Boolean,
     ): ConversationListItemUiModel {
         val isDraft = draft.isVisible
         val isOutgoing = isDraft || !latestMessage.isIncoming
@@ -67,6 +76,7 @@ internal class ConversationListItemUiMapperImpl @Inject constructor(
             isSnoozed = notification.isSnoozed,
             isPinned = isPinned,
             isSelected = isSelected,
+            isOpened = isOpened,
         )
     }
 

@@ -27,6 +27,7 @@ internal class ArchivedConversationListUiStateMapperImpl @Inject constructor(
         val content = contentMapper.map(
             snapshot = snapshot,
             selectedConversationIds = selectedConversationIds,
+            openedConversationId = null,
         )
 
         return State(

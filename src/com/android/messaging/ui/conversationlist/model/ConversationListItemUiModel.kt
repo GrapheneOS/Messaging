@@ -23,6 +23,7 @@ internal data class ConversationListItemUiModel(
     val isSnoozed: Boolean,
     val isPinned: Boolean,
     val isSelected: Boolean,
+    val isOpened: Boolean,
 )
 
 @Immutable

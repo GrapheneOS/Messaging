@@ -244,8 +244,10 @@ private fun itemSnippetText(item: ConversationListItemUiModel): String? {
 
 @Composable
 private fun itemContainerColor(item: ConversationListItemUiModel): Color {
+    val isHighlighted = item.isSelected || item.isOpened
+
     return when {
-        item.isSelected -> MaterialTheme.colorScheme.surfaceContainerLow
+        isHighlighted -> MaterialTheme.colorScheme.surfaceContainerLow
         else -> MaterialTheme.colorScheme.background
     }
 }
