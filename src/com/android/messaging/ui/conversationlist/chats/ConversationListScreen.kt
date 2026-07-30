@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -52,6 +53,9 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.ui.common.components.ComposeBarControlHeight
+import com.android.messaging.ui.common.components.ComposeBarVerticalPadding
+import com.android.messaging.ui.common.components.LocalIsListDetailPane
 import com.android.messaging.ui.common.components.PrimaryActionButton
 import com.android.messaging.ui.common.components.contentSurfaceShape
 import com.android.messaging.ui.common.components.horizontalSafeDrawingInsets
@@ -455,6 +459,10 @@ private fun BoxScope.ConversationListFabs(
     val hasItems = uiState.content is ConversationListContentUiState.Items
     val fabWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
     val horizontalInsets = horizontalSafeDrawingInsets()
+    val bottomSpacing = when {
+        LocalIsListDetailPane.current -> ComposeBarVerticalPadding
+        else -> FabSpacing
+    }
 
     ScrollToTopFab(
         visible = uiState.isScrollToTopVisible,
@@ -462,7 +470,7 @@ private fun BoxScope.ConversationListFabs(
         modifier = Modifier
             .align(Alignment.BottomCenter)
             .windowInsetsPadding(fabWindowInsets)
-            .padding(bottom = FabSpacing),
+            .padding(bottom = bottomSpacing),
     )
 
     StartChatFab(
@@ -474,7 +482,7 @@ private fun BoxScope.ConversationListFabs(
             .windowInsetsPadding(fabWindowInsets)
             .padding(horizontalInsets)
             .padding(horizontal = FabSpacing)
-            .padding(bottom = FabSpacing),
+            .padding(bottom = bottomSpacing),
     )
 }
 
@@ -573,6 +581,7 @@ private fun StartChatFab(
         PrimaryActionButton(
             text = stringResource(R.string.conversation_list_start_chat),
             onClick = onClick,
+            modifier = Modifier.height(height = ComposeBarControlHeight),
             expanded = expanded,
             leadingIcon = Icons.AutoMirrored.Rounded.Chat,
         )
