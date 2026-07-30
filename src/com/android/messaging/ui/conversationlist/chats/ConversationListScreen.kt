@@ -65,6 +65,7 @@ import com.android.messaging.ui.conversationlist.chats.model.ConversationListEff
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState as State
 import com.android.messaging.ui.conversationlist.common.item.ConversationListItemRow
 import com.android.messaging.ui.conversationlist.common.list.conversationRowHorizontalPadding
+import com.android.messaging.ui.conversationlist.common.pane.listPaneContentColor
 import com.android.messaging.ui.conversationlist.common.support.previewConversationListItems
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel as Model
@@ -422,7 +423,7 @@ private fun ConversationListScaffold(
                 }
                 .background(backdropColor)
                 .clip(MaterialTheme.contentSurfaceShape)
-                .background(MaterialTheme.colorScheme.background),
+                .background(listPaneContentColor()),
         ) {
             ConversationListContent(
                 content = uiState.content,
@@ -452,9 +453,8 @@ private fun BoxScope.ConversationListFabs(
     onScrollToTop: () -> Unit,
 ) {
     val hasItems = uiState.content is ConversationListContentUiState.Items
-    val fabWindowInsets = WindowInsets.safeDrawing.only(
-        WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom,
-    )
+    val fabWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
+    val horizontalInsets = horizontalSafeDrawingInsets()
 
     ScrollToTopFab(
         visible = uiState.isScrollToTopVisible,
@@ -472,7 +472,9 @@ private fun BoxScope.ConversationListFabs(
         modifier = Modifier
             .align(Alignment.BottomEnd)
             .windowInsetsPadding(fabWindowInsets)
-            .padding(FabSpacing),
+            .padding(horizontalInsets)
+            .padding(horizontal = FabSpacing)
+            .padding(bottom = FabSpacing),
     )
 }
 
