@@ -31,7 +31,7 @@ internal class ConversationScreenImmediateEffectsTest : BaseConversationScreenEf
     fun closeConversation_invokesNavigationCallback() {
         var navigationCount = 0
         setEffectsContent(
-            onNavigateBack = {
+            onCloseConversation = {
                 navigationCount += 1
             },
         )

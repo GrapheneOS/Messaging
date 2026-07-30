@@ -114,6 +114,9 @@ private fun ConversationRoute(
             )
         },
         onNavigateBack = appNavigator::back,
+        onCloseConversation = {
+            appNavigator.closeConversation(conversationId = conversationId)
+        },
         pendingLaunchPayload = pendingPayload,
         onPendingDraftConsumed = {
             entryModel.onDraftPayloadConsumed(conversationId = conversationId)

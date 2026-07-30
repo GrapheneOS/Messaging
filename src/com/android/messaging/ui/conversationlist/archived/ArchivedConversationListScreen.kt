@@ -65,6 +65,7 @@ internal fun ArchivedConversationListScreen(
     onNavigateBack: () -> Unit,
     onNavigateToConversation: (ConversationId) -> Unit,
     onNavigateToConversationSettings: (ConversationId) -> Unit,
+    onCloseConversation: (ConversationId) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
@@ -81,6 +82,10 @@ internal fun ArchivedConversationListScreen(
 
             is NavEvent.OpenConversationSettings -> {
                 onNavigateToConversationSettings(event.conversationId)
+            }
+
+            is NavEvent.CloseConversation -> {
+                onCloseConversation(event.conversationId)
             }
         }
     }

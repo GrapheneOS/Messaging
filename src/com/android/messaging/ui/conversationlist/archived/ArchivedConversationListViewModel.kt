@@ -204,6 +204,11 @@ internal class ArchivedConversationListViewModel @Inject constructor(
                 isArchived = false,
             )
         }
+
+        conversationIds.forEach { conversationId ->
+            _navigationEvents.trySend(NavEvent.CloseConversation(conversationId))
+        }
+
         _effects.trySend(Effect.ConversationsUnarchived(conversationIds.toImmutableList()))
     }
 

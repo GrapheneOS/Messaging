@@ -58,6 +58,9 @@ private fun conversationListRouteContent(): @Composable (ConversationListNavKey)
                 onNavigateToConversationSettings = { conversationId ->
                     navigator.navigateToConversationSettings(conversationId = conversationId)
                 },
+                onCloseConversation = { conversationId ->
+                    appNavigator.closeConversation(conversationId = conversationId)
+                },
                 onNavigateToArchivedConversations = {
                     appNavigator.push(destination = ArchivedConversationListNavKey)
                 },
@@ -117,7 +120,12 @@ private fun archivedConversationListRouteContent():
                     conversationId = conversationId,
                 )
             },
-            modifier = Modifier.fillMaxSize(),
+            onCloseConversation = { conversationId ->
+                navigator.closeConversation(conversationId = conversationId)
+            },
+            modifier = Modifier
+                .fillMaxSize()
+                .consumeOppositePaneInsets(),
         )
     }
 }

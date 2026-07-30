@@ -16,4 +16,8 @@ internal sealed interface ConversationListNavEvent {
     data class OpenConversationSettings(
         val conversationId: ConversationId,
     ) : ConversationListNavEvent
+
+    data class CloseConversation(
+        val conversationId: ConversationId,
+    ) : ConversationListNavEvent
 }

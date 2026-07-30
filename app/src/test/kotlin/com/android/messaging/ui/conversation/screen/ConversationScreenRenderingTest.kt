@@ -34,6 +34,7 @@ internal class ConversationScreenRenderingTest : BaseConversationScreenTest() {
                     onNavigateToAddContact = {},
                     onNavigateToForward = {},
                     onNavigateBack = {},
+                    onCloseConversation = {},
                     pendingLaunchPayload = ConversationPendingLaunchPayload(),
                     onPendingDraftConsumed = {},
                     onPendingScrollPositionConsumed = {},
