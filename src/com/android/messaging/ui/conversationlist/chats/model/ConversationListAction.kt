@@ -19,6 +19,8 @@ internal sealed interface ConversationListAction {
 
     sealed interface SnackbarAction : ConversationListAction
 
+    sealed interface PaneStateAction : ConversationListAction
+
     // region ConfirmationAction
     data class BlockConfirmed(
         val conversationId: ConversationId,
@@ -114,5 +116,11 @@ internal sealed interface ConversationListAction {
         val conversationIds: ImmutableList<ConversationId>,
         val isPinned: Boolean,
     ) : SelectionAction
+    // endregion
+
+    // region PaneStateAction
+    data class OpenedConversationChanged(
+        val conversationId: ConversationId?,
+    ) : PaneStateAction
     // endregion
 }

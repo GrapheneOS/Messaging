@@ -78,6 +78,7 @@ internal class ConversationListUiStateMapperImplTest {
                 ),
             ),
             selectedConversationIds = persistentListOf(),
+            openedConversationId = null,
             isScrollToTopVisible = false,
             isDebugEnabled = false,
         )
@@ -95,6 +96,7 @@ internal class ConversationListUiStateMapperImplTest {
                 ),
             ),
             selectedConversationIds = persistentListOf(),
+            openedConversationId = null,
             isScrollToTopVisible = false,
             isDebugEnabled = false,
         )
@@ -107,6 +109,7 @@ internal class ConversationListUiStateMapperImplTest {
         val state = mapper.map(
             snapshot = snapshotOf(conversationItem(conversationId = ConversationId("a"))),
             selectedConversationIds = persistentListOf(),
+            openedConversationId = null,
             isScrollToTopVisible = false,
             isDebugEnabled = false,
         )
@@ -130,6 +133,7 @@ internal class ConversationListUiStateMapperImplTest {
                 ),
             ),
             selectedConversationIds = persistentListOf(ConversationId("selected")),
+            openedConversationId = null,
             isScrollToTopVisible = false,
             isDebugEnabled = false,
         )
@@ -159,6 +163,7 @@ internal class ConversationListUiStateMapperImplTest {
                 ConversationId("first"),
                 ConversationId("second")
             ),
+            openedConversationId = null,
             isScrollToTopVisible = false,
             isDebugEnabled = false,
         )
@@ -176,6 +181,7 @@ internal class ConversationListUiStateMapperImplTest {
                 conversationItem(conversationId = ConversationId("b")),
             ),
             selectedConversationIds = persistentListOf(ConversationId("a"), ConversationId("b")),
+            openedConversationId = null,
             isScrollToTopVisible = false,
             isDebugEnabled = false,
         )
@@ -193,6 +199,7 @@ internal class ConversationListUiStateMapperImplTest {
                 ),
             ),
             selectedConversationIds = persistentListOf(),
+            openedConversationId = null,
             isScrollToTopVisible = false,
             isDebugEnabled = false,
         )
@@ -212,6 +219,7 @@ internal class ConversationListUiStateMapperImplTest {
                 ),
             ),
             selectedConversationIds = persistentListOf(),
+            openedConversationId = null,
             isScrollToTopVisible = false,
             isDebugEnabled = false,
         )
@@ -234,6 +242,7 @@ internal class ConversationListUiStateMapperImplTest {
                 ),
             ),
             selectedConversationIds = persistentListOf(),
+            openedConversationId = null,
             isScrollToTopVisible = false,
             isDebugEnabled = false,
         )
@@ -256,6 +265,7 @@ internal class ConversationListUiStateMapperImplTest {
                 ),
             ),
             selectedConversationIds = persistentListOf(),
+            openedConversationId = null,
             isScrollToTopVisible = false,
             isDebugEnabled = false,
         )
@@ -280,6 +290,7 @@ internal class ConversationListUiStateMapperImplTest {
                 ),
             ),
             selectedConversationIds = persistentListOf(),
+            openedConversationId = null,
             isScrollToTopVisible = false,
             isDebugEnabled = false,
         )
@@ -300,6 +311,7 @@ internal class ConversationListUiStateMapperImplTest {
                 hasFirstSyncCompleted = true,
             ),
             selectedConversationIds = persistentListOf(ConversationId("a")),
+            openedConversationId = null,
             isScrollToTopVisible = true,
             isDebugEnabled = true,
         )

@@ -87,6 +87,7 @@ internal fun ConversationListScreen(
     screenModel: ConversationListScreenModel,
     effectHandler: ConversationListEffectHandler,
     navigation: ConversationListNavigationCallbacks,
+    openedConversationId: ConversationId?,
     modifier: Modifier = Modifier,
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
@@ -105,6 +106,10 @@ internal fun ConversationListScreen(
 
     LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
         screenModel.onAction(Action.ScreenResumed)
+    }
+
+    LaunchedEffect(openedConversationId) {
+        screenModel.onAction(Action.OpenedConversationChanged(openedConversationId))
     }
 
     ConversationListNavEvents(

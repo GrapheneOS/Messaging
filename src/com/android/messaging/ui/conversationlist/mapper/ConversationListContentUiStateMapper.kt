@@ -11,6 +11,7 @@ internal interface ConversationListContentUiStateMapper {
     fun map(
         snapshot: ConversationListSnapshot,
         selectedConversationIds: ImmutableList<ConversationId>,
+        openedConversationId: ConversationId?,
     ): ConversationListContentUiState
 }
 
@@ -21,12 +22,14 @@ internal class ConversationListContentUiStateMapperImpl @Inject constructor(
     override fun map(
         snapshot: ConversationListSnapshot,
         selectedConversationIds: ImmutableList<ConversationId>,
+        openedConversationId: ConversationId?,
     ): ConversationListContentUiState {
         val items = snapshot.items
             .map { item ->
                 itemUiMapper.map(
                     item = item,
                     isSelected = item.conversationId in selectedConversationIds,
+                    isOpened = item.conversationId == openedConversationId,
                 )
             }
             .toImmutableList()

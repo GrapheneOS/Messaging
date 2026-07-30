@@ -8,10 +8,13 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.appsettings.navigation.SettingsNavKey
 import com.android.messaging.ui.blockedparticipants.navigation.BlockedParticipantsNavKey
+import com.android.messaging.ui.common.components.LocalIsListDetailPane
 import com.android.messaging.ui.common.components.consumeOppositePaneInsets
 import com.android.messaging.ui.contact.navigation.navigateToAddContact
+import com.android.messaging.ui.conversation.navigation.ConversationNavKey
 import com.android.messaging.ui.conversation.navigation.conversationListPaneMetadata
 import com.android.messaging.ui.conversation.navigation.rememberConversationNavigator
 import com.android.messaging.ui.conversationlist.archived.ArchivedConversationListScreen
@@ -22,6 +25,7 @@ import com.android.messaging.ui.conversationlist.chats.ConversationListScreen
 import com.android.messaging.ui.conversationlist.chats.ConversationListViewModel
 import com.android.messaging.ui.conversationlist.chats.rememberConversationListEffectHandler
 import com.android.messaging.ui.navigation.LocalNavigator
+import com.android.messaging.ui.navigation.Navigator
 import com.android.messaging.ui.navigation.paneTitleMetadata
 
 internal fun EntryProviderScope<NavKey>.conversationListEntries() {
@@ -70,11 +74,24 @@ private fun conversationListRouteContent(): @Composable (ConversationListNavKey)
             screenModel = hiltViewModel<ConversationListViewModel>(),
             effectHandler = effectHandler,
             navigation = navigation,
+            openedConversationId = openedConversationId(navigator = appNavigator),
             modifier = Modifier
                 .fillMaxSize()
                 .consumeOppositePaneInsets(),
         )
     }
+}
+
+@Composable
+private fun openedConversationId(navigator: Navigator): ConversationId? {
+    if (!LocalIsListDetailPane.current) {
+        return null
+    }
+
+    return navigator.backStack
+        .filterIsInstance<ConversationNavKey>()
+        .lastOrNull()
+        ?.conversationId
 }
 
 private fun archivedConversationListRouteContent():

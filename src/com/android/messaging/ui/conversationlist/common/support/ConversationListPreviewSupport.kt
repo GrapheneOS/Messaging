@@ -66,6 +66,7 @@ internal fun previewConversationListItem(
         isSnoozed = isSnoozed,
         isPinned = isPinned,
         isSelected = isSelected,
+        isOpened = false,
     )
 }
 
