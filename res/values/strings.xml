@@ -549,6 +549,8 @@
     <string name="conversation_list_empty_text">Once you start a new conversation, you’ll see it listed here</string>
     <!-- String to show in the archived conversation list view when there are no messages. -->
     <string name="archived_conversation_list_empty_text">Archived conversations appear here</string>
+    <!-- Low-emphasis hint shown in the detail pane on large screens when no conversation is open. -->
+    <string name="conversation_detail_no_selection_text">No conversation selected</string>
     <!-- String to show in the conversation list view when we haven't synchronized the SMS database yet -->
     <string name="conversation_list_first_sync_text">Loading conversations&#8230;</string>
 
