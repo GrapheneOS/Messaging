@@ -69,7 +69,10 @@ internal class ConversationNavigatorImpl(
             return
         }
 
-        navigator.push(destination = destination)
+        when (backStack.lastOrNull()) {
+            is ConversationNavKey -> navigator.replaceTop(destination = destination)
+            else -> navigator.push(destination = destination)
+        }
     }
 
     override fun navigateToNewChat() {
