@@ -4,7 +4,6 @@ import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.send.ConversationSendData
 import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.datamodel.MessageTextStats
-import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
 import com.android.messaging.sms.MmsSmsUtils
 import com.android.messaging.sms.MmsUtils
@@ -38,7 +37,7 @@ internal class GetConversationDraftSendProtocolImpl @Inject constructor() :
         draft: ConversationDraft,
         sendData: ConversationSendData,
     ): Boolean {
-        val selfSubId = resolveSelfSubId(sendData = sendData)
+        val selfSubId = sendData.selfSubId
         val conversationMetadata = sendData.metadata
 
         val groupConversationRequiresMms = conversationMetadata.isGroupConversation &&
@@ -62,11 +61,6 @@ internal class GetConversationDraftSendProtocolImpl @Inject constructor() :
                 )
             }
         }
-    }
-
-    private fun resolveSelfSubId(sendData: ConversationSendData): SubId {
-        val subId = sendData.selfParticipant?.subId ?: ParticipantData.DEFAULT_SELF_SUB_ID
-        return SubId(subId)
     }
 
     private fun messageLengthRequiresMms(

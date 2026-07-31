@@ -49,7 +49,7 @@ internal class SendContentToConversationsImpl @Inject constructor(
             if (perConversationDraft == null) {
                 LogUtil.w(
                     TAG,
-                    "Skipping send to ${conversationId.value}: failed to copy attachments"
+                    "Skipping send to ${conversationId.value}: failed to copy attachments",
                 )
                 anyFailed = true
                 return@forEachIndexed

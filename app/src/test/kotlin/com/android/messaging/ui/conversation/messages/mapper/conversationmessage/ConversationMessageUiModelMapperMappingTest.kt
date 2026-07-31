@@ -27,7 +27,7 @@ internal class ConversationMessageUiModelMapperMappingTest :
 
         val uiModel = mapPresent(
             messageData(
-                messageId = "message-7",
+                messageId = MessageId("message-7"),
                 conversationId = ConversationId("conversation-3"),
                 text = "Hello there",
                 parts = emptyList(),
@@ -40,8 +40,8 @@ internal class ConversationMessageUiModelMapperMappingTest :
                 senderContactId = 42L,
                 senderContactLookupKey = "lookup-7",
                 senderNormalizedDestination = "+15550100",
-                senderParticipantId = "participant-7",
-                selfParticipantId = "self-7",
+                senderParticipantId = ParticipantId("participant-7"),
+                selfParticipantId = ParticipantId("self-7"),
                 canClusterWithPrevious = true,
                 canClusterWithNext = false,
                 canCopyMessageToClipboard = true,
@@ -88,14 +88,15 @@ internal class ConversationMessageUiModelMapperMappingTest :
     @Test
     fun map_withBlankMessageId_dropsMessage() {
         assertNull(mapper.map(messageData(messageId = null)))
-        assertNull(mapper.map(messageData(messageId = "")))
-        assertNull(mapper.map(messageData(messageId = "   ")))
+        assertNull(mapper.map(messageData(messageId = MessageId(""))))
+        assertNull(mapper.map(messageData(messageId = MessageId("   "))))
     }
 
     @Test
     fun map_withBlankConversationId_dropsMessage() {
         assertNull(mapper.map(messageData(conversationId = null)))
         assertNull(mapper.map(messageData(conversationId = ConversationId(""))))
+        assertNull(mapper.map(messageData(conversationId = ConversationId("   "))))
     }
 
     @Test
@@ -110,8 +111,8 @@ internal class ConversationMessageUiModelMapperMappingTest :
         val uiModel = mapPresent(
             messageData(
                 senderNormalizedDestination = "   ",
-                senderParticipantId = "",
-                selfParticipantId = " ",
+                senderParticipantId = ParticipantId(""),
+                selfParticipantId = ParticipantId(" "),
             ),
         )
 

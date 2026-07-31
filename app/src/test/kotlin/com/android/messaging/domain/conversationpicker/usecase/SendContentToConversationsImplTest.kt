@@ -5,6 +5,7 @@ import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.domain.conversation.usecase.draft.SendConversationDraft
 import com.android.messaging.domain.conversation.usecase.draft.exception.BlankConversationIdException
 import com.android.messaging.domain.conversationpicker.model.SendContentResult
+import com.android.messaging.testutil.assertThat
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf
@@ -44,7 +45,8 @@ internal class SendContentToConversationsImplTest {
         )
 
         assertEquals(SendContentResult.Success, result)
-        assertEquals(listOf(ConversationId("a"), ConversationId("b")), sentConversationIds)
+        assertThat(sentConversationIds.toList())
+            .isEqualTo(listOf(ConversationId("a"), ConversationId("b")))
     }
 
     @Test
@@ -62,7 +64,8 @@ internal class SendContentToConversationsImplTest {
         )
 
         assertEquals(SendContentResult.Failure, result)
-        assertEquals(listOf(ConversationId("a"), ConversationId("b")), sentConversationIds)
+        assertThat(sentConversationIds.toList())
+            .isEqualTo(listOf(ConversationId("a"), ConversationId("b")))
     }
 
     @Test
