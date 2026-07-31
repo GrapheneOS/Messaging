@@ -69,7 +69,7 @@ internal class SubscriptionSettingsUiStateMapperSelectionTest :
         )
 
         assertEquals(true, uiState.isMultiSim)
-        assertEquals(listOf(SubId(1), SubId(2)), uiState.subscriptions.map { it.subId })
+        assertThat(uiState.subscriptions.map { it.subId }).isEqualTo(listOf(SubId(1), SubId(2)))
         assertEquals(
             context.getString(R.string.sim_specific_settings, "Verizon"),
             uiState.subscriptions[0].displayName,

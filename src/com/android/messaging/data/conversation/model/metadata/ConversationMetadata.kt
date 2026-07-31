@@ -1,6 +1,7 @@
 package com.android.messaging.data.conversation.model.metadata
 
 import com.android.messaging.data.conversation.model.ParticipantId
+
 internal data class ConversationMetadata(
     val conversationName: String,
     val selfParticipantId: ParticipantId,

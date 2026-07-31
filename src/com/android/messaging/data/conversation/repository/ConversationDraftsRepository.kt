@@ -55,7 +55,7 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
 
     override fun observeConversationDraft(conversationId: ConversationId): Flow<ConversationDraft> {
         val draftChangeUri = MessagingContentProvider.buildConversationMetadataUri(
-            conversationId.value
+            conversationId.value,
         )
 
         return observeDraftChanges(uri = draftChangeUri)
