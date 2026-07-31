@@ -106,7 +106,7 @@ internal class SendConversationDraftImpl @Inject constructor(
             conversationId = conversationId,
         )
 
-        val selfSubId = resolveSelfSubId(sendData = sendData)
+        val selfSubId = sendData.selfSubId
         val sendProtocol = getConversationDraftSendProtocol(
             draft = draft,
             sendData = sendData,
@@ -198,11 +198,6 @@ internal class SendConversationDraftImpl @Inject constructor(
                 conversationId = conversationId,
             )
         }
-    }
-
-    private fun resolveSelfSubId(sendData: ConversationSendData): SubId {
-        val subId = sendData.selfParticipant?.subId ?: ParticipantData.DEFAULT_SELF_SUB_ID
-        return SubId(subId)
     }
 
     private fun validateGroupMmsSelfNumber(

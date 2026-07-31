@@ -29,8 +29,8 @@ internal const val TEST_DESTINATION = "+31612345678"
 internal const val MOTHER_DESTINATION = "+31611111111"
 internal const val FATHER_DESTINATION = "+31622222222"
 
-internal val SUB1_ID = ParticipantId("sub1")
-internal val SUB2_ID = ParticipantId("sub2")
+internal val SUB1_SELF_PARTICIPANT_ID = ParticipantId("sub1")
+internal val SUB2_SELF_PARTICIPANT_ID = ParticipantId("sub2")
 internal const val SUB1_DESTINATION = "+11111111111"
 internal const val SUB2_DESTINATION = "+22222222222"
 
@@ -110,12 +110,12 @@ internal fun participant(
 }
 
 internal fun subscription(
-    id: ParticipantId,
+    selfParticipantId: ParticipantId,
     slotId: Int,
     destination: String?,
 ): Subscription {
     return Subscription(
-        selfParticipantId = id,
+        selfParticipantId = selfParticipantId,
         subId = SubId(slotId),
         label = ConversationSubscriptionLabel.Slot(slotId = slotId),
         displayDestination = destination,

@@ -1,7 +1,7 @@
 package com.android.messaging.ui.conversationlist.common.support
 
 import com.android.messaging.data.conversation.model.ConversationId
-import org.junit.Assert.assertEquals
+import com.android.messaging.testutil.assertThat
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -32,7 +32,7 @@ class AppearanceAnimationTrackerTest {
             excludedConversationIds = emptySet(),
         )
 
-        assertEquals(setOf(ConversationId("c")), entering.keys)
+        assertThat(entering.keys).isEqualTo(setOf(ConversationId("c")))
     }
 
     @Test
