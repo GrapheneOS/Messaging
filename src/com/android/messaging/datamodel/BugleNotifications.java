@@ -58,6 +58,7 @@ import com.android.messaging.util.AvatarUriUtil;
 import com.android.messaging.util.LogUtil;
 import com.android.messaging.util.NotificationChannelUtil;
 import com.android.messaging.util.NotificationPlayer;
+import com.android.messaging.util.OsUtil;
 import com.android.messaging.util.PendingIntentConstants;
 import com.android.messaging.util.PhoneUtils;
 import com.android.messaging.util.RingtoneUtil;
@@ -464,7 +465,8 @@ public class BugleNotifications {
         notifBuilder.addAction(replyActionBuilder.build());
 
         final String messageId = conversation.getLatestMessageId();
-        if (conversation.getDoesLatestMessageNeedDownload() && messageId != null) {
+        if (conversation.getDoesLatestMessageNeedDownload() && messageId != null
+                && !OsUtil.isSecondaryUser()) {
             final PendingIntent downloadPendingIntent =
                     RedownloadMmsAction.getPendingIntentForRedownloadMms(context, messageId);
 
