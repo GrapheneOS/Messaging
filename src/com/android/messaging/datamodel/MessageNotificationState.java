@@ -53,6 +53,7 @@ import com.android.messaging.util.ContentType;
 import com.android.messaging.util.ConversationIdSet;
 import com.android.messaging.util.LogUtil;
 import com.android.messaging.util.NotificationChannelUtil;
+import com.android.messaging.util.OsUtil;
 import com.android.messaging.util.PendingIntentConstants;
 import com.android.messaging.util.UriUtil;
 
@@ -456,8 +457,10 @@ public class MessageNotificationState {
                         // notification.
                         Assert.equals(MessageData.BUGLE_STATUS_INCOMING_YET_TO_MANUAL_DOWNLOAD,
                                 convMessageData.getStatus());
-                        text = context.getResources().getString(
-                                R.string.message_title_manual_download);
+                        final int downloadTitleResId = OsUtil.isSecondaryUser()
+                                ? R.string.message_title_download_secondary_user
+                                : R.string.message_title_manual_download;
+                        text = context.getResources().getString(downloadTitleResId);
                     }
                     Conversation conversation = conversations.get(convId);
                     final Uri avatarUri = AvatarUriUtil.createAvatarUri(
