@@ -9,6 +9,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.testutil.TEST_WAIT_TIMEOUT_MILLIS
 import com.android.messaging.ui.conversation.ADD_PARTICIPANTS_CONFIRM_BUTTON_TEST_TAG
@@ -105,7 +106,7 @@ class AddParticipantsScreenTest {
     fun navigateEffect_forwardsConversationId() {
         val effectsFlow = MutableSharedFlow<AddParticipantsEffect>(extraBufferCapacity = 1)
         val model = createScreenModel(effectsFlow = effectsFlow)
-        val onNavigateToConversation = mockk<(String) -> Unit>(relaxed = true)
+        val onNavigateToConversation = mockk<(ConversationId) -> Unit>(relaxed = true)
 
         setContent(
             model = model,
@@ -172,7 +173,7 @@ class AddParticipantsScreenTest {
     private fun setContent(
         model: AddParticipantsScreenModel,
         onNavigateBack: () -> Unit = {},
-        onNavigateToConversation: (String) -> Unit = {},
+        onNavigateToConversation: (ConversationId) -> Unit = {},
     ) {
         composeTestRule.setContent {
             AppTheme {
@@ -221,7 +222,7 @@ class AddParticipantsScreenTest {
     }
 
     private companion object {
-        private const val TARGET_CONVERSATION_ID = "conversation-target"
+        private val TARGET_CONVERSATION_ID = ConversationId("conversation-target")
 
         private val defaultUiState = AddParticipantsUiState(
             isLoadingConversationParticipants = false,

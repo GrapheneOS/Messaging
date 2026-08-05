@@ -3,13 +3,16 @@ package com.android.messaging.ui.conversation.messages.model.message
 import android.net.Uri
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.datamodel.data.ParticipantData
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
 internal data class ConversationMessageUiModel(
-    val messageId: String,
-    val conversationId: String,
+    val messageId: MessageId,
+    val conversationId: ConversationId,
     val text: String?,
     val parts: ImmutableList<ConversationMessagePartUiModel>,
     val sentTimestamp: Long,
@@ -22,8 +25,8 @@ internal data class ConversationMessageUiModel(
     val senderContactId: Long,
     val senderContactLookupKey: String?,
     val senderNormalizedDestination: String?,
-    val senderParticipantId: String?,
-    val selfParticipantId: String?,
+    val senderParticipantId: ParticipantId?,
+    val selfParticipantId: ParticipantId?,
     val canClusterWithPrevious: Boolean,
     val canClusterWithNext: Boolean,
     val canCopyMessageToClipboard: Boolean,

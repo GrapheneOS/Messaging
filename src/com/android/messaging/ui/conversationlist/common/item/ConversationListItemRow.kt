@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
 import com.android.messaging.ui.common.components.TwoLineListItem
 import com.android.messaging.ui.conversationlist.common.support.conversationListItemTestTag
@@ -277,7 +278,7 @@ private fun ConversationListItemRowPreview() {
         Column(verticalArrangement = Arrangement.spacedBy(space = 2.dp)) {
             ConversationListItemRow(
                 item = previewConversationListItem(
-                    conversationId = "unread",
+                    conversationId = ConversationId("unread"),
                     title = "Jane Doe",
                     snippetText = "Are we still on for tomorrow?",
                     isUnread = true,
@@ -287,7 +288,7 @@ private fun ConversationListItemRowPreview() {
             )
             ConversationListItemRow(
                 item = previewConversationListItem(
-                    conversationId = "read",
+                    conversationId = ConversationId("read"),
                     title = "Ada Lovelace",
                     snippetText = "Sounds good, thanks!",
                 ),
@@ -296,7 +297,7 @@ private fun ConversationListItemRowPreview() {
             )
             ConversationListItemRow(
                 item = previewConversationListItem(
-                    conversationId = "draft",
+                    conversationId = ConversationId("draft"),
                     title = "Grace Hopper",
                     snippetText = "I was thinking that we could",
                     status = ConversationListMessageStatus.Draft,
@@ -307,7 +308,7 @@ private fun ConversationListItemRowPreview() {
             )
             ConversationListItemRow(
                 item = previewConversationListItem(
-                    conversationId = "sending",
+                    conversationId = ConversationId("sending"),
                     title = "Amelia Brown",
                     snippetText = "On my way!",
                     status = ConversationListMessageStatus.Sending,
@@ -318,7 +319,7 @@ private fun ConversationListItemRowPreview() {
             )
             ConversationListItemRow(
                 item = previewConversationListItem(
-                    conversationId = "failed",
+                    conversationId = ConversationId("failed"),
                     title = "Marina Silva",
                     snippetText = "Did you get my last message?",
                     status = ConversationListMessageStatus.Failed(rawTelephonyStatus = 0),
@@ -338,7 +339,7 @@ private fun ConversationListItemRowBadgesPreview() {
         Column(verticalArrangement = Arrangement.spacedBy(space = 2.dp)) {
             ConversationListItemRow(
                 item = previewConversationListItem(
-                    conversationId = "muted_group",
+                    conversationId = ConversationId("muted_group"),
                     title = "Weekend plans",
                     snippetText = "Jane: I can bring snacks",
                     isGroup = true,
@@ -350,7 +351,7 @@ private fun ConversationListItemRowBadgesPreview() {
             )
             ConversationListItemRow(
                 item = previewConversationListItem(
-                    conversationId = "snoozed",
+                    conversationId = ConversationId("snoozed"),
                     title = "Liam Carter",
                     snippetText = "Let's catch up later",
                     isSnoozed = true,
@@ -360,7 +361,7 @@ private fun ConversationListItemRowBadgesPreview() {
             )
             ConversationListItemRow(
                 item = previewConversationListItem(
-                    conversationId = "enterprise",
+                    conversationId = ConversationId("enterprise"),
                     title = "Alex Appleseed",
                     snippetText = "The report is ready for review",
                     isEnterprise = true,
@@ -370,7 +371,7 @@ private fun ConversationListItemRowBadgesPreview() {
             )
             ConversationListItemRow(
                 item = previewConversationListItem(
-                    conversationId = "selected",
+                    conversationId = ConversationId("selected"),
                     title = "Brian Cohen",
                     snippetText = "Happy birthday!",
                     isSelected = true,
@@ -380,7 +381,7 @@ private fun ConversationListItemRowBadgesPreview() {
             )
             ConversationListItemRow(
                 item = previewConversationListItem(
-                    conversationId = "subject",
+                    conversationId = ConversationId("subject"),
                     title = "Maria Tamm",
                     snippetText = "Check out the details below",
                     subject = "Meeting agenda",
@@ -390,7 +391,7 @@ private fun ConversationListItemRowBadgesPreview() {
             )
             ConversationListItemRow(
                 item = previewConversationListItem(
-                    conversationId = "audio",
+                    conversationId = ConversationId("audio"),
                     title = "Sara Lindberg",
                     snippetText = null,
                     preview = ConversationListPreviewUiModel.Audio,
@@ -400,7 +401,7 @@ private fun ConversationListItemRowBadgesPreview() {
             )
             ConversationListItemRow(
                 item = previewConversationListItem(
-                    conversationId = "picture",
+                    conversationId = ConversationId("picture"),
                     title = "Tomas Kask",
                     snippetText = null,
                     isUnread = true,

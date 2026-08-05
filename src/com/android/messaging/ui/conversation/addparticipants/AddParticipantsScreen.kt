@@ -26,6 +26,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.conversation.ADD_PARTICIPANTS_CONFIRM_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.addParticipantsContactDestinationRowTestTag
 import com.android.messaging.ui.conversation.addParticipantsContactRowTestTag
@@ -47,10 +48,10 @@ import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun AddParticipantsScreen(
-    conversationId: String,
+    conversationId: ConversationId,
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit = {},
-    onNavigateToConversation: (String) -> Unit = {},
+    onNavigateToConversation: (ConversationId) -> Unit = {},
     screenModel: AddParticipantsScreenModel = hiltViewModel<AddParticipantsViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()

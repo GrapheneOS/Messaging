@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationlist.chats.model
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationsettings.model.SnoozeOption
 import com.android.messaging.ui.conversationlist.model.ConversationListAvatarUiModel
 import kotlinx.collections.immutable.ImmutableList
@@ -20,7 +21,7 @@ internal sealed interface ConversationListAction {
 
     // region ConfirmationAction
     data class BlockConfirmed(
-        val conversationId: String,
+        val conversationId: ConversationId,
         val destination: String,
     ) : ConfirmationAction
 
@@ -29,16 +30,16 @@ internal sealed interface ConversationListAction {
 
     // region SnackbarAction
     data class ArchiveUndoClicked(
-        val conversationIds: ImmutableList<String>,
+        val conversationIds: ImmutableList<ConversationId>,
         val isArchived: Boolean,
     ) : SnackbarAction
 
     data class ArchiveSnackbarDismissed(
-        val conversationIds: ImmutableList<String>,
+        val conversationIds: ImmutableList<ConversationId>,
     ) : SnackbarAction
 
     data class BlockUndoClicked(
-        val conversationId: String,
+        val conversationId: ConversationId,
         val destination: String,
     ) : SnackbarAction
     // endregion
@@ -49,11 +50,11 @@ internal sealed interface ConversationListAction {
 
     // region ListAction
     data class ConversationClicked(
-        val conversationId: String,
+        val conversationId: ConversationId,
     ) : ListAction
 
     data class ConversationLongClicked(
-        val conversationId: String,
+        val conversationId: ConversationId,
     ) : ListAction
 
     data class NewestConversationVisibilityChanged(
@@ -61,7 +62,7 @@ internal sealed interface ConversationListAction {
     ) : ListAction
 
     data class AvatarMessageClicked(
-        val conversationId: String,
+        val conversationId: ConversationId,
     ) : ListAction
 
     data class AvatarCallClicked(
@@ -73,15 +74,15 @@ internal sealed interface ConversationListAction {
     ) : ListAction
 
     data class AvatarInfoClicked(
-        val conversationId: String,
+        val conversationId: ConversationId,
     ) : ListAction
 
     data class ConversationSwipedToArchive(
-        val conversationId: String,
+        val conversationId: ConversationId,
     ) : ListAction
 
     data class ConversationSwipedToToggleRead(
-        val conversationId: String,
+        val conversationId: ConversationId,
     ) : ListAction
     // endregion
 
@@ -110,7 +111,7 @@ internal sealed interface ConversationListAction {
     ) : SelectionAction
 
     data class PinAnimationPrepared(
-        val conversationIds: ImmutableList<String>,
+        val conversationIds: ImmutableList<ConversationId>,
         val isPinned: Boolean,
     ) : SelectionAction
     // endregion

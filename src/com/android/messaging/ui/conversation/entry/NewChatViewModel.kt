@@ -4,6 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
 import com.android.messaging.data.subscription.resolveSelectedSubscription
@@ -47,7 +49,7 @@ internal interface NewChatScreenModel {
     fun onLoadMore()
     fun onNavigateBack()
     fun onQueryChanged(query: String)
-    fun onSimSelected(selfParticipantId: String)
+    fun onSimSelected(selfParticipantId: ParticipantId)
 }
 
 @HiltViewModel
@@ -66,7 +68,7 @@ internal class NewChatViewModel @Inject constructor(
     private val effectsChannel = Channel<NewChatEffect>(capacity = Channel.BUFFERED)
     private val localUiState = MutableStateFlow(restoreLocalUiState())
 
-    private var pendingSelfParticipantId: String? = null
+    private var pendingSelfParticipantId: ParticipantId? = null
 
     override val effects = effectsChannel.receiveAsFlow()
 
@@ -195,7 +197,7 @@ internal class NewChatViewModel @Inject constructor(
         recipientPickerDelegate.onQueryChanged(query = query)
     }
 
-    override fun onSimSelected(selfParticipantId: String) {
+    override fun onSimSelected(selfParticipantId: ParticipantId) {
         val currentSimState = localUiState.value.simSelectorState
 
         val selectedSubscription = currentSimState.subscriptions
@@ -248,7 +250,7 @@ internal class NewChatViewModel @Inject constructor(
         }
     }
 
-    private fun onConversationResolved(conversationId: String) {
+    private fun onConversationResolved(conversationId: ConversationId) {
         val pendingSelf = pendingSelfParticipantId?.takeUnless { it.isBlank() }
         pendingSelfParticipantId = null
 
@@ -326,8 +328,9 @@ internal class NewChatViewModel @Inject constructor(
     }
 
     private fun reconcileSimSelection(subscriptions: ImmutableList<Subscription>) {
-        val persistedSelfParticipantId = savedStateHandle
-            .get<String>(SIM_SELECTED_SELF_PARTICIPANT_ID_KEY)
+        val persistedSelfParticipantId = ParticipantId.fromOrNull(
+            savedStateHandle.get<String>(SIM_SELECTED_SELF_PARTICIPANT_ID_KEY),
+        )
 
         val resolvedSelection = resolveSimSelection(
             subscriptions = subscriptions,
@@ -346,7 +349,7 @@ internal class NewChatViewModel @Inject constructor(
 
     private fun resolveSimSelection(
         subscriptions: ImmutableList<Subscription>,
-        persistedSelfParticipantId: String?,
+        persistedSelfParticipantId: ParticipantId?,
     ): Subscription? {
         return resolveSelectedSubscription(
             subscriptions = subscriptions,
@@ -355,7 +358,7 @@ internal class NewChatViewModel @Inject constructor(
         )
     }
 
-    private fun selectedSelfParticipantId(): String? {
+    private fun selectedSelfParticipantId(): ParticipantId? {
         return localUiState.value.simSelectorState.selectedSubscription?.selfParticipantId
     }
 
@@ -402,8 +405,9 @@ internal class NewChatViewModel @Inject constructor(
             savedStateHandle[IS_CREATING_GROUP_KEY] = uiState.isCreatingGroup
         }
 
-        val persistedSelfParticipantId = savedStateHandle
-            .get<String>(SIM_SELECTED_SELF_PARTICIPANT_ID_KEY)
+        val persistedSelfParticipantId = ParticipantId.fromOrNull(
+            savedStateHandle.get<String>(SIM_SELECTED_SELF_PARTICIPANT_ID_KEY),
+        )
 
         val selectedSelfParticipantId = uiState
             .simSelectorState
@@ -411,7 +415,8 @@ internal class NewChatViewModel @Inject constructor(
             ?.selfParticipantId
 
         if (persistedSelfParticipantId != selectedSelfParticipantId) {
-            savedStateHandle[SIM_SELECTED_SELF_PARTICIPANT_ID_KEY] = selectedSelfParticipantId
+            savedStateHandle[SIM_SELECTED_SELF_PARTICIPANT_ID_KEY] =
+                selectedSelfParticipantId?.value
         }
     }
 

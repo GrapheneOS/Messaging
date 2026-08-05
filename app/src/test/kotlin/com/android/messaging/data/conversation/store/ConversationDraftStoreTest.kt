@@ -1,15 +1,16 @@
 package com.android.messaging.data.conversation.store
 
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.datamodel.DataModel
 import com.android.messaging.datamodel.DatabaseWrapper
 import com.android.messaging.datamodel.data.ConversationListItemData
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
+import com.android.messaging.testutil.assertThat
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import org.junit.After
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
@@ -38,7 +39,7 @@ class ConversationDraftStoreTest {
     @Test
     fun getSelfParticipantId_whenConversationIsMissing_returnsNull() {
         every {
-            ConversationListItemData.getExistingConversation(databaseWrapper, CONVERSATION_ID)
+            ConversationListItemData.getExistingConversation(databaseWrapper, CONVERSATION_ID.value)
         } returns null
 
         val selfParticipantId = store.getSelfParticipantId(conversationId = CONVERSATION_ID)
@@ -51,7 +52,7 @@ class ConversationDraftStoreTest {
         val conversation = mockk<ConversationListItemData>()
         every { conversation.selfId } returns "  "
         every {
-            ConversationListItemData.getExistingConversation(databaseWrapper, CONVERSATION_ID)
+            ConversationListItemData.getExistingConversation(databaseWrapper, CONVERSATION_ID.value)
         } returns conversation
 
         val selfParticipantId = store.getSelfParticipantId(conversationId = CONVERSATION_ID)
@@ -64,12 +65,12 @@ class ConversationDraftStoreTest {
         val conversation = mockk<ConversationListItemData>()
         every { conversation.selfId } returns SELF_PARTICIPANT_ID
         every {
-            ConversationListItemData.getExistingConversation(databaseWrapper, CONVERSATION_ID)
+            ConversationListItemData.getExistingConversation(databaseWrapper, CONVERSATION_ID.value)
         } returns conversation
 
         val selfParticipantId = store.getSelfParticipantId(conversationId = CONVERSATION_ID)
 
-        assertEquals(SELF_PARTICIPANT_ID, selfParticipantId)
+        assertThat(selfParticipantId).isEqualTo(ParticipantId(SELF_PARTICIPANT_ID))
     }
 
     private companion object {

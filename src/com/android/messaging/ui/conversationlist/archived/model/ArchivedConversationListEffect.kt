@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationlist.archived.model
 
+import com.android.messaging.data.conversation.model.ConversationId
 import kotlinx.collections.immutable.ImmutableList
 
 internal sealed interface ArchivedConversationListEffect {
@@ -7,11 +8,11 @@ internal sealed interface ArchivedConversationListEffect {
     data object OpenDebugOptions : ArchivedConversationListEffect
 
     data class OpenConversation(
-        val conversationId: String,
+        val conversationId: ConversationId,
     ) : ArchivedConversationListEffect
 
     data class OpenConversationSettings(
-        val conversationId: String,
+        val conversationId: ConversationId,
     ) : ArchivedConversationListEffect
 
     data class PlaceCall(
@@ -26,6 +27,6 @@ internal sealed interface ArchivedConversationListEffect {
     ) : ArchivedConversationListEffect
 
     data class ConversationsUnarchived(
-        val conversationIds: ImmutableList<String>,
+        val conversationIds: ImmutableList<ConversationId>,
     ) : ArchivedConversationListEffect
 }

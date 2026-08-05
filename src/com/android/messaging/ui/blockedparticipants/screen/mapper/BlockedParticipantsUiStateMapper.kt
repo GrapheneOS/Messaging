@@ -1,6 +1,7 @@
 package com.android.messaging.ui.blockedparticipants.screen.mapper
 
 import com.android.messaging.data.blockedparticipants.model.BlockedDirectChat
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.domain.conversation.usecase.participant.CanShowOrAddContact
 import com.android.messaging.domain.conversation.usecase.participant.IsContactSaved
 import com.android.messaging.domain.conversation.usecase.telephony.CanPlacePhoneCall
@@ -56,7 +57,7 @@ internal class BlockedParticipantsUiStateMapperImpl @Inject constructor(
         )
 
         return BlockedParticipantUiState(
-            participantId = participant.id,
+            participantId = ParticipantId(participant.id),
             conversationId = chat.conversationId,
             avatarUri = participant.profilePhotoUri?.takeIf(String::isNotBlank),
             displayName = displayName,

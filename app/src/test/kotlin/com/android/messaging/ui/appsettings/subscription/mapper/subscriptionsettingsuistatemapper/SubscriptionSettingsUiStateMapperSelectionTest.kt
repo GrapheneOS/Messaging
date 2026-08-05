@@ -1,6 +1,8 @@
 package com.android.messaging.ui.appsettings.subscription.mapper.subscriptionsettingsuistatemapper
 
 import com.android.messaging.R
+import com.android.messaging.data.subscription.model.SubId
+import com.android.messaging.testutil.assertThat
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -33,7 +35,7 @@ internal class SubscriptionSettingsUiStateMapperSelectionTest :
 
         assertEquals(false, uiState.isMultiSim)
         assertEquals(1, uiState.subscriptions.size)
-        assertEquals(5, uiState.subscriptions.first().subId)
+        assertThat(uiState.subscriptions.first().subId).isEqualTo(SubId(5))
         assertEquals(
             context.getString(R.string.advanced_settings),
             uiState.subscriptions.first().displayName,
@@ -51,7 +53,7 @@ internal class SubscriptionSettingsUiStateMapperSelectionTest :
         )
 
         assertEquals(1, uiState.subscriptions.size)
-        assertEquals(3, uiState.subscriptions.first().subId)
+        assertThat(uiState.subscriptions.first().subId).isEqualTo(SubId(3))
     }
 
     @Test
@@ -67,7 +69,7 @@ internal class SubscriptionSettingsUiStateMapperSelectionTest :
         )
 
         assertEquals(true, uiState.isMultiSim)
-        assertEquals(listOf(1, 2), uiState.subscriptions.map { it.subId })
+        assertThat(uiState.subscriptions.map { it.subId }).isEqualTo(listOf(SubId(1), SubId(2)))
         assertEquals(
             context.getString(R.string.sim_specific_settings, "Verizon"),
             uiState.subscriptions[0].displayName,
@@ -89,7 +91,7 @@ internal class SubscriptionSettingsUiStateMapperSelectionTest :
 
         assertEquals(true, uiState.isMultiSim)
         assertEquals(1, uiState.subscriptions.size)
-        assertEquals(9, uiState.subscriptions.first().subId)
+        assertThat(uiState.subscriptions.first().subId).isEqualTo(SubId(9))
         assertEquals(
             context.getString(R.string.advanced_settings),
             uiState.subscriptions.first().displayName,
@@ -108,7 +110,7 @@ internal class SubscriptionSettingsUiStateMapperSelectionTest :
 
         assertEquals(true, uiState.isMultiSim)
         assertEquals(1, uiState.subscriptions.size)
-        assertEquals(3, uiState.subscriptions.first().subId)
+        assertThat(uiState.subscriptions.first().subId).isEqualTo(SubId(3))
         assertEquals(
             context.getString(R.string.advanced_settings),
             uiState.subscriptions.first().displayName,

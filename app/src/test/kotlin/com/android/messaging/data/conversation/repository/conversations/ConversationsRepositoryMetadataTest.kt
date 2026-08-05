@@ -4,6 +4,7 @@ import android.database.ContentObserver
 import android.database.Cursor
 import android.database.MatrixCursor
 import app.cash.turbine.test
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.DatabaseHelper.MessageColumns
 import com.android.messaging.datamodel.MessagingContentProvider
@@ -12,6 +13,7 @@ import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.testutil.TEST_CALL_ACTION_PHONE_NUMBER
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.testutil.createParticipantsCursor
 import com.android.messaging.testutil.participantRow
 import io.mockk.verify
@@ -34,7 +36,9 @@ internal class ConversationsRepositoryMetadataTest : BaseConversationsRepository
             val registeredObservers = mutableListOf<ContentObserver>()
             val capturedProjections = mutableListOf<Array<String>?>()
             val repository = createRepository()
-            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(CONVERSATION_ID)
+            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(
+                CONVERSATION_ID.value
+            )
 
             stubObserverRegistration(
                 registeredObservers = registeredObservers,
@@ -82,7 +86,9 @@ internal class ConversationsRepositoryMetadataTest : BaseConversationsRepository
             val registeredObservers = mutableListOf<ContentObserver>()
             val capturedProjections = mutableListOf<Array<String>?>()
             val repository = createRepository()
-            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(CONVERSATION_ID)
+            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(
+                CONVERSATION_ID.value
+            )
 
             stubObserverRegistration(
                 registeredObservers = registeredObservers,
@@ -104,7 +110,7 @@ internal class ConversationsRepositoryMetadataTest : BaseConversationsRepository
                 val metadata = awaitItem()
 
                 assertEquals("Carol, Dave, Erin", metadata?.conversationName)
-                assertEquals("self-2", metadata?.selfParticipantId)
+                assertThat(metadata?.selfParticipantId).isEqualTo(ParticipantId("self-2"))
                 assertEquals(true, metadata?.isGroupConversation)
                 assertEquals(3, metadata?.participantCount)
                 assertEquals(false, metadata?.isArchived)
@@ -128,7 +134,9 @@ internal class ConversationsRepositoryMetadataTest : BaseConversationsRepository
             val registeredObservers = mutableListOf<ContentObserver>()
             val capturedProjections = mutableListOf<Array<String>?>()
             val repository = createRepository()
-            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(CONVERSATION_ID)
+            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(
+                CONVERSATION_ID.value
+            )
 
             stubObserverRegistration(
                 registeredObservers = registeredObservers,
@@ -166,9 +174,11 @@ internal class ConversationsRepositoryMetadataTest : BaseConversationsRepository
             val metadataProjections = mutableListOf<Array<String>?>()
             val participantsProjections = mutableListOf<Array<String>?>()
             val repository = createRepository()
-            val metadataUri = MessagingContentProvider.buildConversationMetadataUri(CONVERSATION_ID)
+            val metadataUri = MessagingContentProvider.buildConversationMetadataUri(
+                CONVERSATION_ID.value
+            )
             val participantsUri = MessagingContentProvider
-                .buildConversationParticipantsUri(CONVERSATION_ID)
+                .buildConversationParticipantsUri(CONVERSATION_ID.value)
 
             stubObserverRegistration(
                 registeredObservers = registeredObservers,
@@ -248,7 +258,9 @@ internal class ConversationsRepositoryMetadataTest : BaseConversationsRepository
             val registeredObservers = mutableListOf<ContentObserver>()
             val capturedProjections = mutableListOf<Array<String>?>()
             val repository = createRepository()
-            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(CONVERSATION_ID)
+            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(
+                CONVERSATION_ID.value
+            )
 
             stubObserverRegistration(
                 registeredObservers = registeredObservers,

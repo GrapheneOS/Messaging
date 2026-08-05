@@ -2,6 +2,7 @@ package com.android.messaging.ui.appsettings.subscription.mapper.subscriptionset
 
 import android.content.Context
 import com.android.messaging.R
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscriptionsettings.model.PerSubscriptionData
 import com.android.messaging.data.subscriptionsettings.model.SubscriptionSettingsData
 import com.android.messaging.ui.appsettings.subscription.mapper.SubscriptionSettingsUiStateMapperImpl
@@ -65,7 +66,7 @@ internal abstract class BaseSubscriptionSettingsUiStateMapperTest {
         showCellBroadcast: Boolean = false,
     ): PerSubscriptionData {
         return PerSubscriptionData(
-            subId = subId,
+            subId = SubId(subId),
             subscriptionName = subscriptionName,
             savedPhoneNumber = savedPhoneNumber,
             defaultPhoneNumber = defaultPhoneNumber,

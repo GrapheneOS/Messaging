@@ -22,6 +22,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantUiState
 import com.android.messaging.ui.common.components.TwoLineListItem
 import com.android.messaging.ui.common.components.participant.ParticipantAvatar
@@ -226,8 +228,8 @@ private fun BlockedParticipantItemPreview() {
     MessagingPreviewColumn {
         BlockedParticipantItem(
             participant = BlockedParticipantUiState(
-                participantId = "1",
-                conversationId = "c1",
+                participantId = ParticipantId("1"),
+                conversationId = ConversationId("c1"),
                 avatarUri = null,
                 displayName = "Spam Caller",
                 details = "+31 6 1234 5678",

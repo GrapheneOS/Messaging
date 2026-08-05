@@ -1,5 +1,7 @@
 package com.android.messaging.ui.conversation.composer.delegate.draft
 
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.repository.ConversationDraftsRepository
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
@@ -9,6 +11,7 @@ import com.android.messaging.domain.conversation.usecase.draft.ResolveConversati
 import com.android.messaging.domain.conversation.usecase.draft.ResolveDraftAttachmentsWithinLimit
 import com.android.messaging.domain.conversation.usecase.draft.SendConversationDraft
 import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftDelegateImpl
 import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftEditorDelegateImpl
 import io.mockk.coEvery
@@ -64,7 +67,7 @@ internal class ConversationDraftDelegateSimSelectionTest {
     @Test
     fun simPickedBeforeDraftEditorBindsToConversationIsUsedWhenSendingDraft() = runTest {
         val delegate = createDelegate()
-        val conversationIdFlow = MutableStateFlow<String?>(CONVERSATION_ID)
+        val conversationIdFlow = MutableStateFlow<ConversationId?>(CONVERSATION_ID)
 
         delegate.bind(scope = backgroundScope, conversationIdFlow = conversationIdFlow)
         delegate.onSelfParticipantIdChanged(
@@ -77,13 +80,13 @@ internal class ConversationDraftDelegateSimSelectionTest {
         delegate.onSendClick()
         runCurrent()
 
-        assertEquals(PICKED_SELF_PARTICIPANT_ID, sentDraft.captured.selfParticipantId)
+        assertThat(sentDraft.captured.selfParticipantId).isEqualTo(PICKED_SELF_PARTICIPANT_ID)
     }
 
     @Test
     fun simPickedAfterDraftEditorBindsToConversationIsUsedWhenSendingDraft() = runTest {
         val delegate = createDelegate()
-        val conversationIdFlow = MutableStateFlow<String?>(CONVERSATION_ID)
+        val conversationIdFlow = MutableStateFlow<ConversationId?>(CONVERSATION_ID)
 
         delegate.bind(scope = backgroundScope, conversationIdFlow = conversationIdFlow)
         runCurrent()
@@ -96,13 +99,13 @@ internal class ConversationDraftDelegateSimSelectionTest {
         delegate.onSendClick()
         runCurrent()
 
-        assertEquals(PICKED_SELF_PARTICIPANT_ID, sentDraft.captured.selfParticipantId)
+        assertThat(sentDraft.captured.selfParticipantId).isEqualTo(PICKED_SELF_PARTICIPANT_ID)
     }
 
     @Test
     fun simPickedBeforeDraftEditorBindsOverridesSeededDraftSelfParticipantId() = runTest {
         val delegate = createDelegate()
-        val conversationIdFlow = MutableStateFlow<String?>(CONVERSATION_ID)
+        val conversationIdFlow = MutableStateFlow<ConversationId?>(CONVERSATION_ID)
 
         delegate.bind(scope = backgroundScope, conversationIdFlow = conversationIdFlow)
         delegate.seedDraft(
@@ -122,17 +125,17 @@ internal class ConversationDraftDelegateSimSelectionTest {
         runCurrent()
 
         assertEquals("hello", sentDraft.captured.messageText)
-        assertEquals(PICKED_SELF_PARTICIPANT_ID, sentDraft.captured.selfParticipantId)
+        assertThat(sentDraft.captured.selfParticipantId).isEqualTo(PICKED_SELF_PARTICIPANT_ID)
     }
 
     @Test
     fun simPickedForAnotherConversationIsNotAppliedToBoundConversation() = runTest {
         val delegate = createDelegate()
-        val conversationIdFlow = MutableStateFlow<String?>(CONVERSATION_ID)
+        val conversationIdFlow = MutableStateFlow<ConversationId?>(CONVERSATION_ID)
 
         delegate.bind(scope = backgroundScope, conversationIdFlow = conversationIdFlow)
         delegate.onSelfParticipantIdChanged(
-            conversationId = "another-conversation",
+            conversationId = ConversationId("another-conversation"),
             selfParticipantId = PICKED_SELF_PARTICIPANT_ID,
         )
         runCurrent()
@@ -141,7 +144,7 @@ internal class ConversationDraftDelegateSimSelectionTest {
         delegate.onSendClick()
         runCurrent()
 
-        assertEquals("", sentDraft.captured.selfParticipantId)
+        assertThat(sentDraft.captured.selfParticipantId).isEqualTo(ParticipantId(""))
     }
 
     private fun TestScope.createDelegate(): ConversationDraftDelegateImpl {
@@ -162,8 +165,8 @@ internal class ConversationDraftDelegateSimSelectionTest {
     }
 
     private companion object {
-        private const val CONVERSATION_ID = "conversation-1"
-        private const val PICKED_SELF_PARTICIPANT_ID = "self-participant-2"
-        private const val SEEDED_SELF_PARTICIPANT_ID = "self-participant-1"
+        private val CONVERSATION_ID = ConversationId("conversation-1")
+        private val PICKED_SELF_PARTICIPANT_ID = ParticipantId("self-participant-2")
+        private val SEEDED_SELF_PARTICIPANT_ID = ParticipantId("self-participant-1")
     }
 }

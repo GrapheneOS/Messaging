@@ -2,6 +2,8 @@ package com.android.messaging.ui.conversation.audio.delegate
 
 import android.net.Uri
 import android.os.SystemClock
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.data.conversation.model.draft.ConversationDraftPendingAttachment
 import com.android.messaging.data.conversation.model.draft.ConversationDraftPendingAttachmentKind
@@ -36,9 +38,9 @@ import kotlinx.coroutines.launch
 internal interface ConversationAudioRecordingDelegate :
     ConversationScreenDelegate<ConversationAudioRecordingUiState> {
 
-    fun startRecording(selfParticipantId: String)
+    fun startRecording(selfParticipantId: ParticipantId)
 
-    fun startLockedRecording(selfParticipantId: String)
+    fun startLockedRecording(selfParticipantId: ParticipantId)
 
     fun lockRecording(): Boolean
 
@@ -67,7 +69,7 @@ internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
 
     override fun bind(
         scope: CoroutineScope,
-        conversationIdFlow: StateFlow<String?>,
+        conversationIdFlow: StateFlow<ConversationId?>,
     ) {
         if (boundScope != null) {
             return
@@ -81,14 +83,14 @@ internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
         }
     }
 
-    override fun startRecording(selfParticipantId: String) {
+    override fun startRecording(selfParticipantId: ParticipantId) {
         startRecording(
             selfParticipantId = selfParticipantId,
             queuedStartIntent = QueuedStartIntent.None,
         )
     }
 
-    override fun startLockedRecording(selfParticipantId: String) {
+    override fun startLockedRecording(selfParticipantId: ParticipantId) {
         startRecording(
             selfParticipantId = selfParticipantId,
             queuedStartIntent = QueuedStartIntent.Lock,
@@ -96,7 +98,7 @@ internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
     }
 
     private fun startRecording(
-        selfParticipantId: String,
+        selfParticipantId: ParticipantId,
         queuedStartIntent: QueuedStartIntent,
     ) {
         val scope = boundScope ?: return
@@ -365,7 +367,7 @@ internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
 
     private suspend fun startRecordingInBackground(
         scope: CoroutineScope,
-        selfParticipantId: String,
+        selfParticipantId: ParticipantId,
     ) {
         val resolvedMediaRecorder = LevelTrackingMediaRecorder()
         val maxMessageSize = subscriptionsRepository

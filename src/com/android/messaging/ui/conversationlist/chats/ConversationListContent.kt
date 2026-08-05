@@ -14,6 +14,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.common.components.PrimaryActionButton
 import com.android.messaging.ui.common.components.reorder.OverlayReorderAnimationController
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
@@ -26,7 +27,7 @@ import com.android.messaging.ui.conversationlist.common.status.ConversationListL
 import com.android.messaging.ui.conversationlist.common.status.ConversationListStatusMessage
 import com.android.messaging.ui.conversationlist.common.support.previewConversationListItems
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
-import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
+import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel as Model
 import com.android.messaging.ui.core.MessagingPreviewTheme
 
 private val ChatSwipeSpec = ConversationListSwipeSpec(
@@ -42,7 +43,7 @@ internal fun ConversationListContent(
     scaffoldContentPadding: PaddingValues,
     isSelectionMode: Boolean,
     fabBottomReserve: Dp,
-    pinAnimationController: OverlayReorderAnimationController<ConversationListItemUiModel, String>?,
+    pinAnimationController: OverlayReorderAnimationController<Model, ConversationId>?,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize()) {

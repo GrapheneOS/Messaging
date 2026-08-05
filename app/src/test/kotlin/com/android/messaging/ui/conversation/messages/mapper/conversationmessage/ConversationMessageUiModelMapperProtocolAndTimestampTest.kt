@@ -12,7 +12,7 @@ internal class ConversationMessageUiModelMapperProtocolAndTimestampTest :
 
     @Test
     fun map_smsMessage_mapsToSmsProtocol() {
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(isSms = true, isMms = false, isMmsNotification = false),
         )
 
@@ -21,7 +21,7 @@ internal class ConversationMessageUiModelMapperProtocolAndTimestampTest :
 
     @Test
     fun map_mmsNotification_mapsToMmsPushNotificationProtocolBeforeMms() {
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(isSms = false, isMmsNotification = true, isMms = true),
         )
 
@@ -30,7 +30,7 @@ internal class ConversationMessageUiModelMapperProtocolAndTimestampTest :
 
     @Test
     fun map_mmsMessage_mapsToMmsProtocol() {
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(isSms = false, isMmsNotification = false, isMms = true),
         )
 
@@ -39,7 +39,7 @@ internal class ConversationMessageUiModelMapperProtocolAndTimestampTest :
 
     @Test
     fun map_nonTelephonyMessage_mapsToUnknownProtocol() {
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(isSms = false, isMmsNotification = false, isMms = false),
         )
 
@@ -48,7 +48,7 @@ internal class ConversationMessageUiModelMapperProtocolAndTimestampTest :
 
     @Test
     fun map_incomingMessage_usesReceivedTimestampAsDisplayTimestamp() {
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(isIncoming = true, receivedTimestamp = 500L, sentTimestamp = 100L),
         )
 
@@ -57,7 +57,7 @@ internal class ConversationMessageUiModelMapperProtocolAndTimestampTest :
 
     @Test
     fun map_incomingMessageWithoutReceivedTimestamp_fallsBackToSentTimestamp() {
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(isIncoming = true, receivedTimestamp = 0L, sentTimestamp = 100L),
         )
 
@@ -66,7 +66,7 @@ internal class ConversationMessageUiModelMapperProtocolAndTimestampTest :
 
     @Test
     fun map_outgoingMessage_usesSentTimestampAsDisplayTimestamp() {
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(isIncoming = false, sentTimestamp = 300L, receivedTimestamp = 900L),
         )
 
@@ -75,7 +75,7 @@ internal class ConversationMessageUiModelMapperProtocolAndTimestampTest :
 
     @Test
     fun map_outgoingMessageWithoutSentTimestamp_fallsBackToReceivedTimestamp() {
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(isIncoming = false, sentTimestamp = 0L, receivedTimestamp = 900L),
         )
 
@@ -84,7 +84,7 @@ internal class ConversationMessageUiModelMapperProtocolAndTimestampTest :
 
     @Test
     fun map_outgoingMessageWithNegativeSentTimestamp_fallsBackToReceivedTimestamp() {
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(isIncoming = false, sentTimestamp = -1L, receivedTimestamp = 900L),
         )
 

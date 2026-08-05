@@ -1,7 +1,9 @@
 package com.android.messaging.ui.conversation.recipientpicker.delegate.conversationresolutiondelegate
 
 import app.cash.turbine.test
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveConversationIdResult
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.ConversationResolutionOutcome
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.ConversationResolutionState
 import io.mockk.coEvery
@@ -132,7 +134,9 @@ internal class ConversationResolutionDelegateLifecycleTest :
                 assertEquals(ConversationResolutionState.Idle, delegate.state.value)
 
                 secondGate.complete(
-                    ResolveConversationIdResult.Resolved(conversationId = "conversation-second"),
+                    ResolveConversationIdResult.Resolved(
+                        conversationId = ConversationId("conversation-second")
+                    ),
                 )
                 runCurrent()
 
@@ -169,15 +173,16 @@ internal class ConversationResolutionDelegateLifecycleTest :
                 )
 
                 secondGate.complete(
-                    ResolveConversationIdResult.Resolved(conversationId = "conversation-second"),
+                    ResolveConversationIdResult.Resolved(
+                        conversationId = ConversationId("conversation-second")
+                    ),
                 )
                 runCurrent()
 
-                assertEquals(
+                assertThat(awaitItem()).isEqualTo(
                     ConversationResolutionOutcome.Resolved(
-                        conversationId = "conversation-second",
-                    ),
-                    awaitItem(),
+                        conversationId = ConversationId("conversation-second"),
+                    )
                 )
                 assertEquals(ConversationResolutionState.Idle, delegate.state.value)
                 expectNoEvents()

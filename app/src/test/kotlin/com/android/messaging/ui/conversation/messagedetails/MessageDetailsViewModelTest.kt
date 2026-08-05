@@ -2,6 +2,8 @@ package com.android.messaging.ui.conversation.messagedetails
 
 import android.content.ClipboardManager
 import androidx.lifecycle.SavedStateHandle
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetails
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetailsResult
 import com.android.messaging.data.conversation.repository.ConversationsRepository
@@ -18,6 +20,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Rule
 import org.junit.Test
 
@@ -39,15 +42,15 @@ internal class MessageDetailsViewModelTest {
     }
 
     @Test
-    fun onArguments_loadsMessageDetailsAndExposesMappedState() = runTest {
+    fun uiState_loadsMessageDetailsFromSeededIdsAndExposesMappedState() = runTest {
         val message = mockk<ConversationMessageData>()
         val details = mockk<ConversationMessageDetails>()
         val content = mockk<MessageDetailsUiState.Content>()
 
         coEvery {
             conversationsRepository.getMessageDetails(
-                conversationId = "c",
-                messageId = "m",
+                conversationId = ConversationId("c"),
+                messageId = MessageId("m"),
             )
         } returns ConversationMessageDetailsResult(
             message = message,
@@ -62,17 +65,13 @@ internal class MessageDetailsViewModelTest {
         } returns content
 
         val viewModel = createViewModel()
-        viewModel.onArguments(
-            conversationId = "c",
-            messageId = "m",
-        )
         advanceUntilIdle()
 
         assertEquals(content, viewModel.uiState.value)
         coVerify {
             conversationsRepository.getMessageDetails(
-                conversationId = "c",
-                messageId = "m",
+                conversationId = ConversationId("c"),
+                messageId = MessageId("m"),
             )
         }
         verify {
@@ -84,11 +83,11 @@ internal class MessageDetailsViewModelTest {
     }
 
     @Test
-    fun onArguments_whenMapperReturnsUnavailable_exposesUnavailable() = runTest {
+    fun uiState_whenMapperReturnsUnavailable_exposesUnavailable() = runTest {
         coEvery {
             conversationsRepository.getMessageDetails(
-                conversationId = "c",
-                messageId = "m",
+                conversationId = ConversationId("c"),
+                messageId = MessageId("m"),
             )
         } returns null
 
@@ -100,31 +99,29 @@ internal class MessageDetailsViewModelTest {
         } returns MessageDetailsUiState.Unavailable
 
         val viewModel = createViewModel()
-        viewModel.onArguments(
-            conversationId = "c",
-            messageId = "m",
-        )
         advanceUntilIdle()
 
         assertEquals(MessageDetailsUiState.Unavailable, viewModel.uiState.value)
     }
 
     @Test
-    fun onArguments_storesArgumentsInSavedStateHandle() {
-        val savedStateHandle = SavedStateHandle()
-        val viewModel = createViewModel(savedStateHandle)
-
-        viewModel.onArguments(
-            conversationId = "c",
-            messageId = "m",
+    fun construction_whenConversationIdMissing_throws() {
+        val savedStateHandle = SavedStateHandle(
+            mapOf(MESSAGE_DETAILS_MESSAGE_ID_ARG to "m"),
         )
 
-        assertEquals("c", savedStateHandle.get<String?>("conversation_id"))
-        assertEquals("m", savedStateHandle.get<String?>("message_id"))
+        assertThrows(IllegalArgumentException::class.java) {
+            createViewModel(savedStateHandle)
+        }
     }
 
     private fun createViewModel(
-        savedStateHandle: SavedStateHandle = SavedStateHandle(),
+        savedStateHandle: SavedStateHandle = SavedStateHandle(
+            mapOf(
+                MESSAGE_DETAILS_CONVERSATION_ID_ARG to "c",
+                MESSAGE_DETAILS_MESSAGE_ID_ARG to "m",
+            ),
+        ),
     ): MessageDetailsViewModel {
         return MessageDetailsViewModel(
             conversationsRepository = conversationsRepository,

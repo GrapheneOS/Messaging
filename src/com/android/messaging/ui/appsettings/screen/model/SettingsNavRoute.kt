@@ -1,6 +1,7 @@
 package com.android.messaging.ui.appsettings.screen.model
 
 import androidx.compose.runtime.Immutable
+import com.android.messaging.data.subscription.model.SubId
 
 @Immutable
 internal sealed interface SettingsNavRoute {
@@ -16,7 +17,7 @@ internal sealed interface SettingsNavRoute {
     }
 
     data class SubscriptionSettings(
-        val subId: Int,
+        val subId: SubId,
         val title: String,
     ) : SettingsNavRoute {
         override val depth: Int = 2

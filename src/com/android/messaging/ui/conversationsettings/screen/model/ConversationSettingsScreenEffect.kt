@@ -1,14 +1,16 @@
 package com.android.messaging.ui.conversationsettings.screen.model
 
+import com.android.messaging.data.conversation.model.ConversationId
+
 internal sealed interface ConversationSettingsScreenEffect {
 
     data class OpenNotificationChannelSettings(
-        val conversationId: String,
+        val conversationId: ConversationId,
         val conversationTitle: String,
     ) : ConversationSettingsScreenEffect
 
     data class OpenParticipantChat(
-        val conversationId: String,
+        val conversationId: ConversationId,
     ) : ConversationSettingsScreenEffect
 
     data class CopyToClipboard(

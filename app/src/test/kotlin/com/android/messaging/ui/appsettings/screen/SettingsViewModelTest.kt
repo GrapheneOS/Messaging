@@ -1,7 +1,9 @@
 package com.android.messaging.ui.appsettings.screen
 
 import app.cash.turbine.test
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.testutil.MainDispatcherRule
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.appsettings.general.delegate.AppSettingsDelegate
 import com.android.messaging.ui.appsettings.general.model.AppSettingsUiState
 import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
@@ -70,7 +72,7 @@ class SettingsViewModelTest {
                 sendSoundEnabled = false,
             )
             val subscription = SubscriptionUiState(
-                subId = 1,
+                subId = SubId(1),
                 displayName = "SIM 1",
             )
 
@@ -161,10 +163,10 @@ class SettingsViewModelTest {
             val subDelegate = mockSubscriptionSettingsDelegate()
             val viewModel = createViewModel(subscriptionSettingsDelegate = subDelegate)
 
-            viewModel.onAction(Action.GroupMmsChanged(subId = 1, enabled = false))
+            viewModel.onAction(Action.GroupMmsChanged(subId = SubId(1), enabled = false))
 
             verify(exactly = 1) {
-                subDelegate.onGroupMmsChanged(subId = 1, enabled = false)
+                subDelegate.onGroupMmsChanged(subId = SubId(1), enabled = false)
             }
         }
     }
@@ -175,10 +177,12 @@ class SettingsViewModelTest {
             val subDelegate = mockSubscriptionSettingsDelegate()
             val viewModel = createViewModel(subscriptionSettingsDelegate = subDelegate)
 
-            viewModel.onAction(Action.PhoneNumberChanged(subId = 1, phoneNumber = "+1555000111"))
+            viewModel.onAction(
+                Action.PhoneNumberChanged(subId = SubId(1), phoneNumber = "+1555000111")
+            )
 
             verify(exactly = 1) {
-                subDelegate.onPhoneNumberChanged(subId = 1, phoneNumber = "+1555000111")
+                subDelegate.onPhoneNumberChanged(subId = SubId(1), phoneNumber = "+1555000111")
             }
         }
     }
@@ -189,10 +193,10 @@ class SettingsViewModelTest {
             val subDelegate = mockSubscriptionSettingsDelegate()
             val viewModel = createViewModel(subscriptionSettingsDelegate = subDelegate)
 
-            viewModel.onAction(Action.AutoRetrieveMmsChanged(subId = 2, enabled = true))
+            viewModel.onAction(Action.AutoRetrieveMmsChanged(subId = SubId(2), enabled = true))
 
             verify(exactly = 1) {
-                subDelegate.onAutoRetrieveMmsChanged(subId = 2, enabled = true)
+                subDelegate.onAutoRetrieveMmsChanged(subId = SubId(2), enabled = true)
             }
         }
     }
@@ -203,10 +207,12 @@ class SettingsViewModelTest {
             val subDelegate = mockSubscriptionSettingsDelegate()
             val viewModel = createViewModel(subscriptionSettingsDelegate = subDelegate)
 
-            viewModel.onAction(Action.AutoRetrieveMmsWhenRoamingChanged(subId = 1, enabled = true))
+            viewModel.onAction(
+                Action.AutoRetrieveMmsWhenRoamingChanged(subId = SubId(1), enabled = true)
+            )
 
             verify(exactly = 1) {
-                subDelegate.onAutoRetrieveMmsWhenRoamingChanged(subId = 1, enabled = true)
+                subDelegate.onAutoRetrieveMmsWhenRoamingChanged(subId = SubId(1), enabled = true)
             }
         }
     }
@@ -217,10 +223,10 @@ class SettingsViewModelTest {
             val subDelegate = mockSubscriptionSettingsDelegate()
             val viewModel = createViewModel(subscriptionSettingsDelegate = subDelegate)
 
-            viewModel.onAction(Action.DeliveryReportsChanged(subId = 1, enabled = true))
+            viewModel.onAction(Action.DeliveryReportsChanged(subId = SubId(1), enabled = true))
 
             verify(exactly = 1) {
-                subDelegate.onDeliveryReportsChanged(subId = 1, enabled = true)
+                subDelegate.onDeliveryReportsChanged(subId = SubId(1), enabled = true)
             }
         }
     }
@@ -277,9 +283,11 @@ class SettingsViewModelTest {
             advanceUntilIdle()
 
             viewModel.effects.test {
-                viewModel.onAction(Action.WirelessAlertsClicked(subId = 1))
+                viewModel.onAction(Action.WirelessAlertsClicked(subId = SubId(1)))
 
-                assertEquals(SettingsScreenEffect.OpenWirelessAlerts(subId = 1), awaitItem())
+                assertThat(awaitItem()).isEqualTo(
+                    SettingsScreenEffect.OpenWirelessAlerts(subId = SubId(1)),
+                )
                 cancelAndIgnoreRemainingEvents()
             }
         }

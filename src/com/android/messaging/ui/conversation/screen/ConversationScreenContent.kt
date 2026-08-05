@@ -32,6 +32,8 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.common.components.contentSurfaceShape
 import com.android.messaging.ui.conversation.CONVERSATION_LOADING_INDICATOR_TEST_TAG
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
@@ -53,7 +55,7 @@ private data class ConversationLatestScrollSnapshot(
 @Composable
 internal fun ConversationScreenContent(
     modifier: Modifier = Modifier,
-    conversationId: String?,
+    conversationId: ConversationId?,
     uiState: ConversationScreenScaffoldUiState,
     snackbarHostState: SnackbarHostState,
     contentPadding: PaddingValues,
@@ -61,11 +63,11 @@ internal fun ConversationScreenContent(
     onPendingScrollPositionConsumed: () -> Unit,
     onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
-    onMessageClick: (String) -> Unit,
-    onMessageAvatarClick: (String) -> Unit,
-    onMessageDownloadClick: (String) -> Unit,
-    onMessageLongClick: (String) -> Unit,
-    onMessageResendClick: (String) -> Unit,
+    onMessageClick: (MessageId) -> Unit,
+    onMessageAvatarClick: (MessageId) -> Unit,
+    onMessageDownloadClick: (MessageId) -> Unit,
+    onMessageLongClick: (MessageId) -> Unit,
+    onMessageResendClick: (MessageId) -> Unit,
     onSimSelectorClick: () -> Unit,
     onUnblockClick: () -> Unit,
 ) {
@@ -159,7 +161,7 @@ private fun ConversationScreenLoadingContent(
 @Composable
 private fun ConversationScreenPresentContent(
     modifier: Modifier,
-    conversationId: String?,
+    conversationId: ConversationId?,
     uiState: ConversationScreenScaffoldUiState,
     messagesState: ConversationMessagesUiState.Present,
     snackbarHostState: SnackbarHostState,
@@ -169,11 +171,11 @@ private fun ConversationScreenPresentContent(
     onPendingScrollPositionConsumed: () -> Unit,
     onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
-    onMessageClick: (String) -> Unit,
-    onMessageAvatarClick: (String) -> Unit,
-    onMessageDownloadClick: (String) -> Unit,
-    onMessageLongClick: (String) -> Unit,
-    onMessageResendClick: (String) -> Unit,
+    onMessageClick: (MessageId) -> Unit,
+    onMessageAvatarClick: (MessageId) -> Unit,
+    onMessageDownloadClick: (MessageId) -> Unit,
+    onMessageLongClick: (MessageId) -> Unit,
+    onMessageResendClick: (MessageId) -> Unit,
     onSimSelectorClick: () -> Unit,
     additionalTopContentPadding: Dp,
 ) {
@@ -271,7 +273,7 @@ private fun shouldShowIncomingParticipantIdentity(
 
 @Composable
 private fun AutoScrollToLatestMessage(
-    conversationId: String?,
+    conversationId: ConversationId?,
     messages: ImmutableList<ConversationMessageUiModel>,
     listState: LazyListState,
     snackbarHostState: SnackbarHostState,
@@ -345,7 +347,7 @@ private fun AutoScrollToLatestMessage(
 
 @Composable
 private fun TrackLatestMessageScrollState(
-    conversationId: String?,
+    conversationId: ConversationId?,
     listState: LazyListState,
     isListDraggedState: State<Boolean>,
     snackbarHostState: SnackbarHostState,
@@ -382,7 +384,7 @@ private fun isScrolledToLatestMessage(listState: LazyListState): Boolean {
 
 @Composable
 private fun ScrollToTargetMessage(
-    conversationId: String?,
+    conversationId: ConversationId?,
     pendingScrollPosition: Int?,
     messages: ImmutableList<ConversationMessageUiModel>,
     listState: LazyListState,
@@ -433,7 +435,7 @@ internal fun messagePositionToDisplayIndex(position: Int, size: Int): Int {
 
 @Composable
 private fun rememberMessagesListState(
-    conversationId: String?,
+    conversationId: ConversationId?,
 ): LazyListState {
     return rememberSaveable(
         conversationId,

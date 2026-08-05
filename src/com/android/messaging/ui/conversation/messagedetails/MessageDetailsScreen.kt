@@ -20,7 +20,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,20 +37,11 @@ import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun MessageDetailsScreen(
-    conversationId: String,
-    messageId: String,
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit = {},
     screenModel: MessageDetailsScreenModel = hiltViewModel<MessageDetailsViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
-
-    LaunchedEffect(conversationId, messageId, screenModel) {
-        screenModel.onArguments(
-            conversationId = conversationId,
-            messageId = messageId,
-        )
-    }
 
     MessageDetailsScaffold(
         uiState = uiState,

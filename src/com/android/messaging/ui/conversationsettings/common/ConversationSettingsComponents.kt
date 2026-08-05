@@ -38,6 +38,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.ui.common.components.participant.ParticipantAvatar
 import com.android.messaging.ui.common.components.participant.ParticipantQuickActionsPopup
 import com.android.messaging.ui.common.components.participant.participantAvatarLabel
@@ -376,7 +377,7 @@ private fun ConversationHeaderPreview() {
         ConversationHeader(
             title = "Mother",
             participant = ParticipantUiState(
-                id = "preview",
+                id = ParticipantId("preview"),
                 avatarUri = null,
                 displayName = "Mother",
                 details = "+31 6 1234 5678",
@@ -410,7 +411,7 @@ private fun ParticipantItemPreview() {
     MessagingPreviewColumn {
         ParticipantItem(
             participant = ParticipantUiState(
-                id = "preview",
+                id = ParticipantId("preview"),
                 avatarUri = null,
                 displayName = "Mother",
                 details = "+31 6 1234 5678",

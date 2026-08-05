@@ -40,7 +40,7 @@ internal abstract class ConversationSettingsTestBase {
         every { screenModel.uiState } returns uiStateFlow
         every { screenModel.effects } returns effectsFlow
         every { screenModel.navigationEvents } returns navEventsFlow
-        every { screenModel.rootConversationId } returns ROOT_CONVERSATION_ID
+        every<Any> { screenModel.rootConversationId } returns ROOT_CONVERSATION_ID.value
     }
 
     protected fun renderScreen(state: ConversationSettingsUiState = uiStateFlow.value) {

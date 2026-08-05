@@ -7,6 +7,8 @@ import android.net.Uri
 import androidx.core.net.toUri
 import com.android.messaging.data.conversation.mapper.ConversationDraftMessageDataMapper
 import com.android.messaging.data.conversation.mapper.ConversationMessageDataDraftMapper
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.store.ConversationDraftStore
 import com.android.messaging.datamodel.MessagingContentProvider
@@ -30,10 +32,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 internal interface ConversationDraftsRepository {
-    fun observeConversationDraft(conversationId: String): Flow<ConversationDraft>
+    fun observeConversationDraft(conversationId: ConversationId): Flow<ConversationDraft>
 
     suspend fun saveDraft(
-        conversationId: String,
+        conversationId: ConversationId,
         draft: ConversationDraft,
     )
 }
@@ -51,8 +53,10 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
     private val messagingDbDispatcher: CoroutineDispatcher,
 ) : ConversationDraftsRepository {
 
-    override fun observeConversationDraft(conversationId: String): Flow<ConversationDraft> {
-        val draftChangeUri = MessagingContentProvider.buildConversationMetadataUri(conversationId)
+    override fun observeConversationDraft(conversationId: ConversationId): Flow<ConversationDraft> {
+        val draftChangeUri = MessagingContentProvider.buildConversationMetadataUri(
+            conversationId.value,
+        )
 
         return observeDraftChanges(uri = draftChangeUri)
             .flowOn(defaultDispatcher)
@@ -63,7 +67,7 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
             .catch { e ->
                 LogUtil.e(
                     TAG,
-                    "Failed to load draft for conversation $conversationId",
+                    "Failed to load draft for conversation ${conversationId.value}",
                     e,
                 )
 
@@ -73,7 +77,7 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun saveDraft(
-        conversationId: String,
+        conversationId: ConversationId,
         draft: ConversationDraft,
     ) {
         withContext(context = messagingDbDispatcher) {
@@ -114,11 +118,11 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun notifyConversationMetadataChanged(conversationId: String) {
-        MessagingContentProvider.notifyConversationMetadataChanged(conversationId)
+    private fun notifyConversationMetadataChanged(conversationId: ConversationId) {
+        MessagingContentProvider.notifyConversationMetadataChanged(conversationId.value)
     }
 
-    private fun loadConversationDraft(conversationId: String): ConversationDraft {
+    private fun loadConversationDraft(conversationId: ConversationId): ConversationDraft {
         val selfParticipantId = conversationDraftStore.getSelfParticipantId(
             conversationId = conversationId,
         ) ?: return ConversationDraft()
@@ -135,7 +139,7 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
     }
 
     private fun createConversationDraft(
-        selfParticipantId: String,
+        selfParticipantId: ParticipantId,
         draftMessage: MessageData?,
     ): ConversationDraft {
         return when (draftMessage) {
@@ -220,7 +224,7 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
     }
 
     private fun bindDraftParticipantsIfNeeded(
-        conversationId: String,
+        conversationId: ConversationId,
         message: MessageData,
     ): MessageData? {
         if (hasDraftParticipants(message = message)) {
@@ -243,18 +247,18 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
 
     private fun bindMissingDraftParticipants(
         message: MessageData,
-        selfParticipantId: String,
+        selfParticipantId: ParticipantId,
     ): MessageData {
         if (selfParticipantId.isBlank()) {
             return message
         }
 
         if (message.selfId == null) {
-            message.bindSelfId(selfParticipantId)
+            message.bindSelfId(selfParticipantId.value)
         }
 
         if (message.participantId == null) {
-            message.bindParticipantId(selfParticipantId)
+            message.bindParticipantId(selfParticipantId.value)
         }
 
         return message

@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.ui.BugleComponentActivity
 import com.android.messaging.ui.UIIntents
@@ -90,7 +91,8 @@ internal class ConversationActivity : BugleComponentActivity() {
         launchRequest = ConversationEntryLaunchRequest(
             launchGeneration = launchGeneration,
             conversationId = intent
-                .getStringExtra(UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID),
+                .getStringExtra(UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID)
+                .let(ConversationId::fromOrNull),
             draftData = intent.getParcelableExtra(
                 UIIntents.UI_INTENT_EXTRA_DRAFT_DATA,
                 MessageData::class.java,
@@ -123,10 +125,10 @@ internal class ConversationActivity : BugleComponentActivity() {
             .let(::startActivity)
     }
 
-    private fun launchConversationDetails(conversationId: String) {
+    private fun launchConversationDetails(conversationId: ConversationId) {
         UIIntents.get().launchPeopleAndOptionsActivity(
             this,
-            conversationId,
+            conversationId.value,
         )
     }
 

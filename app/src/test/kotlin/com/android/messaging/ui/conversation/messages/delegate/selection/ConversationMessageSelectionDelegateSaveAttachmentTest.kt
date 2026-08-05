@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.messages.delegate.selection
 
 import android.net.Uri
 import app.cash.turbine.test
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.media.model.AttachmentToSave
 import com.android.messaging.data.media.model.SaveAttachmentsResult
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
@@ -44,7 +45,7 @@ internal class ConversationMessageSelectionDelegateSaveAttachmentTest :
                 )
                 advanceUntilIdle()
 
-                harness.delegate.onMessageLongClick(messageId = "message-1")
+                harness.delegate.onMessageLongClick(messageId = MessageId("message-1"))
                 advanceUntilIdle()
 
                 assertEquals(
@@ -96,7 +97,7 @@ internal class ConversationMessageSelectionDelegateSaveAttachmentTest :
                     ),
                 )
                 advanceUntilIdle()
-                harness.delegate.onMessageLongClick(messageId = "message-1")
+                harness.delegate.onMessageLongClick(messageId = MessageId("message-1"))
                 advanceUntilIdle()
 
                 harness.delegate.effects.test {
@@ -181,7 +182,7 @@ internal class ConversationMessageSelectionDelegateSaveAttachmentTest :
                     ),
                 )
                 advanceUntilIdle()
-                harness.delegate.onMessageLongClick(messageId = "message-1")
+                harness.delegate.onMessageLongClick(messageId = MessageId("message-1"))
                 advanceUntilIdle()
 
                 harness.delegate.onMessageSelectionActionClick(

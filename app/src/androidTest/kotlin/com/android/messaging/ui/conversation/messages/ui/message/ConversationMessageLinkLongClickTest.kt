@@ -19,6 +19,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.Density
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.testutil.TEST_WAIT_TIMEOUT_MILLIS
@@ -262,7 +263,7 @@ class ConversationMessageLinkLongClickTest {
     }
 
     private companion object {
-        private const val MESSAGE_ID = "message-id"
+        private val MESSAGE_ID = MessageId("message-id")
         private const val HEIGHT_ASSERTION_DELTA_DP = 0.5f
         private const val LINK_ONLY_TEXT = "https://example.com"
         private const val MESSAGE_TEST_TAG = "conversation-message"
