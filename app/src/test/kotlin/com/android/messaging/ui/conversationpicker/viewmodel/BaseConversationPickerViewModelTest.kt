@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationpicker.viewmodel
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.domain.conversation.usecase.participant.ResolveConversationId
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveConversationIdResult
@@ -86,7 +87,7 @@ internal abstract class BaseConversationPickerViewModelTest {
 
     protected fun givenResolvedConversation(
         destination: String = TEST_CONTACT_DESTINATION,
-        conversationId: String = TEST_RESOLVED_CONVERSATION_ID,
+        conversationId: ConversationId = TEST_RESOLVED_CONVERSATION_ID,
     ) {
         coEvery { resolveConversationId(listOf(destination)) } returns
             ResolveConversationIdResult.Resolved(conversationId)

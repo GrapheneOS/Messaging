@@ -12,6 +12,9 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.geometry.Rect as ComposeRect
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.common.components.snackbar.MessagingSnackbarHost
 import com.android.messaging.ui.conversation.composer.ui.ConversationComposerSection
@@ -25,16 +28,16 @@ import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaf
 @Composable
 internal fun ConversationScreen(
     modifier: Modifier = Modifier,
-    conversationId: String? = null,
+    conversationId: ConversationId? = null,
     launchGeneration: Int? = null,
     cancelIncomingNotification: Boolean = true,
     onAddPeopleClick: () -> Unit,
     onConversationDetailsClick: () -> Unit,
-    onNavigateToMessageDetails: (messageId: String) -> Unit,
+    onNavigateToMessageDetails: (messageId: MessageId) -> Unit,
     onNavigateBack: () -> Unit,
     pendingDraft: ConversationDraft? = null,
     pendingScrollPosition: Int? = null,
-    pendingSelfParticipantId: String? = null,
+    pendingSelfParticipantId: ParticipantId? = null,
     pendingStartupAttachment: ConversationEntryStartupAttachment? = null,
     onPendingDraftConsumed: () -> Unit = {},
     onPendingScrollPositionConsumed: () -> Unit = {},
@@ -108,7 +111,7 @@ internal fun ConversationScreen(
 @Composable
 internal fun ConversationScreenScaffold(
     modifier: Modifier = Modifier,
-    conversationId: String?,
+    conversationId: ConversationId?,
     uiState: ConversationScreenScaffoldUiState,
     snackbarHostState: SnackbarHostState,
     isMediaPickerOpen: Boolean,
@@ -296,7 +299,7 @@ private fun ConversationScreenBottomBar(
 private fun ConversationScreenSimSelectorSheet(
     simSheetState: ConversationSimSheetState,
     uiState: ConversationScreenScaffoldUiState,
-    onSimSelected: (String) -> Unit,
+    onSimSelected: (ParticipantId) -> Unit,
 ) {
     if (!simSheetState.isVisible || !uiState.composer.simSelector.isAvailable) {
         return

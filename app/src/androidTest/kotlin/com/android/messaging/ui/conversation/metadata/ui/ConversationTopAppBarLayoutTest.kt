@@ -5,6 +5,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.ui.conversation.CONVERSATION_TOP_APP_BAR_TITLE_TEST_TAG
 import com.android.messaging.ui.conversation.metadata.model.ConversationMetadataUiState
@@ -40,7 +41,7 @@ internal class ConversationTopAppBarTest {
 private fun conversationMetadata(): ConversationMetadataUiState {
     return ConversationMetadataUiState.Present(
         title = "+372 5440 0024",
-        selfParticipantId = "self-participant-id",
+        selfParticipantId = ParticipantId("self-participant-id"),
         avatar = ConversationMetadataUiState.Avatar.Single(
             photoUri = null,
             normalizedDestination = null,

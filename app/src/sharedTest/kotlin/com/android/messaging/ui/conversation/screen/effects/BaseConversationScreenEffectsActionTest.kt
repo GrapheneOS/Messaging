@@ -19,6 +19,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Rect as ComposeRect
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.testutil.TEST_WAIT_TIMEOUT_MILLIS
 import com.android.messaging.ui.conversation.screen.ConversationScreenEffects
 import com.android.messaging.ui.conversation.screen.ConversationScreenModel
@@ -97,7 +98,7 @@ internal abstract class BaseConversationScreenEffectsActionTest {
             right = 100f,
             bottom = 100f,
         ),
-        onNavigateToMessageDetails: (String) -> Unit = {},
+        onNavigateToMessageDetails: (MessageId) -> Unit = {},
         onNavigateBack: () -> Unit = {},
     ) {
         snackbarHostState = SnackbarHostState()

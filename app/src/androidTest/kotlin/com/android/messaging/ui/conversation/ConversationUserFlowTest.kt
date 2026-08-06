@@ -12,7 +12,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.common.test.rules.AppTestRule
 import com.android.common.test.rules.MessagingTestRule
-import com.android.messaging.ui.conversationlist.chats.ConversationListActivity
+import com.android.messaging.ui.MainActivity
 import com.android.messaging.ui.conversationlist.common.support.CONVERSATION_LIST_TEST_TAG
 import org.junit.Rule
 import org.junit.Test
@@ -34,7 +34,7 @@ class ConversationUserFlowTest {
     @Test
     fun conversationListToConversation_newScreenUiElementsArePresent() {
         val scenario = ActivityScenario.launch(
-            ConversationListActivity::class.java,
+            MainActivity::class.java,
         )
 
         scenario.use {

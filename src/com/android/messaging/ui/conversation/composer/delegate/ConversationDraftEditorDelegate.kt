@@ -1,5 +1,7 @@
 package com.android.messaging.ui.conversation.composer.delegate
 
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.data.conversation.model.draft.ConversationDraftPendingAttachment
@@ -33,12 +35,12 @@ internal interface ConversationDraftEditorDelegate {
     fun onSubjectTextChanged(subjectText: String)
 
     fun onSelfParticipantIdChanged(
-        conversationId: String,
-        selfParticipantId: String,
+        conversationId: ConversationId,
+        selfParticipantId: ParticipantId,
     )
 
     fun seedDraft(
-        conversationId: String,
+        conversationId: ConversationId,
         draft: ConversationDraft,
     )
 
@@ -64,7 +66,7 @@ internal interface ConversationDraftEditorDelegate {
         captionText: String,
     )
 
-    fun reset(conversationId: String?): DraftSaveRequest?
+    fun reset(conversationId: ConversationId?): DraftSaveRequest?
 
     fun applyPersistedDraftUpdate(persistedDraftUpdate: PersistedDraftUpdate)
 
@@ -78,7 +80,7 @@ internal interface ConversationDraftEditorDelegate {
 
     fun markSendingForSendRequest(sendRequest: DraftSendRequest): Boolean
 
-    fun markConversationDraftAsIdle(conversationId: String)
+    fun markConversationDraftAsIdle(conversationId: ConversationId)
 
     fun clearConversationDraftAfterSend(sendRequest: DraftSendRequest)
 }
@@ -135,8 +137,8 @@ internal class ConversationDraftEditorDelegateImpl @Inject constructor(
     }
 
     override fun onSelfParticipantIdChanged(
-        conversationId: String,
-        selfParticipantId: String,
+        conversationId: ConversationId,
+        selfParticipantId: ParticipantId,
     ) {
         pendingSelfParticipantId = PendingSelfParticipantId(
             conversationId = conversationId,
@@ -146,7 +148,7 @@ internal class ConversationDraftEditorDelegateImpl @Inject constructor(
     }
 
     override fun seedDraft(
-        conversationId: String,
+        conversationId: ConversationId,
         draft: ConversationDraft,
     ) {
         pendingDraftSeed = PendingDraftSeed(
@@ -248,7 +250,7 @@ internal class ConversationDraftEditorDelegateImpl @Inject constructor(
         }
     }
 
-    override fun reset(conversationId: String?): DraftSaveRequest? {
+    override fun reset(conversationId: ConversationId?): DraftSaveRequest? {
         val saveRequest = draftEditorState.value.toSaveRequestOrNull()
 
         updateDraftEditorState {
@@ -336,7 +338,7 @@ internal class ConversationDraftEditorDelegateImpl @Inject constructor(
         return didMarkSending
     }
 
-    override fun markConversationDraftAsIdle(conversationId: String) {
+    override fun markConversationDraftAsIdle(conversationId: ConversationId) {
         updateDraftEditorState { currentDraftEditorState ->
             if (currentDraftEditorState.conversationId != conversationId) {
                 return@updateDraftEditorState currentDraftEditorState
@@ -466,7 +468,7 @@ internal class ConversationDraftEditorDelegateImpl @Inject constructor(
 }
 
 private data class DraftSendProtocolRequest(
-    val conversationId: String?,
+    val conversationId: ConversationId?,
     val draft: ConversationDraft,
 )
 
@@ -476,13 +478,13 @@ internal data class DraftPendingAttachmentResolution(
 )
 
 private data class PendingDraftSeed(
-    val conversationId: String,
+    val conversationId: ConversationId,
     val draft: ConversationDraft,
 )
 
 private data class PendingSelfParticipantId(
-    val conversationId: String,
-    val selfParticipantId: String,
+    val conversationId: ConversationId,
+    val selfParticipantId: ParticipantId,
 )
 
 private data class PendingAttachmentResolutionState(

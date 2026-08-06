@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.database.ContentObserver
 import android.net.Uri
 import com.android.messaging.data.blockedparticipants.model.BlockedDirectChat
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.datamodel.BugleDatabaseOperations
 import com.android.messaging.datamodel.DataModel
 import com.android.messaging.datamodel.DatabaseHelper
@@ -34,7 +35,7 @@ internal interface BlockedParticipantsRepository {
 
     suspend fun setDestinationBlocked(
         destination: String,
-        conversationId: String?,
+        conversationId: ConversationId?,
         isBlocked: Boolean,
     ): Boolean
 }
@@ -60,7 +61,7 @@ internal class BlockedParticipantsRepositoryImpl @Inject constructor(
 
     override suspend fun setDestinationBlocked(
         destination: String,
-        conversationId: String?,
+        conversationId: ConversationId?,
         isBlocked: Boolean,
     ): Boolean {
         val resolvedDestination = destination.takeIf(String::isNotBlank) ?: return false
@@ -76,7 +77,7 @@ internal class BlockedParticipantsRepositoryImpl @Inject constructor(
                 val actionMonitor = updateDestinationBlocked(
                     resolvedDestination,
                     isBlocked,
-                    conversationId?.takeIf(String::isNotBlank),
+                    conversationId?.takeIf { it.isNotBlank() }?.value,
                     listener,
                 )
 
@@ -125,6 +126,7 @@ internal class BlockedParticipantsRepositoryImpl @Inject constructor(
                         dataModel.database,
                         destination,
                     )
+                    ?.let(::ConversationId)
                     ?: return@mapNotNull null
 
                 BlockedDirectChat(

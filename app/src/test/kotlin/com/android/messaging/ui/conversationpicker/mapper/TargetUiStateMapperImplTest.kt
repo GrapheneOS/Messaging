@@ -1,9 +1,11 @@
 package com.android.messaging.ui.conversationpicker.mapper
 
 import com.android.messaging.data.contact.formatter.ContactDestinationFormatter
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationpicker.model.TargetConversation
 import com.android.messaging.data.phone.formatter.PhoneNumberFormatter
 import com.android.messaging.domain.conversation.usecase.avatar.ResolveAvatarUri
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversationpicker.model.TargetUiState
 import io.mockk.every
 import io.mockk.mockk
@@ -53,7 +55,7 @@ internal class TargetUiStateMapperImplTest {
         val result = mapper.map(
             persistentListOf(
                 conversation(
-                    conversationId = "1",
+                    conversationId = ConversationId("1"),
                     name = "Name",
                     normalizedDestination = "+15550100",
                     isGroup = false,
@@ -62,7 +64,7 @@ internal class TargetUiStateMapperImplTest {
         ).single()
 
         val conversation = result as TargetUiState.Conversation
-        assertEquals("1", conversation.conversationId)
+        assertThat(conversation.conversationId).isEqualTo(ConversationId("1"))
         assertEquals("Name", conversation.displayName)
         assertEquals("canonical:+15550100", conversation.normalizedDestination)
         assertEquals("formatted:+15550100", conversation.details)
@@ -74,7 +76,7 @@ internal class TargetUiStateMapperImplTest {
         val result = mapper.map(
             persistentListOf(
                 conversation(
-                    conversationId = "2",
+                    conversationId = ConversationId("2"),
                     name = "Name",
                     normalizedDestination = "+15550100",
                     isGroup = true,
@@ -158,11 +160,11 @@ internal class TargetUiStateMapperImplTest {
         val result = mapper.map(
             persistentListOf(
                 conversation(
-                    conversationId = "1",
+                    conversationId = ConversationId("1"),
                     name = "First",
                 ),
                 conversation(
-                    conversationId = "2",
+                    conversationId = ConversationId("2"),
                     name = "Second",
                 ),
             ),
@@ -177,7 +179,7 @@ internal class TargetUiStateMapperImplTest {
     }
 
     private fun conversation(
-        conversationId: String = "1",
+        conversationId: ConversationId = ConversationId("1"),
         name: String = "Name",
         icon: String? = null,
         normalizedDestination: String? = null,

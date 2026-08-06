@@ -1,5 +1,8 @@
 package com.android.messaging.ui.conversation.messages.mapper
 
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.datamodel.data.MessagePartData
@@ -16,17 +19,24 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 internal interface ConversationMessageUiModelMapper {
-    fun map(data: ConversationMessageData): ConversationMessageUiModel
+    fun map(data: ConversationMessageData): ConversationMessageUiModel?
 }
 
 internal class ConversationMessageUiModelMapperImpl @Inject constructor(
     private val conversationVCardAttachmentUiModelMapper: ConversationVCardAttachmentUiModelMapper,
 ) : ConversationMessageUiModelMapper {
 
-    override fun map(data: ConversationMessageData): ConversationMessageUiModel {
+    override fun map(data: ConversationMessageData): ConversationMessageUiModel? {
+        val messageId = data.messageId?.takeIf { it.isNotBlank() }
+        val conversationId = data.conversationId?.takeIf { it.isNotBlank() }
+
+        if (messageId == null || conversationId == null) {
+            return null
+        }
+
         return ConversationMessageUiModel(
-            messageId = data.messageId ?: "",
-            conversationId = data.conversationId ?: "",
+            messageId = MessageId(messageId),
+            conversationId = ConversationId(conversationId),
             text = data.text,
             parts = data
                 .parts
@@ -49,8 +59,12 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor(
             senderContactLookupKey = data.senderContactLookupKey,
             senderNormalizedDestination = data.senderNormalizedDestination
                 ?.takeIf { it.isNotBlank() },
-            senderParticipantId = data.participantId?.takeIf { it.isNotBlank() },
-            selfParticipantId = data.selfParticipantId?.takeIf { it.isNotBlank() },
+            senderParticipantId = ParticipantId
+                .fromOrNull(data.participantId)
+                ?.takeIf { it.isNotBlank() },
+            selfParticipantId = ParticipantId
+                .fromOrNull(data.selfParticipantId)
+                ?.takeIf { it.isNotBlank() },
             canClusterWithPrevious = data.canClusterWithPreviousMessage,
             canClusterWithNext = data.canClusterWithNextMessage,
             canCopyMessageToClipboard = data.canCopyMessageToClipboard,

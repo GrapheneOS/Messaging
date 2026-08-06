@@ -51,7 +51,6 @@ import com.android.messaging.ui.classzero.ClassZeroActivity;
 import com.android.messaging.ui.contact.AddContactActivity;
 import com.android.messaging.ui.conversation.ConversationActivity;
 import com.android.messaging.ui.conversation.LaunchConversationActivity;
-import com.android.messaging.ui.conversationlist.chats.ConversationListActivity;
 import com.android.messaging.ui.conversationlist.archived.ArchivedConversationListActivity;
 import com.android.messaging.ui.conversationpicker.host.forward.ForwardMessageActivity;
 import com.android.messaging.ui.conversationpicker.host.widget.WidgetPickConversationActivity;
@@ -146,7 +145,7 @@ public class UIIntentsImpl extends UIIntents {
      * Get an intent which takes you to the conversation list
      */
     private Intent getConversationListActivityIntent(final Context context) {
-        return new Intent(context, ConversationListActivity.class);
+        return new Intent(context, MainActivity.class);
     }
 
     @Override

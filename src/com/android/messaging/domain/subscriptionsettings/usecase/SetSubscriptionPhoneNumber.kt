@@ -2,6 +2,7 @@ package com.android.messaging.domain.subscriptionsettings.usecase
 
 import android.content.Context
 import com.android.messaging.R
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.datamodel.ParticipantRefresh
 import com.android.messaging.di.core.IoDispatcher
 import com.android.messaging.util.BuglePrefs
@@ -12,7 +13,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 
 internal fun interface SetSubscriptionPhoneNumber {
-    suspend operator fun invoke(subId: Int, phoneNumber: String)
+    suspend operator fun invoke(subId: SubId, phoneNumber: String)
 }
 
 internal class SetSubscriptionPhoneNumberImpl @Inject constructor(
@@ -20,16 +21,16 @@ internal class SetSubscriptionPhoneNumberImpl @Inject constructor(
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : SetSubscriptionPhoneNumber {
 
-    override suspend fun invoke(subId: Int, phoneNumber: String) {
+    override suspend fun invoke(subId: SubId, phoneNumber: String) {
         withContext(ioDispatcher) {
-            val phoneUtils = PhoneUtils.get(subId)
+            val phoneUtils = PhoneUtils.get(subId.value)
             val canonical = phoneUtils.getCanonicalBySystemLocale(phoneNumber)
             val defaultCanonical = phoneUtils.getCanonicalBySystemLocale(
                 phoneUtils.getCanonicalForSelf(false),
             )
 
             val key = context.getString(R.string.mms_phone_number_pref_key)
-            val subPrefs = BuglePrefs.getSubscriptionPrefs(subId)
+            val subPrefs = BuglePrefs.getSubscriptionPrefs(subId.value)
             if (canonical == defaultCanonical || phoneNumber.isEmpty()) {
                 subPrefs.remove(key)
             } else {

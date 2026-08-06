@@ -4,7 +4,11 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.domain.conversation.usecase.action.CreateDefaultSmsRoleRequest
@@ -122,7 +126,7 @@ internal abstract class BaseConversationViewModelTest {
     ): ConversationMetadataUiState.Present {
         return ConversationMetadataUiState.Present(
             title = "Alice",
-            selfParticipantId = "self-1",
+            selfParticipantId = ParticipantId("self-1"),
             avatar = ConversationMetadataUiState.Avatar.Single(
                 photoUri = null,
                 normalizedDestination = phoneNumber,
@@ -184,7 +188,7 @@ internal abstract class BaseConversationViewModelTest {
         state: ConversationSubscriptionSelectionState = ConversationSubscriptionSelectionState(
             subscriptions = persistentListOf(),
             areSubscriptionsLoaded = false,
-            defaultSmsSubscriptionId = ParticipantData.DEFAULT_SELF_SUB_ID,
+            defaultSmsSubscriptionId = SubId(ParticipantData.DEFAULT_SELF_SUB_ID),
         ),
     ): SubscriptionSelectionDelegateMock {
         val stateFlow = MutableStateFlow(state)
@@ -360,7 +364,7 @@ internal abstract class BaseConversationViewModelTest {
 
     protected fun createMessageUiModel(): ConversationMessageUiModel {
         return ConversationMessageUiModel(
-            messageId = MESSAGE_ID,
+            messageId = MessageId(MESSAGE_ID),
             conversationId = CONVERSATION_ID,
             text = "Hello",
             parts = persistentListOf(),
@@ -391,7 +395,7 @@ internal abstract class BaseConversationViewModelTest {
 
     protected data class BindCall(
         val scope: CoroutineScope,
-        val conversationIdFlow: StateFlow<String?>,
+        val conversationIdFlow: StateFlow<ConversationId?>,
     )
 
     protected data class DraftDelegateMock(
@@ -454,7 +458,7 @@ internal abstract class BaseConversationViewModelTest {
 
     protected data class FocusBindCall(
         val scope: CoroutineScope,
-        val conversationIdFlow: StateFlow<String?>,
+        val conversationIdFlow: StateFlow<ConversationId?>,
     )
 
     protected data class FocusDelegateMock(

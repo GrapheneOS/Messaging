@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationlist.archived.model
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.conversationlist.model.ConversationListAvatarUiModel
 
 internal sealed interface ArchivedConversationListAction {
@@ -20,19 +21,19 @@ internal sealed interface ArchivedConversationListAction {
 
     // region ListAction
     data class ConversationClicked(
-        val conversationId: String,
+        val conversationId: ConversationId,
     ) : ListAction
 
     data class ConversationLongClicked(
-        val conversationId: String,
+        val conversationId: ConversationId,
     ) : ListAction
 
     data class ConversationSwipedToUnarchive(
-        val conversationId: String,
+        val conversationId: ConversationId,
     ) : ListAction
 
     data class AvatarMessageClicked(
-        val conversationId: String,
+        val conversationId: ConversationId,
     ) : ListAction
 
     data class AvatarCallClicked(
@@ -44,7 +45,7 @@ internal sealed interface ArchivedConversationListAction {
     ) : ListAction
 
     data class AvatarInfoClicked(
-        val conversationId: String,
+        val conversationId: ConversationId,
     ) : ListAction
     // endregion
 
@@ -59,11 +60,11 @@ internal sealed interface ArchivedConversationListAction {
 
     // region SnackbarAction
     data class UnarchiveUndoClicked(
-        val conversationIds: List<String>,
+        val conversationIds: List<ConversationId>,
     ) : SnackbarAction
 
     data class UnarchiveSnackbarDismissed(
-        val conversationIds: List<String>,
+        val conversationIds: List<ConversationId>,
     ) : SnackbarAction
     // endregion
 }

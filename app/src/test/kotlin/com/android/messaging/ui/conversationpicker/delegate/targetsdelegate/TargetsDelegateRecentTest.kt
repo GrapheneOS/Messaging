@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationpicker.delegate.targetsdelegate
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationpicker.model.TargetConversation
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runCurrent
@@ -105,7 +106,7 @@ internal class TargetsDelegateRecentTest : BaseTargetsDelegateTest() {
     private fun recents(count: Int): List<TargetConversation> {
         return (1..count).map { index ->
             shareTargetConversation(
-                conversationId = index.toString(),
+                conversationId = ConversationId(index.toString()),
                 name = "Conversation $index",
             )
         }

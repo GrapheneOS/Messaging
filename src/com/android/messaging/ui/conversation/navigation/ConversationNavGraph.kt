@@ -1,7 +1,5 @@
 package com.android.messaging.ui.conversation.navigation
 
-import androidx.compose.foundation.background
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
@@ -13,13 +11,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
-import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
-import androidx.navigation3.ui.NavDisplay
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.conversation.addparticipants.AddParticipantsScreen
 import com.android.messaging.ui.conversation.entry.ConversationEntryScreenModel
@@ -31,12 +28,14 @@ import com.android.messaging.ui.conversation.entry.model.ConversationEntryUiStat
 import com.android.messaging.ui.conversation.messagedetails.MessageDetailsScreen
 import com.android.messaging.ui.conversation.recipientpicker.RecipientPickerScreen
 import com.android.messaging.ui.conversation.screen.ConversationScreen
+import com.android.messaging.ui.navigation.AppNavDisplay
+import com.android.messaging.ui.navigation.SeededViewModelStoreOwner
 
 @Composable
 internal fun ConversationNavGraph(
     launchRequest: ConversationEntryLaunchRequest?,
     modifier: Modifier = Modifier,
-    onConversationDetailsClick: (String) -> Unit = {},
+    onConversationDetailsClick: (ConversationId) -> Unit = {},
     onFinish: () -> Unit,
     entryModel: ConversationEntryScreenModel = hiltViewModel<ConversationEntryViewModel>(),
     navigationReducer: ConversationNavigationReducer = defaultConversationNavReducer,
@@ -58,10 +57,6 @@ internal fun ConversationNavGraph(
             newValue = onConversationDetailsClick,
         ),
         onFinish = rememberUpdatedState(newValue = onFinish),
-    )
-    val entryDecorators = listOf(
-        rememberSaveableStateHolderNavEntryDecorator(),
-        rememberViewModelStoreNavEntryDecorator<NavKey>(),
     )
     val entryProvider = remember(backStack) {
         conversationNavEntryProvider(routeState = routeState)
@@ -85,9 +80,9 @@ internal fun ConversationNavGraph(
         },
     )
 
-    NavDisplay(
+    AppNavDisplay(
         backStack = backStack,
-        modifier = modifier.background(color = MaterialTheme.colorScheme.background),
+        entryProvider = entryProvider,
         onBack = {
             handleNavBack(
                 backStack = backStack,
@@ -95,8 +90,7 @@ internal fun ConversationNavGraph(
                 onFinish = onFinish,
             )
         },
-        entryDecorators = entryDecorators,
-        entryProvider = entryProvider,
+        modifier = modifier,
     )
 }
 
@@ -238,17 +232,21 @@ private fun messageDetailsRouteContent(
     routeState: ConversationNavRouteState,
 ): @Composable (MessageDetailsNavKey) -> Unit {
     return { navKey ->
-        MessageDetailsScreen(
-            conversationId = navKey.conversationId,
-            messageId = navKey.messageId,
-            onNavigateBack = {
-                popBackStackOrFinish(
-                    backStack = routeState.backStack,
-                    navigationReducer = routeState.navigationReducer.value,
-                    onFinish = routeState.onFinish.value,
-                )
-            },
-        )
+        val defaultArgs = remember(navKey) {
+            messageDetailsDefaultArgs(navKey = navKey)
+        }
+
+        SeededViewModelStoreOwner(defaultArgs = defaultArgs) {
+            MessageDetailsScreen(
+                onNavigateBack = {
+                    popBackStackOrFinish(
+                        backStack = routeState.backStack,
+                        navigationReducer = routeState.navigationReducer.value,
+                        onFinish = routeState.onFinish.value,
+                    )
+                },
+            )
+        }
     }
 }
 
@@ -314,7 +312,7 @@ private fun handleNavBack(
 
 private fun pendingLaunchPayloadForConversation(
     entryUiState: ConversationEntryUiState,
-    conversationId: String,
+    conversationId: ConversationId,
 ): ConversationPendingLaunchPayload {
     if (entryUiState.conversationId != conversationId) {
         return ConversationPendingLaunchPayload()
@@ -334,14 +332,14 @@ private class ConversationNavRouteState(
     val entryUiState: State<ConversationEntryUiState>,
     val isLaunchedFromBubble: State<Boolean>,
     val navigationReducer: State<ConversationNavigationReducer>,
-    val onConversationDetailsClick: State<(String) -> Unit>,
+    val onConversationDetailsClick: State<(ConversationId) -> Unit>,
     val onFinish: State<() -> Unit>,
 )
 
 private data class ConversationPendingLaunchPayload(
     val draft: ConversationDraft? = null,
     val scrollPosition: Int? = null,
-    val selfParticipantId: String? = null,
+    val selfParticipantId: ParticipantId? = null,
     val startupAttachment: ConversationEntryStartupAttachment? = null,
 )
 

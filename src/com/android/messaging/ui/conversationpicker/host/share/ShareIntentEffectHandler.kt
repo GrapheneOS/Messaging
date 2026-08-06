@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversationpicker.host.share
 
 import android.app.Activity
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.domain.conversationpicker.model.SendContentResult
@@ -72,8 +73,8 @@ internal class ShareIntentEffectHandler(
         }
     }
 
-    private fun openConversation(conversationId: String) {
-        UIIntents.get().launchConversationActivity(activity, conversationId, messageData)
+    private fun openConversation(conversationId: ConversationId) {
+        UIIntents.get().launchConversationActivity(activity, conversationId.value, messageData)
         activity.finish()
     }
 

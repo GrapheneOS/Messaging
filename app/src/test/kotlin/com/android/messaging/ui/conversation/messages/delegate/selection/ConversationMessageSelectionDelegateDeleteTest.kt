@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.messages.delegate.selection
 
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
 import io.mockk.verify
@@ -29,9 +30,9 @@ internal class ConversationMessageSelectionDelegateDeleteTest :
                     createMessageUiModel(messageId = "message-2"),
                 )
                 advanceUntilIdle()
-                harness.delegate.onMessageLongClick(messageId = "message-1")
+                harness.delegate.onMessageLongClick(messageId = MessageId("message-1"))
                 advanceUntilIdle()
-                harness.delegate.onMessageClick(messageId = "message-2")
+                harness.delegate.onMessageClick(messageId = MessageId("message-2"))
                 advanceUntilIdle()
 
                 harness.delegate.onMessageSelectionActionClick(
@@ -40,7 +41,7 @@ internal class ConversationMessageSelectionDelegateDeleteTest :
                 advanceUntilIdle()
 
                 assertEquals(
-                    persistentSetOf("message-1", "message-2"),
+                    persistentSetOf(MessageId("message-1"), MessageId("message-2")),
                     harness.delegate.state.value.deleteConfirmation?.messageIds,
                 )
 
@@ -49,7 +50,7 @@ internal class ConversationMessageSelectionDelegateDeleteTest :
 
                 assertNull(harness.delegate.state.value.deleteConfirmation)
                 assertEquals(
-                    persistentSetOf("message-1", "message-2"),
+                    persistentSetOf(MessageId("message-1"), MessageId("message-2")),
                     harness.delegate.state.value.selectedMessageIds,
                 )
             } finally {
@@ -69,9 +70,9 @@ internal class ConversationMessageSelectionDelegateDeleteTest :
                     createMessageUiModel(messageId = "message-2"),
                 )
                 advanceUntilIdle()
-                harness.delegate.onMessageLongClick(messageId = "message-1")
+                harness.delegate.onMessageLongClick(messageId = MessageId("message-1"))
                 advanceUntilIdle()
-                harness.delegate.onMessageClick(messageId = "message-2")
+                harness.delegate.onMessageClick(messageId = MessageId("message-2"))
                 advanceUntilIdle()
                 harness.delegate.onMessageSelectionActionClick(
                     action = ConversationMessageSelectionAction.Delete,
@@ -83,7 +84,10 @@ internal class ConversationMessageSelectionDelegateDeleteTest :
 
                 verify(exactly = 1) {
                     harness.conversationsRepository.deleteMessages(
-                        messageIds = persistentSetOf("message-1", "message-2"),
+                        messageIds = persistentSetOf(
+                            MessageId("message-1"),
+                            MessageId("message-2")
+                        ),
                     )
                 }
                 assertEquals(

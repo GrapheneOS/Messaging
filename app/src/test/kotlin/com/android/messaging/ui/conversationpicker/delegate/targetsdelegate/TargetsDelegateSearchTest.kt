@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationpicker.delegate.targetsdelegate
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationpicker.model.TargetConversation
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runCurrent
@@ -29,11 +30,11 @@ internal class TargetsDelegateSearchTest : BaseTargetsDelegateTest() {
         givenRecents(
             listOf(
                 shareTargetConversation(
-                    conversationId = "1",
+                    conversationId = ConversationId("1"),
                     name = "Alice",
                 ),
                 shareTargetConversation(
-                    conversationId = "2",
+                    conversationId = ConversationId("2"),
                     name = "Bob",
                 ),
             ),
@@ -56,12 +57,12 @@ internal class TargetsDelegateSearchTest : BaseTargetsDelegateTest() {
         givenRecents(
             listOf(
                 shareTargetConversation(
-                    conversationId = "1",
+                    conversationId = ConversationId("1"),
                     name = "Alice",
                     normalizedDestination = "+15551234",
                 ),
                 shareTargetConversation(
-                    conversationId = "2",
+                    conversationId = ConversationId("2"),
                     name = "Bob",
                     normalizedDestination = "+15559999",
                 ),
@@ -121,7 +122,7 @@ internal class TargetsDelegateSearchTest : BaseTargetsDelegateTest() {
     private fun recents(count: Int): List<TargetConversation> {
         return (1..count).map { index ->
             shareTargetConversation(
-                conversationId = index.toString(),
+                conversationId = ConversationId(index.toString()),
                 name = "Conversation $index",
             )
         }

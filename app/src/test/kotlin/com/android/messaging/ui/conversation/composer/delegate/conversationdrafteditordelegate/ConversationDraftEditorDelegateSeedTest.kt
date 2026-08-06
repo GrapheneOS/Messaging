@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.composer.delegate.conversationdrafteditordelegate
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -39,14 +40,14 @@ internal class ConversationDraftEditorDelegateSeedTest :
     fun seedDraft_isNotAppliedToADifferentConversation() {
         val delegate = createDelegate()
         delegate.seedDraft(
-            conversationId = "conversation-seeded",
+            conversationId = ConversationId("conversation-seeded"),
             draft = draft(messageText = "seeded"),
         )
 
-        delegate.reset(conversationId = "conversation-other")
+        delegate.reset(conversationId = ConversationId("conversation-other"))
         assertEquals("", delegate.state.value.draft.messageText)
 
-        delegate.reset(conversationId = "conversation-seeded")
+        delegate.reset(conversationId = ConversationId("conversation-seeded"))
         assertEquals("seeded", delegate.state.value.draft.messageText)
     }
 

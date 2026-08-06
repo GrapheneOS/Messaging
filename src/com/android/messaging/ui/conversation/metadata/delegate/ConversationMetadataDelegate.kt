@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.metadata.delegate
 
 import com.android.messaging.R
 import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepository
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.di.core.DefaultDispatcher
@@ -63,12 +64,12 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
         _isDeleteConversationConfirmationVisible.asStateFlow()
 
     private var boundScope: CoroutineScope? = null
-    private var boundConversationIdFlow: StateFlow<String?>? = null
+    private var boundConversationIdFlow: StateFlow<ConversationId?>? = null
     private var latestMetadata: ConversationMetadata? = null
 
     override fun bind(
         scope: CoroutineScope,
-        conversationIdFlow: StateFlow<String?>,
+        conversationIdFlow: StateFlow<ConversationId?>,
     ) {
         if (boundScope != null) {
             return
@@ -213,7 +214,7 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
         _isDeleteConversationConfirmationVisible.value = false
     }
 
-    private val currentConversationId: String?
+    private val currentConversationId: ConversationId?
         get() {
             return boundConversationIdFlow
                 ?.value

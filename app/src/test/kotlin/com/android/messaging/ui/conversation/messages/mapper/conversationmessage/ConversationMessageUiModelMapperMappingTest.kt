@@ -1,7 +1,11 @@
 package com.android.messaging.ui.conversation.messages.mapper.conversationmessage
 
 import android.net.Uri
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.datamodel.data.MessageData
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel.Protocol
@@ -21,10 +25,10 @@ internal class ConversationMessageUiModelMapperMappingTest :
     fun map_mapsEveryScalarFieldOntoUiModel() {
         val avatarUri = Uri.parse("content://avatar/7")
 
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(
-                messageId = "message-7",
-                conversationId = "conversation-3",
+                messageId = MessageId("message-7"),
+                conversationId = ConversationId("conversation-3"),
                 text = "Hello there",
                 parts = emptyList(),
                 sentTimestamp = 1_000L,
@@ -36,8 +40,8 @@ internal class ConversationMessageUiModelMapperMappingTest :
                 senderContactId = 42L,
                 senderContactLookupKey = "lookup-7",
                 senderNormalizedDestination = "+15550100",
-                senderParticipantId = "participant-7",
-                selfParticipantId = "self-7",
+                senderParticipantId = ParticipantId("participant-7"),
+                selfParticipantId = ParticipantId("self-7"),
                 canClusterWithPrevious = true,
                 canClusterWithNext = false,
                 canCopyMessageToClipboard = true,
@@ -49,10 +53,10 @@ internal class ConversationMessageUiModelMapperMappingTest :
             ),
         )
 
-        assertEquals(
+        assertThat(uiModel).isEqualTo(
             ConversationMessageUiModel(
-                messageId = "message-7",
-                conversationId = "conversation-3",
+                messageId = MessageId("message-7"),
+                conversationId = ConversationId("conversation-3"),
                 text = "Hello there",
                 parts = persistentListOf(),
                 sentTimestamp = 1_000L,
@@ -65,8 +69,8 @@ internal class ConversationMessageUiModelMapperMappingTest :
                 senderContactId = 42L,
                 senderContactLookupKey = "lookup-7",
                 senderNormalizedDestination = "+15550100",
-                senderParticipantId = "participant-7",
-                selfParticipantId = "self-7",
+                senderParticipantId = ParticipantId("participant-7"),
+                selfParticipantId = ParticipantId("self-7"),
                 canClusterWithPrevious = true,
                 canClusterWithNext = false,
                 canCopyMessageToClipboard = true,
@@ -77,35 +81,38 @@ internal class ConversationMessageUiModelMapperMappingTest :
                 mmsDownload = null,
                 mmsSubject = "Subject line",
                 protocol = Protocol.SMS,
-            ),
-            uiModel,
+            )
         )
     }
 
     @Test
-    fun map_withNullMessageIdAndConversationId_substitutesEmptyStrings() {
-        val uiModel = mapper.map(
-            messageData(messageId = null, conversationId = null),
-        )
+    fun map_withBlankMessageId_dropsMessage() {
+        assertNull(mapper.map(messageData(messageId = null)))
+        assertNull(mapper.map(messageData(messageId = MessageId(""))))
+        assertNull(mapper.map(messageData(messageId = MessageId("   "))))
+    }
 
-        assertEquals("", uiModel.messageId)
-        assertEquals("", uiModel.conversationId)
+    @Test
+    fun map_withBlankConversationId_dropsMessage() {
+        assertNull(mapper.map(messageData(conversationId = null)))
+        assertNull(mapper.map(messageData(conversationId = ConversationId(""))))
+        assertNull(mapper.map(messageData(conversationId = ConversationId("   "))))
     }
 
     @Test
     fun map_withNullParts_returnsEmptyPartsList() {
-        val uiModel = mapper.map(messageData(parts = null))
+        val uiModel = mapPresent(messageData(parts = null))
 
         assertEquals(persistentListOf<ConversationMessagePartUiModel>(), uiModel.parts)
     }
 
     @Test
     fun map_withBlankSenderIdentifiers_mapsThemToNull() {
-        val uiModel = mapper.map(
+        val uiModel = mapPresent(
             messageData(
                 senderNormalizedDestination = "   ",
-                senderParticipantId = "",
-                selfParticipantId = " ",
+                senderParticipantId = ParticipantId(""),
+                selfParticipantId = ParticipantId(" "),
             ),
         )
 

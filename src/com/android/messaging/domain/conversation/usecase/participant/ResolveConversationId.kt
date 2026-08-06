@@ -1,5 +1,6 @@
 package com.android.messaging.domain.conversation.usecase.participant
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.datamodel.action.ActionMonitor
 import com.android.messaging.datamodel.action.GetOrCreateConversationAction
 import com.android.messaging.datamodel.data.ParticipantData
@@ -48,7 +49,7 @@ internal class ResolveConversationIdImpl @Inject constructor(
                             if (continuation.isActive) {
                                 continuation.resume(
                                     ResolveConversationIdResult.Resolved(
-                                        conversationId = conversationId,
+                                        conversationId = ConversationId(conversationId),
                                     ),
                                 )
                             }

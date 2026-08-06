@@ -1,5 +1,7 @@
 package com.android.messaging.ui.conversation.composer.delegate
 
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.data.conversation.model.draft.ConversationDraftPendingAttachment
@@ -8,7 +10,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
 internal data class DraftEditorState(
-    val conversationId: String? = null,
+    val conversationId: ConversationId? = null,
     val persistedDraft: ConversationDraft = ConversationDraft(),
     private val localEdits: ConversationDraftEdits = ConversationDraftEdits(),
     val isLoaded: Boolean = false,
@@ -81,7 +83,7 @@ internal data class DraftEditorState(
         }
     }
 
-    fun withSelfParticipantId(selfParticipantId: String): DraftEditorState {
+    fun withSelfParticipantId(selfParticipantId: ParticipantId): DraftEditorState {
         return when {
             conversationId == null -> this
             selfParticipantId.isBlank() -> this
@@ -398,25 +400,25 @@ internal data class DraftEditorState(
 }
 
 internal data class DraftSaveRequest(
-    val conversationId: String,
+    val conversationId: ConversationId,
     val draft: ConversationDraft,
 )
 
 internal data class DraftSendRequest(
-    val conversationId: String,
+    val conversationId: ConversationId,
     val draft: ConversationDraft,
     val ignoreMessageSizeLimit: Boolean = false,
 )
 
 internal data class PersistedDraftUpdate(
-    val conversationId: String,
+    val conversationId: ConversationId,
     val persistedDraft: ConversationDraft,
 )
 
 internal data class ConversationDraftEdits(
     val messageText: String? = null,
     val subjectText: String? = null,
-    val selfParticipantId: String? = null,
+    val selfParticipantId: ParticipantId? = null,
     val attachments: ImmutableList<ConversationDraftAttachment>? = null,
 ) {
     val hasChanges: Boolean

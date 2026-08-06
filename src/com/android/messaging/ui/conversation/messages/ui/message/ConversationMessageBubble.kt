@@ -15,6 +15,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageContent
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel.Status
@@ -337,7 +338,7 @@ private fun ConversationMessageBubbleTextPreview() {
     ConversationMessageBubblePreviewColumn {
         ConversationMessageBubblePreviewItem(
             message = previewIncomingMessage(
-                messageId = "bubble-incoming-short",
+                messageId = MessageId("bubble-incoming-short"),
                 text = "Incoming text with sender.",
             ),
             bubbleLayoutMode = ConversationMessageBubbleLayoutMode.TextInSurface,
@@ -345,7 +346,7 @@ private fun ConversationMessageBubbleTextPreview() {
         )
         ConversationMessageBubblePreviewItem(
             message = previewIncomingMessage(
-                messageId = "bubble-incoming-long",
+                messageId = MessageId("bubble-incoming-long"),
                 text = PREVIEW_LONG_BUBBLE_TEXT,
             ),
             bubbleLayoutMode = ConversationMessageBubbleLayoutMode.TextInSurface,
@@ -354,7 +355,7 @@ private fun ConversationMessageBubbleTextPreview() {
         )
         ConversationMessageBubblePreviewItem(
             message = previewOutgoingMessage(
-                messageId = "bubble-outgoing-link",
+                messageId = MessageId("bubble-outgoing-link"),
                 text = "Outgoing text with link https://example.com/support.",
                 status = Status.Outgoing.Delivered,
             ),
@@ -363,7 +364,7 @@ private fun ConversationMessageBubbleTextPreview() {
         )
         ConversationMessageBubblePreviewItem(
             message = previewOutgoingMessage(
-                messageId = "bubble-outgoing-overflow",
+                messageId = MessageId("bubble-outgoing-overflow"),
                 text = PREVIEW_OVERFLOW_BUBBLE_TEXT,
                 status = Status.Outgoing.Sending,
             ),
@@ -372,7 +373,7 @@ private fun ConversationMessageBubbleTextPreview() {
         )
         ConversationMessageBubblePreviewItem(
             message = previewOutgoingMessage(
-                messageId = "bubble-outgoing-selected",
+                messageId = MessageId("bubble-outgoing-selected"),
                 text = "Selected outgoing text in selection mode.",
                 status = Status.Outgoing.Failed,
             ),
@@ -383,7 +384,7 @@ private fun ConversationMessageBubbleTextPreview() {
         )
         ConversationMessageBubblePreviewItem(
             message = previewIncomingMessage(
-                messageId = "bubble-incoming-selection-mode",
+                messageId = MessageId("bubble-incoming-selection-mode"),
                 text = "Incoming text while selection mode is active.",
             ),
             bubbleLayoutMode = ConversationMessageBubbleLayoutMode.TextInSurface,
@@ -424,7 +425,7 @@ private fun ConversationMessageBubbleAttachmentSurfacePreview() {
     ConversationMessageBubblePreviewColumn {
         ConversationMessageBubblePreviewItem(
             message = previewIncomingMessage(
-                messageId = "bubble-incoming-media-subject",
+                messageId = MessageId("bubble-incoming-media-subject"),
                 text = "Body text below the media with https://example.com/trip.",
                 parts = persistentListOf(
                     previewImagePart(text = "Image caption"),
@@ -440,7 +441,7 @@ private fun ConversationMessageBubbleAttachmentSurfacePreview() {
         )
         ConversationMessageBubblePreviewItem(
             message = previewOutgoingMessage(
-                messageId = "bubble-outgoing-audio",
+                messageId = MessageId("bubble-outgoing-audio"),
                 text = null,
                 parts = persistentListOf(previewAudioPart(text = "Voice note caption")),
                 status = Status.Outgoing.Delivered,
@@ -453,7 +454,7 @@ private fun ConversationMessageBubbleAttachmentSurfacePreview() {
         )
         ConversationMessageBubblePreviewItem(
             message = previewIncomingMessage(
-                messageId = "bubble-incoming-vcard",
+                messageId = MessageId("bubble-incoming-vcard"),
                 text = null,
                 parts = persistentListOf(previewVCardPart()),
                 protocol = ConversationMessageUiModel.Protocol.MMS,
@@ -464,7 +465,7 @@ private fun ConversationMessageBubbleAttachmentSurfacePreview() {
         )
         ConversationMessageBubblePreviewItem(
             message = previewOutgoingMessage(
-                messageId = "bubble-outgoing-file",
+                messageId = MessageId("bubble-outgoing-file"),
                 text = null,
                 parts = persistentListOf(previewFilePart(text = "Unsupported PDF attachment")),
                 status = Status.Outgoing.Failed,
@@ -479,7 +480,7 @@ private fun ConversationMessageBubbleAttachmentSurfacePreview() {
         )
         ConversationMessageBubblePreviewItem(
             message = previewOutgoingMessage(
-                messageId = "bubble-outgoing-youtube",
+                messageId = MessageId("bubble-outgoing-youtube"),
                 text = "Watch this: https://www.youtube.com/watch?v=dQw4w9WgXcQ",
                 status = Status.Outgoing.Delivered,
             ),
@@ -495,7 +496,7 @@ private fun ConversationMessageBubbleAttachmentOnlyPreview() {
     ConversationMessageBubblePreviewColumn {
         ConversationMessageBubblePreviewItem(
             message = previewOutgoingMessage(
-                messageId = "bubble-outgoing-image-only",
+                messageId = MessageId("bubble-outgoing-image-only"),
                 text = null,
                 parts = persistentListOf(previewImagePart(text = null)),
                 status = Status.Outgoing.Complete,
@@ -508,7 +509,7 @@ private fun ConversationMessageBubbleAttachmentOnlyPreview() {
         )
         ConversationMessageBubblePreviewItem(
             message = previewIncomingMessage(
-                messageId = "bubble-incoming-image-only",
+                messageId = MessageId("bubble-incoming-image-only"),
                 text = null,
                 parts = persistentListOf(previewImagePart(text = null)),
                 protocol = ConversationMessageUiModel.Protocol.MMS,
@@ -520,7 +521,7 @@ private fun ConversationMessageBubbleAttachmentOnlyPreview() {
         )
         ConversationMessageBubblePreviewItem(
             message = previewIncomingMessage(
-                messageId = "bubble-incoming-video-only-selected",
+                messageId = MessageId("bubble-incoming-video-only-selected"),
                 text = null,
                 parts = persistentListOf(previewVideoPart(text = null)),
                 protocol = ConversationMessageUiModel.Protocol.MMS,
@@ -541,7 +542,7 @@ private fun ConversationMessageBubbleClusterShapePreview() {
     ConversationMessageBubblePreviewColumn {
         ConversationMessageBubblePreviewItem(
             message = previewIncomingMessage(
-                messageId = "bubble-incoming-cluster-start",
+                messageId = MessageId("bubble-incoming-cluster-start"),
                 text = "Incoming cluster start.",
             ).copy(
                 canClusterWithNext = true,
@@ -551,7 +552,7 @@ private fun ConversationMessageBubbleClusterShapePreview() {
         )
         ConversationMessageBubblePreviewItem(
             message = previewIncomingMessage(
-                messageId = "bubble-incoming-cluster-middle",
+                messageId = MessageId("bubble-incoming-cluster-middle"),
                 text = "Incoming cluster middle.",
             ).copy(
                 canClusterWithPrevious = true,
@@ -563,7 +564,7 @@ private fun ConversationMessageBubbleClusterShapePreview() {
         )
         ConversationMessageBubblePreviewItem(
             message = previewIncomingMessage(
-                messageId = "bubble-incoming-cluster-end",
+                messageId = MessageId("bubble-incoming-cluster-end"),
                 text = "Incoming cluster end.",
             ).copy(
                 canClusterWithPrevious = true,
@@ -574,7 +575,7 @@ private fun ConversationMessageBubbleClusterShapePreview() {
         )
         ConversationMessageBubblePreviewItem(
             message = previewOutgoingMessage(
-                messageId = "bubble-outgoing-cluster-start",
+                messageId = MessageId("bubble-outgoing-cluster-start"),
                 text = "Outgoing cluster start.",
             ).copy(
                 canClusterWithNext = true,
@@ -584,7 +585,7 @@ private fun ConversationMessageBubbleClusterShapePreview() {
         )
         ConversationMessageBubblePreviewItem(
             message = previewOutgoingMessage(
-                messageId = "bubble-outgoing-cluster-end",
+                messageId = MessageId("bubble-outgoing-cluster-end"),
                 text = "Outgoing cluster end.",
             ).copy(
                 canClusterWithPrevious = true,

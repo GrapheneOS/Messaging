@@ -26,6 +26,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.ui.common.components.bottomBarInsets
 import com.android.messaging.ui.conversation.CONVERSATION_SIM_SELECTOR_SHEET_TEST_TAG
@@ -42,7 +43,7 @@ private val SHEET_VERTICAL_PADDING = 8.dp
 @Composable
 internal fun ConversationSimSelectorSheet(
     uiState: ConversationSimSelectorUiState,
-    onSimSelected: (String) -> Unit,
+    onSimSelected: (ParticipantId) -> Unit,
     onDismissRequest: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(
@@ -64,7 +65,7 @@ internal fun ConversationSimSelectorSheet(
 @Composable
 private fun ConversationSimSelectorSheetContent(
     uiState: ConversationSimSelectorUiState,
-    onSimSelected: (String) -> Unit,
+    onSimSelected: (ParticipantId) -> Unit,
 ) {
     Column(
         modifier = Modifier

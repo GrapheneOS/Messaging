@@ -1,7 +1,9 @@
 package com.android.messaging.ui.conversation.composer.mapper
 
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.data.subscription.resolveSelectedSubscription
 import com.android.messaging.datamodel.MessageTextStats
@@ -25,7 +27,7 @@ internal interface ConversationComposerUiStateMapper {
         composerAvailability: ConversationComposerAvailability,
         subscriptions: ImmutableList<Subscription>,
         areSubscriptionsLoaded: Boolean,
-        defaultSmsSubscriptionId: Int,
+        defaultSmsSubscriptionId: SubId,
     ): ConversationComposerUiState
 }
 
@@ -39,7 +41,7 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
         composerAvailability: ConversationComposerAvailability,
         subscriptions: ImmutableList<Subscription>,
         areSubscriptionsLoaded: Boolean,
-        defaultSmsSubscriptionId: Int,
+        defaultSmsSubscriptionId: SubId,
     ): ConversationComposerUiState {
         val draft = draftState.draft
         val hasWorkingDraft = draft.hasContent
@@ -83,7 +85,7 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
                 draft = draft,
                 sendProtocol = visibleSendProtocol,
                 selfSubId = simSelector.selectedSubscription?.subId
-                    ?: ParticipantData.DEFAULT_SELF_SUB_ID,
+                    ?: SubId(ParticipantData.DEFAULT_SELF_SUB_ID),
             ),
             isCheckingDraft = draft.isCheckingDraft,
             isSending = draft.isSending,
@@ -97,7 +99,7 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
     private fun buildSegmentCounterUiState(
         draft: ConversationDraft,
         sendProtocol: ConversationDraftSendProtocol,
-        selfSubId: Int,
+        selfSubId: SubId,
     ): ConversationSegmentCounterUiState? {
         val isSms = sendProtocol == ConversationDraftSendProtocol.SMS
         val messageText = draft.messageText
@@ -107,7 +109,7 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
         }
 
         val stats = MessageTextStats().apply {
-            updateMessageTextStats(selfSubId, messageText)
+            updateMessageTextStats(selfSubId.value, messageText)
         }
 
         val messageCount = stats.numMessagesToBeSent
@@ -130,9 +132,9 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
 
     private fun buildSimSelectorUiState(
         subscriptions: ImmutableList<Subscription>,
-        selfParticipantId: String,
+        selfParticipantId: ParticipantId,
         areSubscriptionsLoaded: Boolean,
-        defaultSmsSubscriptionId: Int,
+        defaultSmsSubscriptionId: SubId,
     ): ConversationSimSelectorUiState {
         val selected = resolveSelectedSubscription(
             subscriptions = subscriptions,

@@ -1,5 +1,7 @@
 package com.android.messaging.domain.conversation.usecase.forward
 
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.datamodel.data.MessagePartData
@@ -8,8 +10,8 @@ import javax.inject.Inject
 
 internal interface CreateForwardedMessage {
     suspend operator fun invoke(
-        conversationId: String,
-        messageId: String,
+        conversationId: ConversationId,
+        messageId: MessageId,
     ): MessageData?
 }
 
@@ -19,8 +21,8 @@ internal class CreateForwardedMessageImpl @Inject constructor(
 ) : CreateForwardedMessage {
 
     override suspend operator fun invoke(
-        conversationId: String,
-        messageId: String,
+        conversationId: ConversationId,
+        messageId: MessageId,
     ): MessageData? {
         val message = conversationsRepository
             .getConversationMessage(

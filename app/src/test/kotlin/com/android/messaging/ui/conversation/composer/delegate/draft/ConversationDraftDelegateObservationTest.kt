@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.composer.delegate.draft
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.composer.model.ConversationDraftState
@@ -80,7 +81,7 @@ internal class ConversationDraftDelegateObservationTest : BaseConversationDraftD
                 advanceUntilIdle()
 
                 harness.delegate.onMessageTextChanged(messageText = "Hello")
-                harness.conversationIdFlow.value = "conversation-2"
+                harness.conversationIdFlow.value = ConversationId("conversation-2")
                 advanceUntilIdle()
 
                 coVerify(exactly = 1) {

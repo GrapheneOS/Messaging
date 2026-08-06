@@ -41,7 +41,7 @@ internal class ConversationMessageUiModelMapperStatusTest :
         )
 
         statusToUiStatus.forEach { (bugleStatus, expectedUiStatus) ->
-            val uiModel = mapper.map(messageData(status = bugleStatus))
+            val uiModel = mapPresent(messageData(status = bugleStatus))
 
             assertEquals("status=$bugleStatus", expectedUiStatus, uiModel.status)
         }
@@ -49,7 +49,7 @@ internal class ConversationMessageUiModelMapperStatusTest :
 
     @Test
     fun map_withUnexpectedStatus_mapsToUnknown() {
-        val uiModel = mapper.map(messageData(status = 9999))
+        val uiModel = mapPresent(messageData(status = 9999))
 
         assertEquals(Status.Unknown, uiModel.status)
     }

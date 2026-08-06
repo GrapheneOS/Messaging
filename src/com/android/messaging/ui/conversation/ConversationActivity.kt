@@ -8,12 +8,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.ui.BugleComponentActivity
+import com.android.messaging.ui.MainActivity
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryLaunchRequest
 import com.android.messaging.ui.conversation.navigation.ConversationNavGraph
-import com.android.messaging.ui.conversationlist.chats.ConversationListActivity
 import com.android.messaging.ui.core.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -90,7 +91,8 @@ internal class ConversationActivity : BugleComponentActivity() {
         launchRequest = ConversationEntryLaunchRequest(
             launchGeneration = launchGeneration,
             conversationId = intent
-                .getStringExtra(UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID),
+                .getStringExtra(UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID)
+                .let(ConversationId::fromOrNull),
             draftData = intent.getParcelableExtra(
                 UIIntents.UI_INTENT_EXTRA_DRAFT_DATA,
                 MessageData::class.java,
@@ -116,17 +118,17 @@ internal class ConversationActivity : BugleComponentActivity() {
     private fun redirectToConversationList() {
         finish()
 
-        Intent(this, ConversationListActivity::class.java)
+        Intent(this, MainActivity::class.java)
             .apply {
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
             .let(::startActivity)
     }
 
-    private fun launchConversationDetails(conversationId: String) {
+    private fun launchConversationDetails(conversationId: ConversationId) {
         UIIntents.get().launchPeopleAndOptionsActivity(
             this,
-            conversationId,
+            conversationId.value,
         )
     }
 

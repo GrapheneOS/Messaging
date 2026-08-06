@@ -1,25 +1,26 @@
 package com.android.messaging.data.conversation.store
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.datamodel.BugleDatabaseOperations
 import com.android.messaging.datamodel.DataModel
 import com.android.messaging.datamodel.MessagingContentProvider
 import javax.inject.Inject
 
 internal interface ConversationPinStore {
-    fun pinConversation(conversationId: String)
-    fun unpinConversation(conversationId: String)
+    fun pinConversation(conversationId: ConversationId)
+    fun unpinConversation(conversationId: ConversationId)
 }
 
 internal class ConversationPinStoreImpl @Inject constructor() : ConversationPinStore {
 
-    override fun pinConversation(conversationId: String) {
+    override fun pinConversation(conversationId: ConversationId) {
         setPinned(
             conversationId = conversationId,
             isPinned = true,
         )
     }
 
-    override fun unpinConversation(conversationId: String) {
+    override fun unpinConversation(conversationId: ConversationId) {
         setPinned(
             conversationId = conversationId,
             isPinned = false,
@@ -27,7 +28,7 @@ internal class ConversationPinStoreImpl @Inject constructor() : ConversationPinS
     }
 
     private fun setPinned(
-        conversationId: String,
+        conversationId: ConversationId,
         isPinned: Boolean,
     ) {
         val database = DataModel.get().database
@@ -36,7 +37,7 @@ internal class ConversationPinStoreImpl @Inject constructor() : ConversationPinS
         try {
             BugleDatabaseOperations.updateConversationPinStatusInTransaction(
                 database,
-                conversationId,
+                conversationId.value,
                 isPinned,
             )
             database.setTransactionSuccessful()
@@ -45,6 +46,6 @@ internal class ConversationPinStoreImpl @Inject constructor() : ConversationPinS
         }
 
         MessagingContentProvider.notifyConversationListChanged()
-        MessagingContentProvider.notifyConversationMetadataChanged(conversationId)
+        MessagingContentProvider.notifyConversationMetadataChanged(conversationId.value)
     }
 }

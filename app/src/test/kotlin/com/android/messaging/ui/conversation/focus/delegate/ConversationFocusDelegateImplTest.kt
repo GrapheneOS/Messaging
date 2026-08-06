@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.focus.delegate
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.datamodel.BugleNotifications
 import com.android.messaging.datamodel.DataModel
 import com.android.messaging.testutil.MainDispatcherRule
@@ -55,18 +56,18 @@ class ConversationFocusDelegateImplTest {
         runTest(
             context = mainDispatcherRule.testDispatcher,
         ) {
-            val conversationIdFlow = MutableStateFlow<String?>(value = CONVERSATION_ID)
+            val conversationIdFlow = MutableStateFlow<ConversationId?>(value = CONVERSATION_ID)
             val delegate = createBoundDelegate(conversationIdFlow = conversationIdFlow)
 
             delegate.setScreenFocused(focused = true)
             runCurrent()
 
             verify(exactly = 1) {
-                dataModel.setFocusedConversation(CONVERSATION_ID)
+                dataModel.setFocusedConversation(CONVERSATION_ID.value)
             }
             verify(exactly = 1) {
                 BugleNotifications.markMessagesAsRead(
-                    CONVERSATION_ID,
+                    CONVERSATION_ID.value,
                     true,
                 )
             }
@@ -78,7 +79,7 @@ class ConversationFocusDelegateImplTest {
         runTest(
             context = mainDispatcherRule.testDispatcher,
         ) {
-            val conversationIdFlow = MutableStateFlow<String?>(value = CONVERSATION_ID)
+            val conversationIdFlow = MutableStateFlow<ConversationId?>(value = CONVERSATION_ID)
             val delegate = createBoundDelegate(conversationIdFlow = conversationIdFlow)
 
             delegate.setScreenFocused(focused = true, cancelNotification = false)
@@ -86,7 +87,7 @@ class ConversationFocusDelegateImplTest {
 
             verify(exactly = 1) {
                 BugleNotifications.markMessagesAsRead(
-                    CONVERSATION_ID,
+                    CONVERSATION_ID.value,
                     false,
                 )
             }
@@ -98,7 +99,7 @@ class ConversationFocusDelegateImplTest {
         runTest(
             context = mainDispatcherRule.testDispatcher,
         ) {
-            val conversationIdFlow = MutableStateFlow<String?>(value = null)
+            val conversationIdFlow = MutableStateFlow<ConversationId?>(value = null)
             val delegate = createBoundDelegate(conversationIdFlow = conversationIdFlow)
 
             delegate.setScreenFocused(focused = true)
@@ -118,7 +119,9 @@ class ConversationFocusDelegateImplTest {
         runTest(
             context = mainDispatcherRule.testDispatcher,
         ) {
-            val conversationIdFlow = MutableStateFlow<String?>(value = "   ")
+            val conversationIdFlow = MutableStateFlow<ConversationId?>(
+                value = ConversationId("   "),
+            )
             val delegate = createBoundDelegate(conversationIdFlow = conversationIdFlow)
 
             delegate.setScreenFocused(focused = true)
@@ -146,7 +149,7 @@ class ConversationFocusDelegateImplTest {
             } answers {
                 focusedConversationIds.add(null)
             }
-            val conversationIdFlow = MutableStateFlow<String?>(value = CONVERSATION_ID)
+            val conversationIdFlow = MutableStateFlow<ConversationId?>(value = CONVERSATION_ID)
             val delegate = createBoundDelegate(conversationIdFlow = conversationIdFlow)
 
             delegate.setScreenFocused(focused = true)
@@ -154,7 +157,7 @@ class ConversationFocusDelegateImplTest {
             delegate.setScreenFocused(focused = false)
             runCurrent()
 
-            assertEquals(listOf(null, CONVERSATION_ID, null), focusedConversationIds)
+            assertEquals(listOf(null, CONVERSATION_ID.value, null), focusedConversationIds)
         }
     }
 
@@ -163,16 +166,16 @@ class ConversationFocusDelegateImplTest {
         runTest(
             context = mainDispatcherRule.testDispatcher,
         ) {
-            val conversationIdFlow = MutableStateFlow<String?>(value = CONVERSATION_ID)
+            val conversationIdFlow = MutableStateFlow<ConversationId?>(value = CONVERSATION_ID)
             val delegate = createBoundDelegate(conversationIdFlow = conversationIdFlow)
 
             delegate.setScreenFocused(focused = true)
             runCurrent()
-            conversationIdFlow.value = "conversation-2"
+            conversationIdFlow.value = ConversationId("conversation-2")
             runCurrent()
 
             verify(exactly = 1) {
-                BugleNotifications.markMessagesAsRead(CONVERSATION_ID, true)
+                BugleNotifications.markMessagesAsRead(CONVERSATION_ID.value, true)
             }
             verify(exactly = 1) {
                 BugleNotifications.markMessagesAsRead("conversation-2", true)
@@ -188,7 +191,7 @@ class ConversationFocusDelegateImplTest {
         runTest(
             context = mainDispatcherRule.testDispatcher,
         ) {
-            val conversationIdFlow = MutableStateFlow<String?>(value = CONVERSATION_ID)
+            val conversationIdFlow = MutableStateFlow<ConversationId?>(value = CONVERSATION_ID)
             val delegate = createBoundDelegate(conversationIdFlow = conversationIdFlow)
 
             delegate.setScreenFocused(focused = true)
@@ -197,7 +200,7 @@ class ConversationFocusDelegateImplTest {
             runCurrent()
 
             verify(exactly = 1) {
-                BugleNotifications.markMessagesAsRead(CONVERSATION_ID, true)
+                BugleNotifications.markMessagesAsRead(CONVERSATION_ID.value, true)
             }
         }
     }
@@ -207,8 +210,10 @@ class ConversationFocusDelegateImplTest {
         runTest(
             context = mainDispatcherRule.testDispatcher,
         ) {
-            val conversationIdFlow = MutableStateFlow<String?>(value = CONVERSATION_ID)
-            val secondConversationIdFlow = MutableStateFlow<String?>(value = "conversation-rebound")
+            val conversationIdFlow = MutableStateFlow<ConversationId?>(value = CONVERSATION_ID)
+            val secondConversationIdFlow = MutableStateFlow<ConversationId?>(
+                value = ConversationId("conversation-rebound"),
+            )
             val delegate = createBoundDelegate(conversationIdFlow = conversationIdFlow)
             delegate.bind(scope = backgroundScope, conversationIdFlow = secondConversationIdFlow)
 
@@ -216,7 +221,7 @@ class ConversationFocusDelegateImplTest {
             runCurrent()
 
             verify(exactly = 1) {
-                BugleNotifications.markMessagesAsRead(CONVERSATION_ID, true)
+                BugleNotifications.markMessagesAsRead(CONVERSATION_ID.value, true)
             }
             verify(exactly = 0) {
                 BugleNotifications.markMessagesAsRead("conversation-rebound", any())
@@ -225,7 +230,7 @@ class ConversationFocusDelegateImplTest {
     }
 
     private fun TestScope.createBoundDelegate(
-        conversationIdFlow: MutableStateFlow<String?>,
+        conversationIdFlow: MutableStateFlow<ConversationId?>,
     ): ConversationFocusDelegateImpl {
         val delegate = ConversationFocusDelegateImpl(
             defaultDispatcher = mainDispatcherRule.testDispatcher,

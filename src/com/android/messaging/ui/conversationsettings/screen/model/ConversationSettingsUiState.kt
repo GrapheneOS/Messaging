@@ -1,19 +1,21 @@
 package com.android.messaging.ui.conversationsettings.screen.model
 
 import androidx.compose.runtime.Immutable
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.subscription.model.Subscription
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @Immutable
 internal data class ConversationSettingsUiState(
-    val conversationId: String = "",
+    val conversationId: ConversationId = ConversationId(""),
     val conversationTitle: String = "",
     val isArchived: Boolean = false,
     val isSnoozed: Boolean = false,
     val participants: ImmutableList<ParticipantUiState> = persistentListOf(),
     val otherParticipant: ParticipantUiState? = null,
-    val selfParticipantId: String = "",
+    val selfParticipantId: ParticipantId = ParticipantId(""),
     val availableSubscriptions: ImmutableList<Subscription> = persistentListOf(),
     val selectedSubscription: Subscription? = null,
     val isSimSwitchAvailable: Boolean = false,
@@ -24,7 +26,7 @@ internal data class ConversationSettingsUiState(
 
 @Immutable
 internal data class ParticipantUiState(
-    val id: String,
+    val id: ParticipantId,
     val avatarUri: String?,
     val displayName: String,
     val details: String?,

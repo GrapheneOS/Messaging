@@ -30,7 +30,7 @@ internal class ConversationListEffectHandlerImpl(
             is Effect.OpenConversation -> {
                 UIIntents.get().launchConversationActivity(
                     activity,
-                    effect.conversationId,
+                    effect.conversationId.value,
                     null,
                 )
             }
@@ -38,7 +38,7 @@ internal class ConversationListEffectHandlerImpl(
             is Effect.OpenConversationSettings -> {
                 UIIntents.get().launchPeopleAndOptionsActivity(
                     activity,
-                    effect.conversationId,
+                    effect.conversationId.value,
                 )
             }
 

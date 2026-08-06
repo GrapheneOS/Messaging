@@ -12,6 +12,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.testutil.TestLifecycleOwner
 import com.android.messaging.ui.appsettings.general.model.AppSettingsUiState
 import com.android.messaging.ui.appsettings.screen.model.SettingsUiState
@@ -181,7 +182,7 @@ class SettingsScreenTest {
 
         fakeUiStateFlow.value = createMultiSimState().copy(
             subscriptionSettings = createMultiSimState().subscriptionSettings
-                .filter { it.subId == 1 }
+                .filter { it.subId == SubId(1) }
                 .toImmutableList(),
         )
         composeTestRule.waitForIdle()
@@ -257,7 +258,7 @@ class SettingsScreenTest {
 
         fakeUiStateFlow.value = createMultiSimState().copy(
             subscriptionSettings = createMultiSimState().subscriptionSettings
-                .filter { it.subId == 1 }
+                .filter { it.subId == SubId(1) }
                 .toImmutableList(),
         )
         composeTestRule.waitForIdle()
@@ -278,7 +279,7 @@ class SettingsScreenTest {
                     SettingsScreen(
                         effectHandler = effectHandler,
                         onNavigateBack = {},
-                        intentSubId = intentSubId,
+                        intentSubId = SubId(intentSubId),
                         intentSubTitle = intentSubTitle,
                         isTopLevelIntent = isTopLevelIntent,
                         screenModel = screenModel,
@@ -305,7 +306,7 @@ class SettingsScreenTest {
             ),
             subscriptionSettings = persistentListOf(
                 SubscriptionUiState(
-                    subId = 1,
+                    subId = SubId(1),
                     displayName = "Advanced Settings",
                     displayDetail = "+1234567890",
                 ),
@@ -324,12 +325,12 @@ class SettingsScreenTest {
             ),
             subscriptionSettings = persistentListOf(
                 SubscriptionUiState(
-                    subId = 1,
+                    subId = SubId(1),
                     displayName = "SIM 1",
                     displayDetail = "+1234567890",
                 ),
                 SubscriptionUiState(
-                    subId = 2,
+                    subId = SubId(2),
                     displayName = "SIM 2",
                     displayDetail = "+0987654321",
                 ),
