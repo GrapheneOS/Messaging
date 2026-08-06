@@ -1,7 +1,8 @@
 package com.android.messaging.ui.conversation.metadata.ui
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -38,6 +39,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
@@ -72,6 +75,8 @@ import com.android.messaging.ui.core.MessagingPreviewColumn
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import com.android.messaging.ui.subscription.mapper.resolveDisplayName
 import com.android.messaging.util.AccessibilityUtil
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 private val CONVERSATION_TOP_APP_BAR_TITLE_SPACING = 12.dp
 private val CONVERSATION_TOP_APP_BAR_AVATAR_SIZE = 36.dp
@@ -100,6 +105,7 @@ internal fun ConversationTopAppBar(
     onSimSelectorClick: () -> Unit = {},
     onTitleClick: () -> Unit,
     onNavigateBack: () -> Unit,
+    onPhoneNumberCopy: (String) -> Unit = {},
 ) {
     val presentation = rememberConversationTopAppBarPresentation(
         metadata = metadata,
@@ -128,6 +134,10 @@ internal fun ConversationTopAppBar(
                 isClickable = isTitleClickable,
                 onClick = onTitleClick,
                 presentation = presentation,
+                phoneNumberCopyTargets = (metadata as? ConversationMetadataUiState.Present)
+                    ?.phoneNumberCopyTargets
+                    ?: persistentListOf(),
+                onPhoneNumberCopy = onPhoneNumberCopy,
             )
         },
         navigationIcon = {
@@ -197,28 +207,98 @@ private fun ConversationTopAppBarTitle(
     isClickable: Boolean,
     onClick: () -> Unit,
     presentation: ConversationTopAppBarPresentation,
+    phoneNumberCopyTargets: ImmutableList<ConversationMetadataUiState.PhoneNumberCopyTarget>,
+    onPhoneNumberCopy: (String) -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .heightIn(min = TopAppBarDefaults.TopAppBarExpandedHeight)
-            .testTag(tag = CONVERSATION_TOP_APP_BAR_TITLE_TEST_TAG)
-            .clickable(
-                enabled = isClickable,
-                onClick = onClick,
-            ),
-        horizontalArrangement = Arrangement.spacedBy(
-            space = CONVERSATION_TOP_APP_BAR_TITLE_SPACING,
-        ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        ConversationAvatar(
-            avatar = presentation.avatar,
-            isBlocked = presentation.isBlocked,
-        )
+    var isPhoneNumberMenuExpanded by remember { mutableStateOf(value = false) }
+    val hapticFeedback = LocalHapticFeedback.current
+    val copyLabel = stringResource(id = R.string.copy_to_clipboard)
+    val onPhoneNumberAction: (() -> Unit)? = when (phoneNumberCopyTargets.size) {
+        0 -> null
+        1 -> {
+            {
+                onPhoneNumberCopy(phoneNumberCopyTargets.single().phoneNumber)
+            }
+        }
+        else -> {
+            {
+                isPhoneNumberMenuExpanded = true
+            }
+        }
+    }
+    val onLongClick = onPhoneNumberAction?.let { action ->
+        {
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+            action()
+        }
+    }
 
-        ConversationTopAppBarText(
-            presentation = presentation,
+    Box {
+        Row(
+            modifier = Modifier
+                .heightIn(min = TopAppBarDefaults.TopAppBarExpandedHeight)
+                .testTag(tag = CONVERSATION_TOP_APP_BAR_TITLE_TEST_TAG)
+                .combinedClickable(
+                    enabled = isClickable,
+                    onClick = onClick,
+                    onLongClickLabel = copyLabel.takeIf { onLongClick != null },
+                    onLongClick = onLongClick,
+                ),
+            horizontalArrangement = Arrangement.spacedBy(
+                space = CONVERSATION_TOP_APP_BAR_TITLE_SPACING,
+            ),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            ConversationAvatar(
+                avatar = presentation.avatar,
+                isBlocked = presentation.isBlocked,
+            )
+
+            ConversationTopAppBarText(
+                presentation = presentation,
+            )
+        }
+
+        ConversationPhoneNumberCopyMenu(
+            expanded = isPhoneNumberMenuExpanded,
+            targets = phoneNumberCopyTargets,
+            onDismissRequest = { isPhoneNumberMenuExpanded = false },
+            onPhoneNumberCopy = { phoneNumber ->
+                isPhoneNumberMenuExpanded = false
+                onPhoneNumberCopy(phoneNumber)
+            },
         )
+    }
+}
+
+@Composable
+private fun ConversationPhoneNumberCopyMenu(
+    expanded: Boolean,
+    targets: ImmutableList<ConversationMetadataUiState.PhoneNumberCopyTarget>,
+    onDismissRequest: () -> Unit,
+    onPhoneNumberCopy: (String) -> Unit,
+) {
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismissRequest,
+    ) {
+        targets.forEach { target ->
+            DropdownMenuItem(
+                text = {
+                    Column {
+                        Text(text = target.displayName)
+                        if (target.displayName != target.phoneNumber) {
+                            Text(
+                                text = target.phoneNumber.asLtrText(),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                },
+                onClick = { onPhoneNumberCopy(target.phoneNumber) },
+            )
+        }
     }
 }
 

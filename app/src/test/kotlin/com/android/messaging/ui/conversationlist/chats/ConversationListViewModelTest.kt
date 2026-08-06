@@ -1,6 +1,8 @@
 package com.android.messaging.ui.conversationlist.chats
 
 import app.cash.turbine.test
+import com.android.messaging.data.conversation.model.recipient.ConversationRecipient
+import com.android.messaging.data.conversation.repository.ConversationParticipantsRepository
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
 import com.android.messaging.data.debug.DebugFeaturesProvider
@@ -8,6 +10,7 @@ import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.ui.conversationlist.chats.mapper.ConversationListUiStateMapper
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListEffect as Effect
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState as State
 import com.android.messaging.ui.conversationlist.conversationItem
 import com.android.messaging.ui.conversationlist.delegate.ConversationListActionsDelegate
 import com.android.messaging.ui.conversationlist.delegate.ConversationListOptimisticSnapshotDelegate
@@ -24,6 +27,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -42,6 +46,7 @@ class ConversationListViewModelTest {
     private val actionsDelegate = mockk<ConversationListActionsDelegate>()
     private val optimisticSnapshotDelegate = mockk<ConversationListOptimisticSnapshotDelegate>()
     private val debugFeaturesProvider = mockk<DebugFeaturesProvider>()
+    private val conversationParticipantsRepository = mockk<ConversationParticipantsRepository>()
 
     private val snapshotFlow = MutableStateFlow<ConversationListSnapshot?>(null)
     private val selectedIdsFlow = MutableStateFlow<ImmutableList<String>>(persistentListOf())
@@ -164,6 +169,44 @@ class ConversationListViewModelTest {
     }
 
     @Test
+    fun avatarQuickActionsOpened_loadsCopyablePhoneNumbers() = runTest(
+        context = mainDispatcherRule.testDispatcher,
+    ) {
+        snapshotFlow.value = snapshotOf(conversationItem("a"))
+        every {
+            uiStateMapper.map(any(), any(), any(), any())
+        } returns State()
+        every {
+            conversationParticipantsRepository.getParticipants("a")
+        } returns flowOf(
+            persistentListOf(
+                ConversationRecipient(
+                    id = "1",
+                    displayName = "Ada",
+                    destination = "+1 555 0001",
+                ),
+                ConversationRecipient(
+                    id = "2",
+                    displayName = "Email only",
+                    destination = "ada@example.com",
+                ),
+            ),
+        )
+
+        val viewModel = createViewModel()
+        viewModel.uiState.test {
+            awaitItem()
+            viewModel.onAction(Action.AvatarQuickActionsOpened("a"))
+
+            val targets = awaitItem().phoneNumberCopyTargets.getValue("a")
+            assertEquals(1, targets.size)
+            assertEquals("Ada", targets.single().displayName)
+            assertEquals("+1 555 0001", targets.single().phoneNumber)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun archiveSnackbarDismissed_discardsArchivedItems() {
         val viewModel = createViewModel()
         viewModel.onAction(
@@ -244,6 +287,7 @@ class ConversationListViewModelTest {
             actionsDelegate = actionsDelegate,
             optimisticSnapshotDelegate = optimisticSnapshotDelegate,
             debugFeaturesProvider = debugFeaturesProvider,
+            conversationParticipantsRepository = conversationParticipantsRepository,
         )
     }
 }

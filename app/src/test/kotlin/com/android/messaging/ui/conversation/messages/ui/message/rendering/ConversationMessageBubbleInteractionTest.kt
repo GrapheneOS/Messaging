@@ -1,9 +1,11 @@
 package com.android.messaging.ui.conversation.messages.ui.message.rendering
 
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import com.android.messaging.ui.conversation.conversationMessageSelectionRowTestTag
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.model.message.MmsDownloadUiModel
@@ -218,6 +220,54 @@ internal class ConversationMessageBubbleInteractionTest :
             }
             verify(exactly = 0) {
                 onResendClick.invoke()
+            }
+        }
+    }
+
+    @Test
+    fun incomingSenderLongClick_copiesPhoneNumberWithoutSelectingMessage() {
+        setConversationMessageContent(
+            message = message(
+                status = ConversationMessageUiModel.Status.Incoming.Complete,
+                isIncoming = true,
+                senderDisplayName = "Nora",
+                senderNormalizedDestination = "+15550123",
+            ),
+        )
+
+        composeTestRule
+            .onNodeWithText(text = "Nora")
+            .performSemanticsAction(SemanticsActions.OnLongClick)
+
+        composeTestRule.runOnIdle {
+            verify(exactly = 1) {
+                onPhoneNumberCopy.invoke("+15550123")
+            }
+            verify(exactly = 0) {
+                onMessageLongClick.invoke()
+            }
+        }
+    }
+
+    @Test
+    fun incomingMessageBodyLongClick_keepsMessageSelectionBehavior() {
+        setConversationMessageContent(
+            message = message(
+                status = ConversationMessageUiModel.Status.Incoming.Complete,
+                isIncoming = true,
+                senderDisplayName = "Nora",
+                senderNormalizedDestination = "+15550123",
+            ),
+        )
+
+        longClickBubble()
+
+        composeTestRule.runOnIdle {
+            verify(exactly = 1) {
+                onMessageLongClick.invoke()
+            }
+            verify(exactly = 0) {
+                onPhoneNumberCopy.invoke(any())
             }
         }
     }

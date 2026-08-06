@@ -1,11 +1,13 @@
 package com.android.messaging.ui.conversation.metadata.ui
 
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
@@ -20,6 +22,7 @@ import com.android.messaging.ui.conversation.CONVERSATION_TOP_APP_BAR_TITLE_TEST
 import com.android.messaging.ui.conversation.CONVERSATION_UNARCHIVE_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.metadata.model.ConversationMetadataUiState
 import com.android.messaging.ui.core.AppTheme
+import kotlinx.collections.immutable.persistentListOf
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -63,6 +66,65 @@ class ConversationTopAppBarTest {
         composeTestRule.runOnIdle {
             assertEquals(0, clicks)
         }
+    }
+
+    @Test
+    fun titleLongClick_withOnePhoneNumber_copiesItDirectly() {
+        var copiedPhoneNumber: String? = null
+
+        setContent(
+            metadata = presentMetadata.copy(
+                phoneNumberCopyTargets = persistentListOf(
+                    ConversationMetadataUiState.PhoneNumberCopyTarget(
+                        displayName = "Carol",
+                        phoneNumber = "+37254400024",
+                    ),
+                ),
+            ),
+            onPhoneNumberCopy = { copiedPhoneNumber = it },
+        )
+
+        composeTestRule
+            .onNodeWithTag(testTag = CONVERSATION_TOP_APP_BAR_TITLE_TEST_TAG)
+            .performSemanticsAction(SemanticsActions.OnLongClick)
+
+        composeTestRule.runOnIdle {
+            assertEquals("+37254400024", copiedPhoneNumber)
+        }
+    }
+
+    @Test
+    fun titleLongClick_withMultiplePhoneNumbers_showsChooserAndCopiesSelection() {
+        var copiedPhoneNumber: String? = null
+
+        setContent(
+            metadata = presentMetadata.copy(
+                participantCount = 2,
+                phoneNumberCopyTargets = persistentListOf(
+                    ConversationMetadataUiState.PhoneNumberCopyTarget(
+                        displayName = "Alice",
+                        phoneNumber = "+15550001",
+                    ),
+                    ConversationMetadataUiState.PhoneNumberCopyTarget(
+                        displayName = "Bob",
+                        phoneNumber = "+15550002",
+                    ),
+                ),
+            ),
+            onPhoneNumberCopy = { copiedPhoneNumber = it },
+        )
+
+        composeTestRule
+            .onNodeWithTag(testTag = CONVERSATION_TOP_APP_BAR_TITLE_TEST_TAG)
+            .performSemanticsAction(SemanticsActions.OnLongClick)
+
+        composeTestRule.onNodeWithText("Alice").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Bob").assertIsDisplayed().performClick()
+
+        composeTestRule.runOnIdle {
+            assertEquals("+15550002", copiedPhoneNumber)
+        }
+        composeTestRule.onNodeWithText("Alice").assertDoesNotExist()
     }
 
     @Test
@@ -330,6 +392,7 @@ class ConversationTopAppBarTest {
         onDeleteConversationClick: () -> Unit = {},
         onShowSubjectFieldClick: () -> Unit = {},
         onTitleClick: () -> Unit = {},
+        onPhoneNumberCopy: (String) -> Unit = {},
         onNavigateBack: () -> Unit = {},
     ) {
         composeTestRule.setContent {
@@ -351,6 +414,7 @@ class ConversationTopAppBarTest {
                     onDeleteConversationClick = onDeleteConversationClick,
                     onShowSubjectFieldClick = onShowSubjectFieldClick,
                     onTitleClick = onTitleClick,
+                    onPhoneNumberCopy = onPhoneNumberCopy,
                     onNavigateBack = onNavigateBack,
                 )
             }

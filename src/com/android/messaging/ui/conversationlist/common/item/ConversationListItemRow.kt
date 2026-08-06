@@ -32,12 +32,15 @@ import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
 import com.android.messaging.ui.common.components.TwoLineListItem
+import com.android.messaging.ui.common.components.participant.PhoneNumberCopyTarget
 import com.android.messaging.ui.conversationlist.common.support.conversationListItemTestTag
 import com.android.messaging.ui.conversationlist.common.support.previewConversationListItem
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
 import com.android.messaging.ui.conversationlist.model.ConversationListPreviewUiModel
 import com.android.messaging.ui.core.MessagingPreviewColumn
 import com.android.messaging.util.Dates
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun ConversationListItemRow(
@@ -46,6 +49,8 @@ internal fun ConversationListItemRow(
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
     isSelectionMode: Boolean = false,
+    phoneNumberCopyTargets: ImmutableList<PhoneNumberCopyTarget> = persistentListOf(),
+    onAvatarQuickActionsOpen: () -> Unit = {},
     onAvatarMessageClick: () -> Unit = {},
     onAvatarCallClick: (() -> Unit)? = null,
     onAvatarContactClick: (() -> Unit)? = null,
@@ -58,6 +63,8 @@ internal fun ConversationListItemRow(
                 item = item,
                 isSelectionMode = isSelectionMode,
                 onToggleSelection = onClick,
+                phoneNumberCopyTargets = phoneNumberCopyTargets,
+                onQuickActionsOpen = onAvatarQuickActionsOpen,
                 onMessageClick = onAvatarMessageClick,
                 onCallClick = onAvatarCallClick,
                 onContactClick = onAvatarContactClick,

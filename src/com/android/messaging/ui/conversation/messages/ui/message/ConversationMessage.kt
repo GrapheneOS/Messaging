@@ -59,6 +59,7 @@ internal fun ConversationMessage(
     onMessageLongClick: () -> Unit = {},
     onMessageResendClick: () -> Unit = {},
     onSimSelectorClick: () -> Unit = {},
+    onPhoneNumberCopy: (String) -> Unit = {},
 ) {
     BoxWithConstraints(
         modifier = modifier
@@ -103,6 +104,7 @@ internal fun ConversationMessage(
                 onMessageDownloadClick = onMessageDownloadClick,
                 onMessageLongClick = onMessageLongClick,
                 onMessageResendClick = onMessageResendClick,
+                onPhoneNumberCopy = onPhoneNumberCopy,
                 onSimSelectorClick = onSimSelectorClick,
             )
         }
@@ -289,6 +291,7 @@ private fun ConversationMessageContent(
     onMessageDownloadClick: () -> Unit,
     onMessageLongClick: () -> Unit,
     onMessageResendClick: () -> Unit,
+    onPhoneNumberCopy: (String) -> Unit,
     onSimSelectorClick: () -> Unit,
 ) {
     Column(
@@ -308,6 +311,7 @@ private fun ConversationMessageContent(
             onMessageDownloadClick = onMessageDownloadClick,
             onMessageLongClick = onMessageLongClick,
             onMessageResendClick = onMessageResendClick,
+            onPhoneNumberCopy = onPhoneNumberCopy,
         )
 
         ConversationMessageMetadataRow(
