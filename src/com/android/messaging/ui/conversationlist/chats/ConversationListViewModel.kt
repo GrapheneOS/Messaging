@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.messaging.data.conversation.event.ConversationArchiveEvents
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.repository.ConversationParticipantsRepository
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListMode
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
@@ -14,6 +15,8 @@ import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.di.core.MainDispatcher
 import com.android.messaging.domain.conversation.usecase.participant.ResolveContactAction
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveContactActionResult
+import com.android.messaging.sms.MmsSmsUtils
+import com.android.messaging.ui.common.components.participant.PhoneNumberCopyTarget
 import com.android.messaging.ui.contact.model.AddContactRequest
 import com.android.messaging.ui.conversationlist.chats.mapper.ConversationListUiStateMapper
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
@@ -26,7 +29,9 @@ import com.android.messaging.ui.conversationlist.delegate.ConversationListSelect
 import com.android.messaging.ui.conversationlist.model.ConversationListAvatarUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
@@ -36,6 +41,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -64,6 +70,7 @@ internal class ConversationListViewModel @Inject constructor(
     private val defaultDispatcher: CoroutineDispatcher,
     @param:MainDispatcher
     private val mainDispatcher: CoroutineDispatcher,
+    private val conversationParticipantsRepository: ConversationParticipantsRepository,
 ) : ViewModel(),
     ConversationListScreenModel {
 
@@ -72,6 +79,10 @@ internal class ConversationListViewModel @Inject constructor(
     private val openedConversationId = MutableStateFlow<ConversationId?>(value = null)
     private var isScreenResumed = false
     private var isListScrolledToTop = false
+    private val phoneNumberCopyTargets = MutableStateFlow(
+        persistentMapOf<ConversationId, ImmutableList<PhoneNumberCopyTarget>>(),
+    )
+    private val loadingParticipantConversationIds = mutableSetOf<ConversationId>()
 
     private val snapshot: StateFlow<ConversationListSnapshot?> = optimisticSnapshotDelegate.snapshot
 
@@ -96,6 +107,9 @@ internal class ConversationListViewModel @Inject constructor(
             isDebugEnabled = isDebugEnabled,
         )
     }
+        .combine(phoneNumberCopyTargets) { state, copyTargets ->
+            state.copy(phoneNumberCopyTargets = copyTargets)
+        }
         .flowOn(defaultDispatcher)
         .stateIn(
             scope = viewModelScope,
@@ -252,6 +266,10 @@ internal class ConversationListViewModel @Inject constructor(
                 _navigationEvents.trySend(NavEvent.OpenConversation(action.conversationId))
             }
 
+            is Action.AvatarQuickActionsOpened -> {
+                loadPhoneNumberCopyTargets(action.conversationId)
+            }
+
             is Action.AvatarCallClicked -> {
                 _effects.trySend(Effect.PlaceCall(action.destination))
             }
@@ -282,6 +300,47 @@ internal class ConversationListViewModel @Inject constructor(
 
             is Action.ConversationSwipedToToggleRead -> {
                 onConversationSwipedToToggleRead(action.conversationId)
+            }
+        }
+    }
+
+    private fun loadPhoneNumberCopyTargets(conversationId: ConversationId) {
+        if (
+            phoneNumberCopyTargets.value.containsKey(conversationId) ||
+            !loadingParticipantConversationIds.add(conversationId)
+        ) {
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                val participants = conversationParticipantsRepository
+                    .getParticipants(conversationId = conversationId)
+                    .first()
+                val targets = participants
+                    .mapNotNull { participant ->
+                        val phoneNumber = participant.destination
+                            .trim()
+                            .takeIf(String::isNotBlank)
+                            ?.takeIf(MmsSmsUtils::isPhoneNumber)
+                            ?: return@mapNotNull null
+
+                        PhoneNumberCopyTarget(
+                            displayName = participant.displayName
+                                .takeIf(String::isNotBlank)
+                                ?: phoneNumber,
+                            phoneNumber = phoneNumber,
+                        )
+                    }
+                    .distinctBy(PhoneNumberCopyTarget::phoneNumber)
+                    .toImmutableList()
+
+                phoneNumberCopyTargets.value = phoneNumberCopyTargets.value.put(
+                    key = conversationId,
+                    value = targets,
+                )
+            } finally {
+                loadingParticipantConversationIds.remove(conversationId)
             }
         }
     }

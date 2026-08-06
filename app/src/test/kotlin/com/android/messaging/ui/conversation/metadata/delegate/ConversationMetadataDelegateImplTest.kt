@@ -7,6 +7,8 @@ import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
+import com.android.messaging.data.conversation.model.recipient.ConversationRecipient
+import com.android.messaging.data.conversation.repository.ConversationParticipantsRepository
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.domain.conversation.usecase.action.ArchiveConversation
 import com.android.messaging.domain.conversation.usecase.action.ConversationActionRequirementsResult
@@ -20,6 +22,8 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -200,6 +204,43 @@ class ConversationMetadataDelegateImplTest {
     }
 
     @Test
+    fun participants_areExposedAsPhoneNumberCopyTargets_andEmailIsExcluded() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val harness = createHarness(conversationId = ConversationId("conversation-42"))
+
+            try {
+                harness.participantsFlow.value = persistentListOf(
+                    ConversationRecipient(
+                        id = ParticipantId("participant-1"),
+                        displayName = "Alice",
+                        destination = "+15550001",
+                    ),
+                    ConversationRecipient(
+                        id = ParticipantId("participant-2"),
+                        displayName = "Email only",
+                        destination = "person@example.com",
+                    ),
+                )
+                harness.setPresentState(otherParticipantPhoneNumber = null)
+                advanceUntilIdle()
+
+                val state = harness.delegate.state.value as ConversationMetadataUiState.Present
+                assertEquals(
+                    persistentListOf(
+                        ConversationMetadataUiState.PhoneNumberCopyTarget(
+                            displayName = "Alice",
+                            phoneNumber = "+15550001",
+                        ),
+                    ),
+                    state.phoneNumberCopyTargets,
+                )
+            } finally {
+                harness.cancel()
+            }
+        }
+    }
+
+    @Test
     fun onDeleteConversationClick_togglesConfirmationVisibility() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val harness = createHarness(conversationId = ConversationId("conversation-42"))
@@ -312,6 +353,12 @@ class ConversationMetadataDelegateImplTest {
         val dispatcher = mainDispatcherRule.testDispatcher
         val scope = TestScope(dispatcher)
         val conversationsRepository = mockk<ConversationsRepository>(relaxed = true)
+        val participantsFlow = MutableStateFlow<ImmutableList<ConversationRecipient>>(
+            persistentListOf(),
+        )
+        val conversationParticipantsRepository = mockk<ConversationParticipantsRepository>() {
+            every { getParticipants(any()) } returns participantsFlow
+        }
         val mapper = mockk<ConversationMetadataUiStateMapper>()
         val conversationIdFlow = MutableStateFlow(conversationId)
         val metadataFlow = MutableStateFlow<ConversationMetadata?>(value = null)
@@ -346,6 +393,7 @@ class ConversationMetadataDelegateImplTest {
                 ConversationActionRequirementsResult.Ready
             },
             conversationsRepository = conversationsRepository,
+            conversationParticipantsRepository = conversationParticipantsRepository,
             conversationMetadataUiStateMapper = mapper,
             blockedParticipantsRepository = mockk<BlockedParticipantsRepository>(relaxed = true),
             conversationArchiveEvents = ConversationArchiveEventsImpl(),
@@ -362,6 +410,7 @@ class ConversationMetadataDelegateImplTest {
             conversationsRepository = conversationsRepository,
             archiveConversation = archiveConversation,
             metadataFlow = metadataFlow,
+            participantsFlow = participantsFlow,
             scope = scope,
         )
     }
@@ -385,6 +434,7 @@ class ConversationMetadataDelegateImplTest {
         val conversationsRepository: ConversationsRepository,
         val archiveConversation: ArchiveConversation,
         val metadataFlow: MutableStateFlow<ConversationMetadata?>,
+        val participantsFlow: MutableStateFlow<ImmutableList<ConversationRecipient>>,
         val scope: TestScope,
     ) {
         fun cancel() {

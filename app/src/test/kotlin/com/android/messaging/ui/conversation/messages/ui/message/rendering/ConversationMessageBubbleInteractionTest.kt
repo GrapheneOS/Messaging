@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.TouchInjectionScope
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsSelected
@@ -21,6 +22,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.requestFocus
 import androidx.compose.ui.unit.dp
@@ -271,6 +273,54 @@ internal class ConversationMessageBubbleInteractionTest :
             }
             verify(exactly = 0) {
                 onResendClick.invoke()
+            }
+        }
+    }
+
+    @Test
+    fun incomingSenderLongClick_copiesPhoneNumberWithoutSelectingMessage() {
+        setConversationMessageContent(
+            message = message(
+                status = ConversationMessageUiModel.Status.Incoming.Complete,
+                isIncoming = true,
+                senderDisplayName = "Nora",
+                senderNormalizedDestination = "+15550123",
+            ),
+        )
+
+        composeTestRule
+            .onNodeWithText(text = "Nora")
+            .performSemanticsAction(SemanticsActions.OnLongClick)
+
+        composeTestRule.runOnIdle {
+            verify(exactly = 1) {
+                onPhoneNumberCopy.invoke("+15550123")
+            }
+            verify(exactly = 0) {
+                onMessageLongClick.invoke()
+            }
+        }
+    }
+
+    @Test
+    fun incomingMessageBodyLongClick_keepsMessageSelectionBehavior() {
+        setConversationMessageContent(
+            message = message(
+                status = ConversationMessageUiModel.Status.Incoming.Complete,
+                isIncoming = true,
+                senderDisplayName = "Nora",
+                senderNormalizedDestination = "+15550123",
+            ),
+        )
+
+        longClickBubble()
+
+        composeTestRule.runOnIdle {
+            verify(exactly = 1) {
+                onMessageLongClick.invoke()
+            }
+            verify(exactly = 0) {
+                onPhoneNumberCopy.invoke(any())
             }
         }
     }

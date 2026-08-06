@@ -64,6 +64,7 @@ internal fun ConversationMessage(
     onMessageLongClick: () -> Unit = {},
     onMessageResendClick: () -> Unit = {},
     onSimSelectorClick: () -> Unit = {},
+    onPhoneNumberCopy: (String) -> Unit = {},
 ) {
     BoxWithConstraints(
         modifier = modifier
@@ -113,6 +114,7 @@ internal fun ConversationMessage(
                 onMessageActionClick = onMessageActionClick,
                 onMessageLongClick = onMessageLongClick,
                 onMessageResendClick = onMessageResendClick,
+                onPhoneNumberCopy = onPhoneNumberCopy,
                 onSimSelectorClick = onSimSelectorClick,
             )
         }
@@ -300,6 +302,7 @@ private fun ConversationMessageContent(
     onMessageActionClick: (ConversationMessageAction) -> Unit,
     onMessageLongClick: () -> Unit,
     onMessageResendClick: () -> Unit,
+    onPhoneNumberCopy: (String) -> Unit,
     onSimSelectorClick: () -> Unit,
 ) {
     val bubbleRipple = rememberConversationMessageBubbleRipple()
@@ -333,6 +336,7 @@ private fun ConversationMessageContent(
             onMessageDownloadClick = onMessageDownloadClick,
             onMessageLongClick = onMessageLongClick,
             onMessageResendClick = onMessageResendClick,
+            onPhoneNumberCopy = onPhoneNumberCopy,
         )
 
         ConversationMessageMetadataRow(
