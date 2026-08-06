@@ -1,7 +1,9 @@
 package com.android.messaging.data.conversationlist.model
 
+import com.android.messaging.data.conversation.model.ConversationId
+
 internal data class ConversationListItem(
-    val conversationId: String,
+    val conversationId: ConversationId,
     val title: String?,
     val icon: String?,
     val subject: String?,

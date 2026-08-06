@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationlist.model
 
 import androidx.compose.runtime.Immutable
+import com.android.messaging.data.conversation.model.ConversationId
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentSetOf
@@ -20,6 +21,6 @@ internal sealed interface ConversationListContentUiState {
     @Immutable
     data class Items(
         val items: ImmutableList<ConversationListItemUiModel>,
-        val restoredConversationIds: ImmutableSet<String> = persistentSetOf(),
+        val restoredConversationIds: ImmutableSet<ConversationId> = persistentSetOf(),
     ) : ConversationListContentUiState
 }

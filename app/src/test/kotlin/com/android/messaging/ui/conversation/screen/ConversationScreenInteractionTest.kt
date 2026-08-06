@@ -11,6 +11,7 @@ import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.conversation.CONVERSATION_ATTACHMENT_AUDIO_MENU_ITEM_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_ATTACHMENT_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_SEND_BUTTON_TEST_TAG
@@ -132,12 +133,12 @@ internal class ConversationScreenInteractionTest : BaseConversationScreenTest() 
         setContent(screenModel = screenModel.model)
 
         composeTestRule
-            .onNodeWithTag(conversationMessageBubbleTestTag(messageId = "message-3"))
+            .onNodeWithTag(conversationMessageBubbleTestTag(messageId = MessageId("message-3")))
             .performSemanticsAction(SemanticsActions.OnLongClick)
 
         composeTestRule.runOnIdle {
             verify(exactly = 1) {
-                screenModel.model.onMessageLongClick(messageId = "message-3")
+                screenModel.model.onMessageLongClick(messageId = MessageId("message-3"))
             }
         }
     }
@@ -152,7 +153,7 @@ internal class ConversationScreenInteractionTest : BaseConversationScreenTest() 
                 latestMessageIncoming = false,
             ),
             selection = ConversationMessageSelectionUiState(
-                selectedMessageIds = persistentSetOf("message-3"),
+                selectedMessageIds = persistentSetOf(MessageId("message-3")),
                 availableActions = persistentSetOf(
                     ConversationMessageSelectionAction.Copy,
                     ConversationMessageSelectionAction.Delete,
@@ -163,12 +164,14 @@ internal class ConversationScreenInteractionTest : BaseConversationScreenTest() 
         setContent(screenModel = screenModel.model)
 
         composeTestRule
-            .onNodeWithTag(conversationMessageSelectionRowTestTag(messageId = "message-2"))
+            .onNodeWithTag(
+                conversationMessageSelectionRowTestTag(messageId = MessageId("message-2"))
+            )
             .performClick()
 
         composeTestRule.runOnIdle {
             verify(exactly = 1) {
-                screenModel.model.onMessageClick(messageId = "message-2")
+                screenModel.model.onMessageClick(messageId = MessageId("message-2"))
             }
         }
     }
@@ -183,7 +186,7 @@ internal class ConversationScreenInteractionTest : BaseConversationScreenTest() 
             latestMessageIncoming = false,
         ).map { message ->
             when (message.messageId) {
-                "message-2" -> {
+                MessageId("message-2") -> {
                     message.copy(
                         status = ConversationMessageUiModel.Status.Outgoing.Failed,
                         canResendMessage = true,
@@ -204,12 +207,12 @@ internal class ConversationScreenInteractionTest : BaseConversationScreenTest() 
             .onNodeWithText(failedStatusText, substring = true)
             .assertIsDisplayed()
         composeTestRule
-            .onNodeWithTag(conversationMessageBubbleTestTag(messageId = "message-2"))
+            .onNodeWithTag(conversationMessageBubbleTestTag(messageId = MessageId("message-2")))
             .performClick()
 
         composeTestRule.runOnIdle {
             verify(exactly = 1) {
-                screenModel.model.onMessageResendClick(messageId = "message-2")
+                screenModel.model.onMessageResendClick(messageId = MessageId("message-2"))
             }
         }
     }

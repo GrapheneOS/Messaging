@@ -9,7 +9,9 @@ import android.content.IntentFilter
 import android.database.ContentObserver
 import android.net.Uri
 import android.telephony.SubscriptionManager
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
 import com.android.messaging.datamodel.MessagingContentProvider
@@ -44,13 +46,13 @@ import kotlinx.coroutines.flow.map
 internal interface SubscriptionsRepository {
     fun observeActiveSubscriptions(): Flow<ImmutableList<Subscription>>
 
-    fun observeDefaultSmsSubscriptionId(): Flow<Int>
+    fun observeDefaultSmsSubscriptionId(): Flow<SubId>
 
-    fun getDefaultSmsSubscriptionId(): Int
+    fun getDefaultSmsSubscriptionId(): SubId
 
     fun resolveAttachmentLimit(): Int
 
-    fun resolveMaxMessageSize(selfParticipantId: String): Flow<Int>
+    fun resolveMaxMessageSize(selfParticipantId: ParticipantId): Flow<Int>
 }
 
 internal class SubscriptionsRepositoryImpl @Inject constructor(
@@ -87,7 +89,7 @@ internal class SubscriptionsRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun observeDefaultSmsSubscriptionId(): Flow<Int> {
+    override fun observeDefaultSmsSubscriptionId(): Flow<SubId> {
         return callbackFlow {
             val receiver = object : BroadcastReceiver() {
                 override fun onReceive(context: Context, intent: Intent) {
@@ -125,8 +127,8 @@ internal class SubscriptionsRepositoryImpl @Inject constructor(
             .flowOn(defaultDispatcher)
     }
 
-    override fun getDefaultSmsSubscriptionId(): Int {
-        return PhoneUtils.getDefault().defaultSmsSubscriptionId
+    override fun getDefaultSmsSubscriptionId(): SubId {
+        return SubId(PhoneUtils.getDefault().defaultSmsSubscriptionId)
     }
 
     override fun resolveAttachmentLimit(): Int {
@@ -138,7 +140,7 @@ internal class SubscriptionsRepositoryImpl @Inject constructor(
             )
     }
 
-    override fun resolveMaxMessageSize(selfParticipantId: String): Flow<Int> {
+    override fun resolveMaxMessageSize(selfParticipantId: ParticipantId): Flow<Int> {
         return typedFlow {
             resolveSubscriptionId(selfParticipantId = selfParticipantId)
         }
@@ -218,8 +220,8 @@ internal class SubscriptionsRepositoryImpl @Inject constructor(
         colorIndex: Int,
     ): Subscription {
         return Subscription(
-            selfParticipantId = "$FAKE_SIM_ID_PREFIX$slotId",
-            subId = ParticipantData.DEFAULT_SELF_SUB_ID,
+            selfParticipantId = ParticipantId("$FAKE_SIM_ID_PREFIX$slotId"),
+            subId = SubId(ParticipantData.DEFAULT_SELF_SUB_ID),
             label = ConversationSubscriptionLabel.DebugFake(slotId = slotId),
             displayDestination = null,
             displaySlotId = slotId,
@@ -292,7 +294,7 @@ internal class SubscriptionsRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun resolveSubscriptionId(selfParticipantId: String): Int? {
+    private fun resolveSubscriptionId(selfParticipantId: ParticipantId): Int? {
         if (selfParticipantId.isBlank()) {
             return null
         }
@@ -301,7 +303,7 @@ internal class SubscriptionsRepositoryImpl @Inject constructor(
             MessagingContentProvider.PARTICIPANTS_URI,
             ParticipantData.ParticipantsQuery.PROJECTION,
             "${ParticipantColumns._ID} = ?",
-            arrayOf(selfParticipantId),
+            arrayOf(selfParticipantId.value),
             null,
         )?.use { cursor ->
             when {
@@ -327,8 +329,8 @@ internal class SubscriptionsRepositoryImpl @Inject constructor(
         val slotId = displaySlotId
 
         return Subscription(
-            selfParticipantId = id,
-            subId = subId,
+            selfParticipantId = ParticipantId(id),
+            subId = SubId(subId),
             label = when {
                 subscriptionName.isNullOrBlank() -> ConversationSubscriptionLabel.Slot(
                     slotId = slotId,

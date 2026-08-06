@@ -1,5 +1,6 @@
 package com.android.messaging.data.conversation.mapper
 
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.datamodel.data.MessageData
@@ -24,12 +25,12 @@ class ConversationDraftMessageDataMapperImplTest {
             conversationId = CONVERSATION_ID,
             draft = ConversationDraft(
                 messageText = "Hello",
-                selfParticipantId = "self-1",
+                selfParticipantId = ParticipantId("self-1"),
             ),
         )
         val parts = message.parts.toList()
 
-        assertEquals(CONVERSATION_ID, message.conversationId)
+        assertEquals(CONVERSATION_ID.value, message.conversationId)
         assertEquals("self-1", message.selfId)
         assertEquals("self-1", message.participantId)
         assertEquals(MessageData.PROTOCOL_SMS, message.protocol)
@@ -44,7 +45,7 @@ class ConversationDraftMessageDataMapperImplTest {
             conversationId = CONVERSATION_ID,
             draft = ConversationDraft(
                 subjectText = "Subject",
-                selfParticipantId = "self-1",
+                selfParticipantId = ParticipantId("self-1"),
             ),
         )
         val parts = message.parts.toList()
@@ -61,7 +62,7 @@ class ConversationDraftMessageDataMapperImplTest {
             conversationId = CONVERSATION_ID,
             draft = ConversationDraft(
                 messageText = "Hello",
-                selfParticipantId = "",
+                selfParticipantId = ParticipantId(""),
             ),
         )
 
@@ -75,7 +76,7 @@ class ConversationDraftMessageDataMapperImplTest {
             conversationId = CONVERSATION_ID,
             draft = ConversationDraft(
                 messageText = "Hello",
-                selfParticipantId = "self-1",
+                selfParticipantId = ParticipantId("self-1"),
             ),
             forceMms = true,
         )

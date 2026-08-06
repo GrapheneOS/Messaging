@@ -20,6 +20,9 @@ import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingPhase
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryStartupAttachment
@@ -84,18 +87,18 @@ internal fun rememberAudioRecordingStartRequest(
 
 @Composable
 internal fun ConversationScreenRouteEffects(
-    conversationId: String?,
+    conversationId: ConversationId?,
     launchGeneration: Int?,
     cancelIncomingNotification: Boolean,
     pendingDraft: ConversationDraft?,
-    pendingSelfParticipantId: String?,
+    pendingSelfParticipantId: ParticipantId?,
     pendingStartupAttachment: ConversationEntryStartupAttachment?,
     scaffoldUiState: ConversationScreenScaffoldUiState,
     snackbarHostState: SnackbarHostState,
     hostBoundsState: State<ComposeRect?>,
     permissionState: ConversationMediaPickerPermissionState,
     screenModel: ConversationScreenModel,
-    onNavigateToMessageDetails: (messageId: String) -> Unit,
+    onNavigateToMessageDetails: (messageId: MessageId) -> Unit,
     onNavigateBack: () -> Unit,
     onPendingDraftConsumed: () -> Unit,
     onPendingSelfParticipantIdConsumed: () -> Unit,
@@ -138,10 +141,10 @@ internal fun ConversationScreenRouteEffects(
 
 @Composable
 private fun ConversationPendingLaunchEffects(
-    conversationId: String?,
+    conversationId: ConversationId?,
     launchGeneration: Int?,
     pendingDraft: ConversationDraft?,
-    pendingSelfParticipantId: String?,
+    pendingSelfParticipantId: ParticipantId?,
     pendingStartupAttachment: ConversationEntryStartupAttachment?,
     screenModel: ConversationScreenModel,
     onPendingDraftConsumed: () -> Unit,
@@ -226,7 +229,7 @@ private fun ConversationScreenLifecycleEffects(
 @Composable
 internal fun ConversationScreenSurface(
     modifier: Modifier,
-    conversationId: String?,
+    conversationId: ConversationId?,
     scaffoldUiState: ConversationScreenScaffoldUiState,
     mediaPickerOverlayUiState: ConversationMediaPickerOverlayUiState,
     mediaPickerState: ConversationMediaPickerState,

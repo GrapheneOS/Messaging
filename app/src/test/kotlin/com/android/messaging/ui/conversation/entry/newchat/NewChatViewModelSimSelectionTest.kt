@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.entry.newchat
 
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.datamodel.data.ParticipantData
 import kotlinx.collections.immutable.persistentListOf
@@ -107,7 +108,7 @@ internal class NewChatViewModelSimSelectionTest : BaseNewChatViewModelTest() {
                 advanceUntilIdle()
                 assertEquals(first, expectMostRecentItem().simSelectorState.selectedSubscription)
 
-                viewModel.onSimSelected(selfParticipantId = "self-2")
+                viewModel.onSimSelected(selfParticipantId = ParticipantId("self-2"))
                 advanceUntilIdle()
                 assertEquals(second, expectMostRecentItem().simSelectorState.selectedSubscription)
                 cancelAndIgnoreRemainingEvents()
@@ -129,7 +130,7 @@ internal class NewChatViewModelSimSelectionTest : BaseNewChatViewModelTest() {
                 advanceUntilIdle()
                 assertEquals(first, expectMostRecentItem().simSelectorState.selectedSubscription)
 
-                viewModel.onSimSelected(selfParticipantId = "unknown-self")
+                viewModel.onSimSelected(selfParticipantId = ParticipantId("unknown-self"))
                 advanceUntilIdle()
                 expectNoEvents()
                 cancelAndIgnoreRemainingEvents()
@@ -152,7 +153,7 @@ internal class NewChatViewModelSimSelectionTest : BaseNewChatViewModelTest() {
                 savedStateHandle = savedStateHandle,
             )
             advanceUntilIdle()
-            firstViewModel.onSimSelected(selfParticipantId = "self-2")
+            firstViewModel.onSimSelected(selfParticipantId = ParticipantId("self-2"))
             advanceUntilIdle()
 
             val recreatedViewModel = createViewModel(

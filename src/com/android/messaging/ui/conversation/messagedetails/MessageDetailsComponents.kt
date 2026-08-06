@@ -341,9 +341,9 @@ private fun messageDetailsDebugEntries(
     debug: ConversationMessageDetails.Debug,
 ): List<Pair<String, String>> {
     return listOfNotNull(
-        debug.messageId?.let { "Message id" to it },
+        debug.messageId?.let { "Message id" to it.value },
         debug.telephonyUri?.let { "Telephony uri" to it },
-        debug.conversationId?.let { "Conversation id" to it },
+        debug.conversationId?.let { "Conversation id" to it.value },
         debug.conversationTelephonyThreadId?.let { "Conversation thread id" to it.toString() },
         debug.telephonyThreadId?.let { "Telephony thread id" to it.toString() },
         debug.contentLocationUrl?.let { "Content location" to it },

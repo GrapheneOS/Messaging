@@ -1,23 +1,26 @@
 package com.android.messaging.ui.conversationsettings.screen.support
 
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState
 import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
-internal const val ROOT_CONVERSATION_ID = "conversation-1"
-internal const val PARTICIPANT_CONVERSATION_ID = "conversation-2"
+internal val ROOT_CONVERSATION_ID = ConversationId("conversation-1")
+internal val PARTICIPANT_CONVERSATION_ID = ConversationId("conversation-2")
 
 internal const val FINISH_RESULT_CODE = 1
 
 internal const val MOTHER_NAME = "Mother"
 internal const val FATHER_NAME = "Father"
 
-internal const val MOTHER_PARTICIPANT_ID = "mother"
-internal const val FATHER_PARTICIPANT_ID = "father"
-internal const val TEST_PARTICIPANT_ID = "test_participant"
+internal val MOTHER_PARTICIPANT_ID = ParticipantId("mother")
+internal val FATHER_PARTICIPANT_ID = ParticipantId("father")
+internal val TEST_PARTICIPANT_ID = ParticipantId("test_participant")
 
 internal const val ONE_TO_ONE_TITLE = MOTHER_NAME
 internal const val GROUP_TITLE = "Family"
@@ -26,8 +29,8 @@ internal const val TEST_DESTINATION = "+31612345678"
 internal const val MOTHER_DESTINATION = "+31611111111"
 internal const val FATHER_DESTINATION = "+31622222222"
 
-internal const val SUB1_ID = "sub1"
-internal const val SUB2_ID = "sub2"
+internal val SUB1_SELF_PARTICIPANT_ID = ParticipantId("sub1")
+internal val SUB2_SELF_PARTICIPANT_ID = ParticipantId("sub2")
 internal const val SUB1_DESTINATION = "+11111111111"
 internal const val SUB2_DESTINATION = "+22222222222"
 
@@ -84,7 +87,7 @@ internal fun groupState(): ConversationSettingsUiState {
 }
 
 internal fun participant(
-    id: String = TEST_PARTICIPANT_ID,
+    id: ParticipantId = TEST_PARTICIPANT_ID,
     displayName: String = MOTHER_NAME,
     displayDestination: String = TEST_DESTINATION,
     isBlocked: Boolean = false,
@@ -107,13 +110,13 @@ internal fun participant(
 }
 
 internal fun subscription(
-    id: String,
+    selfParticipantId: ParticipantId,
     slotId: Int,
     destination: String?,
 ): Subscription {
     return Subscription(
-        selfParticipantId = id,
-        subId = slotId,
+        selfParticipantId = selfParticipantId,
+        subId = SubId(slotId),
         label = ConversationSubscriptionLabel.Slot(slotId = slotId),
         displayDestination = destination,
         displaySlotId = slotId,

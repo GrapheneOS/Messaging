@@ -1,7 +1,9 @@
 package com.android.messaging.ui.conversation.recipientpicker.delegate.conversationresolutiondelegate
 
 import app.cash.turbine.test
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveConversationIdResult
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.ConversationResolutionOutcome
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.ConversationResolutionState
 import io.mockk.coEvery
@@ -21,16 +23,19 @@ internal class ConversationResolutionDelegateOutcomeTest :
         runTest(context = mainDispatcherRule.testDispatcher) {
             coEvery {
                 resolveConversationId(destinations = listOf("+15550100"))
-            } returns ResolveConversationIdResult.Resolved(conversationId = "conversation-42")
+            } returns ResolveConversationIdResult.Resolved(
+                conversationId = ConversationId("conversation-42"),
+            )
             val delegate = createBoundDelegate()
 
             delegate.outcomes.test {
                 delegate.resolve(destinations = listOf("+15550100"))
                 runCurrent()
 
-                assertEquals(
-                    ConversationResolutionOutcome.Resolved(conversationId = "conversation-42"),
-                    awaitItem(),
+                assertThat(awaitItem()).isEqualTo(
+                    ConversationResolutionOutcome.Resolved(
+                        conversationId = ConversationId("conversation-42"),
+                    )
                 )
                 expectNoEvents()
             }
@@ -98,7 +103,9 @@ internal class ConversationResolutionDelegateOutcomeTest :
             val captured = slot<List<String>>()
             coEvery {
                 resolveConversationId(destinations = capture(captured))
-            } returns ResolveConversationIdResult.Resolved(conversationId = "conversation-42")
+            } returns ResolveConversationIdResult.Resolved(
+                conversationId = ConversationId("conversation-42"),
+            )
             val delegate = createBoundDelegate()
 
             delegate.resolve(destinations = listOf("  +15550100  ", "alice@example.com", ""))

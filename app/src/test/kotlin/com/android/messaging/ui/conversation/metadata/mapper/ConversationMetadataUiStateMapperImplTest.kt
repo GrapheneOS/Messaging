@@ -1,8 +1,10 @@
 package com.android.messaging.ui.conversation.metadata.mapper
 
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
 import com.android.messaging.testutil.TEST_CALL_ACTION_PHONE_NUMBER
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversation.metadata.model.ConversationMetadataUiState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -20,7 +22,7 @@ class ConversationMetadataUiStateMapperImplTest {
         val result = mapper.map(
             metadata = ConversationMetadata(
                 conversationName = "Carol",
-                selfParticipantId = "self-1",
+                selfParticipantId = ParticipantId("self-1"),
                 isGroupConversation = false,
                 includeEmailAddress = false,
                 participantCount = 1,
@@ -35,10 +37,10 @@ class ConversationMetadataUiStateMapperImplTest {
             ),
         )
 
-        assertEquals(
+        assertThat(result).isEqualTo(
             ConversationMetadataUiState.Present(
                 title = "Carol",
-                selfParticipantId = "self-1",
+                selfParticipantId = ParticipantId("self-1"),
                 avatar = ConversationMetadataUiState.Avatar.Single(
                     photoUri = "content://contacts/people/1/photo",
                     normalizedDestination = TEST_CALL_ACTION_PHONE_NUMBER,
@@ -51,8 +53,7 @@ class ConversationMetadataUiStateMapperImplTest {
                 isArchived = false,
                 isBlocked = false,
                 composerAvailability = ConversationComposerAvailability.Editable,
-            ),
-            result,
+            )
         )
     }
 
@@ -61,7 +62,7 @@ class ConversationMetadataUiStateMapperImplTest {
         val result = mapper.map(
             metadata = ConversationMetadata(
                 conversationName = "Weekend plan",
-                selfParticipantId = "self-1",
+                selfParticipantId = ParticipantId("self-1"),
                 isGroupConversation = true,
                 includeEmailAddress = false,
                 participantCount = 3,

@@ -50,6 +50,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.conversationlist.common.support.AppearanceAnimationToken
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
 import kotlin.math.abs
@@ -193,7 +194,7 @@ internal fun SwipeableConversationListItem(
 
 @Composable
 private fun rememberAppearanceVisibility(
-    conversationId: String,
+    conversationId: ConversationId,
     appearanceAnimationToken: AppearanceAnimationToken?,
     onAppearanceAnimationFinished: () -> Unit,
 ): Animatable<Float, AnimationVector1D> {

@@ -1,21 +1,22 @@
 package com.android.messaging.testutil
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.conversationpicker.model.TargetUiState
 import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
 
 internal const val TEST_CONTACT_DESTINATION = "+15550001"
 internal const val TEST_CONTACT_DISPLAY_NAME = "Alex"
 internal const val TEST_CONTACT_SECONDARY_TEXT = "Mobile"
-internal const val TEST_RESOLVED_CONVERSATION_ID = "99"
+internal val TEST_RESOLVED_CONVERSATION_ID = ConversationId("99")
 
 internal fun conversationTarget(
-    conversationId: String = "1",
+    conversationId: ConversationId = ConversationId("1"),
     normalizedDestination: String? = null,
 ): TargetUiState.Conversation {
     return TargetUiState.Conversation(
         conversationId = conversationId,
         normalizedDestination = normalizedDestination,
-        displayName = "Conversation $conversationId",
+        displayName = "Conversation ${conversationId.value}",
         details = null,
         avatarUri = null,
         isGroup = false,

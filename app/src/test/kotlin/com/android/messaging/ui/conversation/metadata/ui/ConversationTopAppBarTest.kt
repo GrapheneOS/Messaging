@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.ui.conversation.CONVERSATION_ADD_CONTACT_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_ADD_PEOPLE_BUTTON_TEST_TAG
@@ -360,7 +361,7 @@ class ConversationTopAppBarTest {
     private companion object {
         private val presentMetadata = ConversationMetadataUiState.Present(
             title = "Carol",
-            selfParticipantId = "self-participant-id",
+            selfParticipantId = ParticipantId("self-participant-id"),
             avatar = ConversationMetadataUiState.Avatar.Single(
                 photoUri = null,
                 normalizedDestination = "+37254400024",

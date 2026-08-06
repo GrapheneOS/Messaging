@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.screen.model
 
 import android.content.Intent
 import android.net.Uri
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.datamodel.data.MessageData
 
 internal sealed interface ConversationScreenEffect {
@@ -65,6 +66,6 @@ internal sealed interface ConversationScreenEffect {
     ) : ConversationScreenEffect
 
     data class NavigateToMessageDetails(
-        val messageId: String,
+        val messageId: MessageId,
     ) : ConversationScreenEffect
 }

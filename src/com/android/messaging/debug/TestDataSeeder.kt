@@ -178,7 +178,7 @@ private fun resolveDualSimSelfIds(context: Context): Pair<String?, String?> {
         return null to null
     }
 
-    return subscriptions[0].selfParticipantId to subscriptions[1].selfParticipantId
+    return subscriptions[0].selfParticipantId.value to subscriptions[1].selfParticipantId.value
 }
 
 fun clearSeededTestData(context: Context) {

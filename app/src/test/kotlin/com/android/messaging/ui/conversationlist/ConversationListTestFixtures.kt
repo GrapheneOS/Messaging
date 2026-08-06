@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationlist
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListDraft
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListLatestMessage
@@ -12,7 +13,9 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 
 internal fun snapshotOfIds(vararg conversationIds: String): ConversationListSnapshot {
-    return snapshotOfItems(*conversationIds.map(::conversationItem).toTypedArray())
+    return snapshotOfItems(
+        *conversationIds.map { conversationItem(ConversationId(it)) }.toTypedArray(),
+    )
 }
 
 internal fun snapshotOf(vararg items: ConversationListItem): ConversationListSnapshot {
@@ -28,7 +31,7 @@ internal fun snapshotOfItems(vararg items: ConversationListItem): ConversationLi
 }
 
 internal fun conversationItem(
-    conversationId: String,
+    conversationId: ConversationId,
     isArchived: Boolean = false,
     isPinned: Boolean = false,
     isSnoozed: Boolean = false,
@@ -44,7 +47,7 @@ internal fun conversationItem(
 ): ConversationListItem {
     return ConversationListItem(
         conversationId = conversationId,
-        title = "Title $conversationId",
+        title = "Title ${conversationId.value}",
         icon = null,
         subject = null,
         isArchived = isArchived,
@@ -52,14 +55,14 @@ internal fun conversationItem(
         participant = ConversationListParticipant(
             contactId = contactId,
             lookupKey = lookupKey,
-            otherNormalizedDestination = "+1555000$conversationId",
+            otherNormalizedDestination = "+1555000${conversationId.value}",
             isGroup = false,
             isEnterprise = false,
         ),
         latestMessage = ConversationListLatestMessage(
             isRead = isRead,
             timestamp = timestamp,
-            snippetText = "Snippet $conversationId",
+            snippetText = "Snippet ${conversationId.value}",
             previewUri = null,
             previewContentType = null,
             status = status,

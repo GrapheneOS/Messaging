@@ -1,5 +1,6 @@
 package com.android.messaging.testutil
 
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
 
@@ -9,7 +10,7 @@ internal fun createConversationMetadata(
 ): ConversationMetadata {
     return ConversationMetadata(
         conversationName = "Conversation",
-        selfParticipantId = "self-1",
+        selfParticipantId = ParticipantId("self-1"),
         isGroupConversation = isGroupConversation,
         includeEmailAddress = includeEmailAddress,
         participantCount = 1,

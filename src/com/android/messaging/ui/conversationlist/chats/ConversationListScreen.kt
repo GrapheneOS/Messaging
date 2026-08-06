@@ -52,6 +52,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.common.components.PrimaryActionButton
 import com.android.messaging.ui.common.components.contentSurfaceShape
 import com.android.messaging.ui.common.components.horizontalSafeDrawingInsets
@@ -67,7 +68,7 @@ import com.android.messaging.ui.conversationlist.common.item.ConversationListIte
 import com.android.messaging.ui.conversationlist.common.list.conversationRowHorizontalPadding
 import com.android.messaging.ui.conversationlist.common.support.previewConversationListItems
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
-import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
+import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel as Model
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -88,12 +89,12 @@ internal fun ConversationListScreen(
     val listState = rememberLazyListState()
     val snackbarHostState = remember { SnackbarHostState() }
     val pinAnimationController = rememberOverlayReorderAnimationController(
-        key = ConversationListItemUiModel::conversationId,
+        key = Model::conversationId,
         isSettled = { item, anchorToTop -> item.isPinned == anchorToTop },
     )
 
     var pendingDelete by remember { mutableStateOf(false) }
-    var pendingBlockConversationId by remember { mutableStateOf<String?>(null) }
+    var pendingBlockConversationId by remember { mutableStateOf<ConversationId?>(null) }
     var pendingBlockDestination by remember { mutableStateOf<String?>(null) }
     var pendingSnooze by remember { mutableStateOf(false) }
 
@@ -142,7 +143,7 @@ private fun ConversationListScaffoldWithPinOverlay(
     uiState: State,
     listState: LazyListState,
     snackbarHostState: SnackbarHostState,
-    pinAnimationController: OverlayReorderAnimationController<ConversationListItemUiModel, String>,
+    pinAnimationController: OverlayReorderAnimationController<Model, ConversationId>,
     onAction: (Action) -> Unit,
     onDeleteClick: () -> Unit,
     onSnoozeClick: () -> Unit,
@@ -173,7 +174,7 @@ private fun ConversationListScaffoldWithPinOverlay(
 
 @Composable
 private fun ConversationListPinOverlay(
-    controller: OverlayReorderAnimationController<ConversationListItemUiModel, String>,
+    controller: OverlayReorderAnimationController<Model, ConversationId>,
 ) {
     OverlayReorderAnimation(controller = controller) { item ->
         ConversationListItemRow(
@@ -191,9 +192,9 @@ private fun ConversationListEffects(
     effectHandler: ConversationListEffectHandler,
     listState: LazyListState,
     snackbarHostState: SnackbarHostState,
-    pinAnimationController: OverlayReorderAnimationController<ConversationListItemUiModel, String>,
+    pinAnimationController: OverlayReorderAnimationController<Model, ConversationId>,
     onAction: (Action) -> Unit,
-    onConfirmBlock: (conversationId: String, destination: String) -> Unit,
+    onConfirmBlock: (conversationId: ConversationId, destination: String) -> Unit,
 ) {
     val context = LocalContext.current
     val undoLabel = stringResource(R.string.snack_bar_undo)
@@ -258,7 +259,7 @@ private fun ConversationListEffects(
 }
 
 private fun preparePinAnimation(
-    controller: OverlayReorderAnimationController<ConversationListItemUiModel, String>,
+    controller: OverlayReorderAnimationController<Model, ConversationId>,
     effect: Effect.PreparePinAnimation,
     onAction: (Action) -> Unit,
 ) {
@@ -351,7 +352,7 @@ private fun ConversationListScaffold(
     uiState: State,
     listState: LazyListState,
     snackbarHostState: SnackbarHostState,
-    pinAnimationController: OverlayReorderAnimationController<ConversationListItemUiModel, String>?,
+    pinAnimationController: OverlayReorderAnimationController<Model, ConversationId>?,
     onAction: (Action) -> Unit,
     onDeleteClick: () -> Unit,
     onSnoozeClick: () -> Unit,

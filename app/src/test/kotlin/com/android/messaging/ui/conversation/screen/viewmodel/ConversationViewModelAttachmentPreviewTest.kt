@@ -38,7 +38,7 @@ internal class ConversationViewModelAttachmentPreviewTest : BaseConversationView
                         contentType = "image/jpeg",
                         contentUri = "content://media/image/1",
                         imageCollectionUri = MessagingContentProvider
-                            .buildConversationImagesUri(CONVERSATION_ID)
+                            .buildConversationImagesUri(CONVERSATION_ID.value)
                             .toString(),
                     ),
                     awaitItem(),
@@ -71,7 +71,7 @@ internal class ConversationViewModelAttachmentPreviewTest : BaseConversationView
                         contentType = "image/jpeg",
                         contentUri = "content://media/image/1",
                         imageCollectionUri = MessagingContentProvider
-                            .buildDraftImagesUri(CONVERSATION_ID)
+                            .buildDraftImagesUri(CONVERSATION_ID.value)
                             .toString(),
                     ),
                     awaitItem(),
@@ -88,7 +88,7 @@ internal class ConversationViewModelAttachmentPreviewTest : BaseConversationView
                         contentType = "image/png",
                         contentUri = "content://media/image/2",
                         imageCollectionUri = MessagingContentProvider
-                            .buildConversationImagesUri(CONVERSATION_ID)
+                            .buildConversationImagesUri(CONVERSATION_ID.value)
                             .toString(),
                     ),
                     awaitItem(),

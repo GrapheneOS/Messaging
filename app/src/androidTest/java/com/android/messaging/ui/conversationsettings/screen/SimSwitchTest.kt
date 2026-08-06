@@ -7,10 +7,10 @@ import com.android.messaging.R
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsAction
 import com.android.messaging.ui.conversationsettings.screen.support.ConversationSettingsTestBase
 import com.android.messaging.ui.conversationsettings.screen.support.SUB1_DESTINATION
-import com.android.messaging.ui.conversationsettings.screen.support.SUB1_ID
+import com.android.messaging.ui.conversationsettings.screen.support.SUB1_SELF_PARTICIPANT_ID
 import com.android.messaging.ui.conversationsettings.screen.support.SUB1_SLOT
 import com.android.messaging.ui.conversationsettings.screen.support.SUB2_DESTINATION
-import com.android.messaging.ui.conversationsettings.screen.support.SUB2_ID
+import com.android.messaging.ui.conversationsettings.screen.support.SUB2_SELF_PARTICIPANT_ID
 import com.android.messaging.ui.conversationsettings.screen.support.SUB2_SLOT
 import com.android.messaging.ui.conversationsettings.screen.support.oneToOneState
 import com.android.messaging.ui.conversationsettings.screen.support.subscription
@@ -31,8 +31,8 @@ internal class SimSwitchTest : ConversationSettingsTestBase() {
 
     @Test
     fun displaysSelectedSubscription() {
-        val sub1 = subscription(SUB1_ID, SUB1_SLOT, SUB1_DESTINATION)
-        val sub2 = subscription(SUB2_ID, SUB2_SLOT, SUB2_DESTINATION)
+        val sub1 = subscription(SUB1_SELF_PARTICIPANT_ID, SUB1_SLOT, SUB1_DESTINATION)
+        val sub2 = subscription(SUB2_SELF_PARTICIPANT_ID, SUB2_SLOT, SUB2_DESTINATION)
 
         renderScreen(
             oneToOneState(
@@ -50,8 +50,8 @@ internal class SimSwitchTest : ConversationSettingsTestBase() {
 
     @Test
     fun selectingOtherSim_dispatchesSimSelected() {
-        val sub1 = subscription(SUB1_ID, SUB1_SLOT, SUB1_DESTINATION)
-        val sub2 = subscription(SUB2_ID, SUB2_SLOT, SUB2_DESTINATION)
+        val sub1 = subscription(SUB1_SELF_PARTICIPANT_ID, SUB1_SLOT, SUB1_DESTINATION)
+        val sub2 = subscription(SUB2_SELF_PARTICIPANT_ID, SUB2_SLOT, SUB2_DESTINATION)
 
         renderScreen(
             oneToOneState(
@@ -71,7 +71,7 @@ internal class SimSwitchTest : ConversationSettingsTestBase() {
 
         verify(exactly = 1) {
             screenModel.onAction(
-                ConversationSettingsAction.SimSelected(SUB2_ID),
+                ConversationSettingsAction.SimSelected(SUB2_SELF_PARTICIPANT_ID),
             )
         }
     }

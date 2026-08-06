@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationpicker.model
 
 import androidx.compose.runtime.Immutable
+import com.android.messaging.data.conversation.model.ConversationId
 
 @Immutable
 internal sealed interface TargetUiState {
@@ -13,14 +14,14 @@ internal sealed interface TargetUiState {
 
     @Immutable
     data class Conversation(
-        val conversationId: String,
+        val conversationId: ConversationId,
         override val normalizedDestination: String?,
         override val displayName: String,
         override val details: String?,
         override val avatarUri: String?,
         val isGroup: Boolean,
     ) : TargetUiState {
-        override val key: String = "$CONVERSATION_KEY_PREFIX$conversationId"
+        override val key: String = "$CONVERSATION_KEY_PREFIX${conversationId.value}"
 
         override val selectionId: String = when {
             normalizedDestination.isNullOrEmpty() -> key

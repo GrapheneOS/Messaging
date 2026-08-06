@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.recipientpicker.delegate.conversationresolutiondelegate
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.domain.conversation.usecase.participant.ResolveConversationId
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveConversationIdResult
 import com.android.messaging.testutil.MainDispatcherRule
@@ -51,6 +52,6 @@ internal abstract class BaseConversationResolutionDelegateTest {
     }
 
     protected companion object {
-        const val DEFAULT_CONVERSATION_ID = "conversation-default"
+        val DEFAULT_CONVERSATION_ID = ConversationId("conversation-default")
     }
 }

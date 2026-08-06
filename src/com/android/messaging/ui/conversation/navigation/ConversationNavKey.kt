@@ -1,6 +1,8 @@
 package com.android.messaging.ui.conversation.navigation
 
 import androidx.navigation3.runtime.NavKey
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -8,7 +10,7 @@ internal data object NewChatNavKey : NavKey
 
 @Serializable
 internal data class ConversationNavKey(
-    val conversationId: String,
+    val conversationId: ConversationId,
 ) : NavKey
 
 @Serializable
@@ -18,13 +20,13 @@ internal data class RecipientPickerNavKey(
 
 @Serializable
 internal data class AddParticipantsNavKey(
-    val conversationId: String,
+    val conversationId: ConversationId,
 ) : NavKey
 
 @Serializable
 internal data class MessageDetailsNavKey(
-    val conversationId: String,
-    val messageId: String,
+    val conversationId: ConversationId,
+    val messageId: MessageId,
 ) : NavKey
 
 @Serializable
