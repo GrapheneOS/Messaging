@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationlist.chats.mapper
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.domain.conversation.usecase.participant.CanAddContact
@@ -15,7 +16,7 @@ import kotlinx.collections.immutable.ImmutableSet
 internal interface ConversationListUiStateMapper {
     fun map(
         snapshot: ConversationListSnapshot,
-        selectedConversationIds: ImmutableList<String>,
+        selectedConversationIds: ImmutableList<ConversationId>,
         isScrollToTopVisible: Boolean,
         isDebugEnabled: Boolean,
     ): ConversationListUiState
@@ -28,7 +29,7 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
 
     override fun map(
         snapshot: ConversationListSnapshot,
-        selectedConversationIds: ImmutableList<String>,
+        selectedConversationIds: ImmutableList<ConversationId>,
         isScrollToTopVisible: Boolean,
         isDebugEnabled: Boolean,
     ): ConversationListUiState {
@@ -55,7 +56,7 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
 
     private fun mapSelectionState(
         items: List<ConversationListItem>,
-        selectedConversationIds: ImmutableList<String>,
+        selectedConversationIds: ImmutableList<ConversationId>,
         blockedDestinations: ImmutableSet<String>,
     ): ConversationListSelectionUiState {
         val itemsById = items.associateBy(ConversationListItem::conversationId)

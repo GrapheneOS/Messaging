@@ -1,6 +1,7 @@
 package com.android.messaging.ui.appsettings.screen
 
 import androidx.compose.runtime.saveable.SaverScope
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.ui.appsettings.screen.model.SettingsNavRoute
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -26,7 +27,7 @@ internal class SettingsNavRouteSavedStateTest {
     fun saver_roundTripsSubscriptionSettingsRoute() {
         assertRoundTrip(
             route = SettingsNavRoute.SubscriptionSettings(
-                subId = 5,
+                subId = SubId(5),
                 title = "SIM settings",
             ),
         )

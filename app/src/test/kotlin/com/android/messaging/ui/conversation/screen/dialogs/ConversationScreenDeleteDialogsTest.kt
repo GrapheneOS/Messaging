@@ -5,6 +5,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.conversation.CONVERSATION_DELETE_MESSAGES_CONFIRM_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_DELETE_MESSAGES_DISMISS_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageDeleteConfirmationUiState
@@ -59,7 +60,11 @@ internal class ConversationScreenDeleteDialogsTest : BaseConversationScreenDialo
 
     @Test
     fun deleteMessages_multiMessageUsesPluralAndForwardsCallbacks() {
-        val messageIds = persistentSetOf("message-1", "message-2", "message-3")
+        val messageIds = persistentSetOf(
+            MessageId("message-1"),
+            MessageId("message-2"),
+            MessageId("message-3"),
+        )
         val screenModel = setDialogsContent(
             uiState = createDialogUiState(
                 deleteConfirmation = ConversationMessageDeleteConfirmationUiState(

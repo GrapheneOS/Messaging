@@ -1,5 +1,7 @@
 package com.android.messaging.ui.conversation.screen
 
+import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.testutil.assertThat
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -9,21 +11,20 @@ class ConversationAutoScrollPolicyTest {
     fun evaluateConversationAutoScroll_doesNotScrollWhenLatestMessageDidNotChange() {
         val decision = evaluateConversationAutoScroll(
             input = ConversationAutoScrollInput(
-                previousLatestMessageId = "message-1",
-                latestMessageId = "message-1",
+                previousLatestMessageId = MessageId("message-1"),
+                latestMessageId = MessageId("message-1"),
                 hasLatestMessage = true,
                 isLatestMessageIncoming = false,
                 wasScrolledToLatestMessage = true,
             ),
         )
 
-        assertEquals(
+        assertThat(decision).isEqualTo(
             ConversationAutoScrollDecision(
                 shouldScrollToLatestMessage = false,
                 shouldShowNewMessageSnackbar = false,
-                updatedLatestMessageId = "message-1",
-            ),
-            decision,
+                updatedLatestMessageId = MessageId("message-1"),
+            )
         )
     }
 
@@ -31,7 +32,7 @@ class ConversationAutoScrollPolicyTest {
     fun evaluateConversationAutoScroll_doesNotScrollWhenThereIsNoLatestMessage() {
         val decision = evaluateConversationAutoScroll(
             input = ConversationAutoScrollInput(
-                previousLatestMessageId = "message-1",
+                previousLatestMessageId = MessageId("message-1"),
                 latestMessageId = null,
                 hasLatestMessage = false,
                 isLatestMessageIncoming = false,
@@ -53,21 +54,20 @@ class ConversationAutoScrollPolicyTest {
     fun evaluateConversationAutoScroll_showsSnackbarForIncomingMessageWhenUserIsAwayFromLatest() {
         val decision = evaluateConversationAutoScroll(
             input = ConversationAutoScrollInput(
-                previousLatestMessageId = "message-1",
-                latestMessageId = "message-2",
+                previousLatestMessageId = MessageId("message-1"),
+                latestMessageId = MessageId("message-2"),
                 hasLatestMessage = true,
                 isLatestMessageIncoming = true,
                 wasScrolledToLatestMessage = false,
             ),
         )
 
-        assertEquals(
+        assertThat(decision).isEqualTo(
             ConversationAutoScrollDecision(
                 shouldScrollToLatestMessage = false,
                 shouldShowNewMessageSnackbar = true,
-                updatedLatestMessageId = "message-2",
-            ),
-            decision,
+                updatedLatestMessageId = MessageId("message-2"),
+            )
         )
     }
 
@@ -75,21 +75,20 @@ class ConversationAutoScrollPolicyTest {
     fun evaluateConversationAutoScroll_scrollsForIncomingMessageWhenUserIsAlreadyAtLatest() {
         val decision = evaluateConversationAutoScroll(
             input = ConversationAutoScrollInput(
-                previousLatestMessageId = "message-1",
-                latestMessageId = "message-2",
+                previousLatestMessageId = MessageId("message-1"),
+                latestMessageId = MessageId("message-2"),
                 hasLatestMessage = true,
                 isLatestMessageIncoming = true,
                 wasScrolledToLatestMessage = true,
             ),
         )
 
-        assertEquals(
+        assertThat(decision).isEqualTo(
             ConversationAutoScrollDecision(
                 shouldScrollToLatestMessage = true,
                 shouldShowNewMessageSnackbar = false,
-                updatedLatestMessageId = "message-2",
-            ),
-            decision,
+                updatedLatestMessageId = MessageId("message-2"),
+            )
         )
     }
 
@@ -97,21 +96,20 @@ class ConversationAutoScrollPolicyTest {
     fun evaluateConversationAutoScroll_scrollsForOutgoingMessage() {
         val decision = evaluateConversationAutoScroll(
             input = ConversationAutoScrollInput(
-                previousLatestMessageId = "message-1",
-                latestMessageId = "message-2",
+                previousLatestMessageId = MessageId("message-1"),
+                latestMessageId = MessageId("message-2"),
                 hasLatestMessage = true,
                 isLatestMessageIncoming = false,
                 wasScrolledToLatestMessage = false,
             ),
         )
 
-        assertEquals(
+        assertThat(decision).isEqualTo(
             ConversationAutoScrollDecision(
                 shouldScrollToLatestMessage = true,
                 shouldShowNewMessageSnackbar = false,
-                updatedLatestMessageId = "message-2",
-            ),
-            decision,
+                updatedLatestMessageId = MessageId("message-2"),
+            )
         )
     }
 }

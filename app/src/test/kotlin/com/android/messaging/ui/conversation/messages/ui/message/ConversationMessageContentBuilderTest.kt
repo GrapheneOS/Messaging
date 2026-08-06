@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.messages.ui.message
 
 import android.net.Uri
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentType
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.attachment.model.ConversationVCardAttachmentUiModel
@@ -141,7 +142,7 @@ class ConversationMessageContentBuilderTest {
         parts: ImmutableList<ConversationMessagePartUiModel>,
     ): ConversationMessageUiModel {
         return ConversationMessageUiModel(
-            messageId = "message-1",
+            messageId = MessageId("message-1"),
             conversationId = CONVERSATION_ID,
             text = text,
             parts = parts,

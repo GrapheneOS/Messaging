@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.messages.delegate.selection
 import android.app.Activity
 import app.cash.turbine.test
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.domain.conversation.usecase.action.ConversationActionRequirementsResult
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
@@ -36,7 +37,7 @@ internal class ConversationMessageSelectionDelegateResendTest :
                     ),
                 )
                 advanceUntilIdle()
-                harness.delegate.onMessageLongClick(messageId = "message-1")
+                harness.delegate.onMessageLongClick(messageId = MessageId("message-1"))
                 advanceUntilIdle()
 
                 harness.delegate.onMessageSelectionActionClick(
@@ -45,7 +46,9 @@ internal class ConversationMessageSelectionDelegateResendTest :
                 advanceUntilIdle()
 
                 verify(exactly = 1) {
-                    harness.conversationsRepository.resendMessage(messageId = "message-1")
+                    harness.conversationsRepository.resendMessage(
+                        messageId = MessageId("message-1")
+                    )
                 }
                 assertEquals(
                     ConversationMessageSelectionUiState(),
@@ -63,11 +66,13 @@ internal class ConversationMessageSelectionDelegateResendTest :
             val harness = createHarness()
 
             try {
-                harness.delegate.onMessageResendClick(messageId = "message-1")
+                harness.delegate.onMessageResendClick(messageId = MessageId("message-1"))
                 advanceUntilIdle()
 
                 verify(exactly = 1) {
-                    harness.conversationsRepository.resendMessage(messageId = "message-1")
+                    harness.conversationsRepository.resendMessage(
+                        messageId = MessageId("message-1")
+                    )
                 }
                 assertEquals(
                     ConversationMessageSelectionUiState(),
@@ -96,7 +101,7 @@ internal class ConversationMessageSelectionDelegateResendTest :
                     ),
                 )
                 advanceUntilIdle()
-                harness.delegate.onMessageLongClick(messageId = "message-1")
+                harness.delegate.onMessageLongClick(messageId = MessageId("message-1"))
                 advanceUntilIdle()
 
                 harness.delegate.effects.test {
@@ -136,7 +141,7 @@ internal class ConversationMessageSelectionDelegateResendTest :
                     ),
                 )
                 advanceUntilIdle()
-                harness.delegate.onMessageLongClick(messageId = "message-1")
+                harness.delegate.onMessageLongClick(messageId = MessageId("message-1"))
                 advanceUntilIdle()
 
                 harness.delegate.effects.test {
@@ -178,7 +183,7 @@ internal class ConversationMessageSelectionDelegateResendTest :
                     ),
                 )
                 advanceUntilIdle()
-                harness.delegate.onMessageLongClick(messageId = "message-1")
+                harness.delegate.onMessageLongClick(messageId = MessageId("message-1"))
                 advanceUntilIdle()
 
                 harness.delegate.effects.test {
@@ -203,7 +208,9 @@ internal class ConversationMessageSelectionDelegateResendTest :
                     advanceUntilIdle()
 
                     verify(exactly = 1) {
-                        harness.conversationsRepository.resendMessage(messageId = "message-1")
+                        harness.conversationsRepository.resendMessage(
+                            messageId = MessageId("message-1")
+                        )
                     }
                     cancelAndIgnoreRemainingEvents()
                 }
@@ -246,7 +253,7 @@ internal class ConversationMessageSelectionDelegateResendTest :
                     ),
                 )
                 advanceUntilIdle()
-                harness.delegate.onMessageLongClick(messageId = "message-1")
+                harness.delegate.onMessageLongClick(messageId = MessageId("message-1"))
                 advanceUntilIdle()
 
                 harness.delegate.effects.test {

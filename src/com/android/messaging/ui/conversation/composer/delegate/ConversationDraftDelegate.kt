@@ -2,6 +2,8 @@ package com.android.messaging.ui.conversation.composer.delegate
 
 import android.app.Activity
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.data.conversation.model.draft.ConversationDraftPendingAttachment
@@ -67,12 +69,12 @@ internal interface ConversationDraftDelegate : ConversationScreenDelegate<Conver
     fun confirmSubjectDialog(subjectText: String)
 
     fun onSelfParticipantIdChanged(
-        conversationId: String,
-        selfParticipantId: String,
+        conversationId: ConversationId,
+        selfParticipantId: ParticipantId,
     )
 
     fun seedDraft(
-        conversationId: String,
+        conversationId: ConversationId,
         draft: ConversationDraft,
     )
 
@@ -144,7 +146,7 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
 
     override fun bind(
         scope: CoroutineScope,
-        conversationIdFlow: StateFlow<String?>,
+        conversationIdFlow: StateFlow<ConversationId?>,
     ) {
         if (boundScope != null) {
             return
@@ -182,8 +184,8 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
     }
 
     override fun onSelfParticipantIdChanged(
-        conversationId: String,
-        selfParticipantId: String,
+        conversationId: ConversationId,
+        selfParticipantId: ParticipantId,
     ) {
         conversationDraftEditorDelegate.onSelfParticipantIdChanged(
             conversationId = conversationId,
@@ -192,7 +194,7 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
     }
 
     override fun seedDraft(
-        conversationId: String,
+        conversationId: ConversationId,
         draft: ConversationDraft,
     ) {
         conversationDraftEditorDelegate.seedDraft(
@@ -364,7 +366,7 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
 
     private fun bindConversationDraftObservation(
         scope: CoroutineScope,
-        conversationIdFlow: StateFlow<String?>,
+        conversationIdFlow: StateFlow<ConversationId?>,
     ) {
         scope.launch(defaultDispatcher) {
             observeConversationDraftUpdates(conversationIdFlow = conversationIdFlow)
@@ -397,7 +399,7 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
         }
     }
 
-    private suspend fun resetDraftEditorState(conversationId: String?) {
+    private suspend fun resetDraftEditorState(conversationId: ConversationId?) {
         pendingMessageLimitSendRequest = null
         _attachmentLimitWarning.value = null
         _isSubjectDialogVisible.value = false
@@ -597,7 +599,7 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
     }
 
     private fun observeConversationDraftUpdates(
-        conversationIdFlow: StateFlow<String?>,
+        conversationIdFlow: StateFlow<ConversationId?>,
     ): Flow<PersistedDraftUpdate> {
         return runDraftOperationBoundary(
             operationName = "observe drafts",
@@ -610,13 +612,15 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
                     return@transformLatest
                 }
 
-                emitAll(createPersistedDraftUpdatesFlow(conversationId = conversationId))
+                emitAll(
+                    createPersistedDraftUpdatesFlow(conversationId = conversationId)
+                )
             }
         }
     }
 
     private fun createPersistedDraftUpdatesFlow(
-        conversationId: String,
+        conversationId: ConversationId,
     ): Flow<PersistedDraftUpdate> {
         return conversationDraftsRepository
             .observeConversationDraft(conversationId = conversationId)
@@ -629,7 +633,7 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
             .catch { exception ->
                 LogUtil.e(
                     TAG,
-                    "Failed to observe draft for conversation $conversationId",
+                    "Failed to observe draft for conversation ${conversationId.value}",
                     exception,
                 )
 
@@ -657,7 +661,7 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
 
     private fun <T> runDraftOperationBoundary(
         operationName: String,
-        conversationId: String?,
+        conversationId: ConversationId?,
         onFailure: ((Throwable) -> Unit)? = null,
         createFlow: () -> Flow<T>,
     ): Flow<T> {
@@ -666,7 +670,7 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
         }.catch { exception ->
             LogUtil.e(
                 TAG,
-                "Failed to $operationName for conversation $conversationId",
+                "Failed to $operationName for conversation ${conversationId?.value}",
                 exception,
             )
             onFailure?.invoke(exception)

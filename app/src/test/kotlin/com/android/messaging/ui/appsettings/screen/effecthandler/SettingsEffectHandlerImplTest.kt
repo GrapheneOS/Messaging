@@ -5,6 +5,7 @@ import android.app.role.RoleManager
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.provider.Settings
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.appsettings.screen.SettingsEffectHandlerImpl
 import com.android.messaging.ui.appsettings.screen.model.SettingsScreenEffect
@@ -47,7 +48,7 @@ class SettingsEffectHandlerImplTest {
         every { uiIntents.getWirelessAlertsIntent() } returns wirelessAlertsIntent
         val handler = createHandler()
 
-        handler.handle(SettingsScreenEffect.OpenWirelessAlerts(subId = 1))
+        handler.handle(SettingsScreenEffect.OpenWirelessAlerts(subId = SubId(1)))
 
         verify(exactly = 1) {
             activity.startActivity(wirelessAlertsIntent)
@@ -63,7 +64,7 @@ class SettingsEffectHandlerImplTest {
         } throws ActivityNotFoundException()
         val handler = createHandler()
 
-        handler.handle(SettingsScreenEffect.OpenWirelessAlerts(subId = 1))
+        handler.handle(SettingsScreenEffect.OpenWirelessAlerts(subId = SubId(1)))
 
         verify(exactly = 1) {
             activity.startActivity(wirelessAlertsIntent)

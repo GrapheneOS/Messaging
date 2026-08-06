@@ -1,25 +1,26 @@
 package com.android.messaging.data.conversation.store
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.datamodel.BugleDatabaseOperations
 import com.android.messaging.datamodel.DataModel
 import com.android.messaging.datamodel.MessagingContentProvider
 import javax.inject.Inject
 
 internal interface ConversationArchiveStore {
-    fun archiveConversation(conversationId: String)
-    fun unarchiveConversation(conversationId: String)
+    fun archiveConversation(conversationId: ConversationId)
+    fun unarchiveConversation(conversationId: ConversationId)
 }
 
 internal class ConversationArchiveStoreImpl @Inject constructor() : ConversationArchiveStore {
 
-    override fun archiveConversation(conversationId: String) {
+    override fun archiveConversation(conversationId: ConversationId) {
         setArchived(
             conversationId = conversationId,
             isArchived = true,
         )
     }
 
-    override fun unarchiveConversation(conversationId: String) {
+    override fun unarchiveConversation(conversationId: ConversationId) {
         setArchived(
             conversationId = conversationId,
             isArchived = false,
@@ -27,7 +28,7 @@ internal class ConversationArchiveStoreImpl @Inject constructor() : Conversation
     }
 
     private fun setArchived(
-        conversationId: String,
+        conversationId: ConversationId,
         isArchived: Boolean,
     ) {
         val database = DataModel.get().database
@@ -36,7 +37,7 @@ internal class ConversationArchiveStoreImpl @Inject constructor() : Conversation
         try {
             BugleDatabaseOperations.updateConversationArchiveStatusInTransaction(
                 database,
-                conversationId,
+                conversationId.value,
                 isArchived,
             )
             database.setTransactionSuccessful()
@@ -45,6 +46,6 @@ internal class ConversationArchiveStoreImpl @Inject constructor() : Conversation
         }
 
         MessagingContentProvider.notifyConversationListChanged()
-        MessagingContentProvider.notifyConversationMetadataChanged(conversationId)
+        MessagingContentProvider.notifyConversationMetadataChanged(conversationId.value)
     }
 }

@@ -1,10 +1,12 @@
 package com.android.messaging.data.conversation.mapper
 
 import android.net.Uri
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.datamodel.data.MessagePartData
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
+import com.android.messaging.testutil.assertThat
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -19,7 +21,7 @@ class ConversationMessageDataDraftMapperImplTest {
     @Test
     fun map_preservesSourceFieldsWhenSelfParticipantIdIsPresent() {
         val messageData = MessageData.createDraftSmsMessage(
-            CONVERSATION_ID,
+            CONVERSATION_ID.value,
             "self-1",
             "Hello",
         )
@@ -36,12 +38,12 @@ class ConversationMessageDataDraftMapperImplTest {
 
         val draft = mapper.map(
             messageData = messageData,
-            fallbackSelfParticipantId = "fallback-self",
+            fallbackSelfParticipantId = ParticipantId("fallback-self"),
         )
 
         assertEquals("Hello", draft.messageText)
         assertEquals("Subject", draft.subjectText)
-        assertEquals("self-1", draft.selfParticipantId)
+        assertThat(draft.selfParticipantId).isEqualTo(ParticipantId("self-1"))
         assertEquals(
             listOf(
                 createAttachment(
@@ -59,39 +61,39 @@ class ConversationMessageDataDraftMapperImplTest {
     @Test
     fun map_usesFallbackSelfParticipantIdWhenSourceSelfIdIsNull() {
         val messageData = MessageData.createDraftMessage(
-            CONVERSATION_ID,
+            CONVERSATION_ID.value,
             null,
             null,
         )
 
         val draft = mapper.map(
             messageData = messageData,
-            fallbackSelfParticipantId = "fallback-self",
+            fallbackSelfParticipantId = ParticipantId("fallback-self"),
         )
 
-        assertEquals("fallback-self", draft.selfParticipantId)
+        assertThat(draft.selfParticipantId).isEqualTo(ParticipantId("fallback-self"))
     }
 
     @Test
     fun map_usesFallbackSelfParticipantIdWhenSourceSelfIdIsBlank() {
         val messageData = MessageData.createDraftSmsMessage(
-            CONVERSATION_ID,
+            CONVERSATION_ID.value,
             "",
             "Hello",
         )
 
         val draft = mapper.map(
             messageData = messageData,
-            fallbackSelfParticipantId = "fallback-self",
+            fallbackSelfParticipantId = ParticipantId("fallback-self"),
         )
 
-        assertEquals("fallback-self", draft.selfParticipantId)
+        assertThat(draft.selfParticipantId).isEqualTo(ParticipantId("fallback-self"))
     }
 
     @Test
     fun map_normalizesUnspecifiedAttachmentDimensionsToNull() {
         val messageData = MessageData.createDraftSmsMessage(
-            CONVERSATION_ID,
+            CONVERSATION_ID.value,
             "self-1",
             "",
         )
@@ -117,7 +119,7 @@ class ConversationMessageDataDraftMapperImplTest {
     @Test
     fun map_dropsAttachmentsWithBlankContentTypeOrUri() {
         val messageData = MessageData.createDraftSmsMessage(
-            CONVERSATION_ID,
+            CONVERSATION_ID.value,
             "self-1",
             "Hello",
         )
@@ -164,7 +166,7 @@ class ConversationMessageDataDraftMapperImplTest {
     @Test
     fun map_dropsAttachmentsBackedByPhotoPickerUris() {
         val messageData = MessageData.createDraftSmsMessage(
-            CONVERSATION_ID,
+            CONVERSATION_ID.value,
             "self-1",
             "Hello",
         )

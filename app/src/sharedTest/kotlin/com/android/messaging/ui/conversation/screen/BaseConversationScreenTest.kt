@@ -6,6 +6,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
@@ -43,7 +46,7 @@ internal abstract class BaseConversationScreenTest {
 
     protected fun setContent(
         screenModel: ConversationScreenModel,
-        conversationId: () -> String? = { CONVERSATION_ID },
+        conversationId: () -> ConversationId? = { CONVERSATION_ID },
         launchGeneration: () -> Int? = { 1 },
         cancelIncomingNotification: Boolean = true,
         lifecycleOwner: LifecycleOwner? = null,
@@ -68,7 +71,7 @@ internal abstract class BaseConversationScreenTest {
                     onNavigateToMessageDetails = {},
                     onNavigateBack = {},
                     pendingDraft = pendingDraft,
-                    pendingSelfParticipantId = pendingSelfParticipantId,
+                    pendingSelfParticipantId = ParticipantId.fromOrNull(pendingSelfParticipantId),
                     pendingStartupAttachment = pendingStartupAttachment,
                     onPendingDraftConsumed = onPendingDraftConsumed,
                     onPendingSelfParticipantIdConsumed = onPendingSelfParticipantIdConsumed,
@@ -114,7 +117,7 @@ internal abstract class BaseConversationScreenTest {
             isDeleteConversationConfirmationVisible = isDeleteConversationConfirmationVisible,
             metadata = ConversationMetadataUiState.Present(
                 title = "Weekend plan",
-                selfParticipantId = "self-1",
+                selfParticipantId = ParticipantId("self-1"),
                 avatar = ConversationMetadataUiState.Avatar.Single(
                     photoUri = null,
                     normalizedDestination = null,
@@ -151,7 +154,7 @@ internal abstract class BaseConversationScreenTest {
             val messageId = "$messageIdPrefix-$index"
             val isLatestMessage = messageId == latestMessageId
             messages += ConversationMessageUiModel(
-                messageId = messageId,
+                messageId = MessageId(messageId),
                 conversationId = CONVERSATION_ID,
                 text = "Message $index",
                 parts = persistentListOf(),
@@ -166,7 +169,7 @@ internal abstract class BaseConversationScreenTest {
                 senderContactLookupKey = null,
                 senderNormalizedDestination = null,
                 senderParticipantId = null,
-                selfParticipantId = "self-1",
+                selfParticipantId = ParticipantId("self-1"),
                 canClusterWithPrevious = false,
                 canClusterWithNext = false,
                 canCopyMessageToClipboard = !latestMessageIncoming,

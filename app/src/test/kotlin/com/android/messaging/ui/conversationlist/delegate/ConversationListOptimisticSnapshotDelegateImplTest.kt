@@ -1,6 +1,6 @@
 package com.android.messaging.ui.conversationlist.delegate
 
-import com.android.messaging.data.conversationlist.model.ConversationListItem
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListMode
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
@@ -27,7 +27,7 @@ internal class ConversationListOptimisticSnapshotDelegateImplTest {
     fun archive_removesItemFromEffectiveSnapshot() = runTest {
         val delegate = bindDelegate(snapshotOfIds("a", "b"))
 
-        delegate.remove(listOf("a"))
+        delegate.remove(listOf(ConversationId("a")))
 
         assertEquals(listOf("b"), delegate.conversationIds())
     }
@@ -36,14 +36,14 @@ internal class ConversationListOptimisticSnapshotDelegateImplTest {
     fun pin_reordersEffectiveSnapshotToTop() = runTest {
         val delegate = bindDelegate(
             snapshotOfItems(
-                conversationItem("a", timestamp = 3_000L),
-                conversationItem("b", timestamp = 2_000L),
-                conversationItem("c", timestamp = 1_000L),
+                conversationItem(ConversationId("a"), timestamp = 3_000L),
+                conversationItem(ConversationId("b"), timestamp = 2_000L),
+                conversationItem(ConversationId("c"), timestamp = 1_000L),
             ),
         )
 
         delegate.pin(
-            conversationIds = listOf("c"),
+            conversationIds = listOf(ConversationId("c")),
             isPinned = true,
         )
 
@@ -55,14 +55,14 @@ internal class ConversationListOptimisticSnapshotDelegateImplTest {
         val delegate = bindDelegate(
             snapshotOfItems(
                 conversationItem(
-                    conversationId = "a",
+                    conversationId = ConversationId("a"),
                     isRead = false,
                 ),
             ),
         )
 
         delegate.markRead(
-            conversationIds = listOf("a"),
+            conversationIds = listOf(ConversationId("a")),
             isRead = true,
         )
 
@@ -74,8 +74,8 @@ internal class ConversationListOptimisticSnapshotDelegateImplTest {
     fun restoreArchived_afterArchive_bringsItemBack() = runTest {
         val delegate = bindDelegate(snapshotOfIds("a", "b"))
 
-        delegate.remove(listOf("a"))
-        delegate.restore(listOf("a"))
+        delegate.remove(listOf(ConversationId("a")))
+        delegate.restore(listOf(ConversationId("a")))
 
         assertTrue("a" in delegate.conversationIds())
     }
@@ -85,7 +85,7 @@ internal class ConversationListOptimisticSnapshotDelegateImplTest {
         val rawSnapshot = MutableStateFlow(
             snapshotOfItems(
                 conversationItem(
-                    conversationId = "a",
+                    conversationId = ConversationId("a"),
                     isRead = false,
                 ),
             ),
@@ -93,13 +93,13 @@ internal class ConversationListOptimisticSnapshotDelegateImplTest {
 
         val delegate = bindDelegate(rawSnapshot)
         delegate.markRead(
-            conversationIds = listOf("a"),
+            conversationIds = listOf(ConversationId("a")),
             isRead = true,
         )
 
         rawSnapshot.value = snapshotOfItems(
             conversationItem(
-                conversationId = "a",
+                conversationId = ConversationId("a"),
                 isRead = true,
             ),
         )
@@ -107,7 +107,7 @@ internal class ConversationListOptimisticSnapshotDelegateImplTest {
 
         rawSnapshot.value = snapshotOfItems(
             conversationItem(
-                conversationId = "a",
+                conversationId = ConversationId("a"),
                 isRead = false,
             ),
         )
@@ -122,11 +122,11 @@ internal class ConversationListOptimisticSnapshotDelegateImplTest {
         val rawSnapshot = MutableStateFlow(snapshotOfIds("a", "b"))
         val delegate = bindDelegate(rawSnapshot)
 
-        delegate.remove(listOf("a"))
+        delegate.remove(listOf(ConversationId("a")))
         rawSnapshot.value = snapshotOfIds("b")
         runCurrent()
 
-        delegate.discardRemoval(listOf("a"))
+        delegate.discardRemoval(listOf(ConversationId("a")))
 
         assertEquals(listOf("b"), delegate.conversationIds())
     }
@@ -135,9 +135,9 @@ internal class ConversationListOptimisticSnapshotDelegateImplTest {
     fun restoreThenDiscard_keepsRestoredItemVisible() = runTest {
         val delegate = bindDelegate(snapshotOfIds("a", "b"))
 
-        delegate.remove(listOf("a"))
-        delegate.restore(listOf("a"))
-        delegate.discardRemoval(listOf("a"))
+        delegate.remove(listOf(ConversationId("a")))
+        delegate.restore(listOf(ConversationId("a")))
+        delegate.discardRemoval(listOf(ConversationId("a")))
 
         assertTrue("a" in delegate.conversationIds())
     }
@@ -146,33 +146,33 @@ internal class ConversationListOptimisticSnapshotDelegateImplTest {
     fun pinOverrideIsDropped_afterDatabaseCatchesUp() = runTest {
         val rawSnapshot = MutableStateFlow(
             snapshotOfItems(
-                conversationItem("a", isPinned = false, timestamp = 1_000L),
-                conversationItem("b", timestamp = 2_000L),
+                conversationItem(ConversationId("a"), isPinned = false, timestamp = 1_000L),
+                conversationItem(ConversationId("b"), timestamp = 2_000L),
             ),
         )
         val delegate = bindDelegate(rawSnapshot)
 
         delegate.pin(
-            conversationIds = listOf("a"),
+            conversationIds = listOf(ConversationId("a")),
             isPinned = true,
         )
         assertEquals(listOf("a", "b"), delegate.conversationIds())
 
         rawSnapshot.value = snapshotOfItems(
-            conversationItem("a", isPinned = true, timestamp = 1_000L),
-            conversationItem("b", timestamp = 2_000L),
+            conversationItem(ConversationId("a"), isPinned = true, timestamp = 1_000L),
+            conversationItem(ConversationId("b"), timestamp = 2_000L),
         )
         runCurrent()
 
         rawSnapshot.value = snapshotOfItems(
-            conversationItem("b", timestamp = 2_000L),
-            conversationItem("a", isPinned = false, timestamp = 1_000L),
+            conversationItem(ConversationId("b"), timestamp = 2_000L),
+            conversationItem(ConversationId("a"), isPinned = false, timestamp = 1_000L),
         )
         runCurrent()
 
         val pinnedItem = delegate.snapshot.value
             ?.items
-            ?.first { item -> item.conversationId == "a" }
+            ?.first { item -> item.conversationId == ConversationId("a") }
 
         assertFalse(requireNotNull(pinnedItem).isPinned)
         assertEquals(listOf("b", "a"), delegate.conversationIds())
@@ -220,7 +220,7 @@ internal class ConversationListOptimisticSnapshotDelegateImplTest {
     private fun ConversationListOptimisticSnapshotDelegateImpl.conversationIds(): List<String> {
         return snapshot.value
             ?.items
-            ?.map(ConversationListItem::conversationId)
+            ?.map { item -> item.conversationId.value }
             .orEmpty()
     }
 }

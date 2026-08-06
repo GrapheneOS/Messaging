@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversationpicker
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.domain.conversation.usecase.participant.ResolveConversationId
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveConversationIdResult
 import com.android.messaging.domain.conversationpicker.model.SendTarget
@@ -177,7 +178,7 @@ internal class ConversationPickerViewModel @Inject constructor(
             Action.SendClicked -> {
                 val selfParticipantId = simSelectionDelegate
                     .currentSelectedSelfParticipantId()
-                    .orEmpty()
+                    ?: ParticipantId("")
 
                 _effects.tryEmit(
                     Effect.SendToSelected(

@@ -27,7 +27,7 @@ internal class BlockedParticipantsEffectHandlerImpl(
             is Effect.OpenParticipantChat -> {
                 UIIntents.get().launchConversationActivity(
                     activity,
-                    effect.conversationId,
+                    effect.conversationId.value,
                     null,
                 )
                 activity.finish()

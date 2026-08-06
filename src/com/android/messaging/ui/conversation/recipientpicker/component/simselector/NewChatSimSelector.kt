@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.ui.conversation.composer.model.ConversationSimSelectorUiState
 import com.android.messaging.ui.conversation.preview.previewSimSelectorUiState
 import com.android.messaging.ui.core.MessagingPreviewColumn
@@ -14,7 +15,7 @@ import com.android.messaging.ui.subscription.mapper.rememberSimSelectorUiState
 @Composable
 internal fun NewChatSimSelectorRow(
     uiState: ConversationSimSelectorUiState,
-    onSimSelected: (String) -> Unit,
+    onSimSelected: (ParticipantId) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (!uiState.isAvailable) {

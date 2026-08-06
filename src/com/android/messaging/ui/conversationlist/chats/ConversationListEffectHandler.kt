@@ -20,25 +20,10 @@ internal class ConversationListEffectHandlerImpl(
 
     override fun handle(effect: Effect) {
         when (effect) {
-            Effect.StartChat -> {
-                UIIntents.get().launchCreateNewConversationActivity(
-                    activity,
-                    null,
-                )
-            }
-
-            is Effect.OpenConversation -> {
-                UIIntents.get().launchConversationActivity(
-                    activity,
-                    effect.conversationId,
-                    null,
-                )
-            }
-
             is Effect.OpenConversationSettings -> {
                 UIIntents.get().launchPeopleAndOptionsActivity(
                     activity,
-                    effect.conversationId,
+                    effect.conversationId.value,
                 )
             }
 

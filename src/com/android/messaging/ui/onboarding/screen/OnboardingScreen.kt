@@ -39,10 +39,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import com.android.messaging.ui.onboarding.screen.model.OnboardingAction as Action
@@ -60,12 +60,14 @@ private val ScreenPadding = 24.dp
 internal fun OnboardingScreen(
     effectHandler: OnboardingEffectHandler,
     onNavigateBack: () -> Unit,
+    onOnboardingComplete: () -> Unit,
     modifier: Modifier = Modifier,
-    screenModel: OnboardingScreenModel = viewModel<OnboardingViewModel>(),
+    screenModel: OnboardingScreenModel = hiltViewModel<OnboardingViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
 
     val currentEffectHandler by rememberUpdatedState(effectHandler)
+    val onComplete by rememberUpdatedState(onOnboardingComplete)
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
@@ -88,6 +90,11 @@ internal fun OnboardingScreen(
 
                 Effect.RequestSmsRole -> {
                     smsRoleLauncher.launch(currentEffectHandler.createSmsRoleIntent())
+                }
+
+                Effect.Redirect -> {
+                    currentEffectHandler.handle(effect)
+                    onComplete()
                 }
 
                 else -> currentEffectHandler.handle(effect)

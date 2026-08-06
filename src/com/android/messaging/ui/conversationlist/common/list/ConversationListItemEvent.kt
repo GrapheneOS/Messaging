@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationlist.common.list
 
 import androidx.compose.runtime.Immutable
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.conversationlist.common.item.ConversationSwipeKind
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
 
@@ -8,15 +9,15 @@ import com.android.messaging.ui.conversationlist.model.ConversationListItemUiMod
 internal sealed interface ConversationListItemEvent {
 
     data class Clicked(
-        val conversationId: String,
+        val conversationId: ConversationId,
     ) : ConversationListItemEvent
 
     data class LongClicked(
-        val conversationId: String,
+        val conversationId: ConversationId,
     ) : ConversationListItemEvent
 
     data class AvatarMessageClicked(
-        val conversationId: String,
+        val conversationId: ConversationId,
     ) : ConversationListItemEvent
 
     data class AvatarCallClicked(
@@ -28,11 +29,11 @@ internal sealed interface ConversationListItemEvent {
     ) : ConversationListItemEvent
 
     data class AvatarInfoClicked(
-        val conversationId: String,
+        val conversationId: ConversationId,
     ) : ConversationListItemEvent
 
     data class Swiped(
-        val conversationId: String,
+        val conversationId: ConversationId,
         val kind: ConversationSwipeKind,
     ) : ConversationListItemEvent
 }

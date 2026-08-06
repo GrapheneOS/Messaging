@@ -1,7 +1,10 @@
 package com.android.messaging.ui.conversation.navigation
 
 import androidx.navigation3.runtime.NavKey
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
+import com.android.messaging.testutil.assertThat
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -56,13 +59,13 @@ class ConversationNavigationReducerImplTest {
 
         reducer.navigateToConversation(
             backStack = backStack,
-            conversationId = "conversation-2",
+            conversationId = ConversationId("conversation-2"),
         )
 
         assertEquals(
             listOf(
                 ConversationNavKey(conversationId = CONVERSATION_ID),
-                ConversationNavKey(conversationId = "conversation-2"),
+                ConversationNavKey(conversationId = ConversationId("conversation-2")),
             ),
             backStack,
         )
@@ -165,12 +168,12 @@ class ConversationNavigationReducerImplTest {
 
         reducer.replaceCurrentConversation(
             backStack = backStack,
-            conversationId = "conversation-2",
+            conversationId = ConversationId("conversation-2"),
         )
 
         assertEquals(
             listOf(
-                ConversationNavKey(conversationId = "conversation-2"),
+                ConversationNavKey(conversationId = ConversationId("conversation-2")),
             ),
             backStack,
         )
@@ -185,32 +188,32 @@ class ConversationNavigationReducerImplTest {
 
         reducer.replaceCurrentConversation(
             backStack = backStack,
-            conversationId = "conversation-2",
+            conversationId = ConversationId("conversation-2"),
         )
 
         assertEquals(
             listOf(
                 NewChatNavKey,
-                ConversationNavKey(conversationId = "conversation-2"),
+                ConversationNavKey(conversationId = ConversationId("conversation-2")),
             ),
             backStack,
         )
     }
 
     @Test
-    fun resetBackStack_keepsSingleMatchingDestinationUntouched() {
+    fun resetBackStack_keepsMatchingDestinationsUntouched() {
         val backStack = mutableListOf<NavKey>(NewChatNavKey)
 
         reducer.resetBackStack(
             backStack = backStack,
-            destination = NewChatNavKey,
+            destinations = listOf(NewChatNavKey),
         )
 
         assertEquals(listOf(NewChatNavKey), backStack)
     }
 
     @Test
-    fun resetBackStack_replacesExistingEntriesWithDestination() {
+    fun resetBackStack_replacesExistingEntriesWithDestinations() {
         val backStack = mutableListOf(
             NewChatNavKey,
             ConversationNavKey(conversationId = CONVERSATION_ID),
@@ -218,12 +221,43 @@ class ConversationNavigationReducerImplTest {
 
         reducer.resetBackStack(
             backStack = backStack,
-            destination = ConversationNavKey(conversationId = "conversation-2"),
+            destinations = listOf(
+                ConversationNavKey(conversationId = ConversationId("conversation-2")),
+            ),
         )
 
         assertEquals(
             listOf(
-                ConversationNavKey(conversationId = "conversation-2"),
+                ConversationNavKey(conversationId = ConversationId("conversation-2")),
+            ),
+            backStack,
+        )
+    }
+
+    @Test
+    fun resetBackStack_keepsBackStackWhenDestinationsAreEmpty() {
+        val backStack = mutableListOf<NavKey>(NewChatNavKey)
+
+        reducer.resetBackStack(
+            backStack = backStack,
+            destinations = emptyList(),
+        )
+
+        assertEquals(listOf(NewChatNavKey), backStack)
+    }
+
+    @Test
+    fun navigateToNewChat_pushesNewChatDestination() {
+        val backStack = mutableListOf<NavKey>(
+            ConversationNavKey(conversationId = CONVERSATION_ID),
+        )
+
+        reducer.navigateToNewChat(backStack = backStack)
+
+        assertEquals(
+            listOf(
+                ConversationNavKey(conversationId = CONVERSATION_ID),
+                NewChatNavKey,
             ),
             backStack,
         )
@@ -231,20 +265,21 @@ class ConversationNavigationReducerImplTest {
 
     @Test
     fun navigateToMessageDetails_appendsMessageDetailsDestination() {
-        val backStack = mutableListOf<NavKey>(ConversationNavKey(conversationId = "c"))
+        val backStack = mutableListOf<NavKey>(
+            ConversationNavKey(conversationId = ConversationId("c")),
+        )
 
         reducer.navigateToMessageDetails(
             backStack = backStack,
-            conversationId = "c",
-            messageId = "m",
+            conversationId = ConversationId("c"),
+            messageId = MessageId("m"),
         )
 
-        assertEquals(
+        assertThat(backStack.last()).isEqualTo(
             MessageDetailsNavKey(
-                conversationId = "c",
-                messageId = "m",
-            ),
-            backStack.last(),
+                conversationId = ConversationId("c"),
+                messageId = MessageId("m"),
+            )
         )
         assertEquals(2, backStack.size)
     }
@@ -252,17 +287,17 @@ class ConversationNavigationReducerImplTest {
     @Test
     fun navigateToMessageDetails_whenAlreadyOnTop_doesNotDuplicate() {
         val backStack = mutableListOf(
-            ConversationNavKey(conversationId = "c"),
+            ConversationNavKey(conversationId = ConversationId("c")),
             MessageDetailsNavKey(
-                conversationId = "c",
-                messageId = "m",
+                conversationId = ConversationId("c"),
+                messageId = MessageId("m"),
             ),
         )
 
         reducer.navigateToMessageDetails(
             backStack = backStack,
-            conversationId = "c",
-            messageId = "m",
+            conversationId = ConversationId("c"),
+            messageId = MessageId("m"),
         )
 
         assertEquals(2, backStack.size)

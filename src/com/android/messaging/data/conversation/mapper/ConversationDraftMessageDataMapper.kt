@@ -1,6 +1,7 @@
 package com.android.messaging.data.conversation.mapper
 
 import androidx.core.net.toUri
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.datamodel.data.MessageData
@@ -10,7 +11,7 @@ import javax.inject.Inject
 
 internal interface ConversationDraftMessageDataMapper {
     fun map(
-        conversationId: String,
+        conversationId: ConversationId,
         draft: ConversationDraft,
         forceMms: Boolean = false,
     ): MessageData
@@ -20,7 +21,7 @@ internal class ConversationDraftMessageDataMapperImpl @Inject constructor() :
     ConversationDraftMessageDataMapper {
 
     override fun map(
-        conversationId: String,
+        conversationId: ConversationId,
         draft: ConversationDraft,
         forceMms: Boolean,
     ): MessageData {
@@ -30,15 +31,15 @@ internal class ConversationDraftMessageDataMapperImpl @Inject constructor() :
 
         val message = when {
             isMms -> MessageData.createDraftMmsMessage(
-                conversationId,
-                selfParticipantId,
+                conversationId.value,
+                selfParticipantId?.value,
                 draft.messageText,
                 draft.subjectText,
             )
 
             else -> MessageData.createDraftSmsMessage(
-                conversationId,
-                selfParticipantId,
+                conversationId.value,
+                selfParticipantId?.value,
                 draft.messageText,
             )
         }

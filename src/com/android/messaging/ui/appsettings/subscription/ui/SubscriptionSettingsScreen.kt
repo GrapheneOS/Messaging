@@ -37,11 +37,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.ui.appsettings.common.SettingsCategoryHeader
 import com.android.messaging.ui.appsettings.common.SettingsClickableItem
 import com.android.messaging.ui.appsettings.common.SettingsSwitchItem
 import com.android.messaging.ui.appsettings.common.SettingsTopAppBar
-import com.android.messaging.ui.appsettings.screen.SettingsScreenModel
 import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionUiState
 import com.android.messaging.ui.common.text.asLtrText
@@ -448,7 +448,7 @@ private fun PhoneNumberDialogPreview() {
 
 private fun previewSubscriptionSettings(isDefaultSmsApp: Boolean): SubscriptionUiState {
     return SubscriptionUiState(
-        subId = 1,
+        subId = SubId(1),
         displayName = "SIM 1",
         displayDetail = "+31 6 1234 5678",
         phoneNumber = "+31 6 1234 5678",

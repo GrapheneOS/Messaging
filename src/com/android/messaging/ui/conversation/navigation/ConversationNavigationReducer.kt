@@ -1,22 +1,28 @@
 package com.android.messaging.ui.conversation.navigation
 
 import androidx.navigation3.runtime.NavKey
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.ui.navigation.NavigationReducer
+import com.android.messaging.ui.navigation.NavigationReducerImpl
 
 internal interface ConversationNavigationReducer {
     fun navigateToAddParticipants(
         backStack: MutableList<NavKey>,
-        conversationId: String,
+        conversationId: ConversationId,
     )
 
     fun navigateToConversation(
         backStack: MutableList<NavKey>,
-        conversationId: String,
+        conversationId: ConversationId,
     )
+
+    fun navigateToNewChat(backStack: MutableList<NavKey>)
 
     fun navigateToMessageDetails(
         backStack: MutableList<NavKey>,
-        conversationId: String,
-        messageId: String,
+        conversationId: ConversationId,
+        messageId: MessageId,
     )
 
     fun navigateToRecipientPicker(
@@ -28,75 +34,79 @@ internal interface ConversationNavigationReducer {
 
     fun replaceCurrentConversation(
         backStack: MutableList<NavKey>,
-        conversationId: String,
+        conversationId: ConversationId,
     )
 
     fun resetBackStack(
         backStack: MutableList<NavKey>,
-        destination: NavKey,
+        destinations: List<NavKey>,
     )
 }
 
-internal class ConversationNavigationReducerImpl : ConversationNavigationReducer {
+internal class ConversationNavigationReducerImpl(
+    private val navigationReducer: NavigationReducer = NavigationReducerImpl(),
+) : ConversationNavigationReducer {
 
     override fun navigateToAddParticipants(
         backStack: MutableList<NavKey>,
-        conversationId: String,
+        conversationId: ConversationId,
     ) {
-        AddParticipantsNavKey(conversationId = conversationId)
-            .takeIf { it != backStack.lastOrNull() }
-            ?.let(backStack::add)
+        navigationReducer.push(
+            backStack = backStack,
+            destination = AddParticipantsNavKey(conversationId = conversationId),
+        )
     }
 
     override fun navigateToConversation(
         backStack: MutableList<NavKey>,
-        conversationId: String,
+        conversationId: ConversationId,
     ) {
         removeTrailingConversationEntryDestinations(backStack = backStack)
 
-        val destination = ConversationNavKey(conversationId = conversationId)
+        navigationReducer.push(
+            backStack = backStack,
+            destination = ConversationNavKey(conversationId = conversationId),
+        )
+    }
 
-        if (destination == backStack.lastOrNull()) {
-            return
-        }
-
-        backStack.add(destination)
+    override fun navigateToNewChat(backStack: MutableList<NavKey>) {
+        navigationReducer.push(
+            backStack = backStack,
+            destination = NewChatNavKey,
+        )
     }
 
     override fun navigateToMessageDetails(
         backStack: MutableList<NavKey>,
-        conversationId: String,
-        messageId: String,
+        conversationId: ConversationId,
+        messageId: MessageId,
     ) {
-        MessageDetailsNavKey(
-            conversationId = conversationId,
-            messageId = messageId,
+        navigationReducer.push(
+            backStack = backStack,
+            destination = MessageDetailsNavKey(
+                conversationId = conversationId,
+                messageId = messageId,
+            ),
         )
-            .takeIf { it != backStack.lastOrNull() }
-            ?.let(backStack::add)
     }
 
     override fun navigateToRecipientPicker(
         backStack: MutableList<NavKey>,
         mode: RecipientPickerMode,
     ) {
-        RecipientPickerNavKey(mode = mode)
-            .takeIf { it != backStack.lastOrNull() }
-            ?.let(backStack::add)
+        navigationReducer.push(
+            backStack = backStack,
+            destination = RecipientPickerNavKey(mode = mode),
+        )
     }
 
     override fun popBackStack(backStack: MutableList<NavKey>): Boolean {
-        if (backStack.size <= 1) {
-            return false
-        }
-
-        backStack.removeAt(backStack.lastIndex)
-        return true
+        return navigationReducer.pop(backStack = backStack)
     }
 
     override fun replaceCurrentConversation(
         backStack: MutableList<NavKey>,
-        conversationId: String,
+        conversationId: ConversationId,
     ) {
         if (backStack.lastOrNull() is AddParticipantsNavKey) {
             backStack.removeAt(backStack.lastIndex)
@@ -117,14 +127,12 @@ internal class ConversationNavigationReducerImpl : ConversationNavigationReducer
 
     override fun resetBackStack(
         backStack: MutableList<NavKey>,
-        destination: NavKey,
+        destinations: List<NavKey>,
     ) {
-        if (backStack.size == 1 && backStack.firstOrNull() == destination) {
-            return
-        }
-
-        backStack.clear()
-        backStack.add(destination)
+        navigationReducer.reset(
+            backStack = backStack,
+            destinations = destinations,
+        )
     }
 
     private fun removeTrailingConversationEntryDestinations(backStack: MutableList<NavKey>) {

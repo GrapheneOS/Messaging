@@ -1,13 +1,14 @@
 package com.android.messaging.ui.conversationlist.delegate
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.persistentMapOf
 
 internal data class ConversationListOptimisticOverrides(
-    val archiveById: PersistentMap<String, ConversationArchiveOverride> = persistentMapOf(),
-    val readById: PersistentMap<String, Boolean> = persistentMapOf(),
-    val pinnedById: PersistentMap<String, Boolean> = persistentMapOf(),
+    val archiveById: PersistentMap<ConversationId, ConversationArchiveOverride> = persistentMapOf(),
+    val readById: PersistentMap<ConversationId, Boolean> = persistentMapOf(),
+    val pinnedById: PersistentMap<ConversationId, Boolean> = persistentMapOf(),
 ) {
     val isEmpty: Boolean
         get() = archiveById.isEmpty() &&

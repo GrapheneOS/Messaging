@@ -5,6 +5,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.media.model.ConversationCapturedMedia
 import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
@@ -40,6 +43,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -52,14 +56,14 @@ internal interface ConversationScreenModel {
     val mediaPickerOverlayUiState: StateFlow<ConversationMediaPickerOverlayUiState>
     val scaffoldUiState: StateFlow<ConversationScreenScaffoldUiState>
 
-    fun onConversationIdChanged(conversationId: String?)
+    fun onConversationIdChanged(conversationId: ConversationId?)
     fun onOpenStartupAttachment(
-        conversationId: String,
+        conversationId: ConversationId,
         startupAttachment: ConversationEntryStartupAttachment,
     )
 
     fun onSeedDraft(
-        conversationId: String,
+        conversationId: ConversationId,
         draft: ConversationDraft,
     )
 
@@ -73,16 +77,16 @@ internal interface ConversationScreenModel {
         partId: String,
     )
 
-    fun onMessageClick(messageId: String)
-    fun onMessageAvatarClick(messageId: String)
-    fun onMessageDownloadClick(messageId: String)
-    fun onMessageLongClick(messageId: String)
-    fun onMessageResendClick(messageId: String)
+    fun onMessageClick(messageId: MessageId)
+    fun onMessageAvatarClick(messageId: MessageId)
+    fun onMessageDownloadClick(messageId: MessageId)
+    fun onMessageLongClick(messageId: MessageId)
+    fun onMessageResendClick(messageId: MessageId)
     fun onMessageSelectionActionClick(action: ConversationMessageSelectionAction)
 
     fun onCallClick()
 
-    fun onSimSelected(selfParticipantId: String)
+    fun onSimSelected(selfParticipantId: ParticipantId)
 
     fun onExternalUriClicked(uri: String)
 
@@ -155,9 +159,8 @@ internal class ConversationViewModel @Inject constructor(
 ) : ViewModel(),
     ConversationScreenModel {
 
-    private val conversationIdFlow: StateFlow<String?> = savedStateHandle.getStateFlow(
-        key = CONVERSATION_ID_KEY,
-        initialValue = null,
+    private val conversationIdFlow: MutableStateFlow<ConversationId?> = MutableStateFlow(
+        ConversationId.fromOrNull(savedStateHandle[CONVERSATION_ID_KEY]),
     )
     private val _effects = MutableSharedFlow<ConversationScreenEffect>(
         extraBufferCapacity = 1,
@@ -366,14 +369,15 @@ internal class ConversationViewModel @Inject constructor(
         }
     }
 
-    override fun onConversationIdChanged(conversationId: String?) {
+    override fun onConversationIdChanged(conversationId: ConversationId?) {
         updateConversationId(conversationId = conversationId)
     }
 
-    private fun updateConversationId(conversationId: String?) {
+    private fun updateConversationId(conversationId: ConversationId?) {
         if (conversationId != conversationIdFlow.value) {
             conversationMessageSelectionDelegate.dismissMessageSelection()
-            savedStateHandle[CONVERSATION_ID_KEY] = conversationId
+            conversationIdFlow.value = conversationId
+            savedStateHandle[CONVERSATION_ID_KEY] = conversationId?.value
         }
     }
 
@@ -411,7 +415,7 @@ internal class ConversationViewModel @Inject constructor(
     }
 
     override fun onSeedDraft(
-        conversationId: String,
+        conversationId: ConversationId,
         draft: ConversationDraft,
     ) {
         conversationDraftDelegate.seedDraft(
@@ -421,11 +425,11 @@ internal class ConversationViewModel @Inject constructor(
     }
 
     override fun onOpenStartupAttachment(
-        conversationId: String,
+        conversationId: ConversationId,
         startupAttachment: ConversationEntryStartupAttachment,
     ) {
         val imageCollectionUri = MessagingContentProvider
-            .buildConversationImagesUri(conversationId)
+            .buildConversationImagesUri(conversationId.value)
             ?.toString()
 
         viewModelScope.launch(defaultDispatcher) {
@@ -440,9 +444,8 @@ internal class ConversationViewModel @Inject constructor(
     }
 
     override fun onAttachmentClicked(attachment: ComposerAttachmentUiModel.Resolved) {
-        val imageCollectionUri = conversationIdFlow
-            .value
-            ?.let(MessagingContentProvider::buildDraftImagesUri)
+        val imageCollectionUri = conversationIdFlow.value
+            ?.let { MessagingContentProvider.buildDraftImagesUri(it.value) }
             ?.toString()
 
         viewModelScope.launch(defaultDispatcher) {
@@ -461,9 +464,8 @@ internal class ConversationViewModel @Inject constructor(
         contentUri: String,
         partId: String,
     ) {
-        val imageCollectionUri = conversationIdFlow
-            .value
-            ?.let(MessagingContentProvider::buildConversationImagesUri)
+        val imageCollectionUri = conversationIdFlow.value
+            ?.let { MessagingContentProvider.buildConversationImagesUri(it.value) }
             ?.toString()
 
         val initialPhotoOccurrenceIndex =
@@ -485,11 +487,11 @@ internal class ConversationViewModel @Inject constructor(
         }
     }
 
-    override fun onMessageClick(messageId: String) {
+    override fun onMessageClick(messageId: MessageId) {
         conversationMessageSelectionDelegate.onMessageClick(messageId = messageId)
     }
 
-    override fun onMessageAvatarClick(messageId: String) {
+    override fun onMessageAvatarClick(messageId: MessageId) {
         val message = when (val messagesState = conversationMessagesDelegate.state.value) {
             is ConversationMessagesUiState.Present -> {
                 messagesState
@@ -519,15 +521,15 @@ internal class ConversationViewModel @Inject constructor(
         }
     }
 
-    override fun onMessageDownloadClick(messageId: String) {
+    override fun onMessageDownloadClick(messageId: MessageId) {
         conversationMessageSelectionDelegate.onMessageDownloadClick(messageId = messageId)
     }
 
-    override fun onMessageLongClick(messageId: String) {
+    override fun onMessageLongClick(messageId: MessageId) {
         conversationMessageSelectionDelegate.onMessageLongClick(messageId = messageId)
     }
 
-    override fun onMessageResendClick(messageId: String) {
+    override fun onMessageResendClick(messageId: MessageId) {
         conversationMessageSelectionDelegate.onMessageResendClick(messageId = messageId)
     }
 
@@ -553,9 +555,9 @@ internal class ConversationViewModel @Inject constructor(
         }
     }
 
-    override fun onSimSelected(selfParticipantId: String) {
+    override fun onSimSelected(selfParticipantId: ParticipantId) {
         if (selfParticipantId.isBlank()) return
-        val conversationId = conversationIdFlow.value?.takeIf(String::isNotBlank) ?: return
+        val conversationId = conversationIdFlow.value?.takeIf { it.isNotBlank() } ?: return
 
         conversationDraftDelegate.onSelfParticipantIdChanged(
             conversationId = conversationId,

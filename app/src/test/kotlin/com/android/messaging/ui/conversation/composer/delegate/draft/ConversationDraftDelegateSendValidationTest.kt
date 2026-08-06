@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.composer.delegate.draft
 
 import app.cash.turbine.test
 import com.android.messaging.R
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.domain.conversation.usecase.draft.SendConversationDraft
 import com.android.messaging.domain.conversation.usecase.draft.exception.ConversationSimNotReadyException
 import com.android.messaging.domain.conversation.usecase.draft.exception.DraftDispatchFailedException
@@ -48,7 +49,7 @@ internal class ConversationDraftDelegateSendValidationTest : BaseConversationDra
             assertSendFailureMessage(
                 exception = ConversationSimNotReadyException(
                     conversationId = CONVERSATION_ID,
-                    selfSubId = 1,
+                    selfSubId = SubId(1),
                     cause = IllegalStateException("SIM unavailable"),
                 ),
                 expectedMessageResId = R.string.cant_send_message_without_active_subscription,

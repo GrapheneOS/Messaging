@@ -67,20 +67,23 @@
         android:appCategory="social"
         android:label="@string/app_name"
         android:theme="@style/BugleTheme"
-        android:supportsRtl="true">
+        android:supportsRtl="true"
+        android:enableOnBackInvokedCallback="true">
 
-        <!-- Displays a list of conversations -->
+        <!-- Single-Activity host for the app navigation graph -->
         <activity
-            android:name=".ui.conversationlist.chats.ConversationListActivity"
+            android:name=".ui.MainActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="false"
+            android:launchMode="singleTop"
             android:screenOrientation="user"
+            android:windowSoftInputMode="stateHidden|adjustResize"
             android:theme="@style/Theme.Compose" />
 
         <activity-alias
             android:name=".ui.conversationlist.ConversationListActivity"
             android:exported="true"
-            android:targetActivity=".ui.conversationlist.chats.ConversationListActivity">
+            android:targetActivity=".ui.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -123,10 +126,10 @@
             android:screenOrientation="user"
             android:label="@string/archived_activity_title"
             android:theme="@style/Theme.Compose"
-            android:parentActivityName="com.android.messaging.ui.conversationlist.chats.ConversationListActivity">
+            android:parentActivityName="com.android.messaging.ui.MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.android.messaging.ui.conversationlist.chats.ConversationListActivity" />
+                android:value="com.android.messaging.ui.MainActivity" />
         </activity>
 
         <!-- Displays the contents of a single conversation -->
@@ -138,10 +141,10 @@
             android:resizeableActivity="true"
             android:windowSoftInputMode="stateHidden|adjustResize"
             android:theme="@style/Theme.Compose"
-            android:parentActivityName="com.android.messaging.ui.conversationlist.chats.ConversationListActivity">
+            android:parentActivityName="com.android.messaging.ui.MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.android.messaging.ui.conversationlist.chats.ConversationListActivity" />
+                android:value="com.android.messaging.ui.MainActivity" />
         </activity>
 
         <!-- Blocked Participants -->
@@ -150,13 +153,13 @@
             android:allowEmbedded="true"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:label="@string/blocked_contacts_title"
-            android:parentActivityName="com.android.messaging.ui.conversationlist.chats.ConversationListActivity"
+            android:parentActivityName="com.android.messaging.ui.MainActivity"
             android:resizeableActivity="true"
             android:screenOrientation="user"
             android:theme="@style/Theme.Compose">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.android.messaging.ui.conversationlist.chats.ConversationListActivity" />
+                android:value="com.android.messaging.ui.MainActivity" />
         </activity>
 
         <!-- Full-screen photo viewer -->
@@ -175,13 +178,13 @@
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="true"
             android:label="@string/settings_activity_title"
-            android:parentActivityName="com.android.messaging.ui.conversationlist.chats.ConversationListActivity"
+            android:parentActivityName="com.android.messaging.ui.MainActivity"
             android:resizeableActivity="true"
             android:screenOrientation="user"
             android:theme="@style/Theme.Compose">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.android.messaging.ui.conversationlist.chats.ConversationListActivity" />
+                android:value="com.android.messaging.ui.MainActivity" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />

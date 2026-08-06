@@ -7,7 +7,9 @@ import android.database.MatrixCursor
 import android.net.Uri
 import android.telephony.SubscriptionManager
 import app.cash.turbine.test
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
 import com.android.messaging.datamodel.MessagingContentProvider
@@ -16,6 +18,7 @@ import com.android.messaging.debug.DebugSimEmulationMode
 import com.android.messaging.debug.DebugSimEmulationSource
 import com.android.messaging.sms.MmsConfig
 import com.android.messaging.testutil.MainDispatcherRule
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.testutil.createParticipantsCursor
 import com.android.messaging.testutil.participantRow
 import io.mockk.every
@@ -95,16 +98,16 @@ class SubscriptionsRepositoryImplTest {
                 assertEquals(
                     listOf(
                         Subscription(
-                            selfParticipantId = "self-slot-1",
-                            subId = 1,
+                            selfParticipantId = ParticipantId("self-slot-1"),
+                            subId = SubId(1),
                             label = ConversationSubscriptionLabel.Named(name = "Carrier A"),
                             displayDestination = "+1 555 0100",
                             displaySlotId = 1,
                             color = 0xFF445566.toInt(),
                         ),
                         Subscription(
-                            selfParticipantId = "self-slot-2",
-                            subId = 2,
+                            selfParticipantId = ParticipantId("self-slot-2"),
+                            subId = SubId(2),
                             label = ConversationSubscriptionLabel.Named(name = "Carrier B"),
                             displayDestination = "+1 555 0200",
                             displaySlotId = 2,
@@ -157,8 +160,8 @@ class SubscriptionsRepositoryImplTest {
                 assertEquals(
                     listOf(
                         Subscription(
-                            selfParticipantId = "active",
-                            subId = 1,
+                            selfParticipantId = ParticipantId("active"),
+                            subId = SubId(1),
                             label = ConversationSubscriptionLabel.Named(name = "Active"),
                             displayDestination = "+1 555 0002",
                             displaySlotId = 1,
@@ -231,7 +234,7 @@ class SubscriptionsRepositoryImplTest {
             repository.observeActiveSubscriptions().test {
                 val items = awaitItem()
                 assertEquals(1, items.size)
-                assertEquals("real", items.single().selfParticipantId)
+                assertThat(items.single().selfParticipantId).isEqualTo(ParticipantId("real"))
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -262,7 +265,7 @@ class SubscriptionsRepositoryImplTest {
             repository.observeActiveSubscriptions().test {
                 val items = awaitItem()
                 assertEquals(1, items.size)
-                assertEquals("real", items.single().selfParticipantId)
+                assertThat(items.single().selfParticipantId).isEqualTo(ParticipantId("real"))
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -282,7 +285,7 @@ class SubscriptionsRepositoryImplTest {
                 assertEquals(1, items.size)
                 val fake = items.single()
                 assertEquals(1, fake.displaySlotId)
-                assertTrue(fake.selfParticipantId.startsWith("debug_sim_emulated_"))
+                assertTrue(fake.selfParticipantId.value.startsWith("debug_sim_emulated_"))
                 assertEquals(
                     ConversationSubscriptionLabel.DebugFake(slotId = 1),
                     fake.label,
@@ -307,7 +310,7 @@ class SubscriptionsRepositoryImplTest {
                 assertEquals(1, items[0].displaySlotId)
                 assertEquals(2, items[1].displaySlotId)
                 assertTrue(
-                    items.all { it.selfParticipantId.startsWith("debug_sim_emulated_") },
+                    items.all { it.selfParticipantId.value.startsWith("debug_sim_emulated_") },
                 )
                 assertTrue(
                     items.all { it.label is ConversationSubscriptionLabel.DebugFake },
@@ -343,9 +346,9 @@ class SubscriptionsRepositoryImplTest {
                 val items = awaitItem()
                 assertEquals(2, items.size)
                 val bySlot = items.associateBy { it.displaySlotId }
-                assertEquals("real", bySlot[2]?.selfParticipantId)
+                assertThat(bySlot[2]?.selfParticipantId).isEqualTo(ParticipantId("real"))
                 assertTrue(
-                    bySlot[1]?.selfParticipantId.orEmpty().startsWith("debug_sim_emulated_"),
+                    bySlot[1]?.selfParticipantId?.value.orEmpty().startsWith("debug_sim_emulated_"),
                 )
                 cancelAndIgnoreRemainingEvents()
             }
@@ -378,9 +381,9 @@ class SubscriptionsRepositoryImplTest {
                 val items = awaitItem()
                 assertEquals(2, items.size)
                 val bySlot = items.associateBy { it.displaySlotId }
-                assertEquals("real", bySlot[1]?.selfParticipantId)
+                assertThat(bySlot[1]?.selfParticipantId).isEqualTo(ParticipantId("real"))
                 assertTrue(
-                    bySlot[2]?.selfParticipantId.orEmpty().startsWith("debug_sim_emulated_"),
+                    bySlot[2]?.selfParticipantId?.value.orEmpty().startsWith("debug_sim_emulated_"),
                 )
                 cancelAndIgnoreRemainingEvents()
             }
@@ -420,7 +423,7 @@ class SubscriptionsRepositoryImplTest {
             repository.observeActiveSubscriptions().test {
                 val items = awaitItem()
                 assertEquals(
-                    listOf("real-a", "real-b"),
+                    listOf(ParticipantId("real-a"), ParticipantId("real-b")),
                     items.map { it.selfParticipantId },
                 )
                 cancelAndIgnoreRemainingEvents()
@@ -501,7 +504,7 @@ class SubscriptionsRepositoryImplTest {
 
             val repository = createRepository()
 
-            repository.resolveMaxMessageSize(selfParticipantId = "").test {
+            repository.resolveMaxMessageSize(selfParticipantId = ParticipantId("")).test {
                 assertEquals(456_000, awaitItem())
                 cancelAndIgnoreRemainingEvents()
             }
@@ -548,7 +551,7 @@ class SubscriptionsRepositoryImplTest {
 
             val repository = createRepository()
 
-            repository.resolveMaxMessageSize(selfParticipantId = "self-7").test {
+            repository.resolveMaxMessageSize(selfParticipantId = ParticipantId("self-7")).test {
                 assertEquals(987_000, awaitItem())
                 cancelAndIgnoreRemainingEvents()
             }

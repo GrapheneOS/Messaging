@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversationlist.archived
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListMode
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
@@ -159,7 +160,7 @@ internal class ArchivedConversationListViewModel @Inject constructor(
         }
     }
 
-    private fun onConversationClicked(conversationId: String) {
+    private fun onConversationClicked(conversationId: ConversationId) {
         when {
             selectionDelegate.selectedIds.value.isNotEmpty() -> {
                 selectionDelegate.toggle(conversationId)
@@ -171,7 +172,7 @@ internal class ArchivedConversationListViewModel @Inject constructor(
         }
     }
 
-    private fun onConversationSwipedToUnarchive(conversationId: String) {
+    private fun onConversationSwipedToUnarchive(conversationId: ConversationId) {
         unarchive(listOf(conversationId))
     }
 
@@ -182,7 +183,7 @@ internal class ArchivedConversationListViewModel @Inject constructor(
         }
     }
 
-    private fun unarchive(conversationIds: List<String>) {
+    private fun unarchive(conversationIds: List<ConversationId>) {
         if (conversationIds.isEmpty()) {
             return
         }
@@ -197,7 +198,7 @@ internal class ArchivedConversationListViewModel @Inject constructor(
         _effects.trySend(Effect.ConversationsUnarchived(conversationIds.toImmutableList()))
     }
 
-    private fun onUnarchiveUndo(conversationIds: List<String>) {
+    private fun onUnarchiveUndo(conversationIds: List<ConversationId>) {
         if (conversationIds.isEmpty()) {
             return
         }
@@ -233,7 +234,7 @@ internal class ArchivedConversationListViewModel @Inject constructor(
         )
     }
 
-    private inline fun withSelectedIds(block: (List<String>) -> Unit) {
+    private inline fun withSelectedIds(block: (List<ConversationId>) -> Unit) {
         val selectedItems = currentSelectedItems()
 
         if (selectedItems.isEmpty()) {

@@ -3,6 +3,7 @@ package com.android.messaging.data.conversationlist.repository
 import android.content.ContentResolver
 import android.database.ContentObserver
 import android.net.Uri
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListDraft
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListLatestMessage
@@ -48,8 +49,8 @@ import kotlinx.coroutines.flow.merge
 internal interface ConversationListRepository {
     fun observeSnapshot(mode: ConversationListMode): Flow<ConversationListSnapshot>
     fun setNewestConversationVisible(isVisible: Boolean)
-    fun snooze(conversationId: String, option: SnoozeOption)
-    fun clearSnooze(conversationId: String)
+    fun snooze(conversationId: ConversationId, option: SnoozeOption)
+    fun clearSnooze(conversationId: ConversationId)
     fun refresh()
 }
 
@@ -101,16 +102,18 @@ internal class ConversationListRepositoryImpl @Inject constructor(
     }
 
     override fun snooze(
-        conversationId: String,
+        conversationId: ConversationId,
         option: SnoozeOption,
     ) {
-        val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
-        notificationRepository.snooze(resolvedConversationId, option)
+        if (conversationId.isBlank()) return
+
+        notificationRepository.snooze(conversationId, option)
     }
 
-    override fun clearSnooze(conversationId: String) {
-        val resolvedConversationId = conversationId.takeIf(String::isNotBlank) ?: return
-        notificationRepository.clearSnooze(resolvedConversationId)
+    override fun clearSnooze(conversationId: ConversationId) {
+        if (conversationId.isBlank()) return
+
+        notificationRepository.clearSnooze(conversationId)
     }
 
     override fun refresh() {
@@ -239,7 +242,10 @@ internal class ConversationListRepositoryImpl @Inject constructor(
     }
 
     private fun ConversationListItemData.toConversationListItem(): ConversationListItem? {
-        val resolvedConversationId = conversationId?.takeIf(String::isNotBlank) ?: return null
+        val resolvedConversationId = conversationId
+            ?.takeIf(String::isNotBlank)
+            ?.let(::ConversationId)
+            ?: return null
 
         return ConversationListItem(
             conversationId = resolvedConversationId,

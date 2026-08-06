@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationpicker.viewmodel
 
 import app.cash.turbine.test
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.testutil.conversationTarget
 import com.android.messaging.ui.conversationpicker.model.AttachmentUiModel
 import com.android.messaging.ui.conversationpicker.model.DraftUiState
@@ -70,7 +71,7 @@ internal class ConversationPickerViewModelStateTest : BaseConversationPickerView
     fun isSendEnabled_isTrue_whenDraftHasTextAndSelectionExists() =
         runTest(mainDispatcherRule.testDispatcher) {
             draftState.value = DraftUiState(isLoading = false, text = "hi")
-            setSelection(listOf(conversationTarget(conversationId = "1")))
+            setSelection(listOf(conversationTarget(conversationId = ConversationId("1"))))
 
             val viewModel = createViewModel()
             viewModel.uiState.test {
@@ -93,7 +94,7 @@ internal class ConversationPickerViewModelStateTest : BaseConversationPickerView
                     ),
                 ),
             )
-            setSelection(listOf(conversationTarget(conversationId = "1")))
+            setSelection(listOf(conversationTarget(conversationId = ConversationId("1"))))
 
             val viewModel = createViewModel()
             viewModel.uiState.test {
@@ -106,7 +107,7 @@ internal class ConversationPickerViewModelStateTest : BaseConversationPickerView
     @Test
     fun isSendEnabled_isFalse_whenDraftBlank() = runTest(mainDispatcherRule.testDispatcher) {
         draftState.value = DraftUiState(isLoading = false, text = "")
-        setSelection(listOf(conversationTarget(conversationId = "1")))
+        setSelection(listOf(conversationTarget(conversationId = ConversationId("1"))))
 
         val viewModel = createViewModel()
         viewModel.uiState.test {

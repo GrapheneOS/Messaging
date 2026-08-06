@@ -1,5 +1,6 @@
 package com.android.messaging.data.conversation.store
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.datamodel.BugleDatabaseOperations
 import com.android.messaging.datamodel.DataModel
 import com.android.messaging.datamodel.DatabaseWrapper
@@ -60,7 +61,7 @@ internal class ConversationArchiveStoreTest {
             databaseWrapper.beginTransaction()
             BugleDatabaseOperations.updateConversationArchiveStatusInTransaction(
                 databaseWrapper,
-                CONVERSATION_ID,
+                CONVERSATION_ID.value,
                 true,
             )
             databaseWrapper.setTransactionSuccessful()
@@ -70,7 +71,7 @@ internal class ConversationArchiveStoreTest {
             MessagingContentProvider.notifyConversationListChanged()
         }
         verify(exactly = 1) {
-            MessagingContentProvider.notifyConversationMetadataChanged(CONVERSATION_ID)
+            MessagingContentProvider.notifyConversationMetadataChanged(CONVERSATION_ID.value)
         }
     }
 
@@ -81,7 +82,7 @@ internal class ConversationArchiveStoreTest {
         verify(exactly = 1) {
             BugleDatabaseOperations.updateConversationArchiveStatusInTransaction(
                 databaseWrapper,
-                CONVERSATION_ID,
+                CONVERSATION_ID.value,
                 false,
             )
         }
@@ -112,6 +113,6 @@ internal class ConversationArchiveStoreTest {
     }
 
     private companion object {
-        private const val CONVERSATION_ID = "conversation-42"
+        private val CONVERSATION_ID = ConversationId("conversation-42")
     }
 }

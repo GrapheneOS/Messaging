@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.composer.delegate.draft
 
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
@@ -53,7 +54,7 @@ internal class ConversationDraftDelegateSendProtocolTest : BaseConversationDraft
                 coVerify(exactly = 1) {
                     conversationsRepository.getConversationSendData(
                         conversationId = CONVERSATION_ID,
-                        requestedSelfParticipantId = "",
+                        requestedSelfParticipantId = ParticipantId(""),
                     )
                 }
                 verify(exactly = 1) {
