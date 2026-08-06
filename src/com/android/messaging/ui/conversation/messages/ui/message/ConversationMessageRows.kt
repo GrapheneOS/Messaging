@@ -56,6 +56,7 @@ internal fun ConversationMessageBubbleRow(
     onMessageDownloadClick: () -> Unit,
     onMessageLongClick: () -> Unit,
     onMessageResendClick: () -> Unit,
+    onPhoneNumberCopy: (String) -> Unit = {},
 ) {
     ConversationMessageBubbleRowContainer(
         message = message,
@@ -98,6 +99,7 @@ internal fun ConversationMessageBubbleRow(
                 }
             },
             onMessageLongClick = onMessageLongClick,
+            onPhoneNumberCopy = onPhoneNumberCopy,
         )
     }
 }

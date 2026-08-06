@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,13 +29,17 @@ import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -42,8 +47,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
@@ -52,6 +61,8 @@ import com.android.messaging.R
 import com.android.messaging.ui.common.components.AnchorRelativePositionProvider
 import com.android.messaging.ui.common.components.MarqueeText
 import com.android.messaging.ui.core.MessagingPreviewColumn
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 private val PopupWidth = 192.dp
 private val ActionRowHeight = 40.dp
@@ -64,6 +75,9 @@ private val PopupAnchorGap = 16.dp
 private val AvatarFallbackSize = 60.dp
 private val IconInsidePadding = 2.dp
 private val ShadowPadding = 16.dp
+
+internal const val PARTICIPANT_QUICK_ACTIONS_COPY_AREA_TEST_TAG =
+    "participant-quick-actions-copy-area"
 
 @Composable
 internal fun ParticipantQuickActionsPopup(
@@ -80,6 +94,8 @@ internal fun ParticipantQuickActionsPopup(
     onInfoClick: (() -> Unit)?,
     colorSeedCode: String?,
     isContactSaved: Boolean = true,
+    phoneNumberCopyTargets: ImmutableList<PhoneNumberCopyTarget> = persistentListOf(),
+    onPhoneNumberCopy: ((String) -> Unit)? = null,
 ) {
     val transitionState = remember { MutableTransitionState(false) }
     transitionState.targetState = visible
@@ -136,6 +152,8 @@ internal fun ParticipantQuickActionsPopup(
                 onContactClick = onContactClick,
                 onInfoClick = onInfoClick,
                 isContactSaved = isContactSaved,
+                phoneNumberCopyTargets = phoneNumberCopyTargets,
+                onPhoneNumberCopy = onPhoneNumberCopy,
             )
         }
     }
@@ -154,6 +172,8 @@ private fun QuickActionsCard(
     onContactClick: (() -> Unit)?,
     onInfoClick: (() -> Unit)?,
     isContactSaved: Boolean,
+    phoneNumberCopyTargets: ImmutableList<PhoneNumberCopyTarget>,
+    onPhoneNumberCopy: ((String) -> Unit)?,
 ) {
     val cardShape = MaterialTheme.shapes.medium
     val cardColor = MaterialTheme.colorScheme.surfaceContainerHigh
@@ -168,33 +188,38 @@ private fun QuickActionsCard(
         shadowElevation = 4.dp,
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            AvatarHeader(
-                avatarUri = avatarUri,
-                fallbackIcon = fallbackIcon,
-                fallbackLabel = fallbackLabel,
-                colorSeedCode = colorSeedCode,
-                fadeColor = cardColor,
-            )
+            PhoneNumberCopyArea(
+                targets = phoneNumberCopyTargets,
+                onPhoneNumberCopy = onPhoneNumberCopy,
+            ) {
+                AvatarHeader(
+                    avatarUri = avatarUri,
+                    fallbackIcon = fallbackIcon,
+                    fallbackLabel = fallbackLabel,
+                    colorSeedCode = colorSeedCode,
+                    fadeColor = cardColor,
+                )
 
-            Spacer(modifier = Modifier.height(ContentTopPadding))
+                Spacer(modifier = Modifier.height(ContentTopPadding))
 
-            MarqueeText(
-                text = displayName,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-                fadeEdgeWidth = ActionRowPadding,
-            )
-
-            if (!subtitle.isNullOrBlank()) {
                 MarqueeText(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = displayName,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fadeEdgeWidth = ActionRowPadding,
                 )
-            }
 
-            Spacer(modifier = Modifier.height(AvatarSubtitleSpacing))
+                if (!subtitle.isNullOrBlank()) {
+                    MarqueeText(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fadeEdgeWidth = ActionRowPadding,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(AvatarSubtitleSpacing))
+            }
 
             QuickActionsRow(
                 onMessageClick = onMessageClick,
@@ -205,6 +230,78 @@ private fun QuickActionsCard(
             )
 
             Spacer(modifier = Modifier.height(ContentBottomPadding))
+        }
+    }
+}
+
+@Composable
+private fun PhoneNumberCopyArea(
+    targets: ImmutableList<PhoneNumberCopyTarget>,
+    onPhoneNumberCopy: ((String) -> Unit)?,
+    content: @Composable () -> Unit,
+) {
+    var showTargetMenu by remember { mutableStateOf(false) }
+    val hapticFeedback = LocalHapticFeedback.current
+    val copyLabel = stringResource(R.string.copy_to_clipboard)
+    val canCopy = targets.isNotEmpty() && onPhoneNumberCopy != null
+    val performAction: () -> Unit = {
+        when (targets.size) {
+            0 -> Unit
+            1 -> onPhoneNumberCopy?.invoke(targets.single().phoneNumber)
+            else -> showTargetMenu = true
+        }
+    }
+    val interactionModifier = when {
+        !canCopy -> Modifier
+        else -> Modifier.combinedClickable(
+            role = Role.Button,
+            onClickLabel = copyLabel,
+            onClick = performAction,
+            onLongClickLabel = copyLabel,
+            onLongClick = {
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                performAction()
+            },
+        )
+    }
+
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(PARTICIPANT_QUICK_ACTIONS_COPY_AREA_TEST_TAG)
+                .then(interactionModifier),
+        ) {
+            content()
+        }
+
+        DropdownMenu(
+            expanded = showTargetMenu,
+            onDismissRequest = { showTargetMenu = false },
+        ) {
+            targets.forEach { target ->
+                DropdownMenuItem(
+                    text = {
+                        Column {
+                            Text(
+                                text = target.displayName,
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                            if (target.displayName != target.phoneNumber) {
+                                Text(
+                                    text = target.phoneNumber,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    },
+                    onClick = {
+                        showTargetMenu = false
+                        onPhoneNumberCopy?.invoke(target.phoneNumber)
+                    },
+                )
+            }
         }
     }
 }
@@ -352,6 +449,13 @@ private fun ParticipantQuickActionsPopupPreview() {
             onContactClick = {},
             onInfoClick = {},
             isContactSaved = false,
+            phoneNumberCopyTargets = persistentListOf(
+                PhoneNumberCopyTarget(
+                    displayName = "Best friend",
+                    phoneNumber = "+1 555 000 0000000",
+                ),
+            ),
+            onPhoneNumberCopy = {},
         )
     }
 }
