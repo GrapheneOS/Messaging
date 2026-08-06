@@ -1,5 +1,7 @@
 package com.android.messaging.ui.conversation.screen
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
@@ -10,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.geometry.Rect as ComposeRect
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
@@ -133,6 +136,15 @@ internal fun ConversationScreenScaffold(
     onLockedAudioRecordingStartRequest: () -> Unit,
     screenModel: ConversationScreenModel,
 ) {
+    val context = LocalContext.current
+    val clipboardManager = remember(context) {
+        context.getSystemService(ClipboardManager::class.java)
+    }
+    val onPhoneNumberCopy = remember(clipboardManager) {
+        { phoneNumber: String ->
+            clipboardManager.setPrimaryClip(ClipData.newPlainText(null, phoneNumber))
+        }
+    }
     val isSimSelectorAvailable = uiState.composer.simSelector.isAvailable
     val simSheetState = rememberConversationSimSheetState(isAvailable = isSimSelectorAvailable)
     val showSimSelectorSheet = rememberShowSimSelectorSheetCallback(
@@ -150,6 +162,7 @@ internal fun ConversationScreenScaffold(
                 onConversationDetailsClick = onConversationDetailsClick,
                 onNavigateBack = onNavigateBack,
                 onSimSelectorClick = showSimSelectorSheet,
+                onPhoneNumberCopy = onPhoneNumberCopy,
                 screenModel = screenModel,
             )
         },
@@ -184,6 +197,7 @@ internal fun ConversationScreenScaffold(
             onMessageActionClick = screenModel::onMessageActionClick,
             onMessageLongClick = screenModel::onMessageLongClick,
             onMessageResendClick = screenModel::onMessageResendClick,
+            onPhoneNumberCopy = onPhoneNumberCopy,
             onSimSelectorClick = showSimSelectorSheet,
             onUnblockClick = screenModel::onUnblockClick,
         )
@@ -232,6 +246,7 @@ private fun ConversationScreenTopBar(
     onConversationDetailsClick: () -> Unit,
     onNavigateBack: () -> Unit,
     onSimSelectorClick: () -> Unit,
+    onPhoneNumberCopy: (String) -> Unit,
     screenModel: ConversationScreenModel,
 ) {
     when {
@@ -263,6 +278,7 @@ private fun ConversationScreenTopBar(
                 onShowSubjectFieldClick = screenModel::onShowSubjectFieldClick,
                 onSimSelectorClick = onSimSelectorClick,
                 onTitleClick = onConversationDetailsClick,
+                onPhoneNumberCopy = onPhoneNumberCopy,
                 onNavigateBack = onNavigateBack,
             )
         }

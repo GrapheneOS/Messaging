@@ -36,6 +36,7 @@ internal fun ConversationMessageAttachmentOnlyBubble(
     onAttachmentClick: OnConversationAttachmentClick?,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
+    onPhoneNumberCopy: (String) -> Unit = {},
 ) {
     ConversationMessageAttachmentOnlyContainer(
         modifier = modifier,
@@ -52,6 +53,7 @@ internal fun ConversationMessageAttachmentOnlyBubble(
             onAttachmentClick = onAttachmentClick,
             onExternalUriClick = onExternalUriClick,
             onMessageLongClick = onMessageLongClick,
+            onPhoneNumberCopy = onPhoneNumberCopy,
         )
     }
 }
@@ -66,6 +68,7 @@ internal fun ConversationMessageAttachmentSurfaceBubble(
     onAttachmentClick: OnConversationAttachmentClick?,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
+    onPhoneNumberCopy: (String) -> Unit = {},
 ) {
     ConversationMessageBubbleSurface(
         modifier = modifier,
@@ -81,6 +84,7 @@ internal fun ConversationMessageAttachmentSurfaceBubble(
             onAttachmentClick = onAttachmentClick,
             onExternalUriClick = onExternalUriClick,
             onMessageLongClick = onMessageLongClick,
+            onPhoneNumberCopy = onPhoneNumberCopy,
         )
     }
 }
@@ -133,6 +137,7 @@ private fun ConversationMessageAttachmentBubbleContent(
     onAttachmentClick: OnConversationAttachmentClick?,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
+    onPhoneNumberCopy: (String) -> Unit = {},
 ) {
     val content = layout.content
     val hasHeader = layout.showSender || !content.subjectText.isNullOrBlank()
@@ -154,6 +159,8 @@ private fun ConversationMessageAttachmentBubbleContent(
             ),
             senderDisplayName = message.senderDisplayName,
             showSender = layout.showSender,
+            phoneNumber = message.copyableSenderPhoneNumber(isSelectionMode),
+            onPhoneNumberCopy = onPhoneNumberCopy,
         )
 
         ConversationMessageSubject(
