@@ -27,7 +27,7 @@ lifecycle = "2.10.0"
 navigation3 = "1.1.1"
 paging = "3.5.0"
 palette = "1.0.0"
-photo-picker = "1.0.0-alpha01"
+photo-picker = "1.0.0-alpha02"
 preference = "1.2.1"
 recyclerview = "1.4.0"
 
