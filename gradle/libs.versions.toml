@@ -1,6 +1,6 @@
 [versions]
 agp = "9.2.1"
-detekt = "2.0.0-alpha.3"
+detekt = "2.0.0-alpha.5"
 hilt = "2.59.2"
 jacoco = "0.8.14"
 kotlin = "2.3.21"
