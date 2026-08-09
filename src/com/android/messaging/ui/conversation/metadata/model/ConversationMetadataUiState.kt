@@ -32,7 +32,6 @@ internal sealed interface ConversationMetadataUiState {
     @Immutable
     data class Present(
         val title: String,
-        val selfParticipantId: ParticipantId,
         val avatar: Avatar,
         val participantCount: Int,
         val otherParticipantDisplayDestination: String?,

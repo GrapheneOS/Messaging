@@ -176,9 +176,7 @@ internal class ConversationPickerViewModel @Inject constructor(
             }
 
             Action.SendClicked -> {
-                val selfParticipantId = simSelectionDelegate
-                    .currentSelectedSelfParticipantId()
-                    ?: ParticipantId("")
+                val selfParticipantId = simSelectionDelegate.currentSelectedSelfParticipantId()
 
                 _effects.tryEmit(
                     Effect.SendToSelected(

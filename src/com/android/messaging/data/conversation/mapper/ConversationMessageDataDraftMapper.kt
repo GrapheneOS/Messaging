@@ -27,9 +27,7 @@ internal class ConversationMessageDataDraftMapperImpl @Inject constructor() :
             messageText = messageData.messageText,
             subjectText = messageData.mmsSubject.orEmpty(),
             selfParticipantId = ParticipantId.fromOrNull(messageData.selfId)
-                ?.takeIf { it.isNotBlank() }
-                ?: fallbackSelfParticipantId
-                ?: ParticipantId(""),
+                ?: fallbackSelfParticipantId,
             attachments = messageData.parts
                 .asSequence()
                 .filter { it.isAttachment }

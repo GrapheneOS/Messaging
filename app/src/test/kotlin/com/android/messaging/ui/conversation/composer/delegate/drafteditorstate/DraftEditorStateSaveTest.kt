@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.composer.delegate.drafteditorstate
 
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.ui.conversation.composer.delegate.DraftEditorState
 import com.android.messaging.ui.conversation.composer.delegate.DraftSaveRequest
 import org.junit.Assert.assertEquals
@@ -201,7 +202,7 @@ internal class DraftEditorStateSaveTest : BaseDraftEditorStateTest() {
         val state = loadedState(persistedDraft = draft())
             .withMessageText(localDraft.messageText)
             .withSubjectText(localDraft.subjectText)
-            .withSelfParticipantId(localDraft.selfParticipantId)
+            .withSelfParticipantId(ParticipantId("sim-local"))
             .withAttachmentsAdded(localDraft.attachments)
 
         val saved = DraftSaveRequest(

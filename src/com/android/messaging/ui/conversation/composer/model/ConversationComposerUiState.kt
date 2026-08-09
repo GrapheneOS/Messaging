@@ -14,7 +14,7 @@ internal data class ConversationComposerUiState(
     val attachments: ImmutableList<ComposerAttachmentUiModel> = persistentListOf(),
     val messageText: String = "",
     val subjectText: String = "",
-    val selfParticipantId: ParticipantId = ParticipantId(""),
+    val selfParticipantId: ParticipantId? = null,
     val simSelector: ConversationSimSelectorUiState = ConversationSimSelectorUiState(),
     val isMessageFieldEnabled: Boolean = false,
     val isAttachmentActionEnabled: Boolean = false,

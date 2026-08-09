@@ -126,7 +126,6 @@ internal abstract class BaseConversationViewModelTest {
     ): ConversationMetadataUiState.Present {
         return ConversationMetadataUiState.Present(
             title = "Alice",
-            selfParticipantId = ParticipantId("self-1"),
             avatar = ConversationMetadataUiState.Avatar.Single(
                 photoUri = null,
                 normalizedDestination = phoneNumber,

@@ -14,7 +14,7 @@ internal abstract class BaseDraftEditorStateTest {
     protected fun draft(
         messageText: String = "",
         subjectText: String = "",
-        selfParticipantId: String = "",
+        selfParticipantId: String? = null,
         attachments: List<ConversationDraftAttachment> = emptyList(),
         isCheckingDraft: Boolean = false,
         isSending: Boolean = false,
@@ -22,7 +22,7 @@ internal abstract class BaseDraftEditorStateTest {
         return ConversationDraft(
             messageText = messageText,
             subjectText = subjectText,
-            selfParticipantId = ParticipantId(selfParticipantId),
+            selfParticipantId = ParticipantId.fromOrNull(selfParticipantId),
             attachments = attachments.toImmutableList(),
             isCheckingDraft = isCheckingDraft,
             isSending = isSending,

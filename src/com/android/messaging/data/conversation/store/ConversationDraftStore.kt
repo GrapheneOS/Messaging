@@ -30,7 +30,7 @@ internal class ConversationDraftStoreImpl @Inject constructor() : ConversationDr
             conversationId.value,
         ) ?: return null
 
-        return ParticipantId.fromOrNull(conversation.selfId)?.takeIf { it.isNotBlank() }
+        return ParticipantId.fromOrNull(conversation.selfId)
     }
 
     override fun readDraftMessage(

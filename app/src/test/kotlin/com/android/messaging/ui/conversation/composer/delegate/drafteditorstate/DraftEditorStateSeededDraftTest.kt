@@ -37,15 +37,15 @@ internal class DraftEditorStateSeededDraftTest : BaseDraftEditorStateTest() {
     }
 
     @Test
-    fun withSeededDraft_withBlankSelfParticipantId_fallsBackToPersistedSelfParticipantId() {
+    fun withSeededDraft_withoutSelfParticipantId_fallsBackToPersistedSelfParticipantId() {
         val state = loadedState(persistedDraft = draft(selfParticipantId = "sim-persisted"))
-            .withSeededDraft(draft(messageText = "seed", selfParticipantId = "   "))
+            .withSeededDraft(draft(messageText = "seed"))
 
         assertThat(state.effectiveDraft.selfParticipantId).isEqualTo(ParticipantId("sim-persisted"))
     }
 
     @Test
-    fun withSeededDraft_withNonBlankSelfParticipantId_usesSeededSelfParticipantId() {
+    fun withSeededDraft_withSelfParticipantId_usesSeededSelfParticipantId() {
         val state = loadedState(persistedDraft = draft(selfParticipantId = "sim-persisted"))
             .withSeededDraft(draft(messageText = "seed", selfParticipantId = "sim-seed"))
 

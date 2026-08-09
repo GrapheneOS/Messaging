@@ -361,7 +361,6 @@ class ConversationTopAppBarTest {
     private companion object {
         private val presentMetadata = ConversationMetadataUiState.Present(
             title = "Carol",
-            selfParticipantId = ParticipantId("self-participant-id"),
             avatar = ConversationMetadataUiState.Avatar.Single(
                 photoUri = null,
                 normalizedDestination = "+37254400024",

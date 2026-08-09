@@ -48,9 +48,7 @@ internal class ResolveConversationIdImpl @Inject constructor(
                         ) {
                             if (continuation.isActive) {
                                 continuation.resume(
-                                    ResolveConversationIdResult.Resolved(
-                                        conversationId = ConversationId(conversationId),
-                                    ),
+                                    resolveResult(conversationId),
                                 )
                             }
                         }
@@ -70,6 +68,15 @@ internal class ResolveConversationIdImpl @Inject constructor(
                     actionMonitor?.unregister()
                 }
             }
+        }
+    }
+
+    private fun resolveResult(conversationId: String): ResolveConversationIdResult {
+        return when (val resolvedConversationId = ConversationId.fromOrNull(conversationId)) {
+            null -> ResolveConversationIdResult.NotResolved
+            else -> ResolveConversationIdResult.Resolved(
+                conversationId = resolvedConversationId,
+            )
         }
     }
 

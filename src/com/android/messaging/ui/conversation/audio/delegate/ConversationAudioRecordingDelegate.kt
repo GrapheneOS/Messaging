@@ -38,9 +38,9 @@ import kotlinx.coroutines.launch
 internal interface ConversationAudioRecordingDelegate :
     ConversationScreenDelegate<ConversationAudioRecordingUiState> {
 
-    fun startRecording(selfParticipantId: ParticipantId)
+    fun startRecording(selfParticipantId: ParticipantId?)
 
-    fun startLockedRecording(selfParticipantId: ParticipantId)
+    fun startLockedRecording(selfParticipantId: ParticipantId?)
 
     fun lockRecording(): Boolean
 
@@ -83,14 +83,14 @@ internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
         }
     }
 
-    override fun startRecording(selfParticipantId: ParticipantId) {
+    override fun startRecording(selfParticipantId: ParticipantId?) {
         startRecording(
             selfParticipantId = selfParticipantId,
             queuedStartIntent = QueuedStartIntent.None,
         )
     }
 
-    override fun startLockedRecording(selfParticipantId: ParticipantId) {
+    override fun startLockedRecording(selfParticipantId: ParticipantId?) {
         startRecording(
             selfParticipantId = selfParticipantId,
             queuedStartIntent = QueuedStartIntent.Lock,
@@ -98,7 +98,7 @@ internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
     }
 
     private fun startRecording(
-        selfParticipantId: ParticipantId,
+        selfParticipantId: ParticipantId?,
         queuedStartIntent: QueuedStartIntent,
     ) {
         val scope = boundScope ?: return
@@ -367,7 +367,7 @@ internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
 
     private suspend fun startRecordingInBackground(
         scope: CoroutineScope,
-        selfParticipantId: ParticipantId,
+        selfParticipantId: ParticipantId?,
     ) {
         val resolvedMediaRecorder = LevelTrackingMediaRecorder()
         val maxMessageSize = subscriptionsRepository

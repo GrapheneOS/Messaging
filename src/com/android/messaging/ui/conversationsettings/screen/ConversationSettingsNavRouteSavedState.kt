@@ -46,9 +46,10 @@ private fun ConversationSettingsNavRouteSavedState.toRoute(): ConversationSettin
         }
 
         is ConversationSettingsNavRouteSavedState.ParticipantInfo -> {
-            ConversationSettingsNavRoute.ParticipantInfo(
-                conversationId = ConversationId(conversationId),
-            )
+            ConversationId
+                .fromOrNull(conversationId)
+                ?.let(ConversationSettingsNavRoute::ParticipantInfo)
+                ?: ConversationSettingsNavRoute.Conversation
         }
     }
 }

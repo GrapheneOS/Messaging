@@ -37,11 +37,7 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
             .map(::toParticipantUiState)
             .toImmutableList()
         val otherParticipant = participants.singleOrNull()
-
-        val effectiveSelfId = selfIdOverride
-            ?.takeIf { it.isNotBlank() }
-            ?: data.dbSelfParticipantId
-
+        val effectiveSelfId = selfIdOverride ?: data.dbSelfParticipantId
         val selectedSubscription = subscriptions
             .firstOrNull { it.selfParticipantId == effectiveSelfId }
             ?: subscriptions.firstOrNull()

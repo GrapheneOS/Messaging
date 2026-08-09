@@ -132,7 +132,7 @@ internal class ConversationsRepositoryDirectLookupTest : BaseConversationsReposi
     }
 
     @Test
-    fun getConversationSendData_usesMetadataSelfParticipantWhenRequestIsBlank() {
+    fun getConversationSendData_usesMetadataSelfParticipantWhenRequestIsMissing() {
         runTest(
             context = mainDispatcherRule.testDispatcher,
         ) {
@@ -183,7 +183,7 @@ internal class ConversationsRepositoryDirectLookupTest : BaseConversationsReposi
 
             val result = createRepository().getConversationSendData(
                 conversationId = CONVERSATION_ID,
-                requestedSelfParticipantId = ParticipantId(""),
+                requestedSelfParticipantId = null,
             )
 
             assertEquals("metadata-self", result?.selfParticipant?.id)

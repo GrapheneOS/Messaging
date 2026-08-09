@@ -63,6 +63,7 @@ internal abstract class BaseConversationPickerViewModelTest {
 
     protected val simSelectionDelegate = mockk<SimSelectionDelegate>(relaxed = true) {
         every { state } returns simSelectionState
+        every { currentSelectedSelfParticipantId() } returns null
     }
 
     protected val resolveConversationId = mockk<ResolveConversationId>()

@@ -3,7 +3,6 @@ package com.android.messaging.ui.conversation.messages.mapper.conversationmessag
 import android.net.Uri
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
-import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentType
 import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.datamodel.data.MessageData
@@ -65,8 +64,8 @@ internal abstract class BaseConversationMessageUiModelMapperTest {
         senderContactId: Long = 0L,
         senderContactLookupKey: String? = null,
         senderNormalizedDestination: String? = null,
-        senderParticipantId: ParticipantId? = null,
-        selfParticipantId: ParticipantId? = null,
+        senderParticipantId: String? = null,
+        selfParticipantId: String? = null,
         canClusterWithPrevious: Boolean = false,
         canClusterWithNext: Boolean = false,
         canCopyMessageToClipboard: Boolean = false,
@@ -94,8 +93,8 @@ internal abstract class BaseConversationMessageUiModelMapperTest {
         every { mock.senderContactId } returns senderContactId
         every { mock.senderContactLookupKey } returns senderContactLookupKey
         every { mock.senderNormalizedDestination } returns senderNormalizedDestination
-        every { mock.participantId } returns senderParticipantId?.value
-        every { mock.selfParticipantId } returns selfParticipantId?.value
+        every { mock.participantId } returns senderParticipantId
+        every { mock.selfParticipantId } returns selfParticipantId
         every { mock.canClusterWithPreviousMessage } returns canClusterWithPrevious
         every { mock.canClusterWithNextMessage } returns canClusterWithNext
         every { mock.canCopyMessageToClipboard } returns canCopyMessageToClipboard

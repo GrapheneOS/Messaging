@@ -19,7 +19,7 @@ internal class SetConversationSelfParticipantIdImpl @Inject constructor(
         conversationId: ConversationId,
         selfParticipantId: ParticipantId,
     ) {
-        if (conversationId.isBlank() || selfParticipantId.isBlank()) return
+        if (conversationId.isBlank()) return
 
         simSelectionRepository.setSelectedSelfId(
             conversationId = conversationId,

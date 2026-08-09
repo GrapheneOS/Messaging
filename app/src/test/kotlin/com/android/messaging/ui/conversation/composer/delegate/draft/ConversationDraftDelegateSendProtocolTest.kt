@@ -54,7 +54,7 @@ internal class ConversationDraftDelegateSendProtocolTest : BaseConversationDraft
                 coVerify(exactly = 1) {
                     conversationsRepository.getConversationSendData(
                         conversationId = CONVERSATION_ID,
-                        requestedSelfParticipantId = ParticipantId(""),
+                        requestedSelfParticipantId = null,
                     )
                 }
                 verify(exactly = 1) {

@@ -176,38 +176,6 @@ internal class NewChatViewModelConversationResolutionTest : BaseNewChatViewModel
     }
 
     @Test
-    fun resolvedOutcome_afterContactClick_withBlankSelfParticipantId_navigatesWithNull() {
-        runTest(context = mainDispatcherRule.testDispatcher) {
-            val repository = createSubscriptionsRepositoryMock(
-                subscriptions = persistentListOf(subscription(selfParticipantId = "")),
-            )
-            val resolution = createResolutionDelegateMock()
-            val viewModel = createViewModel(
-                subscriptionsRepository = repository,
-                conversationResolutionDelegate = resolution.mock,
-            )
-            advanceUntilIdle()
-
-            viewModel.effects.test {
-                viewModel.onContactClicked(destination = DESTINATION)
-                advanceUntilIdle()
-                resolution.outcomes.emit(
-                    ConversationResolutionOutcome.Resolved(conversationId = CONVERSATION_ID),
-                )
-                advanceUntilIdle()
-                assertEquals(
-                    NewChatEffect.NavigateToConversation(
-                        conversationId = CONVERSATION_ID,
-                        selfParticipantId = null,
-                    ),
-                    awaitItem(),
-                )
-                cancelAndIgnoreRemainingEvents()
-            }
-        }
-    }
-
-    @Test
     fun failedOutcome_emitsConversationCreationFailureMessage() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val resolution = createResolutionDelegateMock()

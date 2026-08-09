@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.StateFlow
 
 internal interface ConversationSettingsScreenDelegate<T> {
     val state: StateFlow<T>
+    val rootConversationId: ConversationId
 
     fun bind(scope: CoroutineScope)
     fun setConversationId(conversationId: ConversationId)

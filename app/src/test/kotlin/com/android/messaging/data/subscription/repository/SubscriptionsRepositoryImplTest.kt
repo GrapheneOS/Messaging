@@ -495,7 +495,7 @@ class SubscriptionsRepositoryImplTest {
     }
 
     @Test
-    fun resolveMaxMessageSize_returnsGlobalFallbackWhenSelfParticipantIdIsBlank() {
+    fun resolveMaxMessageSize_returnsGlobalFallbackWhenSelfParticipantIdIsMissing() {
         runTest(
             context = mainDispatcherRule.testDispatcher
         ) {
@@ -504,7 +504,7 @@ class SubscriptionsRepositoryImplTest {
 
             val repository = createRepository()
 
-            repository.resolveMaxMessageSize(selfParticipantId = ParticipantId("")).test {
+            repository.resolveMaxMessageSize(selfParticipantId = null).test {
                 assertEquals(456_000, awaitItem())
                 cancelAndIgnoreRemainingEvents()
             }

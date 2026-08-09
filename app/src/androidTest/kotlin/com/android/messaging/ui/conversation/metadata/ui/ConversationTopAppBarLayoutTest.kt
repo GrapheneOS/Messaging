@@ -41,7 +41,6 @@ internal class ConversationTopAppBarTest {
 private fun conversationMetadata(): ConversationMetadataUiState {
     return ConversationMetadataUiState.Present(
         title = "+372 5440 0024",
-        selfParticipantId = ParticipantId("self-participant-id"),
         avatar = ConversationMetadataUiState.Avatar.Single(
             photoUri = null,
             normalizedDestination = null,

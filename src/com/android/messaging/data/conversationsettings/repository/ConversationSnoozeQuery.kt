@@ -8,10 +8,12 @@ object ConversationSnoozeQuery {
 
     @JvmStatic
     fun isConversationSnoozed(conversationId: String): Boolean {
+        val resolvedConversationId = ConversationId.fromOrNull(conversationId) ?: return false
         val context = Factory.get().applicationContext
+
         return EntryPointAccessors
             .fromApplication(context, ConversationNotificationRepository.Provider::class.java)
             .conversationNotificationRepository()
-            .isSnoozed(ConversationId(conversationId))
+            .isSnoozed(resolvedConversationId)
     }
 }
