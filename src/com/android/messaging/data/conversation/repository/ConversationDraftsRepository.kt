@@ -249,10 +249,6 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
         message: MessageData,
         selfParticipantId: ParticipantId,
     ): MessageData {
-        if (selfParticipantId.isBlank()) {
-            return message
-        }
-
         if (message.selfId == null) {
             message.bindSelfId(selfParticipantId.value)
         }

@@ -312,10 +312,7 @@ class ConversationDraftsRepositoryImplTest {
 
             repository.saveDraft(
                 conversationId = CONVERSATION_ID,
-                draft = ConversationDraft(
-                    messageText = "Hello",
-                    selfParticipantId = ParticipantId(""),
-                ),
+                draft = ConversationDraft(messageText = "Hello"),
             )
 
             assertEquals("self-1", updatedMessage.captured.selfId)
@@ -337,10 +334,7 @@ class ConversationDraftsRepositoryImplTest {
 
             repository.saveDraft(
                 conversationId = CONVERSATION_ID,
-                draft = ConversationDraft(
-                    messageText = "Hello",
-                    selfParticipantId = ParticipantId(""),
-                ),
+                draft = ConversationDraft(messageText = "Hello"),
             )
 
             verify(exactly = 0) {

@@ -49,9 +49,14 @@ internal class TargetsRepositoryImpl @Inject constructor(
                 val item = ConversationListItemData()
                 while (it.moveToNext()) {
                     item.bind(it)
+
+                    val conversationId = ConversationId
+                        .fromOrNull(item.conversationId)
+                        ?: continue
+
                     add(
                         TargetConversation(
-                            conversationId = ConversationId(item.conversationId),
+                            conversationId = conversationId,
                             name = item.name.orEmpty(),
                             icon = item.icon,
                             normalizedDestination = item.otherParticipantNormalizedDestination,

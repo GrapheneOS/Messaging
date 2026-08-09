@@ -141,7 +141,6 @@ class ConversationTopAppBarSimSelectorTest {
         setContent(
             metadata = ConversationMetadataUiState.Present(
                 title = "Weekend plan",
-                selfParticipantId = ParticipantId("self-1"),
                 avatar = ConversationMetadataUiState.Avatar.Group,
                 participantCount = 3,
                 otherParticipantDisplayDestination = null,
@@ -188,7 +187,6 @@ class ConversationTopAppBarSimSelectorTest {
     private companion object {
         private val presentMetadata = ConversationMetadataUiState.Present(
             title = "Carol",
-            selfParticipantId = ParticipantId("self-1"),
             avatar = ConversationMetadataUiState.Avatar.Single(
                 photoUri = null,
                 normalizedDestination = TEST_CALL_ACTION_PHONE_NUMBER,

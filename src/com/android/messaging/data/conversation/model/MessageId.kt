@@ -17,7 +17,7 @@ internal value class MessageId(
 
     companion object {
         fun fromOrNull(value: String?): MessageId? {
-            return value?.let(::MessageId)
+            return value?.takeIf { it.isNotBlank() }?.let(::MessageId)
         }
     }
 }

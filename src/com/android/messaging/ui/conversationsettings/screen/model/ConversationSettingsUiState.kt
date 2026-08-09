@@ -9,13 +9,13 @@ import kotlinx.collections.immutable.persistentListOf
 
 @Immutable
 internal data class ConversationSettingsUiState(
-    val conversationId: ConversationId = ConversationId(""),
+    val conversationId: ConversationId,
     val conversationTitle: String = "",
     val isArchived: Boolean = false,
     val isSnoozed: Boolean = false,
     val participants: ImmutableList<ParticipantUiState> = persistentListOf(),
     val otherParticipant: ParticipantUiState? = null,
-    val selfParticipantId: ParticipantId = ParticipantId(""),
+    val selfParticipantId: ParticipantId? = null,
     val availableSubscriptions: ImmutableList<Subscription> = persistentListOf(),
     val selectedSubscription: Subscription? = null,
     val isSimSwitchAvailable: Boolean = false,

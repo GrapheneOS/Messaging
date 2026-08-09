@@ -556,7 +556,6 @@ internal class ConversationViewModel @Inject constructor(
     }
 
     override fun onSimSelected(selfParticipantId: ParticipantId) {
-        if (selfParticipantId.isBlank()) return
         val conversationId = conversationIdFlow.value?.takeIf { it.isNotBlank() } ?: return
 
         conversationDraftDelegate.onSelfParticipantIdChanged(

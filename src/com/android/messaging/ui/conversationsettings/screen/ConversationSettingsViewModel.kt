@@ -1,13 +1,11 @@
 package com.android.messaging.ui.conversationsettings.screen
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.domain.conversation.usecase.participant.ResolveConversationId
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveConversationIdResult
-import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversationsettings.screen.delegate.ConversationSettingsDelegate
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsAction as Action
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsNavEvent as NavEvent
@@ -38,7 +36,6 @@ internal interface ConversationSettingsScreenModel {
 
 @HiltViewModel
 internal class ConversationSettingsViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
     private val delegate: ConversationSettingsDelegate,
     private val resolveConversationId: ResolveConversationId,
 ) : ViewModel(),
@@ -52,14 +49,11 @@ internal class ConversationSettingsViewModel @Inject constructor(
 
     override val uiState: StateFlow<State> = delegate.state
 
-    override val rootConversationId: ConversationId = requireNotNull(
-        ConversationId.fromOrNull(savedStateHandle[UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID]),
-    ) { "conversationId is required" }
+    override val rootConversationId: ConversationId = delegate.rootConversationId
 
     private var resolveConversationJob: Job? = null
 
     init {
-        delegate.setConversationId(rootConversationId)
         delegate.bind(viewModelScope)
     }
 

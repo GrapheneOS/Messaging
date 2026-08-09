@@ -9,7 +9,7 @@ import kotlinx.collections.immutable.persistentListOf
 internal data class ConversationDraft(
     val messageText: String = "",
     val subjectText: String = "",
-    val selfParticipantId: ParticipantId = ParticipantId(""),
+    val selfParticipantId: ParticipantId? = null,
     val attachments: ImmutableList<ConversationDraftAttachment> = persistentListOf(),
     val isCheckingDraft: Boolean = false,
     val isSending: Boolean = false,

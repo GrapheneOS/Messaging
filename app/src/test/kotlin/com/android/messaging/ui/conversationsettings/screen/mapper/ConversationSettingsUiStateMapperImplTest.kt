@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationsettings.screen.mapper
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationsettings.model.ConversationSettingsData
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
@@ -51,12 +52,18 @@ internal class ConversationSettingsUiStateMapperImplTest {
         }
 
         return mapper
-            .map(ConversationSettingsData(participants = persistentListOf(participant)))
+            .map(
+                ConversationSettingsData(
+                    conversationId = CONVERSATION_ID,
+                    participants = persistentListOf(participant),
+                ),
+            )
             .participants
             .single()
     }
 
     private companion object {
+        private val CONVERSATION_ID = ConversationId("conversation-1")
         private const val DESTINATION = "+15550123"
         private const val FULL_NAME = "Ada Lovelace"
     }

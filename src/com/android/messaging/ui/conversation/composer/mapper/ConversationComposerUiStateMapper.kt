@@ -132,7 +132,7 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
 
     private fun buildSimSelectorUiState(
         subscriptions: ImmutableList<Subscription>,
-        selfParticipantId: ParticipantId,
+        selfParticipantId: ParticipantId?,
         areSubscriptionsLoaded: Boolean,
         defaultSmsSubscriptionId: SubId,
     ): ConversationSimSelectorUiState {

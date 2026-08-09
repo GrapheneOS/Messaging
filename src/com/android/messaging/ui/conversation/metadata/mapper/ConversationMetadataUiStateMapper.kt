@@ -27,7 +27,6 @@ internal class ConversationMetadataUiStateMapperImpl @Inject constructor() :
 
         return ConversationMetadataUiState.Present(
             title = metadata.conversationName,
-            selfParticipantId = metadata.selfParticipantId,
             avatar = avatar,
             participantCount = metadata.participantCount,
             otherParticipantDisplayDestination = metadata.otherParticipantDisplayDestination,

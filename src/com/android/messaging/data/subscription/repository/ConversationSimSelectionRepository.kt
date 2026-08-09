@@ -38,16 +38,16 @@ internal class ConversationSimSelectionRepositoryImpl @Inject constructor() :
         if (conversationId.isBlank()) return null
 
         val prefs = BuglePrefs.getApplicationPrefs()
-        return ParticipantId
-            .fromOrNull(prefs.getString(prefKey(conversationId), null))
-            ?.takeIf { it.isNotBlank() }
+        return ParticipantId.fromOrNull(
+            prefs.getString(prefKey(conversationId), null)
+        )
     }
 
     override fun setSelectedSelfId(
         conversationId: ConversationId,
         selfId: ParticipantId,
     ) {
-        if (conversationId.isBlank() || selfId.isBlank()) return
+        if (conversationId.isBlank()) return
 
         val prefs = BuglePrefs.getApplicationPrefs()
         prefs.putString(prefKey(conversationId), selfId.value)

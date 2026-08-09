@@ -27,16 +27,17 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor(
 ) : ConversationMessageUiModelMapper {
 
     override fun map(data: ConversationMessageData): ConversationMessageUiModel? {
-        val messageId = data.messageId?.takeIf { it.isNotBlank() }
-        val conversationId = data.conversationId?.takeIf { it.isNotBlank() }
+        val messageId = MessageId.fromOrNull(data.messageId)
+        val conversationId = ConversationId.fromOrNull(data.conversationId)
 
         if (messageId == null || conversationId == null) {
+            LogUtil.e(LOG_TAG, "Dropping conversation message with missing ids")
             return null
         }
 
         return ConversationMessageUiModel(
-            messageId = MessageId(messageId),
-            conversationId = ConversationId(conversationId),
+            messageId = messageId,
+            conversationId = conversationId,
             text = data.text,
             parts = data
                 .parts
@@ -59,12 +60,8 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor(
             senderContactLookupKey = data.senderContactLookupKey,
             senderNormalizedDestination = data.senderNormalizedDestination
                 ?.takeIf { it.isNotBlank() },
-            senderParticipantId = ParticipantId
-                .fromOrNull(data.participantId)
-                ?.takeIf { it.isNotBlank() },
-            selfParticipantId = ParticipantId
-                .fromOrNull(data.selfParticipantId)
-                ?.takeIf { it.isNotBlank() },
+            senderParticipantId = ParticipantId.fromOrNull(data.participantId),
+            selfParticipantId = ParticipantId.fromOrNull(data.selfParticipantId),
             canClusterWithPrevious = data.canClusterWithPreviousMessage,
             canClusterWithNext = data.canClusterWithNextMessage,
             canCopyMessageToClipboard = data.canCopyMessageToClipboard,

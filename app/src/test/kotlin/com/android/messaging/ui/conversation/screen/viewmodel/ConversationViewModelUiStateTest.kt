@@ -52,7 +52,6 @@ internal class ConversationViewModelUiStateTest : BaseConversationViewModelTest(
 
             val metadataState = ConversationMetadataUiState.Present(
                 title = "Weekend plan",
-                selfParticipantId = ParticipantId("self-1"),
                 avatar = ConversationMetadataUiState.Avatar.Single(
                     photoUri = null,
                     normalizedDestination = null,
@@ -138,7 +137,6 @@ internal class ConversationViewModelUiStateTest : BaseConversationViewModelTest(
 
                 metadataDelegate.stateFlow.value = ConversationMetadataUiState.Present(
                     title = "Weekend plan",
-                    selfParticipantId = ParticipantId("self-1"),
                     avatar = ConversationMetadataUiState.Avatar.Single(
                         photoUri = null,
                         normalizedDestination = null,
@@ -180,7 +178,6 @@ internal class ConversationViewModelUiStateTest : BaseConversationViewModelTest(
 
             metadataDelegate.stateFlow.value = ConversationMetadataUiState.Present(
                 title = "Weekend plan",
-                selfParticipantId = ParticipantId("self-1"),
                 avatar = ConversationMetadataUiState.Avatar.Group,
                 participantCount = 2,
                 otherParticipantDisplayDestination = null,
@@ -214,7 +211,6 @@ internal class ConversationViewModelUiStateTest : BaseConversationViewModelTest(
 
             metadataDelegate.stateFlow.value = ConversationMetadataUiState.Present(
                 title = "Weekend plan",
-                selfParticipantId = ParticipantId("self-1"),
                 avatar = ConversationMetadataUiState.Avatar.Group,
                 participantCount = 10,
                 otherParticipantDisplayDestination = null,

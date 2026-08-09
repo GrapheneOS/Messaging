@@ -52,7 +52,7 @@ internal interface SubscriptionsRepository {
 
     fun resolveAttachmentLimit(): Int
 
-    fun resolveMaxMessageSize(selfParticipantId: ParticipantId): Flow<Int>
+    fun resolveMaxMessageSize(selfParticipantId: ParticipantId?): Flow<Int>
 }
 
 internal class SubscriptionsRepositoryImpl @Inject constructor(
@@ -140,7 +140,7 @@ internal class SubscriptionsRepositoryImpl @Inject constructor(
             )
     }
 
-    override fun resolveMaxMessageSize(selfParticipantId: ParticipantId): Flow<Int> {
+    override fun resolveMaxMessageSize(selfParticipantId: ParticipantId?): Flow<Int> {
         return typedFlow {
             resolveSubscriptionId(selfParticipantId = selfParticipantId)
         }
@@ -294,8 +294,8 @@ internal class SubscriptionsRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun resolveSubscriptionId(selfParticipantId: ParticipantId): Int? {
-        if (selfParticipantId.isBlank()) {
+    private fun resolveSubscriptionId(selfParticipantId: ParticipantId?): Int? {
+        if (selfParticipantId == null) {
             return null
         }
 

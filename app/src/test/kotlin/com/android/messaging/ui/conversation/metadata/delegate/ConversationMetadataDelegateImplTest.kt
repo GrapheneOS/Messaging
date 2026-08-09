@@ -258,7 +258,6 @@ class ConversationMetadataDelegateImplTest {
             val metadata = firstArg<ConversationMetadata>()
             ConversationMetadataUiState.Present(
                 title = "Carol",
-                selfParticipantId = ParticipantId("self-1"),
                 avatar = ConversationMetadataUiState.Avatar.Single(
                     photoUri = metadata.otherParticipantPhotoUri,
                     normalizedDestination = metadata.otherParticipantNormalizedDestination,

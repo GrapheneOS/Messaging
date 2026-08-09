@@ -40,7 +40,6 @@ class ConversationMetadataUiStateMapperImplTest {
         assertThat(result).isEqualTo(
             ConversationMetadataUiState.Present(
                 title = "Carol",
-                selfParticipantId = ParticipantId("self-1"),
                 avatar = ConversationMetadataUiState.Avatar.Single(
                     photoUri = "content://contacts/people/1/photo",
                     normalizedDestination = TEST_CALL_ACTION_PHONE_NUMBER,

@@ -57,13 +57,10 @@ class ConversationDraftMessageDataMapperImplTest {
     }
 
     @Test
-    fun map_keepsSelfAndParticipantUnsetWhenSelfParticipantIdIsBlank() {
+    fun map_keepsSelfAndParticipantUnsetWhenSelfParticipantIdIsMissing() {
         val message = mapper.map(
             conversationId = CONVERSATION_ID,
-            draft = ConversationDraft(
-                messageText = "Hello",
-                selfParticipantId = ParticipantId(""),
-            ),
+            draft = ConversationDraft(messageText = "Hello"),
         )
 
         assertNull(message.selfId)

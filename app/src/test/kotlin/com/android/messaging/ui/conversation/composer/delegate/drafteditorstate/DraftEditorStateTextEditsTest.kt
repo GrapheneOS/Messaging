@@ -80,13 +80,6 @@ internal class DraftEditorStateTextEditsTest : BaseDraftEditorStateTest() {
     }
 
     @Test
-    fun withSelfParticipantId_withBlankId_returnsSameState() {
-        val state = loadedState(persistedDraft = draft(selfParticipantId = "sim-1"))
-
-        assertSame(state, state.withSelfParticipantId(ParticipantId("   ")))
-    }
-
-    @Test
     fun withSelfParticipantId_whenIdMatchesEffectiveDraft_returnsSameState() {
         val state = loadedState(persistedDraft = draft(selfParticipantId = "sim-1"))
 

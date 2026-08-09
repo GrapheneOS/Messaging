@@ -55,7 +55,7 @@ internal interface ConversationsRepository {
 
     suspend fun getConversationSendData(
         conversationId: ConversationId,
-        requestedSelfParticipantId: ParticipantId,
+        requestedSelfParticipantId: ParticipantId?,
     ): ConversationSendData?
 
     suspend fun getConversationMessage(
@@ -147,7 +147,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
 
     override suspend fun getConversationSendData(
         conversationId: ConversationId,
-        requestedSelfParticipantId: ParticipantId,
+        requestedSelfParticipantId: ParticipantId?,
     ): ConversationSendData? {
         return withContext(context = messagingDbDispatcher) {
             val metadata = when {
@@ -161,7 +161,6 @@ internal class ConversationsRepositoryImpl @Inject constructor(
 
             metadata?.let { conversationMetadata ->
                 val resolvedSelfParticipantId = requestedSelfParticipantId
-                    .takeIf { it.isNotBlank() }
                     ?: conversationMetadata.selfParticipantId
 
                 ConversationSendData(
@@ -289,7 +288,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
         conversationId: ConversationId,
         selfId: ParticipantId,
     ) {
-        if (conversationId.isBlank() || selfId.isBlank()) return
+        if (conversationId.isBlank()) return
 
         withContext(context = messagingDbDispatcher) {
             conversationSelfIdStore.updateSelfId(
@@ -364,7 +363,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
 
                 ConversationMetadata(
                     conversationName = cursor.getStringOrEmpty(ConversationColumns.NAME),
-                    selfParticipantId = ParticipantId(
+                    selfParticipantId = ParticipantId.fromOrNull(
                         cursor.getStringOrEmpty(ConversationColumns.CURRENT_SELF_ID),
                     ),
                     isGroupConversation = participantCount > 1,
@@ -451,7 +450,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
     private fun queryParticipant(
         participantId: ParticipantId?,
     ): ParticipantData? {
-        if (participantId == null || participantId.isBlank()) {
+        if (participantId == null) {
             return null
         }
 

@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationsettings.screen.delegate
 
+import androidx.lifecycle.SavedStateHandle
 import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepository
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.ParticipantId
@@ -12,6 +13,7 @@ import com.android.messaging.data.subscription.repository.SubscriptionsRepositor
 import com.android.messaging.datamodel.ParticipantRefresh
 import com.android.messaging.di.core.ApplicationCoroutineScope
 import com.android.messaging.domain.conversationsettings.usecase.SetConversationSelfParticipantId
+import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversationsettings.common.ConversationSettingsScreenDelegate
 import com.android.messaging.ui.conversationsettings.screen.mapper.ConversationSettingsUiStateMapper
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState
@@ -24,7 +26,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -50,14 +51,19 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
     private val blockedParticipantsRepository: BlockedParticipantsRepository,
     private val setConversationSelfParticipantId: SetConversationSelfParticipantId,
     @param:ApplicationCoroutineScope private val applicationScope: CoroutineScope,
+    savedStateHandle: SavedStateHandle,
 ) : ConversationSettingsDelegate {
 
-    private val _state = MutableStateFlow(ConversationSettingsUiState())
+    override val rootConversationId: ConversationId = requireNotNull(
+        ConversationId.fromOrNull(savedStateHandle[UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID]),
+    ) { "conversationId is required" }
+
+    private val _state = MutableStateFlow(ConversationSettingsUiState(rootConversationId))
     override val state: StateFlow<ConversationSettingsUiState> = _state.asStateFlow()
 
     private val refreshTriggers = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
-    private val conversationIdFlow = MutableStateFlow<ConversationId?>(null)
+    private val conversationIdFlow = MutableStateFlow(rootConversationId)
     private var isBound = false
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -66,7 +72,6 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
         isBound = true
 
         conversationIdFlow
-            .filterNotNull()
             .flatMapLatest(::observeUiState)
             .onEach { _state.value = it }
             .launchIn(scope)
@@ -102,22 +107,19 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
     }
 
     override fun setDestinationBlocked(blocked: Boolean) {
-        val normalizedDestination = _state.value.otherParticipant?.normalizedDestination
-        val conversationId = currentConversationId()
-
-        if (normalizedDestination == null || conversationId == null) return
+        val normalizedDestination = _state.value.otherParticipant?.normalizedDestination ?: return
 
         applicationScope.launch {
             blockedParticipantsRepository.setDestinationBlocked(
                 destination = normalizedDestination,
-                conversationId = conversationId,
+                conversationId = currentConversationId(),
                 isBlocked = blocked,
             )
         }
     }
 
     override fun setArchived(archived: Boolean) {
-        val conversationId = currentConversationId() ?: return
+        val conversationId = currentConversationId()
 
         applicationScope.launch {
             when {
@@ -129,29 +131,26 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
 
     override fun setSelfParticipantId(selfParticipantId: ParticipantId) {
         if (_state.value.selfParticipantId == selfParticipantId) return
-        val conversationId = currentConversationId() ?: return
 
         applicationScope.launch {
             setConversationSelfParticipantId(
-                conversationId = conversationId,
+                conversationId = currentConversationId(),
                 selfParticipantId = selfParticipantId,
             )
         }
     }
 
     override fun snooze(option: SnoozeOption) {
-        val conversationId = currentConversationId() ?: return
-        notificationRepository.snooze(conversationId, option)
+        notificationRepository.snooze(currentConversationId(), option)
         refresh()
     }
 
     override fun unsnooze() {
-        val conversationId = currentConversationId() ?: return
-        notificationRepository.clearSnooze(conversationId)
+        notificationRepository.clearSnooze(currentConversationId())
         refresh()
     }
 
-    private fun currentConversationId(): ConversationId? {
-        return conversationIdFlow.value?.takeIf { it.isNotBlank() }
+    private fun currentConversationId(): ConversationId {
+        return conversationIdFlow.value
     }
 }

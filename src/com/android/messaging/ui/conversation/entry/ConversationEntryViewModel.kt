@@ -51,8 +51,7 @@ internal class ConversationEntryViewModel @Inject constructor(
         updateUiState(
             _uiState.value.copy(
                 conversationId = conversationId,
-                pendingSelfParticipantId = pendingSelfParticipantId
-                    ?.takeIf { it.isNotBlank() },
+                pendingSelfParticipantId = pendingSelfParticipantId,
             ),
         )
     }

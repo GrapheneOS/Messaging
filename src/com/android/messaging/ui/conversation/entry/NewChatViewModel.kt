@@ -251,9 +251,6 @@ internal class NewChatViewModel @Inject constructor(
     }
 
     private fun onConversationResolved(conversationId: ConversationId) {
-        val pendingSelf = pendingSelfParticipantId?.takeUnless { it.isBlank() }
-        pendingSelfParticipantId = null
-
         updateLocalUiState(
             localUiState.value.copy(isCreatingGroup = false),
         )
@@ -263,9 +260,11 @@ internal class NewChatViewModel @Inject constructor(
         sendEffect(
             effect = NewChatEffect.NavigateToConversation(
                 conversationId = conversationId,
-                selfParticipantId = pendingSelf,
+                selfParticipantId = pendingSelfParticipantId,
             ),
         )
+
+        pendingSelfParticipantId = null
     }
 
     private fun startConversationResolution(

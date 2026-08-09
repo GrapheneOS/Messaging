@@ -25,21 +25,20 @@ internal class ConversationDraftMessageDataMapperImpl @Inject constructor() :
         draft: ConversationDraft,
         forceMms: Boolean,
     ): MessageData {
-        val selfParticipantId = draft.selfParticipantId.takeIf { it.isNotBlank() }
         val messageParts = draft.attachments.mapNotNull(::createMessagePartDataOrNull)
         val isMms = forceMms || draft.subjectText.isNotBlank() || messageParts.isNotEmpty()
 
         val message = when {
             isMms -> MessageData.createDraftMmsMessage(
                 conversationId.value,
-                selfParticipantId?.value,
+                draft.selfParticipantId?.value,
                 draft.messageText,
                 draft.subjectText,
             )
 
             else -> MessageData.createDraftSmsMessage(
                 conversationId.value,
-                selfParticipantId?.value,
+                draft.selfParticipantId?.value,
                 draft.messageText,
             )
         }

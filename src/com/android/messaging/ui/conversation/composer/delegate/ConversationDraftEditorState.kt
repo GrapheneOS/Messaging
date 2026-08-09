@@ -86,7 +86,6 @@ internal data class DraftEditorState(
     fun withSelfParticipantId(selfParticipantId: ParticipantId): DraftEditorState {
         return when {
             conversationId == null -> this
-            selfParticipantId.isBlank() -> this
             effectiveDraft.selfParticipantId == selfParticipantId -> this
 
             else -> {
@@ -103,10 +102,7 @@ internal data class DraftEditorState(
         }
 
         val normalizedDraft = draft.copy(
-            selfParticipantId = when {
-                draft.selfParticipantId.isBlank() -> persistedDraft.selfParticipantId
-                else -> draft.selfParticipantId
-            },
+            selfParticipantId = draft.selfParticipantId ?: persistedDraft.selfParticipantId,
         )
 
         return copyWithNormalizedLocalEdits(
@@ -532,7 +528,7 @@ private fun createConversationDraftEdits(
     return ConversationDraftEdits(
         messageText = targetDraft.messageText.takeIf { it != baseDraft.messageText },
         subjectText = targetDraft.subjectText.takeIf { it != baseDraft.subjectText },
-        selfParticipantId = targetDraft.selfParticipantId.takeIf {
+        selfParticipantId = targetDraft.selfParticipantId?.takeIf {
             it != baseDraft.selfParticipantId
         },
         attachments = targetDraft.attachments.takeIf { it != baseDraft.attachments },

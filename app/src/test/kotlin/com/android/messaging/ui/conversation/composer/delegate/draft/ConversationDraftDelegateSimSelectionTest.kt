@@ -144,7 +144,7 @@ internal class ConversationDraftDelegateSimSelectionTest {
         delegate.onSendClick()
         runCurrent()
 
-        assertThat(sentDraft.captured.selfParticipantId).isEqualTo(ParticipantId(""))
+        assertThat(sentDraft.captured.selfParticipantId).isNull()
     }
 
     private fun TestScope.createDelegate(): ConversationDraftDelegateImpl {

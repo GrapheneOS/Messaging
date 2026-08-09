@@ -93,7 +93,7 @@ internal class ConversationSettingsRepositoryImpl @Inject constructor(
             isArchived = metadata?.isArchived ?: false,
             isSnoozed = notificationRepository.isSnoozed(conversationId),
             participants = participants.toImmutableList(),
-            dbSelfParticipantId = metadata?.selfParticipantId ?: ParticipantId(""),
+            dbSelfParticipantId = metadata?.selfParticipantId,
         )
     }
 

@@ -97,7 +97,6 @@ internal fun previewMetadata(
 ): ConversationMetadataUiState.Present {
     return ConversationMetadataUiState.Present(
         title = title,
-        selfParticipantId = ParticipantId("self-1"),
         avatar = ConversationMetadataUiState.Avatar.Single(
             photoUri = null,
             normalizedDestination = null,
@@ -116,7 +115,6 @@ internal fun previewMetadata(
 internal fun previewGroupMetadata(): ConversationMetadataUiState.Present {
     return ConversationMetadataUiState.Present(
         title = "Project group",
-        selfParticipantId = ParticipantId("self-1"),
         avatar = ConversationMetadataUiState.Avatar.Group,
         participantCount = 4,
         otherParticipantDisplayDestination = null,

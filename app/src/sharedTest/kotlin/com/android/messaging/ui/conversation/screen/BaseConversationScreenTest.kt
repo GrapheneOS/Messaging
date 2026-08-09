@@ -117,7 +117,6 @@ internal abstract class BaseConversationScreenTest {
             isDeleteConversationConfirmationVisible = isDeleteConversationConfirmationVisible,
             metadata = ConversationMetadataUiState.Present(
                 title = "Weekend plan",
-                selfParticipantId = ParticipantId("self-1"),
                 avatar = ConversationMetadataUiState.Avatar.Single(
                     photoUri = null,
                     normalizedDestination = null,

@@ -40,8 +40,8 @@ internal class ConversationMessageUiModelMapperMappingTest :
                 senderContactId = 42L,
                 senderContactLookupKey = "lookup-7",
                 senderNormalizedDestination = "+15550100",
-                senderParticipantId = ParticipantId("participant-7"),
-                selfParticipantId = ParticipantId("self-7"),
+                senderParticipantId = "participant-7",
+                selfParticipantId = "self-7",
                 canClusterWithPrevious = true,
                 canClusterWithNext = false,
                 canCopyMessageToClipboard = true,
@@ -111,8 +111,8 @@ internal class ConversationMessageUiModelMapperMappingTest :
         val uiModel = mapPresent(
             messageData(
                 senderNormalizedDestination = "   ",
-                senderParticipantId = ParticipantId(""),
-                selfParticipantId = ParticipantId(" "),
+                senderParticipantId = "",
+                selfParticipantId = " ",
             ),
         )
 
