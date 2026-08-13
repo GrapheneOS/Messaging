@@ -128,7 +128,7 @@ class ShareIntentActivity : BugleComponentActivity() {
 
     private fun redirectToSendToIfNeeded(): Boolean {
         val hasNoDestination = intent.getStringExtra(EXTRA_ADDRESS).isNullOrEmpty() &&
-            intent.getStringExtra(Intent.EXTRA_EMAIL).isNullOrEmpty()
+            intent.getStringArrayExtra(Intent.EXTRA_EMAIL).isNullOrEmpty()
 
         if (Intent.ACTION_SEND != intent.action || hasNoDestination) {
             return false

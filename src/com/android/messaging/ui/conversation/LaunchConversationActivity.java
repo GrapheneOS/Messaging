@@ -71,12 +71,13 @@ public class LaunchConversationActivity extends Activity implements
                 recipients = commaSeparatedRecipients.split(",");
             }
             final boolean haveAddress = !TextUtils.isEmpty(intent.getStringExtra(ADDRESS));
-            final boolean haveEmail = !TextUtils.isEmpty(intent.getStringExtra(Intent.EXTRA_EMAIL));
+            final String[] emails = intent.getStringArrayExtra(Intent.EXTRA_EMAIL);
+            final boolean haveEmail = emails != null && emails.length > 0;
             if (recipients == null && (haveAddress || haveEmail)) {
                 if (haveAddress) {
                     recipients = new String[] { intent.getStringExtra(ADDRESS) };
                 } else {
-                    recipients = new String[] { intent.getStringExtra(Intent.EXTRA_EMAIL) };
+                    recipients = emails;
                 }
             }
             if (recipients != null) {
