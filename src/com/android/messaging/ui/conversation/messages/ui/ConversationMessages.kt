@@ -86,6 +86,7 @@ internal fun ConversationMessages(
     onMessageLongClick: (String) -> Unit,
     onMessageResendClick: (String) -> Unit,
     onSimSelectorClick: () -> Unit = {},
+    onPhoneNumberCopy: (String) -> Unit = {},
 ) {
     val configuration = LocalConfiguration.current
     val displayMessages = remember(messages) {
@@ -134,6 +135,7 @@ internal fun ConversationMessages(
             onMessageDownloadClick = onMessageDownloadClick,
             onMessageLongClick = onMessageLongClick,
             onMessageResendClick = onMessageResendClick,
+            onPhoneNumberCopy = onPhoneNumberCopy,
             onSimSelectorClick = onSimSelectorClick,
         )
     }
@@ -154,6 +156,7 @@ private fun LazyListScope.conversationMessageItems(
     onMessageDownloadClick: (String) -> Unit,
     onMessageLongClick: (String) -> Unit,
     onMessageResendClick: (String) -> Unit,
+    onPhoneNumberCopy: (String) -> Unit,
     onSimSelectorClick: () -> Unit,
 ) {
     itemsIndexed(
@@ -185,6 +188,7 @@ private fun LazyListScope.conversationMessageItems(
             onMessageDownloadClick = onMessageDownloadClick,
             onMessageLongClick = onMessageLongClick,
             onMessageResendClick = onMessageResendClick,
+            onPhoneNumberCopy = onPhoneNumberCopy,
             onSimSelectorClick = onSimSelectorClick,
         )
     }
@@ -306,6 +310,7 @@ private fun ConversationMessagesItem(
     onMessageDownloadClick: (String) -> Unit,
     onMessageLongClick: (String) -> Unit,
     onMessageResendClick: (String) -> Unit,
+    onPhoneNumberCopy: (String) -> Unit,
     onSimSelectorClick: () -> Unit,
 ) {
     val presentation = rememberConversationMessagesItemPresentation(
@@ -353,6 +358,7 @@ private fun ConversationMessagesItem(
             onMessageResendClick = {
                 onMessageResendClick(message.messageId)
             },
+            onPhoneNumberCopy = onPhoneNumberCopy,
             onSimSelectorClick = onSimSelectorClick,
         )
     }

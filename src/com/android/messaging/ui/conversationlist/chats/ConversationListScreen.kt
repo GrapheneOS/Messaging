@@ -408,6 +408,7 @@ private fun ConversationListScaffold(
                 isSelectionMode = isSelectionMode,
                 fabBottomReserve = FabBottomReserve,
                 pinAnimationController = pinAnimationController,
+                phoneNumberCopyTargets = uiState.phoneNumberCopyTargets,
             )
 
             ConversationListFabs(

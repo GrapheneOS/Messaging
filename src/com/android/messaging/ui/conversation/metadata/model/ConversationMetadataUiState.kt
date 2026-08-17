@@ -3,6 +3,8 @@ package com.android.messaging.ui.conversation.metadata.model
 import androidx.compose.runtime.Immutable
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerDisabledReason
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 @Immutable
 internal sealed interface ConversationMetadataUiState {
@@ -40,7 +42,14 @@ internal sealed interface ConversationMetadataUiState {
         val isArchived: Boolean,
         val isBlocked: Boolean,
         override val composerAvailability: ConversationComposerAvailability,
+        val phoneNumberCopyTargets: ImmutableList<PhoneNumberCopyTarget> = persistentListOf(),
     ) : ConversationMetadataUiState
+
+    @Immutable
+    data class PhoneNumberCopyTarget(
+        val displayName: String,
+        val phoneNumber: String,
+    )
 
     @Immutable
     data object Unavailable : ConversationMetadataUiState {
