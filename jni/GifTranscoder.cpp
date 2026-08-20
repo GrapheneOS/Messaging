@@ -58,7 +58,7 @@ constexpr int square(int a) noexcept {
 }
 
 // GIF does not support partial transparency, so our alpha channels are always 0x0 or 0xff.
-constexpr ColorARGB TRANSPARENT = 0x0;
+constexpr ColorARGB kTransparent = 0x0;
 
 [[nodiscard]]
 constexpr uint8_t alpha(ColorARGB color) noexcept {
@@ -86,9 +86,9 @@ constexpr ColorARGB makeColorARGB(uint8_t a, uint8_t r, uint8_t g, uint8_t b) no
            (static_cast<ColorARGB>(g) << 8) | static_cast<ColorARGB>(b);
 }
 
-constexpr uint32_t MAX_COLOR_DISTANCE = 255 * 255 * 255;
+constexpr uint32_t kMaxColorDistance = 255 * 255 * 255;
 
-constexpr size_t GIF_MAX_AREA = 4LL * 1024 * 1024;
+constexpr size_t kGifMaxArea = 4LL * 1024 * 1024;
 
 // A monotonically increasing timestamp in milliseconds, for measuring elapsed durations.
 [[nodiscard]]
@@ -153,7 +153,7 @@ bool GifTranscoder::resizeBoxFilter(GifFileType* gifIn, GifFileType* gifOut) {
         return false;
     }
 
-    if (static_cast<uint64_t>(gifIn->SWidth) * gifIn->SHeight > GIF_MAX_AREA) {
+    if (static_cast<uint64_t>(gifIn->SWidth) * gifIn->SHeight > kGifMaxArea) {
         LOGE("Input GIF is too large: %d x %d", gifIn->SWidth, gifIn->SHeight);
         return false;
     }
@@ -193,7 +193,7 @@ bool GifTranscoder::resizeBoxFilter(GifFileType* gifIn, GifFileType* gifOut) {
     GifImageDesc prevImageDimens;
 
     // Background color (applies to entire GIF).
-    ColorARGB bgColor = TRANSPARENT;
+    ColorARGB bgColor = kTransparent;
 
     GifRecordType recordType;
     do {
@@ -414,7 +414,7 @@ bool GifTranscoder::renderImage(GifFileType* gifIn,
     } else if (prevImageDisposalMode == DISPOSE_BACKGROUND) {
         fillRect(renderBuffer, gifIn->SWidth, gifIn->SHeight,
                  prevImageDimens.Left, prevImageDimens.Top,
-                 prevImageDimens.Width, prevImageDimens.Height, TRANSPARENT);
+                 prevImageDimens.Width, prevImageDimens.Height, kTransparent);
     }
 
     // Paint this image onto the canvas
@@ -499,7 +499,7 @@ GifByteType GifTranscoder::findBestColor(ColorMapObject* colorMap, int transpare
     }
 
     GifByteType closestColorIndex = 0;
-    int closestColorDistance = MAX_COLOR_DISTANCE;
+    int closestColorDistance = kMaxColorDistance;
     for (int i = 0; i < colorMap->ColorCount; i++) {
         // Skip the transparent color (we've already eliminated that option).
         if (i == transparentColorIndex) {
@@ -531,7 +531,7 @@ ColorMapObject* GifTranscoder::getColorMap(GifFileType* gifIn) {
 ColorARGB GifTranscoder::getColorARGB(ColorMapObject* colorMap, int transparentColorIndex,
                                       GifByteType colorIndex) {
     if (colorIndex == transparentColorIndex) {
-        return TRANSPARENT;
+        return kTransparent;
     }
     return gifColorToColorARGB(colorMap->Colors[colorIndex]);
 }
@@ -586,9 +586,9 @@ jboolean transcode(JNIEnv* env, jobject clazz, jstring filePath, jstring outFile
     return (gifCode == GIF_OK);
 }
 
-constexpr char CLASS_PATH_NAME[] = "com/android/messaging/util/GifTranscoder";
+constexpr char kClassPathName[] = "com/android/messaging/util/GifTranscoder";
 
-const JNINativeMethod METHODS[] = {
+const JNINativeMethod kMethods[] = {
     { "transcodeInternal", "(Ljava/lang/String;Ljava/lang/String;)Z", reinterpret_cast<void*>(transcode) },
 };
 
@@ -609,8 +609,8 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     if (vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) != JNI_OK) {
         return -1;
     }
-    if (!registerNativeMethods(env, CLASS_PATH_NAME,
-                               METHODS, sizeof(METHODS) / sizeof(METHODS[0]))) {
+    if (!registerNativeMethods(env, kClassPathName,
+                               kMethods, sizeof(kMethods) / sizeof(kMethods[0]))) {
       return -1;
     }
     return JNI_VERSION_1_6;
