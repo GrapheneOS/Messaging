@@ -1,7 +1,7 @@
 [versions]
 agp = "9.2.1"
 detekt = "2.0.0-alpha.3"
-hilt = "2.59.2"
+hilt = "2.60.1"
 jacoco = "0.8.14"
 kotlin = "2.3.21"
 kotlinx-serialization = "1.11.0"
