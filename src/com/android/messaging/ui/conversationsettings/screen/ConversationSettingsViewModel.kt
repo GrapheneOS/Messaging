@@ -22,6 +22,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
+internal const val CONVERSATION_SETTINGS_CONVERSATION_ID_ARG = "conversationId"
+
 internal interface ConversationSettingsScreenModel {
     val effects: Flow<Effect>
     val navigationEvents: Flow<NavEvent>
@@ -175,7 +177,7 @@ internal class ConversationSettingsViewModel @Inject constructor(
         when (result) {
             is ResolveConversationIdResult.Resolved -> {
                 if (shouldOpenChat) {
-                    emitEffect(Effect.OpenParticipantChat(result.conversationId))
+                    emitNavigationEvent(NavEvent.OpenParticipantChat(result.conversationId))
                 } else {
                     emitNavigationEvent(NavEvent.OpenParticipantInfo(result.conversationId))
                 }

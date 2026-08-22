@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversationsettings.screen.support
 
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.conversationsettings.screen.ConversationSettingsEffectHandler
 import com.android.messaging.ui.conversationsettings.screen.ConversationSettingsScreen
 import com.android.messaging.ui.conversationsettings.screen.ConversationSettingsScreenModel
@@ -28,7 +29,9 @@ internal abstract class ConversationSettingsTestBase {
     protected val navEventsFlow = MutableSharedFlow<ConversationSettingsNavEvent>(
         extraBufferCapacity = 1,
     )
-    protected val onNavigateBackCalls = mutableListOf<Int?>()
+    protected var onNavigateBackCalls = 0
+    protected var onCloseAfterArchiveCalls = 0
+    protected val onNavigateToConversationCalls = mutableListOf<ConversationId>()
 
     protected lateinit var screenModel: ConversationSettingsScreenModel
     protected lateinit var effectHandler: ConversationSettingsEffectHandler
@@ -49,7 +52,9 @@ internal abstract class ConversationSettingsTestBase {
             AppTheme {
                 ConversationSettingsScreen(
                     effectHandler = effectHandler,
-                    onNavigateBack = onNavigateBackCalls::add,
+                    onNavigateBack = { onNavigateBackCalls += 1 },
+                    onCloseAfterArchive = { onCloseAfterArchiveCalls += 1 },
+                    onNavigateToConversation = { onNavigateToConversationCalls += it },
                     screenModel = screenModel,
                 )
             }

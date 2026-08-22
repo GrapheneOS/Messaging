@@ -2,11 +2,6 @@ package com.android.messaging.ui.conversationsettings.screen
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,7 +41,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
@@ -59,16 +53,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.ParticipantId
+import com.android.messaging.ui.common.components.horizontalSlideContentTransform
 import com.android.messaging.ui.common.components.safeDrawingContentPadding
 import com.android.messaging.ui.common.text.asLtrText
-import com.android.messaging.ui.conversation.ConversationActivity
 import com.android.messaging.ui.conversation.conversationSettingsParticipantRowTestTag
 import com.android.messaging.ui.conversationsettings.common.ConversationHeader
 import com.android.messaging.ui.conversationsettings.common.ConversationSettingsItem
@@ -90,18 +84,19 @@ import com.android.messaging.ui.conversationsettings.screen.model.ParticipantCon
 import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
 import com.android.messaging.ui.conversationsettings.screen.model.saveableKey
 import com.android.messaging.ui.conversationsettings.screen.model.targetConversationId
+import com.android.messaging.ui.core.CollectEvents
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
-private const val SLIDE_OFFSET_DIVISOR = 3
-
 @Composable
 internal fun ConversationSettingsScreen(
     effectHandler: ConversationSettingsEffectHandler,
-    onNavigateBack: (Int?) -> Unit,
+    onNavigateBack: () -> Unit,
+    onCloseAfterArchive: () -> Unit,
+    onNavigateToConversation: (ConversationId) -> Unit,
     modifier: Modifier = Modifier,
-    screenModel: ConversationSettingsScreenModel = viewModel<ConversationSettingsViewModel>(),
+    screenModel: ConversationSettingsScreenModel = hiltViewModel<ConversationSettingsViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
     val rootConversationId = screenModel.rootConversationId
@@ -123,36 +118,32 @@ internal fun ConversationSettingsScreen(
         screenModel.refreshState()
     }
 
-    val currentEffectHandler by rememberUpdatedState(effectHandler)
-    LaunchedEffect(screenModel) {
-        screenModel.effects.collect { effect ->
-            currentEffectHandler.handle(effect)
-        }
-    }
+    CollectEvents(
+        events = screenModel.effects,
+        onEvent = effectHandler::handle,
+    )
 
-    var resultCode by remember { mutableStateOf<Int?>(null) }
     val navigateUp: () -> Unit = {
-        if (isRootRoute()) {
-            onNavigateBack(resultCode)
-        } else {
-            currentRoute = NavRoute.Conversation
+        when {
+            isRootRoute() -> onNavigateBack()
+            else -> currentRoute = NavRoute.Conversation
         }
     }
 
-    LaunchedEffect(screenModel) {
-        screenModel.navigationEvents.collect { event ->
-            when (event) {
-                is NavEvent.OpenParticipantInfo -> {
-                    currentRoute = NavRoute.ParticipantInfo(
-                        conversationId = event.conversationId,
-                    )
-                }
+    CollectEvents(events = screenModel.navigationEvents) { event ->
+        when (event) {
+            is NavEvent.OpenParticipantChat -> {
+                onNavigateToConversation(event.conversationId)
+            }
 
-                NavEvent.CloseAfterArchive -> {
-                    if (isRootRoute()) {
-                        resultCode = ConversationActivity.FINISH_RESULT_CODE
-                    }
-                    navigateUp()
+            is NavEvent.OpenParticipantInfo -> {
+                currentRoute = NavRoute.ParticipantInfo(conversationId = event.conversationId)
+            }
+
+            NavEvent.CloseAfterArchive -> {
+                when {
+                    isRootRoute() -> onCloseAfterArchive()
+                    else -> navigateUp()
                 }
             }
         }
@@ -188,14 +179,9 @@ private fun ConversationSettingsNavHost(
         targetState = route,
         modifier = modifier.background(MaterialTheme.colorScheme.background),
         transitionSpec = {
-            val isForward = targetState.depth > initialState.depth
-            if (isForward) {
-                (slideInHorizontally { it / SLIDE_OFFSET_DIVISOR } + fadeIn()) togetherWith
-                    (slideOutHorizontally { -it / SLIDE_OFFSET_DIVISOR } + fadeOut())
-            } else {
-                (slideInHorizontally { -it / SLIDE_OFFSET_DIVISOR } + fadeIn()) togetherWith
-                    (slideOutHorizontally { it / SLIDE_OFFSET_DIVISOR } + fadeOut())
-            }
+            horizontalSlideContentTransform(
+                isForward = targetState.depth > initialState.depth,
+            )
         },
         label = "conversation_settings_navigation",
     ) { animatedRoute ->

@@ -57,7 +57,7 @@ internal class BlockedParticipantsViewModel @Inject constructor(
             }
 
             is Action.ParticipantMessageClicked -> {
-                emitEffect(Effect.OpenParticipantChat(action.conversationId))
+                emitNavigationEvent(NavEvent.OpenParticipantChat(action.conversationId))
             }
 
             is Action.ParticipantCallClicked -> {
@@ -102,7 +102,7 @@ internal class BlockedParticipantsViewModel @Inject constructor(
             ?.conversationId
             ?: return
 
-        emitEffect(Effect.OpenParticipantChat(conversationId))
+        emitNavigationEvent(NavEvent.OpenParticipantChat(conversationId))
     }
 
     private fun showOrAddContact(participant: BlockedParticipantUiState) {

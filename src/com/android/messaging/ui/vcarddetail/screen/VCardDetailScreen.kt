@@ -13,26 +13,26 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.data.vcarddetail.model.VCardFieldAction
 import com.android.messaging.ui.common.components.contentSurfaceShape
 import com.android.messaging.ui.common.components.safeDrawingContentPadding
+import com.android.messaging.ui.core.CollectEvents
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import com.android.messaging.ui.vcarddetail.common.VCardContactCard
 import com.android.messaging.ui.vcarddetail.common.VCardDetailTopAppBar
 import com.android.messaging.ui.vcarddetail.screen.model.VCardContactUiModel
 import com.android.messaging.ui.vcarddetail.screen.model.VCardDetailAction as Action
+import com.android.messaging.ui.vcarddetail.screen.model.VCardDetailNavEvent
 import com.android.messaging.ui.vcarddetail.screen.model.VCardDetailUiState as State
 import com.android.messaging.ui.vcarddetail.screen.model.VCardFieldUiModel
 import kotlinx.collections.immutable.persistentListOf
@@ -45,14 +45,18 @@ internal fun VCardDetailScreen(
     effectHandler: VCardDetailEffectHandler,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
-    screenModel: VCardDetailScreenModel = viewModel<VCardDetailViewModel>(),
+    screenModel: VCardDetailScreenModel = hiltViewModel<VCardDetailViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
 
-    val currentEffectHandler by rememberUpdatedState(effectHandler)
-    LaunchedEffect(screenModel) {
-        screenModel.effects.collect { effect ->
-            currentEffectHandler.handle(effect)
+    CollectEvents(
+        events = screenModel.effects,
+        onEvent = effectHandler::handle,
+    )
+
+    CollectEvents(events = screenModel.navigationEvents) { event ->
+        when (event) {
+            VCardDetailNavEvent.Close -> onNavigateBack()
         }
     }
 

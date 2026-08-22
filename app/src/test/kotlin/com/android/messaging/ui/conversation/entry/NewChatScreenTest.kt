@@ -223,7 +223,10 @@ class NewChatScreenTest {
     private fun setContent(screenModel: NewChatScreenModel) {
         composeTestRule.setContent {
             AppTheme {
-                NewChatScreen(screenModel = screenModel)
+                NewChatScreen(
+                    effectHandler = mockk(relaxed = true),
+                    screenModel = screenModel,
+                )
             }
         }
     }
@@ -231,6 +234,7 @@ class NewChatScreenTest {
     private fun createScreenModel(initialUiState: NewChatUiState): NewChatScreenModel {
         return mockk<NewChatScreenModel>(relaxed = true) {
             every { effects } returns MutableSharedFlow()
+            every { navigationEvents } returns MutableSharedFlow()
             every { uiState } returns MutableStateFlow(value = initialUiState)
         }
     }

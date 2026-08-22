@@ -263,7 +263,8 @@ public class UiUtils {
 
     /**
      * Check if the activity needs to be redirected to onboarding, which covers both the
-     * once-per-version SMS warning and the permission check.
+     * once-per-version SMS warning and the permission check. Onboarding is a destination inside
+     * the single-Activity host, so redirecting means launching the host and finishing the caller.
      * @return true if {@link Activity#finish()} was called because redirection was performed
      */
     public static boolean redirectToOnboardingIfNeeded(final Activity activity) {
@@ -272,7 +273,7 @@ public class UiUtils {
             return false;
         }
 
-        UIIntents.get().launchOnboardingActivity(activity);
+        UIIntents.get().launchConversationListActivity(activity);
         activity.finish();
         return true;
     }

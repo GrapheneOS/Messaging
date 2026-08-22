@@ -10,6 +10,7 @@ import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversationlist.chats.mapper.ConversationListUiStateMapper
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListEffect as Effect
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListNavEvent as NavEvent
 import com.android.messaging.ui.conversationlist.conversationItem
 import com.android.messaging.ui.conversationlist.delegate.ConversationListActionsDelegate
 import com.android.messaging.ui.conversationlist.delegate.ConversationListOptimisticSnapshotDelegate
@@ -145,23 +146,23 @@ class ConversationListViewModelTest {
             snapshotFlow.value = snapshotOf(conversationItem(ConversationId("a")))
 
             val viewModel = createViewModel()
-            viewModel.effects.test {
+            viewModel.navigationEvents.test {
                 viewModel.onAction(Action.ConversationClicked(ConversationId("a")))
 
-                assertThat(awaitItem()).isEqualTo(Effect.OpenConversation(ConversationId("a")))
+                assertThat(awaitItem()).isEqualTo(NavEvent.OpenConversation(ConversationId("a")))
                 cancelAndIgnoreRemainingEvents()
             }
         }
     }
 
     @Test
-    fun startChatClicked_emitsStartChatEffect() {
+    fun startChatClicked_emitsOpenNewChatNavEvent() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val viewModel = createViewModel()
-            viewModel.effects.test {
+            viewModel.navigationEvents.test {
                 viewModel.onAction(Action.StartChatClicked)
 
-                assertEquals(Effect.StartChat, awaitItem())
+                assertEquals(NavEvent.OpenNewChat, awaitItem())
                 cancelAndIgnoreRemainingEvents()
             }
         }

@@ -132,11 +132,13 @@ internal class ConversationAttachmentPreviewEffectTest {
     }
 
     @Test
-    fun openAttachmentPreviewEffect_normalizesFileUriBeforeOpeningVCard() {
+    fun openAttachmentPreviewEffect_opensVCardViaGenericIntentWithNormalizedUri() {
         runTest {
             val fileUri = Uri.parse("file:///tmp/contact.vcf")
             val scratchUri = Uri.parse("content://scratch/contact.vcf")
+            val intentSlot = slot<Intent>()
             every { UriUtil.persistContentToScratchSpace(fileUri) } returns scratchUri
+            every { context.startActivity(capture(intentSlot)) } just runs
 
             openAttachmentPreviewEffect(
                 context = context,
@@ -150,9 +152,12 @@ internal class ConversationAttachmentPreviewEffectTest {
                 ),
             )
 
-            verify(exactly = 1) {
-                uiIntents.launchVCardDetailActivity(context, scratchUri)
-            }
+            assertEquals(Intent.ACTION_VIEW, intentSlot.captured.action)
+            assertEquals(scratchUri, intentSlot.captured.data)
+            assertEquals("text/x-vcard", intentSlot.captured.type)
+            assertTrue(
+                intentSlot.captured.flags and Intent.FLAG_GRANT_READ_URI_PERMISSION != 0,
+            )
         }
     }
 

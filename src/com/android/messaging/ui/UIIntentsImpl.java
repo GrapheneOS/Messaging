@@ -30,9 +30,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract.Contacts;
 import android.provider.ContactsContract.Intents;
-import android.provider.MediaStore;
 import android.provider.Settings;
-import android.provider.Telephony;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 
@@ -45,20 +43,14 @@ import com.android.messaging.datamodel.data.MessagePartData;
 import com.android.messaging.receiver.ConversationReadReceiver;
 import com.android.messaging.receiver.NotificationReceiver;
 import com.android.messaging.sms.MmsSmsUtils;
-import com.android.messaging.ui.appsettings.SettingsActivity;
-import com.android.messaging.ui.blockedparticipants.BlockedParticipantsActivity;
 import com.android.messaging.ui.classzero.ClassZeroActivity;
 import com.android.messaging.ui.contact.AddContactActivity;
 import com.android.messaging.ui.conversation.ConversationActivity;
 import com.android.messaging.ui.conversation.LaunchConversationActivity;
-import com.android.messaging.ui.conversationlist.archived.ArchivedConversationListActivity;
 import com.android.messaging.ui.conversationpicker.host.forward.ForwardMessageActivity;
 import com.android.messaging.ui.conversationpicker.host.widget.WidgetPickConversationActivity;
-import com.android.messaging.ui.conversationsettings.ConversationSettingsActivity;
 import com.android.messaging.ui.debug.DebugMmsConfigActivity;
-import com.android.messaging.ui.onboarding.OnboardingActivity;
 import com.android.messaging.ui.photoviewer.PhotoViewerActivity;
-import com.android.messaging.ui.vcarddetail.VCardDetailActivity;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.ContentType;
 import com.android.messaging.util.ConversationIdSet;
@@ -78,10 +70,6 @@ public class UIIntentsImpl extends UIIntents {
     private static final String CALL_TARGET_CLICK_KEY = "touchPoint";
     private static final String CALL_TARGET_CLICK_EXTRA_KEY =
             "android.telecom.extra.OUTGOING_CALL_EXTRAS";
-    private static final String MEDIA_SCANNER_CLASS =
-            "com.android.providers.media.MediaScannerService";
-    private static final String MEDIA_SCANNER_PACKAGE = "com.android.providers.media";
-    private static final String MEDIA_SCANNER_SCAN_ACTION = "android.media.IMediaScannerService";
     private static final int MUTABLE_PENDING_INTENT_FLAGS =
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE;
 
@@ -135,12 +123,6 @@ public class UIIntentsImpl extends UIIntents {
         return intent;
     }
 
-    @Override
-    public void launchOnboardingActivity(final Context context) {
-        final Intent intent = new Intent(context, OnboardingActivity.class);
-        context.startActivity(intent);
-    }
-
     /**
      * Get an intent which takes you to the conversation list
      */
@@ -165,15 +147,6 @@ public class UIIntentsImpl extends UIIntents {
     }
 
     @Override
-    public void launchConversationActivityNewTask(
-            final Context context, final String conversationId) {
-        final Intent intent = getConversationActivityIntent(context, conversationId, null,
-                false /* withCustomTransition */);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(intent);
-    }
-
-    @Override
     public void launchConversationActivityWithParentStack(final Context context,
                 final String conversationId, final String smsBody) {
         final MessageData messageData = TextUtils.isEmpty(smsBody)
@@ -184,14 +157,6 @@ public class UIIntentsImpl extends UIIntents {
                         getConversationActivityIntent(context, conversationId, messageData,
                                 false /* withCustomTransition */))
                 .startActivities();
-    }
-
-    @Override
-    public void launchCreateNewConversationActivity(final Context context,
-            final MessageData draft) {
-        final Intent intent = getConversationActivityIntent(context, null, draft,
-                false /* withCustomTransition */);
-        context.startActivity(intent);
     }
 
     @Override
@@ -221,34 +186,6 @@ public class UIIntentsImpl extends UIIntents {
     }
 
     @Override
-    public void launchSettingsActivity(final Context context) {
-        final Intent intent = new Intent(context, SettingsActivity.class);
-        context.startActivity(intent);
-    }
-
-    @Override
-    public void launchArchivedConversationsActivity(final Context context) {
-        final Intent intent = new Intent(context, ArchivedConversationListActivity.class);
-        context.startActivity(intent);
-    }
-
-    @Override
-    public void launchBlockedParticipantsActivity(final Context context) {
-        final Intent intent = new Intent(context, BlockedParticipantsActivity.class);
-        context.startActivity(intent);
-    }
-
-    @Override
-    public void launchPeopleAndOptionsActivity(
-            final Activity activity,
-            final String conversationId
-    ) {
-        final Intent intent = new Intent(activity, ConversationSettingsActivity.class);
-        intent.putExtra(UI_INTENT_EXTRA_CONVERSATION_ID, conversationId);
-        activity.startActivityForResult(intent, 0);
-    }
-
-    @Override
     public void launchPhoneCallActivity(final Context context, final String phoneNumber,
                                         final Point clickPosition) {
         final Intent intent = new Intent(Intent.ACTION_CALL,
@@ -272,13 +209,6 @@ public class UIIntentsImpl extends UIIntents {
         final Intent forwardMessageIntent = new Intent(context, ForwardMessageActivity.class)
                 .putExtra(UI_INTENT_EXTRA_DRAFT_DATA, message);
         context.startActivity(forwardMessageIntent);
-    }
-
-    @Override
-    public void launchVCardDetailActivity(final Context context, final Uri vcardUri) {
-        final Intent vcardDetailIntent = new Intent(context, VCardDetailActivity.class)
-                .putExtra(UI_INTENT_EXTRA_VCARD_URI, vcardUri);
-        context.startActivity(vcardDetailIntent);
     }
 
     @Override
@@ -310,12 +240,6 @@ public class UIIntentsImpl extends UIIntents {
                 activity, initialPhoto, photosUri, initialPhotoBounds,
                 initialPhotoOccurrenceIndex));
         activity.overridePendingTransition(0, 0);
-    }
-
-    @Override
-    public Intent getViewUrlIntent(final String url) {
-        final Uri uri = Uri.parse(url);
-        return new Intent(Intent.ACTION_VIEW, uri);
     }
 
     @Override
@@ -445,15 +369,8 @@ public class UIIntentsImpl extends UIIntents {
     }
 
     @Override
-    public Intent getChangeDefaultSmsAppIntent(final Activity activity) {
-        final Intent intent = new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
-        intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, activity.getPackageName());
-        return intent;
-    }
-
-    @Override
     public void launchBrowserForUrl(final Context context, final String url) {
-        final Intent intent = getViewUrlIntent(url);
+        final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
         startExternalActivity(context, intent);
     }
 
@@ -474,14 +391,6 @@ public class UIIntentsImpl extends UIIntents {
         final Intent intent = new Intent(context, LaunchConversationActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NO_HISTORY);
         return intent;
-    }
-
-    @Override
-    public void kickMediaScanner(final Context context, final String volume) {
-        final Intent intent = new Intent(MEDIA_SCANNER_SCAN_ACTION)
-            .putExtra(MediaStore.MEDIA_SCANNER_VOLUME, volume)
-            .setClassName(MEDIA_SCANNER_PACKAGE, MEDIA_SCANNER_CLASS);
-        context.startService(intent);
     }
 
     @Override

@@ -27,14 +27,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.common.components.contentSurfaceShape
 import com.android.messaging.ui.common.components.snackbar.MessagingSnackbarHost
 import com.android.messaging.ui.common.components.snackbar.showActionSnackbar
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListAction as Action
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListEffect as Effect
+import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListNavEvent as NavEvent
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListUiState as State
 import com.android.messaging.ui.conversationlist.common.dialog.ConversationListDeleteDialog
 import com.android.messaging.ui.conversationlist.common.item.ConversationSwipeKind
@@ -46,6 +48,7 @@ import com.android.messaging.ui.conversationlist.common.status.ConversationListL
 import com.android.messaging.ui.conversationlist.common.status.ConversationListStatusMessage
 import com.android.messaging.ui.conversationlist.common.support.previewConversationListItems
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
+import com.android.messaging.ui.core.CollectEvents
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -60,15 +63,29 @@ private val ArchivedSwipeSpec = ConversationListSwipeSpec(
 internal fun ArchivedConversationListScreen(
     effectHandler: ArchivedConversationListEffectHandler,
     onNavigateBack: () -> Unit,
+    onNavigateToConversation: (ConversationId) -> Unit,
+    onNavigateToConversationSettings: (ConversationId) -> Unit,
     modifier: Modifier = Modifier,
     screenModel: ArchivedConversationListScreenModel =
-        viewModel<ArchivedConversationListViewModel>(),
+        hiltViewModel<ArchivedConversationListViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     val snackbarHostState = remember { SnackbarHostState() }
 
     var pendingDelete by remember { mutableStateOf(false) }
+
+    CollectEvents(events = screenModel.navigationEvents) { event ->
+        when (event) {
+            is NavEvent.OpenConversation -> {
+                onNavigateToConversation(event.conversationId)
+            }
+
+            is NavEvent.OpenConversationSettings -> {
+                onNavigateToConversationSettings(event.conversationId)
+            }
+        }
+    }
 
     ArchivedConversationListEffects(
         effects = screenModel.effects,

@@ -46,7 +46,6 @@ conversation/messages/ui/message/ConversationMessageSelectionIndicator.kt
 conversation/messages/ui/message/ConversationMmsDownloadBody.kt
 conversation/messages/ui/text/ConversationMessageText.kt
 conversation/metadata/ui/ConversationTopAppBar.kt
-conversation/recipientpicker/RecipientPickerScreen.kt
 conversation/recipientpicker/component/RecipientSelectionArmedRecipient.kt
 conversation/recipientpicker/component/RecipientSelectionContent.kt
 conversation/recipientpicker/component/RecipientSelectionQueryCard.kt

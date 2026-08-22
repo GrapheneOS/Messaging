@@ -1,84 +1,73 @@
 package com.android.messaging.ui.conversation.navigation
 
-import android.content.Intent
-import androidx.activity.compose.LocalActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
-import com.android.messaging.ui.UIIntents
-import com.android.messaging.ui.conversation.ConversationActivity
 import com.android.messaging.ui.conversation.addparticipants.AddParticipantsScreen
+import com.android.messaging.ui.conversation.addparticipants.rememberAddParticipantsEffectHandler
 import com.android.messaging.ui.conversation.entry.NewChatScreen
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryStartupAttachment
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryUiState
+import com.android.messaging.ui.conversation.entry.rememberNewChatEffectHandler
 import com.android.messaging.ui.conversation.messagedetails.MessageDetailsScreen
-import com.android.messaging.ui.conversation.recipientpicker.RecipientPickerScreen
 import com.android.messaging.ui.conversation.screen.ConversationScreen
-import com.android.messaging.ui.conversationsettings.ConversationSettingsActivity
+import com.android.messaging.ui.navigation.LocalNavigator
 import com.android.messaging.ui.navigation.SeededViewModelStoreOwner
 
-internal fun EntryProviderScope<NavKey>.conversationEntries(
-    routeState: ConversationNavRouteState,
-) {
+internal fun EntryProviderScope<NavKey>.conversationEntries() {
     entry<ConversationNavKey>(
-        content = conversationScreenRouteContent(routeState = routeState),
+        content = conversationScreenRouteContent(),
     )
     entry<NewChatNavKey>(
-        content = newChatRouteContent(routeState = routeState),
+        content = newChatRouteContent(),
     )
     entry<AddParticipantsNavKey>(
-        content = addParticipantsRouteContent(routeState = routeState),
+        content = addParticipantsRouteContent(),
     )
     entry<MessageDetailsNavKey>(
-        metadata = messageDetailsTransitionMetadata(),
-        content = messageDetailsRouteContent(routeState = routeState),
+        content = messageDetailsRouteContent(),
     )
-    entry<RecipientPickerNavKey> { navKey ->
-        RecipientPickerScreen(mode = navKey.mode)
-    }
 }
 
-private fun conversationScreenRouteContent(
-    routeState: ConversationNavRouteState,
-): @Composable (ConversationNavKey) -> Unit {
+private fun conversationScreenRouteContent(): @Composable (ConversationNavKey) -> Unit {
     return { navKey ->
         val conversationId = navKey.conversationId
-        val entryModel = routeState.entryModel.value
-        val entryUiState = routeState.entryUiState.value
-        val navigationReducer = routeState.navigationReducer.value
+        val entryNavState = LocalConversationEntryNavState.current
+        val entryModel = entryNavState.model
+        val entryUiState by entryModel.uiState.collectAsStateWithLifecycle()
+        val navigator = rememberConversationNavigator()
+        val appNavigator = LocalNavigator.current
         val pendingPayload = pendingLaunchPayloadForConversation(
             entryUiState = entryUiState,
             conversationId = conversationId,
         )
-        val openConversationDetails = rememberConversationDetailsLauncher(routeState = routeState)
 
         ConversationScreen(
             conversationId = conversationId,
             launchGeneration = entryUiState.launchGeneration,
-            cancelIncomingNotification = !routeState.isLaunchedFromBubble.value,
+            cancelIncomingNotification = !entryNavState.isLaunchedFromBubble,
             onAddPeopleClick = {
-                navigationReducer.navigateToAddParticipants(
-                    backStack = routeState.backStack,
-                    conversationId = conversationId,
-                )
+                navigator.navigateToAddParticipants(conversationId = conversationId)
             },
-            onConversationDetailsClick = { openConversationDetails(conversationId) },
+            onConversationDetailsClick = {
+                navigator.navigateToConversationSettings(conversationId = conversationId)
+            },
             onNavigateToMessageDetails = { messageId ->
-                navigationReducer.navigateToMessageDetails(
-                    backStack = routeState.backStack,
+                navigator.navigateToMessageDetails(
                     conversationId = conversationId,
                     messageId = messageId,
                 )
             },
-            onNavigateBack = {
-                popConversationBackStackOrFinish(routeState = routeState)
+            onNavigateToVCardDetail = { uri ->
+                navigator.navigateToVCardDetail(uri = uri)
             },
+            onNavigateBack = appNavigator::back,
             pendingDraft = pendingPayload.draft,
             pendingScrollPosition = pendingPayload.scrollPosition,
             pendingSelfParticipantId = pendingPayload.selfParticipantId,
@@ -99,82 +88,52 @@ private fun conversationScreenRouteContent(
     }
 }
 
-@Composable
-private fun rememberConversationDetailsLauncher(
-    routeState: ConversationNavRouteState,
-): (ConversationId) -> Unit {
-    val activity = checkNotNull(LocalActivity.current)
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult(),
-    ) { result ->
-        if (result.resultCode == ConversationActivity.FINISH_RESULT_CODE) {
-            popConversationBackStackOrFinish(routeState = routeState)
-        }
-    }
-
-    return { conversationId ->
-        val intent = Intent(activity, ConversationSettingsActivity::class.java)
-        intent.putExtra(UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID, conversationId.value)
-        launcher.launch(intent)
-    }
-}
-
-private fun newChatRouteContent(
-    routeState: ConversationNavRouteState,
-): @Composable (NewChatNavKey) -> Unit {
+private fun newChatRouteContent(): @Composable (NewChatNavKey) -> Unit {
     return {
-        val entryModel = routeState.entryModel.value
+        val entryModel = LocalConversationEntryNavState.current.model
+        val navigator = rememberConversationNavigator()
+        val appNavigator = LocalNavigator.current
 
         NewChatScreen(
-            onNavigateBack = {
-                popConversationBackStackOrFinish(routeState = routeState)
-            },
+            effectHandler = rememberNewChatEffectHandler(),
+            onNavigateBack = appNavigator::back,
             onNavigateToConversation = { conversationId, selfParticipantId ->
                 entryModel.onConversationNavigationRequested(
                     conversationId = conversationId,
                     pendingSelfParticipantId = selfParticipantId,
                 )
-                routeState.navigationReducer.value.navigateToConversation(
-                    backStack = routeState.backStack,
-                    conversationId = conversationId,
-                )
+                navigator.navigateToConversation(conversationId = conversationId)
             },
         )
     }
 }
 
-private fun addParticipantsRouteContent(
-    routeState: ConversationNavRouteState,
-): @Composable (AddParticipantsNavKey) -> Unit {
+private fun addParticipantsRouteContent(): @Composable (AddParticipantsNavKey) -> Unit {
     return { navKey ->
+        val navigator = rememberConversationNavigator()
+        val appNavigator = LocalNavigator.current
+
         AddParticipantsScreen(
+            effectHandler = rememberAddParticipantsEffectHandler(),
             conversationId = navKey.conversationId,
-            onNavigateBack = {
-                popConversationBackStackOrFinish(routeState = routeState)
-            },
+            onNavigateBack = appNavigator::back,
             onNavigateToConversation = { resolvedConversationId ->
-                routeState.navigationReducer.value.replaceCurrentConversation(
-                    backStack = routeState.backStack,
-                    conversationId = resolvedConversationId,
-                )
+                navigator.replaceCurrentConversation(conversationId = resolvedConversationId)
             },
         )
     }
 }
 
-private fun messageDetailsRouteContent(
-    routeState: ConversationNavRouteState,
-): @Composable (MessageDetailsNavKey) -> Unit {
+private fun messageDetailsRouteContent(): @Composable (MessageDetailsNavKey) -> Unit {
     return { navKey ->
+        val navigator = LocalNavigator.current
         val defaultArgs = remember(navKey) {
             messageDetailsDefaultArgs(navKey = navKey)
         }
 
         SeededViewModelStoreOwner(defaultArgs = defaultArgs) {
             MessageDetailsScreen(
-                onNavigateBack = {
-                    popConversationBackStackOrFinish(routeState = routeState)
-                },
+                onNavigateBack = navigator::back,
             )
         }
     }
@@ -194,16 +153,6 @@ private fun pendingLaunchPayloadForConversation(
         selfParticipantId = entryUiState.pendingSelfParticipantId,
         startupAttachment = entryUiState.pendingStartupAttachment,
     )
-}
-
-private fun popConversationBackStackOrFinish(
-    routeState: ConversationNavRouteState,
-) {
-    if (routeState.navigationReducer.value.popBackStack(backStack = routeState.backStack)) {
-        return
-    }
-
-    routeState.onFinish.value()
 }
 
 private data class ConversationPendingLaunchPayload(

@@ -1,15 +1,9 @@
 package com.android.messaging.ui.blockedparticipants.screen.model
 
-import com.android.messaging.data.conversation.model.ConversationId
-
 internal sealed interface BlockedParticipantsScreenEffect {
 
     data class ShowMessage(
         val messageResId: Int,
-    ) : BlockedParticipantsScreenEffect
-
-    data class OpenParticipantChat(
-        val conversationId: ConversationId,
     ) : BlockedParticipantsScreenEffect
 
     data class PlacePhoneCall(

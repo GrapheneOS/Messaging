@@ -97,4 +97,29 @@ internal class ConversationViewModelAttachmentPreviewTest : BaseConversationView
             }
         }
     }
+
+    @Test
+    fun onMessageAttachmentClicked_forVCard_emitsNavigateToVCardDetail() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val viewModel = createViewModel()
+            viewModel.onConversationIdChanged(conversationId = CONVERSATION_ID)
+
+            viewModel.effects.test {
+                viewModel.onMessageAttachmentClicked(
+                    contentType = "text/x-vcard",
+                    contentUri = "content://attachments/contact-card",
+                    partId = "part-1",
+                )
+                advanceUntilIdle()
+
+                assertEquals(
+                    ConversationScreenEffect.NavigateToVCardDetail(
+                        uri = "content://attachments/contact-card",
+                    ),
+                    awaitItem(),
+                )
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
 }

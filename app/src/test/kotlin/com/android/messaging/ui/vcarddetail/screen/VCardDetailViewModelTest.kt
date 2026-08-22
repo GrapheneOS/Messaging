@@ -11,9 +11,9 @@ import com.android.messaging.data.vcarddetail.repository.VCardDetailRepository
 import com.android.messaging.domain.vcarddetail.model.AddVCardToContactsResult
 import com.android.messaging.domain.vcarddetail.usecase.AddVCardToContacts
 import com.android.messaging.testutil.MainDispatcherRule
-import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.vcarddetail.screen.mapper.VCardDetailUiStateMapperImpl
 import com.android.messaging.ui.vcarddetail.screen.model.VCardDetailAction as Action
+import com.android.messaging.ui.vcarddetail.screen.model.VCardDetailNavEvent as NavEvent
 import com.android.messaging.ui.vcarddetail.screen.model.VCardDetailScreenEffect as Effect
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -70,15 +70,19 @@ internal class VCardDetailViewModelTest {
         }
 
     @Test
-    fun onFailed_emitsShowMessageAndClose() = runTest(mainDispatcherRule.testDispatcher) {
+    fun onFailed_emitsShowMessageAndNavigatesBack() = runTest(mainDispatcherRule.testDispatcher) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
-        viewModel.effects.test {
-            results.emit(VCardDetailResult.Failed)
+        viewModel.navigationEvents.test {
+            viewModel.effects.test {
+                results.emit(VCardDetailResult.Failed)
 
-            assertEquals(Effect.ShowMessage(R.string.failed_loading_vcard), awaitItem())
-            assertEquals(Effect.Close, awaitItem())
+                assertEquals(Effect.ShowMessage(R.string.failed_loading_vcard), awaitItem())
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            assertEquals(NavEvent.Close, awaitItem())
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -228,7 +232,7 @@ internal class VCardDetailViewModelTest {
         val uri = mockk<Uri>()
         every { uri.toString() } returns VCARD_URI
         val savedStateHandle = SavedStateHandle(
-            mapOf(UIIntents.UI_INTENT_EXTRA_VCARD_URI to uri),
+            mapOf(VCARD_DETAIL_URI_ARG to uri),
         )
 
         return VCardDetailViewModel(

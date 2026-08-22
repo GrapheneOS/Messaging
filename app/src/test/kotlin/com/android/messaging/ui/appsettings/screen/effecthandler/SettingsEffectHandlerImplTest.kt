@@ -9,7 +9,6 @@ import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.appsettings.screen.SettingsEffectHandlerImpl
 import com.android.messaging.ui.appsettings.screen.model.SettingsScreenEffect
-import com.android.messaging.ui.license.LicenseActivity
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -117,20 +116,6 @@ class SettingsEffectHandlerImplTest {
         verify(exactly = 1) {
             activity.startActivityForResult(requestIntent, REQUEST_DEFAULT_SMS_APP)
         }
-    }
-
-    @Test
-    fun handle_openLicenses_startsLicenseActivity() {
-        val startedIntent = slot<Intent>()
-        val handler = createHandler()
-
-        handler.handle(SettingsScreenEffect.OpenLicenses)
-
-        verify(exactly = 1) {
-            activity.startActivity(capture(startedIntent))
-        }
-        assertEquals(LicenseActivity::class.java.name, startedIntent.captured.component?.className)
-        assertEquals(APP_PACKAGE_NAME, startedIntent.captured.component?.packageName)
     }
 
     private fun createHandler(): SettingsEffectHandlerImpl {

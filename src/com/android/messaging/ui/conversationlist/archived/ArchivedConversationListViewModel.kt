@@ -10,6 +10,7 @@ import com.android.messaging.data.debug.DebugFeaturesProvider
 import com.android.messaging.ui.conversationlist.archived.mapper.ArchivedConversationListUiStateMapper
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListAction as Action
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListEffect as Effect
+import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListNavEvent as NavEvent
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListUiState as State
 import com.android.messaging.ui.conversationlist.delegate.ConversationListActionsDelegate
 import com.android.messaging.ui.conversationlist.delegate.ConversationListOptimisticSnapshotDelegate
@@ -30,6 +31,7 @@ import kotlinx.coroutines.launch
 
 internal interface ArchivedConversationListScreenModel {
     val effects: Flow<Effect>
+    val navigationEvents: Flow<NavEvent>
     val uiState: StateFlow<State>
 
     fun onAction(action: Action)
@@ -51,6 +53,9 @@ internal class ArchivedConversationListViewModel @Inject constructor(
 
     private val _effects = Channel<Effect>(Channel.BUFFERED)
     override val effects: Flow<Effect> = _effects.receiveAsFlow()
+
+    private val _navigationEvents = Channel<NavEvent>(Channel.BUFFERED)
+    override val navigationEvents: Flow<NavEvent> = _navigationEvents.receiveAsFlow()
 
     override val uiState: StateFlow<State> = combine(
         snapshot.filterNotNull(),
@@ -111,7 +116,7 @@ internal class ArchivedConversationListViewModel @Inject constructor(
             }
 
             is Action.AvatarMessageClicked -> {
-                _effects.trySend(Effect.OpenConversation(action.conversationId))
+                _navigationEvents.trySend(NavEvent.OpenConversation(action.conversationId))
             }
 
             is Action.AvatarCallClicked -> {
@@ -123,7 +128,7 @@ internal class ArchivedConversationListViewModel @Inject constructor(
             }
 
             is Action.AvatarInfoClicked -> {
-                _effects.trySend(Effect.OpenConversationSettings(action.conversationId))
+                _navigationEvents.trySend(NavEvent.OpenConversationSettings(action.conversationId))
             }
         }
     }
@@ -167,7 +172,7 @@ internal class ArchivedConversationListViewModel @Inject constructor(
             }
 
             else -> {
-                _effects.trySend(Effect.OpenConversation(conversationId))
+                _navigationEvents.trySend(NavEvent.OpenConversation(conversationId))
             }
         }
     }

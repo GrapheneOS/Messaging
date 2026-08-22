@@ -62,9 +62,6 @@ public abstract class UIIntents {
     public static final String ACTION_RESET_NOTIFICATIONS =
             "com.android.messaging.reset_notifications";
 
-    // Sending VCard uri to VCard detail activity
-    public static final String UI_INTENT_EXTRA_VCARD_URI = "vcard_uri";
-
     public static final String CMAS_COMPONENT = "com.android.cellbroadcastreceiver.module";
 
     // Intent action for local broadcast receiver for conversation self id change.
@@ -73,16 +70,6 @@ public abstract class UIIntents {
 
     // Conversation self id
     public static final String UI_INTENT_EXTRA_CONVERSATION_SELF_ID = "conversation_self_id";
-
-    // Subscription id
-    public static final String UI_INTENT_EXTRA_SUB_ID = "sub_id";
-
-    // Per-Subscription setting activity title
-    public static final String UI_INTENT_EXTRA_PER_SUBSCRIPTION_SETTING_TITLE =
-            "per_sub_setting_title";
-
-    // Is application settings launched as the top level settings activity?
-    public static final String UI_INTENT_EXTRA_TOP_LEVEL_SETTINGS = "top_level_settings";
 
     // Sending attachment uri from widget
     public static final String UI_INTENT_EXTRA_ATTACHMENT_URI = "attachment_uri";
@@ -101,11 +88,6 @@ public abstract class UIIntents {
     public static final String UI_INTENT_EXTRA_MESSAGE_POSITION = "message_position";
 
     public static final String ACTION_MESSAGE_READ = "com.android.messaging.action.MESSAGE_READ";
-
-    /**
-     * Launch the onboarding activity (SMS warning, followed by the permission check)
-     */
-    public abstract void launchOnboardingActivity(final Context context);
 
     public abstract void launchConversationListActivity(final Context context);
 
@@ -134,26 +116,9 @@ public abstract class UIIntents {
             String conversationId, String smsBody);
 
     /**
-     * Launch an activity to show a conversation as a new task.
-     */
-    public abstract void launchConversationActivityNewTask(final Context context,
-            final String conversationId);
-
-    /**
-     * Launch an activity to start a new conversation
-     */
-    public abstract void launchCreateNewConversationActivity(final Context context,
-            final MessageData draft);
-
-    /**
      * Launch debug activity to set MMS config options.
      */
     public abstract void launchDebugMmsConfigActivity(final Context context);
-
-    /**
-     * Launch an activity to change settings.
-     */
-    public abstract void launchSettingsActivity(final Context context);
 
     /**
      * Launch an activity to add a contact with a given destination.
@@ -167,28 +132,12 @@ public abstract class UIIntents {
             final Uri avatarUri, final String destination);
 
     /**
-     * Launch an activity to show people & options for a given conversation.
-     */
-    public abstract void launchPeopleAndOptionsActivity(final Activity context,
-            final String conversationId);
-
-    /**
      * Launch an external activity to handle a phone call
      * @param phoneNumber the phone number to call
      * @param clickPosition is the location tapped to start this launch for transition use
      */
     public abstract void launchPhoneCallActivity(final Context context, final String phoneNumber,
                                                  final Point clickPosition);
-
-    /**
-     * Launch an activity to show archived conversations.
-     */
-    public abstract void launchArchivedConversationsActivity(final Context context);
-
-    /**
-     * Launch an activity to show blocked participants.
-     */
-    public abstract void launchBlockedParticipantsActivity(final Context context);
 
     /**
      * Launch an activity to show a class zero message
@@ -199,11 +148,6 @@ public abstract class UIIntents {
      * Launch an activity to let the user forward a message
      */
     public abstract void launchForwardMessageActivity(Context context, MessageData message);
-
-    /**
-     * Launch an activity to show details for a VCard
-     */
-    public abstract void launchVCardDetailActivity(Context context, Uri vcardUri);
 
     /**
      * Launch an external activity that handles the intent to add VCard to contacts
@@ -230,20 +174,9 @@ public abstract class UIIntents {
             Rect initialPhotoBounds, Uri photosUri, int initialPhotoOccurrenceIndex);
 
     /**
-     * Get a ACTION_VIEW intent
-     * @param url display the data in the url to users
-     */
-    public abstract Intent getViewUrlIntent(final String url);
-
-    /**
      * Get an intent to launch the wireless alert viewer.
      */
     public abstract Intent getWirelessAlertsIntent();
-
-    /**
-     * Get an intent to launch the dialog for changing the default SMS App.
-     */
-    public abstract Intent getChangeDefaultSmsAppIntent(final Activity activity);
 
     /**
      * Broadcast conversation self id change so it may be reflected in the message compose UI.
@@ -315,11 +248,6 @@ public abstract class UIIntents {
      * Get an intent for the LaunchConversationActivity.
      */
     public abstract Intent getLaunchConversationActivityIntent(final Context context);
-
-    /**
-     *  Tell MediaScanner to re-scan the specified volume.
-     */
-    public abstract void kickMediaScanner(final Context context, final String volume);
 
     /**
      * Launch to browser for a url.
