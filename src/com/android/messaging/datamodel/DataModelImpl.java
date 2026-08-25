@@ -25,9 +25,6 @@ import com.android.messaging.datamodel.action.ActionService;
 import com.android.messaging.datamodel.action.BackgroundWorker;
 import com.android.messaging.datamodel.action.FixupMessageStatusOnStartupAction;
 import com.android.messaging.datamodel.action.ProcessPendingMessagesAction;
-import com.android.messaging.datamodel.data.ContactListItemData;
-import com.android.messaging.datamodel.data.ContactPickerData;
-import com.android.messaging.datamodel.data.ContactPickerData.ContactPickerDataListener;
 import com.android.messaging.datamodel.data.ConversationData;
 import com.android.messaging.datamodel.data.ConversationData.ConversationDataListener;
 import com.android.messaging.datamodel.data.ConversationListData;
@@ -78,17 +75,6 @@ public class DataModelImpl extends DataModel {
     public ConversationData createConversationData(final Context context,
             final ConversationDataListener listener, final String conversationId) {
         return new ConversationData(context, listener, conversationId);
-    }
-
-    @Override
-    public ContactListItemData createContactListItemData() {
-        return new ContactListItemData();
-    }
-
-    @Override
-    public ContactPickerData createContactPickerData(final Context context,
-            final ContactPickerDataListener listener) {
-        return new ContactPickerData(context, listener);
     }
 
     @Override
