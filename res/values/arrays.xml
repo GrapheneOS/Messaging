@@ -22,21 +22,4 @@
         <item>no subject</item>
         <item>nosubject</item>
     </string-array>
-
-    <!-- Choices for quick-reply to message notification. Users with an Android
-    Wear device (e.g. smartwatch) can reply to messages either by speaking their
-    response, or choosing one of these predefined options. -->
-    <string-array name="notification_reply_choices">
-        <item>Yes</item>
-        <item>No</item>
-        <item>OK</item>
-        <item>Hehe</item>
-        <item>Thanks</item>
-        <item>I agree</item>
-        <item>Nice</item>
-        <item>On my way</item>
-        <item>OK, let me get back to you later</item>
-        <item>:)</item>
-        <item>:(</item>
-    </string-array>
 </resources>

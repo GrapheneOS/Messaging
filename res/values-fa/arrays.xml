@@ -21,17 +21,4 @@
     <item msgid="8900116186849071724">"بدون موضوع"</item>
     <item msgid="272485471009191934">"بدون موضوع"</item>
   </string-array>
-  <string-array name="notification_reply_choices">
-    <item msgid="1875991048685328264">"بله"</item>
-    <item msgid="6049132459802288033">"خیر"</item>
-    <item msgid="3084376867445867895">"تأیید"</item>
-    <item msgid="3155097332660174689">"هه‌هه"</item>
-    <item msgid="2611328818571146775">"سپاسگزارم"</item>
-    <item msgid="4881335087096496747">"موافقم"</item>
-    <item msgid="2422296858597420738">"خوب"</item>
-    <item msgid="4805581752819452687">"در راهم"</item>
-    <item msgid="4746700499431366214">"بسیار خوب، بگذارید بعداً با شما تماس بگیرم"</item>
-    <item msgid="4342041517788201970">":)"</item>
-    <item msgid="7439437911747961187">":("</item>
-  </string-array>
 </resources>
