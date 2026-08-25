@@ -1,10 +1,10 @@
 package com.android.messaging.domain.conversation.usecase.participant
 
-import com.android.messaging.datamodel.data.ContactPickerData
+import com.android.messaging.sms.MmsConfig
 import io.mockk.every
+import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
-import io.mockk.verify
 import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -16,9 +16,14 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class CanAddMoreConversationParticipantsImplTest {
 
+    private val useCase = CanAddMoreConversationParticipantsImpl()
+
     @Before
     fun setUp() {
-        unmockkAll()
+        mockkStatic(MmsConfig::class)
+        every { MmsConfig.get(any()) } returns mockk {
+            every { recipientLimit } returns RECIPIENT_LIMIT
+        }
     }
 
     @After
@@ -27,25 +32,14 @@ class CanAddMoreConversationParticipantsImplTest {
     }
 
     @Test
-    fun invoke_delegatesToLegacyContactPickerLimitCheck() {
-        val useCase = CanAddMoreConversationParticipantsImpl()
-        mockkStatic(ContactPickerData::class)
-        every { ContactPickerData.getCanAddMoreParticipants(0) } returns true
-        every { ContactPickerData.getCanAddMoreParticipants(4) } returns true
-        every { ContactPickerData.getCanAddMoreParticipants(5) } returns false
+    fun invoke_whenParticipantCountIsBelowRecipientLimit_returnsTrue() {
+        assertTrue(useCase.invoke(participantCount = RECIPIENT_LIMIT - 1))
+    }
 
-        assertTrue(useCase.invoke(participantCount = 0))
-        assertTrue(useCase.invoke(participantCount = 4))
-        assertFalse(useCase.invoke(participantCount = 5))
-
-        verify(exactly = 1) {
-            ContactPickerData.getCanAddMoreParticipants(0)
-        }
-        verify(exactly = 1) {
-            ContactPickerData.getCanAddMoreParticipants(4)
-        }
-        verify(exactly = 1) {
-            ContactPickerData.getCanAddMoreParticipants(5)
-        }
+    @Test
+    fun invoke_whenParticipantCountReachedRecipientLimit_returnsFalse() {
+        assertFalse(useCase.invoke(participantCount = RECIPIENT_LIMIT))
     }
 }
+
+private const val RECIPIENT_LIMIT = 5

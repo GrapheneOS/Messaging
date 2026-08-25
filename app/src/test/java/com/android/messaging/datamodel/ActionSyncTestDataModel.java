@@ -5,8 +5,6 @@ import android.database.sqlite.SQLiteDatabase;
 
 import com.android.messaging.datamodel.action.ActionService;
 import com.android.messaging.datamodel.action.BackgroundWorker;
-import com.android.messaging.datamodel.data.ContactListItemData;
-import com.android.messaging.datamodel.data.ContactPickerData;
 import com.android.messaging.datamodel.data.ConversationData;
 import com.android.messaging.datamodel.data.ConversationListData;
 import com.android.messaging.datamodel.data.DraftMessageData;
@@ -36,17 +34,6 @@ public class ActionSyncTestDataModel extends DataModel {
     public ConversationData createConversationData(final Context context,
             final ConversationData.ConversationDataListener listener,
             final String conversationId) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ContactListItemData createContactListItemData() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ContactPickerData createContactPickerData(final Context context,
-            final ContactPickerData.ContactPickerDataListener listener) {
         throw new UnsupportedOperationException();
     }
 

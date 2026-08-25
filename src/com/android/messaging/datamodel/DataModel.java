@@ -25,9 +25,6 @@ import com.android.messaging.Factory;
 import com.android.messaging.datamodel.action.Action;
 import com.android.messaging.datamodel.action.ActionService;
 import com.android.messaging.datamodel.action.BackgroundWorker;
-import com.android.messaging.datamodel.data.ContactListItemData;
-import com.android.messaging.datamodel.data.ContactPickerData;
-import com.android.messaging.datamodel.data.ContactPickerData.ContactPickerDataListener;
 import com.android.messaging.datamodel.data.ConversationData;
 import com.android.messaging.datamodel.data.ConversationData.ConversationDataListener;
 import com.android.messaging.datamodel.data.ConversationListData;
@@ -67,11 +64,6 @@ public abstract class DataModel {
 
     public abstract ConversationData createConversationData(final Context context,
             final ConversationDataListener listener, final String conversationId);
-
-    public abstract ContactListItemData createContactListItemData();
-
-    public abstract ContactPickerData createContactPickerData(final Context context,
-            final ContactPickerDataListener listener);
 
     public abstract MediaPickerData createMediaPickerData(final Context context);
 
