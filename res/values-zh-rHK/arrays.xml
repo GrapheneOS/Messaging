@@ -21,17 +21,4 @@
     <item msgid="8900116186849071724">"沒有主旨"</item>
     <item msgid="272485471009191934">"無主旨"</item>
   </string-array>
-  <string-array name="notification_reply_choices">
-    <item msgid="1875991048685328264">"是"</item>
-    <item msgid="6049132459802288033">"否"</item>
-    <item msgid="3084376867445867895">"確定"</item>
-    <item msgid="3155097332660174689">"呵呵"</item>
-    <item msgid="2611328818571146775">"謝謝"</item>
-    <item msgid="4881335087096496747">"我同意"</item>
-    <item msgid="2422296858597420738">"很好"</item>
-    <item msgid="4805581752819452687">"我正在路上"</item>
-    <item msgid="4746700499431366214">"好，我稍後再回覆您"</item>
-    <item msgid="4342041517788201970">":)"</item>
-    <item msgid="7439437911747961187">":("</item>
-  </string-array>
 </resources>

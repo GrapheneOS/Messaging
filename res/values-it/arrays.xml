@@ -21,17 +21,4 @@
     <item msgid="8900116186849071724">"nessun oggetto"</item>
     <item msgid="272485471009191934">"nosubject"</item>
   </string-array>
-  <string-array name="notification_reply_choices">
-    <item msgid="1875991048685328264">"Sì"</item>
-    <item msgid="6049132459802288033">"No"</item>
-    <item msgid="3084376867445867895">"OK"</item>
-    <item msgid="3155097332660174689">"He he"</item>
-    <item msgid="2611328818571146775">"Grazie"</item>
-    <item msgid="4881335087096496747">"Accetto"</item>
-    <item msgid="2422296858597420738">"Bene"</item>
-    <item msgid="4805581752819452687">"Sto arrivando"</item>
-    <item msgid="4746700499431366214">"OK, ti ricontatto più tardi"</item>
-    <item msgid="4342041517788201970">":)"</item>
-    <item msgid="7439437911747961187">":("</item>
-  </string-array>
 </resources>

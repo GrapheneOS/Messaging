@@ -21,17 +21,4 @@
     <item msgid="8900116186849071724">"ไม่มีเรื่อง"</item>
     <item msgid="272485471009191934">"ไม่มีชื่อเรื่อง"</item>
   </string-array>
-  <string-array name="notification_reply_choices">
-    <item msgid="1875991048685328264">"ใช่"</item>
-    <item msgid="6049132459802288033">"ไม่ใช่"</item>
-    <item msgid="3084376867445867895">"ตกลง"</item>
-    <item msgid="3155097332660174689">"อิอิ"</item>
-    <item msgid="2611328818571146775">"ขอบคุณ"</item>
-    <item msgid="4881335087096496747">"ฉันเห็นด้วย"</item>
-    <item msgid="2422296858597420738">"เยี่ยมเลย"</item>
-    <item msgid="4805581752819452687">"เดินทางอยู่"</item>
-    <item msgid="4746700499431366214">"ตกลง ฉันจะติดต่อกลับมาในภายหลัง"</item>
-    <item msgid="4342041517788201970">":)"</item>
-    <item msgid="7439437911747961187">":("</item>
-  </string-array>
 </resources>

@@ -21,17 +21,4 @@
     <item msgid="8900116186849071724">"কোনো বিষয় নেই"</item>
     <item msgid="272485471009191934">"বিষয়হীন"</item>
   </string-array>
-  <string-array name="notification_reply_choices">
-    <item msgid="1875991048685328264">"হ্যাঁ"</item>
-    <item msgid="6049132459802288033">"না"</item>
-    <item msgid="3084376867445867895">"ঠিক আছে"</item>
-    <item msgid="3155097332660174689">"হিহি"</item>
-    <item msgid="2611328818571146775">"ধন্যবাদ"</item>
-    <item msgid="4881335087096496747">"আমি রাজি"</item>
-    <item msgid="2422296858597420738">"সুন্দর"</item>
-    <item msgid="4805581752819452687">"রাস্তায় আছি"</item>
-    <item msgid="4746700499431366214">"ঠিক আছে, পরে আপনার সঙ্গে এই নিয়ে কথা বলছি"</item>
-    <item msgid="4342041517788201970">":)"</item>
-    <item msgid="7439437911747961187">":("</item>
-  </string-array>
 </resources>

@@ -21,17 +21,4 @@
     <item msgid="8900116186849071724">"విషయం లేదు"</item>
     <item msgid="272485471009191934">"విషయం లేదు"</item>
   </string-array>
-  <string-array name="notification_reply_choices">
-    <item msgid="1875991048685328264">"అవును"</item>
-    <item msgid="6049132459802288033">"వద్దు"</item>
-    <item msgid="3084376867445867895">"సరే"</item>
-    <item msgid="3155097332660174689">"హెహే"</item>
-    <item msgid="2611328818571146775">"ధన్యవాదాలు"</item>
-    <item msgid="4881335087096496747">"నేను అంగీకరిస్తున్నాను"</item>
-    <item msgid="2422296858597420738">"బాగుంది"</item>
-    <item msgid="4805581752819452687">"నేను ఆ పని మీదే ఉన్నాను"</item>
-    <item msgid="4746700499431366214">"సరే, నేను మీతో తర్వాత మాట్లాడుతాను"</item>
-    <item msgid="4342041517788201970">":)"</item>
-    <item msgid="7439437911747961187">":("</item>
-  </string-array>
 </resources>
