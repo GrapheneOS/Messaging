@@ -159,9 +159,9 @@
         <!-- Handles sharing intent -->
         <activity
             android:name=".ui.conversationpicker.host.share.ShareIntentActivity"
+            android:autoRemoveFromRecents="true"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:documentLaunchMode="always"
-            android:excludeFromRecents="true"
             android:exported="false"
             android:screenOrientation="user"
             android:theme="@style/Theme.Compose"

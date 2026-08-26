@@ -19,26 +19,26 @@ internal fun horizontalSlideContentTransform(isForward: Boolean): ContentTransfo
     }
 }
 
-internal fun slideInFromRight(): EnterTransition {
+private fun slideInFromRight(): EnterTransition {
     val slide = slideInHorizontally(animationSpec = slideSpec()) { fullWidth -> fullWidth }
     return slide + fadeIn(animationSpec = fadeSpec())
 }
 
-internal fun slideOutToLeft(): ExitTransition {
+private fun slideOutToLeft(): ExitTransition {
     val slide = slideOutHorizontally(animationSpec = slideSpec()) { fullWidth ->
         -fullWidth / SLIDE_PARALLAX_DIVISOR
     }
     return slide + fadeOut(animationSpec = fadeSpec())
 }
 
-internal fun slideInFromLeft(): EnterTransition {
+private fun slideInFromLeft(): EnterTransition {
     val slide = slideInHorizontally(animationSpec = slideSpec()) { fullWidth ->
         -fullWidth / SLIDE_PARALLAX_DIVISOR
     }
     return slide + fadeIn(animationSpec = fadeSpec())
 }
 
-internal fun slideOutToRight(): ExitTransition {
+private fun slideOutToRight(): ExitTransition {
     val slide = slideOutHorizontally(animationSpec = slideSpec()) { fullWidth -> fullWidth }
     return slide + fadeOut(animationSpec = fadeSpec())
 }
