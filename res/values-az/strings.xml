@@ -296,6 +296,7 @@
     <string name="general_settings" msgid="5409336577057897710">"Ümumi"</string>
     <string name="advanced_settings" msgid="5870459931510000742">"Qabaqcıl"</string>
     <string name="general_settings_activity_title" msgid="3012187932521771578">"Ümumi ayarlar"</string>
+    <string name="advanced_settings_activity_title" msgid="7397017836928206201">"Qabaqcıl ayarlar"</string>
     <string name="sim_specific_settings" msgid="948779178668552448">"\"<xliff:g id="SIM_NAME">%s</xliff:g>\" SIM"</string>
     <string name="disable_group_mms" msgid="1016285369211000297">"Bütün alıcılara fərdi SMS göndər. Hər hansı bir cavabı özünüz olacaq"</string>
     <string name="enable_group_mms" msgid="4311733160940564593">"Bütün alıcılara bir MMS göndər"</string>

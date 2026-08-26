@@ -296,6 +296,7 @@
     <string name="general_settings" msgid="5409336577057897710">"ທົ່ວໄປ"</string>
     <string name="advanced_settings" msgid="5870459931510000742">"​ຂັ້ນ​ສູງ"</string>
     <string name="general_settings_activity_title" msgid="3012187932521771578">"ການຕັ້ງຄ່າ​ທົ່ວໄປ"</string>
+    <string name="advanced_settings_activity_title" msgid="7397017836928206201">"ການຕັ້ງຄ່າ​ຂັ້ນສູງ"</string>
     <string name="sim_specific_settings" msgid="948779178668552448">"SIM \"<xliff:g id="SIM_NAME">%s</xliff:g>\""</string>
     <string name="disable_group_mms" msgid="1016285369211000297">"​ສົ່ງ​ຂໍ້​ຄວາມ SMS ​ສະ​ເພາະ​ບຸກ​ຄົນໄປ​ຫາ​ທຸກໆ​ຜູ່​ຮັບ. ​ສະ​ເພາະ​ທ່ານ​ເທົ່າ​ນັ້ນ​ທີ່​ຈະ​ໄດ້​ຮັບ​ແຕ່​ລະ​ການ​ຕອບ​ກັບ"</string>
     <string name="enable_group_mms" msgid="4311733160940564593">"​ສົ່ງ MMS ​ສະ​ບັບ​ນຶ່ງ​ໄປ​ຫາ​ທຸກໆ​ຜູ່​ຮັບ"</string>

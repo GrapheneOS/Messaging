@@ -296,6 +296,7 @@
     <string name="general_settings" msgid="5409336577057897710">"Général"</string>
     <string name="advanced_settings" msgid="5870459931510000742">"Paramètres avancés"</string>
     <string name="general_settings_activity_title" msgid="3012187932521771578">"Paramètres généraux"</string>
+    <string name="advanced_settings_activity_title" msgid="7397017836928206201">"Paramètres avancés"</string>
     <string name="sim_specific_settings" msgid="948779178668552448">"Carte SIM \"<xliff:g id="SIM_NAME">%s</xliff:g>\""</string>
     <string name="disable_group_mms" msgid="1016285369211000297">"Envoyer des SMS individuels à tous les destinataires. Vous seul recevrez les réponses."</string>
     <string name="enable_group_mms" msgid="4311733160940564593">"Envoyer un MMS unique à tous les destinataires"</string>

@@ -326,6 +326,7 @@
     <string name="general_settings" msgid="5409336577057897710">"Všeobecné"</string>
     <string name="advanced_settings" msgid="5870459931510000742">"Rozšírené"</string>
     <string name="general_settings_activity_title" msgid="3012187932521771578">"Všeobecné nastavenia"</string>
+    <string name="advanced_settings_activity_title" msgid="7397017836928206201">"Rozšírené nastavenia"</string>
     <string name="sim_specific_settings" msgid="948779178668552448">"SIM karta <xliff:g id="SIM_NAME">%s</xliff:g>"</string>
     <string name="disable_group_mms" msgid="1016285369211000297">"Odoslať osobitné správy SMS všetkým príjemcom. Všetky odpovede dostanete iba vy."</string>
     <string name="enable_group_mms" msgid="4311733160940564593">"Odoslať jednu správu MMS všetkým príjemcom"</string>

@@ -15,6 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.paneTitle
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.android.messaging.R
 import com.android.messaging.ui.common.components.ListDetailPaneSide
@@ -27,6 +29,8 @@ import com.android.messaging.ui.core.MessagingPreviewTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ConversationDetailPlaceholder(modifier: Modifier = Modifier) {
+    val title = stringResource(R.string.conversation_pane_title)
+
     CompositionLocalProvider(
         LocalIsListDetailPane provides true,
         LocalListDetailPaneSide provides ListDetailPaneSide.End,
@@ -34,6 +38,7 @@ internal fun ConversationDetailPlaceholder(modifier: Modifier = Modifier) {
         Column(
             modifier = modifier
                 .fillMaxSize()
+                .semantics { paneTitle = title }
                 .consumeOppositePaneInsets()
                 .background(MaterialTheme.colorScheme.surfaceContainer),
         ) {

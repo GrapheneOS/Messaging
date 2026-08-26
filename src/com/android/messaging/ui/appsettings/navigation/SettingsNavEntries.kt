@@ -34,50 +34,52 @@ import kotlinx.collections.immutable.ImmutableList
 internal fun EntryProviderScope<NavKey>.settingsEntries() {
     entry<SettingsNavKey>(
         metadata = paneTitleMetadata(R.string.settings_activity_title),
-        content = { SettingsRootDestination() },
+        content = settingsRouteContent(),
     )
     entry<AppSettingsNavKey>(
         metadata = paneTitleMetadata(R.string.general_settings_activity_title),
-        content = {
-            AppSettingsDestination(
-                isTopLevel = false,
-                advancedSubscription = null,
-            )
-        },
+        content = appSettingsRouteContent(),
     )
     entry<PrivacySettingsNavKey>(
         metadata = paneTitleMetadata(R.string.privacy_settings_activity_title),
-        content = { PrivacySettingsDestination() },
+        content = privacySettingsRouteContent(),
     )
     entry<SubscriptionSettingsNavKey>(
-        content = { navKey ->
-            SubscriptionSettingsDestination(
-                navKey = navKey,
-            )
-        },
+        metadata = paneTitleMetadata(R.string.advanced_settings_activity_title),
+        content = subscriptionSettingsRouteContent(),
     )
 }
 
-@Composable
-private fun SettingsRootDestination() {
-    val viewModel = hiltViewModel<SettingsMainViewModel>()
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+private fun settingsRouteContent(): @Composable (SettingsNavKey) -> Unit {
+    return {
+        val viewModel = hiltViewModel<SettingsMainViewModel>()
+        val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
-        viewModel.refreshState()
+        LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
+            viewModel.refreshState()
+        }
+
+        when (uiState.isMultiSim) {
+            true -> SettingsMainDestination(
+                subscriptions = uiState.subscriptions,
+            )
+
+            false -> AppSettingsDestination(
+                isTopLevel = true,
+                advancedSubscription = uiState.subscriptions.firstOrNull(),
+            )
+
+            null -> Unit
+        }
     }
+}
 
-    when (uiState.isMultiSim) {
-        true -> SettingsMainDestination(
-            subscriptions = uiState.subscriptions,
+private fun appSettingsRouteContent(): @Composable (AppSettingsNavKey) -> Unit {
+    return {
+        AppSettingsDestination(
+            isTopLevel = false,
+            advancedSubscription = null,
         )
-
-        false -> AppSettingsDestination(
-            isTopLevel = true,
-            advancedSubscription = uiState.subscriptions.firstOrNull(),
-        )
-
-        null -> Unit
     }
 }
 
@@ -147,59 +149,61 @@ private fun AppSettingsDestination(
     )
 }
 
-@Composable
-private fun PrivacySettingsDestination() {
-    val navigator = LocalNavigator.current
-    val viewModel = hiltViewModel<AppSettingsViewModel>()
-    val appSettings by viewModel.uiState.collectAsStateWithLifecycle()
-
-    LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
-        viewModel.refreshState()
-    }
-
-    PrivacySettingsScreen(
-        appSettings = appSettings,
-        onAction = viewModel::onAction,
-        onNavigateBack = navigator::back,
-    )
-}
-
-@Composable
-private fun SubscriptionSettingsDestination(navKey: SubscriptionSettingsNavKey) {
-    val navigator = LocalNavigator.current
-    val defaultArgs = remember(navKey) {
-        subscriptionSettingsDefaultArgs(navKey = navKey)
-    }
-
-    SeededViewModelStoreOwner(defaultArgs = defaultArgs) {
-        val viewModel = hiltViewModel<SubscriptionSettingsViewModel>()
-        val subscription by viewModel.uiState.collectAsStateWithLifecycle()
-        val effectHandler = rememberSubscriptionSettingsEffectHandler()
+private fun privacySettingsRouteContent(): @Composable (PrivacySettingsNavKey) -> Unit {
+    return {
+        val navigator = LocalNavigator.current
+        val viewModel = hiltViewModel<AppSettingsViewModel>()
+        val appSettings by viewModel.uiState.collectAsStateWithLifecycle()
 
         LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
             viewModel.refreshState()
         }
 
-        CollectEvents(
-            events = viewModel.effects,
-            onEvent = effectHandler::handle,
+        PrivacySettingsScreen(
+            appSettings = appSettings,
+            onAction = viewModel::onAction,
+            onNavigateBack = navigator::back,
         )
+    }
+}
 
-        CollectEvents(events = viewModel.navigationEvents) { event ->
-            when (event) {
-                SubscriptionSettingsNavEvent.Close -> {
-                    navigator.back()
-                }
-            }
+private fun subscriptionSettingsRouteContent(): @Composable (SubscriptionSettingsNavKey) -> Unit {
+    return { navKey ->
+        val navigator = LocalNavigator.current
+        val defaultArgs = remember(navKey) {
+            subscriptionSettingsDefaultArgs(navKey = navKey)
         }
 
-        subscription?.let { subscriptionSettings ->
-            SubscriptionSettingsScreen(
-                subscriptionSettings = subscriptionSettings,
-                title = navKey.title,
-                onAction = viewModel::onAction,
-                onNavigateBack = navigator::back,
+        SeededViewModelStoreOwner(defaultArgs = defaultArgs) {
+            val viewModel = hiltViewModel<SubscriptionSettingsViewModel>()
+            val subscription by viewModel.uiState.collectAsStateWithLifecycle()
+            val effectHandler = rememberSubscriptionSettingsEffectHandler()
+
+            LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
+                viewModel.refreshState()
+            }
+
+            CollectEvents(
+                events = viewModel.effects,
+                onEvent = effectHandler::handle,
             )
+
+            CollectEvents(events = viewModel.navigationEvents) { event ->
+                when (event) {
+                    SubscriptionSettingsNavEvent.Close -> {
+                        navigator.back()
+                    }
+                }
+            }
+
+            subscription?.let { subscriptionSettings ->
+                SubscriptionSettingsScreen(
+                    subscriptionSettings = subscriptionSettings,
+                    title = navKey.title,
+                    onAction = viewModel::onAction,
+                    onNavigateBack = navigator::back,
+                )
+            }
         }
     }
 }

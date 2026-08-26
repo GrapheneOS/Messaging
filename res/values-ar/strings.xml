@@ -356,6 +356,7 @@
     <string name="general_settings" msgid="5409336577057897710">"عام"</string>
     <string name="advanced_settings" msgid="5870459931510000742">"إعدادات متقدمة"</string>
     <string name="general_settings_activity_title" msgid="3012187932521771578">"الإعدادات العامة"</string>
+    <string name="advanced_settings_activity_title" msgid="7397017836928206201">"إعدادات متقدمة"</string>
     <string name="sim_specific_settings" msgid="948779178668552448">"‏شريحة SIM من \"<xliff:g id="SIM_NAME">%s</xliff:g>\""</string>
     <string name="disable_group_mms" msgid="1016285369211000297">"إرسال رسالة قصيرة واحدة إلى جميع المستلمين. ولن تصل الردود إلا إليك"</string>
     <string name="enable_group_mms" msgid="4311733160940564593">"إرسال رسالة وسائط متعددة إلى جميع المستلمين"</string>

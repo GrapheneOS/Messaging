@@ -296,6 +296,7 @@
     <string name="general_settings" msgid="5409336577057897710">"일반"</string>
     <string name="advanced_settings" msgid="5870459931510000742">"고급"</string>
     <string name="general_settings_activity_title" msgid="3012187932521771578">"일반 설정"</string>
+    <string name="advanced_settings_activity_title" msgid="7397017836928206201">"고급 설정"</string>
     <string name="sim_specific_settings" msgid="948779178668552448">"\'<xliff:g id="SIM_NAME">%s</xliff:g>\' SIM"</string>
     <string name="disable_group_mms" msgid="1016285369211000297">"모든 수신자에게 개별 SMS 보내기(나만 답장을 받을 수 있음)"</string>
     <string name="enable_group_mms" msgid="4311733160940564593">"모든 수신자에게 하나의 MMS 보내기"</string>

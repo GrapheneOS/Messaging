@@ -296,6 +296,7 @@
     <string name="general_settings" msgid="5409336577057897710">"പൊതുവായത്"</string>
     <string name="advanced_settings" msgid="5870459931510000742">"വിപുലമായത്"</string>
     <string name="general_settings_activity_title" msgid="3012187932521771578">"പൊതു ക്രമീകരണങ്ങൾ"</string>
+    <string name="advanced_settings_activity_title" msgid="7397017836928206201">"വിപുലമായ ക്രമീകരണങ്ങൾ"</string>
     <string name="sim_specific_settings" msgid="948779178668552448">"\"<xliff:g id="SIM_NAME">%s</xliff:g>\" SIM"</string>
     <string name="disable_group_mms" msgid="1016285369211000297">"എല്ലാ സ്വീകർത്താക്കൾക്കും വെവ്വേറെ SMS സന്ദേശങ്ങൾ അയയ്‌ക്കുക. മറുപടികളെല്ലാം നിങ്ങൾക്കുമാത്രമേ ലഭിക്കൂ"</string>
     <string name="enable_group_mms" msgid="4311733160940564593">"എല്ലാ സ്വീകർത്താക്കൾക്കും ഒരൊറ്റ MMS അയയ്‌ക്കുക"</string>

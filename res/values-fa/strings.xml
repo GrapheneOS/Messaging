@@ -296,6 +296,7 @@
     <string name="general_settings" msgid="5409336577057897710">"کلی"</string>
     <string name="advanced_settings" msgid="5870459931510000742">"پیشرفته"</string>
     <string name="general_settings_activity_title" msgid="3012187932521771578">"تنظیمات کلی"</string>
+    <string name="advanced_settings_activity_title" msgid="7397017836928206201">"تنظیمات پیشرفته"</string>
     <string name="sim_specific_settings" msgid="948779178668552448">"سیم کارت «<xliff:g id="SIM_NAME">%s</xliff:g>»"</string>
     <string name="disable_group_mms" msgid="1016285369211000297">"ارسال پیامک‌های جداگانه به همه گیرندگان. فقط شما جواب‌ها را دریافت می‌کنید"</string>
     <string name="enable_group_mms" msgid="4311733160940564593">"‏ارسال یک MMS تکی به همه گیرندگان"</string>

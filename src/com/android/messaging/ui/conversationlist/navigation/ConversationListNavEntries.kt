@@ -30,7 +30,7 @@ import com.android.messaging.ui.navigation.paneTitleMetadata
 
 internal fun EntryProviderScope<NavKey>.conversationListEntries() {
     entry<ConversationListNavKey>(
-        metadata = conversationListPaneMetadata(),
+        metadata = conversationListPaneMetadata() + paneTitleMetadata(R.string.app_name),
         content = conversationListRouteContent(),
     )
     entry<ArchivedConversationListNavKey>(

@@ -296,6 +296,7 @@
     <string name="general_settings" msgid="5409336577057897710">"ទូទៅ"</string>
     <string name="advanced_settings" msgid="5870459931510000742">"កម្រិត​ខ្ពស់"</string>
     <string name="general_settings_activity_title" msgid="3012187932521771578">"ការ​កំណត់​ទូទៅ"</string>
+    <string name="advanced_settings_activity_title" msgid="7397017836928206201">"ការ​កំណត់​កម្រិត​ខ្ពស់"</string>
     <string name="sim_specific_settings" msgid="948779178668552448">"\"<xliff:g id="SIM_NAME">%s</xliff:g>\" ស៊ីម"</string>
     <string name="disable_group_mms" msgid="1016285369211000297">"ផ្ញើ​សារ SMS នីមួយៗ​ទៅ​អ្នក​ទទួល​ទាំង​អស់។ មាន​តែ​អ្នក​ប៉ុណ្ណោះ​​ទទួល​បាន​ការ​ឆ្លើយតប"</string>
     <string name="enable_group_mms" msgid="4311733160940564593">"ផ្ញើ​សារ MMS មួយ​ទៅ​អ្នក​ទទួល"</string>
