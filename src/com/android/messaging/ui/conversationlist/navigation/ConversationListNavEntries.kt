@@ -34,7 +34,8 @@ internal fun EntryProviderScope<NavKey>.conversationListEntries() {
         content = conversationListRouteContent(),
     )
     entry<ArchivedConversationListNavKey>(
-        metadata = paneTitleMetadata(R.string.archived_activity_title),
+        metadata = conversationListPaneMetadata() +
+            paneTitleMetadata(R.string.archived_activity_title),
         content = archivedConversationListRouteContent(),
     )
 }

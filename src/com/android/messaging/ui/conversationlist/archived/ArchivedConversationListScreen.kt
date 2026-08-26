@@ -43,6 +43,7 @@ import com.android.messaging.ui.conversationlist.common.list.ConversationListIte
 import com.android.messaging.ui.conversationlist.common.list.ConversationListItems
 import com.android.messaging.ui.conversationlist.common.list.ConversationListSwipeSpec
 import com.android.messaging.ui.conversationlist.common.list.unsupportedSwipeKind
+import com.android.messaging.ui.conversationlist.common.pane.listPaneContentColor
 import com.android.messaging.ui.conversationlist.common.status.ConversationListLoadingIndicator
 import com.android.messaging.ui.conversationlist.common.status.ConversationListStatusMessage
 import com.android.messaging.ui.conversationlist.common.support.previewConversationListItems
@@ -216,7 +217,7 @@ private fun ArchivedConversationListScaffold(
                 .padding(top = contentPadding.calculateTopPadding())
                 .background(archivedBackdropColor(isSelectionMode))
                 .clip(MaterialTheme.contentSurfaceShape)
-                .background(MaterialTheme.colorScheme.background),
+                .background(listPaneContentColor()),
         ) {
             ArchivedConversationListContent(
                 content = uiState.content,
