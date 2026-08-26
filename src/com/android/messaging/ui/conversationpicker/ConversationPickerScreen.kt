@@ -4,10 +4,13 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Transition
+import androidx.compose.animation.core.rememberTransition
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -20,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -30,6 +34,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,7 +56,7 @@ import com.android.messaging.ui.common.components.composer.MESSAGE_COMPOSE_FIELD
 import com.android.messaging.ui.common.components.composer.MessageComposeBar
 import com.android.messaging.ui.common.components.composer.MessageSendButton
 import com.android.messaging.ui.common.components.contentSurfaceShape
-import com.android.messaging.ui.common.components.horizontalSlideContentTransform
+import com.android.messaging.ui.common.components.displayCornerRadius
 import com.android.messaging.ui.common.components.imeAwareBottomBarInsets
 import com.android.messaging.ui.common.components.mediapreview.MediaPreviewBackground
 import com.android.messaging.ui.common.components.safeDrawingContentPadding
@@ -78,8 +84,10 @@ import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerU
 import com.android.messaging.ui.subscription.component.SimSelectorRow
 import com.android.messaging.ui.subscription.mapper.rememberSimSelectorUiState
 import com.android.messaging.ui.subscription.model.SimSelectionUiState
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.coroutines.launch
 
 @Composable
 internal fun ConversationPickerScreen(
@@ -151,6 +159,13 @@ private fun PickerContent(
     modifier: Modifier = Modifier,
 ) {
     val searchState = rememberTextFieldState()
+    val reviewTransition = remember {
+        PickerReviewTransition(isReviewing = uiState.draft.isReviewing)
+    }
+    val transition = rememberTransition(
+        transitionState = reviewTransition.transitionState,
+        label = "picker_review",
+    )
 
     LaunchedEffect(searchState) {
         snapshotFlow { searchState.text.toString() }
@@ -159,15 +174,22 @@ private fun PickerContent(
             }
     }
 
+    LaunchedEffect(uiState.draft.isReviewing) {
+        reviewTransition.settleTo(isReviewing = uiState.draft.isReviewing)
+    }
+
     PickerBackHandlers(
         uiState = uiState,
         searchState = searchState,
+        reviewTransition = reviewTransition,
         onAction = onAction,
     )
 
     AnimatedPickerContent(
         uiState = uiState,
         searchState = searchState,
+        reviewTransition = reviewTransition,
+        transition = transition,
         onAction = onAction,
         onNavigateBack = onNavigateBack,
         onGrantContactsPermission = onGrantContactsPermission,
@@ -181,6 +203,8 @@ private fun PickerContent(
 private fun AnimatedPickerContent(
     uiState: State,
     searchState: TextFieldState,
+    reviewTransition: PickerReviewTransition,
+    transition: Transition<Boolean>,
     onAction: (Action) -> Unit,
     onNavigateBack: () -> Unit,
     onGrantContactsPermission: () -> Unit,
@@ -188,18 +212,23 @@ private fun AnimatedPickerContent(
     labels: ConversationPickerLabels,
     modifier: Modifier = Modifier,
 ) {
-    AnimatedContent(
-        targetState = uiState.draft.isReviewing,
+    transition.AnimatedContent(
         modifier = modifier.background(MaterialTheme.colorScheme.background),
-        transitionSpec = { horizontalSlideContentTransform(isForward = targetState) },
-        label = "picker_review",
+        transitionSpec = {
+            reviewTransition.stepContentTransform(isForward = targetState)
+        },
     ) { isReviewing ->
+        val pageModifier = Modifier.clip(
+            shape = RoundedCornerShape(size = displayCornerRadius()),
+        )
+
         when {
             isReviewing -> {
                 PickerReviewScaffold(
                     uiState = uiState,
                     onAction = onAction,
                     labels = labels,
+                    modifier = pageModifier,
                 )
             }
 
@@ -212,6 +241,7 @@ private fun AnimatedPickerContent(
                     onGrantContactsPermission = onGrantContactsPermission,
                     allowMultiSelect = allowMultiSelect,
                     labels = labels,
+                    modifier = pageModifier,
                 )
             }
         }
@@ -222,20 +252,35 @@ private fun AnimatedPickerContent(
 private fun PickerBackHandlers(
     uiState: State,
     searchState: TextFieldState,
+    reviewTransition: PickerReviewTransition,
     onAction: (Action) -> Unit,
 ) {
     val isReviewing = uiState.draft.isReviewing
     val inSelectionMode = uiState.targets.selection.selectedIds.isNotEmpty()
     val isSearchActive = uiState.targets.isSearchActive
+    val settleScope = rememberCoroutineScope()
 
-    BackHandler(enabled = isReviewing || inSelectionMode || isSearchActive) {
+    PredictiveBackHandler(enabled = isReviewing) { progress ->
+        try {
+            progress.collect { backEvent ->
+                reviewTransition.seekToTargets(backEvent = backEvent)
+            }
+            onAction(Action.ReviewDismissed)
+        } catch (cancellation: CancellationException) {
+            settleScope.launch {
+                reviewTransition.settleTo(isReviewing = isReviewing)
+            }
+            throw cancellation
+        }
+    }
+
+    BackHandler(enabled = !isReviewing && (inSelectionMode || isSearchActive)) {
         when {
-            isReviewing -> onAction(Action.ReviewDismissed)
             isSearchActive -> {
                 searchState.clearText()
                 onAction(Action.SearchClosed)
             }
-            inSelectionMode -> onAction(Action.SelectionCleared)
+            else -> onAction(Action.SelectionCleared)
         }
     }
 }
