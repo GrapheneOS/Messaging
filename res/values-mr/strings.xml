@@ -296,6 +296,7 @@
     <string name="general_settings" msgid="5409336577057897710">"सामान्य"</string>
     <string name="advanced_settings" msgid="5870459931510000742">"प्रगत"</string>
     <string name="general_settings_activity_title" msgid="3012187932521771578">"सामान्य सेटिंग्ज"</string>
+    <string name="advanced_settings_activity_title" msgid="7397017836928206201">"प्रगत सेटिंग्ज"</string>
     <string name="sim_specific_settings" msgid="948779178668552448">"\"<xliff:g id="SIM_NAME">%s</xliff:g>\" सिम"</string>
     <string name="disable_group_mms" msgid="1016285369211000297">"सर्व प्राप्तकर्त्यांना वैयक्तिक SMS संदेश पाठवा. केवळ आपणच कोणतीही प्रत्युत्तरे मिळवाल"</string>
     <string name="enable_group_mms" msgid="4311733160940564593">"सर्व प्राप्तकर्त्यांना एक एकल MMS पाठवा"</string>

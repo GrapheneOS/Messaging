@@ -10,6 +10,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
+import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.common.components.consumeOppositePaneInsets
 import com.android.messaging.ui.contact.navigation.navigateToAddContact
@@ -28,19 +29,24 @@ import com.android.messaging.ui.conversation.screen.ConversationViewModel
 import com.android.messaging.ui.conversation.screen.model.ConversationPendingLaunchPayload
 import com.android.messaging.ui.navigation.LocalNavigator
 import com.android.messaging.ui.navigation.SeededViewModelStoreOwner
+import com.android.messaging.ui.navigation.paneTitleMetadata
 
 internal fun EntryProviderScope<NavKey>.conversationEntries() {
     entry<ConversationNavKey>(
-        metadata = conversationDetailPaneMetadata(),
+        metadata = conversationDetailPaneMetadata() +
+            paneTitleMetadata(R.string.conversation_pane_title),
         content = conversationScreenRouteContent(),
     )
     entry<NewChatNavKey>(
+        metadata = paneTitleMetadata(R.string.start_new_conversation),
         content = newChatRouteContent(),
     )
     entry<AddParticipantsNavKey>(
+        metadata = paneTitleMetadata(R.string.conversation_add_people),
         content = addParticipantsRouteContent(),
     )
     entry<MessageDetailsNavKey>(
+        metadata = paneTitleMetadata(R.string.message_details_title),
         content = messageDetailsRouteContent(),
     )
 }

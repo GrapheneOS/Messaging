@@ -296,6 +296,7 @@
     <string name="general_settings" msgid="5409336577057897710">"常规"</string>
     <string name="advanced_settings" msgid="5870459931510000742">"高级"</string>
     <string name="general_settings_activity_title" msgid="3012187932521771578">"常规设置"</string>
+    <string name="advanced_settings_activity_title" msgid="7397017836928206201">"高级设置"</string>
     <string name="sim_specific_settings" msgid="948779178668552448">"SIM 卡 “<xliff:g id="SIM_NAME">%s</xliff:g>”"</string>
     <string name="disable_group_mms" msgid="1016285369211000297">"将单条短信发送给所有收件人。只有您能收到相应回复"</string>
     <string name="enable_group_mms" msgid="4311733160940564593">"将单条彩信发送给所有收件人"</string>

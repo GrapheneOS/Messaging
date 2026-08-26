@@ -296,6 +296,7 @@
     <string name="general_settings" msgid="5409336577057897710">"সাধারণ"</string>
     <string name="advanced_settings" msgid="5870459931510000742">"আরো বিকল্প"</string>
     <string name="general_settings_activity_title" msgid="3012187932521771578">"সাধারণ সেটিংস"</string>
+    <string name="advanced_settings_activity_title" msgid="7397017836928206201">"উন্নত সেটিংস"</string>
     <string name="sim_specific_settings" msgid="948779178668552448">"\"<xliff:g id="SIM_NAME">%s</xliff:g>\" SIM"</string>
     <string name="disable_group_mms" msgid="1016285369211000297">"সকল প্রাপকের কাছে আলাদা আলাদা করে SMS পাঠান৷ শুধুমাত্র আপনিই উত্তরগুলি পাবেন"</string>
     <string name="enable_group_mms" msgid="4311733160940564593">"সকল প্রাপকের কাছে একটি নির্দিষ্ট MMS পাঠান"</string>

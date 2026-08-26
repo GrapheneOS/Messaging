@@ -296,6 +296,7 @@
     <string name="general_settings" msgid="5409336577057897710">"Umum"</string>
     <string name="advanced_settings" msgid="5870459931510000742">"Lanjutan"</string>
     <string name="general_settings_activity_title" msgid="3012187932521771578">"Tetapan umum"</string>
+    <string name="advanced_settings_activity_title" msgid="7397017836928206201">"Tetapan terperinci"</string>
     <string name="sim_specific_settings" msgid="948779178668552448">"SIM \"<xliff:g id="SIM_NAME">%s</xliff:g>\""</string>
     <string name="disable_group_mms" msgid="1016285369211000297">"Hantar mesej SMS individu kepada semua penerima. Hanya anda yang akan menerima sebarang balasan"</string>
     <string name="enable_group_mms" msgid="4311733160940564593">"Hantar MMS tunggal kepada semua penerima"</string>

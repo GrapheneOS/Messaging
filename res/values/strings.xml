@@ -551,6 +551,8 @@
     <string name="archived_conversation_list_empty_text">Archived conversations appear here</string>
     <!-- Low-emphasis hint shown in the detail pane on large screens when no conversation is open. -->
     <string name="conversation_detail_no_selection_text">No conversation selected</string>
+    <!-- Accessibility name of the pane that shows a single conversation. -->
+    <string name="conversation_pane_title">Conversation</string>
     <!-- String to show in the conversation list view when we haven't synchronized the SMS database yet -->
     <string name="conversation_list_first_sync_text">Loading conversations&#8230;</string>
 
@@ -782,6 +784,9 @@
 
     <!-- The title for privacy settings screen  -->
     <string name="privacy_settings_activity_title">Privacy</string>
+
+    <!-- The title for advanced settings activity  -->
+    <string name="advanced_settings_activity_title">Advanced settings</string>
 
     <!-- The title for the YouTube link previews setting -->
     <string name="youtube_link_previews_pref_title">YouTube link previews</string>

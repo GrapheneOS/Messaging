@@ -296,6 +296,7 @@
     <string name="general_settings" msgid="5409336577057897710">"Жалпы"</string>
     <string name="advanced_settings" msgid="5870459931510000742">"Кеңейтілген"</string>
     <string name="general_settings_activity_title" msgid="3012187932521771578">"Жалпы параметрлер"</string>
+    <string name="advanced_settings_activity_title" msgid="7397017836928206201">"Қосымша параметрлер"</string>
     <string name="sim_specific_settings" msgid="948779178668552448">"«<xliff:g id="SIM_NAME">%s</xliff:g>» SIM"</string>
     <string name="disable_group_mms" msgid="1016285369211000297">"Барлық алушыларға SMS хабарларын жіберіңіз. Жауаптарды тек сіз аласыз"</string>
     <string name="enable_group_mms" msgid="4311733160940564593">"Барлық алушыларға бір MMS жіберу"</string>
