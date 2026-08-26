@@ -15,7 +15,6 @@
  */
 package com.android.messaging.util;
 
-import android.graphics.Color;
 import android.net.Uri;
 import android.net.Uri.Builder;
 import androidx.annotation.NonNull;
@@ -83,11 +82,6 @@ public class AvatarUriUtil {
 
     public static final Uri DEFAULT_BACKGROUND_AVATAR = new Uri.Builder().scheme(SCHEME)
             .authority(AUTHORITY).appendPath(TYPE_DEFAULT_BACKGROUND_URI).build();
-
-    private static final Uri BLANK_SIM_INDICATOR_INCOMING_URI = createSimIconUri("",
-            false /* selected */, Color.TRANSPARENT, true /* incoming */);
-    private static final Uri BLANK_SIM_INDICATOR_OUTGOING_URI = createSimIconUri("",
-            false /* selected */, Color.TRANSPARENT, false /* incoming */);
 
     /**
      * Creates an avatar uri based on a list of ParticipantData. The list of participants may not
@@ -218,10 +212,6 @@ public class AvatarUriUtil {
         builder.appendQueryParameter(PARAM_SIM_SELECTED, String.valueOf(selected));
         builder.appendQueryParameter(PARAM_SIM_INCOMING, String.valueOf(incoming));
         return builder.build();
-    }
-
-    public static Uri getBlankSimIndicatorUri(final boolean incoming) {
-        return incoming ? BLANK_SIM_INDICATOR_INCOMING_URI : BLANK_SIM_INDICATOR_OUTGOING_URI;
     }
 
     /**

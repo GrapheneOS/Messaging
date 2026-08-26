@@ -18,7 +18,6 @@ package com.android.messaging.datamodel;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import androidx.core.app.RemoteInput;
 import android.telephony.TelephonyManager;

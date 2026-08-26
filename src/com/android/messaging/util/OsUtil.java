@@ -107,27 +107,6 @@ public class OsUtil {
         return hasPermission(Manifest.permission.READ_SMS);
     }
 
-    public static boolean hasLocationPermission() {
-        return OsUtil.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION);
-    }
-
-
-    public static boolean hasReadImagesPermission() {
-        return OsUtil.hasPermission(Manifest.permission.READ_MEDIA_IMAGES);
-    }
-
-    public static boolean hasReadVideoPermission() {
-        return OsUtil.hasPermission(Manifest.permission.READ_MEDIA_VIDEO);
-    }
-
-    public static boolean hasReadAudioPermission() {
-        return OsUtil.hasPermission(Manifest.permission.READ_MEDIA_AUDIO);
-    }
-
-    public static boolean hasRecordAudioPermission() {
-        return OsUtil.hasPermission(Manifest.permission.RECORD_AUDIO);
-    }
-
     /**
      * Returns array with the set of permissions that have not been granted from the given set.
      * The array will be empty if the app has all of the specified permissions. Note that calling

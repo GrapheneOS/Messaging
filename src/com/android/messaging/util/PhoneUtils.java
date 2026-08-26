@@ -104,15 +104,6 @@ public class PhoneUtils {
     }
 
     /**
-     * Get number of SIM slots
-     *
-     * @return the SIM slot count
-     */
-    public int getSimSlotCount() {
-        return mSubscriptionManager.getActiveSubscriptionInfoCountMax();
-    }
-
-    /**
      * Get SIM's carrier name
      *
      * @return the carrier name of the SIM
@@ -130,15 +121,6 @@ public class PhoneUtils {
             }
         }
         return null;
-    }
-
-    /**
-     * Check if there is SIM inserted on the device
-     *
-     * @return true if there is SIM inserted, false otherwise
-     */
-    public boolean hasSim() {
-        return mSubscriptionManager.getActiveSubscriptionInfoCount() > 0;
     }
 
     /**
@@ -164,15 +146,6 @@ public class PhoneUtils {
             mnc = subInfo.getMnc();
         }
         return new int[]{mcc, mnc};
-    }
-
-    /**
-     * Get the mcc/mnc string
-     *
-     * @return the text of mccmnc string
-     */
-    public String getSimOperatorNumeric() {
-        return getMccMncString(getMccMnc());
     }
 
     /**
@@ -914,13 +887,6 @@ public class PhoneUtils {
     public boolean isAirplaneModeOn() {
         return Settings.Global.getInt(mContext.getContentResolver(),
                 Settings.Global.AIRPLANE_MODE_ON, 0) != 0;
-    }
-
-    public static String getMccMncString(int[] mccmnc) {
-        if (mccmnc == null || mccmnc.length != 2) {
-            return "000000";
-        }
-        return String.format(Locale.ROOT, "%03d%03d", mccmnc[0], mccmnc[1]);
     }
 
     public static String canonicalizeMccMnc(final String mcc, final String mnc) {

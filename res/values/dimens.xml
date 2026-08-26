@@ -30,11 +30,6 @@
     <dimen name="widget_header_new_conv_button_width">48dp</dimen>
     <dimen name="widget_conversation_title_size">18sp</dimen>
 
-    <!-- Conversation fast-scroller -->
-    <dimen name="fastscroll_track_width">8dp</dimen>
-    <dimen name="fastscroll_thumb_height">48dp</dimen>
-    <dimen name="fastscroll_preview_corner_radius">44dp</dimen>
-
     <dimen name="max_bubbled_activity_height">600dp</dimen>
 
 </resources>

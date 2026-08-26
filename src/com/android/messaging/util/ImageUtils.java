@@ -25,15 +25,12 @@ import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Shader.TileMode;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.text.TextUtils;
-import android.view.View;
 
 import com.android.messaging.Factory;
 import com.android.messaging.datamodel.MediaScratchFileProvider;
@@ -169,14 +166,6 @@ public class ImageUtils {
                     dest.width() / 2f - stroke.getStrokeWidth() / 2f,
                     stroke);
         }
-    }
-
-    /**
-     * Sets a drawable to the background of a view. setBackgroundDrawable() is deprecated since
-     * JB and replaced by setBackground().
-     */
-    public static void setBackgroundDrawableOnView(final View view, final Drawable drawable) {
-        view.setBackground(drawable);
     }
 
     /**
@@ -814,71 +803,6 @@ public class ImageUtils {
                 }
             }
         }
-    }
-
-    /**
-     * Scales and center-crops a bitmap to the size passed in and returns the new bitmap.
-     *
-     * @param source Bitmap to scale and center-crop
-     * @param newWidth destination width
-     * @param newHeight destination height
-     * @return Bitmap scaled and center-cropped bitmap
-     */
-    public static Bitmap scaleCenterCrop(final Bitmap source, final int newWidth,
-            final int newHeight) {
-        final int sourceWidth = source.getWidth();
-        final int sourceHeight = source.getHeight();
-
-        // Compute the scaling factors to fit the new height and width, respectively.
-        // To cover the final image, the final scaling will be the bigger
-        // of these two.
-        final float xScale = (float) newWidth / sourceWidth;
-        final float yScale = (float) newHeight / sourceHeight;
-        final float scale = Math.max(xScale, yScale);
-
-        // Now get the size of the source bitmap when scaled
-        final float scaledWidth = scale * sourceWidth;
-        final float scaledHeight = scale * sourceHeight;
-
-        // Let's find out the upper left coordinates if the scaled bitmap
-        // should be centered in the new size give by the parameters
-        final float left = (newWidth - scaledWidth) / 2;
-        final float top = (newHeight - scaledHeight) / 2;
-
-        // The target rectangle for the new, scaled version of the source bitmap will now
-        // be
-        final RectF targetRect = new RectF(left, top, left + scaledWidth, top + scaledHeight);
-
-        // Finally, we create a new bitmap of the specified size and draw our new,
-        // scaled bitmap onto it.
-        final Bitmap dest = Bitmap.createBitmap(newWidth, newHeight, source.getConfig());
-        final Canvas canvas = new Canvas(dest);
-        canvas.drawBitmap(source, null, targetRect, null);
-
-        return dest;
-    }
-
-    /**
-     *  The drawable can be a Nine-Patch. If we directly use the same drawable instance for each
-     *  drawable of different sizes, then the drawable sizes would interfere with each other. The
-     *  solution here is to create a new drawable instance for every time with the SAME
-     *  ConstantState (i.e. sharing the same common state such as the bitmap, so that we don't have
-     *  to recreate the bitmap resource), and apply the different properties on top (nine-patch
-     *  size and color tint).
-     *
-     *  TODO: we are creating new drawable instances here, but there are optimizations that
-     *  can be made. For example, message bubbles shouldn't need the mutate() call and the
-     *  play/pause buttons shouldn't need to create new drawable from the constant state.
-     */
-    public static Drawable getTintedDrawable(final Context context, final Drawable drawable,
-            final int color) {
-        // For some reason occassionally drawables on JB has a null constant state
-        final Drawable.ConstantState constantStateDrawable = drawable.getConstantState();
-        final Drawable retDrawable = (constantStateDrawable != null)
-                ? constantStateDrawable.newDrawable(context.getResources()).mutate()
-                : drawable;
-        retDrawable.setColorFilter(color, PorterDuff.Mode.SRC_ATOP);
-        return retDrawable;
     }
 
     /**
