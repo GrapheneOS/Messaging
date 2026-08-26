@@ -44,7 +44,6 @@ import com.android.messaging.util.SafeAsyncTask;
 import com.android.messaging.util.UriUtil;
 
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Represents a single message part. Messages consist of one or more parts which may contain

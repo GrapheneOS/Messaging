@@ -18,7 +18,6 @@ package com.android.messaging.datamodel;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
-import android.net.Uri;
 import android.telephony.SubscriptionManager;
 
 import com.android.messaging.datamodel.action.ActionService;
@@ -34,7 +33,6 @@ import com.android.messaging.datamodel.data.GalleryGridItemData;
 import com.android.messaging.datamodel.data.LaunchConversationData;
 import com.android.messaging.datamodel.data.LaunchConversationData.LaunchConversationDataListener;
 import com.android.messaging.datamodel.data.MediaPickerData;
-import com.android.messaging.datamodel.data.MessagePartData;
 import com.android.messaging.datamodel.data.ParticipantData;
 import com.android.messaging.sms.MmsConfig;
 import com.android.messaging.util.Assert;

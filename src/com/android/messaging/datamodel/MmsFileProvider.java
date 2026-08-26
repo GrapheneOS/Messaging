@@ -18,7 +18,6 @@ package com.android.messaging.datamodel;
 
 import android.content.Context;
 import android.net.Uri;
-import android.text.TextUtils;
 
 import com.android.messaging.BuildConfig;
 import com.android.messaging.Factory;

@@ -29,15 +29,6 @@
     <color name="timestamp_text_incoming">#99ffffff</color>
     <color name="timestamp_text_failed">#99ff0000</color>
 
-    <color name="conversation_background">#eeeeee</color>
-    <color name="message_bubble_color_outgoing">#ffffffff</color>
-    <color name="message_error_bubble_color_incoming">#e2e2e2</color>
-    <color name="message_audio_button_color_incoming">#ffffffff</color>
-    <color name="message_bubble_color_selected">#8BC34A</color>
-
-    <!-- Base color used for color filtering. -->
-    <color name="color_filter_base_color">#ff0000</color>
-
     <!-- Activity background color -->
     <drawable name="class_zero_background">#7f040000</drawable>
 
@@ -45,8 +36,6 @@
     <color name="chips_dropdown_background_pressed">#ededed</color>
 
     <color name="letter_tile_font_color">#ffffff</color>
-
-    <color name="audio_progress_bar_color">@color/primary_color</color>
 
     <color name="notification_warning_color">#ff0000</color>
     <color name="notification_subject_color">#DE000000</color>
@@ -59,7 +48,5 @@
     <color name="widget_background_color">#ffffff</color>
     <color name="ripple_material_light">#40000000</color>
     <color name="widget_conversation_title_color">#FFFFFF</color>
-
-    <color name="fastscroll_thumb_color">#42000000</color>
 
 </resources>

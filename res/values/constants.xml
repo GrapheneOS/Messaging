@@ -44,7 +44,4 @@
     <string name="new_image_file_name_format" translatable="false">"'IMG'_yyyyMMdd_HHmmss"</string>
     <!-- format string for creating new files of unknown type. Passed to java.text.SimpleDateFormat. -->
     <string name="new_file_name_format" translatable="false">"yyyyMMdd_HHmmss"</string>
-
-    <!-- Generic reveal view animation duration -->
-    <integer name="reveal_view_animation_duration">300</integer>
 </resources>

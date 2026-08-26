@@ -101,10 +101,6 @@ public class Dates {
         return getTimeString(time, abbreviated, true /*minPeriodToday*/);
     }
 
-    public static CharSequence getFastScrollPreviewTimeString(final long time) {
-        return getTimeString(time, true /* abbreviated */, true /* minPeriodToday */);
-    }
-
     public static CharSequence getMessageDetailsTimeString(final long time) {
         final Context context = getContext();
         int flags;

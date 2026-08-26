@@ -1307,34 +1307,6 @@ public class MmsUtils {
     }
 
     /**
-     * Delete SMS and MMS messages that are earlier than a specific timestamp
-     *
-     * @param cutOffTimestampInMillis The cut-off timestamp
-     * @return Total number of messages deleted.
-     */
-    public static int deleteMessagesOlderThan(final long cutOffTimestampInMillis) {
-        int deleted = 0;
-        final ContentResolver resolver = Factory.get().getApplicationContext().getContentResolver();
-        // Delete old SMS
-        final String smsSelection = String.format(
-                Locale.US,
-                "%s AND (%s<=%d)",
-                getSmsTypeSelectionSql(),
-                Sms.DATE,
-                cutOffTimestampInMillis);
-        deleted += resolver.delete(Sms.CONTENT_URI, smsSelection, null/*selectionArgs*/);
-        // Delete old MMS
-        final String mmsSelection = String.format(
-                Locale.US,
-                "%s AND (%s<=%d)",
-                getMmsTypeSelectionSql(),
-                Mms.DATE,
-                cutOffTimestampInMillis / 1000L);
-        deleted += resolver.delete(Mms.CONTENT_URI, mmsSelection, null/*selectionArgs*/);
-        return deleted;
-    }
-
-    /**
      * Update the read status of SMS/MMS messages by thread and timestamp
      *
      * @param threadId The thread of sms/mms to change
@@ -1371,19 +1343,6 @@ public class MmsUtils {
                 values,
                 mmsSelection,
                 null/*selectionArgs*/);
-    }
-
-    /**
-     * Update the read status of a single MMS message by its URI
-     *
-     * @param mmsUri
-     * @param read
-     */
-    public static void updateReadStatusForMmsMessage(final Uri mmsUri, final boolean read) {
-        final ContentResolver resolver = Factory.get().getApplicationContext().getContentResolver();
-        final ContentValues values = new ContentValues();
-        values.put(Mms.READ, read ? 1 : 0);
-        resolver.update(mmsUri, values, null/*where*/, null/*selectionArgs*/);
     }
 
     public static class AttachmentInfo {

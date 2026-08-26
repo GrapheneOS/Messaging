@@ -181,18 +181,6 @@ public class ContactUtil {
         }
     }
 
-    /**
-     * Get a list of phones matching a search criteria. The search may be on contact name or
-     * phone number. In case search is on contact name, all matching contact's phone number
-     * will be returned.
-     * NOTE: This is visible for testing only, clients should only call filterDestination() since
-     * we support email addresses as well.
-     */
-    @VisibleForTesting
-    public static CursorQueryData filterPhones(final Context context, final String query) {
-        return filterPhonesInternal(context, Phone.CONTENT_FILTER_URI, query, Directory.DEFAULT);
-    }
-
     private static CursorQueryData filterPhonesInternal(final Context context,
             final Uri phoneFilterBaseUri, final String query, final long directoryId) {
         if (!ContactUtil.hasReadContactsPermission()) {
