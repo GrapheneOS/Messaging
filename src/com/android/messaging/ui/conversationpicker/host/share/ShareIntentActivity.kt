@@ -160,17 +160,13 @@ class ShareIntentActivity : BugleComponentActivity() {
          * redirecting an intent that carries an EXTRA_STREAM attachment would silently drop the
          * attachment. Keep such intents in the conversation picker instead.
          */
-        internal fun shouldRedirectToSendTo(intent: Intent): Boolean {
-            if (Intent.ACTION_SEND != intent.action) {
-                return false
-            }
-            if (intent.hasExtra(Intent.EXTRA_STREAM)) {
-                return false
-            }
-            val hasDestination = !intent.getStringExtra(EXTRA_ADDRESS).isNullOrEmpty() ||
-                hasEmailDestination(intent)
-            return hasDestination
-        }
+        internal fun shouldRedirectToSendTo(intent: Intent): Boolean =
+            Intent.ACTION_SEND == intent.action &&
+                !intent.hasExtra(Intent.EXTRA_STREAM) &&
+                (
+                    !intent.getStringExtra(EXTRA_ADDRESS).isNullOrEmpty() ||
+                        hasEmailDestination(intent)
+                    )
 
         /**
          * EXTRA_EMAIL is documented as a String[] but senders also put a single String there.
@@ -178,10 +174,8 @@ class ShareIntentActivity : BugleComponentActivity() {
          */
         internal fun hasEmailDestination(intent: Intent): Boolean {
             val emails = intent.getStringArrayExtra(Intent.EXTRA_EMAIL)
-            if (emails != null) {
-                return emails.any { !it.isNullOrEmpty() }
-            }
-            return !intent.getStringExtra(Intent.EXTRA_EMAIL).isNullOrEmpty()
+            return emails?.any { !it.isNullOrEmpty() }
+                ?: !intent.getStringExtra(Intent.EXTRA_EMAIL).isNullOrEmpty()
         }
 
         internal fun createForwardIntent(
