@@ -71,7 +71,7 @@ class RecipientSelectionQueryCardTest {
                     onSelectedRecipientClick = {},
                     onSelectedRecipientBackspace = { recipient ->
                         removeCount += 1
-                        recipients = recipients.remove(recipient)
+                        recipients = recipients.removing(recipient)
                     },
                     focusRequester = focusRequester,
                     simSelectorSlot = null,

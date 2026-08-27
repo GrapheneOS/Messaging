@@ -55,7 +55,7 @@ internal class ConversationListSelectionDelegateImpl @Inject constructor() :
                 )
 
                 _selectedIds.update { currentSelectedIds ->
-                    currentSelectedIds.retainAll(knownIds)
+                    currentSelectedIds.retainingAll(knownIds)
                 }
             }
             .launchIn(scope)
@@ -67,11 +67,11 @@ internal class ConversationListSelectionDelegateImpl @Inject constructor() :
         _selectedIds.update { currentSelectedIds ->
             when {
                 conversationId in currentSelectedIds -> {
-                    currentSelectedIds.remove(conversationId)
+                    currentSelectedIds.removing(conversationId)
                 }
 
                 else -> {
-                    currentSelectedIds.add(conversationId)
+                    currentSelectedIds.adding(conversationId)
                 }
             }
         }

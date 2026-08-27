@@ -82,7 +82,7 @@ internal abstract class BaseConversationPickerViewModelTest {
     protected fun givenSelectedTargets(targets: List<TargetUiState>) {
         every { targetsDelegate.currentSelectedTargets } returns targets.toImmutableList()
         selectedIds.value = targets.map { it.selectionId }.toImmutableSet().let {
-            persistentSetOf<String>().addAll(it)
+            persistentSetOf<String>().addingAll(it)
         }
     }
 
@@ -106,7 +106,7 @@ internal abstract class BaseConversationPickerViewModelTest {
             selection = SelectionUiState(
                 selectedIds = selectedTargets.map { it.selectionId }
                     .toImmutableSet()
-                    .let { persistentSetOf<String>().addAll(it) },
+                    .let { persistentSetOf<String>().addingAll(it) },
                 selectedTargets = selectedTargets.toImmutableList(),
             ),
         )

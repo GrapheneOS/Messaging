@@ -112,8 +112,8 @@ internal class TargetsDelegateImpl @Inject constructor(
         val isSelected = current.any { it.selectionId == target.selectionId }
 
         selectedTargetsList.value = when {
-            isSelected -> current.removeAll { it.selectionId == target.selectionId }
-            else -> current.add(target)
+            isSelected -> current.removingAll { it.selectionId == target.selectionId }
+            else -> current.adding(target)
         }
     }
 
@@ -197,7 +197,7 @@ internal class TargetsDelegateImpl @Inject constructor(
         val availableConversationIds = availableRecents.mapTo(HashSet()) { it.conversationId }
 
         selectedTargetsList.update { selected ->
-            selected.removeAll { target ->
+            selected.removingAll { target ->
                 target is TargetUiState.Conversation &&
                     target.conversationId !in availableConversationIds
             }

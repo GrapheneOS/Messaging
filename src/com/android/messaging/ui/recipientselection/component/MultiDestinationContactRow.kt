@@ -389,18 +389,18 @@ private fun MultiDestinationContactRowSelectionStatesPreview() {
             PreviewMultiDestinationContactRow(
                 item = contactItem,
                 selectedDestinations = persistentSetOf<String>()
-                    .add(PREVIEW_MOBILE_DESTINATION)
-                    .add(PREVIEW_WORK_DESTINATION)
-                    .add(PREVIEW_HOME_DESTINATION),
+                    .adding(PREVIEW_MOBILE_DESTINATION)
+                    .adding(PREVIEW_WORK_DESTINATION)
+                    .adding(PREVIEW_HOME_DESTINATION),
             )
 
             PreviewMultiDestinationContactRow(
                 item = contactItem,
                 selectedDestinations = persistentSetOf<String>()
-                    .add(PREVIEW_MOBILE_DESTINATION)
-                    .add(PREVIEW_WORK_DESTINATION)
-                    .add(PREVIEW_HOME_DESTINATION)
-                    .add(PREVIEW_EMAIL_DESTINATION),
+                    .adding(PREVIEW_MOBILE_DESTINATION)
+                    .adding(PREVIEW_WORK_DESTINATION)
+                    .adding(PREVIEW_HOME_DESTINATION)
+                    .adding(PREVIEW_EMAIL_DESTINATION),
             )
         }
     }
@@ -423,8 +423,8 @@ private fun MultiDestinationContactRowContentStatesPreview() {
             PreviewMultiDestinationContactRow(
                 item = contactItem,
                 selectedDestinations = persistentSetOf<String>()
-                    .add(PREVIEW_LONG_EMAIL_DESTINATION)
-                    .add(PREVIEW_LONG_LOCATION_DESTINATION),
+                    .adding(PREVIEW_LONG_EMAIL_DESTINATION)
+                    .adding(PREVIEW_LONG_LOCATION_DESTINATION),
             )
         }
     }
@@ -503,7 +503,7 @@ private fun previewMultiDestinationContactItem(): RecipientPickerListItem.Contac
     return RecipientPickerListItem.Contact(
         contact = baseContact.copy(
             destinations = persistentListOf<ContactDestinationUiModel>()
-                .add(
+                .adding(
                     previewContactDestination(
                         dataId = 11L,
                         value = PREVIEW_MOBILE_DESTINATION,
@@ -514,7 +514,7 @@ private fun previewMultiDestinationContactItem(): RecipientPickerListItem.Contac
                         isSuperPrimary = true,
                     ),
                 )
-                .add(
+                .adding(
                     previewContactDestination(
                         dataId = 12L,
                         value = PREVIEW_WORK_DESTINATION,
@@ -523,7 +523,7 @@ private fun previewMultiDestinationContactItem(): RecipientPickerListItem.Contac
                         type = Phone.TYPE_WORK,
                     ),
                 )
-                .add(
+                .adding(
                     previewContactDestination(
                         dataId = 13L,
                         value = PREVIEW_HOME_DESTINATION,
@@ -532,7 +532,7 @@ private fun previewMultiDestinationContactItem(): RecipientPickerListItem.Contac
                         type = Phone.TYPE_HOME,
                     ),
                 )
-                .add(
+                .adding(
                     previewContactDestination(
                         dataId = 14L,
                         value = PREVIEW_EMAIL_DESTINATION,
@@ -556,7 +556,7 @@ private fun previewLongMultiDestinationContactItem(): RecipientPickerListItem.Co
         contact = baseContact.copy(
             displayName = PREVIEW_LONG_CONTACT_NAME,
             destinations = persistentListOf<ContactDestinationUiModel>()
-                .add(
+                .adding(
                     previewContactDestination(
                         dataId = 21L,
                         value = PREVIEW_LONG_PHONE_DESTINATION,
@@ -566,7 +566,7 @@ private fun previewLongMultiDestinationContactItem(): RecipientPickerListItem.Co
                         customLabel = "Emergency escalation mobile",
                     ),
                 )
-                .add(
+                .adding(
                     previewContactDestination(
                         dataId = 22L,
                         value = PREVIEW_LONG_EMAIL_DESTINATION,
@@ -575,7 +575,7 @@ private fun previewLongMultiDestinationContactItem(): RecipientPickerListItem.Co
                         type = Email.TYPE_WORK,
                     ),
                 )
-                .add(
+                .adding(
                     previewContactDestination(
                         dataId = 23L,
                         value = PREVIEW_LONG_LOCATION_DESTINATION,
