@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversationlist.delegate
 
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListItem
+import com.android.messaging.ui.conversationlist.delegate.ConversationRemovalOverride.Kind
 import dagger.Reusable
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
@@ -21,17 +22,16 @@ internal class ConversationListOptimisticReducer @Inject constructor() {
         }
 
         val currentIds = items.mapTo(mutableSetOf()) { it.conversationId }
-        val restoredItems = overrides.archiveById.mapNotNull { (conversationId, override) ->
-            val restoring = override as? ConversationArchiveOverride.Restoring
-                ?: return@mapNotNull null
-
-            restoring.item.takeIf { conversationId !in currentIds }
+        val restoredItems = overrides.removalById.mapNotNull { (conversationId, override) ->
+            override.item.takeIf {
+                override.kind == Kind.Restored && conversationId !in currentIds
+            }
         }
 
         val overridden = (items + restoredItems)
             .asSequence()
             .filterNot { item ->
-                overrides.archiveById[item.conversationId] is ConversationArchiveOverride.Archived
+                overrides.removalById[item.conversationId]?.kind == Kind.Removed
             }
             .map { item ->
                 item.withOverrides(overrides)
@@ -55,17 +55,17 @@ internal class ConversationListOptimisticReducer @Inject constructor() {
         }
 
         val itemsById = items.associateBy(ConversationListItem::conversationId)
-        val archiveById = overrides.archiveById.pruneArchiveOverrides(itemsById)
-        val restoringIds = archiveById
+        val removalById = overrides.removalById.pruneRemovalOverrides(itemsById)
+        val restoredIds = removalById
             .filterValues { override ->
-                override is ConversationArchiveOverride.Restoring
+                override.kind == Kind.Restored
             }
             .keys
 
         val readById = overrides.readById
             .pruneStaleOverrides(
                 itemsById = itemsById,
-                restoringIds = restoringIds,
+                restoredIds = restoredIds,
                 isStillPending = { item, isRead ->
                     item.latestMessage.isRead != isRead
                 },
@@ -74,39 +74,33 @@ internal class ConversationListOptimisticReducer @Inject constructor() {
         val pinnedById = overrides.pinnedById
             .pruneStaleOverrides(
                 itemsById = itemsById,
-                restoringIds = restoringIds,
+                restoredIds = restoredIds,
                 isStillPending = { item, isPinned ->
                     item.isPinned != isPinned
                 },
             )
 
         return ConversationListOptimisticOverrides(
-            archiveById = archiveById,
+            removalById = removalById,
             readById = readById,
             pinnedById = pinnedById,
         )
     }
 
-    private fun PersistentMap<ConversationId, ConversationArchiveOverride>.pruneArchiveOverrides(
+    private fun PersistentMap<ConversationId, ConversationRemovalOverride>.pruneRemovalOverrides(
         itemsById: Map<ConversationId, ConversationListItem>,
-    ): PersistentMap<ConversationId, ConversationArchiveOverride> {
-        return mutate { archiveOverrides ->
+    ): PersistentMap<ConversationId, ConversationRemovalOverride> {
+        return mutate { removalOverrides ->
             forEach { (conversationId, override) ->
-                when (override) {
-                    is ConversationArchiveOverride.Archived -> Unit
+                when {
+                    conversationId !in itemsById -> {
+                        removalOverrides[conversationId] = override.copy(
+                            awaitingRemoval = false,
+                        )
+                    }
 
-                    is ConversationArchiveOverride.Restoring -> {
-                        when {
-                            conversationId !in itemsById -> {
-                                archiveOverrides[conversationId] = override.copy(
-                                    awaitingRemoval = false,
-                                )
-                            }
-
-                            !override.awaitingRemoval -> {
-                                archiveOverrides.remove(conversationId)
-                            }
-                        }
+                    !override.awaitingRemoval -> {
+                        removalOverrides.remove(conversationId)
                     }
                 }
             }
@@ -115,7 +109,7 @@ internal class ConversationListOptimisticReducer @Inject constructor() {
 
     private fun <V> PersistentMap<ConversationId, V>.pruneStaleOverrides(
         itemsById: Map<ConversationId, ConversationListItem>,
-        restoringIds: Set<ConversationId>,
+        restoredIds: Set<ConversationId>,
         isStillPending: (item: ConversationListItem, override: V) -> Boolean,
     ): PersistentMap<ConversationId, V> {
         return mutate { retainedOverrides ->
@@ -123,7 +117,7 @@ internal class ConversationListOptimisticReducer @Inject constructor() {
                 val item = itemsById[conversationId]
                 val shouldRetain = when {
                     item != null -> isStillPending(item, override)
-                    conversationId in restoringIds -> true
+                    conversationId in restoredIds -> true
                     else -> false
                 }
 

@@ -5,6 +5,7 @@ import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListMode
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
+import com.android.messaging.ui.conversationlist.delegate.ConversationRemovalOverride.Kind
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.CoroutineScope
@@ -61,62 +62,58 @@ internal class ConversationListOptimisticSnapshotDelegateImpl @Inject constructo
     }
 
     override fun remove(conversationIds: List<ConversationId>) {
-        val requestedIds = conversationIds.toSet()
-        val archivedItems = _snapshot.value
-            ?.items
-            .orEmpty()
-            .filter { item ->
-                item.conversationId in requestedIds
-            }
-            .associate { item ->
-                item.conversationId to ConversationArchiveOverride.Archived(item)
-            }
+        val rawItemsById = rawItemsById()
+        val removedItems = effectiveItems(conversationIds).associate { item ->
+            item.conversationId to ConversationRemovalOverride(
+                item = item,
+                kind = Kind.Removed,
+                awaitingRemoval = item.conversationId in rawItemsById,
+            )
+        }
 
-        if (archivedItems.isEmpty()) {
+        if (removedItems.isEmpty()) {
             return
         }
 
         overrides = overrides.copy(
-            archiveById = overrides.archiveById.putAll(archivedItems),
+            removalById = overrides.removalById.putAll(removedItems),
         )
         publishSnapshot()
     }
 
     override fun discardRemoval(conversationIds: List<ConversationId>) {
-        var archiveById = overrides.archiveById
+        var removalById = overrides.removalById
 
         conversationIds.forEach { conversationId ->
-            if (archiveById[conversationId] is ConversationArchiveOverride.Archived) {
-                archiveById = archiveById.remove(conversationId)
+            if (removalById[conversationId]?.kind == Kind.Removed) {
+                removalById = removalById.remove(conversationId)
             }
         }
 
-        overrides = overrides.copy(archiveById = archiveById)
+        overrides = overrides.copy(removalById = removalById)
         publishSnapshot()
     }
 
     override fun restore(conversationIds: List<ConversationId>) {
-        var archiveById = overrides.archiveById
-        val rawItemsById = rawSnapshot
-            ?.items
-            .orEmpty()
-            .associateBy(ConversationListItem::conversationId)
+        var removalById = overrides.removalById
+        val rawItemsById = rawItemsById()
 
         conversationIds.forEach { conversationId ->
-            val item = archiveById[conversationId]?.item
+            val item = removalById[conversationId]?.item
                 ?: rawItemsById[conversationId]
                 ?: return@forEach
 
-            archiveById = archiveById.put(
+            removalById = removalById.put(
                 key = conversationId,
-                value = ConversationArchiveOverride.Restoring(
+                value = ConversationRemovalOverride(
                     item = item,
+                    kind = Kind.Restored,
                     awaitingRemoval = conversationId in rawItemsById,
                 ),
             )
         }
 
-        overrides = overrides.copy(archiveById = archiveById)
+        overrides = overrides.copy(removalById = removalById)
         publishSnapshot()
     }
 
@@ -124,13 +121,8 @@ internal class ConversationListOptimisticSnapshotDelegateImpl @Inject constructo
         conversationIds: List<ConversationId>,
         isRead: Boolean,
     ) {
-        val effectiveIds = _snapshot.value
-            ?.items
-            .orEmpty()
-            .mapTo(mutableSetOf()) { item -> item.conversationId }
-        val readOverrides = conversationIds
-            .filter(effectiveIds::contains)
-            .associateWith { isRead }
+        val readOverrides = effectiveItems(conversationIds)
+            .associate { item -> item.conversationId to isRead }
 
         if (readOverrides.isEmpty()) {
             return
@@ -146,13 +138,8 @@ internal class ConversationListOptimisticSnapshotDelegateImpl @Inject constructo
         conversationIds: List<ConversationId>,
         isPinned: Boolean,
     ) {
-        val effectiveIds = _snapshot.value
-            ?.items
-            .orEmpty()
-            .mapTo(mutableSetOf()) { item -> item.conversationId }
-        val pinOverrides = conversationIds
-            .filter(effectiveIds::contains)
-            .associateWith { isPinned }
+        val pinOverrides = effectiveItems(conversationIds)
+            .associate { item -> item.conversationId to isPinned }
 
         if (pinOverrides.isEmpty()) {
             return
@@ -164,11 +151,29 @@ internal class ConversationListOptimisticSnapshotDelegateImpl @Inject constructo
         publishSnapshot()
     }
 
+    private fun effectiveItems(
+        conversationIds: List<ConversationId>,
+    ): List<ConversationListItem> {
+        val requestedIds = conversationIds.toSet()
+
+        return _snapshot.value
+            ?.items
+            .orEmpty()
+            .filter { item -> item.conversationId in requestedIds }
+    }
+
+    private fun rawItemsById(): Map<ConversationId, ConversationListItem> {
+        return rawSnapshot
+            ?.items
+            .orEmpty()
+            .associateBy(ConversationListItem::conversationId)
+    }
+
     private fun publishSnapshot() {
         val snapshot = rawSnapshot ?: return
 
-        val restoredConversationIds = overrides.archiveById
-            .filterValues { override -> override is ConversationArchiveOverride.Restoring }
+        val restoredConversationIds = overrides.removalById
+            .filterValues { override -> override.kind == Kind.Restored }
             .keys
             .toImmutableSet()
 

@@ -4,6 +4,7 @@ import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversationlist.conversationItem
+import com.android.messaging.ui.conversationlist.delegate.ConversationRemovalOverride.Kind
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 import org.junit.Assert.assertEquals
@@ -31,18 +32,22 @@ internal class ConversationListOptimisticReducerTest {
     }
 
     @Test
-    fun apply_archivedOverride_removesItem() {
-        val archivedItem = conversationItem(ConversationId("a"))
+    fun apply_removalOverride_hidesItem() {
+        val removedItem = conversationItem(ConversationId("a"))
         val items = persistentListOf(
-            archivedItem,
+            removedItem,
             conversationItem(ConversationId("b")),
         )
 
         val result = reducer.apply(
             items = items,
             overrides = ConversationListOptimisticOverrides(
-                archiveById = persistentMapOf(
-                    ConversationId("a") to ConversationArchiveOverride.Archived(archivedItem),
+                removalById = persistentMapOf(
+                    ConversationId("a") to ConversationRemovalOverride(
+                        item = removedItem,
+                        kind = Kind.Removed,
+                        awaitingRemoval = true,
+                    ),
                 ),
             ),
         )
@@ -107,7 +112,7 @@ internal class ConversationListOptimisticReducerTest {
 
     @Test
     fun apply_restoringItemMissingFromRawSnapshot_keepsItVisibleAndOrdered() {
-        val restoringItem = conversationItem(
+        val restoredItem = conversationItem(
             conversationId = ConversationId("c"),
             isPinned = true,
             isRead = false,
@@ -120,9 +125,10 @@ internal class ConversationListOptimisticReducerTest {
                 conversationItem(ConversationId("b"), timestamp = 1_000L),
             ),
             overrides = ConversationListOptimisticOverrides(
-                archiveById = persistentMapOf(
-                    ConversationId("c") to ConversationArchiveOverride.Restoring(
-                        item = restoringItem,
+                removalById = persistentMapOf(
+                    ConversationId("c") to ConversationRemovalOverride(
+                        item = restoredItem,
+                        kind = Kind.Restored,
                         awaitingRemoval = false,
                     ),
                 ),
@@ -142,9 +148,10 @@ internal class ConversationListOptimisticReducerTest {
         val result = reducer.apply(
             items = persistentListOf(rawItem),
             overrides = ConversationListOptimisticOverrides(
-                archiveById = persistentMapOf(
-                    ConversationId("a") to ConversationArchiveOverride.Restoring(
+                removalById = persistentMapOf(
+                    ConversationId("a") to ConversationRemovalOverride(
                         item = cachedItem,
+                        kind = Kind.Restored,
                         awaitingRemoval = false,
                     ),
                 ),
@@ -156,18 +163,44 @@ internal class ConversationListOptimisticReducerTest {
     }
 
     @Test
-    fun prune_archivedItemMissingFromRawSnapshot_keepsItForUndo() {
-        val archivedItem = conversationItem(ConversationId("a"))
-        val archivedOverride = ConversationArchiveOverride.Archived(archivedItem)
+    fun prune_removedItemMissingFromRawSnapshot_keepsItForUndo() {
+        val removedItem = conversationItem(ConversationId("a"))
+        val removalOverride = ConversationRemovalOverride(
+            item = removedItem,
+            kind = Kind.Removed,
+            awaitingRemoval = true,
+        )
 
         val pruned = reducer.prune(
             items = persistentListOf(),
             overrides = ConversationListOptimisticOverrides(
-                archiveById = persistentMapOf(ConversationId("a") to archivedOverride),
+                removalById = persistentMapOf(ConversationId("a") to removalOverride),
             ),
         )
 
-        assertThat(pruned.archiveById[ConversationId("a")]).isEqualTo(archivedOverride)
+        assertThat(pruned.removalById[ConversationId("a")]).isEqualTo(
+            removalOverride.copy(awaitingRemoval = false),
+        )
+    }
+
+    @Test
+    fun prune_removedItemBackInRawSnapshot_dropsStaleOverride() {
+        val removedItem = conversationItem(ConversationId("a"))
+
+        val pruned = reducer.prune(
+            items = persistentListOf(removedItem),
+            overrides = ConversationListOptimisticOverrides(
+                removalById = persistentMapOf(
+                    ConversationId("a") to ConversationRemovalOverride(
+                        item = removedItem,
+                        kind = Kind.Removed,
+                        awaitingRemoval = false,
+                    ),
+                ),
+            ),
+        )
+
+        assertThat(pruned.removalById[ConversationId("a")]).isNull()
     }
 
     @Test
@@ -178,9 +211,10 @@ internal class ConversationListOptimisticReducerTest {
             isRead = false,
         )
         var overrides = ConversationListOptimisticOverrides(
-            archiveById = persistentMapOf(
-                ConversationId("a") to ConversationArchiveOverride.Restoring(
+            removalById = persistentMapOf(
+                ConversationId("a") to ConversationRemovalOverride(
                     item = cachedItem,
+                    kind = Kind.Restored,
                     awaitingRemoval = true,
                 ),
             ),
@@ -192,9 +226,10 @@ internal class ConversationListOptimisticReducerTest {
             items = persistentListOf(cachedItem),
             overrides = overrides,
         )
-        assertThat(overrides.archiveById[ConversationId("a")]).isEqualTo(
-            ConversationArchiveOverride.Restoring(
+        assertThat(overrides.removalById[ConversationId("a")]).isEqualTo(
+            ConversationRemovalOverride(
                 item = cachedItem,
+                kind = Kind.Restored,
                 awaitingRemoval = true,
             )
         )
@@ -203,9 +238,10 @@ internal class ConversationListOptimisticReducerTest {
             items = persistentListOf(),
             overrides = overrides,
         )
-        assertThat(overrides.archiveById[ConversationId("a")]).isEqualTo(
-            ConversationArchiveOverride.Restoring(
+        assertThat(overrides.removalById[ConversationId("a")]).isEqualTo(
+            ConversationRemovalOverride(
                 item = cachedItem,
+                kind = Kind.Restored,
                 awaitingRemoval = false,
             )
         )
@@ -216,7 +252,7 @@ internal class ConversationListOptimisticReducerTest {
             items = persistentListOf(cachedItem),
             overrides = overrides,
         )
-        assertFalse(ConversationId("a") in overrides.archiveById)
+        assertFalse(ConversationId("a") in overrides.removalById)
         assertTrue(overrides.readById.getValue(ConversationId("a")))
         assertTrue(overrides.pinnedById.getValue(ConversationId("a")))
 
