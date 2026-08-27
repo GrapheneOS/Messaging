@@ -111,10 +111,7 @@ internal class ConversationSettingsViewModel @Inject constructor(
     private fun handleParticipantAction(action: ParticipantAction) {
         when (action) {
             is ParticipantAction.ParticipantPressed -> {
-                resolveConversation(
-                    action.destination,
-                    shouldOpenChat = true,
-                )
+                onParticipantPressed(destination = action.destination)
             }
 
             is ParticipantAction.ParticipantLongPressed -> {
@@ -136,6 +133,20 @@ internal class ConversationSettingsViewModel @Inject constructor(
                 emitContactAction(participant = action.participant)
             }
         }
+    }
+
+    private fun onParticipantPressed(destination: String) {
+        val state = uiState.value
+
+        if (state.otherParticipant != null) {
+            emitNavigationEvent(NavEvent.OpenParticipantChat(state.conversationId))
+            return
+        }
+
+        resolveConversation(
+            destination,
+            shouldOpenChat = true,
+        )
     }
 
     private fun handleNotificationsClicked() {
