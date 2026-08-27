@@ -31,7 +31,6 @@ import com.android.messaging.datamodel.DatabaseHelper.ConversationParticipantsCo
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns;
 import com.android.messaging.datamodel.data.ParticipantData;
 import com.android.messaging.datamodel.data.ParticipantData.ParticipantsQuery;
-import com.android.messaging.ui.UIIntents;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.ContactUtil;
 import com.android.messaging.util.LogUtil;
@@ -704,7 +703,6 @@ public class ParticipantRefresh {
 
         MessagingContentProvider.notifyMessagesChanged(conversationId);
         MessagingContentProvider.notifyConversationMetadataChanged(conversationId);
-        UIIntents.get().broadcastConversationSelfIdChange(db.getContext(), conversationId, selfId);
     }
 
     /**

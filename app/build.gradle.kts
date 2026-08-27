@@ -48,7 +48,7 @@ tasks.withType<Detekt>().configureEach {
 
 android {
     compileSdk = 37
-    buildToolsVersion = "36.1.0"
+    buildToolsVersion = "37.0.0"
 
     namespace = "com.android.messaging"
 
@@ -178,11 +178,6 @@ dependencies {
     implementation(libs.androidx.camera.core)
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.video)
-    implementation(libs.androidx.paging.compose)
-    implementation(libs.androidx.paging.runtime)
-    implementation(libs.androidx.palette)
-    implementation(libs.androidx.preference)
-    implementation(libs.androidx.recyclerview)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
@@ -195,7 +190,6 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
 
-    implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
@@ -208,14 +202,12 @@ dependencies {
 
     implementation(libs.coil.compose)
     implementation(libs.coil.gif)
-    implementation(libs.coil.network.okhttp)
     implementation(libs.glide)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
     implementation(libs.guava)
-    implementation(libs.jsr305)
 
     implementation(libs.kotlinx.collections.immutable)
     implementation(libs.kotlinx.coroutines.android)
@@ -241,14 +233,10 @@ dependencies {
 
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    androidTestImplementation(libs.androidx.test.espresso.contrib)
     androidTestImplementation(libs.androidx.test.espresso.core)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.rules)
     androidTestImplementation(libs.androidx.test.runner)
-
-    androidTestImplementation(libs.hilt.android.testing)
-    kspAndroidTest(libs.hilt.compiler)
 
     androidTestImplementation(libs.mockk)
     androidTestImplementation(libs.mockk.agent)

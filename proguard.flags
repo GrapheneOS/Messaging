@@ -40,7 +40,6 @@
 -keep class androidx.core.*.* { *; }
 -keep class androidx.appcompat.* { *; }
 -keep class androidx.appcompat.*.* { *; }
--keep class androidx.recyclerview.widget.* { *; }
 -keep class androidx.viewpager.widget.* { *; }
 
 # Keep rastermill classes that need to be accessed from native code (JNI)

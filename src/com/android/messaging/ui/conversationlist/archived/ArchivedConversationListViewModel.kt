@@ -49,7 +49,7 @@ internal class ArchivedConversationListViewModel @Inject constructor(
     private val actionsDelegate: ConversationListActionsDelegate,
     private val optimisticSnapshotDelegate: ConversationListOptimisticSnapshotDelegate,
     private val selectionDelegate: ConversationListSelectionDelegate,
-    private val uiStateMapper: ArchivedConversationListUiStateMapper,
+    uiStateMapper: ArchivedConversationListUiStateMapper,
     private val resolveContactAction: ResolveContactAction,
     debugFeaturesProvider: DebugFeaturesProvider,
 ) : ViewModel(),
