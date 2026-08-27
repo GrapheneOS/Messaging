@@ -37,7 +37,6 @@ import com.android.messaging.datamodel.data.MessageData;
 import com.android.messaging.datamodel.data.MessagePartData;
 import com.android.messaging.datamodel.data.ParticipantData;
 import com.android.messaging.sms.MmsUtils;
-import com.android.messaging.ui.UIIntents;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.Assert.DoesNotRunOnMainThread;
 import com.android.messaging.util.AvatarUriUtil;
@@ -586,14 +585,6 @@ public class BugleDatabaseOperations {
         // Conversation always exists as this method is called from ActionService only after
         // reading and if necessary creating the conversation.
         updateConversationRow(dbWrapper, conversationId, values);
-
-        if (shouldAutoSwitchSelfId) {
-            // Normally, the draft message compose UI trusts its UI state for providing up-to-date
-            // conversation self id. Therefore, notify UI through local broadcast receiver about
-            // this external change so the change can be properly reflected.
-            UIIntents.get().broadcastConversationSelfIdChange(dbWrapper.getContext(),
-                    conversationId, getConversationSelfId(dbWrapper, conversationId));
-        }
     }
 
     @DoesNotRunOnMainThread

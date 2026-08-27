@@ -65,13 +65,6 @@ public abstract class UIIntents {
 
     public static final String CMAS_COMPONENT = "com.android.cellbroadcastreceiver.module";
 
-    // Intent action for local broadcast receiver for conversation self id change.
-    public static final String CONVERSATION_SELF_ID_CHANGE_BROADCAST_ACTION =
-            "conversation_self_id_change";
-
-    // Conversation self id
-    public static final String UI_INTENT_EXTRA_CONVERSATION_SELF_ID = "conversation_self_id";
-
     // Sending attachment uri from widget
     public static final String UI_INTENT_EXTRA_ATTACHMENT_URI = "attachment_uri";
 
@@ -148,12 +141,6 @@ public abstract class UIIntents {
      * Get an intent to launch the wireless alert viewer.
      */
     public abstract Intent getWirelessAlertsIntent();
-
-    /**
-     * Broadcast conversation self id change so it may be reflected in the message compose UI.
-     */
-    public abstract void broadcastConversationSelfIdChange(final Context context,
-            final String conversationId, final String conversationSelfId);
 
     /**
      * Get a PendingIntent for starting conversation list from notifications.

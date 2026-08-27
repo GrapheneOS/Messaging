@@ -46,7 +46,7 @@ internal interface ConversationListScreenModel {
 @HiltViewModel
 internal class ConversationListViewModel @Inject constructor(
     private val repository: ConversationListRepository,
-    private val uiStateMapper: ConversationListUiStateMapper,
+    uiStateMapper: ConversationListUiStateMapper,
     private val selectionDelegate: ConversationListSelectionDelegate,
     private val actionsDelegate: ConversationListActionsDelegate,
     private val optimisticSnapshotDelegate: ConversationListOptimisticSnapshotDelegate,

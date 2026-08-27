@@ -88,7 +88,7 @@ internal interface ConversationDraftEditorDelegate {
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 internal class ConversationDraftEditorDelegateImpl @Inject constructor(
     private val subscriptionsRepository: SubscriptionsRepository,
-    private val resolveConversationDraftSendProtocol: ResolveConversationDraftSendProtocol,
+    resolveConversationDraftSendProtocol: ResolveConversationDraftSendProtocol,
     private val resolveDraftAttachmentsWithinLimit: ResolveDraftAttachmentsWithinLimit,
 ) : ConversationDraftEditorDelegate {
 

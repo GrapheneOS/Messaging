@@ -52,7 +52,6 @@ import com.android.messaging.util.UiUtils;
 import com.android.messaging.util.UriUtil;
 
 import androidx.core.app.TaskStackBuilder;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 /**
  * A central repository of Intents used to start activities.
@@ -195,15 +194,6 @@ public class UIIntentsImpl extends UIIntents {
         intent.putExtra("SingleItemOnly", true);
         intent.setDataAndType(videoUri, ContentType.VIDEO_UNSPECIFIED);
         startExternalActivity(context, intent);
-    }
-
-    @Override
-    public void broadcastConversationSelfIdChange(final Context context,
-            final String conversationId, final String conversationSelfId) {
-        final Intent intent = new Intent(CONVERSATION_SELF_ID_CHANGE_BROADCAST_ACTION);
-        intent.putExtra(UI_INTENT_EXTRA_CONVERSATION_ID, conversationId);
-        intent.putExtra(UI_INTENT_EXTRA_CONVERSATION_SELF_ID, conversationSelfId);
-        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
     @Override

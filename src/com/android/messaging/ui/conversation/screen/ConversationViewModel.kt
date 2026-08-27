@@ -154,7 +154,7 @@ internal class ConversationViewModel @Inject constructor(
     private val conversationFocusDelegate: ConversationFocusDelegate,
     private val conversationSubscriptionSelectionDelegate:
     ConversationSubscriptionSelectionDelegate,
-    private val conversationComposerUiStateMapper: ConversationComposerUiStateMapper,
+    conversationComposerUiStateMapper: ConversationComposerUiStateMapper,
     private val simSelectionRepository: ConversationSimSelectionRepository,
     private val canAddMoreConversationParticipants: CanAddMoreConversationParticipants,
     private val canAddContact: CanAddContact,
