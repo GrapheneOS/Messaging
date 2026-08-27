@@ -23,6 +23,8 @@ internal interface Navigator {
 
     fun closeConversation(conversationId: ConversationId)
 
+    fun removeDestination(destination: NavKey)
+
     fun finish()
 }
 
@@ -64,6 +66,19 @@ internal class NavigatorImpl(
     override fun closeConversation(conversationId: ConversationId) {
         val remainingDestinations = backStack.dropLastWhile { navKey ->
             navKey.belongsToConversation(conversationId)
+        }
+
+        if (remainingDestinations.isEmpty()) {
+            onFinish()
+            return
+        }
+
+        reset(destinations = remainingDestinations)
+    }
+
+    override fun removeDestination(destination: NavKey) {
+        val remainingDestinations = backStack.filterNot { navKey ->
+            navKey == destination
         }
 
         if (remainingDestinations.isEmpty()) {

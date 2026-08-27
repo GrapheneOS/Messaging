@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 
 internal interface ConversationListOptimisticSnapshotDelegate {
     val snapshot: StateFlow<ConversationListSnapshot?>
+    val hasRawItems: Boolean
 
     fun bind(scope: CoroutineScope, mode: ConversationListMode)
 
@@ -33,6 +34,9 @@ internal class ConversationListOptimisticSnapshotDelegateImpl @Inject constructo
 
     private val _snapshot = MutableStateFlow<ConversationListSnapshot?>(null)
     override val snapshot: StateFlow<ConversationListSnapshot?> = _snapshot.asStateFlow()
+
+    override val hasRawItems: Boolean
+        get() = rawSnapshot?.items?.isNotEmpty() == true
 
     private var rawSnapshot: ConversationListSnapshot? = null
     private var overrides = ConversationListOptimisticOverrides()

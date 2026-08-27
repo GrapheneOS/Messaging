@@ -5,6 +5,7 @@ import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.navigation.ConversationNavKey
 import com.android.messaging.ui.conversation.navigation.NewChatNavKey
+import com.android.messaging.ui.conversationlist.navigation.ArchivedConversationListNavKey
 import com.android.messaging.ui.conversationsettings.navigation.ConversationSettingsNavKey
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -54,6 +55,34 @@ class NavigatorImplTest {
             listOf(ConversationNavKey(conversationId = ConversationId("other"))),
             backStack,
         )
+    }
+
+    @Test
+    fun removeDestination_dropsItFromTheMiddleOfTheBackStack() {
+        val backStack = mutableListOf(
+            NewChatNavKey,
+            ArchivedConversationListNavKey,
+            ConversationNavKey(conversationId = CONVERSATION_ID),
+        )
+
+        navigator(backStack = backStack)
+            .removeDestination(destination = ArchivedConversationListNavKey)
+
+        assertFalse(didFinish)
+        assertEquals(
+            listOf(NewChatNavKey, ConversationNavKey(conversationId = CONVERSATION_ID)),
+            backStack,
+        )
+    }
+
+    @Test
+    fun removeDestination_finishesWhenNothingRemains() {
+        val backStack = mutableListOf<NavKey>(ArchivedConversationListNavKey)
+
+        navigator(backStack = backStack)
+            .removeDestination(destination = ArchivedConversationListNavKey)
+
+        assertTrue(didFinish)
     }
 
     @Test
