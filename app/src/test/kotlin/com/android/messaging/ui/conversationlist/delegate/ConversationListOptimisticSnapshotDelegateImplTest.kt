@@ -132,6 +132,44 @@ internal class ConversationListOptimisticSnapshotDelegateImplTest {
     }
 
     @Test
+    fun removalOverrideIsDropped_whenDatabaseBringsItemBack() = runTest {
+        val rawSnapshot = MutableStateFlow(snapshotOfIds("a", "b"))
+        val delegate = bindDelegate(rawSnapshot)
+
+        delegate.remove(listOf(ConversationId("a")))
+        assertEquals(listOf("b"), delegate.conversationIds())
+
+        rawSnapshot.value = snapshotOfIds("b")
+        runCurrent()
+
+        rawSnapshot.value = snapshotOfIds("a", "b")
+        runCurrent()
+
+        assertEquals(listOf("a", "b"), delegate.conversationIds())
+    }
+
+    @Test
+    fun removalOverrideIsKept_untilDatabaseRemovesItem() = runTest {
+        val rawSnapshot = MutableStateFlow(
+            snapshotOfItems(
+                conversationItem(ConversationId("a"), timestamp = 2_000L),
+                conversationItem(ConversationId("b"), timestamp = 1_000L),
+            ),
+        )
+        val delegate = bindDelegate(rawSnapshot)
+
+        delegate.remove(listOf(ConversationId("a")))
+
+        rawSnapshot.value = snapshotOfItems(
+            conversationItem(ConversationId("a"), timestamp = 2_000L),
+            conversationItem(ConversationId("b"), timestamp = 3_000L),
+        )
+        runCurrent()
+
+        assertEquals(listOf("b"), delegate.conversationIds())
+    }
+
+    @Test
     fun restoreThenDiscard_keepsRestoredItemVisible() = runTest {
         val delegate = bindDelegate(snapshotOfIds("a", "b"))
 
