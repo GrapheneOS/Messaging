@@ -71,35 +71,35 @@ internal fun previewRecipientSelectionContactsSectionedState(): RecipientSelecti
         picker = RecipientPickerUiState(
             query = "",
             items = persistentListOf<RecipientPickerListItem>()
-                .add(
+                .adding(
                     previewRecipientSelectionSingleDestinationContactItem(
                         contactId = 1L,
                         destination = "+31600000001",
                         displayName = "Ada Lovelace",
                     ),
                 )
-                .add(
+                .adding(
                     previewRecipientSelectionSingleDestinationContactItem(
                         contactId = 2L,
                         destination = "+31600000002",
                         displayName = "Alan Turing",
                     ),
                 )
-                .add(
+                .adding(
                     previewRecipientSelectionSingleDestinationContactItem(
                         contactId = 3L,
                         destination = "+31600000003",
                         displayName = "Bob Kahn",
                     ),
                 )
-                .add(
+                .adding(
                     previewRecipientSelectionSingleDestinationContactItem(
                         contactId = 4L,
                         destination = "+31600000004",
                         displayName = "Zoe Washington",
                     ),
                 )
-                .add(
+                .adding(
                     previewRecipientSelectionSingleDestinationContactItem(
                         contactId = 5L,
                         destination = "+31600000005",
@@ -224,9 +224,9 @@ internal fun previewRecipientSelectionContactsLongTextState(): RecipientSelectio
     return RecipientSelectionContentUiState(
         picker = previewRecipientSelectionContactsPickerState(
             items = persistentListOf<RecipientPickerListItem>()
-                .add(previewRecipientSelectionLongSingleDestinationContactItem())
-                .add(previewRecipientSelectionLongMultiDestinationContactItem())
-                .add(previewRecipientSelectionLongSyntheticPhoneItem()),
+                .adding(previewRecipientSelectionLongSingleDestinationContactItem())
+                .adding(previewRecipientSelectionLongMultiDestinationContactItem())
+                .adding(previewRecipientSelectionLongSyntheticPhoneItem()),
         ),
         primaryAction = previewRecipientSelectionPrimaryActionUiState(
             isEnabled = true,
@@ -246,10 +246,10 @@ internal fun previewRecipientSelectionContactsLongTextState(): RecipientSelectio
 private fun previewRecipientSelectionContactsDefaultItems():
     ImmutableList<RecipientPickerListItem> {
     return persistentListOf<RecipientPickerListItem>()
-        .add(previewRecipientSelectionSingleDestinationContactItem())
-        .add(previewRecipientSelectionSyntheticPhoneItem())
-        .add(previewRecipientSelectionMultiDestinationContactItem())
-        .add(previewRecipientSelectionSingleEmailDestinationContactItem())
+        .adding(previewRecipientSelectionSingleDestinationContactItem())
+        .adding(previewRecipientSelectionSyntheticPhoneItem())
+        .adding(previewRecipientSelectionMultiDestinationContactItem())
+        .adding(previewRecipientSelectionSingleEmailDestinationContactItem())
 }
 
 private fun previewRecipientSelectionContactsPickerState(

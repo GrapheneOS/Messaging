@@ -451,7 +451,7 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
             syntheticItem == null -> contactItems
             else -> {
                 persistentListOf<RecipientPickerListItem>(syntheticItem)
-                    .addAll(contactItems)
+                    .addingAll(contactItems)
             }
         }
     }

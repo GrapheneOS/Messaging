@@ -118,6 +118,6 @@ internal class BlockedParticipantsDelegateImpl @Inject constructor(
             it.participantId
         }
 
-        return retainAll(knownIds)
+        return retainingAll(knownIds)
     }
 }

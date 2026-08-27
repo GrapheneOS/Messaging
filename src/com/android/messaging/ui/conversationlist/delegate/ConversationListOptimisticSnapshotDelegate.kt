@@ -80,7 +80,7 @@ internal class ConversationListOptimisticSnapshotDelegateImpl @Inject constructo
         }
 
         overrides = overrides.copy(
-            removalById = overrides.removalById.putAll(removedItems),
+            removalById = overrides.removalById.puttingAll(removedItems),
         )
         publishSnapshot()
     }
@@ -90,7 +90,7 @@ internal class ConversationListOptimisticSnapshotDelegateImpl @Inject constructo
 
         conversationIds.forEach { conversationId ->
             if (removalById[conversationId]?.kind == Kind.Removed) {
-                removalById = removalById.remove(conversationId)
+                removalById = removalById.removing(conversationId)
             }
         }
 
@@ -107,7 +107,7 @@ internal class ConversationListOptimisticSnapshotDelegateImpl @Inject constructo
                 ?: rawItemsById[conversationId]
                 ?: return@forEach
 
-            removalById = removalById.put(
+            removalById = removalById.putting(
                 key = conversationId,
                 value = ConversationRemovalOverride(
                     item = item,
@@ -133,7 +133,7 @@ internal class ConversationListOptimisticSnapshotDelegateImpl @Inject constructo
         }
 
         overrides = overrides.copy(
-            readById = overrides.readById.putAll(readOverrides),
+            readById = overrides.readById.puttingAll(readOverrides),
         )
         publishSnapshot()
     }
@@ -150,7 +150,7 @@ internal class ConversationListOptimisticSnapshotDelegateImpl @Inject constructo
         }
 
         overrides = overrides.copy(
-            pinnedById = overrides.pinnedById.putAll(pinOverrides),
+            pinnedById = overrides.pinnedById.puttingAll(pinOverrides),
         )
         publishSnapshot()
     }
