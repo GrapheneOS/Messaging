@@ -4,6 +4,8 @@ import com.android.messaging.data.conversation.model.ConversationId
 
 internal sealed interface ArchivedConversationListNavEvent {
 
+    data object CloseArchivedList : ArchivedConversationListNavEvent
+
     data class OpenConversation(
         val conversationId: ConversationId,
     ) : ArchivedConversationListNavEvent
