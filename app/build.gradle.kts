@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.detekt)
     alias(libs.plugins.hilt)
     jacoco
+    id("messaging.jacoco")
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.serialization)
@@ -243,5 +244,3 @@ dependencies {
     androidTestImplementation(libs.mockk.android)
     androidTestImplementation(libs.turbine)
 }
-
-apply(from = "jacoco.gradle.kts")
