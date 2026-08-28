@@ -3,10 +3,10 @@ package com.android.messaging.ui.conversationlist.mapper
 import android.content.Context
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
+import com.android.messaging.data.phone.formatter.PhoneNumberFormatter
 import com.android.messaging.domain.conversation.usecase.avatar.ResolveAvatarUri
 import com.android.messaging.domain.conversation.usecase.participant.CanShowOrAddContact
 import com.android.messaging.domain.conversation.usecase.participant.IsContactSaved
-import com.android.messaging.data.phone.formatter.PhoneNumberFormatter
 import com.android.messaging.domain.conversation.usecase.telephony.CanPlacePhoneCall
 import com.android.messaging.ui.conversationlist.conversationItem
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState

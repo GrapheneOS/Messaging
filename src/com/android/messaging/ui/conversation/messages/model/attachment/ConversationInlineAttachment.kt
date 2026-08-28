@@ -16,6 +16,7 @@ internal sealed interface ConversationInlineAttachment {
         override val openAction: ConversationAttachmentOpenAction?,
         val titleText: String?,
         val titleTextResId: Int?,
+        val durationMillis: Long = 0L,
     ) : ConversationInlineAttachment
 
     @Immutable

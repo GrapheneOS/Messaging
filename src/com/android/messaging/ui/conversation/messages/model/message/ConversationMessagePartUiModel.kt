@@ -34,6 +34,7 @@ internal sealed interface ConversationMessagePartUiModel {
             override val width: Int,
             override val height: Int,
             override val partId: String = "",
+            val durationMillis: Long = 0L,
         ) : Attachment
 
         @Immutable

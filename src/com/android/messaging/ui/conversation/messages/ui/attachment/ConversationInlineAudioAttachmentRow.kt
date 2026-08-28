@@ -68,6 +68,7 @@ internal fun ConversationInlineAudioAttachmentRow(
 
     val playbackState = rememberConversationInlineAudioAttachmentPlaybackState(
         contentUri = contentUri,
+        durationMillis = attachment.durationMillis,
     )
 
     ConversationInlineAudioAttachmentRowContent(

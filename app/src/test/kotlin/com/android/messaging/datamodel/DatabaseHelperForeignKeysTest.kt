@@ -4,12 +4,12 @@ import android.database.sqlite.SQLiteDatabase
 import androidx.core.content.contentValuesOf
 import com.android.messaging.FactoryTestAccess
 import com.android.messaging.R
-import com.android.messaging.datamodel.DatabaseHelper.MESSAGES_TABLE
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.DatabaseHelper.ConversationParticipantsColumns
+import com.android.messaging.datamodel.DatabaseHelper.MESSAGES_TABLE
 import com.android.messaging.datamodel.DatabaseHelper.MessageColumns
-import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
 import com.android.messaging.datamodel.DatabaseHelper.PartColumns
+import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
 import com.android.messaging.testutil.installTestFactory
 import io.mockk.unmockkAll
 import org.junit.After

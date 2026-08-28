@@ -9,6 +9,7 @@ import com.android.messaging.data.conversation.model.attachment.ConversationVCar
 import com.android.messaging.data.conversation.repository.ConversationVCardMetadataRepository
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.datamodel.data.ConversationMessageData
+import com.android.messaging.domain.media.usecase.ResolveAudioDurationMillis
 import com.android.messaging.domain.photoviewer.usecase.ResolveConversationPhotoViewerInitialOccurrenceIndex
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
@@ -38,6 +39,8 @@ internal abstract class BaseConversationMessagesDelegateTest {
     protected val appSettingsRepository = mockk<AppSettingsRepository> {
         coEvery { isYouTubeLinkPreviewsEnabled() } returns false
     }
+    protected val resolveAudioDurationMillis =
+        mockk<ResolveAudioDurationMillis>(relaxed = true)
     protected val messageUiModelMapper = mockk<ConversationMessageUiModelMapper>()
     protected val vCardUiModelMapper = mockk<ConversationVCardAttachmentUiModelMapper>()
     protected val vCardMetadataRepository = mockk<ConversationVCardMetadataRepository>()
@@ -46,6 +49,7 @@ internal abstract class BaseConversationMessagesDelegateTest {
         return ConversationMessagesDelegateImpl(
             conversationsRepository = conversationsRepository,
             appSettingsRepository = appSettingsRepository,
+            resolveAudioDurationMillis = resolveAudioDurationMillis,
             resolveInitialPhotoOccurrenceIndex =
                 mockk<ResolveConversationPhotoViewerInitialOccurrenceIndex>(relaxed = true),
             conversationMessageUiModelMapper = messageUiModelMapper,
@@ -154,14 +158,16 @@ internal abstract class BaseConversationMessagesDelegateTest {
     }
 
     protected fun audioPart(
-        contentUri: String = "content://media/audio/1",
+        contentUri: String? = "content://media/audio/1",
+        durationMillis: Long = 0L,
     ): ConversationMessagePartUiModel.Attachment.Audio {
         return ConversationMessagePartUiModel.Attachment.Audio(
             text = null,
             contentType = "audio/mpeg",
-            contentUri = Uri.parse(contentUri),
+            contentUri = contentUri?.let(Uri::parse),
             width = 0,
             height = 0,
+            durationMillis = durationMillis,
         )
     }
 

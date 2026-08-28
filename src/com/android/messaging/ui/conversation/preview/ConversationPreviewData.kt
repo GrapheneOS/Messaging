@@ -457,6 +457,7 @@ internal fun previewInlineAudioAttachment(): ConversationInlineAttachment.Audio 
         ),
         titleText = "Voice note",
         titleTextResId = null,
+        durationMillis = 42_000L,
     )
 }
 

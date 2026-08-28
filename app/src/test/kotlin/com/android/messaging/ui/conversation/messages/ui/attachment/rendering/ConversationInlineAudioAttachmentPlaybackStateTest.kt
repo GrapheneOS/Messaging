@@ -4,6 +4,7 @@ import android.media.MediaPlayer
 import com.android.common.test.helpers.targetContext
 import com.android.messaging.ui.conversation.messages.ui.attachment.ConversationInlineAudioAttachmentPlaybackState
 import io.mockk.mockk
+import io.mockk.unmockkAll
 import io.mockk.verify
 import java.io.IOException
 import org.junit.After
@@ -21,6 +22,7 @@ private const val STATE_AUDIO_CONTENT_URI = "content://mms/part/test-audio"
 private const val STATE_MISSING_AUDIO_CONTENT_URI = "content://mms/part/missing-audio"
 private const val STATE_AUDIO_DURATION_MILLIS = 18_000
 private const val STATE_PAUSED_POSITION_MILLIS = 4_500
+private const val STATE_SEEDED_DURATION_MILLIS = 42_000L
 
 @RunWith(RobolectricTestRunner::class)
 internal class ConversationInlineAudioAttachmentPlaybackStateTest {
@@ -40,6 +42,7 @@ internal class ConversationInlineAudioAttachmentPlaybackStateTest {
     @After
     fun tearDown() {
         ShadowMediaPlayer.resetStaticState()
+        unmockkAll()
     }
 
     @Test
@@ -54,6 +57,43 @@ internal class ConversationInlineAudioAttachmentPlaybackStateTest {
         verify(exactly = 0) {
             onPlaybackFailure.invoke()
         }
+    }
+
+    @Test
+    fun seededDuration_reportsMediaLengthWithoutPlayingIt() {
+        val playbackState = playbackState(initialDurationMillis = STATE_SEEDED_DURATION_MILLIS)
+
+        assertEquals(STATE_SEEDED_DURATION_MILLIS, playbackState.durationMillis)
+        assertEquals("00:42", playbackState.durationLabel)
+        assertFalse(playbackState.isPlaying)
+    }
+
+    @Test
+    fun seededDuration_isReplacedByThePreparedPlayerDuration() {
+        val playbackState = startedPlaybackState(
+            initialDurationMillis = STATE_SEEDED_DURATION_MILLIS,
+        )
+
+        assertEquals(STATE_AUDIO_DURATION_MILLIS.toLong(), playbackState.durationMillis)
+    }
+
+    @Test
+    fun seedDuration_appliesALateResolvedLength() {
+        val playbackState = playbackState()
+
+        playbackState.seedDurationMillis(STATE_SEEDED_DURATION_MILLIS)
+
+        assertEquals(STATE_SEEDED_DURATION_MILLIS, playbackState.durationMillis)
+        assertEquals("00:42", playbackState.durationLabel)
+    }
+
+    @Test
+    fun seedDuration_neverOverridesThePreparedPlayerDuration() {
+        val playbackState = startedPlaybackState()
+
+        playbackState.seedDurationMillis(STATE_SEEDED_DURATION_MILLIS)
+
+        assertEquals(STATE_AUDIO_DURATION_MILLIS.toLong(), playbackState.durationMillis)
     }
 
     @Test
@@ -185,12 +225,12 @@ internal class ConversationInlineAudioAttachmentPlaybackStateTest {
     }
 
     @Test
-    fun mediaError_reportsFailureAndResetsPlaybackState() {
+    fun mediaError_reportsFailureAndKeepsTheKnownDuration() {
         val playbackState = startedPlaybackState()
 
         shadowMediaPlayer.invokeErrorListener(MediaPlayer.MEDIA_ERROR_UNKNOWN, 0)
 
-        assertEquals(0L, playbackState.durationMillis)
+        assertEquals(STATE_AUDIO_DURATION_MILLIS.toLong(), playbackState.durationMillis)
         assertEquals(0L, playbackState.positionMillis)
         assertEquals(0f, playbackState.progress)
         assertFalse(playbackState.isPlaying)
@@ -223,15 +263,20 @@ internal class ConversationInlineAudioAttachmentPlaybackStateTest {
         }
     }
 
-    private fun playbackState(): ConversationInlineAudioAttachmentPlaybackState {
+    private fun playbackState(
+        initialDurationMillis: Long = 0L,
+    ): ConversationInlineAudioAttachmentPlaybackState {
         return ConversationInlineAudioAttachmentPlaybackState(
+            initialDurationMillis = initialDurationMillis,
             onPlaybackFailure = onPlaybackFailure,
         )
     }
 
-    private fun startedPlaybackState(): ConversationInlineAudioAttachmentPlaybackState {
+    private fun startedPlaybackState(
+        initialDurationMillis: Long = 0L,
+    ): ConversationInlineAudioAttachmentPlaybackState {
         addAudioMediaInfo(preparationDelayMillis = -1)
-        val playbackState = playbackState()
+        val playbackState = playbackState(initialDurationMillis = initialDurationMillis)
 
         playbackState.togglePlayback(
             context = targetContext,

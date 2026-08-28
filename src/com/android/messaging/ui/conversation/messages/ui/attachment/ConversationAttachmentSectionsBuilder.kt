@@ -137,6 +137,7 @@ private fun toMediaInlineAttachment(
                 key = attachment.key,
                 contentUri = part.contentUri.toString(),
                 openAction = attachment.toConversationAttachmentOpenActionOrNull(),
+                durationMillis = part.durationMillis,
             )
         }
 
@@ -168,6 +169,7 @@ private fun createAudioInlineAttachment(
     key: String,
     contentUri: String,
     openAction: ConversationAttachmentOpenAction?,
+    durationMillis: Long,
 ): ConversationInlineAttachment {
     return ConversationInlineAttachment.Audio(
         key = key,
@@ -175,6 +177,7 @@ private fun createAudioInlineAttachment(
         openAction = openAction,
         titleText = null,
         titleTextResId = R.string.audio_attachment_content_description,
+        durationMillis = durationMillis,
     )
 }
 

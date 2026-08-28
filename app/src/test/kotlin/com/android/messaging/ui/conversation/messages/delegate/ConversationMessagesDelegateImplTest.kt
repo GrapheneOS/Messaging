@@ -4,6 +4,7 @@ import androidx.core.net.toUri
 import com.android.messaging.data.appsettings.repository.AppSettingsRepository
 import com.android.messaging.data.conversation.repository.ConversationVCardMetadataRepository
 import com.android.messaging.data.conversation.repository.ConversationsRepository
+import com.android.messaging.domain.media.usecase.ResolveAudioDurationMillis
 import com.android.messaging.domain.photoviewer.usecase.ResolveConversationPhotoViewerInitialOccurrenceIndex
 import com.android.messaging.ui.conversation.attachment.mapper.ConversationVCardAttachmentUiModelMapper
 import com.android.messaging.ui.conversation.messages.mapper.ConversationMessageUiModelMapper
@@ -25,6 +26,7 @@ internal class ConversationMessagesDelegateImplTest {
     private val delegate = ConversationMessagesDelegateImpl(
         conversationsRepository = mockk<ConversationsRepository>(),
         appSettingsRepository = mockk<AppSettingsRepository>(),
+        resolveAudioDurationMillis = mockk<ResolveAudioDurationMillis>(),
         resolveInitialPhotoOccurrenceIndex = resolveInitialPhotoOccurrenceIndex,
         conversationMessageUiModelMapper = mockk<ConversationMessageUiModelMapper>(),
         conversationVCardAttachmentUiModelMapper =
