@@ -75,10 +75,10 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
         val hasFullName = !fullName.isNullOrEmpty()
         val displayName = when {
             hasFullName -> fullName
-            else -> participant.sendDestination.orEmpty()
+            else -> participant.displayDestination.orEmpty()
         }
         val details = when {
-            hasFullName && !participant.isUnknownSender -> participant.sendDestination
+            hasFullName && !participant.isUnknownSender -> participant.displayDestination
             else -> null
         }
         val canCall = canPlacePhoneCall(participant.normalizedDestination)

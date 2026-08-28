@@ -9,6 +9,7 @@ import com.android.messaging.domain.conversation.usecase.avatar.ResolveAvatarUri
 import com.android.messaging.domain.conversation.usecase.participant.CanAddContact
 import com.android.messaging.domain.conversation.usecase.participant.CanShowOrAddContact
 import com.android.messaging.domain.conversation.usecase.participant.IsContactSaved
+import com.android.messaging.data.phone.formatter.PhoneNumberFormatter
 import com.android.messaging.domain.conversation.usecase.telephony.CanPlacePhoneCall
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState
 import com.android.messaging.ui.conversationlist.conversationItem
@@ -38,6 +39,7 @@ internal class ConversationListUiStateMapperImplTest {
     private val canPlacePhoneCall = mockk<CanPlacePhoneCall>(relaxed = true)
     private val canShowOrAddContact = mockk<CanShowOrAddContact>(relaxed = true)
     private val isContactSaved = mockk<IsContactSaved>(relaxed = true)
+    private val phoneNumberFormatter = mockk<PhoneNumberFormatter>(relaxed = true)
     private val resolveAvatarUri = mockk<ResolveAvatarUri>(relaxed = true)
 
     private val itemUiMapper = ConversationListItemUiMapperImpl(
@@ -45,6 +47,7 @@ internal class ConversationListUiStateMapperImplTest {
         canPlacePhoneCall = canPlacePhoneCall,
         canShowOrAddContact = canShowOrAddContact,
         isContactSaved = isContactSaved,
+        phoneNumberFormatter = phoneNumberFormatter,
         resolveAvatarUri = resolveAvatarUri,
     )
 

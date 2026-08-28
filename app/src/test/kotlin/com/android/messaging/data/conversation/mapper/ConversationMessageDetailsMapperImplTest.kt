@@ -24,6 +24,7 @@ internal class ConversationMessageDetailsMapperImplTest {
             isSms = true,
             isIncoming = true,
             senderNormalizedDestination = "+15550100",
+            senderDisplayDestination = "+1 555-0100",
             sentTimeStamp = 1_000L,
             receivedTimeStamp = 2_000L,
         )
@@ -35,7 +36,7 @@ internal class ConversationMessageDetailsMapperImplTest {
         )
 
         assertEquals(ConversationMessageDetails.Type.SMS, result.type)
-        assertEquals("+15550100", result.sender)
+        assertEquals("+1 555-0100", result.sender)
         assertEquals(1_000L, result.sentTimestamp)
         assertEquals(2_000L, result.receivedTimestamp)
         assertNull(result.priority)
@@ -171,15 +172,18 @@ internal class ConversationMessageDetailsMapperImplTest {
             participant(
                 id = "sender",
                 normalizedDestination = "+10000000000",
+                displayDestination = "+1 000-000-0000",
             ),
             participant(
                 id = "recipient",
                 normalizedDestination = "+19999999999",
+                displayDestination = "+1 999-999-9999",
             ),
             participant(
                 id = "self",
                 isSelf = true,
                 normalizedDestination = "+15555555555",
+                displayDestination = "+1 555-555-5555",
             ),
         )
 
@@ -192,7 +196,7 @@ internal class ConversationMessageDetailsMapperImplTest {
             debug = null,
         )
 
-        assertEquals(listOf("+19999999999"), result.recipients)
+        assertEquals(listOf("+1 999-999-9999"), result.recipients)
     }
 
     @Test
@@ -205,6 +209,7 @@ internal class ConversationMessageDetailsMapperImplTest {
             participant(
                 id = "recipient",
                 normalizedDestination = " ",
+                displayDestination = " ",
             ),
         )
 
@@ -344,6 +349,7 @@ internal class ConversationMessageDetailsMapperImplTest {
         isIncoming: Boolean = false,
         isSendComplete: Boolean = false,
         senderNormalizedDestination: String? = null,
+        senderDisplayDestination: String? = null,
         participantId: String? = null,
         selfParticipantId: String? = null,
         sentTimeStamp: Long = 0L,
@@ -356,6 +362,7 @@ internal class ConversationMessageDetailsMapperImplTest {
             every { this@mockk.isIncoming } returns isIncoming
             every { this@mockk.isSendComplete } returns isSendComplete
             every { this@mockk.senderNormalizedDestination } returns senderNormalizedDestination
+            every { this@mockk.senderDisplayDestination } returns senderDisplayDestination
             every { this@mockk.participantId } returns participantId
             every { this@mockk.selfParticipantId } returns selfParticipantId
             every { this@mockk.sentTimeStamp } returns sentTimeStamp
@@ -369,6 +376,7 @@ internal class ConversationMessageDetailsMapperImplTest {
         id: String,
         isSelf: Boolean = false,
         normalizedDestination: String? = null,
+        displayDestination: String? = null,
         isActiveSubscription: Boolean = false,
         isDefaultSelf: Boolean = false,
         subscriptionName: String? = null,
@@ -378,6 +386,7 @@ internal class ConversationMessageDetailsMapperImplTest {
             every { this@mockk.id } returns id
             every { this@mockk.isSelf } returns isSelf
             every { this@mockk.normalizedDestination } returns normalizedDestination
+            every { this@mockk.displayDestination } returns displayDestination
             every { this@mockk.isActiveSubscription } returns isActiveSubscription
             every { this@mockk.isDefaultSelf } returns isDefaultSelf
             every { this@mockk.subscriptionName } returns subscriptionName

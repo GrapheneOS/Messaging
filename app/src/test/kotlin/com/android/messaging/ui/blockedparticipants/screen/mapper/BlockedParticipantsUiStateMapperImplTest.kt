@@ -1,9 +1,9 @@
-package com.android.messaging.ui.conversationsettings.screen.mapper
+package com.android.messaging.ui.blockedparticipants.screen.mapper
 
+import com.android.messaging.data.blockedparticipants.model.BlockedDirectChat
 import com.android.messaging.data.conversation.model.ConversationId
-import com.android.messaging.data.conversationsettings.model.ConversationSettingsData
 import com.android.messaging.datamodel.data.ParticipantData
-import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
+import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantUiState
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf
@@ -11,9 +11,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
-internal class ConversationSettingsUiStateMapperImplTest {
+internal class BlockedParticipantsUiStateMapperImplTest {
 
-    private val mapper = ConversationSettingsUiStateMapperImpl(
+    private val mapper = BlockedParticipantsUiStateMapperImpl(
         canPlacePhoneCall = { false },
         canShowOrAddContact = { _, _, _, _ -> false },
         isContactSavedUseCase = { _, _ -> false },
@@ -44,7 +44,7 @@ internal class ConversationSettingsUiStateMapperImplTest {
     private fun mapParticipant(
         name: String?,
         unknownSender: Boolean,
-    ): ParticipantUiState {
+    ): BlockedParticipantUiState {
         val participant = mockk<ParticipantData>(relaxed = true) {
             every { fullName } returns name
             every { sendDestination } returns SEND_DESTINATION
@@ -54,12 +54,13 @@ internal class ConversationSettingsUiStateMapperImplTest {
 
         return mapper
             .map(
-                ConversationSettingsData(
-                    conversationId = CONVERSATION_ID,
-                    participants = persistentListOf(participant),
+                persistentListOf(
+                    BlockedDirectChat(
+                        participant = participant,
+                        conversationId = CONVERSATION_ID,
+                    ),
                 ),
             )
-            .participants
             .single()
     }
 
