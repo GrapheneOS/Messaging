@@ -414,6 +414,245 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
     }
 
     @Test
+    fun getConversationMessages_doesNotClusterFailedMessageWithDeliveredNeighbours() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher
+        ) {
+            val registeredObservers = mutableListOf<ContentObserver>()
+            val capturedProjections = mutableListOf<Array<String>?>()
+            val repository = createRepository()
+            val expectedUri = MessagingContentProvider.buildConversationMessagesUri(
+                CONVERSATION_ID.value
+            )
+            val messagesInUiOrder = listOf(
+                messageRow(
+                    messageId = "delivered-before",
+                    participantId = "self-sender",
+                    selfParticipantId = "self-1",
+                    receivedTimestamp = 0L,
+                    status = MessageData.BUGLE_STATUS_OUTGOING_DELIVERED,
+                    text = "This one went through fine",
+                ),
+                messageRow(
+                    messageId = "failed",
+                    participantId = "self-sender",
+                    selfParticipantId = "self-1",
+                    receivedTimestamp = 10_000L,
+                    status = MessageData.BUGLE_STATUS_OUTGOING_FAILED,
+                    text = "This one did not go through",
+                ),
+                messageRow(
+                    messageId = "delivered-after",
+                    participantId = "self-sender",
+                    selfParticipantId = "self-1",
+                    receivedTimestamp = 20_000L,
+                    status = MessageData.BUGLE_STATUS_OUTGOING_DELIVERED,
+                    text = "This one went through fine too",
+                ),
+                messageRow(
+                    messageId = "delivered-last",
+                    participantId = "self-sender",
+                    selfParticipantId = "self-1",
+                    receivedTimestamp = 30_000L,
+                    status = MessageData.BUGLE_STATUS_OUTGOING_DELIVERED,
+                    text = "And so did this one",
+                ),
+            )
+
+            stubObserverRegistration(
+                registeredObservers = registeredObservers,
+                expectedUri = expectedUri,
+            )
+            stubQuery(
+                expectedUri = expectedUri,
+                capturedProjections = capturedProjections,
+                result = createConversationMessagesCursor(rows = messagesInUiOrder.asReversed()),
+            )
+
+            repository.getConversationMessages(conversationId = CONVERSATION_ID).test {
+                val messages = awaitItem()
+
+                assertEquals(
+                    messagesInUiOrder.map { it.messageId },
+                    messages.map { it.messageId },
+                )
+
+                // The failed message must never hide behind a neighbour's metadata line: it is
+                // the only place the failure is shown, and the only way to reach "tap to retry".
+                assertClusterState(
+                    message = messages[0],
+                    canClusterWithPrevious = false,
+                    canClusterWithNext = false,
+                )
+                assertClusterState(
+                    message = messages[1],
+                    canClusterWithPrevious = false,
+                    canClusterWithNext = false,
+                )
+                // Delivered neighbours on the far side of the failure still cluster together.
+                assertClusterState(
+                    message = messages[2],
+                    canClusterWithPrevious = false,
+                    canClusterWithNext = true,
+                )
+                assertClusterState(
+                    message = messages[3],
+                    canClusterWithPrevious = true,
+                    canClusterWithNext = false,
+                )
+
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    @Test
+    fun getConversationMessages_doesNotClusterConsecutiveFailedMessages() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher
+        ) {
+            val registeredObservers = mutableListOf<ContentObserver>()
+            val capturedProjections = mutableListOf<Array<String>?>()
+            val repository = createRepository()
+            val expectedUri = MessagingContentProvider.buildConversationMessagesUri(
+                CONVERSATION_ID.value
+            )
+            val messagesInUiOrder = listOf(
+                messageRow(
+                    messageId = "failed-1",
+                    participantId = "self-sender",
+                    selfParticipantId = "self-1",
+                    receivedTimestamp = 0L,
+                    status = MessageData.BUGLE_STATUS_OUTGOING_FAILED,
+                    text = "First failure",
+                ),
+                messageRow(
+                    messageId = "failed-2",
+                    participantId = "self-sender",
+                    selfParticipantId = "self-1",
+                    receivedTimestamp = 10_000L,
+                    status = MessageData.BUGLE_STATUS_OUTGOING_FAILED,
+                    text = "Second failure",
+                ),
+                messageRow(
+                    messageId = "failed-3",
+                    participantId = "self-sender",
+                    selfParticipantId = "self-1",
+                    receivedTimestamp = 20_000L,
+                    status = MessageData.BUGLE_STATUS_OUTGOING_FAILED,
+                    text = "Third failure",
+                ),
+            )
+
+            stubObserverRegistration(
+                registeredObservers = registeredObservers,
+                expectedUri = expectedUri,
+            )
+            stubQuery(
+                expectedUri = expectedUri,
+                capturedProjections = capturedProjections,
+                result = createConversationMessagesCursor(rows = messagesInUiOrder.asReversed()),
+            )
+
+            repository.getConversationMessages(conversationId = CONVERSATION_ID).test {
+                val messages = awaitItem()
+
+                assertEquals(3, messages.size)
+
+                // A run of failures shares one status line otherwise, leaving all but the last
+                // failure unmarked.
+                messages.forEach { message ->
+                    assertClusterState(
+                        message = message,
+                        canClusterWithPrevious = false,
+                        canClusterWithNext = false,
+                    )
+                }
+
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    @Test
+    fun getConversationMessages_stillClustersOutgoingMessagesWithDifferentSuccessStatuses() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher
+        ) {
+            val registeredObservers = mutableListOf<ContentObserver>()
+            val capturedProjections = mutableListOf<Array<String>?>()
+            val repository = createRepository()
+            val expectedUri = MessagingContentProvider.buildConversationMessagesUri(
+                CONVERSATION_ID.value
+            )
+            val messagesInUiOrder = listOf(
+                messageRow(
+                    messageId = "complete",
+                    participantId = "self-sender",
+                    selfParticipantId = "self-1",
+                    receivedTimestamp = 0L,
+                    status = MessageData.BUGLE_STATUS_OUTGOING_COMPLETE,
+                    text = "Sent, no delivery report yet",
+                ),
+                messageRow(
+                    messageId = "delivered",
+                    participantId = "self-sender",
+                    selfParticipantId = "self-1",
+                    receivedTimestamp = 10_000L,
+                    status = MessageData.BUGLE_STATUS_OUTGOING_DELIVERED,
+                    text = "This one got its delivery report",
+                ),
+                messageRow(
+                    messageId = "sending",
+                    participantId = "self-sender",
+                    selfParticipantId = "self-1",
+                    receivedTimestamp = 20_000L,
+                    status = MessageData.BUGLE_STATUS_OUTGOING_SENDING,
+                    text = "Still in flight",
+                ),
+            )
+
+            stubObserverRegistration(
+                registeredObservers = registeredObservers,
+                expectedUri = expectedUri,
+            )
+            stubQuery(
+                expectedUri = expectedUri,
+                capturedProjections = capturedProjections,
+                result = createConversationMessagesCursor(rows = messagesInUiOrder.asReversed()),
+            )
+
+            repository.getConversationMessages(conversationId = CONVERSATION_ID).test {
+                val messages = awaitItem()
+
+                assertEquals(3, messages.size)
+
+                // Only failures break a cluster. Delivery reports land one message at a time and
+                // in-flight messages settle through several statuses, so a successful run is
+                // routinely a mix of them -- splitting on status alone would tear apart ordinary
+                // threads and make every arriving report re-flow the list.
+                assertClusterState(
+                    message = messages[0],
+                    canClusterWithPrevious = false,
+                    canClusterWithNext = true,
+                )
+                assertClusterState(
+                    message = messages[1],
+                    canClusterWithPrevious = true,
+                    canClusterWithNext = true,
+                )
+                assertClusterState(
+                    message = messages[2],
+                    canClusterWithPrevious = true,
+                    canClusterWithNext = false,
+                )
+
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    @Test
     fun getConversationMessages_returnsEmptyListWhenQueryReturnsNull() {
         runTest(
             context = mainDispatcherRule.testDispatcher
