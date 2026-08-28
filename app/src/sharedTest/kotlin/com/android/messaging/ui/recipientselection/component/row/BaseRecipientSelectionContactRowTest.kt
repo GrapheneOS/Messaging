@@ -1,5 +1,6 @@
 package com.android.messaging.ui.recipientselection.component.row
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.unit.dp
@@ -88,6 +89,7 @@ internal abstract class BaseRecipientSelectionContactRowTest {
         rowDecorators: RecipientSelectionRowDecorators = defaultRowDecorators(),
         onRecipientDestinationLongClick: OnRecipientDestinationAction? =
             onContentDestinationLongClick,
+        @StringRes emptyStateText: Int = R.string.contact_list_empty_text,
     ) {
         composeTestRule.setContent {
             AppTheme {
@@ -98,7 +100,7 @@ internal abstract class BaseRecipientSelectionContactRowTest {
                     onLoadMore = onLoadMore,
                     onPrimaryActionClick = onPrimaryActionClick,
                     onRecipientDestinationLongClick = onRecipientDestinationLongClick,
-                    emptyStateText = R.string.contact_list_empty_text,
+                    emptyStateText = emptyStateText,
                 )
             }
         }

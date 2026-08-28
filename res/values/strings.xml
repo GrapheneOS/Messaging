@@ -613,6 +613,9 @@
     <!-- Hint text shown on the contact list when there's no contacts -->
     <string name="contact_list_empty_text">Enter a contact name or phone number to start a new message</string>
 
+    <!-- Text shown in the recipient picker when a search matched no contacts -->
+    <string name="recipient_picker_no_results_text">No contacts found</string>
+
     <!-- Action menu title for blocking and archiving selected conversations in conversation list -->
     <string name="action_block">Block</string>
 
