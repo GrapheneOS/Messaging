@@ -257,10 +257,11 @@ public class UIIntentsImpl extends UIIntents {
         if (conversationIdSet != null) {
             intent.putExtra(UI_INTENT_EXTRA_CONVERSATION_ID_SET,
                     conversationIdSet.getDelimitedString());
+            // Ensure that the platform doesn't reuse PendingIntents across conversations: the id
+            // set only lives in an extra, which filterEquals() ignores
+            intent.setData(MessagingContentProvider.buildConversationMetadataUri(
+                    conversationIdSet.first()));
         }
-
-        // We can have several pending intents for clearing conversations so we need each to be unique
-        intent.setIdentifier(Long.toString(System.currentTimeMillis()));
 
         return PendingIntent.getBroadcast(context,
                 requestCode, intent,
