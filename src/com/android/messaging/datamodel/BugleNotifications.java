@@ -70,7 +70,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Handle posting, updating and removing all conversation notifications.<p>
@@ -97,6 +96,7 @@ public class BugleNotifications {
 
     private static final String SMS_NOTIFICATION_TAG = ":sms:";
     private static final String SMS_ERROR_NOTIFICATION_TAG = ":error:";
+    public static final String SMS_OVERFLOW_NOTIFICATION_TAG = ":sms:overflow:";
 
     /**
      * Upper bound on the number of {@link Person} entries attached to a conversation notification.
@@ -104,6 +104,9 @@ public class BugleNotifications {
      */
     @VisibleForTesting
     public static final int MAX_NOTIFICATION_PEOPLE = 25;
+
+    @VisibleForTesting
+    public static final int MAX_CONVERSATION_NOTIFICATIONS = 40;
 
     /**
      * This is the volume at which to play the observable-conversation notification sound,
@@ -168,16 +171,51 @@ public class BugleNotifications {
                 final Uri ringtoneUri = getNotificationRingtoneUriForConversationId(conversationId);
                 playObservableConversationNotificationSound(ringtoneUri);
             }
+            updateOverflowNotification(0);
             return;
         }
 
-        // Send per-conversation notifications (if there are multiple conversations).
-        Optional<Conversation> conversation = state.mConversationsList.mConversations.stream()
+        // Send per-conversation notifications (if there are multiple conversations). The list
+        // holds every conversation with unseen messages, so it has to be iterated: picking one
+        // entry notifies whichever conversation holds the newest unseen message and silently
+        // drops the rest, and there is no summary notification to surface them.
+        final List<Conversation> notifiable = state.mConversationsList.mConversations.stream()
                 .filter(conv -> !isConversationBlocked(conv.mConversationId))
                 .filter(conv -> !ConversationSnoozeQuery.isConversationSnoozed(
                         conv.mConversationId))
-                .findFirst();
-        conversation.ifPresent(conv -> processAndSend(state, conv));
+                .toList();
+
+        notifiable.stream()
+                .limit(MAX_CONVERSATION_NOTIFICATIONS)
+                .forEach(conv -> processAndSend(state, conv));
+
+        updateOverflowNotification(notifiable.size() - MAX_CONVERSATION_NOTIFICATIONS);
+    }
+
+    private static void updateOverflowNotification(final int overflowCount) {
+        final Context context = Factory.get().getApplicationContext();
+        final NotificationManagerCompat notificationManager =
+                NotificationManagerCompat.from(context);
+        final String tag = buildNotificationTag(SMS_OVERFLOW_NOTIFICATION_TAG, null);
+        if (overflowCount <= 0) {
+            notificationManager.cancel(tag, PendingIntentConstants.SMS_NOTIFICATION_ID);
+            return;
+        }
+
+        final Notification notification = new NotificationCompat.Builder(context,
+                NotificationChannelUtil.INCOMING_MESSAGES)
+                .setContentTitle(context.getResources().getQuantityString(
+                        R.plurals.notification_more_conversations, overflowCount, overflowCount))
+                .setSmallIcon(R.drawable.ic_sms_light)
+                .setContentIntent(
+                        UIIntents.get().getPendingIntentForConversationListActivity(context))
+                .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+                .setOnlyAlertOnce(true)
+                .setAutoCancel(true)
+                .build();
+
+        notificationManager.notify(tag, PendingIntentConstants.SMS_NOTIFICATION_ID, notification);
     }
 
     /**
