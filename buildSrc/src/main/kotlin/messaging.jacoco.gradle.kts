@@ -1,9 +1,18 @@
+// Coverage tasks for :app. Lives here as a precompiled script plugin rather than an
+// `apply(from = "jacoco.gradle.kts")`: AGP 9's lint visits applied script files and dies
+// with "`findFirCompiledSymbol` only works on compiled declarations", aborting the whole
+// module's lint analysis.
+
 import java.io.File
 import java.math.BigDecimal
 import org.gradle.api.file.FileCollection
 import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
 import org.gradle.testing.jacoco.tasks.JacocoReport
 import org.gradle.testing.jacoco.tasks.JacocoReportBase
+
+plugins {
+    id("jacoco")
+}
 
 private val jacocoRulesDirPath = "jacoco-rules"
 private val sourceDirPath = "../src"
