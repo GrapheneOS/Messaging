@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.messages.mapper.conversationmessag
 
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel.Protocol
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -65,16 +66,34 @@ internal class ConversationMessageUiModelMapperProtocolAndTimestampTest :
     }
 
     @Test
-    fun map_outgoingMessage_usesSentTimestampAsDisplayTimestamp() {
+    fun map_outgoingMessage_usesReceivedTimestampAsDisplayTimestamp() {
         val uiModel = mapPresent(
             messageData(isIncoming = false, sentTimestamp = 300L, receivedTimestamp = 900L),
+        )
+
+        assertEquals(900L, uiModel.displayTimestamp)
+    }
+
+    @Test
+    fun map_outgoingMessageWithoutReceivedTimestamp_fallsBackToSentTimestamp() {
+        val uiModel = mapPresent(
+            messageData(isIncoming = false, sentTimestamp = 300L, receivedTimestamp = 0L),
         )
 
         assertEquals(300L, uiModel.displayTimestamp)
     }
 
     @Test
-    fun map_outgoingMessageWithoutSentTimestamp_fallsBackToReceivedTimestamp() {
+    fun map_outgoingMessageWithNegativeReceivedTimestamp_fallsBackToSentTimestamp() {
+        val uiModel = mapPresent(
+            messageData(isIncoming = false, sentTimestamp = 300L, receivedTimestamp = -1L),
+        )
+
+        assertEquals(300L, uiModel.displayTimestamp)
+    }
+
+    @Test
+    fun map_outgoingMessageWithoutSentTimestamp_stillUsesReceivedTimestamp() {
         val uiModel = mapPresent(
             messageData(isIncoming = false, sentTimestamp = 0L, receivedTimestamp = 900L),
         )
@@ -83,11 +102,35 @@ internal class ConversationMessageUiModelMapperProtocolAndTimestampTest :
     }
 
     @Test
-    fun map_outgoingMessageWithNegativeSentTimestamp_fallsBackToReceivedTimestamp() {
+    fun map_outgoingMessageSentAfterItWasReceived_stillLabelsWithReceivedTimestamp() {
         val uiModel = mapPresent(
-            messageData(isIncoming = false, sentTimestamp = -1L, receivedTimestamp = 900L),
+            messageData(isIncoming = false, sentTimestamp = 9_000L, receivedTimestamp = 5_000L),
         )
 
-        assertEquals(900L, uiModel.displayTimestamp)
+        assertEquals(5_000L, uiModel.displayTimestamp)
+    }
+
+    @Test
+    fun map_retriedOutgoingMessage_labelsWithTheTimestampTheThreadIsSortedBy() {
+        val earlier = mapPresent(
+            messageData(
+                isIncoming = false,
+                receivedTimestamp = 1_000L,
+                sentTimestamp = 1_000L,
+            ),
+        )
+        val retried = mapPresent(
+            messageData(
+                isIncoming = false,
+                receivedTimestamp = 5_000L,
+                sentTimestamp = 900L,
+            ),
+        )
+
+        assertEquals(5_000L, retried.displayTimestamp)
+        assertTrue(
+            "a message sorted below another must never be labelled earlier than it",
+            retried.displayTimestamp > earlier.displayTimestamp,
+        )
     }
 }

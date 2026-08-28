@@ -50,7 +50,6 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor(
             displayTimestamp = conversationMessageDisplayTimestamp(
                 sentTimestamp = data.sentTimeStamp,
                 receivedTimestamp = data.receivedTimeStamp,
-                isIncoming = data.isIncoming,
             ),
             status = mapStatus(data.status),
             isIncoming = data.isIncoming,
@@ -263,17 +262,10 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor(
     private fun conversationMessageDisplayTimestamp(
         sentTimestamp: Long,
         receivedTimestamp: Long,
-        isIncoming: Boolean,
     ): Long {
-        val primaryTimestamp = when {
-            isIncoming -> receivedTimestamp
-            else -> sentTimestamp
-        }
-
         return when {
-            primaryTimestamp > 0L -> primaryTimestamp
-            isIncoming -> sentTimestamp
-            else -> receivedTimestamp
+            receivedTimestamp > 0L -> receivedTimestamp
+            else -> sentTimestamp
         }
     }
 
