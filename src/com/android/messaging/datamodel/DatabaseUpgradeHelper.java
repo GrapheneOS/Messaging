@@ -52,6 +52,9 @@ public class DatabaseUpgradeHelper {
         if (currentVersion < 3) {
             currentVersion = upgradeToVersion3(db);
         }
+        if (currentVersion < 4) {
+            currentVersion = upgradeToVersion4();
+        }
         // Rebuild all the views
         final Context context = Factory.get().getApplicationContext();
         DatabaseHelper.dropAllViews(db);
@@ -74,6 +77,12 @@ public class DatabaseUpgradeHelper {
         db.execSQL(DatabaseHelper.CONVERSATIONS_TABLE_PINNED_INDEX_SQL);
         LogUtil.i(TAG, "Upgraded database to version 3");
         return 3;
+    }
+
+    /** View-only change; without this handler the version check throws and every table is wiped. */
+    private int upgradeToVersion4() {
+        LogUtil.i(TAG, "Upgraded database to version 4");
+        return 4;
     }
 
     /**
