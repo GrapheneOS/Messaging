@@ -61,7 +61,7 @@ internal class ConversationMessageUiModelMapperMappingTest :
                 parts = persistentListOf(),
                 sentTimestamp = 1_000L,
                 receivedTimestamp = 2_000L,
-                displayTimestamp = 1_000L,
+                displayTimestamp = 2_000L,
                 status = Status.Outgoing.Delivered,
                 isIncoming = false,
                 senderDisplayName = "Ada Lovelace",
