@@ -34,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import com.android.messaging.R
 import com.android.messaging.ui.common.components.PrimaryActionButton
 import com.android.messaging.ui.common.components.bottomBarInsets
 import com.android.messaging.ui.common.components.selection.SelectionListContent
@@ -142,7 +143,12 @@ private fun LazyListScope.recipientSelectionContactItems(
 
         pickerUiState.items.isEmpty() -> {
             item {
-                RecipientSelectionEmptyState(text = emptyStateText)
+                RecipientSelectionEmptyState(
+                    text = when {
+                        pickerUiState.query.isBlank() -> emptyStateText
+                        else -> R.string.recipient_picker_no_results_text
+                    },
+                )
             }
         }
 
