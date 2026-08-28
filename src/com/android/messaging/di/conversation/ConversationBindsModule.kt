@@ -76,6 +76,8 @@ import com.android.messaging.domain.conversation.usecase.telephony.IsDeviceVoice
 import com.android.messaging.domain.conversation.usecase.telephony.IsDeviceVoiceCapableImpl
 import com.android.messaging.domain.conversation.usecase.telephony.IsEmergencyPhoneNumber
 import com.android.messaging.domain.conversation.usecase.telephony.IsEmergencyPhoneNumberImpl
+import com.android.messaging.domain.media.usecase.ResolveAudioDurationMillis
+import com.android.messaging.domain.media.usecase.ResolveAudioDurationMillisImpl
 import com.android.messaging.ui.contact.mapper.ContactUiModelMapper
 import com.android.messaging.ui.contact.mapper.ContactUiModelMapperImpl
 import com.android.messaging.ui.conversation.attachment.mapper.ConversationVCardAttachmentUiModelMapper
@@ -246,6 +248,12 @@ internal abstract class ConversationBindsModule {
     abstract fun bindIsContactSaved(
         impl: IsContactSavedImpl,
     ): IsContactSaved
+
+    @Binds
+    @Singleton
+    abstract fun bindResolveAudioDurationMillis(
+        impl: ResolveAudioDurationMillisImpl,
+    ): ResolveAudioDurationMillis
 
     @Binds
     @Reusable

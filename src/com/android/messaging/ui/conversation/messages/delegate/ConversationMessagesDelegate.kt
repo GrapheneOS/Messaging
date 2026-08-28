@@ -9,6 +9,7 @@ import com.android.messaging.data.conversation.repository.ConversationsRepositor
 import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.datamodel.data.MessagePartData
 import com.android.messaging.di.core.DefaultDispatcher
+import com.android.messaging.domain.media.usecase.ResolveAudioDurationMillis
 import com.android.messaging.domain.photoviewer.model.ConversationPhotoViewerAttachment
 import com.android.messaging.domain.photoviewer.usecase.ResolveConversationPhotoViewerInitialOccurrenceIndex
 import com.android.messaging.ui.conversation.attachment.mapper.ConversationVCardAttachmentUiModelMapper
@@ -24,6 +25,9 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,6 +58,7 @@ internal interface ConversationMessagesDelegate :
 internal class ConversationMessagesDelegateImpl @Inject constructor(
     private val conversationsRepository: ConversationsRepository,
     private val appSettingsRepository: AppSettingsRepository,
+    private val resolveAudioDurationMillis: ResolveAudioDurationMillis,
     private val resolveInitialPhotoOccurrenceIndex:
     ResolveConversationPhotoViewerInitialOccurrenceIndex,
     private val conversationMessageUiModelMapper: ConversationMessageUiModelMapper,
@@ -144,6 +149,7 @@ internal class ConversationMessagesDelegateImpl @Inject constructor(
                         .mapNotNull(conversationMessageUiModelMapper::map)
                         .toImmutableList()
                 }
+                .map(::withAudioDurations)
                 .flatMapLatest { messages ->
                     observeMessagesWithVCardMetadata(
                         messages = messages,
@@ -164,6 +170,54 @@ internal class ConversationMessagesDelegateImpl @Inject constructor(
             .onStart { emit(Unit) }
             .map { appSettingsRepository.isYouTubeLinkPreviewsEnabled() }
             .distinctUntilChanged()
+    }
+
+    private suspend fun withAudioDurations(
+        messages: ImmutableList<ConversationMessageUiModel>,
+    ): ImmutableList<ConversationMessageUiModel> {
+        val audioContentUris = messages
+            .asSequence()
+            .flatMap(ConversationMessageUiModel::parts)
+            .filterIsInstance<ConversationMessagePartUiModel.Attachment.Audio>()
+            .mapNotNullTo(mutableSetOf()) { audioPart -> audioPart.contentUri?.toString() }
+
+        if (audioContentUris.isEmpty()) {
+            return messages
+        }
+
+        val durationsByContentUri = coroutineScope {
+            audioContentUris
+                .map { contentUri ->
+                    async { contentUri to resolveAudioDurationMillis(contentUri) }
+                }
+                .awaitAll()
+                .toMap()
+        }
+
+        return messages
+            .map { message ->
+                val parts = message.parts.map { part ->
+                    when (part) {
+                        is ConversationMessagePartUiModel.Attachment.Audio -> {
+                            part.copy(
+                                durationMillis = part
+                                    .contentUri
+                                    ?.toString()
+                                    ?.let(durationsByContentUri::get)
+                                    ?: part.durationMillis,
+                            )
+                        }
+
+                        else -> part
+                    }
+                }
+
+                when (parts) {
+                    message.parts -> message
+                    else -> message.copy(parts = parts.toImmutableList())
+                }
+            }
+            .toImmutableList()
     }
 
     private fun observeMessagesWithVCardMetadata(
