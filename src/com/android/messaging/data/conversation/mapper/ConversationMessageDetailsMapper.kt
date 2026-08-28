@@ -37,7 +37,7 @@ internal class ConversationMessageDetailsMapperImpl @Inject constructor() :
 
         return ConversationMessageDetails(
             type = type,
-            sender = message.senderNormalizedDestination?.takeIf(String::isNotBlank),
+            sender = message.senderDisplayDestination?.takeIf(String::isNotBlank),
             recipients = recipients(data),
             sentTimestamp = sentTimestamp(message),
             receivedTimestamp = receivedTimestamp(message),
@@ -72,7 +72,7 @@ internal class ConversationMessageDetailsMapperImpl @Inject constructor() :
                 participant.isSelf && (participant.id != selfId || !includeSelf)
             }
             .mapNotNull { participant ->
-                participant.normalizedDestination?.takeIf(String::isNotBlank)
+                participant.displayDestination?.takeIf(String::isNotBlank)
             }
             .toImmutableList()
     }

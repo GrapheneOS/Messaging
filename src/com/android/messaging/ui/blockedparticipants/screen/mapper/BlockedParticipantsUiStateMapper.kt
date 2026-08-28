@@ -35,11 +35,11 @@ internal class BlockedParticipantsUiStateMapperImpl @Inject constructor(
     ): BlockedParticipantUiState {
         val participant = chat.participant
         val contactName = participant.fullName?.takeIf(String::isNotEmpty)
-        val sendDestination = participant.sendDestination.orEmpty()
+        val displayDestination = participant.displayDestination.orEmpty()
 
-        val displayName = contactName ?: sendDestination
+        val displayName = contactName ?: displayDestination
         val details = when {
-            contactName != null && !participant.isUnknownSender -> sendDestination
+            contactName != null && !participant.isUnknownSender -> displayDestination
             else -> null
         }
 

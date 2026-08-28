@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversationlist.mapper
 import android.content.Context
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
+import com.android.messaging.data.phone.formatter.PhoneNumberFormatter
 import com.android.messaging.domain.conversation.usecase.avatar.ResolveAvatarUri
 import com.android.messaging.domain.conversation.usecase.participant.CanShowOrAddContact
 import com.android.messaging.domain.conversation.usecase.participant.IsContactSaved
@@ -30,6 +31,7 @@ internal class ConversationListItemUiMapperImpl @Inject constructor(
     private val canPlacePhoneCall: CanPlacePhoneCall,
     private val canShowOrAddContact: CanShowOrAddContact,
     private val isContactSaved: IsContactSaved,
+    private val phoneNumberFormatter: PhoneNumberFormatter,
     private val resolveAvatarUri: ResolveAvatarUri,
 ) : ConversationListItemUiMapper {
 
@@ -96,7 +98,11 @@ internal class ConversationListItemUiMapperImpl @Inject constructor(
             lookupKey = participant.lookupKey,
             normalizedDestination = destination,
             isGroup = participant.isGroup,
-            subtitle = destination.takeIf { isOneOnOne },
+            // Only worth a second line when the title is a contact name, not the same number
+            subtitle = destination
+                ?.takeIf { isOneOnOne }
+                ?.let(phoneNumberFormatter::formatForDisplay)
+                ?.takeIf { it != title },
             canCall = isOneOnOne && canPlacePhoneCall(destination),
             canShowContact = canShowContact,
             isContactSaved = isContactSaved(
