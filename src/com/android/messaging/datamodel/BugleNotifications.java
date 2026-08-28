@@ -174,6 +174,8 @@ public class BugleNotifications {
         // Send per-conversation notifications (if there are multiple conversations).
         Optional<Conversation> conversation = state.mConversationsList.mConversations.stream()
                 .filter(conv -> !isConversationBlocked(conv.mConversationId))
+                .filter(conv -> !ConversationSnoozeQuery.isConversationSnoozed(
+                        conv.mConversationId))
                 .findFirst();
         conversation.ifPresent(conv -> processAndSend(state, conv));
     }

@@ -3,6 +3,7 @@ package com.android.messaging.datamodel
 import android.media.AudioManager
 import android.net.Uri
 import com.android.messaging.FactoryTestAccess
+import com.android.messaging.data.conversationsettings.repository.ConversationSnoozeQuery
 import com.android.messaging.datamodel.data.ConversationListItemData
 import com.android.messaging.testutil.installTestFactory
 import com.android.messaging.util.RingtoneUtil
@@ -35,6 +36,7 @@ class BugleNotificationsBlockedConversationTest {
         every { dataModel.getDatabase() } returns database
         silenceRinger()
         stubConversationLookup()
+        stubSnoozeLookup()
         stubNotificationDelivery()
     }
 
@@ -118,6 +120,11 @@ class BugleNotificationsBlockedConversationTest {
         every {
             ConversationListItemData.getExistingConversation(database, conversationId)
         } returns convData
+    }
+
+    private fun stubSnoozeLookup() {
+        mockkStatic(ConversationSnoozeQuery::class)
+        every { ConversationSnoozeQuery.isConversationSnoozed(any()) } returns false
     }
 
     private fun stubNotificationDelivery() {
