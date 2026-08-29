@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,6 +43,7 @@ import com.android.messaging.ui.appsettings.common.SettingsCategoryHeader
 import com.android.messaging.ui.appsettings.common.SettingsClickableItem
 import com.android.messaging.ui.appsettings.common.SettingsSwitchItem
 import com.android.messaging.ui.appsettings.common.SettingsTopAppBar
+import com.android.messaging.ui.appsettings.subscription.model.PhoneNumberDialogUiState
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionSettingsAction as Action
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionUiState
 import com.android.messaging.ui.common.text.asLtrText
@@ -54,11 +56,11 @@ internal fun SubscriptionSettingsScreen(
     title: String,
     onAction: (Action) -> Unit,
     onNavigateBack: () -> Unit,
+    phoneNumberDialogState: PhoneNumberDialogUiState,
     modifier: Modifier = Modifier,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     var showGroupMmsDialog by remember { mutableStateOf(false) }
-    var showPhoneNumberDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -78,7 +80,7 @@ internal fun SubscriptionSettingsScreen(
                 subscriptionSettings = subscriptionSettings,
                 onAction = onAction,
                 onGroupMmsClick = { showGroupMmsDialog = true },
-                onPhoneNumberClick = { showPhoneNumberDialog = true },
+                onPhoneNumberClick = { onAction(Action.PhoneNumberClicked) },
             )
             advancedSettingsItems(
                 subscriptionSettings = subscriptionSettings,
@@ -90,10 +92,9 @@ internal fun SubscriptionSettingsScreen(
     SubscriptionDialogs(
         subscriptionSettings = subscriptionSettings,
         onAction = onAction,
+        phoneNumberDialogState = phoneNumberDialogState,
         showGroupMmsDialog = showGroupMmsDialog,
         onDismissGroupMms = { showGroupMmsDialog = false },
-        showPhoneNumberDialog = showPhoneNumberDialog,
-        onDismissPhoneNumber = { showPhoneNumberDialog = false },
     )
 }
 
@@ -101,10 +102,9 @@ internal fun SubscriptionSettingsScreen(
 private fun SubscriptionDialogs(
     subscriptionSettings: SubscriptionUiState,
     onAction: (Action) -> Unit,
+    phoneNumberDialogState: PhoneNumberDialogUiState,
     showGroupMmsDialog: Boolean,
     onDismissGroupMms: () -> Unit,
-    showPhoneNumberDialog: Boolean,
-    onDismissPhoneNumber: () -> Unit,
 ) {
     if (showGroupMmsDialog) {
         GroupMmsDialog(
@@ -119,17 +119,18 @@ private fun SubscriptionDialogs(
         )
     }
 
-    if (showPhoneNumberDialog) {
+    if (phoneNumberDialogState.isVisible) {
         PhoneNumberDialog(
             currentNumber = subscriptionSettings.phoneNumber.ifEmpty {
                 subscriptionSettings.defaultPhoneNumber
             },
-            onDismiss = onDismissPhoneNumber,
+            isInvalid = phoneNumberDialogState.isInvalid,
+            onErrorDismissed = { onAction(Action.PhoneNumberErrorDismissed) },
+            onDismiss = { onAction(Action.PhoneNumberDialogDismissed) },
             onConfirm = { phoneNumber ->
                 onAction(
-                    Action.PhoneNumberChanged(phoneNumber),
+                    Action.PhoneNumberConfirmed(phoneNumber),
                 )
-                onDismissPhoneNumber()
             },
         )
     }
@@ -350,12 +351,14 @@ private fun GroupMmsOption(
 }
 
 @Composable
-private fun PhoneNumberDialog(
+internal fun PhoneNumberDialog(
     currentNumber: String,
+    isInvalid: Boolean,
+    onErrorDismissed: () -> Unit,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit,
 ) {
-    var phoneNumber by remember { mutableStateOf(currentNumber) }
+    var phoneNumber by rememberSaveable { mutableStateOf(currentNumber) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -365,10 +368,23 @@ private fun PhoneNumberDialog(
         text = {
             OutlinedTextField(
                 value = phoneNumber,
-                onValueChange = { phoneNumber = it },
+                onValueChange = {
+                    phoneNumber = it
+                    if (isInvalid) {
+                        onErrorDismissed()
+                    }
+                },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 singleLine = true,
+                isError = isInvalid,
+                supportingText = when {
+                    isInvalid -> {
+                        { Text(text = stringResource(R.string.invalid_self_phone_number)) }
+                    }
+
+                    else -> null
+                },
             )
         },
         confirmButton = {
@@ -393,6 +409,7 @@ private fun SubscriptionSettingsScreenDefaultSmsPreview() {
             title = "SIM 1",
             onAction = {},
             onNavigateBack = {},
+            phoneNumberDialogState = PhoneNumberDialogUiState(),
         )
     }
 }
@@ -406,6 +423,7 @@ private fun SubscriptionSettingsScreenNotDefaultSmsPreview() {
             title = "SIM 2",
             onAction = {},
             onNavigateBack = {},
+            phoneNumberDialogState = PhoneNumberDialogUiState(),
         )
     }
 }
@@ -440,6 +458,8 @@ private fun PhoneNumberDialogPreview() {
     MessagingPreviewTheme {
         PhoneNumberDialog(
             currentNumber = "+31 6 1234 5678",
+            isInvalid = false,
+            onErrorDismissed = {},
             onDismiss = {},
             onConfirm = {},
         )
