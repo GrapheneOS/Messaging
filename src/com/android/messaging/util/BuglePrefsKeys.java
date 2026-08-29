@@ -68,6 +68,13 @@ public final class BuglePrefsKeys {
     public static final boolean SMS_WARNING_ACKNOWLEDGED_DEFAULT = false;
 
     /**
+     * Whether the one-off request for READ_PHONE_NUMBERS has already been made.
+     */
+    public static final String SELF_PHONE_NUMBER_PERMISSION_REQUESTED =
+            "self_phone_number_permission_requested";
+    public static final boolean SELF_PHONE_NUMBER_PERMISSION_REQUESTED_DEFAULT = false;
+
+    /**
      * The last selected chooser index in the media picker.
      */
     public static final String SELECTED_MEDIA_PICKER_CHOOSER_INDEX

@@ -7,6 +7,7 @@ import com.android.messaging.domain.conversation.usecase.draft.SendConversationD
 import com.android.messaging.domain.conversation.usecase.draft.exception.ConversationSimNotReadyException
 import com.android.messaging.domain.conversation.usecase.draft.exception.DraftDispatchFailedException
 import com.android.messaging.domain.conversation.usecase.draft.exception.MessageLimitExceededException
+import com.android.messaging.domain.conversation.usecase.draft.exception.MissingSelfPhoneNumberForGroupMmsException
 import com.android.messaging.domain.conversation.usecase.draft.exception.TooManyVideoAttachmentsException
 import com.android.messaging.domain.conversation.usecase.draft.exception.UnknownConversationRecipientException
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
@@ -53,6 +54,19 @@ internal class ConversationDraftDelegateSendValidationTest : BaseConversationDra
                     cause = IllegalStateException("SIM unavailable"),
                 ),
                 expectedMessageResId = R.string.cant_send_message_without_active_subscription,
+            )
+        }
+    }
+
+    @Test
+    fun sendValidationFailure_whenSelfPhoneNumberIsUnknown_emitsAddYourPhoneNumberMessage() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            assertSendFailureMessage(
+                exception = MissingSelfPhoneNumberForGroupMmsException(
+                    conversationId = CONVERSATION_ID,
+                    selfSubId = SubId(1),
+                ),
+                expectedMessageResId = R.string.cant_send_group_mms_without_self_phone_number,
             )
         }
     }

@@ -4,10 +4,14 @@ import com.android.messaging.data.onboarding.GetMissingPermissionLabels
 import com.android.messaging.data.onboarding.GetMissingPermissionLabelsImpl
 import com.android.messaging.data.onboarding.RequiredPermissionsChecker
 import com.android.messaging.data.onboarding.RequiredPermissionsCheckerImpl
+import com.android.messaging.data.onboarding.store.SelfPhoneNumberPermissionStore
+import com.android.messaging.data.onboarding.store.SelfPhoneNumberPermissionStoreImpl
 import com.android.messaging.data.onboarding.store.SmsWarningStore
 import com.android.messaging.data.onboarding.store.SmsWarningStoreImpl
 import com.android.messaging.domain.onboarding.usecase.DeterminePermissionRequest
 import com.android.messaging.domain.onboarding.usecase.DeterminePermissionRequestImpl
+import com.android.messaging.domain.onboarding.usecase.SelfPhoneNumberPermissionPrompt
+import com.android.messaging.domain.onboarding.usecase.SelfPhoneNumberPermissionPromptImpl
 import com.android.messaging.domain.onboarding.usecase.ShouldShowOnboarding
 import com.android.messaging.domain.onboarding.usecase.ShouldShowOnboardingImpl
 import dagger.Binds
@@ -49,4 +53,16 @@ internal abstract class OnboardingBindsModule {
     abstract fun bindShouldShowOnboarding(
         impl: ShouldShowOnboardingImpl,
     ): ShouldShowOnboarding
+
+    @Binds
+    @Reusable
+    abstract fun bindSelfPhoneNumberPermissionStore(
+        impl: SelfPhoneNumberPermissionStoreImpl,
+    ): SelfPhoneNumberPermissionStore
+
+    @Binds
+    @Reusable
+    abstract fun bindSelfPhoneNumberPermissionPrompt(
+        impl: SelfPhoneNumberPermissionPromptImpl,
+    ): SelfPhoneNumberPermissionPrompt
 }

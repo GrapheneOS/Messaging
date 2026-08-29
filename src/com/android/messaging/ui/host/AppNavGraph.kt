@@ -7,6 +7,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.scene.SceneStrategy
+import com.android.messaging.domain.onboarding.usecase.SelfPhoneNumberPermissionPrompt
 import com.android.messaging.ui.conversation.navigation.ProvideConversationEntryNavState
 import com.android.messaging.ui.navigation.AppNavDisplay
 import com.android.messaging.ui.navigation.LocalNavigator
@@ -25,6 +26,7 @@ internal fun AppNavGraph(
     showsTwoPanes: Boolean,
     launchDestinations: Flow<List<NavKey>>,
     shouldShowOnboarding: () -> Boolean,
+    selfPhoneNumberPermissionPrompt: SelfPhoneNumberPermissionPrompt,
     onAppResumed: () -> Unit,
     onFinish: () -> Unit,
     modifier: Modifier = Modifier,
@@ -43,6 +45,12 @@ internal fun AppNavGraph(
         navigator = navigator,
         shouldShowOnboarding = shouldShowOnboarding,
         onAppResumed = onAppResumed,
+    )
+
+    SelfPhoneNumberPermissionEffect(
+        backStack = backStack,
+        shouldShowOnboarding = shouldShowOnboarding,
+        selfPhoneNumberPermissionPrompt = selfPhoneNumberPermissionPrompt,
     )
 
     AppNavLaunchEffects(

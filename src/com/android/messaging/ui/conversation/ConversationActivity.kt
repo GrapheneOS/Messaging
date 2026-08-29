@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.navigation3.runtime.NavKey
+import com.android.messaging.domain.onboarding.usecase.SelfPhoneNumberPermissionPrompt
 import com.android.messaging.domain.onboarding.usecase.ShouldShowOnboarding
 import com.android.messaging.ui.MainActivity
 import com.android.messaging.ui.conversation.entry.ConversationLaunchStore
@@ -27,6 +28,9 @@ internal class ConversationActivity : ComponentActivity() {
 
     @Inject
     lateinit var shouldShowOnboarding: ShouldShowOnboarding
+
+    @Inject
+    lateinit var selfPhoneNumberPermissionPrompt: SelfPhoneNumberPermissionPrompt
 
     @Inject
     lateinit var launchStore: ConversationLaunchStore
@@ -59,6 +63,7 @@ internal class ConversationActivity : ComponentActivity() {
                     showsTwoPanes = false,
                     launchDestinations = launchDestinationFlow,
                     shouldShowOnboarding = shouldShowOnboarding::invoke,
+                    selfPhoneNumberPermissionPrompt = selfPhoneNumberPermissionPrompt,
                     onAppResumed = ::resumeDataModel,
                     onFinish = ::finishAfterTransition,
                 )
