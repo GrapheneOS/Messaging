@@ -100,6 +100,9 @@ public class BugleNotifications {
     // Logging
     public static final String TAG = LogUtil.BUGLE_NOTIFICATIONS_TAG;
 
+    @VisibleForTesting
+    public static final int REQUEST_CODE_REDOWNLOAD_MMS = 101;
+
     // Constants to use for update.
     public static final int UPDATE_NONE = 0;
     public static final int UPDATE_MESSAGES = 1;
@@ -576,7 +579,8 @@ public class BugleNotifications {
         if (conversation.getDoesLatestMessageNeedDownload() && messageId != null
                 && !OsUtil.isSecondaryUser()) {
             final PendingIntent downloadPendingIntent =
-                    RedownloadMmsAction.getPendingIntentForRedownloadMms(context, messageId);
+                    RedownloadMmsAction.getPendingIntentForRedownloadMms(context,
+                            messageId, REQUEST_CODE_REDOWNLOAD_MMS);
 
             final NotificationCompat.Action.Builder actionBuilder =
                     new NotificationCompat.Action.Builder(R.drawable.ic_file_download_light,

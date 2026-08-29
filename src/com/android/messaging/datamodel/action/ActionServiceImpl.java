@@ -213,8 +213,10 @@ public class ActionServiceImpl extends JobIntentService {
      * triggered
      */
     public static PendingIntent makeStartActionPendingIntent(final Context context,
-            final Action action, final int requestCode, final boolean launchesAnActivity) {
+            final Action action, final String identifier, final int requestCode,
+            final boolean launchesAnActivity) {
         final Intent intent = PendingActionReceiver.makeIntent(OP_START_ACTION);
+        intent.setIdentifier(identifier);
         final Bundle actionBundle = new Bundle();
         actionBundle.putParcelable(BUNDLE_ACTION, action);
         intent.putExtra(EXTRA_ACTION_BUNDLE, actionBundle);

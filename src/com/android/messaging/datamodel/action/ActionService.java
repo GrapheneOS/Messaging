@@ -25,9 +25,10 @@ import android.os.Bundle;
  */
 public class ActionService {
     protected static PendingIntent makeStartActionPendingIntent(final Context context,
-            final Action action, final int requestCode, final boolean launchesAnActivity) {
-        return ActionServiceImpl.makeStartActionPendingIntent(context, action, requestCode,
-                launchesAnActivity);
+            final Action action, final String identifier, final int requestCode,
+            final boolean launchesAnActivity) {
+        return ActionServiceImpl.makeStartActionPendingIntent(context, action, identifier,
+                requestCode, launchesAnActivity);
     }
 
     /**
