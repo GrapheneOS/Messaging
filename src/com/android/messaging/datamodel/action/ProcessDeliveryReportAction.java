@@ -33,15 +33,13 @@ import com.android.messaging.sms.MmsUtils;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.LogUtil;
 
-import java.util.concurrent.TimeUnit;
-
 public class ProcessDeliveryReportAction extends Action implements Parcelable {
     private static final String TAG = LogUtil.BUGLE_DATAMODEL_TAG;
 
     private static final String KEY_URI = "uri";
     private static final String KEY_STATUS = "status";
 
-    private ProcessDeliveryReportAction(final Uri uri, final int status) {
+    ProcessDeliveryReportAction(final Uri uri, final int status) {
         actionParameters.putParcelable(KEY_URI, uri);
         actionParameters.putInt(KEY_STATUS, status);
     }
@@ -76,8 +74,7 @@ public class ProcessDeliveryReportAction extends Action implements Parcelable {
             final int bugleStatus = SyncMessageBatch.bugleStatusForSms(true /*outgoing*/,
                     Telephony.Sms.MESSAGE_TYPE_SENT /* type */, status);
             values.put(DatabaseHelper.MessageColumns.STATUS, bugleStatus);
-            values.put(DatabaseHelper.MessageColumns.SENT_TIMESTAMP,
-                    TimeUnit.MILLISECONDS.toMicros(timeSentInMillis));
+            values.put(DatabaseHelper.MessageColumns.SENT_TIMESTAMP, timeSentInMillis);
 
             final MessageData messageData =
                     BugleDatabaseOperations.readMessageData(db, smsMessageUri);
