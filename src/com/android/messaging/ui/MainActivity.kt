@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
+import com.android.messaging.domain.onboarding.usecase.SelfPhoneNumberPermissionPrompt
 import com.android.messaging.domain.onboarding.usecase.ShouldShowOnboarding
 import com.android.messaging.ui.appsettings.navigation.SettingsNavKey
 import com.android.messaging.ui.appsettings.navigation.goToSettings
@@ -32,6 +33,9 @@ internal class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var shouldShowOnboarding: ShouldShowOnboarding
+
+    @Inject
+    lateinit var selfPhoneNumberPermissionPrompt: SelfPhoneNumberPermissionPrompt
 
     @Inject
     lateinit var launchStore: ConversationLaunchStore
@@ -61,6 +65,7 @@ internal class MainActivity : ComponentActivity() {
                     showsTwoPanes = listDetailLayout.showsTwoPanes,
                     launchDestinations = launchDestinationFlow,
                     shouldShowOnboarding = shouldShowOnboarding::invoke,
+                    selfPhoneNumberPermissionPrompt = selfPhoneNumberPermissionPrompt,
                     onAppResumed = ::resumeDataModel,
                     onFinish = ::finish,
                     modifier = Modifier.fillMaxSize(),

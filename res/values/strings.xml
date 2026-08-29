@@ -451,6 +451,8 @@
     <string name="fail_to_load_attachment">Can\'t load attachment. Try again.</string>
     <!-- Shows when the user attempts to send message when there is no active subscription -->
     <string name="cant_send_message_without_active_subscription">Network is not ready. Try again.</string>
+    <!-- Shows when the user attempts to send a group MMS but the phone number of this device is unknown -->
+    <string name="cant_send_group_mms_without_self_phone_number">Group messages need your phone number. Add it in Settings.</string>
 
     <string name="conversation_add_people">Add people</string>
     <string name="conversation_new_group">New group</string>

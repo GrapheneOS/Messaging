@@ -35,6 +35,9 @@
     <uses-permission android:name="android.permission.READ_PROFILE"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <!-- Needed by SubscriptionManager#getPhoneNumber to resolve the self number from the
+         carrier or IMS when the SIM does not carry it -->
+    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS"/>
 
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />

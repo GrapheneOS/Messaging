@@ -164,15 +164,46 @@ public class PhoneUtils {
         }
 
         final SubscriptionInfo subInfo = getActiveSubscriptionInfo();
-        if (subInfo != null) {
-            String phoneNumber = subInfo.getNumber();
-            if (TextUtils.isEmpty(phoneNumber) && LogUtil.isLoggable(TAG, LogUtil.DEBUG)) {
-                LogUtil.d(TAG, "SubscriptionInfo phone number for self is empty!");
-            }
-            return phoneNumber;
+        if (subInfo == null) {
+            LogUtil.w(TAG, "PhoneUtils.getSelfRawNumber: subInfo is null for " + mSubId);
+            throw new IllegalStateException("No active subscription");
         }
-        LogUtil.w(TAG, "PhoneUtils.getSelfRawNumber: subInfo is null for " + mSubId);
-        throw new IllegalStateException("No active subscription");
+
+        final String carrierNumber = getCarrierKnownNumber(subInfo.getSubscriptionId());
+        if (!TextUtils.isEmpty(carrierNumber)) {
+            return carrierNumber;
+        }
+
+        final String phoneNumber = subInfo.getNumber();
+        if (TextUtils.isEmpty(phoneNumber) && LogUtil.isLoggable(TAG, LogUtil.DEBUG)) {
+            LogUtil.d(TAG, "SubscriptionInfo phone number for self is empty!");
+        }
+
+        return phoneNumber;
+    }
+
+    /**
+     * Ask telephony for an active subscription's number, from whichever source knows it.
+     *
+     * <p>{@link SubscriptionInfo#getNumber} reads the UICC alone, and plenty of carriers never
+     * write the MSISDN there -- the number is then only known from the carrier config or from the
+     * IMS registration. {@link SubscriptionManager#getPhoneNumber} consults all three.
+     *
+     * @param subId an active subscription id
+     * @return the number, or empty if telephony has none or will not tell us
+     */
+    private String getCarrierKnownNumber(final int subId) {
+        try {
+            return mSubscriptionManager.getPhoneNumber(subId);
+        } catch (final SecurityException e) {
+            // READ_PHONE_NUMBERS is declared but not granted; the UICC is all we get.
+            LogUtil.w(TAG, "PhoneUtils.getCarrierKnownNumber: not permitted for " + subId);
+            return "";
+        } catch (final IllegalArgumentException e) {
+            // The subscription went away between the two calls.
+            LogUtil.w(TAG, "PhoneUtils.getCarrierKnownNumber: unknown subscription " + subId);
+            return "";
+        }
     }
 
     /**

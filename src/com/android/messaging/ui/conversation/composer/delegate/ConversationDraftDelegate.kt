@@ -15,6 +15,7 @@ import com.android.messaging.domain.conversation.usecase.action.ConversationActi
 import com.android.messaging.domain.conversation.usecase.draft.SendConversationDraft
 import com.android.messaging.domain.conversation.usecase.draft.exception.ConversationSimNotReadyException
 import com.android.messaging.domain.conversation.usecase.draft.exception.MessageLimitExceededException
+import com.android.messaging.domain.conversation.usecase.draft.exception.MissingSelfPhoneNumberForGroupMmsException
 import com.android.messaging.domain.conversation.usecase.draft.exception.SendConversationDraftException
 import com.android.messaging.domain.conversation.usecase.draft.exception.TooManyVideoAttachmentsException
 import com.android.messaging.domain.conversation.usecase.draft.exception.UnknownConversationRecipientException
@@ -560,6 +561,12 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
             }
 
             is UnknownConversationRecipientException -> R.string.unknown_sender
+
+            // Must precede the SendConversationDraftException branch it is a subclass of.
+            is MissingSelfPhoneNumberForGroupMmsException -> {
+                R.string.cant_send_group_mms_without_self_phone_number
+            }
+
             is SendConversationDraftException -> R.string.send_message_failure
             else -> R.string.send_message_failure
         }
