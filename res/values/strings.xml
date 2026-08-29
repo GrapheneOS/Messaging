@@ -255,6 +255,8 @@
     <string name="notification_download_mms">Download</string>
     <!-- Notification voice reply prompt (visible on wearable device only). [CHAR LIMIT=15] -->
     <string name="notification_reply_prompt">Reply</string>
+    <!-- Action on the "message not sent" notification, to send the message again -->
+    <string name="notification_retry_prompt">Try again</string>
     <!-- Notification title for the conversations left out when too many have unseen messages -->
     <plurals name="notification_more_conversations">
         <item quantity="one"><xliff:g id="count">%d</xliff:g> more conversation with new messages</item>

@@ -1,11 +1,15 @@
 package com.android.messaging.datamodel
 
+import android.app.Notification
 import android.app.NotificationManager
+import android.content.ContentValues
 import android.content.Context
 import androidx.core.content.contentValuesOf
 import com.android.messaging.FactoryTestAccess
+import com.android.messaging.R
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.testutil.installTestFactory
+import com.android.messaging.util.ContentType
 import com.android.messaging.util.NotificationChannelUtil
 import com.android.messaging.util.PendingIntentConstants
 import io.mockk.every
@@ -54,9 +58,9 @@ class MessageNotificationStateFailedMessagesTest {
 
     @Test
     fun checkFailedMessagesPostsNotificationOnExistingChannel() {
-        insertFailedOutgoingMessage()
+        insertFailedMessage()
 
-        MessageNotificationState.checkFailedMessages()
+        checkFailedMessages()
 
         val shadow = shadowOf(notificationManager)
         val notification = shadow.getNotification(
@@ -81,8 +85,8 @@ class MessageNotificationStateFailedMessagesTest {
 
     @Test
     fun checkFailedMessagesCancelsNotificationOnceMessagesAreSeen() {
-        insertFailedOutgoingMessage()
-        MessageNotificationState.checkFailedMessages()
+        insertFailedMessage()
+        checkFailedMessages()
 
         DataModel.get().database.update(
             DatabaseHelper.MESSAGES_TABLE,
@@ -90,13 +94,145 @@ class MessageNotificationStateFailedMessagesTest {
             null,
             null,
         )
-        MessageNotificationState.checkFailedMessages()
+        checkFailedMessages()
 
         val shadow = shadowOf(notificationManager)
         assertEquals(0, shadow.size())
     }
 
-    private fun insertFailedOutgoingMessage() {
+    @Test
+    fun checkFailedMessagesShowsTheTextOfTheMessageThatFailed() {
+        insertFailedMessage()
+
+        checkFailedMessages()
+
+        assertEquals(
+            "the failure notification does not say which message failed",
+            MESSAGE_TEXT,
+            postedFailureNotification().extras.getCharSequence(Notification.EXTRA_TEXT).toString(),
+        )
+    }
+
+    @Test
+    fun checkFailedMessagesNamesTheConversationTheMessageWasFor() {
+        insertFailedMessage()
+
+        checkFailedMessages()
+
+        assertEquals(
+            "the failure notification does not say which conversation failed",
+            CONVERSATION_NAME,
+            postedFailureNotification().extras
+                .getCharSequence(Notification.EXTRA_SUB_TEXT).toString(),
+        )
+    }
+
+    @Test
+    fun checkFailedMessagesStampsTheNotificationWithTheTimeOfTheFailedMessage() {
+        insertFailedMessage()
+
+        checkFailedMessages()
+
+        assertEquals(
+            "the failure notification is stamped with the time of the check, not the message",
+            RECEIVED_TIMESTAMP_MILLIS,
+            postedFailureNotification().`when`,
+        )
+    }
+
+    @Test
+    fun checkFailedMessagesOffersToSendTheFailedMessageAgain() {
+        insertFailedMessage()
+
+        checkFailedMessages()
+
+        val actions = postedFailureNotification().actions
+        assertNotNull("the failure notification offers no way to retry", actions)
+        assertEquals("expected exactly one action on the failure notification", 1, actions.size)
+        assertEquals(
+            context.getString(R.string.notification_retry_prompt),
+            actions.single().title.toString(),
+        )
+    }
+
+    @Test
+    fun checkFailedMessagesDescribesTheAttachmentWhenTheMessageHasNoText() {
+        insertFailedMessage(
+            partValues = contentValuesOf(
+                DatabaseHelper.PartColumns.CONTENT_URI to "content://mms/part/1",
+                DatabaseHelper.PartColumns.CONTENT_TYPE to ContentType.IMAGE_PNG,
+            ),
+        )
+
+        checkFailedMessages()
+
+        assertEquals(
+            "an attachment-only message leaves the failure notification blank",
+            context.getString(R.string.notification_picture),
+            postedFailureNotification().extras.getCharSequence(Notification.EXTRA_TEXT).toString(),
+        )
+    }
+
+    @Test
+    fun checkFailedMessagesOffersToDownloadAgainWhenTheDownloadFailed() {
+        insertFailedMessage(status = MessageData.BUGLE_STATUS_INCOMING_DOWNLOAD_FAILED)
+
+        checkFailedMessages()
+
+        val actions = postedFailureNotification().actions
+        assertNotNull("the failure notification offers no way to retry the download", actions)
+        assertEquals(
+            "a failed download must offer to download again, not to send again",
+            context.getString(R.string.notification_download_mms),
+            actions.single().title.toString(),
+        )
+    }
+
+    @Test
+    fun checkFailedMessagesFallsBackToTheSentTimeWhenNothingWasReceived() {
+        insertFailedMessage(receivedTimestamp = 0L)
+
+        checkFailedMessages()
+
+        assertEquals(
+            "a message with no received time leaves the notification stamped with the check",
+            SENT_TIMESTAMP_MILLIS,
+            postedFailureNotification().`when`,
+        )
+    }
+
+    private fun checkFailedMessages() {
+        var failure: Throwable? = null
+        val thread = Thread(
+            { MessageNotificationState.checkFailedMessages() },
+            "notification-check",
+        )
+        thread.setUncaughtExceptionHandler { _, throwable -> failure = throwable }
+        thread.start()
+        thread.join()
+        failure?.let { throw it }
+    }
+
+    private fun postedFailureNotification(): Notification {
+        val notification = shadowOf(notificationManager).getNotification(
+            BugleNotifications.buildNotificationTag(
+                PendingIntentConstants.MSG_SEND_ERROR,
+                null,
+            ),
+            PendingIntentConstants.MSG_SEND_ERROR,
+        )
+        assertNotNull("failure notification was not posted", notification)
+        return notification
+    }
+
+    private fun insertFailedMessage(
+        partValues: ContentValues = contentValuesOf(
+            DatabaseHelper.PartColumns.TEXT to MESSAGE_TEXT,
+            DatabaseHelper.PartColumns.CONTENT_TYPE to ContentType.TEXT_PLAIN,
+        ),
+        status: Int = MessageData.BUGLE_STATUS_OUTGOING_FAILED,
+        receivedTimestamp: Long = RECEIVED_TIMESTAMP_MILLIS,
+    ) {
         val db = DataModel.get().database
 
         val participantId = db.insert(
@@ -122,19 +258,25 @@ class MessageNotificationStateFailedMessagesTest {
                 DatabaseHelper.MessageColumns.CONVERSATION_ID to conversationId,
                 DatabaseHelper.MessageColumns.SENDER_PARTICIPANT_ID to participantId,
                 DatabaseHelper.MessageColumns.SELF_PARTICIPANT_ID to participantId,
-                DatabaseHelper.MessageColumns.STATUS to MessageData.BUGLE_STATUS_OUTGOING_FAILED,
+                DatabaseHelper.MessageColumns.STATUS to status,
                 DatabaseHelper.MessageColumns.SEEN to 0,
                 DatabaseHelper.MessageColumns.READ to 0,
-                DatabaseHelper.MessageColumns.RECEIVED_TIMESTAMP to RECEIVED_TIMESTAMP_MILLIS,
+                DatabaseHelper.MessageColumns.RECEIVED_TIMESTAMP to receivedTimestamp,
                 DatabaseHelper.MessageColumns.SENT_TIMESTAMP to SENT_TIMESTAMP_MILLIS,
             ),
         )
         assertTrue("message insert failed", messageId >= 0)
+
+        partValues.put(DatabaseHelper.PartColumns.MESSAGE_ID, messageId)
+        partValues.put(DatabaseHelper.PartColumns.CONVERSATION_ID, conversationId)
+        val partId = db.insert(DatabaseHelper.PARTS_TABLE, null, partValues)
+        assertTrue("part insert failed", partId >= 0)
     }
 
     private companion object {
         private const val RECIPIENT = "+15551230000"
         private const val CONVERSATION_NAME = "Test conversation"
+        private const val MESSAGE_TEXT = "the message that failed to send"
         private const val RECEIVED_TIMESTAMP_MILLIS = 1_780_920_000_000L
         private const val SENT_TIMESTAMP_MILLIS = 1_780_919_999_000L
     }
