@@ -12,7 +12,7 @@ internal data class ConversationListSelectionUiState(
 internal data class SelectionActionsUiState(
     val canAddContact: Boolean = false,
     val canBlock: Boolean = false,
-    val firstSelectedIsPinned: Boolean? = null,
-    val firstSelectedIsSnoozed: Boolean? = null,
-    val firstSelectedIsUnread: Boolean? = null,
+    val allSelectedArePinned: Boolean? = null,
+    val allSelectedAreSnoozed: Boolean? = null,
+    val allSelectedAreRead: Boolean? = null,
 )

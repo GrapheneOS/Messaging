@@ -12,6 +12,7 @@ import com.android.messaging.domain.conversation.usecase.participant.CanShowOrAd
 import com.android.messaging.domain.conversation.usecase.participant.IsContactSaved
 import com.android.messaging.domain.conversation.usecase.telephony.CanPlacePhoneCall
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState
+import com.android.messaging.ui.conversationlist.chats.model.SelectionActionsUiState
 import com.android.messaging.ui.conversationlist.conversationItem
 import com.android.messaging.ui.conversationlist.mapper.ConversationListContentUiStateMapperImpl
 import com.android.messaging.ui.conversationlist.mapper.ConversationListItemUiMapperImpl
@@ -25,6 +26,7 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.toPersistentList
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -119,9 +121,9 @@ internal class ConversationListUiStateMapperImplTest {
 
         val actions = state.selection.actions
         assertEquals(0, state.selection.selectedCount)
-        assertNull(actions.firstSelectedIsPinned)
-        assertNull(actions.firstSelectedIsSnoozed)
-        assertNull(actions.firstSelectedIsUnread)
+        assertNull(actions.allSelectedArePinned)
+        assertNull(actions.allSelectedAreSnoozed)
+        assertNull(actions.allSelectedAreRead)
     }
 
     @Test
@@ -142,38 +144,52 @@ internal class ConversationListUiStateMapperImplTest {
         )
 
         val actions = state.selection.actions
-        assertTrue(requireNotNull(actions.firstSelectedIsPinned))
-        assertTrue(requireNotNull(actions.firstSelectedIsSnoozed))
-        assertTrue(requireNotNull(actions.firstSelectedIsUnread))
+        assertTrue(requireNotNull(actions.allSelectedArePinned))
+        assertTrue(requireNotNull(actions.allSelectedAreSnoozed))
+        assertFalse(requireNotNull(actions.allSelectedAreRead))
     }
 
     @Test
-    fun map_mixedSelection_togglesFollowFirstSelectedConversation() {
-        val state = mapper.map(
-            snapshot = snapshotOf(
-                conversationItem(
-                    conversationId = ConversationId("first"),
-                    isPinned = false,
-                    isSnoozed = false,
-                ),
-                conversationItem(
-                    conversationId = ConversationId("second"),
-                    isPinned = true,
-                    isSnoozed = true,
-                ),
+    fun map_mixedSelection_offersTheSameTogglesWhicheverRowWasTappedFirst() {
+        val snapshot = mixedSnapshot()
+
+        val plainTappedFirst = selectionActions(snapshot, "plain", "marked")
+        val markedTappedFirst = selectionActions(snapshot, "marked", "plain")
+
+        assertEquals(plainTappedFirst, markedTappedFirst)
+    }
+
+    @Test
+    fun map_mixedSelection_offersToPinSnoozeAndMarkTheWholeSelectionRead() {
+        val actions = selectionActions(mixedSnapshot(), "marked", "plain")
+
+        assertFalse(requireNotNull(actions.allSelectedArePinned))
+        assertFalse(requireNotNull(actions.allSelectedAreSnoozed))
+        assertFalse(requireNotNull(actions.allSelectedAreRead))
+    }
+
+    @Test
+    fun map_selectionThatIsEntirelyPinnedSnoozedAndRead_offersTheOppositeActions() {
+        val snapshot = snapshotOf(
+            conversationItem(
+                conversationId = ConversationId("a"),
+                isPinned = true,
+                isSnoozed = true,
+                isRead = true,
             ),
-            selectedConversationIds = persistentListOf(
-                ConversationId("first"),
-                ConversationId("second")
+            conversationItem(
+                conversationId = ConversationId("b"),
+                isPinned = true,
+                isSnoozed = true,
+                isRead = true,
             ),
-            openedConversationId = null,
-            isScrollToTopVisible = false,
-            isDebugEnabled = false,
         )
 
-        val actions = state.selection.actions
-        assertFalse(requireNotNull(actions.firstSelectedIsPinned))
-        assertFalse(requireNotNull(actions.firstSelectedIsSnoozed))
+        val actions = selectionActions(snapshot, "a", "b")
+
+        assertTrue(requireNotNull(actions.allSelectedArePinned))
+        assertTrue(requireNotNull(actions.allSelectedAreSnoozed))
+        assertTrue(requireNotNull(actions.allSelectedAreRead))
     }
 
     @Test
@@ -324,6 +340,36 @@ internal class ConversationListUiStateMapperImplTest {
         assertTrue(state.hasBlockedParticipants)
         assertTrue(state.isDebugEnabled)
         assertFalse(state.selection.actions.canBlock)
+    }
+
+    private fun mixedSnapshot(): ConversationListSnapshot {
+        return snapshotOf(
+            conversationItem(
+                conversationId = ConversationId("plain"),
+                isPinned = false,
+                isSnoozed = false,
+                isRead = true,
+            ),
+            conversationItem(
+                conversationId = ConversationId("marked"),
+                isPinned = true,
+                isSnoozed = true,
+                isRead = false,
+            ),
+        )
+    }
+
+    private fun selectionActions(
+        snapshot: ConversationListSnapshot,
+        vararg selectedIds: String,
+    ): SelectionActionsUiState {
+        return mapper.map(
+            snapshot = snapshot,
+            selectedConversationIds = selectedIds.map(::ConversationId).toPersistentList(),
+            openedConversationId = null,
+            isScrollToTopVisible = false,
+            isDebugEnabled = false,
+        ).selection.actions
     }
 
     private fun singleItem(

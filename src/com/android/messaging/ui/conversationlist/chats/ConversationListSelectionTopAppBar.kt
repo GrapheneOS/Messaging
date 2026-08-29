@@ -81,9 +81,9 @@ private fun ConversationListSelectionActions(
     onDeleteClick: () -> Unit,
     onSnoozeClick: () -> Unit,
 ) {
-    actions.firstSelectedIsSnoozed?.let { isSnoozed ->
+    actions.allSelectedAreSnoozed?.let { areSnoozed ->
         when {
-            isSnoozed -> SelectionActionButton(
+            areSnoozed -> SelectionActionButton(
                 imageVector = Icons.Default.NotificationsActive,
                 labelResId = R.string.unsnooze_chat_setting_title,
                 onClick = { onAction(Action.UnsnoozeClicked) },
@@ -97,9 +97,9 @@ private fun ConversationListSelectionActions(
         }
     }
 
-    actions.firstSelectedIsPinned?.let { isPinned ->
+    actions.allSelectedArePinned?.let { arePinned ->
         when {
-            isPinned -> SelectionActionButton(
+            arePinned -> SelectionActionButton(
                 imageVector = Icons.Outlined.PushPin,
                 labelResId = R.string.action_unpin,
                 onClick = { onAction(Action.UnpinClicked) },
@@ -137,16 +137,16 @@ private fun SelectionOverflowMenu(
     onAction: (Action) -> Unit,
 ) {
     OverflowMenu { dismiss ->
-        actions.firstSelectedIsUnread?.let { isUnread ->
+        actions.allSelectedAreRead?.let { areRead ->
             OverflowMenuItem(
                 labelResId = when {
-                    isUnread -> R.string.mark_as_read
-                    else -> R.string.mark_as_unread
+                    areRead -> R.string.mark_as_unread
+                    else -> R.string.mark_as_read
                 },
                 onClick = {
                     val action = when {
-                        isUnread -> Action.MarkReadClicked
-                        else -> Action.MarkUnreadClicked
+                        areRead -> Action.MarkUnreadClicked
+                        else -> Action.MarkReadClicked
                     }
                     onAction(action)
                     dismiss()
@@ -209,9 +209,9 @@ private fun ConversationListSelectionTopAppBarPreview() {
             actions = SelectionActionsUiState(
                 canAddContact = true,
                 canBlock = true,
-                firstSelectedIsPinned = false,
-                firstSelectedIsSnoozed = false,
-                firstSelectedIsUnread = true,
+                allSelectedArePinned = false,
+                allSelectedAreSnoozed = false,
+                allSelectedAreRead = false,
             ),
             onAction = {},
             onDeleteClick = {},
