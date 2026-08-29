@@ -135,7 +135,7 @@ jobs:
           if-no-files-found: ignore
 
   instrumented-tests:
-    name: Instrumented tests (Android 16 x86_64)
+    name: Instrumented tests (Android 17 x86_64)
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
@@ -152,11 +152,28 @@ jobs:
           java-version: 17
           cache: gradle
 
+      - name: Build app and instrumented test APKs
+        run: >
+          ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest
+          --no-daemon --stacktrace --console=plain
+
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
+
+      - name: Update Android command line tools
+        id: cmdline-tools
+        run: |
+          SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --install 'cmdline-tools;latest' > /dev/null
+          if [ -d "$SDK/cmdline-tools/latest-2" ]; then
+            rm -rf "$SDK/cmdline-tools/latest"
+            mv "$SDK/cmdline-tools/latest-2" "$SDK/cmdline-tools/latest"
+          fi
+          version=$("$SDK/cmdline-tools/latest/bin/sdkmanager" --version 2>/dev/null | grep -Eo '^[0-9][0-9.]*' | head -1)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Restore AVD cache
         id: avd-cache
@@ -165,15 +182,19 @@ jobs:
           path: |
             ~/.android/avd/*
             ~/.android/adb*
-          key: avd-36-x86_64-default
+          key: avd-37.0-x86_64-google_apis-${{ steps.cmdline-tools.outputs.version }}
 
       - name: Create AVD and generate snapshot for caching
         if: steps.avd-cache.outputs.cache-hit != 'true'
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
-          api-level: 36
+          api-level: "37.0"
           arch: x86_64
-          target: default
+          target: google_apis
+          cores: 4
+          ram-size: 4096M
+          heap-size: 576M
+          disk-size: 8G
           force-avd-creation: false
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: false
@@ -182,18 +203,22 @@ jobs:
       - name: Run instrumented tests and coverage gate
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
-          api-level: 36
+          api-level: "37.0"
           arch: x86_64
-          target: default
+          target: google_apis
+          cores: 4
+          ram-size: 4096M
+          heap-size: 576M
+          disk-size: 8G
           force-avd-creation: false
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: >
-            ./gradlew :app:connectedDebugAndroidTest :app:jacocoAndroidTestVerification
-            -PandroidTestCoverage=true
-            -PandroidTestMinCoverage=80
-            -PandroidTestMinBranchCoverage=50
-            --no-daemon --stacktrace --console=plain
+          script: |
+            adb logcat -G 16M
+            ./gradlew :app:connectedDebugAndroidTest :app:jacocoAndroidTestVerification -PandroidTestCoverage=true -PandroidTestMinCoverage=80 -PandroidTestMinBranchCoverage=50 --no-daemon --stacktrace --console=plain
+            rc=$?
+            adb logcat -d > logcat.txt
+            exit $rc
 
       - name: Upload instrumented test reports
         if: failure()
@@ -205,4 +230,5 @@ jobs:
             app/build/outputs/androidTest-results/connected/
             app/build/reports/jacoco/jacocoAndroidTestReport/
             app/build/reports/androidTests/connected/
+            logcat.txt
           if-no-files-found: ignore
