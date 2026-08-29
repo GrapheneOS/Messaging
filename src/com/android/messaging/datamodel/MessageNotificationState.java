@@ -123,9 +123,9 @@ public class MessageNotificationState {
 
         MessageLineInfo(final String authorId, final String authorFullName,
                 final String authorFirstName, final CharSequence text, final Uri attachmentUri,
-                final String attachmentType, final boolean isManualDownloadNeeded,
-                final Uri avatarUri, final String messageId, final long timestamp,
-                final String contactUriString) {
+                final String attachmentType,
+                final boolean isManualDownloadNeeded, final Uri avatarUri, final String messageId,
+                final long timestamp, final String contactUriString) {
             mAuthorId = authorId;
             mMessageId = messageId;
             mName = authorFullName == null ? authorFirstName : authorFullName;
@@ -191,8 +191,11 @@ public class MessageNotificationState {
             MessagingStyle.Message message =
                     new MessagingStyle.Message(mText, mTimestamp, person);
             if (mAttachmentUri != null && ContentType.isImageType(mAttachmentType)) {
-                message.setData(mAttachmentType,
-                        SharedMemoryImageProvider.Companion.buildUri(mAttachmentUri, mAttachmentType));
+                final Uri notificationImageUri = BugleNotifications.getNotificationImageUri(
+                        Factory.get().getApplicationContext(), mAttachmentUri);
+                if (notificationImageUri != null) {
+                    message.setData(ContentType.IMAGE_JPEG, notificationImageUri);
+                }
             }
             return message;
         }
@@ -561,8 +564,9 @@ public class MessageNotificationState {
 
                     conversation.mLineInfos.add(new MessageLineInfo(authorId,
                             authorFullName, authorFirstName, text,
-                            attachmentUri, attachmentType, isManualDownloadNeeded, avatarUri,
-                            messageId, timestamp, contactUriString));
+                            attachmentUri, attachmentType,
+                            isManualDownloadNeeded, avatarUri, messageId, timestamp,
+                            contactUriString));
                     messageCount++;
                     conversation.mTotalMessageCount++;
                 } while (convMessageCursor.moveToNext());
