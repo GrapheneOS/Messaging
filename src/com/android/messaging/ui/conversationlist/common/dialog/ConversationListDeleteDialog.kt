@@ -26,6 +26,9 @@ internal fun ConversationListDeleteDialog(
                 ),
             )
         },
+        text = {
+            Text(text = stringResource(R.string.delete_message_confirmation_dialog_text))
+        },
         confirmButton = {
             TextButton(onClick = onConfirm) {
                 Text(text = stringResource(R.string.delete_conversation_confirmation_button))

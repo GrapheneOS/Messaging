@@ -59,6 +59,19 @@ internal class ConversationScreenDeleteDialogsTest : BaseConversationScreenDialo
     }
 
     @Test
+    fun deleteConversation_warnsThatItCannotBeUndone() {
+        setDialogsContent(
+            uiState = createDialogUiState(
+                isDeleteConversationConfirmationVisible = true,
+            ),
+        )
+
+        composeTestRule
+            .onNodeWithText(text(R.string.delete_message_confirmation_dialog_text))
+            .assertIsDisplayed()
+    }
+
+    @Test
     fun deleteMessages_multiMessageUsesPluralAndForwardsCallbacks() {
         val messageIds = persistentSetOf(
             MessageId("message-1"),

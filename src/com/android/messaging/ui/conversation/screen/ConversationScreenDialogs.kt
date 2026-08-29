@@ -34,6 +34,7 @@ import com.android.messaging.ui.conversation.CONVERSATION_SUBJECT_DIALOG_TEXT_FI
 import com.android.messaging.ui.conversation.screen.model.ConversationAttachmentLimitWarning
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageDeleteConfirmationUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaffoldUiState
+import com.android.messaging.ui.conversationlist.common.dialog.ConversationListDeleteDialog
 
 @Composable
 internal fun ConversationScreenDialogs(
@@ -57,7 +58,8 @@ internal fun ConversationScreenDialogs(
     }
 
     if (uiState.isDeleteConversationConfirmationVisible) {
-        ConversationDeleteConversationDialog(
+        ConversationListDeleteDialog(
+            selectedCount = 1,
             onConfirm = screenModel::confirmDeleteConversation,
             onDismiss = screenModel::dismissDeleteConversationConfirmation,
         )
@@ -125,35 +127,6 @@ private fun ConversationAttachmentLimitWarningDialog(
             ConversationAttachmentLimitWarning.ComposingAttachmentLimitReached,
             ConversationAttachmentLimitWarning.SendingVideoAttachmentLimitReached,
             -> null
-        },
-    )
-}
-
-@Composable
-private fun ConversationDeleteConversationDialog(
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = pluralStringResource(
-                    id = R.plurals.delete_conversations_confirmation_dialog_title,
-                    count = 1,
-                    1,
-                ),
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(text = stringResource(R.string.delete_conversation_confirmation_button))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = stringResource(R.string.delete_conversation_decline_button))
-            }
         },
     )
 }
