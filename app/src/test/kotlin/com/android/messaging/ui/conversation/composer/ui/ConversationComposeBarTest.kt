@@ -1,5 +1,7 @@
 package com.android.messaging.ui.conversation.composer.ui
 
+import android.view.View
+import android.view.WindowManager
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -55,11 +57,14 @@ import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.shadow.api.Shadow
+import org.robolectric.shadows.ShadowWindowManagerImpl
 
 @RunWith(RobolectricTestRunner::class)
 class ConversationComposeBarTest {
@@ -752,6 +757,72 @@ class ConversationComposeBarTest {
             assertEquals(1, cancelRequests)
             assertEquals(ConversationAudioRecordingPhase.Idle, audioRecording.phase)
         }
+    }
+
+    /**
+     * Back is delivered to the focused window, so a `FLAG_NOT_FOCUSABLE` menu never sees it and
+     * the press reaches the navigation stack instead, closing the conversation along with the
+     * menu. `FLAG_ALT_FOCUSABLE_IM` is what lets the menu be focusable without taking the keyboard
+     * down with it — the media picker reads the keyboard state to decide whether to restore it.
+     * Robolectric cannot route key events between windows, so the assertions are on the window
+     * flags that behaviour depends on.
+     */
+    @Test
+    fun attachmentMenu_isFocusableForBackButLeavesTheKeyboardUp() {
+        setContent(
+            messageText = "",
+            isSendActionEnabled = false,
+            isAttachmentActionEnabled = true,
+        )
+
+        val menuWindowFlags = openAttachmentMenuAndReadWindowFlags()
+
+        assertEquals(
+            "the attachment menu window must be focusable to receive back",
+            0,
+            menuWindowFlags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+        )
+        assertNotEquals(
+            "the focused menu must not take the keyboard down with it",
+            0,
+            menuWindowFlags and WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM,
+        )
+        assertNotEquals(
+            "the bottom anchored menu must stay unclipped by the window it is anchored in",
+            0,
+            menuWindowFlags and WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+        )
+        assertNotEquals(
+            "the menu must keep watching outside touches to stay tap dismissable",
+            0,
+            menuWindowFlags and WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
+        )
+    }
+
+    private fun openAttachmentMenuAndReadWindowFlags(): Int {
+        val windowsBeforeOpening = addedWindows()
+
+        composeTestRule
+            .onNodeWithTag(
+                testTag = CONVERSATION_ATTACHMENT_BUTTON_TEST_TAG,
+                useUnmergedTree = true,
+            )
+            .performClick()
+        composeTestRule
+            .onNodeWithTag(CONVERSATION_ATTACHMENT_MEDIA_MENU_ITEM_TEST_TAG)
+            .assertExists()
+
+        val menuWindow = addedWindows().single { window ->
+            windowsBeforeOpening.none { openedEarlier -> openedEarlier === window }
+        }
+
+        return (menuWindow.layoutParams as WindowManager.LayoutParams).flags
+    }
+
+    private fun addedWindows(): List<View> {
+        val windowManager = targetContext.getSystemService(WindowManager::class.java)
+
+        return Shadow.extract<ShadowWindowManagerImpl>(windowManager).views.toList()
     }
 
     private fun setContent(
