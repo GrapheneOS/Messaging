@@ -4,6 +4,12 @@ internal sealed interface SubscriptionSettingsAction {
 
     data object WirelessAlertsClicked : SubscriptionSettingsAction
 
+    data object PhoneNumberClicked : SubscriptionSettingsAction
+
+    data object PhoneNumberDialogDismissed : SubscriptionSettingsAction
+
+    data object PhoneNumberErrorDismissed : SubscriptionSettingsAction
+
     data class AutoRetrieveMmsChanged(
         val enabled: Boolean,
     ) : SubscriptionSettingsAction
@@ -20,7 +26,7 @@ internal sealed interface SubscriptionSettingsAction {
         val enabled: Boolean,
     ) : SubscriptionSettingsAction
 
-    data class PhoneNumberChanged(
+    data class PhoneNumberConfirmed(
         val phoneNumber: String,
     ) : SubscriptionSettingsAction
 }

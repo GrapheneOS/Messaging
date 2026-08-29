@@ -8,6 +8,7 @@ import com.android.messaging.testutil.FakeBuglePrefs
 import com.android.messaging.testutil.installTestFactory
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Before
 import org.junit.Test
@@ -100,15 +101,85 @@ class PhoneUtilsSelfNumberTest {
         }
     }
 
+    @Test
+    fun getValidSelfE164NumberRejectsANumberLiftedOutOfText() {
+        givenSubscription(numberOnSim = SIM_NUMBER, country = "ee")
+
+        assertNull(
+            "libphonenumber pulls the first number it finds out of surrounding text, and" +
+                " whatever is stored here becomes the sender identity of every outgoing MMS",
+            PhoneUtils(SUB_ID).getValidSelfE164Number("Call me at 5551234567"),
+        )
+    }
+
+    @Test
+    fun getValidSelfE164NumberRejectsAValidNumberLiftedOutOfText() {
+        givenSubscription(numberOnSim = SIM_NUMBER, country = "ee")
+
+        assertNull(
+            "text around a number that is valid on its own is lifted just the same, so the" +
+                " strict branch cannot be trusted to have consumed the whole input either",
+            PhoneUtils(SUB_ID).getValidSelfE164Number("Call me at +37254810027"),
+        )
+    }
+
+    @Test
+    fun getValidSelfE164NumberRejectsAVanityNumber() {
+        givenSubscription(numberOnSim = SIM_NUMBER, country = "us")
+
+        assertNull(
+            "libphonenumber turns the letters of a vanity number into digits, so accepting" +
+                " one would store a number nobody typed",
+            PhoneUtils(SUB_ID).getValidSelfE164Number("1-800-FLOWERS"),
+        )
+    }
+
+    @Test
+    fun getValidSelfE164NumberAcceptsANumberTheNumberingPlanDoesNotAssign() {
+        givenSubscription(numberOnSim = SIM_NUMBER, country = "ee")
+
+        assertEquals(
+            "libphonenumber's metadata trails real numbering plans, and this is the only way" +
+                " to set a number the SIM does not carry",
+            "+3721234567",
+            PhoneUtils(SUB_ID).getValidSelfE164Number("1234567"),
+        )
+    }
+
+    @Test
+    fun getValidSelfE164NumberAcceptsANumberTypedWithSeparators() {
+        givenSubscription(numberOnSim = SIM_NUMBER, country = "ee")
+
+        assertEquals(
+            "a number is normally typed with spaces and punctuation, so rejecting those" +
+                " would refuse ordinary input",
+            "+37255550001",
+            PhoneUtils(SUB_ID).getValidSelfE164Number("+372 (55) 55-0001"),
+        )
+    }
+
+    @Test
+    fun getValidSelfE164NumberDropsAnExtensionTypedAfterTheNumber() {
+        givenSubscription(numberOnSim = SIM_NUMBER, country = "ee")
+
+        assertEquals(
+            "an extension is separated by punctuation rather than letters, so the guard" +
+                " cannot see it and libphonenumber keeps only the number it hangs off",
+            "+37255550001",
+            PhoneUtils(SUB_ID).getValidSelfE164Number("+372 5555 0001#123"),
+        )
+    }
+
     private fun subscriptionManager(): SubscriptionManager {
         return context.getSystemService(SubscriptionManager::class.java)
     }
 
-    private fun givenSubscription(numberOnSim: String) {
+    private fun givenSubscription(numberOnSim: String, country: String? = null) {
         shadowOf(subscriptionManager()).setActiveSubscriptionInfos(
             ShadowSubscriptionManager.SubscriptionInfoBuilder.newBuilder()
                 .setId(SUB_ID)
                 .setNumber(numberOnSim)
+                .apply { country?.let(::setCountryIso) }
                 .buildSubscriptionInfo(),
         )
     }

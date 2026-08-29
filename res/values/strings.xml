@@ -385,6 +385,8 @@
     <string name="mms_phone_number_pref_title">Your phone number</string>
     <!-- Display text for phone number preference when the number is unknown -->
     <string name="unknown_phone_number_pref_display_value">Unknown</string>
+    <!-- Shows under the phone number field when what the user typed is not a phone number -->
+    <string name="invalid_self_phone_number">Not a valid phone number. Try the international format, starting with +.</string>
     <!-- Title for the preference for playing a message send sound -->
     <string name="send_sound_pref_title">Outgoing message sounds</string>
 

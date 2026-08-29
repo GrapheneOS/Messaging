@@ -177,6 +177,8 @@ private fun subscriptionSettingsRouteContent(): @Composable (SubscriptionSetting
         SeededViewModelStoreOwner(defaultArgs = defaultArgs) {
             val viewModel = hiltViewModel<SubscriptionSettingsViewModel>()
             val subscription by viewModel.uiState.collectAsStateWithLifecycle()
+            val phoneNumberDialogState by viewModel.phoneNumberDialogState
+                .collectAsStateWithLifecycle()
             val effectHandler = rememberSubscriptionSettingsEffectHandler()
 
             LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
@@ -202,6 +204,7 @@ private fun subscriptionSettingsRouteContent(): @Composable (SubscriptionSetting
                     title = navKey.title,
                     onAction = viewModel::onAction,
                     onNavigateBack = navigator::back,
+                    phoneNumberDialogState = phoneNumberDialogState,
                 )
             }
         }
