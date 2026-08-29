@@ -12,6 +12,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import com.android.messaging.R
 import com.android.messaging.data.subscription.model.SubId
+import com.android.messaging.ui.appsettings.subscription.model.PhoneNumberDialogUiState
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionSettingsAction as Action
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionUiState
 import com.android.messaging.ui.core.AppTheme
@@ -92,13 +93,24 @@ class SubscriptionSettingsScreenTest {
     }
 
     @Test
-    fun phoneNumberClick_showsDialog() {
+    fun phoneNumberClick_reportsTheClick() {
         val sub = createDefaultSubscription(phoneNumber = "+1234567890")
         setContent(subscriptionSettings = sub)
 
         val phoneTitle = composeTestRule.activity.getString(R.string.mms_phone_number_pref_title)
         composeTestRule.onNodeWithText(phoneTitle).performClick()
         composeTestRule.waitForIdle()
+
+        verify { onAction(Action.PhoneNumberClicked) }
+    }
+
+    @Test
+    fun visiblePhoneNumberDialogState_showsDialog() {
+        val sub = createDefaultSubscription(phoneNumber = "+1234567890")
+        setContent(
+            subscriptionSettings = sub,
+            phoneNumberDialogState = PhoneNumberDialogUiState(isVisible = true),
+        )
 
         val okText = composeTestRule.activity.getString(android.R.string.ok)
         composeTestRule.onNodeWithText(okText).assertIsDisplayed()
@@ -273,6 +285,7 @@ class SubscriptionSettingsScreenTest {
 
     private fun setContent(
         subscriptionSettings: SubscriptionUiState = createDefaultSubscription(),
+        phoneNumberDialogState: PhoneNumberDialogUiState = PhoneNumberDialogUiState(),
     ) {
         composeTestRule.setContent {
             AppTheme {
@@ -281,6 +294,7 @@ class SubscriptionSettingsScreenTest {
                     title = "Advanced Settings",
                     onAction = onAction,
                     onNavigateBack = {},
+                    phoneNumberDialogState = phoneNumberDialogState,
                 )
             }
         }
