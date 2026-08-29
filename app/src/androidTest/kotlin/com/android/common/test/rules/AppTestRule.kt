@@ -1,7 +1,7 @@
 package com.android.common.test.rules
 
+import com.android.common.test.helpers.FirstRunFlagsHelper
 import com.android.common.test.helpers.ShellCommandHelper
-import com.android.common.test.helpers.SmsWarningHelper
 import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
@@ -15,7 +15,7 @@ class AppTestRule : TestRule {
         return object : Statement() {
             override fun evaluate() {
                 val previousSmsRoleHolders = ShellCommandHelper.setupSmsDefaultRole()
-                val wasSmsWarningAcknowledged = SmsWarningHelper.acknowledgeSmsWarning()
+                val previousFirstRunFlags = FirstRunFlagsHelper.suppressFirstRunPrompts()
                 var baseFailure: Throwable? = null
                 try {
                     base.evaluate()
@@ -23,8 +23,8 @@ class AppTestRule : TestRule {
                     baseFailure = throwable
                 } finally {
                     try {
-                        SmsWarningHelper.restoreSmsWarning(
-                            wasAcknowledged = wasSmsWarningAcknowledged,
+                        FirstRunFlagsHelper.restoreFirstRunPrompts(
+                            previousFlags = previousFirstRunFlags,
                         )
                         ShellCommandHelper.restoreSmsDefaultRole(
                             previousRoleHolders = previousSmsRoleHolders,
