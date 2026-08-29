@@ -9,6 +9,7 @@ import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiS
 import com.android.messaging.ui.conversationlist.chats.model.SelectionActionsUiState
 import com.android.messaging.ui.conversationlist.mapper.ConversationListContentUiStateMapper
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
+import com.android.messaging.util.core.extension.allOrNull
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
@@ -82,7 +83,6 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
         blockedDestinations: ImmutableSet<String>,
     ): SelectionActionsUiState {
         val singleSelection = selectedItems.singleOrNull()
-        val firstSelected = selectedItems.firstOrNull()
         val canAddSelectedContact = singleSelection?.participant?.let { participant ->
             canAddContact(
                 isGroup = participant.isGroup,
@@ -100,9 +100,9 @@ internal class ConversationListUiStateMapperImpl @Inject constructor(
         return SelectionActionsUiState(
             canAddContact = canAddSelectedContact == true,
             canBlock = canBlockSelected == true,
-            firstSelectedIsPinned = firstSelected?.isPinned,
-            firstSelectedIsSnoozed = firstSelected?.notification?.isSnoozed,
-            firstSelectedIsUnread = firstSelected?.latestMessage?.isRead?.not(),
+            allSelectedArePinned = selectedItems.allOrNull(ConversationListItem::isPinned),
+            allSelectedAreSnoozed = selectedItems.allOrNull { it.notification.isSnoozed },
+            allSelectedAreRead = selectedItems.allOrNull { it.latestMessage.isRead },
         )
     }
 
