@@ -24,7 +24,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.common.components.horizontalSafeDrawingInsets
 import com.android.messaging.ui.common.components.reorder.OverlayReorderAnimationController
@@ -40,8 +39,6 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
 
 private const val CONVERSATION_ROW_CONTENT_TYPE = "conversation_row"
-
-private const val PINNED_ITEM_Z_INDEX = 1f
 
 private val ItemPlacementSpec = spring(
     dampingRatio = Spring.DampingRatioNoBouncy,
@@ -168,7 +165,6 @@ private fun LazyItemScope.ConversationListRow(
         modifier = Modifier
             .conversationItemAnimation(
                 lazyItemScope = this,
-                isPinned = item.isPinned,
                 animatePlacement = !isHiddenByPinAnimation,
             )
             .trackPinAnimationBounds(
@@ -413,16 +409,9 @@ private fun resolveAnchorScrollRequest(
 
 private fun Modifier.conversationItemAnimation(
     lazyItemScope: LazyItemScope,
-    isPinned: Boolean,
     animatePlacement: Boolean,
 ): Modifier = with(lazyItemScope) {
     this@conversationItemAnimation
-        .zIndex(
-            when {
-                isPinned -> PINNED_ITEM_Z_INDEX
-                else -> 0f
-            },
-        )
         .animateItem(
             fadeInSpec = null,
             fadeOutSpec = null,
