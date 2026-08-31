@@ -26,7 +26,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -60,7 +59,7 @@ internal fun SubscriptionSettingsScreen(
     modifier: Modifier = Modifier,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    var showGroupMmsDialog by remember { mutableStateOf(false) }
+    var showGroupMmsDialog by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -287,7 +286,7 @@ private fun GroupMmsDialog(
     onDismiss: () -> Unit,
     onConfirm: (Boolean) -> Unit,
 ) {
-    var selectedEnabled by remember { mutableStateOf(isEnabled) }
+    var selectedEnabled by rememberSaveable { mutableStateOf(isEnabled) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
