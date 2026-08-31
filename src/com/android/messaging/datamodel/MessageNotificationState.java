@@ -871,13 +871,11 @@ public class MessageNotificationState {
                         .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
                         .setSound(UriUtil.getUriForResourceId(context, R.raw.message_failure));
 
-                    if (builder != null) {
-                        notificationManager.notify(
-                                BugleNotifications.buildNotificationTag(
-                                        PendingIntentConstants.MSG_SEND_ERROR, null),
-                                PendingIntentConstants.MSG_SEND_ERROR,
-                                builder.build());
-                    }
+                    notificationManager.notify(
+                            BugleNotifications.buildNotificationTag(
+                                    PendingIntentConstants.MSG_SEND_ERROR, null),
+                            PendingIntentConstants.MSG_SEND_ERROR,
+                            builder.build());
                 } else {
                     notificationManager.cancel(
                             BugleNotifications.buildNotificationTag(
