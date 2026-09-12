@@ -7,7 +7,9 @@ import android.provider.Telephony.Sms
 import android.telephony.SmsMessage
 import com.android.messaging.di.receiver.IncomingSmsEntryPoint
 import dagger.hilt.android.EntryPointAccessors
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 class SmsDeliverReceiver : BroadcastReceiver() {
 
@@ -21,8 +23,14 @@ class SmsDeliverReceiver : BroadcastReceiver() {
         val appContext = context.applicationContext
         val entryPoint = entryPoint(appContext)
         entryPoint.applicationScope().launch(entryPoint.ioDispatcher()) {
-            try {
+            val delivery = launch {
                 entryPoint.incomingSmsDeliverer().deliverFromIntent(appContext, intent)
+            }
+            try {
+                // The import keeps running in the application scope either way; stop holding the
+                // broadcast open for it once the window is nearly spent, or the system kills us
+                // with an ANR and the import does not finish at all.
+                withTimeoutOrNull(BROADCAST_BUDGET) { delivery.join() }
             } finally {
                 pendingResult.finish()
             }
@@ -30,6 +38,8 @@ class SmsDeliverReceiver : BroadcastReceiver() {
     }
 
     companion object {
+
+        private val BROADCAST_BUDGET = 8.seconds
 
         @JvmStatic
         fun deliverSmsMessages(
