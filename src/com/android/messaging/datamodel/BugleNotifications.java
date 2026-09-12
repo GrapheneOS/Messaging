@@ -132,6 +132,9 @@ public class BugleNotifications {
 
     private static final AtomicLong sLastNotificationImageSweep = new AtomicLong();
 
+    /** Guards a notification pass, so that concurrent callers do not repeat each other's work */
+    private static final Object sNotificationLock = new Object();
+
     /**
      * This is the volume at which to play the observable-conversation notification sound,
      * expressed as a fraction of the system notification volume.
@@ -162,6 +165,12 @@ public class BugleNotifications {
         }
         Assert.isNotMainThread();
 
+        synchronized (sNotificationLock) {
+            updateSerialized(conversationId, coverage);
+        }
+    }
+
+    private static void updateSerialized(final String conversationId, final int coverage) {
         final long passStart = System.currentTimeMillis();
         try {
             if (!PhoneUtils.getDefault().isDefaultSmsApp()) {
