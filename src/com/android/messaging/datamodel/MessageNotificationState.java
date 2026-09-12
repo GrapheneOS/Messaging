@@ -122,11 +122,12 @@ public class MessageNotificationState {
         final Uri mAvatarUri;
         final Uri mAttachmentUri;
         final String mAttachmentType;
+        final String mAttachmentPartId;
         final String mContactUriString;
 
         MessageLineInfo(final String authorId, final String authorFullName,
                 final String authorFirstName, final CharSequence text, final Uri attachmentUri,
-                final String attachmentType,
+                final String attachmentType, final String attachmentPartId,
                 final boolean isManualDownloadNeeded, final Uri avatarUri, final String messageId,
                 final long timestamp, final String contactUriString) {
             mAuthorId = authorId;
@@ -150,6 +151,7 @@ public class MessageNotificationState {
             mAvatarUri = avatarUri;
             mAttachmentUri = attachmentUri;
             mAttachmentType = attachmentType;
+            mAttachmentPartId = attachmentPartId;
             mContactUriString = contactUriString;
         }
 
@@ -195,7 +197,8 @@ public class MessageNotificationState {
                     new MessagingStyle.Message(mText, mTimestamp, person);
             if (mAttachmentUri != null && ContentType.isImageType(mAttachmentType)) {
                 final Uri notificationImageUri = BugleNotifications.getNotificationImageUri(
-                        Factory.get().getApplicationContext(), mAttachmentUri);
+                        Factory.get().getApplicationContext(), mAttachmentUri,
+                        mAttachmentPartId);
                 if (notificationImageUri != null) {
                     message.setData(ContentType.IMAGE_JPEG, notificationImageUri);
                 }
@@ -552,11 +555,13 @@ public class MessageNotificationState {
                     // Otherwise, show the first one we find.
                     Uri attachmentUri = null;
                     String attachmentType = null;
+                    String attachmentPartId = null;
                     final MessagePartData messagePartData =
                             getMostInterestingAttachment(convMessageData);
                     if (messagePartData != null) {
                         attachmentUri = messagePartData.getContentUri();
                         attachmentType = messagePartData.getContentType();
+                        attachmentPartId = messagePartData.getPartId();
                     }
 
                     Uri contactUri = convMessageData.getSenderContactLookupUri();
@@ -567,7 +572,7 @@ public class MessageNotificationState {
 
                     conversation.mLineInfos.add(new MessageLineInfo(authorId,
                             authorFullName, authorFirstName, text,
-                            attachmentUri, attachmentType,
+                            attachmentUri, attachmentType, attachmentPartId,
                             isManualDownloadNeeded, avatarUri, messageId, timestamp,
                             contactUriString));
                     messageCount++;

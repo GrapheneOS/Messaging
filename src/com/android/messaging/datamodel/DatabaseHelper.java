@@ -33,6 +33,7 @@ import com.android.messaging.util.Assert.DoesNotRunOnMainThread;
 import com.android.messaging.util.LogUtil;
 import com.google.common.annotations.VisibleForTesting;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -812,6 +813,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     private static void createDatabase(final SQLiteDatabase db) {
+        // A fresh parts table starts its _id at 1 again, whether this is a rebuild, a first
+        // run, or the recreation that follows corruption. The notification images are named
+        // after those ids and outlive the database, so leaving them behind would serve one
+        // part's image as the image of whatever part next takes its id
+        for (final File image : NotificationImageProvider.listImageFiles()) {
+            image.delete();
+        }
+
         for (final String sql : CREATE_TABLE_SQLS) {
             db.execSQL(sql);
         }

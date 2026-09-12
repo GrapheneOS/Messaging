@@ -742,18 +742,32 @@ public class BugleNotifications {
         return null;
     }
 
-    static Uri getNotificationImageUri(final Context context, final Uri imageUri) {
+    /**
+     * Transcodes the attachment at {@code imageUri} into a file named after {@code partId}, or
+     * returns the file an earlier call already wrote for that part. Call it from a notification
+     * pass only: the deterministic name makes the temporary file it writes through deterministic
+     * too, so two concurrent callers for one part would trample each other's write.
+     */
+    static Uri getNotificationImageUri(final Context context, final Uri imageUri,
+            final String partId) {
         if (imageUri == null) {
             return null;
         }
 
-        final Uri notificationImageUri = NotificationImageProvider.buildNotificationImageUri();
+        final Uri notificationImageUri = NotificationImageProvider
+                .buildNotificationImageUri(partId);
+
         if (notificationImageUri == null) {
             return null;
         }
         final File imageFile = NotificationImageProvider.getFileFromUri(notificationImageUri);
         if (imageFile == null) {
             return null;
+        }
+
+        if (imageFile.length() > 0) {
+            imageFile.setLastModified(System.currentTimeMillis());
+            return notificationImageUri;
         }
 
         final ImageRequestDescriptor descriptor = new UriImageRequestDescriptor(

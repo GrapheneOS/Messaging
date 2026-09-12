@@ -31,21 +31,21 @@ class NotificationImageProvider : FileProvider() {
         }
 
         @JvmStatic
-        fun buildNotificationImageUri(): Uri? {
-            val uri = buildFileUri(AUTHORITY, NOTIFICATION_IMAGE_EXTENSION)
-            val file = getFileFromUri(uri)
-
-            return when {
-                file == null -> null
-                ensureFileExists(file) -> uri
-                else -> {
-                    LogUtil.e(
-                        LogUtil.BUGLE_TAG,
-                        "Failed to create notification image ${file.absolutePath}",
-                    )
-                    null
-                }
+        fun buildNotificationImageUri(fileId: String?): Uri? {
+            val directory = getDirectory()
+            if (!directory.exists() && !directory.mkdirs()) {
+                LogUtil.e(LogUtil.BUGLE_TAG, "Failed to create ${directory.absolutePath}")
+                return null
             }
+
+            val uri = when {
+                !fileId.isNullOrEmpty() && isValidFileId(fileId) ->
+                    buildFileUri(AUTHORITY, NOTIFICATION_IMAGE_EXTENSION, fileId)
+
+                else -> buildFileUri(AUTHORITY, NOTIFICATION_IMAGE_EXTENSION)
+            }
+
+            return uri.takeIf { getFileFromUri(it) != null }
         }
 
         @JvmStatic
