@@ -10,6 +10,7 @@ import androidx.compose.ui.test.performClick
 import com.android.messaging.testutil.TEST_WAIT_TIMEOUT_MILLIS
 import com.android.messaging.ui.core.AppTheme
 import kotlinx.coroutines.awaitCancellation
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -27,6 +28,23 @@ internal class MessageComposeBarInputTypeTest {
         val inputType = focusedFieldInputType()
 
         assertTrue(inputType and InputType.TYPE_TEXT_FLAG_CAP_SENTENCES != 0)
+    }
+
+    @Test
+    fun messageComposeField_reportsShortMessageVariationToTheKeyboard() {
+        val inputType = focusedFieldInputType()
+
+        assertEquals(
+            InputType.TYPE_TEXT_VARIATION_SHORT_MESSAGE,
+            inputType and InputType.TYPE_MASK_VARIATION,
+        )
+    }
+
+    @Test
+    fun messageComposeField_staysMultiLine() {
+        val inputType = focusedFieldInputType()
+
+        assertTrue(inputType and InputType.TYPE_TEXT_FLAG_MULTI_LINE != 0)
     }
 
     private fun focusedFieldInputType(): Int {
