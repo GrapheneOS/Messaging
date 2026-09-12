@@ -134,7 +134,7 @@ private fun NewChatScreenContent(
     selectedGroupRecipients: ImmutableList<SelectedRecipient> = persistentListOf(),
     simSelectorUiState: ConversationSimSelectorUiState = ConversationSimSelectorUiState(),
 ) {
-    val screenContainerColor = MaterialTheme.colorScheme.surfaceVariant
+    val screenContainerColor = MaterialTheme.colorScheme.surfaceContainer
 
     Scaffold(
         modifier = modifier,
@@ -177,9 +177,6 @@ private fun NewChatTopAppBar(
     TopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = containerColor,
-            navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
-            titleContentColor = MaterialTheme.colorScheme.onSurface,
-            actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         ),
         navigationIcon = {
             IconButton(

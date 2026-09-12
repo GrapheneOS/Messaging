@@ -104,7 +104,7 @@ private fun RecipientSelectionContentLayout(
 ) {
     Surface(
         modifier = modifier,
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        color = MaterialTheme.colorScheme.surfaceContainer,
     ) {
         Column(
             modifier = Modifier
