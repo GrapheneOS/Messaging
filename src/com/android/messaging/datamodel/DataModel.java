@@ -29,10 +29,8 @@ import com.android.messaging.datamodel.data.ConversationData.ConversationDataLis
 import com.android.messaging.datamodel.data.ConversationListData;
 import com.android.messaging.datamodel.data.ConversationListData.ConversationListDataListener;
 import com.android.messaging.datamodel.data.DraftMessageData;
-import com.android.messaging.datamodel.data.GalleryGridItemData;
 import com.android.messaging.datamodel.data.LaunchConversationData;
 import com.android.messaging.datamodel.data.LaunchConversationData.LaunchConversationDataListener;
-import com.android.messaging.datamodel.data.MediaPickerData;
 import com.android.messaging.util.Assert.DoesNotRunOnMainThread;
 
 public abstract class DataModel {
@@ -62,10 +60,6 @@ public abstract class DataModel {
 
     public abstract ConversationData createConversationData(final Context context,
             final ConversationDataListener listener, final String conversationId);
-
-    public abstract MediaPickerData createMediaPickerData(final Context context);
-
-    public abstract GalleryGridItemData createGalleryGridItemData();
 
     public abstract LaunchConversationData createLaunchConversationData(
             LaunchConversationDataListener listener);

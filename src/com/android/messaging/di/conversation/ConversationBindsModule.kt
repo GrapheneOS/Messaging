@@ -34,8 +34,6 @@ import com.android.messaging.data.conversation.store.ConversationSelfIdStore
 import com.android.messaging.data.conversation.store.ConversationSelfIdStoreImpl
 import com.android.messaging.data.media.repository.ConversationAttachmentsRepository
 import com.android.messaging.data.media.repository.ConversationAttachmentsRepositoryImpl
-import com.android.messaging.data.media.repository.ConversationMediaRepository
-import com.android.messaging.data.media.repository.ConversationMediaRepositoryImpl
 import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
 import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepositoryImpl
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
@@ -366,12 +364,6 @@ internal abstract class ConversationBindsModule {
     abstract fun bindConversationVCardMetadataMapper(
         impl: ConversationVCardMetadataMapperImpl,
     ): ConversationVCardMetadataMapper
-
-    @Binds
-    @Reusable
-    abstract fun bindConversationMediaRepository(
-        impl: ConversationMediaRepositoryImpl,
-    ): ConversationMediaRepository
 
     @Binds
     abstract fun bindConversationMetadataUiStateMapper(

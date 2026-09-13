@@ -18,7 +18,6 @@ package com.android.messaging.util;
 import android.app.ActivityManager;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapShader;
@@ -29,14 +28,12 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Shader.TileMode;
 import android.net.Uri;
-import android.provider.MediaStore;
 import android.text.TextUtils;
 
 import com.android.messaging.Factory;
 import com.android.messaging.datamodel.MediaScratchFileProvider;
 import com.android.messaging.datamodel.MessagingContentProvider;
 import com.android.messaging.datamodel.media.ImageRequest;
-import com.android.messaging.util.Assert.DoesNotRunOnMainThread;
 import com.android.messaging.util.exif.ExifInterface;
 import com.google.common.annotations.VisibleForTesting;
 
@@ -200,38 +197,6 @@ public class ImageUtils {
         }
 
         return inSampleSize;
-    }
-
-    private static final String[] MEDIA_CONTENT_PROJECTION = new String[] {
-        MediaStore.MediaColumns.MIME_TYPE
-    };
-
-    private static final int INDEX_CONTENT_TYPE = 0;
-
-    @DoesNotRunOnMainThread
-    public static String getContentType(final ContentResolver cr, final Uri uri) {
-        // Figure out the content type of media.
-        String contentType = null;
-        Cursor cursor = null;
-        if (UriUtil.isMediaStoreUri(uri)) {
-            try {
-                cursor = cr.query(uri, MEDIA_CONTENT_PROJECTION, null, null, null);
-
-                if (cursor != null && cursor.moveToFirst()) {
-                    contentType = cursor.getString(INDEX_CONTENT_TYPE);
-                }
-            } finally {
-                if (cursor != null) {
-                    cursor.close();
-                }
-            }
-        }
-        if (contentType == null) {
-            // Last ditch effort to get the content type. Look at the file extension.
-            contentType = ContentType.getContentTypeFromExtension(uri.toString(),
-                    ContentType.IMAGE_UNSPECIFIED);
-        }
-        return contentType;
     }
 
     /**
