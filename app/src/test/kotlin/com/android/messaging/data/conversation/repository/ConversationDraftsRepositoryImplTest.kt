@@ -10,6 +10,7 @@ import com.android.messaging.data.conversation.mapper.ConversationMessageDataDra
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.store.ConversationDraftStore
+import com.android.messaging.datamodel.MediaScratchFileProvider
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.datamodel.data.MessagePartData
@@ -413,7 +414,7 @@ class ConversationDraftsRepositoryImplTest {
             addPart(
                 MessagePartData.createMediaMessagePart(
                     "audio/3gpp",
-                    Uri.parse("content://media/audio/1"),
+                    MediaScratchFileProvider.getUriBuilder().appendPath("1.3gpp").build(),
                     0,
                     0,
                 ),
@@ -431,7 +432,7 @@ class ConversationDraftsRepositoryImplTest {
             addPart(
                 MessagePartData.createMediaMessagePart(
                     "image/jpeg",
-                    Uri.parse("content://media/image/1"),
+                    MediaScratchFileProvider.getUriBuilder().appendPath("1.jpg").build(),
                     640,
                     480,
                 ),
