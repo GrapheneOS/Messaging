@@ -2,7 +2,9 @@ package com.android.messaging.ui.conversationsettings.screen.mapper
 
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversationsettings.model.ConversationSettingsData
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscription.model.Subscription
+import com.android.messaging.data.subscription.resolveSelectedSubscription
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.domain.conversation.usecase.participant.CanShowOrAddContact
 import com.android.messaging.domain.conversation.usecase.participant.IsContactSaved
@@ -11,14 +13,13 @@ import com.android.messaging.ui.conversationsettings.screen.model.ConversationSe
 import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 internal interface ConversationSettingsUiStateMapper {
     fun map(
         data: ConversationSettingsData,
-        subscriptions: ImmutableList<Subscription> = persistentListOf(),
-        selfIdOverride: ParticipantId? = null,
+        subscriptions: ImmutableList<Subscription>,
+        defaultSmsSubscriptionId: SubId,
     ): ConversationSettingsUiState
 }
 
@@ -31,16 +32,17 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
     override fun map(
         data: ConversationSettingsData,
         subscriptions: ImmutableList<Subscription>,
-        selfIdOverride: ParticipantId?,
+        defaultSmsSubscriptionId: SubId,
     ): ConversationSettingsUiState {
         val participants = data.participants
             .map(::toParticipantUiState)
             .toImmutableList()
         val otherParticipant = participants.singleOrNull()
-        val effectiveSelfId = selfIdOverride ?: data.dbSelfParticipantId
-        val selectedSubscription = subscriptions
-            .firstOrNull { it.selfParticipantId == effectiveSelfId }
-            ?: subscriptions.firstOrNull()
+        val selectedSubscription = resolveSelectedSubscription(
+            subscriptions = subscriptions,
+            selectedSelfParticipantId = data.dbSelfParticipantId,
+            defaultSmsSubscriptionId = defaultSmsSubscriptionId,
+        )
 
         val canShowContact = otherParticipant?.let { participant ->
             canShowOrAddContact(
@@ -58,7 +60,7 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
             isSnoozed = data.isSnoozed,
             participants = participants,
             otherParticipant = otherParticipant,
-            selfParticipantId = effectiveSelfId,
+            selfParticipantId = data.dbSelfParticipantId,
             availableSubscriptions = subscriptions,
             selectedSubscription = selectedSubscription,
             isSimSwitchAvailable = subscriptions.size > 1,

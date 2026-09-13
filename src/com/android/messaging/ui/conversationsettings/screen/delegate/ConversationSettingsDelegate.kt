@@ -8,7 +8,6 @@ import com.android.messaging.data.conversation.repository.ConversationsRepositor
 import com.android.messaging.data.conversationsettings.model.SnoozeOption
 import com.android.messaging.data.conversationsettings.repository.ConversationNotificationRepository
 import com.android.messaging.data.conversationsettings.repository.ConversationSettingsRepository
-import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
 import com.android.messaging.datamodel.ParticipantRefresh
 import com.android.messaging.di.core.ApplicationCoroutineScope
@@ -45,7 +44,6 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
     private val repository: ConversationSettingsRepository,
     private val notificationRepository: ConversationNotificationRepository,
     private val subscriptionsRepository: SubscriptionsRepository,
-    private val simSelectionRepository: ConversationSimSelectionRepository,
     private val mapper: ConversationSettingsUiStateMapper,
     private val conversationsRepository: ConversationsRepository,
     private val blockedParticipantsRepository: BlockedParticipantsRepository,
@@ -91,12 +89,12 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
         return combine(
             settings,
             subscriptionsRepository.observeActiveSubscriptions(),
-            simSelectionRepository.observe(id),
-        ) { data, subscriptions, selfIdOverride ->
+            subscriptionsRepository.observeDefaultSmsSubscriptionId(),
+        ) { data, subscriptions, defaultSmsSubscriptionId ->
             mapper.map(
                 data = data,
                 subscriptions = subscriptions,
-                selfIdOverride = selfIdOverride,
+                defaultSmsSubscriptionId = defaultSmsSubscriptionId,
             )
         }
     }
