@@ -255,16 +255,16 @@ private fun NewChatRecipientSelectionContent(
             onContactRecipientClick = onContactLongClick,
         ),
         onSelectedRecipientClick = onCreateGroupRecipientClick,
+        pinnedTopContent = {
+            NewChatCreateGroupHeader(
+                isCreatingGroup = isCreatingGroup,
+                onCreateGroupClick = onCreateGroupClick,
+            )
+        },
         simSelectorSlot = {
             NewChatSimSelectorRow(
                 uiState = simSelectorUiState,
                 onSimSelected = onSimSelected,
-            )
-        },
-        topListContent = {
-            NewChatRecipientSelectionTopListContent(
-                isCreatingGroup = isCreatingGroup,
-                onCreateGroupClick = onCreateGroupClick,
             )
         },
     )

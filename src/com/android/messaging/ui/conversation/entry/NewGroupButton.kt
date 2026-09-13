@@ -40,7 +40,7 @@ import com.android.messaging.ui.conversation.NEW_CHAT_CREATE_GROUP_BUTTON_TEST_T
 import com.android.messaging.ui.core.MessagingPreviewColumn
 
 @Composable
-internal fun NewChatRecipientSelectionTopListContent(
+internal fun NewChatCreateGroupHeader(
     isCreatingGroup: Boolean,
     onCreateGroupClick: () -> Unit,
 ) {
@@ -139,9 +139,9 @@ private fun <T> newChatSpatialAnimationSpec(): FiniteAnimationSpec<T> {
 
 @PreviewLightDark
 @Composable
-private fun NewChatRecipientSelectionTopListContentPreview() {
+private fun NewChatCreateGroupHeaderPreview() {
     MessagingPreviewColumn {
-        NewChatRecipientSelectionTopListContent(
+        NewChatCreateGroupHeader(
             isCreatingGroup = false,
             onCreateGroupClick = {},
         )

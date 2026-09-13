@@ -52,8 +52,8 @@ internal fun RecipientSelectionContent(
     onQueryChanged: (String) -> Unit = {},
     onRecipientDestinationLongClick: OnRecipientDestinationAction? = null,
     onSelectedRecipientClick: (SelectedRecipient) -> Unit = {},
+    pinnedTopContent: (@Composable () -> Unit)? = null,
     simSelectorSlot: (@Composable () -> Unit)? = null,
-    topListContent: (@Composable () -> Unit)? = null,
 ) {
     val queryFocusRequester = remember { FocusRequester() }
     val armedDestination = rememberSaveable { mutableStateOf<String?>(null) }
@@ -69,6 +69,7 @@ internal fun RecipientSelectionContent(
 
     RecipientSelectionContentLayout(
         modifier = modifier,
+        pinnedTopContent = pinnedTopContent,
         queryArea = {
             RecipientSelectionArmedQueryArea(
                 uiState = uiState,
@@ -86,7 +87,6 @@ internal fun RecipientSelectionContent(
                 uiState = uiState,
                 rowDecorators = rowDecorators,
                 armedDestination = armedDestination,
-                topListContent = topListContent,
                 onLoadMore = onLoadMore,
                 onPrimaryActionClick = onPrimaryActionClick,
                 onRecipientDestinationClick = onRecipientDestinationClick,
@@ -101,6 +101,7 @@ private fun RecipientSelectionContentLayout(
     queryArea: @Composable () -> Unit,
     contactsArea: @Composable () -> Unit,
     modifier: Modifier = Modifier,
+    pinnedTopContent: (@Composable () -> Unit)? = null,
 ) {
     Surface(
         modifier = modifier,
@@ -115,6 +116,8 @@ private fun RecipientSelectionContentLayout(
             queryArea()
 
             Spacer(modifier = Modifier.height(12.dp))
+            pinnedTopContent?.invoke()
+
             Box(modifier = Modifier.weight(weight = 1f)) {
                 contactsArea()
             }
@@ -194,7 +197,6 @@ private fun RecipientSelectionArmedContactsArea(
     onLoadMore: () -> Unit,
     onPrimaryActionClick: () -> Unit,
     modifier: Modifier = Modifier,
-    topListContent: (@Composable () -> Unit)? = null,
 ) {
     val currentOnPrimaryActionClick = rememberUpdatedState(onPrimaryActionClick)
     val currentOnRecipientDestinationClick = rememberUpdatedState(onRecipientDestinationClick)
@@ -237,7 +239,6 @@ private fun RecipientSelectionArmedContactsArea(
         onRecipientDestinationLongClick = onRecipientDestinationLongClickWrapped
             .takeIf { onRecipientDestinationLongClick != null },
         emptyStateText = R.string.contact_list_empty_text,
-        topListContent = topListContent,
     )
 }
 
@@ -290,7 +291,7 @@ private fun RecipientSelectionContentSimSelectorAndTopContentPreview() {
                 onSimSelected = { _ -> },
             )
         },
-        topListContent = {
+        pinnedTopContent = {
             PreviewRecipientSelectionContactsTopListContent()
         },
     )
@@ -309,8 +310,8 @@ private fun PreviewRecipientSelectionContent(
     uiState: RecipientSelectionContentUiState,
     modifier: Modifier = Modifier.height(height = 560.dp),
     onRecipientDestinationLongClick: OnRecipientDestinationAction? = { _, _ -> },
+    pinnedTopContent: (@Composable () -> Unit)? = null,
     simSelectorSlot: (@Composable () -> Unit)? = null,
-    topListContent: (@Composable () -> Unit)? = null,
 ) {
     MessagingPreviewTheme {
         RecipientSelectionContent(
@@ -322,8 +323,8 @@ private fun PreviewRecipientSelectionContent(
             onRecipientDestinationLongClick = onRecipientDestinationLongClick,
             onSelectedRecipientClick = { _ -> },
             onQueryChanged = { _ -> },
+            pinnedTopContent = pinnedTopContent,
             simSelectorSlot = simSelectorSlot,
-            topListContent = topListContent,
         )
     }
 }
