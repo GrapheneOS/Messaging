@@ -389,6 +389,8 @@
     <string name="invalid_self_phone_number">Not a valid phone number. Try the international format, starting with +.</string>
     <!-- Title for the preference for playing a message send sound -->
     <string name="send_sound_pref_title">Outgoing message sounds</string>
+    <string name="in_conversation_sound_pref_title">In-conversation message sounds</string>
+    <string name="in_conversation_sound_pref_summary">Play a quiet sound for a message that arrives in the conversation you are viewing. Muted and snoozed conversations stay silent.</string>
 
     <string name="dump_sms_pref_title">Dump SMS</string>
     <string name="dump_sms_pref_summary">Dump received SMS raw data into external storage file</string>

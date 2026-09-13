@@ -22,7 +22,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
-import android.media.AudioManager;
 import android.net.Uri;
 import android.service.notification.StatusBarNotification;
 import android.text.TextUtils;
@@ -61,12 +60,9 @@ import com.android.messaging.util.Assert;
 import com.android.messaging.util.AvatarUriUtil;
 import com.android.messaging.util.LogUtil;
 import com.android.messaging.util.NotificationChannelUtil;
-import com.android.messaging.util.NotificationPlayer;
 import com.android.messaging.util.OsUtil;
 import com.android.messaging.util.PendingIntentConstants;
 import com.android.messaging.util.PhoneUtils;
-import com.android.messaging.util.RingtoneUtil;
-import com.android.messaging.util.ThreadUtil;
 import com.android.messaging.util.UriUtil;
 import com.android.messaging.util.exif.ExifInterface;
 
@@ -131,12 +127,6 @@ public class BugleNotifications {
             5 * DateUtils.MINUTE_IN_MILLIS;
 
     private static final AtomicLong sLastNotificationImageSweep = new AtomicLong();
-
-    /**
-     * This is the volume at which to play the observable-conversation notification sound,
-     * expressed as a fraction of the system notification volume.
-     */
-    private static final float OBSERVABLE_CONVERSATION_NOTIFICATION_VOLUME = 0.25f;
 
     /**
      * Entry point for posting notifications.
@@ -244,12 +234,7 @@ public class BugleNotifications {
         }
 
         final MessageNotificationState state = MessageNotificationState.getNotificationState();
-        final boolean softSound = DataModel.get().isNewMessageObservable(conversationId);
         if (state == null) {
-            if (softSound && !TextUtils.isEmpty(conversationId)) {
-                final Uri ringtoneUri = getNotificationRingtoneUriForConversationId(conversationId);
-                playObservableConversationNotificationSound(ringtoneUri);
-            }
             updateOverflowNotification(0);
             return;
         }
@@ -336,15 +321,7 @@ public class BugleNotifications {
         }
     }
 
-    private static Uri getNotificationRingtoneUriForConversationId(final String conversationId) {
-        final DatabaseWrapper db = DataModel.get().getDatabase();
-        final ConversationListItemData convData =
-                ConversationListItemData.getExistingConversation(db, conversationId);
-        return RingtoneUtil.getNotificationRingtoneUri(conversationId,
-                convData != null ? convData.getNotificationSoundUri() : null);
-    }
-
-    private static boolean isConversationBlocked(final String conversationId) {
+    public static boolean isConversationBlocked(final String conversationId) {
         final DatabaseWrapper db = DataModel.get().getDatabase();
         final ConversationListItemData convData =
                 ConversationListItemData.getExistingConversation(db, conversationId);
@@ -624,34 +601,6 @@ public class BugleNotifications {
             LogUtil.e(TAG, "Dropping notification: cannot grant access to its attachment", e);
             return false;
         }
-    }
-
-    /**
-     * Play the observable conversation notification sound (it's the regular notification sound, but
-     * played at half-volume)
-     */
-    private static void playObservableConversationNotificationSound(final Uri ringtoneUri) {
-        final Context context = Factory.get().getApplicationContext();
-        final AudioManager audioManager = (AudioManager) context
-                .getSystemService(Context.AUDIO_SERVICE);
-        final boolean silenced =
-                audioManager.getRingerMode() != AudioManager.RINGER_MODE_NORMAL;
-        if (silenced) {
-             return;
-        }
-
-        final NotificationPlayer player = new NotificationPlayer(LogUtil.BUGLE_TAG);
-        player.play(ringtoneUri, false,
-                AudioManager.STREAM_NOTIFICATION,
-                OBSERVABLE_CONVERSATION_NOTIFICATION_VOLUME);
-
-        // Stop the sound after five seconds to handle continuous ringtones
-        ThreadUtil.getMainThreadHandler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                player.stop();
-            }
-        }, 5000);
     }
 
     /**

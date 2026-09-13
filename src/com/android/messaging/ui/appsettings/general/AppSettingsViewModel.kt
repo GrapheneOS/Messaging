@@ -41,6 +41,10 @@ internal class AppSettingsViewModel @Inject constructor(
             is Action.DumpSmsChanged -> appSettingsDelegate.onDumpSmsChanged(action.enabled)
             is Action.SendSoundChanged -> appSettingsDelegate.onSendSoundChanged(action.enabled)
 
+            is Action.InConversationSoundChanged -> {
+                appSettingsDelegate.onInConversationSoundChanged(action.enabled)
+            }
+
             is Action.YouTubeLinkPreviewsChanged -> {
                 appSettingsDelegate.onYouTubeLinkPreviewsChanged(action.enabled)
             }

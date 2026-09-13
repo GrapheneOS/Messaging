@@ -19,6 +19,8 @@
     <string name="notification_sound_pref_key" translatable="false">notification_sound</string>
     <string name="send_sound_pref_key" translatable="false">send_sound</string>
     <bool name="send_sound_pref_default" translatable="false">true</bool>
+    <string name="in_conversation_sound_pref_key" translatable="false">in_conversation_sound</string>
+    <bool name="in_conversation_sound_pref_default" translatable="false">false</bool>
     <string name="youtube_link_previews_pref_key" translatable="false">youtube_link_previews</string>
     <bool name="youtube_link_previews_pref_default" translatable="false">false</bool>
 

@@ -109,6 +109,17 @@ private fun LazyListScope.coreSettingsItems(
         )
     }
 
+    item(key = "in_conversation_sound") {
+        SettingsSwitchItem(
+            title = stringResource(R.string.in_conversation_sound_pref_title),
+            summary = stringResource(R.string.in_conversation_sound_pref_summary),
+            checked = appSettings.inConversationSoundEnabled,
+            onCheckedChange = {
+                onAction(Action.InConversationSoundChanged(it))
+            },
+        )
+    }
+
     item(key = "privacy") {
         SettingsClickableItem(
             title = stringResource(R.string.privacy_settings_activity_title),

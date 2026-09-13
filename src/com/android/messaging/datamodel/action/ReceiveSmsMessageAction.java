@@ -98,8 +98,8 @@ public class ReceiveSmsMessageAction extends Action implements Parcelable {
         // Only the primary user gets to insert the message into the telephony db and into bugle's
         // db. The secondary user goes through this path, but skips doing the actual insert. It
         // goes through this path because it needs to compute messageInFocusedConversation in order
-        // to calculate whether to skip the notification and play a soft sound if the user is
-        // already in the conversation.
+        // to calculate whether to skip the notification if the user is already in the
+        // conversation.
         if (!OsUtil.isSecondaryUser()) {
             final boolean read = messageValues.getAsBoolean(Sms.Inbox.READ)
                     || messageInFocusedConversation;

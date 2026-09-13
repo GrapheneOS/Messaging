@@ -1,6 +1,5 @@
 package com.android.messaging.datamodel
 
-import android.media.AudioManager
 import android.net.Uri
 import com.android.messaging.FactoryTestAccess
 import com.android.messaging.data.conversationsettings.repository.ConversationSnoozeQuery
@@ -34,7 +33,6 @@ class BugleNotificationsBlockedConversationTest {
             dataModel = dataModel,
         )
         every { dataModel.getDatabase() } returns database
-        silenceRinger()
         stubConversationLookup()
         stubSnoozeLookup()
         stubNotificationDelivery()
@@ -76,25 +74,17 @@ class BugleNotificationsBlockedConversationTest {
     }
 
     @Test
-    fun createMessageNotification_withBlockedObservableConversation_playsNoSound() {
-        givenNoUnseenMessages()
-        givenConversationObservable(BLOCKED_CONVERSATION_ID)
-
-        BugleNotifications.createMessageNotification(BLOCKED_CONVERSATION_ID)
-
-        verify(exactly = 0) { RingtoneUtil.getNotificationRingtoneUri(any(), any()) }
-    }
-
-    @Test
-    fun createMessageNotification_withAllowedObservableConversation_playsSound() {
+    fun createMessageNotification_withObservableConversation_postsAndPlaysNothing() {
+        // Issue #298: a message arriving in the conversation the user is watching is already
+        // marked seen, so there is nothing to post - and nothing to play either. The app used
+        // to sound the conversation ringtone here, which no notification setting could silence.
         givenNoUnseenMessages()
         givenConversationObservable(ALLOWED_CONVERSATION_ID)
 
         BugleNotifications.createMessageNotification(ALLOWED_CONVERSATION_ID)
 
-        verify(exactly = 1) {
-            RingtoneUtil.getNotificationRingtoneUri(ALLOWED_CONVERSATION_ID, null)
-        }
+        verify(exactly = 0) { BugleNotifications.processAndSend(any(), any()) }
+        verify(exactly = 0) { RingtoneUtil.getNotificationRingtoneUri(any(), any()) }
     }
 
     private fun stubConversationLookup() {
@@ -116,7 +106,6 @@ class BugleNotificationsBlockedConversationTest {
     ) {
         val convData = mockk<ConversationListItemData>(relaxed = true)
         every { convData.otherParticipantNormalizedDestination } returns sender
-        every { convData.notificationSoundUri } returns null
         every {
             ConversationListItemData.getExistingConversation(database, conversationId)
         } returns convData
@@ -133,12 +122,6 @@ class BugleNotificationsBlockedConversationTest {
         every { RingtoneUtil.getNotificationRingtoneUri(any(), any()) } returns RINGTONE_URI
         mockkStatic(BugleNotifications::class)
         every { BugleNotifications.processAndSend(any(), any()) } just runs
-    }
-
-    private fun silenceRinger() {
-        RuntimeEnvironment.getApplication()
-            .getSystemService(AudioManager::class.java)
-            .ringerMode = AudioManager.RINGER_MODE_SILENT
     }
 
     private fun givenUnseenMessage(

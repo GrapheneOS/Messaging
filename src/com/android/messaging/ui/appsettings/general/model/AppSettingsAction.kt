@@ -17,6 +17,10 @@ internal sealed interface AppSettingsAction {
         val enabled: Boolean,
     ) : AppSettingsAction
 
+    data class InConversationSoundChanged(
+        val enabled: Boolean,
+    ) : AppSettingsAction
+
     data class YouTubeLinkPreviewsChanged(
         val enabled: Boolean,
     ) : AppSettingsAction
