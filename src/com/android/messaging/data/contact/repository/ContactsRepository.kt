@@ -289,8 +289,7 @@ internal class ContactsRepositoryImpl @Inject constructor(
                     kind = kind,
                     destinationColumnName = destinationColumnName,
                 )
-            }
-            ?: emptyList()
+            }.orEmpty()
     }
 
     private fun mapDestinationRows(

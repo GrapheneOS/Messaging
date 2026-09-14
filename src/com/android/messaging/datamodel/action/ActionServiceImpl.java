@@ -78,6 +78,26 @@ public class ActionServiceImpl extends JobIntentService {
     }
 
     /**
+     * Execute action synchronously on the calling thread instead of queueing it on the service
+     * @param action - action to execute
+     */
+    public static void executeActionImmediately(final Action action) {
+        final LoggingTimer timer =
+                createLoggingTimer(action, "#executeActionImmediately");
+        final BackgroundWorker worker =
+                DataModel.get().getBackgroundWorkerForActionService();
+        action.markStart();
+        action.markBeginExecute();
+
+        timer.start();
+        final Object result = action.executeAction();
+        timer.stopAndLog();
+
+        action.markEndExecute(result);
+        action.sendBackgroundActions(worker);
+    }
+
+    /**
      * Handle response returned by BackgroundWorker
      * @param request - request generating response
      * @param response - response from service
@@ -193,8 +213,10 @@ public class ActionServiceImpl extends JobIntentService {
      * triggered
      */
     public static PendingIntent makeStartActionPendingIntent(final Context context,
-            final Action action, final int requestCode, final boolean launchesAnActivity) {
+            final Action action, final String identifier, final int requestCode,
+            final boolean launchesAnActivity) {
         final Intent intent = PendingActionReceiver.makeIntent(OP_START_ACTION);
+        intent.setIdentifier(identifier);
         final Bundle actionBundle = new Bundle();
         actionBundle.putParcelable(BUNDLE_ACTION, action);
         intent.putExtra(EXTRA_ACTION_BUNDLE, actionBundle);

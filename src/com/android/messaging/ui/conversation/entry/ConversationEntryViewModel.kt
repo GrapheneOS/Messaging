@@ -2,7 +2,10 @@ package com.android.messaging.ui.conversation.entry
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.android.messaging.data.conversation.mapper.ConversationMessageDataDraftMapper
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryLaunchRequest
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryStartupAttachment
@@ -12,61 +15,57 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 internal interface ConversationEntryScreenModel {
     val uiState: StateFlow<ConversationEntryUiState>
 
     fun onConversationNavigationRequested(
-        conversationId: String,
-        pendingSelfParticipantId: String?,
+        conversationId: ConversationId,
+        pendingSelfParticipantId: ParticipantId?,
     )
 
-    fun onLaunchRequest(launchRequest: ConversationEntryLaunchRequest)
+    fun onDraftPayloadConsumed(conversationId: ConversationId)
 
-    fun onDraftPayloadConsumed(conversationId: String)
+    fun onScrollPositionConsumed(conversationId: ConversationId)
 
-    fun onScrollPositionConsumed(conversationId: String)
+    fun onPendingSelfParticipantIdConsumed(conversationId: ConversationId)
 
-    fun onPendingSelfParticipantIdConsumed(conversationId: String)
-
-    fun onStartupAttachmentConsumed(conversationId: String)
+    fun onStartupAttachmentConsumed(conversationId: ConversationId)
 }
 
 @HiltViewModel
 internal class ConversationEntryViewModel @Inject constructor(
     private val conversationMessageDataDraftMapper: ConversationMessageDataDraftMapper,
     private val savedStateHandle: SavedStateHandle,
+    launchStore: ConversationLaunchStore,
 ) : ViewModel(),
     ConversationEntryScreenModel {
 
     private val _uiState = MutableStateFlow(restoreUiState())
     override val uiState = _uiState.asStateFlow()
 
+    init {
+        viewModelScope.launch {
+            launchStore.requests.collect(::onLaunchRequest)
+        }
+    }
+
     override fun onConversationNavigationRequested(
-        conversationId: String,
-        pendingSelfParticipantId: String?,
+        conversationId: ConversationId,
+        pendingSelfParticipantId: ParticipantId?,
     ) {
         updateUiState(
             _uiState.value.copy(
                 conversationId = conversationId,
-                pendingSelfParticipantId = pendingSelfParticipantId
-                    ?.takeIf { it.isNotBlank() },
+                pendingSelfParticipantId = pendingSelfParticipantId,
             ),
         )
     }
 
-    override fun onLaunchRequest(launchRequest: ConversationEntryLaunchRequest) {
-        val processedLaunchGeneration = savedStateHandle.get<Int>(
-            PROCESSED_LAUNCH_GENERATION_KEY,
-        )
-
-        if (processedLaunchGeneration == launchRequest.launchGeneration) {
-            return
-        }
-
+    private fun onLaunchRequest(launchRequest: ConversationEntryLaunchRequest) {
         updateUiState(
             ConversationEntryUiState(
-                launchGeneration = launchRequest.launchGeneration,
                 conversationId = launchRequest.conversationId,
                 pendingDraft = launchRequest.draftData?.let { messageData ->
                     conversationMessageDataDraftMapper.map(messageData = messageData)
@@ -80,10 +79,9 @@ internal class ConversationEntryViewModel @Inject constructor(
         )
         savedStateHandle[PENDING_DRAFT_DATA_KEY] = launchRequest.draftData
         savedStateHandle[PENDING_SCROLL_POSITION_KEY] = launchRequest.messagePosition
-        savedStateHandle[PROCESSED_LAUNCH_GENERATION_KEY] = launchRequest.launchGeneration
     }
 
-    override fun onDraftPayloadConsumed(conversationId: String) {
+    override fun onDraftPayloadConsumed(conversationId: ConversationId) {
         val currentUiState = _uiState.value
 
         if (
@@ -100,7 +98,7 @@ internal class ConversationEntryViewModel @Inject constructor(
         }
     }
 
-    override fun onScrollPositionConsumed(conversationId: String) {
+    override fun onScrollPositionConsumed(conversationId: ConversationId) {
         val currentUiState = _uiState.value
 
         val hasPendingScrollPosition = currentUiState.pendingScrollPosition != null
@@ -116,7 +114,7 @@ internal class ConversationEntryViewModel @Inject constructor(
         }
     }
 
-    override fun onStartupAttachmentConsumed(conversationId: String) {
+    override fun onStartupAttachmentConsumed(conversationId: ConversationId) {
         val currentUiState = _uiState.value
 
         val hasPendingStartupAttachment = currentUiState.pendingStartupAttachment != null
@@ -130,7 +128,7 @@ internal class ConversationEntryViewModel @Inject constructor(
         }
     }
 
-    override fun onPendingSelfParticipantIdConsumed(conversationId: String) {
+    override fun onPendingSelfParticipantIdConsumed(conversationId: ConversationId) {
         val currentUiState = _uiState.value
 
         val hasPendingSelfParticipantId = currentUiState.pendingSelfParticipantId != null
@@ -154,11 +152,12 @@ internal class ConversationEntryViewModel @Inject constructor(
         )
 
         return ConversationEntryUiState(
-            launchGeneration = savedStateHandle[LAUNCH_GENERATION_KEY],
-            conversationId = savedStateHandle[CONVERSATION_ID_KEY],
+            conversationId = ConversationId.fromOrNull(savedStateHandle[CONVERSATION_ID_KEY]),
             pendingDraft = pendingDraftData?.let(conversationMessageDataDraftMapper::map),
             pendingScrollPosition = savedStateHandle[PENDING_SCROLL_POSITION_KEY],
-            pendingSelfParticipantId = savedStateHandle[PENDING_SELF_PARTICIPANT_ID_KEY],
+            pendingSelfParticipantId = ParticipantId.fromOrNull(
+                savedStateHandle[PENDING_SELF_PARTICIPANT_ID_KEY],
+            ),
             pendingStartupAttachment = buildStartupAttachmentOrNull(
                 contentUri = startupAttachmentUri,
                 contentType = startupAttachmentType,
@@ -181,16 +180,13 @@ internal class ConversationEntryViewModel @Inject constructor(
         previousUiState: ConversationEntryUiState,
         uiState: ConversationEntryUiState,
     ) {
-        if (previousUiState.launchGeneration != uiState.launchGeneration) {
-            savedStateHandle[LAUNCH_GENERATION_KEY] = uiState.launchGeneration
-        }
-
         if (previousUiState.conversationId != uiState.conversationId) {
-            savedStateHandle[CONVERSATION_ID_KEY] = uiState.conversationId
+            savedStateHandle[CONVERSATION_ID_KEY] = uiState.conversationId?.value
         }
 
         if (previousUiState.pendingSelfParticipantId != uiState.pendingSelfParticipantId) {
-            savedStateHandle[PENDING_SELF_PARTICIPANT_ID_KEY] = uiState.pendingSelfParticipantId
+            savedStateHandle[PENDING_SELF_PARTICIPANT_ID_KEY] =
+                uiState.pendingSelfParticipantId?.value
         }
 
         if (
@@ -230,15 +226,10 @@ internal class ConversationEntryViewModel @Inject constructor(
 
     private companion object {
         private const val CONVERSATION_ID_KEY = "conversation_id"
-        private const val LAUNCH_GENERATION_KEY = "launch_generation"
         private const val PENDING_DRAFT_DATA_KEY = "pending_draft_data"
         private const val PENDING_SCROLL_POSITION_KEY = "pending_scroll_position"
         private const val PENDING_SELF_PARTICIPANT_ID_KEY = "pending_self_participant_id"
         private const val PENDING_STARTUP_ATTACHMENT_TYPE_KEY = "pending_startup_attachment_type"
         private const val PENDING_STARTUP_ATTACHMENT_URI_KEY = "pending_startup_attachment_uri"
-
-        // Tracks the last launch request handled by this ViewModel even when the
-        // same launch generation remains in uiState for downstream side effects
-        private const val PROCESSED_LAUNCH_GENERATION_KEY = "processed_launch_generation"
     }
 }

@@ -131,16 +131,6 @@ public final class ContentType {
         return (null != contentType) && contentType.equalsIgnoreCase(TEXT_VCARD);
     }
 
-    public static boolean isDrmType(final String contentType) {
-        return (null != contentType)
-                && (contentType.equals(APP_DRM_CONTENT)
-                        || contentType.equals(APP_DRM_MESSAGE));
-    }
-
-    public static boolean isUnspecified(final String contentType) {
-        return (null != contentType) && contentType.endsWith("*");
-    }
-
     /**
      * If the content type is a type which can be displayed in the conversation list as a preview.
      */

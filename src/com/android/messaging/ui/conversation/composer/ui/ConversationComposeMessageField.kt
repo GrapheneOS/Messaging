@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.composer.ui
 
+import android.view.WindowManager
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -119,9 +120,15 @@ internal fun ConversationComposeAttachmentMenu(
                 x = 0.dp,
                 y = (-8).dp,
             ),
+            // Raw flags because no combination of the boolean options expresses this. The menu
+            // has to be focusable, otherwise back (key or gesture) never reaches it and closes the
+            // conversation instead; ALT_FOCUSABLE_IM then keeps the keyboard up behind the menu,
+            // which the media picker relies on to know whether to bring it back. NO_LIMITS keeps
+            // the bottom anchored menu unclipped, WATCH_OUTSIDE_TOUCH keeps tap-to-dismiss.
             properties = PopupProperties(
-                focusable = false,
-                clippingEnabled = false,
+                flags = WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM or
+                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
+                    WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
             ),
         ) {
             ConversationComposeAttachmentMenuContent(

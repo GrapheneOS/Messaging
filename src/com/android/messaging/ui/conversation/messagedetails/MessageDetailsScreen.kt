@@ -20,14 +20,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetails
@@ -38,20 +36,11 @@ import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun MessageDetailsScreen(
-    conversationId: String,
-    messageId: String,
+    screenModel: MessageDetailsScreenModel,
+    onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
-    onNavigateBack: () -> Unit = {},
-    screenModel: MessageDetailsScreenModel = hiltViewModel<MessageDetailsViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
-
-    LaunchedEffect(conversationId, messageId, screenModel) {
-        screenModel.onArguments(
-            conversationId = conversationId,
-            messageId = messageId,
-        )
-    }
 
     MessageDetailsScaffold(
         uiState = uiState,
@@ -132,6 +121,7 @@ private fun MessageDetailsContent(
         MessageDetailsPreviewCard(
             preview = content.preview,
             details = details,
+            youTubeLinkPreviewsEnabled = content.youTubeLinkPreviewsEnabled,
         )
 
         MessageDetailsMessageFields(

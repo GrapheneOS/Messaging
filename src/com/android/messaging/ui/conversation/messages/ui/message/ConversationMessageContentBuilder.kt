@@ -16,8 +16,12 @@ import kotlinx.collections.immutable.toImmutableList
 internal fun buildConversationMessageContent(
     message: ConversationMessageUiModel,
     subjectText: String?,
+    youTubeLinkPreviewsEnabled: Boolean,
 ): ConversationMessageContent {
-    val attachments = buildConversationMessageAttachments(message = message)
+    val attachments = buildConversationMessageAttachments(
+        message = message,
+        youTubeLinkPreviewsEnabled = youTubeLinkPreviewsEnabled,
+    )
     val attachmentSections = buildConversationAttachmentSections(
         attachments = attachments,
         vCardSubtitleTextResIdOverride = vCardSubtitleTextResIdOverride(message),
@@ -49,6 +53,7 @@ private fun vCardSubtitleTextResIdOverride(message: ConversationMessageUiModel):
 
 private fun buildConversationMessageAttachments(
     message: ConversationMessageUiModel,
+    youTubeLinkPreviewsEnabled: Boolean,
 ): ImmutableList<ConversationMessageAttachment> {
     val attachmentItems = message
         .parts
@@ -60,7 +65,7 @@ private fun buildConversationMessageAttachments(
             attachment.part is ConversationMessagePartUiModel.Attachment.Image
     }
 
-    if (hasImageAttachment) {
+    if (!youTubeLinkPreviewsEnabled || hasImageAttachment) {
         return attachmentItems
     }
 

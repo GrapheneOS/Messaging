@@ -1,20 +1,234 @@
-name: Build application
+name: Pull request checks
 
-on: [pull_request, push]
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
-  build:
+  build-debug-apk:
+    name: Build debug APK
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v5
+      - name: Check out sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
-      - name: Set up JDK 21
-        uses: actions/setup-java@v5
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
         with:
-          distribution: 'temurin'
-          java-version: 21
+          distribution: temurin
+          java-version: 17
           cache: gradle
-      - name: Build with Gradle
-        run: ./gradlew build --no-daemon
+
+      - name: Assemble debug APK
+        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace --console=plain
+
+  ktlint:
+    name: ktlintCheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: true
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Run ktlintCheck
+        run: ./gradlew ktlintCheck --no-daemon --stacktrace --console=plain
+
+      - name: Upload ktlint reports
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ktlint-reports
+          path: |
+            build/reports/ktlint/
+            app/build/reports/ktlint/
+          if-no-files-found: ignore
+
+  detekt:
+    name: Detekt
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: true
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Run Detekt
+        run: ./gradlew :app:detektDebug --no-daemon --stacktrace --console=plain
+
+      - name: Upload Detekt reports
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: detekt-reports
+          path: app/build/reports/detekt/
+          if-no-files-found: ignore
+
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: true
+
+      - name: Set up JDKs
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          distribution: temurin
+          java-version: |
+            17
+            21
+          cache: gradle
+
+      - name: Run unit tests and coverage gate
+        run: >
+          ./gradlew :app:jacocoUnitTestVerification
+          -PunitTestMinCoverage=80
+          -PunitTestMinBranchCoverage=60
+          --no-daemon --stacktrace --console=plain
+
+      - name: Upload unit test reports
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: unit-test-reports
+          path: |
+            app/build/reports/jacoco/jacocoUnitTestReport/
+            app/build/reports/tests/testDebugUnitTest/
+            app/build/test-results/testDebugUnitTest/
+          if-no-files-found: ignore
+
+  instrumented-tests:
+    name: Instrumented tests (Android 17 x86_64)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: true
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Build app and instrumented test APKs
+        run: >
+          ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest
+          --no-daemon --stacktrace --console=plain
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Update Android command line tools
+        id: cmdline-tools
+        run: |
+          SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --install 'cmdline-tools;latest' > /dev/null
+          if [ -d "$SDK/cmdline-tools/latest-2" ]; then
+            rm -rf "$SDK/cmdline-tools/latest"
+            mv "$SDK/cmdline-tools/latest-2" "$SDK/cmdline-tools/latest"
+          fi
+          version=$("$SDK/cmdline-tools/latest/bin/sdkmanager" --version 2>/dev/null | grep -Eo '^[0-9][0-9.]*' | head -1)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Restore AVD cache
+        id: avd-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-37.0-x86_64-google_apis-${{ steps.cmdline-tools.outputs.version }}
+
+      - name: Create AVD and generate snapshot for caching
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: "37.0"
+          arch: x86_64
+          target: google_apis
+          cores: 4
+          ram-size: 4096M
+          heap-size: 576M
+          disk-size: 8G
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          script: echo "Generated AVD snapshot for caching."
+
+      - name: Run instrumented tests and coverage gate
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: "37.0"
+          arch: x86_64
+          target: google_apis
+          cores: 4
+          ram-size: 4096M
+          heap-size: 576M
+          disk-size: 8G
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: |
+            adb logcat -G 16M
+            ./gradlew :app:connectedDebugAndroidTest :app:jacocoAndroidTestVerification -PandroidTestCoverage=true -PandroidTestMinCoverage=80 -PandroidTestMinBranchCoverage=50 --no-daemon --stacktrace --console=plain
+            rc=$?
+            adb logcat -d > logcat.txt
+            exit $rc
+
+      - name: Upload instrumented test reports
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: instrumented-test-reports
+          path: |
+            app/build/outputs/code_coverage/debugAndroidTest/connected/
+            app/build/outputs/androidTest-results/connected/
+            app/build/reports/jacoco/jacocoAndroidTestReport/
+            app/build/reports/androidTests/connected/
+            logcat.txt
+          if-no-files-found: ignore

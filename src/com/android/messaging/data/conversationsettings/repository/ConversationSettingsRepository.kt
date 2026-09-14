@@ -5,13 +5,15 @@ package com.android.messaging.data.conversationsettings.repository
 import android.content.ContentResolver
 import android.database.ContentObserver
 import android.net.Uri
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.data.conversationsettings.model.ConversationSettingsData
+import com.android.messaging.data.conversationsettings.model.SNOOZE_NEVER_EXPIRES
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.data.ConversationParticipantsData
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.di.core.MessagingDbDispatcher
-import com.android.messaging.util.PhoneUtils
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineDispatcher
@@ -28,7 +30,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 
 internal interface ConversationSettingsRepository {
-    fun getConversationSettings(conversationId: String): Flow<ConversationSettingsData>
+    fun getConversationSettings(conversationId: ConversationId): Flow<ConversationSettingsData>
 }
 
 internal class ConversationSettingsRepositoryImpl @Inject constructor(
@@ -39,11 +41,11 @@ internal class ConversationSettingsRepositoryImpl @Inject constructor(
 ) : ConversationSettingsRepository {
 
     override fun getConversationSettings(
-        conversationId: String,
+        conversationId: ConversationId,
     ): Flow<ConversationSettingsData> {
         val uris = listOf(
-            MessagingContentProvider.buildConversationMetadataUri(conversationId),
-            MessagingContentProvider.buildConversationParticipantsUri(conversationId),
+            MessagingContentProvider.buildConversationMetadataUri(conversationId.value),
+            MessagingContentProvider.buildConversationParticipantsUri(conversationId.value),
         )
 
         return refreshTriggers(conversationId, uris)
@@ -52,7 +54,7 @@ internal class ConversationSettingsRepositoryImpl @Inject constructor(
     }
 
     private fun refreshTriggers(
-        conversationId: String,
+        conversationId: ConversationId,
         uris: List<Uri>,
     ): Flow<Unit> {
         return observeUris(uris).flatMapLatest {
@@ -63,11 +65,11 @@ internal class ConversationSettingsRepositoryImpl @Inject constructor(
     }
 
     private fun snoozeExpiry(
-        conversationId: String,
+        conversationId: ConversationId,
     ): Flow<Unit> {
         return flow {
             val snoozeUntilMillis = notificationRepository.getSnoozeUntilMillis(conversationId)
-            if (snoozeUntilMillis == Long.MAX_VALUE) return@flow
+            if (snoozeUntilMillis == SNOOZE_NEVER_EXPIRES) return@flow
 
             val remaining = snoozeUntilMillis - System.currentTimeMillis()
             if (remaining <= 0L) return@flow
@@ -78,9 +80,8 @@ internal class ConversationSettingsRepositoryImpl @Inject constructor(
     }
 
     private suspend fun loadConversationSettings(
-        conversationId: String,
+        conversationId: ConversationId,
     ): ConversationSettingsData {
-        val phoneUtils = PhoneUtils.getDefault()
         val participants = queryOtherParticipants(conversationId)
         val metadata = conversationsRepository.getConversationMetadataSnapshot(
             conversationId = conversationId,
@@ -91,18 +92,17 @@ internal class ConversationSettingsRepositoryImpl @Inject constructor(
             conversationTitle = metadata?.conversationName.orEmpty(),
             isArchived = metadata?.isArchived ?: false,
             isSnoozed = notificationRepository.isSnoozed(conversationId),
-            isVoiceCapable = phoneUtils.isVoiceCapable,
             participants = participants.toImmutableList(),
-            dbSelfParticipantId = metadata?.selfParticipantId.orEmpty(),
+            dbSelfParticipantId = metadata?.selfParticipantId,
         )
     }
 
     private fun queryOtherParticipants(
-        conversationId: String,
+        conversationId: ConversationId,
     ): List<ParticipantData> {
         val participantsData = ConversationParticipantsData().apply {
             contentResolver.query(
-                MessagingContentProvider.buildConversationParticipantsUri(conversationId),
+                MessagingContentProvider.buildConversationParticipantsUri(conversationId.value),
                 ParticipantData.ParticipantsQuery.PROJECTION,
                 null,
                 null,

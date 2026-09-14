@@ -38,9 +38,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.ui.common.components.participant.ParticipantAvatar
 import com.android.messaging.ui.common.components.participant.ParticipantQuickActionsPopup
 import com.android.messaging.ui.common.components.participant.participantAvatarLabel
+import com.android.messaging.ui.common.components.participant.participantColorSeed
+import com.android.messaging.ui.common.text.asLtrText
 import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
 import com.android.messaging.ui.core.MessagingPreviewColumn
 
@@ -77,6 +80,9 @@ internal fun ConversationHeader(
             fallbackLabel = participantAvatarLabel(
                 source = participant?.displayName
             ).takeUnless { isBlocked },
+            colorSeedCode = participantColorSeed(
+                normalizedDestination = participant?.normalizedDestination,
+            ),
         )
 
         if (title.isNotEmpty()) {
@@ -206,6 +212,9 @@ private fun ParticipantRow(
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        val displayName = participant.displayNameText()
+        val details = participant.details?.asLtrText()
+
         ParticipantAvatarWithQuickActions(
             participant = participant,
             avatarUri = avatarUri,
@@ -221,8 +230,8 @@ private fun ParticipantRow(
         Spacer(modifier = Modifier.width(16.dp))
 
         ParticipantInfo(
-            displayName = participant.displayName,
-            details = participant.details,
+            displayName = displayName,
+            details = details,
             modifier = Modifier.weight(1f),
         )
 
@@ -239,18 +248,23 @@ private fun ParticipantQuickActions(
     avatarUri: String?,
     fallbackIcon: ImageVector,
     fallbackLabel: String?,
+    colorSeedCode: String?,
     onDismiss: () -> Unit,
     onMessageClick: () -> Unit,
     onCallClick: (() -> Unit)?,
     onContactClick: (() -> Unit)?,
 ) {
+    val displayName = participant.displayNameText()
+    val subtitle = participant.details?.asLtrText()
+
     ParticipantQuickActionsPopup(
         visible = visible,
         avatarUri = avatarUri,
-        displayName = participant.displayName,
-        subtitle = participant.details,
+        displayName = displayName,
+        subtitle = subtitle,
         fallbackIcon = fallbackIcon,
         fallbackLabel = fallbackLabel,
+        colorSeedCode = colorSeedCode,
         onDismiss = onDismiss,
         onMessageClick = {
             onMessageClick()
@@ -264,8 +278,17 @@ private fun ParticipantQuickActions(
             onContactClick?.invoke()
             onDismiss()
         }.takeIf { onContactClick != null },
+        onInfoClick = null,
         isContactSaved = participant.isContactSaved,
     )
+}
+
+@Composable
+private fun ParticipantUiState.displayNameText(): String {
+    return when {
+        isDisplayNameLtr -> displayName.asLtrText()
+        else -> displayName
+    }
 }
 
 @Composable
@@ -280,12 +303,17 @@ private fun ParticipantAvatarWithQuickActions(
     onCallClick: (() -> Unit)?,
     onContactClick: (() -> Unit)?,
 ) {
+    val colorSeedCode = participantColorSeed(
+        normalizedDestination = participant.normalizedDestination,
+    )
+
     Box(modifier = Modifier.size(40.dp)) {
         ParticipantAvatar(
             avatarUri = avatarUri,
             fallbackIcon = fallbackIcon,
             fallbackSize = 24.dp,
             fallbackLabel = fallbackLabel,
+            colorSeedCode = colorSeedCode,
             modifier = Modifier.matchParentSize(),
         )
 
@@ -295,6 +323,7 @@ private fun ParticipantAvatarWithQuickActions(
             avatarUri = avatarUri,
             fallbackIcon = fallbackIcon,
             fallbackLabel = fallbackLabel,
+            colorSeedCode = colorSeedCode,
             onDismiss = onDismissQuickActions,
             onMessageClick = onMessageClick,
             onCallClick = onCallClick,
@@ -348,7 +377,7 @@ private fun ConversationHeaderPreview() {
         ConversationHeader(
             title = "Mother",
             participant = ParticipantUiState(
-                id = "preview",
+                id = ParticipantId("preview"),
                 avatarUri = null,
                 displayName = "Mother",
                 details = "+31 6 1234 5678",
@@ -382,7 +411,7 @@ private fun ParticipantItemPreview() {
     MessagingPreviewColumn {
         ParticipantItem(
             participant = ParticipantUiState(
-                id = "preview",
+                id = ParticipantId("preview"),
                 avatarUri = null,
                 displayName = "Mother",
                 details = "+31 6 1234 5678",

@@ -7,6 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.android.messaging.R
 import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
 import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerUiState
 import com.android.messaging.ui.recipientselection.model.picker.SelectedRecipient
@@ -38,6 +39,7 @@ internal fun PreviewRecipientSelectionContactsContent(
         onPrimaryActionClick = {},
         onRecipientDestinationClick = { _, _ -> },
         onRecipientDestinationLongClick = onRecipientDestinationLongClick,
+        emptyStateText = R.string.contact_list_empty_text,
         topListContent = topListContent,
     )
 }
@@ -69,35 +71,35 @@ internal fun previewRecipientSelectionContactsSectionedState(): RecipientSelecti
         picker = RecipientPickerUiState(
             query = "",
             items = persistentListOf<RecipientPickerListItem>()
-                .add(
+                .adding(
                     previewRecipientSelectionSingleDestinationContactItem(
                         contactId = 1L,
                         destination = "+31600000001",
                         displayName = "Ada Lovelace",
                     ),
                 )
-                .add(
+                .adding(
                     previewRecipientSelectionSingleDestinationContactItem(
                         contactId = 2L,
                         destination = "+31600000002",
                         displayName = "Alan Turing",
                     ),
                 )
-                .add(
+                .adding(
                     previewRecipientSelectionSingleDestinationContactItem(
                         contactId = 3L,
                         destination = "+31600000003",
                         displayName = "Bob Kahn",
                     ),
                 )
-                .add(
+                .adding(
                     previewRecipientSelectionSingleDestinationContactItem(
                         contactId = 4L,
                         destination = "+31600000004",
                         displayName = "Zoe Washington",
                     ),
                 )
-                .add(
+                .adding(
                     previewRecipientSelectionSingleDestinationContactItem(
                         contactId = 5L,
                         destination = "+31600000005",
@@ -222,9 +224,9 @@ internal fun previewRecipientSelectionContactsLongTextState(): RecipientSelectio
     return RecipientSelectionContentUiState(
         picker = previewRecipientSelectionContactsPickerState(
             items = persistentListOf<RecipientPickerListItem>()
-                .add(previewRecipientSelectionLongSingleDestinationContactItem())
-                .add(previewRecipientSelectionLongMultiDestinationContactItem())
-                .add(previewRecipientSelectionLongSyntheticPhoneItem()),
+                .adding(previewRecipientSelectionLongSingleDestinationContactItem())
+                .adding(previewRecipientSelectionLongMultiDestinationContactItem())
+                .adding(previewRecipientSelectionLongSyntheticPhoneItem()),
         ),
         primaryAction = previewRecipientSelectionPrimaryActionUiState(
             isEnabled = true,
@@ -244,10 +246,10 @@ internal fun previewRecipientSelectionContactsLongTextState(): RecipientSelectio
 private fun previewRecipientSelectionContactsDefaultItems():
     ImmutableList<RecipientPickerListItem> {
     return persistentListOf<RecipientPickerListItem>()
-        .add(previewRecipientSelectionSingleDestinationContactItem())
-        .add(previewRecipientSelectionSyntheticPhoneItem())
-        .add(previewRecipientSelectionMultiDestinationContactItem())
-        .add(previewRecipientSelectionSingleEmailDestinationContactItem())
+        .adding(previewRecipientSelectionSingleDestinationContactItem())
+        .adding(previewRecipientSelectionSyntheticPhoneItem())
+        .adding(previewRecipientSelectionMultiDestinationContactItem())
+        .adding(previewRecipientSelectionSingleEmailDestinationContactItem())
 }
 
 private fun previewRecipientSelectionContactsPickerState(

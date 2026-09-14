@@ -14,6 +14,7 @@ internal data class ConversationScreenScaffoldUiState(
     val canAddContact: Boolean = false,
     val canDeleteConversation: Boolean = false,
     val canEditSubject: Boolean = false,
+    val isBlocked: Boolean = false,
     val attachmentLimitWarning: ConversationAttachmentLimitWarning? = null,
     val isDeleteConversationConfirmationVisible: Boolean = false,
     val isSubjectDialogVisible: Boolean = false,

@@ -2,43 +2,69 @@ package com.android.messaging.ui.conversation
 
 import android.content.Intent
 import android.os.Bundle
-import android.text.TextUtils
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import com.android.messaging.datamodel.data.MessageData
-import com.android.messaging.ui.UIIntents
-import com.android.messaging.ui.conversation.entry.model.ConversationEntryLaunchRequest
-import com.android.messaging.ui.conversation.navigation.ConversationNavGraph
-import com.android.messaging.ui.conversationlist.ConversationListActivity
+import androidx.navigation3.runtime.NavKey
+import com.android.messaging.domain.onboarding.usecase.SelfPhoneNumberPermissionPrompt
+import com.android.messaging.domain.onboarding.usecase.ShouldShowOnboarding
+import com.android.messaging.ui.MainActivity
+import com.android.messaging.ui.conversation.entry.ConversationLaunchStore
+import com.android.messaging.ui.conversation.entry.submitIntent
+import com.android.messaging.ui.conversation.navigation.NewChatNavKey
+import com.android.messaging.ui.conversation.navigation.conversationRoute
+import com.android.messaging.ui.conversationlist.navigation.goToConversationList
 import com.android.messaging.ui.core.AppTheme
+import com.android.messaging.ui.host.AppNavGraph
+import com.android.messaging.util.BugleActivityUtil
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 
 @AndroidEntryPoint
 internal class ConversationActivity : ComponentActivity() {
 
-    private var launchGeneration = 0
-    private var launchRequest: ConversationEntryLaunchRequest? by mutableStateOf(value = null)
+    @Inject
+    lateinit var shouldShowOnboarding: ShouldShowOnboarding
+
+    @Inject
+    lateinit var selfPhoneNumberPermissionPrompt: SelfPhoneNumberPermissionPrompt
+
+    @Inject
+    lateinit var launchStore: ConversationLaunchStore
+
+    private val launchDestinations = Channel<List<NavKey>>(Channel.BUFFERED)
+    private val launchDestinationFlow: Flow<List<NavKey>> = launchDestinations.receiveAsFlow()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        launchGeneration = savedInstanceState?.getInt(LAUNCH_GENERATION_STATE_KEY) ?: 0
-
-        if (applyIntent(intent = intent, launchGeneration = launchGeneration)) {
+        if (intent.goToConversationList()) {
+            redirectToConversationList()
             return
+        }
+
+        val startDestinations = conversationRoute(intent) ?: listOf(NewChatNavKey)
+
+        if (savedInstanceState == null) {
+            launchStore.submitIntent(intent = intent)
         }
 
         enableEdgeToEdge()
 
         setContent {
             AppTheme {
-                ConversationNavGraph(
-                    launchRequest = launchRequest,
-                    onConversationDetailsClick = ::launchConversationDetails,
+                AppNavGraph(
+                    startDestinations = startDestinations,
+                    isLaunchedFromBubble = isLaunchedFromBubble,
+                    additionalSceneStrategies = emptyList(),
+                    showsTwoPanes = false,
+                    launchDestinations = launchDestinationFlow,
+                    shouldShowOnboarding = shouldShowOnboarding::invoke,
+                    selfPhoneNumberPermissionPrompt = selfPhoneNumberPermissionPrompt,
+                    onAppResumed = ::resumeDataModel,
                     onFinish = ::finishAfterTransition,
                 )
             }
@@ -48,87 +74,29 @@ internal class ConversationActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
 
-        launchGeneration += 1
-        applyIntent(intent = intent, launchGeneration = launchGeneration)
-    }
+        this.intent = intent
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-
-        outState.putInt(LAUNCH_GENERATION_STATE_KEY, launchGeneration)
-    }
-
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if (resultCode == FINISH_RESULT_CODE) {
-            finish()
-        }
-    }
-
-    private fun applyIntent(
-        intent: Intent,
-        launchGeneration: Int,
-    ): Boolean {
-        setIntent(intent)
-
-        val goToConversationList = intent.getBooleanExtra(
-            UIIntents.UI_INTENT_EXTRA_GOTO_CONVERSATION_LIST,
-            false,
-        )
-
-        if (goToConversationList) {
+        if (intent.goToConversationList()) {
             redirectToConversationList()
-            return true
+            return
         }
 
-        launchRequest = ConversationEntryLaunchRequest(
-            launchGeneration = launchGeneration,
-            conversationId = intent
-                .getStringExtra(UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID),
-            draftData = intent.getParcelableExtra(
-                UIIntents.UI_INTENT_EXTRA_DRAFT_DATA,
-                MessageData::class.java,
-            ),
-            startupAttachmentUri = intent
-                .getStringExtra(UIIntents.UI_INTENT_EXTRA_ATTACHMENT_URI)
-                ?.takeUnless(TextUtils::isEmpty),
-            startupAttachmentType = intent
-                .getStringExtra(UIIntents.UI_INTENT_EXTRA_ATTACHMENT_TYPE)
-                ?.takeUnless(TextUtils::isEmpty),
-            messagePosition = intent
-                .getIntExtra(UIIntents.UI_INTENT_EXTRA_MESSAGE_POSITION, -1)
-                .takeIf { position -> position >= 0 },
-            isLaunchedFromBubble = isLaunchedFromBubble,
-        )
+        val route = conversationRoute(intent) ?: return
+        launchStore.submitIntent(intent = intent)
+        launchDestinations.trySend(route)
+    }
 
-        intent.removeExtra(UIIntents.UI_INTENT_EXTRA_DRAFT_DATA)
-        intent.removeExtra(UIIntents.UI_INTENT_EXTRA_MESSAGE_POSITION)
-
-        return false
+    private fun resumeDataModel() {
+        BugleActivityUtil.onActivityResume(this, this)
     }
 
     private fun redirectToConversationList() {
         finish()
 
-        Intent(this, ConversationListActivity::class.java)
+        Intent(this, MainActivity::class.java)
             .apply {
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
             .let(::startActivity)
-    }
-
-    private fun launchConversationDetails(conversationId: String) {
-        UIIntents.get().launchPeopleAndOptionsActivity(
-            this,
-            conversationId,
-        )
-    }
-
-    companion object {
-        const val FINISH_RESULT_CODE: Int = 1
-
-        private const val LAUNCH_GENERATION_STATE_KEY = "launch_generation"
     }
 }

@@ -21,6 +21,7 @@ import android.database.sqlite.SQLiteDatabase;
 import com.android.messaging.Factory;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.LogUtil;
+import com.google.common.annotations.VisibleForTesting;
 
 public class DatabaseUpgradeHelper {
     private static final String TAG = LogUtil.BUGLE_DATABASE_TAG;
@@ -48,6 +49,12 @@ public class DatabaseUpgradeHelper {
         if (currentVersion < 2) {
             currentVersion = upgradeToVersion2(db);
         }
+        if (currentVersion < 3) {
+            currentVersion = upgradeToVersion3(db);
+        }
+        if (currentVersion < 4) {
+            currentVersion = upgradeToVersion4(db);
+        }
         // Rebuild all the views
         final Context context = Factory.get().getApplicationContext();
         DatabaseHelper.dropAllViews(db);
@@ -61,6 +68,65 @@ public class DatabaseUpgradeHelper {
                 DatabaseHelper.ConversationColumns.IS_ENTERPRISE + " INT DEFAULT(0)");
         LogUtil.i(TAG, "Ugraded database to version 2");
         return 2;
+    }
+
+    @VisibleForTesting
+    public int upgradeToVersion3(final SQLiteDatabase db) {
+        db.execSQL("ALTER TABLE " + DatabaseHelper.CONVERSATIONS_TABLE + " ADD COLUMN " +
+                DatabaseHelper.ConversationColumns.PINNED + " INT DEFAULT(0)");
+        db.execSQL(DatabaseHelper.CONVERSATIONS_TABLE_PINNED_INDEX_SQL);
+        LogUtil.i(TAG, "Upgraded database to version 3");
+        return 3;
+    }
+
+    /**
+     * Purges the rows orphaned while the declared foreign keys went unenforced. onConfigure() has
+     * already turned enforcement on for this connection by the time the upgrade runs, but turning
+     * it on does not repair the violations already in the database - the orphans would linger
+     * forever, parts keeping the text of deleted messages. Parents are purged before children, so
+     * whatever each statement orphans is taken out by the now-live cascades or by the sweeps that
+     * follow. The view change needs no statement, the views are rebuilt unconditionally above -
+     * but the handler must still exist, or the version check throws and every table is wiped.
+     */
+    private int upgradeToVersion4(final SQLiteDatabase db) {
+        // ON DELETE CASCADE: the child is meaningless once its parent is gone.
+        db.execSQL("DELETE FROM " + DatabaseHelper.MESSAGES_TABLE
+                + " WHERE " + DatabaseHelper.MessageColumns.CONVERSATION_ID + " NOT IN ("
+                + "SELECT " + DatabaseHelper.ConversationColumns._ID
+                + " FROM " + DatabaseHelper.CONVERSATIONS_TABLE + ")");
+
+        db.execSQL("DELETE FROM " + DatabaseHelper.PARTS_TABLE
+                + " WHERE " + DatabaseHelper.PartColumns.MESSAGE_ID + " NOT IN ("
+                + "SELECT " + DatabaseHelper.MessageColumns._ID
+                + " FROM " + DatabaseHelper.MESSAGES_TABLE + ")"
+                + " OR " + DatabaseHelper.PartColumns.CONVERSATION_ID + " NOT IN ("
+                + "SELECT " + DatabaseHelper.ConversationColumns._ID
+                + " FROM " + DatabaseHelper.CONVERSATIONS_TABLE + ")");
+
+        db.execSQL("DELETE FROM " + DatabaseHelper.CONVERSATION_PARTICIPANTS_TABLE
+                + " WHERE " + DatabaseHelper.ConversationParticipantsColumns.CONVERSATION_ID
+                + " NOT IN (SELECT " + DatabaseHelper.ConversationColumns._ID
+                + " FROM " + DatabaseHelper.CONVERSATIONS_TABLE + ")"
+                + " OR " + DatabaseHelper.ConversationParticipantsColumns.PARTICIPANT_ID
+                + " NOT IN (SELECT " + DatabaseHelper.ParticipantColumns._ID
+                + " FROM " + DatabaseHelper.PARTICIPANTS_TABLE + ")");
+
+        // ON DELETE SET NULL: the message outlives the participant, it just forgets it.
+        final String[] participantColumns = {
+                DatabaseHelper.MessageColumns.SENDER_PARTICIPANT_ID,
+                DatabaseHelper.MessageColumns.SELF_PARTICIPANT_ID
+        };
+
+        for (final String column : participantColumns) {
+            db.execSQL("UPDATE " + DatabaseHelper.MESSAGES_TABLE + " SET " + column + "=NULL"
+                    + " WHERE " + column + " NOT IN ("
+                    + "SELECT " + DatabaseHelper.ParticipantColumns._ID
+                    + " FROM " + DatabaseHelper.PARTICIPANTS_TABLE + ")");
+        }
+
+        LogUtil.i(TAG, "Upgraded database to version 4");
+
+        return 4;
     }
 
     /**

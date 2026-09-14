@@ -5,11 +5,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.messaging.R
 import com.android.messaging.data.contact.formatter.ContactDestinationFormatter
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.recipient.ConversationRecipient
 import com.android.messaging.data.conversation.repository.ConversationParticipantsRepository
 import com.android.messaging.di.core.MainDispatcher
 import com.android.messaging.domain.conversation.usecase.participant.IsConversationRecipientLimitExceeded
 import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsEffect
+import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsNavEvent
 import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsUiState
 import com.android.messaging.ui.conversation.recipientpicker.delegate.ConversationResolutionDelegate
 import com.android.messaging.ui.conversation.recipientpicker.delegate.SelectedRecipientsDelegate
@@ -42,9 +44,10 @@ import kotlinx.coroutines.launch
 
 internal interface AddParticipantsScreenModel {
     val effects: Flow<AddParticipantsEffect>
+    val navigationEvents: Flow<AddParticipantsNavEvent>
     val uiState: StateFlow<AddParticipantsUiState>
 
-    fun onConversationIdChanged(conversationId: String?)
+    fun onConversationIdChanged(conversationId: ConversationId)
     fun onLoadMore()
     fun onQueryChanged(query: String)
     fun onRecipientClicked(recipient: SelectedRecipient)
@@ -65,9 +68,8 @@ internal class AddParticipantsViewModel @Inject constructor(
 ) : ViewModel(),
     AddParticipantsScreenModel {
 
-    private val conversationIdFlow: StateFlow<String?> = savedStateHandle.getStateFlow(
-        key = CONVERSATION_ID_KEY,
-        initialValue = null,
+    private val conversationIdFlow: MutableStateFlow<ConversationId?> = MutableStateFlow(
+        ConversationId.fromOrNull(savedStateHandle[CONVERSATION_ID_KEY]),
     )
     private val effectsChannel = Channel<AddParticipantsEffect>(
         capacity = Channel.BUFFERED,
@@ -77,6 +79,11 @@ internal class AddParticipantsViewModel @Inject constructor(
     )
 
     override val effects = effectsChannel.receiveAsFlow()
+
+    private val navigationEventsChannel = Channel<AddParticipantsNavEvent>(
+        capacity = Channel.BUFFERED,
+    )
+    override val navigationEvents = navigationEventsChannel.receiveAsFlow()
 
     override val uiState: StateFlow<AddParticipantsUiState> = combine(
         localUiState,
@@ -162,9 +169,10 @@ internal class AddParticipantsViewModel @Inject constructor(
         }
     }
 
-    override fun onConversationIdChanged(conversationId: String?) {
+    override fun onConversationIdChanged(conversationId: ConversationId) {
         if (conversationId != conversationIdFlow.value) {
-            savedStateHandle[CONVERSATION_ID_KEY] = conversationId
+            conversationIdFlow.value = conversationId
+            savedStateHandle[CONVERSATION_ID_KEY] = conversationId.value
         }
     }
 
@@ -245,8 +253,8 @@ internal class AddParticipantsViewModel @Inject constructor(
                     when (outcome) {
                         is ConversationResolutionOutcome.Resolved -> {
                             selectedRecipientsDelegate.clear()
-                            sendEffect(
-                                effect = AddParticipantsEffect.NavigateToConversation(
+                            navigationEventsChannel.trySend(
+                                AddParticipantsNavEvent.OpenConversation(
                                     conversationId = outcome.conversationId,
                                 ),
                             )

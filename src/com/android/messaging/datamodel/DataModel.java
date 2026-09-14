@@ -18,16 +18,12 @@ package com.android.messaging.datamodel;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
-import android.net.Uri;
 import android.text.TextUtils;
 
 import com.android.messaging.Factory;
 import com.android.messaging.datamodel.action.Action;
 import com.android.messaging.datamodel.action.ActionService;
 import com.android.messaging.datamodel.action.BackgroundWorker;
-import com.android.messaging.datamodel.data.ContactListItemData;
-import com.android.messaging.datamodel.data.ContactPickerData;
-import com.android.messaging.datamodel.data.ContactPickerData.ContactPickerDataListener;
 import com.android.messaging.datamodel.data.ConversationData;
 import com.android.messaging.datamodel.data.ConversationData.ConversationDataListener;
 import com.android.messaging.datamodel.data.ConversationListData;
@@ -37,8 +33,6 @@ import com.android.messaging.datamodel.data.GalleryGridItemData;
 import com.android.messaging.datamodel.data.LaunchConversationData;
 import com.android.messaging.datamodel.data.LaunchConversationData.LaunchConversationDataListener;
 import com.android.messaging.datamodel.data.MediaPickerData;
-import com.android.messaging.datamodel.data.MessagePartData;
-import com.android.messaging.datamodel.data.VCardContactItemData;
 import com.android.messaging.util.Assert.DoesNotRunOnMainThread;
 
 public abstract class DataModel {
@@ -53,6 +47,11 @@ public abstract class DataModel {
         get().getActionService().startAction(action);
     }
 
+    @DoesNotRunOnMainThread
+    public static final void executeActionImmediately(final Action action) {
+        get().getActionService().executeActionImmediately(action);
+    }
+
     public static final void scheduleAction(final Action action,
             final int code, final long delayMs) {
         get().getActionService().scheduleAction(action, code, delayMs);
@@ -64,23 +63,12 @@ public abstract class DataModel {
     public abstract ConversationData createConversationData(final Context context,
             final ConversationDataListener listener, final String conversationId);
 
-    public abstract ContactListItemData createContactListItemData();
-
-    public abstract ContactPickerData createContactPickerData(final Context context,
-            final ContactPickerDataListener listener);
-
     public abstract MediaPickerData createMediaPickerData(final Context context);
 
     public abstract GalleryGridItemData createGalleryGridItemData();
 
     public abstract LaunchConversationData createLaunchConversationData(
             LaunchConversationDataListener listener);
-
-    public abstract VCardContactItemData createVCardContactItemData(final Context context,
-            final MessagePartData data);
-
-    public abstract VCardContactItemData createVCardContactItemData(final Context context,
-            final Uri vCardUri);
 
     public abstract DraftMessageData createDraftMessageData(String conversationId);
 

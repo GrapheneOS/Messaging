@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.metadata.model
 
 import androidx.compose.runtime.Immutable
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerDisabledReason
 
@@ -31,13 +32,13 @@ internal sealed interface ConversationMetadataUiState {
     @Immutable
     data class Present(
         val title: String,
-        val selfParticipantId: String,
         val avatar: Avatar,
         val participantCount: Int,
         val otherParticipantDisplayDestination: String?,
         val otherParticipantPhoneNumber: String?,
         val otherParticipantContactLookupKey: String?,
         val isArchived: Boolean,
+        val isBlocked: Boolean,
         override val composerAvailability: ConversationComposerAvailability,
     ) : ConversationMetadataUiState
 

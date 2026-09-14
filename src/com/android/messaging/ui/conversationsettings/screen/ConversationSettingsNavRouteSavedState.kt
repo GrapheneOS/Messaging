@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversationsettings.screen
 
 import android.os.Parcelable
 import androidx.compose.runtime.saveable.Saver
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsNavRoute
 import kotlinx.parcelize.Parcelize
 
@@ -32,7 +33,7 @@ private fun ConversationSettingsNavRoute.toSavedState(): ConversationSettingsNav
 
         is ConversationSettingsNavRoute.ParticipantInfo -> {
             ConversationSettingsNavRouteSavedState.ParticipantInfo(
-                conversationId = conversationId,
+                conversationId = conversationId.value,
             )
         }
     }
@@ -45,9 +46,10 @@ private fun ConversationSettingsNavRouteSavedState.toRoute(): ConversationSettin
         }
 
         is ConversationSettingsNavRouteSavedState.ParticipantInfo -> {
-            ConversationSettingsNavRoute.ParticipantInfo(
-                conversationId = conversationId,
-            )
+            ConversationId
+                .fromOrNull(conversationId)
+                ?.let(ConversationSettingsNavRoute::ParticipantInfo)
+                ?: ConversationSettingsNavRoute.Conversation
         }
     }
 }

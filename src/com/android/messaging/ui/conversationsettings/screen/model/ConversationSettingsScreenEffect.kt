@@ -1,14 +1,13 @@
 package com.android.messaging.ui.conversationsettings.screen.model
 
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.ui.contact.model.AddContactRequest
+
 internal sealed interface ConversationSettingsScreenEffect {
 
     data class OpenNotificationChannelSettings(
-        val conversationId: String,
+        val conversationId: ConversationId,
         val conversationTitle: String,
-    ) : ConversationSettingsScreenEffect
-
-    data class OpenParticipantChat(
-        val conversationId: String,
     ) : ConversationSettingsScreenEffect
 
     data class CopyToClipboard(
@@ -23,10 +22,12 @@ internal sealed interface ConversationSettingsScreenEffect {
         val destination: String,
     ) : ConversationSettingsScreenEffect
 
-    data class ShowOrAddContact(
+    data class ShowContactCard(
         val contactId: Long,
-        val contactLookupKey: String?,
-        val avatarUri: String?,
-        val normalizedDestination: String?,
+        val contactLookupKey: String,
+    ) : ConversationSettingsScreenEffect
+
+    data class AddContact(
+        val request: AddContactRequest,
     ) : ConversationSettingsScreenEffect
 }

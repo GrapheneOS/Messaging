@@ -38,12 +38,12 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.ui.common.components.ComposeBarControlHeight
+import com.android.messaging.ui.common.components.ComposeBarVerticalPadding
 import com.android.messaging.ui.core.MessagingPreviewColumn
 
 private val ComposeBarHorizontalPadding = 12.dp
-private val ComposeBarVerticalPadding = 8.dp
 private val ComposeBarItemSpacing = 8.dp
-private val ComposeControlMinHeight = 56.dp
 private val SendButtonSize = 56.dp
 
 @Composable
@@ -148,7 +148,7 @@ private fun MessageComposeField(
                         .fillMaxWidth()
                         .then(focusRequesterModifier)
                         .testTag(testTag)
-                        .heightIn(min = ComposeControlMinHeight)
+                        .heightIn(min = ComposeBarControlHeight)
                         .then(stateDescriptionModifier)
                         .then(contentHiddenModifier),
                     value = text,

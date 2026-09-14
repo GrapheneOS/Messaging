@@ -1,9 +1,11 @@
 package com.android.messaging.ui.blockedparticipants.screen.delegate
 
 import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepository
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
+import com.android.messaging.di.core.ApplicationCoroutineScope
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.domain.blockedparticipants.usecase.DeleteDirectChats
-import com.android.messaging.domain.blockedparticipants.usecase.SetDestinationBlocked
 import com.android.messaging.ui.blockedparticipants.common.BlockedParticipantsScreenDelegate
 import com.android.messaging.ui.blockedparticipants.screen.mapper.BlockedParticipantsUiStateMapper
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantUiState
@@ -22,7 +24,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal interface BlockedParticipantsDelegate : BlockedParticipantsScreenDelegate<State> {
-    fun toggleSelection(participantId: String)
+    fun toggleSelection(participantId: ParticipantId)
     fun clearSelection()
     fun unblock(normalizedDestination: String)
     fun deleteSelectedChats()
@@ -31,10 +33,11 @@ internal interface BlockedParticipantsDelegate : BlockedParticipantsScreenDelega
 internal class BlockedParticipantsDelegateImpl @Inject constructor(
     private val repository: BlockedParticipantsRepository,
     private val mapper: BlockedParticipantsUiStateMapper,
-    private val setDestinationBlocked: SetDestinationBlocked,
     private val deleteDirectChats: DeleteDirectChats,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
+    @param:ApplicationCoroutineScope
+    private val applicationScope: CoroutineScope,
 ) : BlockedParticipantsDelegate {
 
     private val _state = MutableStateFlow(State())
@@ -60,7 +63,7 @@ internal class BlockedParticipantsDelegateImpl @Inject constructor(
         }
     }
 
-    override fun toggleSelection(participantId: String) {
+    override fun toggleSelection(participantId: ParticipantId) {
         _state.update { current ->
             val updated = if (participantId in current.selectedParticipantIds) {
                 current.selectedParticipantIds - participantId
@@ -78,10 +81,13 @@ internal class BlockedParticipantsDelegateImpl @Inject constructor(
     }
 
     override fun unblock(normalizedDestination: String) {
-        setDestinationBlocked(
-            normalizedDestination = normalizedDestination,
-            blocked = false,
-        )
+        applicationScope.launch {
+            repository.setDestinationBlocked(
+                destination = normalizedDestination,
+                conversationId = null,
+                isBlocked = false,
+            )
+        }
     }
 
     override fun deleteSelectedChats() {
@@ -96,22 +102,22 @@ internal class BlockedParticipantsDelegateImpl @Inject constructor(
         deleteDirectChats(conversationIds)
     }
 
-    private fun State.conversationIdsForSelection(): List<String> {
+    private fun State.conversationIdsForSelection(): List<ConversationId> {
         return participants.asSequence()
             .filter { it.participantId in selectedParticipantIds }
             .map { it.conversationId }
             .toList()
     }
 
-    private fun PersistentSet<String>.retainKnown(
+    private fun PersistentSet<ParticipantId>.retainKnown(
         participants: List<BlockedParticipantUiState>,
-    ): PersistentSet<String> {
+    ): PersistentSet<ParticipantId> {
         if (isEmpty()) return this
 
         val knownIds = participants.mapTo(HashSet(participants.size)) {
             it.participantId
         }
 
-        return retainAll(knownIds)
+        return retainingAll(knownIds)
     }
 }

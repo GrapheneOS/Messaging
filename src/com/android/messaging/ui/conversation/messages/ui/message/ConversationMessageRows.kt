@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
@@ -24,8 +25,12 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.ui.conversation.conversationMessageBubbleTestTag
+import com.android.messaging.ui.conversation.conversationMessageSelectionRowTestTag
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel.Status
+import com.android.messaging.ui.conversation.messages.ui.attachment.OnConversationAttachmentClick
 import com.android.messaging.ui.conversation.preview.previewAudioPart
 import com.android.messaging.ui.conversation.preview.previewFilePart
 import com.android.messaging.ui.conversation.preview.previewImagePart
@@ -45,7 +50,7 @@ internal fun ConversationMessageBubbleRow(
     layout: ConversationMessageLayout,
     maxBubbleWidth: Dp,
     simDisplayName: String?,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onMessageClick: () -> Unit,
     onMessageAvatarClick: () -> Unit,
@@ -77,12 +82,12 @@ internal fun ConversationMessageBubbleRow(
             layout = layout,
             maxBubbleWidth = maxBubbleWidth,
             simDisplayName = simDisplayName,
-            onAttachmentClick = { contentType, contentUri ->
+            onAttachmentClick = { contentType, contentUri, partId ->
                 when {
                     isSelectionMode -> onMessageClick()
                     message.canDownloadMessage -> onMessageDownloadClick()
                     message.canResendMessage -> onMessageResendClick()
-                    else -> onAttachmentClick(contentType, contentUri)
+                    else -> onAttachmentClick(contentType, contentUri, partId)
                 }
             },
             onExternalUriClick = { uri ->
@@ -112,6 +117,11 @@ private fun ConversationMessageBubbleRowContainer(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .testTag(
+                tag = conversationMessageSelectionRowTestTag(
+                    messageId = message.messageId,
+                ),
+            )
             .conversationMessageSelectionModeRowModifier(
                 isSelected = isSelected,
                 isSelectionMode = isSelectionMode,
@@ -236,6 +246,11 @@ private fun Modifier.conversationMessageBubbleInteractionModifier(
 ): Modifier {
     val hapticFeedback = LocalHapticFeedback.current
     val bubbleModifier = this
+        .testTag(
+            tag = conversationMessageBubbleTestTag(
+                messageId = message.messageId,
+            ),
+        )
         .clip(shape = layout.bubbleShape)
 
     return when {
@@ -345,7 +360,7 @@ private fun ConversationMessageRowsIncomingStatusPreview() {
     ConversationMessageRowsPreviewColumn {
         ConversationMessageRowsPreviewItem(
             message = previewIncomingMessage(
-                messageId = "rows-incoming-complete",
+                messageId = MessageId("rows-incoming-complete"),
                 text = "Incoming complete row with avatar, sender, and timestamp.",
                 status = Status.Incoming.Complete,
             ),
@@ -354,7 +369,7 @@ private fun ConversationMessageRowsIncomingStatusPreview() {
 
         ConversationMessageRowsPreviewItem(
             message = previewIncomingMessage(
-                messageId = "rows-incoming-unknown",
+                messageId = MessageId("rows-incoming-unknown"),
                 text = "Incoming row with unknown protocol and status.",
                 status = Status.Unknown,
                 protocol = ConversationMessageUiModel.Protocol.UNKNOWN,
@@ -370,7 +385,7 @@ private fun ConversationMessageRowsDirectionMetadataPreview() {
     ConversationMessageRowsPreviewColumn {
         ConversationMessageRowsPreviewItem(
             message = previewIncomingMessage(
-                messageId = "rows-incoming",
+                messageId = MessageId("rows-incoming"),
                 text = PREVIEW_ROWS_LONG_TEXT,
             ),
             simDisplayName = "Personal",
@@ -378,7 +393,7 @@ private fun ConversationMessageRowsDirectionMetadataPreview() {
 
         ConversationMessageRowsPreviewItem(
             message = previewOutgoingMessage(
-                messageId = "rows-outgoing-delivered",
+                messageId = MessageId("rows-outgoing-delivered"),
                 text = "Delivered outgoing row with right alignment and SIM metadata.",
                 status = Status.Outgoing.Delivered,
             ),
@@ -388,7 +403,7 @@ private fun ConversationMessageRowsDirectionMetadataPreview() {
 
         ConversationMessageRowsPreviewItem(
             message = previewOutgoingMessage(
-                messageId = "rows-outgoing-failed",
+                messageId = MessageId("rows-outgoing-failed"),
                 text = "Failed row shows retry interaction on the bubble and error metadata.",
                 status = Status.Outgoing.Failed,
             ),
@@ -398,7 +413,7 @@ private fun ConversationMessageRowsDirectionMetadataPreview() {
 
         ConversationMessageRowsPreviewItem(
             message = previewIncomingMessage(
-                messageId = "rows-hidden-identity",
+                messageId = MessageId("rows-hidden-identity"),
                 text = "Incoming row with participant identity hidden keeps the bubble flush left.",
             ),
             showIncomingParticipantIdentity = false,
@@ -407,7 +422,7 @@ private fun ConversationMessageRowsDirectionMetadataPreview() {
 
         ConversationMessageRowsPreviewItem(
             message = previewOutgoingMessage(
-                messageId = "rows-overflow",
+                messageId = MessageId("rows-overflow"),
                 text = PREVIEW_ROWS_OVERFLOW_TEXT,
                 status = Status.Outgoing.Complete,
             ),
@@ -422,7 +437,7 @@ private fun ConversationMessageRowsSelectionPreview() {
     ConversationMessageRowsPreviewColumn {
         ConversationMessageRowsPreviewItem(
             message = previewIncomingMessage(
-                messageId = "rows-selection-incoming-unselected",
+                messageId = MessageId("rows-selection-incoming-unselected"),
                 text = "Selection mode, incoming row, not selected.",
             ),
             isSelected = false,
@@ -432,7 +447,7 @@ private fun ConversationMessageRowsSelectionPreview() {
 
         ConversationMessageRowsPreviewItem(
             message = previewIncomingMessage(
-                messageId = "rows-selection-incoming-selected",
+                messageId = MessageId("rows-selection-incoming-selected"),
                 text = "Selection mode, incoming row, selected.",
             ),
             isSelected = true,
@@ -442,7 +457,7 @@ private fun ConversationMessageRowsSelectionPreview() {
 
         ConversationMessageRowsPreviewItem(
             message = previewOutgoingMessage(
-                messageId = "rows-selection-outgoing-unselected",
+                messageId = MessageId("rows-selection-outgoing-unselected"),
                 text = "Selection mode, outgoing row, not selected.",
                 status = Status.Outgoing.Sending,
             ),
@@ -454,7 +469,7 @@ private fun ConversationMessageRowsSelectionPreview() {
 
         ConversationMessageRowsPreviewItem(
             message = previewOutgoingMessage(
-                messageId = "rows-selection-outgoing-selected",
+                messageId = MessageId("rows-selection-outgoing-selected"),
                 text = "Selected outgoing failed row keeps retry state visible " +
                     "inside selection mode.",
                 status = Status.Outgoing.Failed,
@@ -497,7 +512,7 @@ private fun ConversationMessageRowsAttachmentPreview() {
     ConversationMessageRowsPreviewColumn {
         ConversationMessageRowsPreviewItem(
             message = previewIncomingMessage(
-                messageId = "rows-attachments-incoming-gallery",
+                messageId = MessageId("rows-attachments-incoming-gallery"),
                 text = "Photo and video from the site visit.",
                 parts = persistentListOf(
                     previewImagePart(text = "North entrance"),
@@ -513,7 +528,7 @@ private fun ConversationMessageRowsAttachmentPreview() {
 
         ConversationMessageRowsPreviewItem(
             message = previewOutgoingMessage(
-                messageId = "rows-attachments-outgoing-audio",
+                messageId = MessageId("rows-attachments-outgoing-audio"),
                 text = "Voice memo attached.",
                 parts = persistentListOf(previewAudioPart(text = "Two minute update")),
                 status = Status.Outgoing.Complete,
@@ -526,7 +541,7 @@ private fun ConversationMessageRowsAttachmentPreview() {
 
         ConversationMessageRowsPreviewItem(
             message = previewIncomingMessage(
-                messageId = "rows-attachments-vcard",
+                messageId = MessageId("rows-attachments-vcard"),
                 text = null,
                 parts = persistentListOf(previewVCardPart()),
                 protocol = ConversationMessageUiModel.Protocol.MMS,
@@ -537,7 +552,7 @@ private fun ConversationMessageRowsAttachmentPreview() {
 
         ConversationMessageRowsPreviewItem(
             message = previewOutgoingMessage(
-                messageId = "rows-attachments-image-only",
+                messageId = MessageId("rows-attachments-image-only"),
                 text = null,
                 parts = persistentListOf(previewImagePart(text = null)),
                 status = Status.Outgoing.Complete,
@@ -549,7 +564,7 @@ private fun ConversationMessageRowsAttachmentPreview() {
 
         ConversationMessageRowsPreviewItem(
             message = previewOutgoingMessage(
-                messageId = "rows-attachments-file-failed",
+                messageId = MessageId("rows-attachments-file-failed"),
                 text = "Document did not send.",
                 parts = persistentListOf(previewFilePart(text = "Quarterly report.pdf")),
                 status = Status.Outgoing.Failed,
@@ -564,7 +579,7 @@ private fun ConversationMessageRowsAttachmentPreview() {
 
         ConversationMessageRowsPreviewItem(
             message = previewOutgoingMessage(
-                messageId = "rows-attachments-youtube-preview",
+                messageId = MessageId("rows-attachments-youtube-preview"),
                 text = "Reference clip: https://www.youtube.com/watch?v=dQw4w9WgXcQ",
                 status = Status.Outgoing.Delivered,
             ),
@@ -580,7 +595,7 @@ private fun ConversationMessageRowsClusterPreview() {
     ConversationMessageRowsPreviewColumn {
         ConversationMessageRowsPreviewItem(
             message = previewIncomingMessage(
-                messageId = "rows-incoming-cluster-start",
+                messageId = MessageId("rows-incoming-cluster-start"),
                 text = "Cluster start shows sender but no avatar.",
             ).copy(
                 canClusterWithNext = true,
@@ -590,7 +605,7 @@ private fun ConversationMessageRowsClusterPreview() {
 
         ConversationMessageRowsPreviewItem(
             message = previewIncomingMessage(
-                messageId = "rows-incoming-cluster-middle",
+                messageId = MessageId("rows-incoming-cluster-middle"),
                 text = "Cluster middle suppresses sender, avatar, and metadata.",
             ).copy(
                 canClusterWithPrevious = true,
@@ -601,7 +616,7 @@ private fun ConversationMessageRowsClusterPreview() {
 
         ConversationMessageRowsPreviewItem(
             message = previewIncomingMessage(
-                messageId = "rows-incoming-cluster-end",
+                messageId = MessageId("rows-incoming-cluster-end"),
                 text = "Cluster end restores the avatar and timestamp.",
             ).copy(
                 canClusterWithPrevious = true,
@@ -611,7 +626,7 @@ private fun ConversationMessageRowsClusterPreview() {
 
         ConversationMessageRowsPreviewItem(
             message = previewOutgoingMessage(
-                messageId = "rows-outgoing-cluster-start",
+                messageId = MessageId("rows-outgoing-cluster-start"),
                 text = "Outgoing cluster start hides metadata until the last grouped message.",
             ).copy(
                 canClusterWithNext = true,
@@ -621,7 +636,7 @@ private fun ConversationMessageRowsClusterPreview() {
 
         ConversationMessageRowsPreviewItem(
             message = previewOutgoingMessage(
-                messageId = "rows-outgoing-cluster-end",
+                messageId = MessageId("rows-outgoing-cluster-end"),
                 text = "Outgoing cluster end shows right aligned metadata.",
                 status = Status.Outgoing.Delivered,
             ).copy(
@@ -673,7 +688,7 @@ private fun ConversationMessageRowsPreviewItem(
             layout = layout,
             maxBubbleWidth = 320.dp,
             simDisplayName = simDisplayName,
-            onAttachmentClick = { _, _ -> },
+            onAttachmentClick = { _, _, _ -> },
             onExternalUriClick = {},
             onMessageClick = {},
             onMessageAvatarClick = {},

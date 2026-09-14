@@ -19,19 +19,19 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.conversation.ADD_PARTICIPANTS_CONFIRM_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.addParticipantsContactDestinationRowTestTag
 import com.android.messaging.ui.conversation.addParticipantsContactRowTestTag
-import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsEffect
+import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsNavEvent
 import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsUiState
 import com.android.messaging.ui.conversation.recipientpicker.component.RecipientSelectionContent
+import com.android.messaging.ui.core.CollectEvents
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
 import com.android.messaging.ui.recipientselection.model.picker.SelectedRecipient
@@ -42,34 +42,32 @@ import com.android.messaging.ui.recipientselection.model.selection.RecipientSele
 import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionStrings
 import com.android.messaging.ui.recipientselection.preview.previewRecipientPickerUiState
 import com.android.messaging.ui.recipientselection.preview.previewSelectedRecipient
-import com.android.messaging.util.UiUtils
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun AddParticipantsScreen(
-    conversationId: String,
+    screenModel: AddParticipantsScreenModel,
+    effectHandler: AddParticipantsEffectHandler,
+    conversationId: ConversationId,
+    onNavigateBack: () -> Unit,
+    onNavigateToConversation: (ConversationId) -> Unit,
     modifier: Modifier = Modifier,
-    onNavigateBack: () -> Unit = {},
-    onNavigateToConversation: (String) -> Unit = {},
-    screenModel: AddParticipantsScreenModel = hiltViewModel<AddParticipantsViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
-    val latestOnNavigateToConversation = rememberUpdatedState(onNavigateToConversation)
 
     LaunchedEffect(conversationId, screenModel) {
         screenModel.onConversationIdChanged(conversationId = conversationId)
     }
 
-    LaunchedEffect(screenModel) {
-        screenModel.effects.collect { effect ->
-            when (effect) {
-                is AddParticipantsEffect.NavigateToConversation -> {
-                    latestOnNavigateToConversation.value(effect.conversationId)
-                }
+    CollectEvents(
+        events = screenModel.effects,
+        onEvent = effectHandler::handle,
+    )
 
-                is AddParticipantsEffect.ShowMessage -> {
-                    UiUtils.showToastAtBottom(effect.messageResId)
-                }
+    CollectEvents(events = screenModel.navigationEvents) { event ->
+        when (event) {
+            is AddParticipantsNavEvent.OpenConversation -> {
+                onNavigateToConversation(event.conversationId)
             }
         }
     }

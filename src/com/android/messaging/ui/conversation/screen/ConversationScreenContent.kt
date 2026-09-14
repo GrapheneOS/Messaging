@@ -4,9 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
@@ -29,25 +29,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.ui.common.components.contentSurfaceShape
 import com.android.messaging.ui.conversation.CONVERSATION_LOADING_INDICATOR_TEST_TAG
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagesUiState
 import com.android.messaging.ui.conversation.messages.ui.ConversationMessages
+import com.android.messaging.ui.conversation.messages.ui.attachment.OnConversationAttachmentClick
 import com.android.messaging.ui.conversation.metadata.model.ConversationMetadataUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaffoldUiState
 import com.android.messaging.ui.subscription.mapper.resolveDisplayName
 import kotlinx.collections.immutable.ImmutableList
 
 private const val SMOOTH_SCROLL_JUMP_THRESHOLD = 15
-
-private val conversationCornerShape = RoundedCornerShape(
-    topStart = 28.dp,
-    topEnd = 28.dp,
-    bottomStart = 0.dp,
-    bottomEnd = 0.dp,
-)
 
 private data class ConversationLatestScrollSnapshot(
     val isScrolledToLatestMessage: Boolean,
@@ -57,55 +55,80 @@ private data class ConversationLatestScrollSnapshot(
 @Composable
 internal fun ConversationScreenContent(
     modifier: Modifier = Modifier,
-    conversationId: String?,
+    conversationId: ConversationId?,
     uiState: ConversationScreenScaffoldUiState,
     snackbarHostState: SnackbarHostState,
     contentPadding: PaddingValues,
     pendingScrollPosition: Int?,
     onPendingScrollPositionConsumed: () -> Unit,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
-    onMessageClick: (String) -> Unit,
-    onMessageAvatarClick: (String) -> Unit,
-    onMessageDownloadClick: (String) -> Unit,
-    onMessageLongClick: (String) -> Unit,
-    onMessageResendClick: (String) -> Unit,
+    onMessageClick: (MessageId) -> Unit,
+    onMessageAvatarClick: (MessageId) -> Unit,
+    onMessageDownloadClick: (MessageId) -> Unit,
+    onMessageLongClick: (MessageId) -> Unit,
+    onMessageResendClick: (MessageId) -> Unit,
     onSimSelectorClick: () -> Unit,
+    onUnblockClick: () -> Unit,
 ) {
     val contentBackdropColor = conversationScreenContentBackdropColor(uiState = uiState)
 
     val messagesState = uiState.messages
+    val isContentLoaded = !shouldShowConversationScreenLoadingContent(uiState = uiState)
+    val isBannerRevealed = rememberBlockedBannerRevealState(
+        conversationId = conversationId,
+        isBlocked = uiState.isBlocked,
+        isContentLoaded = isContentLoaded,
+    )
 
-    when {
-        shouldShowConversationScreenLoadingContent(uiState = uiState) -> {
-            ConversationScreenLoadingContent(
-                modifier = modifier,
-                contentPadding = contentPadding,
-                contentBackdropColor = contentBackdropColor,
-            )
+    var bannerHeight by remember { mutableStateOf(value = 0.dp) }
+    val messagesTopReservation = when {
+        isBannerRevealed -> bannerHeight
+        else -> 0.dp
+    }
+
+    Box(modifier = modifier) {
+        when {
+            shouldShowConversationScreenLoadingContent(uiState = uiState) -> {
+                ConversationScreenLoadingContent(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = contentPadding,
+                    contentBackdropColor = contentBackdropColor,
+                )
+            }
+
+            messagesState is ConversationMessagesUiState.Present -> {
+                ConversationScreenPresentContent(
+                    modifier = Modifier.fillMaxSize(),
+                    conversationId = conversationId,
+                    uiState = uiState,
+                    messagesState = messagesState,
+                    snackbarHostState = snackbarHostState,
+                    contentPadding = contentPadding,
+                    contentBackdropColor = contentBackdropColor,
+                    pendingScrollPosition = pendingScrollPosition,
+                    onPendingScrollPositionConsumed = onPendingScrollPositionConsumed,
+                    onAttachmentClick = onAttachmentClick,
+                    onExternalUriClick = onExternalUriClick,
+                    onMessageClick = onMessageClick,
+                    onMessageAvatarClick = onMessageAvatarClick,
+                    onMessageDownloadClick = onMessageDownloadClick,
+                    onMessageLongClick = onMessageLongClick,
+                    onMessageResendClick = onMessageResendClick,
+                    onSimSelectorClick = onSimSelectorClick,
+                    additionalTopContentPadding = messagesTopReservation,
+                )
+            }
         }
 
-        messagesState is ConversationMessagesUiState.Present -> {
-            ConversationScreenPresentContent(
-                modifier = modifier,
-                conversationId = conversationId,
-                uiState = uiState,
-                messagesState = messagesState,
-                snackbarHostState = snackbarHostState,
-                contentPadding = contentPadding,
-                contentBackdropColor = contentBackdropColor,
-                pendingScrollPosition = pendingScrollPosition,
-                onPendingScrollPositionConsumed = onPendingScrollPositionConsumed,
-                onAttachmentClick = onAttachmentClick,
-                onExternalUriClick = onExternalUriClick,
-                onMessageClick = onMessageClick,
-                onMessageAvatarClick = onMessageAvatarClick,
-                onMessageDownloadClick = onMessageDownloadClick,
-                onMessageLongClick = onMessageLongClick,
-                onMessageResendClick = onMessageResendClick,
-                onSimSelectorClick = onSimSelectorClick,
-            )
-        }
+        ConversationBlockedBannerSlot(
+            modifier = Modifier
+                .align(alignment = Alignment.TopCenter)
+                .padding(top = contentPadding.calculateTopPadding()),
+            isRevealed = isBannerRevealed,
+            onUnblockClick = onUnblockClick,
+            onHeightChanged = { height -> bannerHeight = height },
+        )
     }
 }
 
@@ -138,7 +161,7 @@ private fun ConversationScreenLoadingContent(
 @Composable
 private fun ConversationScreenPresentContent(
     modifier: Modifier,
-    conversationId: String?,
+    conversationId: ConversationId?,
     uiState: ConversationScreenScaffoldUiState,
     messagesState: ConversationMessagesUiState.Present,
     snackbarHostState: SnackbarHostState,
@@ -146,14 +169,15 @@ private fun ConversationScreenPresentContent(
     contentBackdropColor: Color,
     pendingScrollPosition: Int?,
     onPendingScrollPositionConsumed: () -> Unit,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
-    onMessageClick: (String) -> Unit,
-    onMessageAvatarClick: (String) -> Unit,
-    onMessageDownloadClick: (String) -> Unit,
-    onMessageLongClick: (String) -> Unit,
-    onMessageResendClick: (String) -> Unit,
+    onMessageClick: (MessageId) -> Unit,
+    onMessageAvatarClick: (MessageId) -> Unit,
+    onMessageDownloadClick: (MessageId) -> Unit,
+    onMessageLongClick: (MessageId) -> Unit,
+    onMessageResendClick: (MessageId) -> Unit,
     onSimSelectorClick: () -> Unit,
+    additionalTopContentPadding: Dp,
 ) {
     val messagesListState = rememberMessagesListState(conversationId = conversationId)
     val showIncomingParticipantIdentity = shouldShowIncomingParticipantIdentity(
@@ -196,8 +220,10 @@ private fun ConversationScreenPresentContent(
         listState = messagesListState,
         selectedMessageIds = uiState.selection.selectedMessageIds,
         showIncomingParticipantIdentity = showIncomingParticipantIdentity,
+        youTubeLinkPreviewsEnabled = messagesState.youTubeLinkPreviewsEnabled,
         subscriptions = uiState.composer.simSelector.subscriptions,
         currentSendSimDisplayName = currentSendSimDisplayName,
+        additionalTopContentPadding = additionalTopContentPadding,
         onAttachmentClick = onAttachmentClick,
         onExternalUriClick = onExternalUriClick,
         onMessageClick = onMessageClick,
@@ -215,9 +241,12 @@ private fun Modifier.conversationScreenContentModifier(
     backdropColor: Color,
 ): Modifier {
     return this
-        .padding(paddingValues = contentPadding)
+        .padding(
+            top = contentPadding.calculateTopPadding(),
+            bottom = contentPadding.calculateBottomPadding(),
+        )
         .background(color = backdropColor)
-        .clip(shape = conversationCornerShape)
+        .clip(shape = MaterialTheme.contentSurfaceShape)
         .background(color = MaterialTheme.colorScheme.background)
 }
 
@@ -245,7 +274,7 @@ private fun shouldShowIncomingParticipantIdentity(
 
 @Composable
 private fun AutoScrollToLatestMessage(
-    conversationId: String?,
+    conversationId: ConversationId?,
     messages: ImmutableList<ConversationMessageUiModel>,
     listState: LazyListState,
     snackbarHostState: SnackbarHostState,
@@ -319,7 +348,7 @@ private fun AutoScrollToLatestMessage(
 
 @Composable
 private fun TrackLatestMessageScrollState(
-    conversationId: String?,
+    conversationId: ConversationId?,
     listState: LazyListState,
     isListDraggedState: State<Boolean>,
     snackbarHostState: SnackbarHostState,
@@ -356,7 +385,7 @@ private fun isScrolledToLatestMessage(listState: LazyListState): Boolean {
 
 @Composable
 private fun ScrollToTargetMessage(
-    conversationId: String?,
+    conversationId: ConversationId?,
     pendingScrollPosition: Int?,
     messages: ImmutableList<ConversationMessageUiModel>,
     listState: LazyListState,
@@ -407,7 +436,7 @@ internal fun messagePositionToDisplayIndex(position: Int, size: Int): Int {
 
 @Composable
 private fun rememberMessagesListState(
-    conversationId: String?,
+    conversationId: ConversationId?,
 ): LazyListState {
     return rememberSaveable(
         conversationId,

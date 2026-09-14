@@ -21,7 +21,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.res.Configuration
 import android.os.Debug
 import android.os.Handler
 import android.os.Looper
@@ -29,11 +28,10 @@ import android.telephony.CarrierConfigManager
 import android.util.Log
 import androidx.appcompat.mms.CarrierConfigValuesLoader
 import androidx.appcompat.mms.MmsManager
+import com.android.messaging.di.receiver.IncomingSmsEntryPoint
 import com.android.messaging.domain.notification.usecase.MigrateConversationNotificationChannels
-import com.android.messaging.receiver.SmsReceiver
 import com.android.messaging.sms.BugleUserAgentInfoLoader
 import com.android.messaging.sms.MmsConfig
-import com.android.messaging.ui.ConversationDrawables
 import com.android.messaging.util.BuglePrefsKeys
 import com.android.messaging.util.DebugUtils
 import com.android.messaging.util.LogUtil
@@ -41,6 +39,7 @@ import com.android.messaging.util.NotificationChannelUtil
 import com.android.messaging.util.PhoneUtils
 import com.android.messaging.util.Trace
 import com.google.common.annotations.VisibleForTesting
+import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.android.HiltAndroidApp
 import java.io.File
 import javax.inject.Inject
@@ -80,13 +79,6 @@ open class BugleApplication :
 
             NotificationChannelUtil.onCreate(context = this)
         }
-    }
-
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-
-        // Update conversation drawables when changing writing systems.
-        ConversationDrawables.get().updateDrawables()
     }
 
     // Called by the real factory from FactoryImpl.register(), not in tests.
@@ -268,10 +260,11 @@ open class BugleApplication :
             return runningTests
         }
 
-        @JvmStatic
         fun updateAppConfig(context: Context) {
             // Make sure we set the correct state for the SMS/MMS receivers.
-            SmsReceiver.updateSmsReceiveHandler(context)
+            EntryPointAccessors.fromApplication(context, IncomingSmsEntryPoint::class.java)
+                .smsReceiverToggle()
+                .update(context)
         }
     }
 }

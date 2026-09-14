@@ -27,7 +27,6 @@ internal class ConversationMetadataUiStateMapperImpl @Inject constructor() :
 
         return ConversationMetadataUiState.Present(
             title = metadata.conversationName,
-            selfParticipantId = metadata.selfParticipantId,
             avatar = avatar,
             participantCount = metadata.participantCount,
             otherParticipantDisplayDestination = metadata.otherParticipantDisplayDestination,
@@ -36,6 +35,7 @@ internal class ConversationMetadataUiStateMapperImpl @Inject constructor() :
                 ?.takeIf(MmsSmsUtils::isPhoneNumber),
             otherParticipantContactLookupKey = metadata.otherParticipantContactLookupKey,
             isArchived = metadata.isArchived,
+            isBlocked = metadata.isBlocked,
             composerAvailability = metadata.composerAvailability,
         )
     }

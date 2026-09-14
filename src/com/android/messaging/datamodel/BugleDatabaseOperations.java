@@ -37,7 +37,6 @@ import com.android.messaging.datamodel.data.MessageData;
 import com.android.messaging.datamodel.data.MessagePartData;
 import com.android.messaging.datamodel.data.ParticipantData;
 import com.android.messaging.sms.MmsUtils;
-import com.android.messaging.ui.UIIntents;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.Assert.DoesNotRunOnMainThread;
 import com.android.messaging.util.AvatarUriUtil;
@@ -586,14 +585,6 @@ public class BugleDatabaseOperations {
         // Conversation always exists as this method is called from ActionService only after
         // reading and if necessary creating the conversation.
         updateConversationRow(dbWrapper, conversationId, values);
-
-        if (shouldAutoSwitchSelfId) {
-            // Normally, the draft message compose UI trusts its UI state for providing up-to-date
-            // conversation self id. Therefore, notify UI through local broadcast receiver about
-            // this external change so the change can be properly reflected.
-            UIIntents.get().broadcastConversationSelfIdChange(dbWrapper.getContext(),
-                    conversationId, getConversationSelfId(dbWrapper, conversationId));
-        }
     }
 
     @DoesNotRunOnMainThread
@@ -613,6 +604,16 @@ public class BugleDatabaseOperations {
         Assert.isTrue(dbWrapper.getDatabase().inTransaction());
         final ContentValues values = new ContentValues();
         values.put(ConversationColumns.ARCHIVE_STATUS, isArchived ? 1 : 0);
+        updateConversationRowIfExists(dbWrapper, conversationId, values);
+    }
+
+    @DoesNotRunOnMainThread
+    public static void updateConversationPinStatusInTransaction(final DatabaseWrapper dbWrapper,
+            final String conversationId, final boolean isPinned) {
+        Assert.isNotMainThread();
+        Assert.isTrue(dbWrapper.getDatabase().inTransaction());
+        final ContentValues values = new ContentValues();
+        values.put(ConversationColumns.PINNED, isPinned ? 1 : 0);
         updateConversationRowIfExists(dbWrapper, conversationId, values);
     }
 
@@ -1489,6 +1490,28 @@ public class BugleDatabaseOperations {
             if (cursor != null) {
                 cursor.close();
             }
+        }
+    }
+
+    /**
+     * Returns whether the conversation is currently archived in the local db. Used so that a
+     * message sync does not clobber the user's archive state when it refreshes conversation
+     * metadata.
+     */
+    @DoesNotRunOnMainThread
+    public static boolean getConversationArchiveStatusInTransaction(
+            final DatabaseWrapper dbWrapper,
+            final String conversationId
+    ) {
+        try (Cursor cursor = dbWrapper.query(
+                DatabaseHelper.CONVERSATIONS_TABLE,
+                new String[] { ConversationColumns.ARCHIVE_STATUS },
+                ConversationColumns._ID + "=?",
+                new String[] { conversationId },
+                null, null, null
+            )
+        ) {
+            return cursor.moveToFirst() && cursor.getInt(0) == 1;
         }
     }
 

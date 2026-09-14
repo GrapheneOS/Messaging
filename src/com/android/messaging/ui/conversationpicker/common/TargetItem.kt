@@ -10,10 +10,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.common.components.selection.SelectionListAvatar
 import com.android.messaging.ui.common.components.selection.SelectionListItem
 import com.android.messaging.ui.common.components.selection.SelectionListItemTokens
 import com.android.messaging.ui.common.components.selection.SelectionListTrailingIndicator
+import com.android.messaging.ui.common.text.asLtrText
 import com.android.messaging.ui.conversationpicker.model.TargetUiState
 import com.android.messaging.ui.core.MessagingPreviewColumn
 
@@ -48,10 +50,12 @@ internal fun TargetItem(
     shape: RoundedCornerShape = SelectionListItemTokens.singleShape,
 ) {
     val avatarContent = target.avatarContent()
+    val title = target.displayName.asLtrText()
+    val subtitle = target.details?.asLtrText()
 
     TargetRow(
-        title = target.displayName,
-        subtitle = target.details,
+        title = title,
+        subtitle = subtitle,
         avatarUri = target.avatarUri,
         colorSeedCode = avatarContent.colorSeedCode,
         fallbackIcon = avatarContent.fallbackIcon,
@@ -111,7 +115,7 @@ private fun TargetItemPreview() {
     MessagingPreviewColumn {
         TargetItem(
             target = TargetUiState.Conversation(
-                conversationId = "1",
+                conversationId = ConversationId("1"),
                 normalizedDestination = "+31612345678",
                 displayName = "Jane Doe",
                 details = "+31 6 1234 5678",

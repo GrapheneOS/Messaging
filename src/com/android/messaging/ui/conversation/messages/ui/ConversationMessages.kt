@@ -25,10 +25,14 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.subscription.model.Subscription
+import com.android.messaging.ui.common.components.safeDrawingContentPadding
 import com.android.messaging.ui.conversation.CONVERSATION_MESSAGES_LIST_TEST_TAG
 import com.android.messaging.ui.conversation.conversationMessageItemTestTag
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
+import com.android.messaging.ui.conversation.messages.ui.attachment.OnConversationAttachmentClick
 import com.android.messaging.ui.conversation.messages.ui.message.ConversationMessage
 import com.android.messaging.ui.conversation.messages.ui.message.conversationMessageDisplayEpochDay
 import com.android.messaging.ui.conversation.messages.ui.message.formatDateSeparatorText
@@ -45,18 +49,10 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableMap
 
-private val messagesContentPadding = PaddingValues(
-    start = 16.dp,
-    top = 24.dp,
-    end = 16.dp,
-    bottom = 24.dp,
-)
-private val sendSimContentPadding = PaddingValues(
-    start = 16.dp,
-    top = 24.dp,
-    end = 16.dp,
-    bottom = 6.dp,
-)
+private val MESSAGES_CONTENT_HORIZONTAL_PADDING = 16.dp
+private val MESSAGES_CONTENT_TOP_PADDING = 24.dp
+private val MESSAGES_CONTENT_BOTTOM_PADDING = 24.dp
+private val SEND_SIM_CONTENT_BOTTOM_PADDING = 6.dp
 
 private val MESSAGES_CLUSTER_TOP_PADDING = 2.dp
 private val MESSAGES_GROUP_TOP_PADDING = 12.dp
@@ -78,17 +74,19 @@ internal fun ConversationMessages(
     modifier: Modifier = Modifier,
     messages: ImmutableList<ConversationMessageUiModel>,
     listState: LazyListState,
-    selectedMessageIds: ImmutableSet<String> = persistentSetOf(),
+    selectedMessageIds: ImmutableSet<MessageId> = persistentSetOf(),
     showIncomingParticipantIdentity: Boolean = true,
+    youTubeLinkPreviewsEnabled: Boolean = false,
     subscriptions: ImmutableList<Subscription> = persistentListOf(),
     currentSendSimDisplayName: String? = null,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    additionalTopContentPadding: Dp = 0.dp,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
-    onMessageClick: (String) -> Unit,
-    onMessageAvatarClick: (String) -> Unit,
-    onMessageDownloadClick: (String) -> Unit,
-    onMessageLongClick: (String) -> Unit,
-    onMessageResendClick: (String) -> Unit,
+    onMessageClick: (MessageId) -> Unit,
+    onMessageAvatarClick: (MessageId) -> Unit,
+    onMessageDownloadClick: (MessageId) -> Unit,
+    onMessageLongClick: (MessageId) -> Unit,
+    onMessageResendClick: (MessageId) -> Unit,
     onSimSelectorClick: () -> Unit = {},
 ) {
     val configuration = LocalConfiguration.current
@@ -113,6 +111,7 @@ internal fun ConversationMessages(
             .background(color = MaterialTheme.colorScheme.background),
         contentPadding = conversationMessagesContentPadding(
             shouldShowSendSimIndicator = shouldShowSendSimIndicator,
+            additionalTopContentPadding = additionalTopContentPadding,
         ),
     ) {
         conversationSendSimIndicatorItem(
@@ -128,6 +127,7 @@ internal fun ConversationMessages(
             selectedMessageIds = selectedMessageIds,
             isSelectionMode = isSelectionMode,
             showIncomingParticipantIdentity = showIncomingParticipantIdentity,
+            youTubeLinkPreviewsEnabled = youTubeLinkPreviewsEnabled,
             simDisplayNameByParticipantId = simDisplayNameByParticipantId,
             onAttachmentClick = onAttachmentClick,
             onExternalUriClick = onExternalUriClick,
@@ -144,22 +144,23 @@ internal fun ConversationMessages(
 private fun LazyListScope.conversationMessageItems(
     displayMessages: List<ConversationMessageUiModel>,
     timeZone: TimeZone,
-    selectedMessageIds: ImmutableSet<String>,
+    selectedMessageIds: ImmutableSet<MessageId>,
     isSelectionMode: Boolean,
     showIncomingParticipantIdentity: Boolean,
-    simDisplayNameByParticipantId: ImmutableMap<String, String>,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    youTubeLinkPreviewsEnabled: Boolean,
+    simDisplayNameByParticipantId: ImmutableMap<ParticipantId, String>,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
-    onMessageClick: (String) -> Unit,
-    onMessageAvatarClick: (String) -> Unit,
-    onMessageDownloadClick: (String) -> Unit,
-    onMessageLongClick: (String) -> Unit,
-    onMessageResendClick: (String) -> Unit,
+    onMessageClick: (MessageId) -> Unit,
+    onMessageAvatarClick: (MessageId) -> Unit,
+    onMessageDownloadClick: (MessageId) -> Unit,
+    onMessageLongClick: (MessageId) -> Unit,
+    onMessageResendClick: (MessageId) -> Unit,
     onSimSelectorClick: () -> Unit,
 ) {
     itemsIndexed(
         items = displayMessages,
-        key = { _, message -> message.messageId },
+        key = { _, message -> message.messageId.value },
         contentType = { index, _ ->
             conversationMessagesItemContentType(
                 messages = displayMessages,
@@ -177,6 +178,7 @@ private fun LazyListScope.conversationMessageItems(
             isSelectionMode = isSelectionMode,
             isSelected = selectedMessageIds.contains(message.messageId),
             showIncomingParticipantIdentity = showIncomingParticipantIdentity,
+            youTubeLinkPreviewsEnabled = youTubeLinkPreviewsEnabled,
             simDisplayNameByParticipantId = simDisplayNameByParticipantId,
             onAttachmentClick = onAttachmentClick,
             onExternalUriClick = onExternalUriClick,
@@ -213,19 +215,27 @@ private fun LazyListScope.conversationSendSimIndicatorItem(
     }
 }
 
+@Composable
 private fun conversationMessagesContentPadding(
     shouldShowSendSimIndicator: Boolean,
+    additionalTopContentPadding: Dp,
 ): PaddingValues {
-    return when {
-        shouldShowSendSimIndicator -> sendSimContentPadding
-        else -> messagesContentPadding
+    val bottomPadding = when {
+        shouldShowSendSimIndicator -> SEND_SIM_CONTENT_BOTTOM_PADDING
+        else -> MESSAGES_CONTENT_BOTTOM_PADDING
     }
+
+    return safeDrawingContentPadding(
+        top = MESSAGES_CONTENT_TOP_PADDING + additionalTopContentPadding,
+        bottom = bottomPadding,
+        horizontal = MESSAGES_CONTENT_HORIZONTAL_PADDING,
+    )
 }
 
 @Composable
 private fun rememberSimDisplayNameByParticipantId(
     subscriptions: ImmutableList<Subscription>,
-): ImmutableMap<String, String> {
+): ImmutableMap<ParticipantId, String> {
     val resources = LocalResources.current
 
     return remember(subscriptions, resources) {
@@ -289,14 +299,15 @@ private fun ConversationMessagesItem(
     isSelectionMode: Boolean,
     isSelected: Boolean,
     showIncomingParticipantIdentity: Boolean,
-    simDisplayNameByParticipantId: ImmutableMap<String, String>,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    youTubeLinkPreviewsEnabled: Boolean,
+    simDisplayNameByParticipantId: ImmutableMap<ParticipantId, String>,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
-    onMessageClick: (String) -> Unit,
-    onMessageAvatarClick: (String) -> Unit,
-    onMessageDownloadClick: (String) -> Unit,
-    onMessageLongClick: (String) -> Unit,
-    onMessageResendClick: (String) -> Unit,
+    onMessageClick: (MessageId) -> Unit,
+    onMessageAvatarClick: (MessageId) -> Unit,
+    onMessageDownloadClick: (MessageId) -> Unit,
+    onMessageLongClick: (MessageId) -> Unit,
+    onMessageResendClick: (MessageId) -> Unit,
     onSimSelectorClick: () -> Unit,
 ) {
     val presentation = rememberConversationMessagesItemPresentation(
@@ -325,6 +336,7 @@ private fun ConversationMessagesItem(
             isSelectionMode = isSelectionMode,
             message = message,
             showIncomingParticipantIdentity = showIncomingParticipantIdentity,
+            youTubeLinkPreviewsEnabled = youTubeLinkPreviewsEnabled,
             simDisplayName = simDisplayName,
             onAttachmentClick = onAttachmentClick,
             onExternalUriClick = onExternalUriClick,
@@ -507,11 +519,11 @@ private fun ConversationMessagesPreview() {
         ConversationMessages(
             messages = previewMessages(),
             listState = LazyListState(),
-            selectedMessageIds = persistentSetOf("outgoing-delivered"),
+            selectedMessageIds = persistentSetOf(MessageId("outgoing-delivered")),
             showIncomingParticipantIdentity = true,
             subscriptions = previewSubscriptions(),
             currentSendSimDisplayName = "Personal",
-            onAttachmentClick = { _, _ -> },
+            onAttachmentClick = { _, _, _ -> },
             onExternalUriClick = {},
             onMessageClick = {},
             onMessageAvatarClick = {},

@@ -12,6 +12,8 @@ import com.android.messaging.ui.blockedparticipants.screen.support.DESTINATION_1
 import com.android.messaging.ui.blockedparticipants.screen.support.DESTINATION_2
 import com.android.messaging.ui.blockedparticipants.screen.support.DISPLAY_NAME_1
 import com.android.messaging.ui.blockedparticipants.screen.support.DISPLAY_NAME_2
+import com.android.messaging.ui.blockedparticipants.screen.support.PARTICIPANT_ID_1
+import com.android.messaging.ui.blockedparticipants.screen.support.PARTICIPANT_ID_2
 import com.android.messaging.ui.blockedparticipants.screen.support.emptyState
 import com.android.messaging.ui.blockedparticipants.screen.support.loadedState
 import com.android.messaging.ui.blockedparticipants.screen.support.participant
@@ -64,12 +66,12 @@ internal class UnblockParticipantTest : BlockedParticipantsTestBase() {
             loadedState(
                 participants = persistentListOf(
                     participant(
-                        participantId = "p1",
+                        participantId = PARTICIPANT_ID_1,
                         displayName = DISPLAY_NAME_1,
                         destination = DESTINATION_1,
                     ),
                     participant(
-                        participantId = "p2",
+                        participantId = PARTICIPANT_ID_2,
                         displayName = DISPLAY_NAME_2,
                         destination = DESTINATION_2,
                     ),

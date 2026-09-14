@@ -13,5 +13,6 @@ internal sealed interface ConversationMessagesUiState {
     @Immutable
     data class Present(
         val messages: ImmutableList<ConversationMessageUiModel> = persistentListOf(),
+        val youTubeLinkPreviewsEnabled: Boolean = false,
     ) : ConversationMessagesUiState
 }

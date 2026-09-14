@@ -1,5 +1,3 @@
-import org.gradle.api.artifacts.VersionCatalogsExtension
-import org.gradle.kotlin.dsl.the
 import org.jlleitschuh.gradle.ktlint.KtlintExtension
 
 plugins {

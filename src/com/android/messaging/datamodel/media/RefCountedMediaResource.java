@@ -32,7 +32,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * Instances of the subclasses are:
  * 1. Loaded by their corresponding MediaRequest classes.
  * 2. Maintained by MediaResourceManager in its MediaCache pool.
- * 3. Used by the UI (such as ContactIconViews) to present the content.
+ * 3. Used by the UI to present the content.
  *
  * Note: all synchronized methods in this class (e.g. addRef()) should not attempt to make outgoing
  * calls that could potentially acquire media cache locks due to the potential deadlock this can

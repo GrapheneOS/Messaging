@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.messages.model.attachment
 
 import androidx.compose.runtime.Immutable
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentType
+import com.android.messaging.data.vcard.model.VCardAvatarPhoto
 
 @Immutable
 internal sealed interface ConversationInlineAttachment {
@@ -15,6 +16,7 @@ internal sealed interface ConversationInlineAttachment {
         override val openAction: ConversationAttachmentOpenAction?,
         val titleText: String?,
         val titleTextResId: Int?,
+        val durationMillis: Long = 0L,
     ) : ConversationInlineAttachment
 
     @Immutable
@@ -32,7 +34,8 @@ internal sealed interface ConversationInlineAttachment {
         val contentUri: String,
         override val openAction: ConversationAttachmentOpenAction?,
         val type: ConversationVCardAttachmentType,
-        val avatarUri: String?,
+        val avatarPhoto: VCardAvatarPhoto?,
+        val normalizedDestination: String?,
         val titleText: String?,
         val titleTextResId: Int?,
         val subtitleText: String?,

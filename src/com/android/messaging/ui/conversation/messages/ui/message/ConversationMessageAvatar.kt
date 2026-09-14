@@ -13,6 +13,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.common.components.participant.ParticipantAvatar
 import com.android.messaging.ui.common.components.participant.participantAvatarLabel
 import com.android.messaging.ui.common.components.participant.participantColorSeed
@@ -70,7 +71,7 @@ private fun ConversationMessageAvatarPreview() {
             )
             ConversationMessageAvatar(
                 message = previewIncomingMessage(
-                    messageId = "phone-avatar",
+                    messageId = MessageId("phone-avatar"),
                     text = "Phone number sender",
                 ).copy(senderDisplayName = "+31 6 2222 3333"),
                 onClick = {},

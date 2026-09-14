@@ -4,7 +4,10 @@ config:
 
 complexity:
   LongParameterList:
+    active: false
     ignoreDefaultParameters: true
+    ignoreAnnotated:
+      - Composable
   TooManyFunctions:
     allowedFunctionsPerClass: 60
     allowedFunctionsPerFile: 15
@@ -17,14 +20,33 @@ complexity:
       - Preview
       - PreviewLightDark
 
+coroutines:
+  InjectDispatcher:
+    active: false
+    ignoreAnnotated:
+      - Provides
+
 naming:
   FunctionNaming:
     ignoreAnnotated:
       - Composable
 
 style:
+  AbstractClassCanBeInterface:
+    ignoreAnnotated:
+      - Module
+
   ForbiddenComment:
     active: false
+
+  ForbiddenMethodCall:
+    active: true
+    methods:
+      - reason: >-
+          Does not cover the display cutout, so content slides under the camera
+          notch in landscape. Use bottomBarInsets(), imeAwareBottomBarInsets()
+          or safeDrawingContentPadding() from WindowInsetsExtensions instead.
+        value: 'androidx.compose.foundation.layout.navigationBarsPadding'
 
   MagicNumber:
     ignoreCompanionObjectPropertyDeclaration: true

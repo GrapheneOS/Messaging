@@ -7,6 +7,7 @@ import android.content.Context
 import android.provider.Settings
 import android.view.View
 import com.android.messaging.FactoryTestAccess
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.testutil.createIncomingMessagesTestChannel
 import com.android.messaging.testutil.installTestFactory
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsScreenEffect as Effect
@@ -56,11 +57,12 @@ class ConversationSettingsEffectHandlerTest {
             clipboardManager = activity.getSystemService(
                 Context.CLIPBOARD_SERVICE,
             ) as ClipboardManager,
+            onNavigateToAddContact = {},
         )
 
         handler.handle(
             Effect.OpenNotificationChannelSettings(
-                conversationId = conversationId,
+                conversationId = ConversationId(conversationId),
                 conversationTitle = "Settings conversation",
             ),
         )

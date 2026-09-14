@@ -23,6 +23,7 @@ internal class AppSettingsUiStateMapperImpl @Inject constructor(
                 appSettings.defaultSmsAppLabel,
             ),
             sendSoundEnabled = appSettings.sendSoundEnabled,
+            youTubeLinkPreviewsEnabled = appSettings.youTubeLinkPreviewsEnabled,
             isDebugEnabled = appSettings.isDebugEnabled,
             dumpSmsEnabled = appSettings.dumpSmsEnabled,
             dumpMmsEnabled = appSettings.dumpMmsEnabled,

@@ -4,15 +4,20 @@ import android.content.ContentResolver
 import android.database.ContentObserver
 import android.net.Uri
 import com.android.messaging.data.blockedparticipants.model.BlockedDirectChat
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.datamodel.BugleDatabaseOperations
 import com.android.messaging.datamodel.DataModel
 import com.android.messaging.datamodel.DatabaseHelper
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
 import com.android.messaging.datamodel.MessagingContentProvider
+import com.android.messaging.datamodel.action.UpdateDestinationBlockedAction.UpdateDestinationBlockedActionListener
+import com.android.messaging.datamodel.action.UpdateDestinationBlockedAction.updateDestinationBlocked
 import com.android.messaging.datamodel.data.ParticipantData
+import com.android.messaging.di.core.MainDispatcher
 import com.android.messaging.di.core.MessagingDbDispatcher
 import javax.inject.Inject
+import kotlin.coroutines.resume
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -22,14 +27,23 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 
 internal interface BlockedParticipantsRepository {
     fun observeBlockedParticipants(): Flow<ImmutableList<BlockedDirectChat>>
+
+    suspend fun setDestinationBlocked(
+        destination: String,
+        conversationId: ConversationId?,
+        isBlocked: Boolean,
+    ): Boolean
 }
 
 internal class BlockedParticipantsRepositoryImpl @Inject constructor(
     private val contentResolver: ContentResolver,
     @param:MessagingDbDispatcher private val messagingDbDispatcher: CoroutineDispatcher,
+    @param:MainDispatcher private val mainDispatcher: CoroutineDispatcher,
 ) : BlockedParticipantsRepository {
 
     private val dataModel = DataModel.get()
@@ -43,6 +57,35 @@ internal class BlockedParticipantsRepositoryImpl @Inject constructor(
         return observeUris(uris)
             .map { queryBlockedDirectChats() }
             .flowOn(messagingDbDispatcher)
+    }
+
+    override suspend fun setDestinationBlocked(
+        destination: String,
+        conversationId: ConversationId?,
+        isBlocked: Boolean,
+    ): Boolean {
+        val resolvedDestination = destination.takeIf(String::isNotBlank) ?: return false
+
+        return withContext(mainDispatcher) {
+            suspendCancellableCoroutine { continuation ->
+                val listener = UpdateDestinationBlockedActionListener { _, success, _, _ ->
+                    if (continuation.isActive) {
+                        continuation.resume(success)
+                    }
+                }
+
+                val actionMonitor = updateDestinationBlocked(
+                    resolvedDestination,
+                    isBlocked,
+                    conversationId?.takeIf { it.isNotBlank() }?.value,
+                    listener,
+                )
+
+                continuation.invokeOnCancellation {
+                    actionMonitor?.unregister()
+                }
+            }
+        }
     }
 
     // Returns only blocked participants that have an existing 1 on 1 conversation.
@@ -83,6 +126,7 @@ internal class BlockedParticipantsRepositoryImpl @Inject constructor(
                         dataModel.database,
                         destination,
                     )
+                    ?.let(::ConversationId)
                     ?: return@mapNotNull null
 
                 BlockedDirectChat(

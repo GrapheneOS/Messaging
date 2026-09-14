@@ -2,6 +2,7 @@ package com.android.messaging.data.conversationpicker.repository
 
 import android.content.ContentResolver
 import android.database.ContentObserver
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationpicker.model.TargetConversation
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.data.ConversationListData
@@ -48,9 +49,14 @@ internal class TargetsRepositoryImpl @Inject constructor(
                 val item = ConversationListItemData()
                 while (it.moveToNext()) {
                     item.bind(it)
+
+                    val conversationId = ConversationId
+                        .fromOrNull(item.conversationId)
+                        ?: continue
+
                     add(
                         TargetConversation(
-                            conversationId = item.conversationId,
+                            conversationId = conversationId,
                             name = item.name.orEmpty(),
                             icon = item.icon,
                             normalizedDestination = item.otherParticipantNormalizedDestination,

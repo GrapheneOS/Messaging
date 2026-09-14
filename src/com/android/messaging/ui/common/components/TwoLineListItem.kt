@@ -4,6 +4,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
@@ -28,7 +32,6 @@ private val ItemHorizontalPadding = 8.dp
 private val ItemVerticalPadding = 8.dp
 private val ListRowShape = RoundedCornerShape(percent = 50)
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun TwoLineListItem(
     title: String,
@@ -39,6 +42,60 @@ internal fun TwoLineListItem(
     onLongClick: (() -> Unit)? = null,
     shape: Shape = ListRowShape,
     color: Color = MaterialTheme.colorScheme.background,
+    contentDescription: String? = null,
+    keepLeadingContentAccessible: Boolean = false,
+    trailingContent: (@Composable () -> Unit)? = null,
+) {
+    TwoLineListItem(
+        onClick = onClick,
+        leadingContent = leadingContent,
+        titleContent = {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        },
+        modifier = modifier,
+        onLongClick = onLongClick,
+        shape = shape,
+        color = color,
+        contentDescription = contentDescription,
+        keepLeadingContentAccessible = keepLeadingContentAccessible,
+        subtitleContent = when {
+            subtitle.isNullOrBlank() -> null
+
+            else -> {
+                {
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        },
+        trailingContent = trailingContent,
+    )
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+internal fun TwoLineListItem(
+    onClick: () -> Unit,
+    leadingContent: @Composable () -> Unit,
+    titleContent: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    onLongClick: (() -> Unit)? = null,
+    shape: Shape = ListRowShape,
+    color: Color = MaterialTheme.colorScheme.background,
+    contentDescription: String? = null,
+    keepLeadingContentAccessible: Boolean = false,
+    subtitleContent: (@Composable () -> Unit)? = null,
     trailingContent: (@Composable () -> Unit)? = null,
 ) {
     Surface(
@@ -50,35 +107,59 @@ internal fun TwoLineListItem(
             null -> Modifier.clickable(onClick = onClick)
             else -> Modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick)
         }
+        val semanticsModifier = when (contentDescription) {
+            null -> Modifier
+            else -> Modifier.semantics {
+                this.contentDescription = contentDescription
+            }
+        }
+        val descendantSemanticsModifier = when (contentDescription) {
+            null -> Modifier
+            else -> Modifier.clearAndSetSemantics {}
+        }
+        val leadingSemanticsModifier = when {
+            contentDescription == null -> Modifier
+            keepLeadingContentAccessible -> Modifier
+            else -> descendantSemanticsModifier
+        }
 
         Row(
-            modifier = clickModifier.padding(
-                horizontal = ItemHorizontalPadding,
-                vertical = ItemVerticalPadding,
-            ),
+            modifier = clickModifier
+                .then(semanticsModifier)
+                .padding(
+                    horizontal = ItemHorizontalPadding,
+                    vertical = ItemVerticalPadding,
+                ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            leadingContent()
+            Box(modifier = leadingSemanticsModifier) {
+                leadingContent()
+            }
 
             Spacer(modifier = Modifier.width(ItemHorizontalPadding))
 
-            TwoLineListItemText(
-                title = title,
-                subtitle = subtitle,
+            TwoLineListItemContent(
+                titleContent = titleContent,
+                subtitleContent = subtitleContent,
                 modifier = Modifier
                     .weight(1f)
-                    .padding(horizontal = ItemHorizontalPadding),
+                    .padding(horizontal = ItemHorizontalPadding)
+                    .then(descendantSemanticsModifier),
             )
 
-            trailingContent?.invoke()
+            trailingContent?.let { content ->
+                Box(modifier = descendantSemanticsModifier) {
+                    content()
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun TwoLineListItemText(
-    title: String,
-    subtitle: String?,
+private fun TwoLineListItemContent(
+    titleContent: @Composable () -> Unit,
+    subtitleContent: (@Composable () -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     val twoLineHeight = with(LocalDensity.current) {
@@ -90,22 +171,7 @@ private fun TwoLineListItemText(
         modifier = modifier.heightIn(min = twoLineHeight),
         verticalArrangement = Arrangement.Center,
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-
-        if (!subtitle.isNullOrBlank()) {
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
+        titleContent()
+        subtitleContent?.invoke()
     }
 }

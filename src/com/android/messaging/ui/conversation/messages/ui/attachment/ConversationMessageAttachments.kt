@@ -20,7 +20,7 @@ internal fun ConversationMessageAttachments(
     isIncoming: Boolean,
     isSelectionMode: Boolean,
     useStandaloneAudioAttachmentBg: Boolean,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
 ) {
@@ -86,7 +86,7 @@ private fun ConversationMessageAttachmentsPreview() {
             isIncoming = true,
             isSelectionMode = false,
             useStandaloneAudioAttachmentBg = true,
-            onAttachmentClick = { _, _ -> },
+            onAttachmentClick = { _, _, _ -> },
             onExternalUriClick = {},
             onMessageLongClick = {},
         )

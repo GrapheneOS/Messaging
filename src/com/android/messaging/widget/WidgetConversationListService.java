@@ -25,7 +25,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
-import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
@@ -39,7 +38,6 @@ import com.android.messaging.datamodel.data.ConversationListData;
 import com.android.messaging.datamodel.data.ConversationListItemData;
 import com.android.messaging.sms.MmsUtils;
 import com.android.messaging.ui.UIIntents;
-import com.android.messaging.ui.conversationlist.ConversationListItemView;
 import com.android.messaging.util.ContentType;
 import com.android.messaging.util.Dates;
 import com.android.messaging.util.LogUtil;
@@ -197,11 +195,114 @@ public class WidgetConversationListService extends RemoteViewsService {
 
                 // Set the accessibility TalkBack text
                 remoteViews.setContentDescription(R.id.widget_conversation_list_item,
-                        ConversationListItemView.buildContentDescription(mContext.getResources(),
-                                conv, new TextPaint()));
+                        buildContentDescription(mContext.getResources(), conv));
 
                 return remoteViews;
             }
+        }
+
+        // Resource Ids of content descriptions prefixes for different message status.
+        private static final int[][][] sPrimaryContentDescriptions = {
+            // 1:1 conversation
+            {
+                // Incoming message
+                {
+                    R.string.one_on_one_incoming_failed_message_prefix,
+                    R.string.one_on_one_incoming_successful_message_prefix
+                },
+                // Outgoing message
+                {
+                    R.string.one_on_one_outgoing_failed_message_prefix,
+                    R.string.one_on_one_outgoing_successful_message_prefix,
+                    R.string.one_on_one_outgoing_draft_message_prefix,
+                    R.string.one_on_one_outgoing_sending_message_prefix,
+                }
+            },
+
+            // Group conversation
+            {
+                // Incoming message
+                {
+                    R.string.group_incoming_failed_message_prefix,
+                    R.string.group_incoming_successful_message_prefix,
+                },
+                // Outgoing message
+                {
+                    R.string.group_outgoing_failed_message_prefix,
+                    R.string.group_outgoing_successful_message_prefix,
+                    R.string.group_outgoing_draft_message_prefix,
+                    R.string.group_outgoing_sending_message_prefix,
+                }
+            }
+        };
+
+        // Resource Id of the secondary part of the content description for an edge case of a
+        // message which is in both draft status and failed status.
+        private static final int sSecondaryContentDescription =
+                R.string.failed_message_content_description;
+
+        // 1:1 versus group
+        private static final int CONV_TYPE_ONE_ON_ONE_INDEX = 0;
+        private static final int CONV_TYPE_ONE_GROUP_INDEX = 1;
+        // Direction
+        private static final int DIRECTION_INCOMING_INDEX = 0;
+        private static final int DIRECTION_OUTGOING_INDEX = 1;
+        // Message status
+        private static final int MESSAGE_STATUS_FAILED_INDEX = 0;
+        private static final int MESSAGE_STATUS_SUCCESSFUL_INDEX = 1;
+        private static final int MESSAGE_STATUS_DRAFT_INDEX = 2;
+        private static final int MESSAGE_STATUS_SENDING_INDEX = 3;
+
+        private static String buildContentDescription(final Resources resources,
+                final ConversationListItemData data) {
+            int messageStatusIndex;
+            boolean outgoingSnippet = data.getIsMessageTypeOutgoing() || data.getShowDraft();
+            if (outgoingSnippet) {
+                if (data.getShowDraft()) {
+                    messageStatusIndex = MESSAGE_STATUS_DRAFT_INDEX;
+                } else if (data.getIsSendRequested()) {
+                    messageStatusIndex = MESSAGE_STATUS_SENDING_INDEX;
+                } else {
+                    messageStatusIndex = data.getIsFailedStatus() ? MESSAGE_STATUS_FAILED_INDEX
+                            : MESSAGE_STATUS_SUCCESSFUL_INDEX;
+                }
+            } else {
+                messageStatusIndex = data.getIsFailedStatus() ? MESSAGE_STATUS_FAILED_INDEX
+                        : MESSAGE_STATUS_SUCCESSFUL_INDEX;
+            }
+
+            int resId = sPrimaryContentDescriptions
+                    [data.getIsGroup() ? CONV_TYPE_ONE_GROUP_INDEX : CONV_TYPE_ONE_ON_ONE_INDEX]
+                    [outgoingSnippet ? DIRECTION_OUTGOING_INDEX : DIRECTION_INCOMING_INDEX]
+                    [messageStatusIndex];
+
+            final String snippetText = data.getShowDraft() ?
+                    data.getDraftSnippetText() : data.getSnippetText();
+
+            final String conversationName = data.getName();
+            String senderOrConvName =
+                    outgoingSnippet ? conversationName : data.getSnippetSenderName();
+
+            String primaryContentDescription = resources.getString(resId, senderOrConvName,
+                    snippetText == null ? "" : snippetText,
+                    data.getFormattedTimestamp(),
+                    // This is used only for incoming group messages
+                    conversationName);
+            String contentDescription = primaryContentDescription;
+
+            // An edge case : for an outgoing message, it might be in both draft status and
+            // failed status.
+            if (outgoingSnippet && data.getShowDraft() && data.getIsFailedStatus()) {
+                StringBuilder contentDescriptionBuilder = new StringBuilder();
+                contentDescriptionBuilder.append(primaryContentDescription);
+
+                String secondaryContentDescription =
+                        resources.getString(sSecondaryContentDescription);
+                contentDescriptionBuilder.append(" ");
+                contentDescriptionBuilder.append(secondaryContentDescription);
+                contentDescription = contentDescriptionBuilder.toString();
+            }
+            return contentDescription;
         }
 
         private String getSnippetText(final ConversationListItemData conv) {

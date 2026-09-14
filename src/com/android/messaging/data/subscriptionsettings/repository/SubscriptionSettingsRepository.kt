@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.telephony.SubscriptionManager
 import com.android.messaging.Factory
 import com.android.messaging.R
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscriptionsettings.model.PerSubscriptionData
 import com.android.messaging.data.subscriptionsettings.model.SubscriptionBooleanPref
 import com.android.messaging.data.subscriptionsettings.model.SubscriptionSettingsData
@@ -32,7 +33,7 @@ internal interface SubscriptionSettingsRepository {
     fun observeSubscriptionsChanged(): Flow<Unit>
     suspend fun getSubscriptionSettings(): SubscriptionSettingsData
     suspend fun setSubscriptionBooleanPref(
-        subId: Int,
+        subId: SubId,
         pref: SubscriptionBooleanPref,
         enabled: Boolean,
     )
@@ -70,7 +71,7 @@ internal class SubscriptionSettingsRepositoryImpl @Inject constructor(
             val isDefaultSmsApp = phoneUtilsDefault.isDefaultSmsApp
             val isCellBroadcastAppEnabled = readCellBroadcastAppEnabled()
             val defaultSelfData = readPerSubscriptionData(
-                subId = ParticipantData.DEFAULT_SELF_SUB_ID,
+                subId = SubId(ParticipantData.DEFAULT_SELF_SUB_ID),
                 subscriptionName = null,
             )
 
@@ -80,7 +81,7 @@ internal class SubscriptionSettingsRepositoryImpl @Inject constructor(
                         .filter { !it.isDefaultSelf && it.isActiveSubscription }
                         .map { self ->
                             readPerSubscriptionData(
-                                subId = self.subId,
+                                subId = SubId(self.subId),
                                 subscriptionName = self.subscriptionName,
                             )
                         }
@@ -103,12 +104,12 @@ internal class SubscriptionSettingsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun setSubscriptionBooleanPref(
-        subId: Int,
+        subId: SubId,
         pref: SubscriptionBooleanPref,
         enabled: Boolean,
     ) {
         withContext(ioDispatcher) {
-            BuglePrefs.getSubscriptionPrefs(subId).putBoolean(
+            BuglePrefs.getSubscriptionPrefs(subId.value).putBoolean(
                 context.getString(pref.keyResId),
                 enabled,
             )
@@ -116,12 +117,12 @@ internal class SubscriptionSettingsRepositoryImpl @Inject constructor(
     }
 
     private fun readPerSubscriptionData(
-        subId: Int,
+        subId: SubId,
         subscriptionName: String?,
     ): PerSubscriptionData {
-        val subPrefs = Factory.get().getSubscriptionPrefs(subId)
-        val phoneUtils = PhoneUtils.get(subId)
-        val mmsConfig = MmsConfig.get(subId)
+        val subPrefs = Factory.get().getSubscriptionPrefs(subId.value)
+        val phoneUtils = PhoneUtils.get(subId.value)
+        val mmsConfig = MmsConfig.get(subId.value)
         val resources = context.resources
 
         val savedPhoneNumber = subPrefs.getString(

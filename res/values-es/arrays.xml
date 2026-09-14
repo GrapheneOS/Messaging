@@ -21,17 +21,4 @@
     <item msgid="8900116186849071724">"sin asunto"</item>
     <item msgid="272485471009191934">"sinasunto"</item>
   </string-array>
-  <string-array name="notification_reply_choices">
-    <item msgid="1875991048685328264">"Sí"</item>
-    <item msgid="6049132459802288033">"No"</item>
-    <item msgid="3084376867445867895">"Ok"</item>
-    <item msgid="3155097332660174689">"Je, je"</item>
-    <item msgid="2611328818571146775">"Gracias"</item>
-    <item msgid="4881335087096496747">"Acepto"</item>
-    <item msgid="2422296858597420738">"Genial"</item>
-    <item msgid="4805581752819452687">"Voy de camino"</item>
-    <item msgid="4746700499431366214">"Vale, te llamo más tarde"</item>
-    <item msgid="4342041517788201970">":)"</item>
-    <item msgid="7439437911747961187">":("</item>
-  </string-array>
 </resources>

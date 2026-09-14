@@ -2,12 +2,16 @@ package com.android.messaging.ui.blockedparticipants.screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.messaging.data.conversation.model.ParticipantId
+import com.android.messaging.domain.conversation.usecase.participant.ResolveContactAction
+import com.android.messaging.domain.conversation.usecase.participant.model.ResolveContactActionResult
 import com.android.messaging.ui.blockedparticipants.screen.delegate.BlockedParticipantsDelegate
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantUiState
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsAction as Action
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsNavEvent as NavEvent
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsScreenEffect as Effect
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsUiState as State
+import com.android.messaging.ui.contact.model.AddContactRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
@@ -26,6 +30,7 @@ internal interface BlockedParticipantsScreenModel {
 @HiltViewModel
 internal class BlockedParticipantsViewModel @Inject constructor(
     private val delegate: BlockedParticipantsDelegate,
+    private val resolveContactAction: ResolveContactAction,
 ) : ViewModel(),
     BlockedParticipantsScreenModel {
 
@@ -56,7 +61,7 @@ internal class BlockedParticipantsViewModel @Inject constructor(
             }
 
             is Action.ParticipantMessageClicked -> {
-                emitEffect(Effect.OpenParticipantChat(action.conversationId))
+                emitNavigationEvent(NavEvent.OpenParticipantChat(action.conversationId))
             }
 
             is Action.ParticipantCallClicked -> {
@@ -64,7 +69,7 @@ internal class BlockedParticipantsViewModel @Inject constructor(
             }
 
             is Action.ParticipantContactInfoClicked -> {
-                showOrAddContact(action.participant)
+                emitContactAction(participant = action.participant)
             }
 
             Action.DeleteSelectedConfirmed -> {
@@ -88,7 +93,7 @@ internal class BlockedParticipantsViewModel @Inject constructor(
         }
     }
 
-    private fun handleParticipantClicked(participantId: String) {
+    private fun handleParticipantClicked(participantId: ParticipantId) {
         val state = uiState.value
 
         if (state.selectedParticipantIds.isNotEmpty()) {
@@ -101,18 +106,39 @@ internal class BlockedParticipantsViewModel @Inject constructor(
             ?.conversationId
             ?: return
 
-        emitEffect(Effect.OpenParticipantChat(conversationId))
+        emitNavigationEvent(NavEvent.OpenParticipantChat(conversationId))
     }
 
-    private fun showOrAddContact(participant: BlockedParticipantUiState) {
-        emitEffect(
-            Effect.ShowOrAddContact(
-                contactId = participant.contactId,
-                contactLookupKey = participant.lookupKey,
-                avatarUri = participant.avatarUri,
-                normalizedDestination = participant.normalizedDestination,
-            ),
+    private fun emitContactAction(participant: BlockedParticipantUiState) {
+        val contactAction = resolveContactAction(
+            contactId = participant.contactId,
+            lookupKey = participant.lookupKey,
+            destination = participant.normalizedDestination,
         )
+
+        when (contactAction) {
+            is ResolveContactActionResult.ShowContactCard -> {
+                emitEffect(
+                    Effect.ShowContactCard(
+                        contactId = contactAction.contactId,
+                        contactLookupKey = contactAction.lookupKey,
+                    ),
+                )
+            }
+
+            is ResolveContactActionResult.AddContact -> {
+                emitEffect(
+                    Effect.AddContact(
+                        request = AddContactRequest(
+                            destination = contactAction.destination,
+                            avatarUri = participant.avatarUri,
+                        ),
+                    ),
+                )
+            }
+
+            ResolveContactActionResult.Unavailable -> Unit
+        }
     }
 
     private fun emitEffect(effect: Effect) {

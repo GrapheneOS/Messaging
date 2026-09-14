@@ -1,0 +1,12 @@
+# Instrumented-test-only class-directory exclude patterns.
+**/ui/conversation/mediapicker/ConversationCaptureMode.class
+**/ui/conversation/mediapicker/ConversationMediaPickerSavedState.class
+**/ui/conversation/mediapicker/ConversationMediaPickerSavedState$*.class
+**/ui/conversation/mediapicker/ConversationMediaPickerState.class
+**/ui/conversation/mediapicker/ConversationMediaPickerState$*.class
+**/ui/conversation/mediapicker/camera/ConversationCameraController.class
+**/ui/conversation/mediapicker/camera/ConversationCameraControllerImpl*.class
+**/ui/conversation/navigation/ConversationNavRouteState.class
+**/ui/conversation/navigation/ConversationPendingLaunchPayload.class
+**/ui/conversation/screen/ConversationSimSheetState.class
+**/ui/conversation/screen/ConversationSimSheetState$*.class

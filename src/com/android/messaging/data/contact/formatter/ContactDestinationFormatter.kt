@@ -1,7 +1,7 @@
 package com.android.messaging.data.contact.formatter
 
+import com.android.messaging.data.phone.formatter.PhoneNumberFormatter
 import com.android.messaging.sms.MmsSmsUtils
-import com.android.messaging.util.PhoneUtils
 import java.util.Locale
 import javax.inject.Inject
 
@@ -16,13 +16,13 @@ internal interface ContactDestinationFormatter {
     fun countryCandidates(): List<String>
 }
 
-internal class ContactDestinationFormatterImpl @Inject constructor() : ContactDestinationFormatter {
+internal class ContactDestinationFormatterImpl @Inject constructor(
+    private val phoneNumberFormatter: PhoneNumberFormatter,
+) : ContactDestinationFormatter {
 
     override fun canonicalize(value: String): String {
         return canonicalize(value = value) { trimmed ->
-            PhoneUtils
-                .getDefault()
-                .getCanonicalForEnteredPhoneNumber(trimmed)
+            phoneNumberFormatter.getCanonicalForEnteredNumber(trimmed)
         }
     }
 
@@ -31,24 +31,16 @@ internal class ContactDestinationFormatterImpl @Inject constructor() : ContactDe
         countryCandidates: List<String>,
     ): String {
         return canonicalize(value = value) { trimmed ->
-            PhoneUtils
-                .getDefault()
-                .getCanonicalForEnteredPhoneNumber(trimmed, countryCandidates)
+            phoneNumberFormatter.getCanonicalForEnteredNumber(trimmed, countryCandidates)
         }
     }
 
     override fun formatPhoneForDisplay(value: String): String {
-        return PhoneUtils.getDefault().formatForDisplay(value)
+        return phoneNumberFormatter.formatForDisplay(value)
     }
 
     override fun countryCandidates(): List<String> {
-        val phoneUtils = PhoneUtils
-            .getDefault()
-            .apply {
-                warmUp()
-            }
-
-        return phoneUtils.countryCandidatesForEnteredPhoneNumber
+        return phoneNumberFormatter.countryCandidates()
     }
 
     private inline fun canonicalize(

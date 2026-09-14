@@ -29,3 +29,5 @@ target_compile_options(giftranscode PRIVATE
         -Wno-unused-parameter
         -Wno-switch
 )
+
+target_compile_features(giftranscode PRIVATE cxx_std_17)

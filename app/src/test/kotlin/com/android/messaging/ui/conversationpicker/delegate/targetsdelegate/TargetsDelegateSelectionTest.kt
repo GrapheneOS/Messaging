@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationpicker.delegate.targetsdelegate
 
 import app.cash.turbine.test
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.testutil.TEST_CONTACT_DESTINATION
 import com.android.messaging.testutil.contactTarget
 import com.android.messaging.testutil.conversationTarget
@@ -69,7 +70,7 @@ internal class TargetsDelegateSelectionTest : BaseTargetsDelegateTest() {
 
         delegate.toggleSelection(
             conversationTarget(
-                conversationId = "7",
+                conversationId = ConversationId("7"),
                 normalizedDestination = null,
             ),
         )
@@ -128,11 +129,11 @@ internal class TargetsDelegateSelectionTest : BaseTargetsDelegateTest() {
         source.emit(
             persistentListOf(
                 shareTargetConversation(
-                    conversationId = "1",
+                    conversationId = ConversationId("1"),
                     name = "One",
                 ),
                 shareTargetConversation(
-                    conversationId = "2",
+                    conversationId = ConversationId("2"),
                     name = "Two",
                 ),
             ),
@@ -141,14 +142,14 @@ internal class TargetsDelegateSelectionTest : BaseTargetsDelegateTest() {
 
         delegate.toggleSelection(
             conversationTarget(
-                conversationId = "1",
+                conversationId = ConversationId("1"),
                 normalizedDestination = null,
             ),
         )
         source.emit(
             persistentListOf(
                 shareTargetConversation(
-                    conversationId = "2",
+                    conversationId = ConversationId("2"),
                     name = "Two",
                 ),
             ),
@@ -167,7 +168,7 @@ internal class TargetsDelegateSelectionTest : BaseTargetsDelegateTest() {
         source.emit(
             persistentListOf(
                 shareTargetConversation(
-                    conversationId = "1",
+                    conversationId = ConversationId("1"),
                     name = "One",
                 ),
             ),
@@ -176,14 +177,14 @@ internal class TargetsDelegateSelectionTest : BaseTargetsDelegateTest() {
 
         delegate.toggleSelection(
             conversationTarget(
-                conversationId = "1",
+                conversationId = ConversationId("1"),
                 normalizedDestination = null,
             ),
         )
         source.emit(
             persistentListOf(
                 shareTargetConversation(
-                    conversationId = "1",
+                    conversationId = ConversationId("1"),
                     name = "One",
                 ),
             ),
@@ -202,7 +203,7 @@ internal class TargetsDelegateSelectionTest : BaseTargetsDelegateTest() {
         source.emit(
             persistentListOf(
                 shareTargetConversation(
-                    conversationId = "1",
+                    conversationId = ConversationId("1"),
                     name = "One",
                 ),
             ),

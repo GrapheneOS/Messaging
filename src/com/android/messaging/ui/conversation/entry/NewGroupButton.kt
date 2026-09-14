@@ -31,10 +31,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.ui.conversation.NEW_CHAT_CREATE_GROUP_BUTTON_TEST_TAG
 import com.android.messaging.ui.core.MessagingPreviewColumn
 
 @Composable
@@ -67,7 +69,8 @@ private fun NewGroupButton(
     val hapticFeedback = LocalHapticFeedback.current
 
     FilledTonalButton(
-        modifier = modifier,
+        modifier = modifier
+            .testTag(tag = NEW_CHAT_CREATE_GROUP_BUTTON_TEST_TAG),
         onClick = {
             hapticFeedback.performHapticFeedback(HapticFeedbackType.ContextClick)
             onClick()

@@ -4,10 +4,15 @@ package com.android.messaging.ui.conversation.preview
 
 import androidx.core.net.toUri
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentType
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscription.model.Subscription
+import com.android.messaging.data.vcard.model.VCardAvatarPhoto
 import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
 import com.android.messaging.ui.conversation.attachment.model.ConversationVCardAttachmentUiModel
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingPhase
@@ -26,6 +31,7 @@ import com.android.messaging.ui.conversation.messages.model.message.Conversation
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagesUiState
 import com.android.messaging.ui.conversation.messages.model.message.MmsDownloadUiModel
 import com.android.messaging.ui.conversation.metadata.model.ConversationMetadataUiState
+import java.util.Base64
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -33,20 +39,22 @@ private const val PREVIEW_NOW_MILLIS = 1_806_240_000_000L
 private const val PREVIEW_MESSAGE_RECEIVED_MILLIS = PREVIEW_NOW_MILLIS - 120_000L
 private const val PREVIEW_IMAGE_WIDTH = 1600
 private const val PREVIEW_IMAGE_HEIGHT = 1200
+private const val PREVIEW_AVATAR_PNG_BASE64 =
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADUlEQVR42mP8z8BQDwAFgwJ/l0SWJAAAAABJRU5ErkJggg=="
 
 internal fun previewSubscriptions(): ImmutableList<Subscription> {
     return persistentListOf(
         previewSubscription(
-            selfParticipantId = "self-1",
-            subId = 1,
+            selfParticipantId = ParticipantId("self-1"),
+            subId = SubId(1),
             label = ConversationSubscriptionLabel.Named(name = "Personal"),
             displayDestination = "+31 6 1234 5678",
             displaySlotId = 1,
             color = 0xff1e88e5.toInt(),
         ),
         previewSubscription(
-            selfParticipantId = "self-2",
-            subId = 2,
+            selfParticipantId = ParticipantId("self-2"),
+            subId = SubId(2),
             label = ConversationSubscriptionLabel.Named(name = "Work"),
             displayDestination = "+372 5555 0101",
             displaySlotId = 2,
@@ -56,8 +64,8 @@ internal fun previewSubscriptions(): ImmutableList<Subscription> {
 }
 
 internal fun previewSubscription(
-    selfParticipantId: String = "self-1",
-    subId: Int = 1,
+    selfParticipantId: ParticipantId = ParticipantId("self-1"),
+    subId: SubId = SubId(1),
     label: ConversationSubscriptionLabel = ConversationSubscriptionLabel.Named(name = "Personal"),
     displayDestination: String? = "+31 6 1234 5678",
     displaySlotId: Int = 1,
@@ -85,10 +93,10 @@ internal fun previewSimSelectorUiState(): ConversationSimSelectorUiState {
 internal fun previewMetadata(
     title: String = "Ada Lovelace",
     participantCount: Int = 1,
+    isBlocked: Boolean = false,
 ): ConversationMetadataUiState.Present {
     return ConversationMetadataUiState.Present(
         title = title,
-        selfParticipantId = "self-1",
         avatar = ConversationMetadataUiState.Avatar.Single(
             photoUri = null,
             normalizedDestination = null,
@@ -99,6 +107,7 @@ internal fun previewMetadata(
         otherParticipantPhoneNumber = "+31622223333",
         otherParticipantContactLookupKey = "preview-contact",
         isArchived = false,
+        isBlocked = isBlocked,
         composerAvailability = ConversationComposerAvailability.Editable,
     )
 }
@@ -106,13 +115,13 @@ internal fun previewMetadata(
 internal fun previewGroupMetadata(): ConversationMetadataUiState.Present {
     return ConversationMetadataUiState.Present(
         title = "Project group",
-        selfParticipantId = "self-1",
         avatar = ConversationMetadataUiState.Avatar.Group,
         participantCount = 4,
         otherParticipantDisplayDestination = null,
         otherParticipantPhoneNumber = null,
         otherParticipantContactLookupKey = null,
         isArchived = false,
+        isBlocked = false,
         composerAvailability = ConversationComposerAvailability.Editable,
     )
 }
@@ -125,7 +134,7 @@ internal fun previewComposerUiState(
         attachments = persistentListOf(),
         messageText = messageText,
         subjectText = subjectText,
-        selfParticipantId = "self-1",
+        selfParticipantId = ParticipantId("self-1"),
         simSelector = previewSimSelectorUiState(),
         isMessageFieldEnabled = true,
         isAttachmentActionEnabled = true,
@@ -248,7 +257,14 @@ internal fun previewVCardUiModel(
 ): ConversationVCardAttachmentUiModel {
     return ConversationVCardAttachmentUiModel(
         type = type,
-        avatarUri = null,
+        avatarPhoto = when (type) {
+            ConversationVCardAttachmentType.CONTACT -> previewVCardAvatarPhoto()
+            ConversationVCardAttachmentType.LOCATION -> null
+        },
+        normalizedDestination = when (type) {
+            ConversationVCardAttachmentType.CONTACT -> "+31622223333"
+            ConversationVCardAttachmentType.LOCATION -> null
+        },
         titleText = when (type) {
             ConversationVCardAttachmentType.CONTACT -> "Ada Lovelace"
             ConversationVCardAttachmentType.LOCATION -> "Rathausmarkt"
@@ -260,14 +276,21 @@ internal fun previewVCardUiModel(
     )
 }
 
+private fun previewVCardAvatarPhoto(): VCardAvatarPhoto {
+    return VCardAvatarPhoto(Base64.getDecoder().decode(PREVIEW_AVATAR_PNG_BASE64))
+}
+
 internal fun previewMessagesUiState(): ConversationMessagesUiState.Present {
-    return ConversationMessagesUiState.Present(messages = previewMessages())
+    return ConversationMessagesUiState.Present(
+        messages = previewMessages(),
+        youTubeLinkPreviewsEnabled = true,
+    )
 }
 
 internal fun previewMessages(): ImmutableList<ConversationMessageUiModel> {
     return persistentListOf(
         previewIncomingMessage(
-            messageId = "incoming-mms",
+            messageId = MessageId("incoming-mms"),
             text = "Here are the photos and voice note.",
             status = ConversationMessageUiModel.Status.Incoming.Complete,
             parts = persistentListOf(
@@ -277,12 +300,12 @@ internal fun previewMessages(): ImmutableList<ConversationMessageUiModel> {
             canSaveAttachments = true,
         ),
         previewOutgoingMessage(
-            messageId = "outgoing-delivered",
+            messageId = MessageId("outgoing-delivered"),
             text = "Received. I will forward them to the group.",
             status = ConversationMessageUiModel.Status.Outgoing.Delivered,
         ),
         previewIncomingMessage(
-            messageId = "incoming-download",
+            messageId = MessageId("incoming-download"),
             text = null,
             status = ConversationMessageUiModel.Status.Incoming.YetToManualDownload,
             mmsDownload = previewMmsDownloadUiModel(),
@@ -293,7 +316,7 @@ internal fun previewMessages(): ImmutableList<ConversationMessageUiModel> {
 }
 
 internal fun previewIncomingMessage(
-    messageId: String = "incoming-1",
+    messageId: MessageId = MessageId("incoming-1"),
     text: String? = "Can you review this before tonight?",
     status: ConversationMessageUiModel.Status = ConversationMessageUiModel.Status.Incoming.Complete,
     parts: ImmutableList<ConversationMessagePartUiModel> = persistentListOf(
@@ -311,7 +334,7 @@ internal fun previewIncomingMessage(
         status = status,
         isIncoming = true,
         senderDisplayName = "Ada Lovelace",
-        senderParticipantId = "participant-ada",
+        senderParticipantId = ParticipantId("participant-ada"),
         mmsDownload = mmsDownload,
         protocol = protocol,
         canDownloadMessage = canDownloadMessage,
@@ -320,7 +343,7 @@ internal fun previewIncomingMessage(
 }
 
 internal fun previewOutgoingMessage(
-    messageId: String = "outgoing-1",
+    messageId: MessageId = MessageId("outgoing-1"),
     text: String? = "I am on my way.",
     status: ConversationMessageUiModel.Status = ConversationMessageUiModel.Status.Outgoing.Complete,
     parts: ImmutableList<ConversationMessagePartUiModel> = persistentListOf(
@@ -334,8 +357,8 @@ internal fun previewOutgoingMessage(
         status = status,
         isIncoming = false,
         senderDisplayName = null,
-        senderParticipantId = "self-1",
-        selfParticipantId = "self-1",
+        senderParticipantId = ParticipantId("self-1"),
+        selfParticipantId = ParticipantId("self-1"),
     )
 }
 
@@ -434,6 +457,7 @@ internal fun previewInlineAudioAttachment(): ConversationInlineAttachment.Audio 
         ),
         titleText = "Voice note",
         titleTextResId = null,
+        durationMillis = 42_000L,
     )
 }
 
@@ -462,7 +486,8 @@ internal fun previewInlineVCardAttachment(
             contentUri = "content://com.android.messaging.preview/message/contact.vcf",
         ),
         type = type,
-        avatarUri = vCardUiModel.avatarUri,
+        avatarPhoto = vCardUiModel.avatarPhoto,
+        normalizedDestination = vCardUiModel.normalizedDestination,
         titleText = vCardUiModel.titleText,
         titleTextResId = vCardUiModel.titleTextResId,
         subtitleText = vCardUiModel.subtitleText,
@@ -472,23 +497,25 @@ internal fun previewInlineVCardAttachment(
 
 internal fun previewMmsDownloadUiModel(
     state: MmsDownloadUiModel.State = MmsDownloadUiModel.State.AwaitingManualDownload,
+    isSecondaryUser: Boolean = false,
 ): MmsDownloadUiModel {
     return MmsDownloadUiModel(
         state = state,
         sizeBytes = 2_400_000L,
         expiryTimestamp = PREVIEW_NOW_MILLIS + 86_400_000L,
+        isSecondaryUser = isSecondaryUser,
     )
 }
 
 private fun previewMessage(
-    messageId: String,
+    messageId: MessageId,
     text: String?,
     parts: ImmutableList<ConversationMessagePartUiModel>,
     status: ConversationMessageUiModel.Status,
     isIncoming: Boolean,
     senderDisplayName: String?,
-    senderParticipantId: String?,
-    selfParticipantId: String? = null,
+    senderParticipantId: ParticipantId?,
+    selfParticipantId: ParticipantId? = null,
     mmsDownload: MmsDownloadUiModel? = null,
     protocol: ConversationMessageUiModel.Protocol = ConversationMessageUiModel.Protocol.SMS,
     canDownloadMessage: Boolean = false,
@@ -496,7 +523,7 @@ private fun previewMessage(
 ): ConversationMessageUiModel {
     return ConversationMessageUiModel(
         messageId = messageId,
-        conversationId = "conversation-1",
+        conversationId = ConversationId("conversation-1"),
         text = text,
         parts = parts,
         sentTimestamp = PREVIEW_MESSAGE_RECEIVED_MILLIS,

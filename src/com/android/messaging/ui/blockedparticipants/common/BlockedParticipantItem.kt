@@ -22,11 +22,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantUiState
 import com.android.messaging.ui.common.components.TwoLineListItem
 import com.android.messaging.ui.common.components.participant.ParticipantAvatar
 import com.android.messaging.ui.common.components.participant.ParticipantQuickActionsPopup
 import com.android.messaging.ui.common.components.participant.participantAvatarLabel
+import com.android.messaging.ui.common.components.participant.participantColorSeed
+import com.android.messaging.ui.common.text.asLtrText
 import com.android.messaging.ui.core.MessagingPreviewColumn
 
 @Composable
@@ -91,10 +95,12 @@ private fun BlockedParticipantRow(
         isSelected -> MaterialTheme.colorScheme.surfaceContainerLow
         else -> MaterialTheme.colorScheme.background
     }
+    val displayName = participant.displayName.asLtrText()
+    val details = participant.details?.asLtrText()
 
     TwoLineListItem(
-        title = participant.displayName,
-        subtitle = participant.details,
+        title = displayName,
+        subtitle = details,
         onClick = onClick,
         modifier = modifier,
         onLongClick = onLongClick,
@@ -124,18 +130,23 @@ private fun BlockedParticipantQuickActions(
     visible: Boolean,
     participant: BlockedParticipantUiState,
     fallbackIcon: ImageVector,
+    colorSeedCode: String?,
     onDismiss: () -> Unit,
     onMessageClick: () -> Unit,
     onCallClick: (() -> Unit)?,
     onContactClick: (() -> Unit)?,
 ) {
+    val displayName = participant.displayName.asLtrText()
+    val subtitle = participant.details?.asLtrText()
+
     ParticipantQuickActionsPopup(
         visible = visible,
         avatarUri = participant.avatarUri,
-        displayName = participant.displayName,
-        subtitle = participant.details,
+        displayName = displayName,
+        subtitle = subtitle,
         fallbackIcon = fallbackIcon,
         fallbackLabel = participantAvatarLabel(source = participant.displayName),
+        colorSeedCode = colorSeedCode,
         onDismiss = onDismiss,
         onMessageClick = {
             onMessageClick()
@@ -149,6 +160,7 @@ private fun BlockedParticipantQuickActions(
             onContactClick?.invoke()
             onDismiss()
         }.takeIf { onContactClick != null },
+        onInfoClick = null,
         isContactSaved = participant.isContactSaved,
     )
 }
@@ -166,12 +178,17 @@ private fun BlockedParticipantAvatarWithQuickActions(
     onCallClick: (() -> Unit)?,
     onContactClick: (() -> Unit)?,
 ) {
+    val colorSeedCode = participantColorSeed(
+        normalizedDestination = participant.normalizedDestination,
+    )
+
     Box(modifier = Modifier.size(48.dp)) {
         ParticipantAvatar(
             avatarUri = participant.avatarUri,
             size = 48.dp,
             fallbackLabel = participantAvatarLabel(source = participant.displayName),
             fallbackIcon = fallbackIcon,
+            colorSeedCode = colorSeedCode,
             isSelected = isSelected,
             modifier = Modifier
                 .clip(CircleShape)
@@ -185,6 +202,7 @@ private fun BlockedParticipantAvatarWithQuickActions(
             visible = quickActionsVisible && !inSelectionMode,
             participant = participant,
             fallbackIcon = fallbackIcon,
+            colorSeedCode = colorSeedCode,
             onDismiss = onDismissQuickActions,
             onMessageClick = onMessageClick,
             onCallClick = onCallClick,
@@ -210,8 +228,8 @@ private fun BlockedParticipantItemPreview() {
     MessagingPreviewColumn {
         BlockedParticipantItem(
             participant = BlockedParticipantUiState(
-                participantId = "1",
-                conversationId = "c1",
+                participantId = ParticipantId("1"),
+                conversationId = ConversationId("c1"),
                 avatarUri = null,
                 displayName = "Spam Caller",
                 details = "+31 6 1234 5678",
@@ -219,6 +237,7 @@ private fun BlockedParticipantItemPreview() {
                 lookupKey = null,
                 normalizedDestination = "+31612345678",
                 canCall = true,
+                canShowContact = true,
                 isContactSaved = true,
             ),
             isSelected = false,

@@ -148,6 +148,11 @@ public class ConversationMessageData {
         if (getIsIncoming() != otherIsIncoming) {
             return false;
         }
+
+        if (requiresOwnStatusLine(mStatus) || requiresOwnStatusLine(otherStatus)) {
+            return false;
+        }
+
         final long otherReceivedTimestamp = cursor.getLong(INDEX_RECEIVED_TIMESTAMP);
         final long timestampDeltaMillis = Math.abs(mReceivedTimestamp - otherReceivedTimestamp);
         if (timestampDeltaMillis > DateUtils.MINUTE_IN_MILLIS) {
@@ -158,6 +163,12 @@ public class ConversationMessageData {
             return false;
         }
         return true;
+    }
+
+    private static boolean requiresOwnStatusLine(final int status) {
+        return status == MessageData.BUGLE_STATUS_OUTGOING_AWAITING_RETRY
+                || status == MessageData.BUGLE_STATUS_OUTGOING_FAILED
+                || status == MessageData.BUGLE_STATUS_OUTGOING_FAILED_EMERGENCY_NUMBER;
     }
 
     private static final Character QUOTE_CHAR = '\'';

@@ -6,10 +6,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.Subject
+import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.rounded.Archive
 import androidx.compose.material.icons.rounded.Call
 import androidx.compose.material.icons.rounded.Delete
@@ -26,7 +26,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -49,12 +48,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import androidx.core.text.BidiFormatter
-import androidx.core.text.TextDirectionHeuristicsCompat
 import com.android.messaging.R
 import com.android.messaging.ui.common.components.participant.ParticipantAvatar
 import com.android.messaging.ui.common.components.participant.participantAvatarLabel
 import com.android.messaging.ui.common.components.participant.participantColorSeed
+import com.android.messaging.ui.common.text.asLtrText
 import com.android.messaging.ui.conversation.CONVERSATION_ADD_CONTACT_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_ADD_PEOPLE_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_ARCHIVE_BUTTON_TEST_TAG
@@ -174,6 +172,7 @@ private fun rememberConversationTopAppBarPresentation(
     )
 
     val avatar = conversationAvatar(metadata)
+    val isBlocked = metadata is ConversationMetadataUiState.Present && metadata.isBlocked
 
     return remember(
         metadata,
@@ -181,12 +180,14 @@ private fun rememberConversationTopAppBarPresentation(
         subtitle,
         subtitleContentDescription,
         avatar,
+        isBlocked,
     ) {
         ConversationTopAppBarPresentation(
             title = title,
             subtitle = subtitle,
             subtitleContentDescription = subtitleContentDescription,
             avatar = avatar,
+            isBlocked = isBlocked,
         )
     }
 }
@@ -212,6 +213,7 @@ private fun ConversationTopAppBarTitle(
     ) {
         ConversationAvatar(
             avatar = presentation.avatar,
+            isBlocked = presentation.isBlocked,
         )
 
         ConversationTopAppBarText(
@@ -457,6 +459,7 @@ private fun ConversationTopAppBarOverflowMenuItem(
 @Composable
 private fun ConversationAvatar(
     avatar: ConversationMetadataUiState.Avatar,
+    isBlocked: Boolean,
 ) {
     when (avatar) {
         ConversationMetadataUiState.Avatar.Group -> {
@@ -471,14 +474,18 @@ private fun ConversationAvatar(
 
         is ConversationMetadataUiState.Avatar.Single -> {
             ParticipantAvatar(
-                avatarUri = avatar.photoUri,
+                avatarUri = avatar.photoUri.takeUnless { isBlocked },
                 size = CONVERSATION_TOP_APP_BAR_AVATAR_SIZE,
-                fallbackLabel = participantAvatarLabel(source = avatar.displayName),
+                fallbackLabel = participantAvatarLabel(source = avatar.displayName)
+                    .takeUnless { isBlocked },
                 colorSeedCode = participantColorSeed(
                     normalizedDestination = avatar.normalizedDestination,
                 ),
                 fallbackSize = CONVERSATION_TOP_APP_BAR_AVATAR_FALLBACK_SIZE,
-                fallbackIcon = Icons.Rounded.Person,
+                fallbackIcon = when {
+                    isBlocked -> Icons.Default.Block
+                    else -> Icons.Rounded.Person
+                },
             )
         }
     }
@@ -538,12 +545,7 @@ private fun conversationSubtitle(
         is ConversationMetadataUiState.Present -> {
             when {
                 shouldShowOneOnOneSubtitle(metadata = metadata) -> {
-                    BidiFormatter
-                        .getInstance()
-                        .unicodeWrap(
-                            metadata.otherParticipantDisplayDestination,
-                            TextDirectionHeuristicsCompat.LTR,
-                        )
+                    metadata.otherParticipantDisplayDestination?.asLtrText()
                 }
 
                 metadata.participantCount > 1 -> {
@@ -604,6 +606,7 @@ private data class ConversationTopAppBarPresentation(
     val subtitle: String?,
     val subtitleContentDescription: String?,
     val avatar: ConversationMetadataUiState.Avatar,
+    val isBlocked: Boolean,
 )
 
 @Immutable
@@ -653,6 +656,21 @@ private fun ConversationTopAppBarOneOnOnePreview() {
             isDeleteConversationVisible = true,
             isShowSubjectFieldVisible = true,
             simSelector = previewSimSelectorUiState(),
+            onAddPeopleClick = {},
+            onTitleClick = {},
+            onNavigateBack = {},
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationTopAppBarBlockedPreview() {
+    MessagingPreviewTheme {
+        ConversationTopAppBar(
+            metadata = previewMetadata(isBlocked = true),
+            isCallVisible = true,
+            isDeleteConversationVisible = true,
             onAddPeopleClick = {},
             onTitleClick = {},
             onNavigateBack = {},

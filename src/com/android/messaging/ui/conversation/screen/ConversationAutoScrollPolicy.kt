@@ -1,8 +1,10 @@
 package com.android.messaging.ui.conversation.screen
 
+import com.android.messaging.data.conversation.model.MessageId
+
 internal data class ConversationAutoScrollInput(
-    val previousLatestMessageId: String?,
-    val latestMessageId: String?,
+    val previousLatestMessageId: MessageId?,
+    val latestMessageId: MessageId?,
     val hasLatestMessage: Boolean,
     val isLatestMessageIncoming: Boolean,
     val wasScrolledToLatestMessage: Boolean,
@@ -11,7 +13,7 @@ internal data class ConversationAutoScrollInput(
 internal data class ConversationAutoScrollDecision(
     val shouldScrollToLatestMessage: Boolean,
     val shouldShowNewMessageSnackbar: Boolean,
-    val updatedLatestMessageId: String?,
+    val updatedLatestMessageId: MessageId?,
 )
 
 internal fun evaluateConversationAutoScroll(

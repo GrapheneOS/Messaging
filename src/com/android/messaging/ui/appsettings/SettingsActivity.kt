@@ -1,56 +1,25 @@
 package com.android.messaging.ui.appsettings
 
-import android.app.role.RoleManager
+import android.content.Intent
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import com.android.messaging.datamodel.data.ParticipantData
-import com.android.messaging.ui.UIIntents
-import com.android.messaging.ui.appsettings.screen.SettingsEffectHandlerImpl
-import com.android.messaging.ui.appsettings.screen.SettingsScreen
-import com.android.messaging.ui.core.AppTheme
+import com.android.messaging.ui.BugleComponentActivity
+import com.android.messaging.ui.MainActivity
+import com.android.messaging.ui.appsettings.navigation.UI_INTENT_EXTRA_GOTO_SETTINGS
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 @AndroidEntryPoint
-class SettingsActivity : ComponentActivity() {
-
-    @Inject
-    lateinit var roleManager: RoleManager
+class SettingsActivity : BugleComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        enableEdgeToEdge()
-
-        val effectHandler = SettingsEffectHandlerImpl(
-            activity = this,
-            roleManager = roleManager,
+        startActivity(
+            Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra(UI_INTENT_EXTRA_GOTO_SETTINGS, true)
+            },
         )
 
-        val subId = intent.getIntExtra(
-            UIIntents.UI_INTENT_EXTRA_SUB_ID,
-            ParticipantData.DEFAULT_SELF_SUB_ID,
-        )
-        val subTitle = intent.getStringExtra(
-            UIIntents.UI_INTENT_EXTRA_PER_SUBSCRIPTION_SETTING_TITLE,
-        )
-        val isTopLevel = intent.getBooleanExtra(
-            UIIntents.UI_INTENT_EXTRA_TOP_LEVEL_SETTINGS,
-            false,
-        )
-
-        setContent {
-            AppTheme {
-                SettingsScreen(
-                    effectHandler = effectHandler,
-                    onNavigateBack = ::finish,
-                    intentSubId = subId,
-                    intentSubTitle = subTitle,
-                    isTopLevelIntent = isTopLevel,
-                )
-            }
-        }
+        finish()
     }
 }

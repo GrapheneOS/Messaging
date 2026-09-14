@@ -1,0 +1,5 @@
+# Instrumented-test class-directory include patterns.
+com/android/messaging/ui/appsettings/**
+com/android/messaging/ui/contact/**
+com/android/messaging/ui/conversation/**
+com/android/messaging/ui/core/**

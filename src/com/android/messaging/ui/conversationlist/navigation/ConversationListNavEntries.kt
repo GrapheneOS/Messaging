@@ -1,0 +1,135 @@
+package com.android.messaging.ui.conversationlist.navigation
+
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavKey
+import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.ui.appsettings.navigation.SettingsNavKey
+import com.android.messaging.ui.blockedparticipants.navigation.BlockedParticipantsNavKey
+import com.android.messaging.ui.common.components.LocalIsListDetailPane
+import com.android.messaging.ui.common.components.consumeOppositePaneInsets
+import com.android.messaging.ui.contact.navigation.navigateToAddContact
+import com.android.messaging.ui.conversation.navigation.ConversationNavKey
+import com.android.messaging.ui.conversation.navigation.conversationListPaneMetadata
+import com.android.messaging.ui.conversation.navigation.rememberConversationNavigator
+import com.android.messaging.ui.conversationlist.archived.ArchivedConversationListScreen
+import com.android.messaging.ui.conversationlist.archived.ArchivedConversationListViewModel
+import com.android.messaging.ui.conversationlist.archived.rememberArchivedConversationListEffectHandler
+import com.android.messaging.ui.conversationlist.chats.ConversationListNavigationCallbacks
+import com.android.messaging.ui.conversationlist.chats.ConversationListScreen
+import com.android.messaging.ui.conversationlist.chats.ConversationListViewModel
+import com.android.messaging.ui.conversationlist.chats.rememberConversationListEffectHandler
+import com.android.messaging.ui.navigation.LocalNavigator
+import com.android.messaging.ui.navigation.Navigator
+import com.android.messaging.ui.navigation.paneTitleMetadata
+
+internal fun EntryProviderScope<NavKey>.conversationListEntries() {
+    entry<ConversationListNavKey>(
+        metadata = conversationListPaneMetadata() + paneTitleMetadata(R.string.app_name),
+        content = conversationListRouteContent(),
+    )
+    entry<ArchivedConversationListNavKey>(
+        metadata = conversationListPaneMetadata() +
+            paneTitleMetadata(R.string.archived_activity_title),
+        content = archivedConversationListRouteContent(),
+    )
+}
+
+private fun conversationListRouteContent(): @Composable (ConversationListNavKey) -> Unit {
+    return {
+        val navigator = rememberConversationNavigator()
+        val appNavigator = LocalNavigator.current
+        val effectHandler = rememberConversationListEffectHandler(
+            onNavigateToAddContact = { request ->
+                appNavigator.navigateToAddContact(request = request)
+            },
+        )
+
+        val navigation = remember(navigator, appNavigator) {
+            ConversationListNavigationCallbacks(
+                onNavigateToConversation = { conversationId ->
+                    navigator.navigateToConversation(conversationId = conversationId)
+                },
+                onNavigateToNewChat = navigator::navigateToNewChat,
+                onNavigateToConversationSettings = { conversationId ->
+                    navigator.navigateToConversationSettings(conversationId = conversationId)
+                },
+                onCloseConversation = { conversationId ->
+                    appNavigator.closeConversation(conversationId = conversationId)
+                },
+                onNavigateToArchivedConversations = {
+                    appNavigator.push(destination = ArchivedConversationListNavKey)
+                },
+                onNavigateToBlockedParticipants = {
+                    appNavigator.push(destination = BlockedParticipantsNavKey)
+                },
+                onNavigateToSettings = {
+                    appNavigator.push(destination = SettingsNavKey)
+                },
+            )
+        }
+
+        ConversationListScreen(
+            screenModel = hiltViewModel<ConversationListViewModel>(),
+            effectHandler = effectHandler,
+            navigation = navigation,
+            openedConversationId = openedConversationId(navigator = appNavigator),
+            modifier = Modifier
+                .fillMaxSize()
+                .consumeOppositePaneInsets(),
+        )
+    }
+}
+
+@Composable
+private fun openedConversationId(navigator: Navigator): ConversationId? {
+    if (!LocalIsListDetailPane.current) {
+        return null
+    }
+
+    return navigator.backStack
+        .filterIsInstance<ConversationNavKey>()
+        .lastOrNull()
+        ?.conversationId
+}
+
+private fun archivedConversationListRouteContent():
+    @Composable (ArchivedConversationListNavKey) -> Unit {
+    return {
+        val conversationNavigator = rememberConversationNavigator()
+        val navigator = LocalNavigator.current
+        val effectHandler = rememberArchivedConversationListEffectHandler(
+            onNavigateToAddContact = { request ->
+                navigator.navigateToAddContact(request = request)
+            },
+        )
+
+        ArchivedConversationListScreen(
+            screenModel = hiltViewModel<ArchivedConversationListViewModel>(),
+            effectHandler = effectHandler,
+            onNavigateBack = navigator::back,
+            onNavigateToConversation = { conversationId ->
+                conversationNavigator.navigateToConversation(conversationId = conversationId)
+            },
+            onNavigateToConversationSettings = { conversationId ->
+                conversationNavigator.navigateToConversationSettings(
+                    conversationId = conversationId,
+                )
+            },
+            onCloseConversation = { conversationId ->
+                navigator.closeConversation(conversationId = conversationId)
+            },
+            onCloseArchivedList = {
+                navigator.removeDestination(destination = ArchivedConversationListNavKey)
+            },
+            modifier = Modifier
+                .fillMaxSize()
+                .consumeOppositePaneInsets(),
+        )
+    }
+}

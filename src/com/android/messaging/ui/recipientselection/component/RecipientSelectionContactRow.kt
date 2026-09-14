@@ -322,9 +322,9 @@ private fun RecipientSelectionContactRowMultiDestinationWrapperPreview() {
             PreviewRecipientSelectionContactRow(
                 item = contactItem,
                 selectedDestinations = persistentSetOf<String>()
-                    .add(RECIPIENT_ROW_PREVIEW_PRIMARY_DESTINATION)
-                    .add(RECIPIENT_ROW_PREVIEW_SECONDARY_DESTINATION)
-                    .add(RECIPIENT_ROW_PREVIEW_EMAIL_DESTINATION),
+                    .adding(RECIPIENT_ROW_PREVIEW_PRIMARY_DESTINATION)
+                    .adding(RECIPIENT_ROW_PREVIEW_SECONDARY_DESTINATION)
+                    .adding(RECIPIENT_ROW_PREVIEW_EMAIL_DESTINATION),
                 loadingDestination = RECIPIENT_ROW_PREVIEW_EMAIL_DESTINATION,
             )
         }

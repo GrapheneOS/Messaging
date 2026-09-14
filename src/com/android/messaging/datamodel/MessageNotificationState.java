@@ -22,7 +22,6 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.net.Uri;
-import android.text.Html;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -39,6 +38,8 @@ import androidx.core.graphics.drawable.IconCompat;
 
 import com.android.messaging.Factory;
 import com.android.messaging.R;
+import com.android.messaging.datamodel.action.RedownloadMmsAction;
+import com.android.messaging.datamodel.action.ResendMessageAction;
 import com.android.messaging.datamodel.data.ConversationListItemData;
 import com.android.messaging.datamodel.data.ConversationMessageData;
 import com.android.messaging.datamodel.data.ConversationParticipantsData;
@@ -52,6 +53,8 @@ import com.android.messaging.util.AvatarUriUtil;
 import com.android.messaging.util.ContentType;
 import com.android.messaging.util.ConversationIdSet;
 import com.android.messaging.util.LogUtil;
+import com.android.messaging.util.NotificationChannelUtil;
+import com.android.messaging.util.OsUtil;
 import com.android.messaging.util.PendingIntentConstants;
 import com.android.messaging.util.UriUtil;
 
@@ -83,6 +86,8 @@ public class MessageNotificationState {
 
     private static final int REPLY_INTENT_REQUEST_CODE_OFFSET = 0;
     private static final int NUM_EXTRA_REQUEST_CODES_NEEDED = 1;
+
+    private static final int REQUEST_CODE_REDOWNLOAD_FAILED_MMS = 103;
 
     private static final int CONTENT_INTENT_REQUEST_CODE_OFFSET = 0;
     private static final int CLEAR_INTENT_REQUEST_CODE_OFFSET = 1;
@@ -121,9 +126,9 @@ public class MessageNotificationState {
 
         MessageLineInfo(final String authorId, final String authorFullName,
                 final String authorFirstName, final CharSequence text, final Uri attachmentUri,
-                final String attachmentType, final boolean isManualDownloadNeeded,
-                final Uri avatarUri, final String messageId, final long timestamp,
-                final String contactUriString) {
+                final String attachmentType,
+                final boolean isManualDownloadNeeded, final Uri avatarUri, final String messageId,
+                final long timestamp, final String contactUriString) {
             mAuthorId = authorId;
             mMessageId = messageId;
             mName = authorFullName == null ? authorFirstName : authorFullName;
@@ -189,8 +194,11 @@ public class MessageNotificationState {
             MessagingStyle.Message message =
                     new MessagingStyle.Message(mText, mTimestamp, person);
             if (mAttachmentUri != null && ContentType.isImageType(mAttachmentType)) {
-                message.setData(mAttachmentType,
-                        SharedMemoryImageProvider.Companion.buildUri(mAttachmentUri, mAttachmentType));
+                final Uri notificationImageUri = BugleNotifications.getNotificationImageUri(
+                        Factory.get().getApplicationContext(), mAttachmentUri);
+                if (notificationImageUri != null) {
+                    message.setData(ContentType.IMAGE_JPEG, notificationImageUri);
+                }
             }
             return message;
         }
@@ -455,8 +463,10 @@ public class MessageNotificationState {
                         // notification.
                         Assert.equals(MessageData.BUGLE_STATUS_INCOMING_YET_TO_MANUAL_DOWNLOAD,
                                 convMessageData.getStatus());
-                        text = context.getResources().getString(
-                                R.string.message_title_manual_download);
+                        final int downloadTitleResId = OsUtil.isSecondaryUser()
+                                ? R.string.message_title_download_secondary_user
+                                : R.string.message_title_manual_download;
+                        text = context.getResources().getString(downloadTitleResId);
                     }
                     Conversation conversation = conversations.get(convId);
                     final Uri avatarUri = AvatarUriUtil.createAvatarUri(
@@ -467,6 +477,11 @@ public class MessageNotificationState {
                     if (conversation == null) {
                         final ConversationListItemData convData =
                                 ConversationListItemData.getExistingConversation(db, convId);
+                        if (convData == null) {
+                            // The conversation was removed (e.g. deleted as empty during sync)
+                            // between reading the message and building the notification.
+                            continue;
+                        }
                         final int subId = BugleDatabaseOperations.getSelfSubscriptionId(db,
                                 convData.getSelfId());
                         groupConversationName = convData.getName();
@@ -552,8 +567,9 @@ public class MessageNotificationState {
 
                     conversation.mLineInfos.add(new MessageLineInfo(authorId,
                             authorFullName, authorFirstName, text,
-                            attachmentUri, attachmentType, isManualDownloadNeeded, avatarUri,
-                            messageId, timestamp, contactUriString));
+                            attachmentUri, attachmentType,
+                            isManualDownloadNeeded, avatarUri, messageId, timestamp,
+                            contactUriString));
                     messageCount++;
                     conversation.mTotalMessageCount++;
                 } while (convMessageCursor.moveToNext());
@@ -683,6 +699,23 @@ public class MessageNotificationState {
         return spanBuilder;
     }
 
+    private static CharSequence describeFailedMessage(final MessageData message) {
+        if (message == null) {
+            // Deleted between the query above and this read.
+            return null;
+        }
+        final String text = message.getMessageText();
+        if (!TextUtils.isEmpty(text)) {
+            return text;
+        }
+        for (final MessagePartData part : message.getParts()) {
+            if (part.isAttachment()) {
+                return MessageLineInfo.formatAttachmentTag(part.getContentType());
+            }
+        }
+        return null;
+    }
+
     /**
      * Check for failed messages and post notifications as needed.
      */
@@ -712,7 +745,7 @@ public class MessageNotificationState {
                 final ArrayList<Integer> failedMessages = new ArrayList<Integer>();
 
                 int cursorPosition = -1;
-                final long when = 0;
+                long when = 0;
 
                 messageDataCursor.moveToPosition(-1);
                 while (messageDataCursor.moveToNext()) {
@@ -735,12 +768,11 @@ public class MessageNotificationState {
                     LogUtil.d(TAG, "Found " + failedMessages.size() + " failed messages");
                 }
                 if (failedMessages.size() > 0) {
-                    final NotificationCompat.Builder builder =
-                            new NotificationCompat.Builder(context);
+                    final NotificationCompat.Builder builder = new NotificationCompat.Builder(
+                            context, NotificationChannelUtil.ALERTS_CHANNEL);
 
                     CharSequence line1;
                     CharSequence line2;
-                    final boolean isRichContent = false;
                     ConversationIdSet conversationIds = null;
                     PendingIntent destinationIntent;
                     if (failedMessages.size() == 1) {
@@ -756,23 +788,44 @@ public class MessageNotificationState {
 
                         conversationIds = ConversationIdSet.createSet(conversationId);
 
-                        final String failedMessgeSnippet = messageData.getMessageText();
+                        final String messageId = messageData.getMessageId();
+                        // Stamp the notification with the message that failed rather than with
+                        // the time of this check, matching the timestamp the thread sorts by.
+                        when = messageData.getReceivedTimeStamp() > 0
+                                ? messageData.getReceivedTimeStamp()
+                                : messageData.getSentTimeStamp();
+
+                        final ConversationListItemData conversation =
+                                ConversationListItemData.getExistingConversation(db,
+                                        conversationId);
+                        if (conversation != null) {
+                            // Says who the message was for without hand-building a bidi-unsafe
+                            // "name - text" line out of two user-supplied strings.
+                            builder.setSubText(conversation.getName());
+                        }
+
                         int failureStringId;
                         if (messageData.getStatus() ==
                                 MessageData.BUGLE_STATUS_INCOMING_DOWNLOAD_FAILED) {
                             failureStringId =
                                     R.string.notification_download_failures_line1_singular;
+                            if (!OsUtil.isSecondaryUser()) {
+                                builder.addAction(R.drawable.ic_file_download_light,
+                                        context.getString(R.string.notification_download_mms),
+                                        RedownloadMmsAction.getPendingIntentForRedownloadMms(
+                                                context, messageId,
+                                                REQUEST_CODE_REDOWNLOAD_FAILED_MMS));
+                            }
                         } else {
                             failureStringId = R.string.notification_send_failures_line1_singular;
+                            builder.addAction(0,
+                                    context.getString(R.string.notification_retry_prompt),
+                                    ResendMessageAction.getPendingIntentForResendMessage(
+                                            context, messageId));
                         }
                         line1 = resources.getString(failureStringId);
-                        line2 = failedMessgeSnippet;
-                        // Set rich text for non-SMS messages or MMS push notification messages
-                        // which we generate locally with rich text
-                        // TODO- fix this
-//                        if (messageData.isMmsInd()) {
-//                            isRichContent = true;
-//                        }
+                        line2 = describeFailedMessage(
+                                BugleDatabaseOperations.readMessage(db, messageId));
                     } else {
                         // We have notifications for multiple conversation, go to the conversation
                         // list.
@@ -814,25 +867,15 @@ public class MessageNotificationState {
                         .setSmallIcon(R.drawable.ic_failed_light)
                         .setDeleteIntent(pendingIntentForDelete)
                         .setContentIntent(destinationIntent)
+                        .setContentText(line2)
+                        .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
                         .setSound(UriUtil.getUriForResourceId(context, R.raw.message_failure));
-                    if (isRichContent && !TextUtils.isEmpty(line2)) {
-                        final NotificationCompat.InboxStyle inboxStyle =
-                                new NotificationCompat.InboxStyle(builder);
-                        if (line2 != null) {
-                            inboxStyle.addLine(Html.fromHtml(line2.toString()));
-                        }
-                        builder.setStyle(inboxStyle);
-                    } else {
-                        builder.setContentText(line2);
-                    }
 
-                    if (builder != null) {
-                        notificationManager.notify(
-                                BugleNotifications.buildNotificationTag(
-                                        PendingIntentConstants.MSG_SEND_ERROR, null),
-                                PendingIntentConstants.MSG_SEND_ERROR,
-                                builder.build());
-                    }
+                    notificationManager.notify(
+                            BugleNotifications.buildNotificationTag(
+                                    PendingIntentConstants.MSG_SEND_ERROR, null),
+                            PendingIntentConstants.MSG_SEND_ERROR,
+                            builder.build());
                 } else {
                     notificationManager.cancel(
                             BugleNotifications.buildNotificationTag(

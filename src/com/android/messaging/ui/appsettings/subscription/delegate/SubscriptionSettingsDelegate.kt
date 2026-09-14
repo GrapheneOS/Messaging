@@ -1,5 +1,6 @@
 package com.android.messaging.ui.appsettings.subscription.delegate
 
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscriptionsettings.model.SubscriptionBooleanPref
 import com.android.messaging.data.subscriptionsettings.repository.SubscriptionSettingsRepository
 import com.android.messaging.domain.subscriptionsettings.usecase.SetSubscriptionPhoneNumber
@@ -21,11 +22,11 @@ import kotlinx.coroutines.launch
 
 internal interface SubscriptionSettingsDelegate :
     SettingsScreenDelegate<SubscriptionSettingsUiState> {
-    fun onAutoRetrieveMmsChanged(subId: Int, enabled: Boolean)
-    fun onAutoRetrieveMmsWhenRoamingChanged(subId: Int, enabled: Boolean)
-    fun onDeliveryReportsChanged(subId: Int, enabled: Boolean)
-    fun onGroupMmsChanged(subId: Int, enabled: Boolean)
-    fun onPhoneNumberChanged(subId: Int, phoneNumber: String)
+    fun onAutoRetrieveMmsChanged(subId: SubId, enabled: Boolean)
+    fun onAutoRetrieveMmsWhenRoamingChanged(subId: SubId, enabled: Boolean)
+    fun onDeliveryReportsChanged(subId: SubId, enabled: Boolean)
+    fun onGroupMmsChanged(subId: SubId, enabled: Boolean)
+    fun onPhoneNumberChanged(subId: SubId, phoneNumber: String)
 }
 
 internal class SubscriptionSettingsDelegateImpl @Inject constructor(
@@ -72,7 +73,7 @@ internal class SubscriptionSettingsDelegateImpl @Inject constructor(
     }
 
     override fun onAutoRetrieveMmsChanged(
-        subId: Int,
+        subId: SubId,
         enabled: Boolean,
     ) {
         setBooleanPref(
@@ -83,7 +84,7 @@ internal class SubscriptionSettingsDelegateImpl @Inject constructor(
     }
 
     override fun onAutoRetrieveMmsWhenRoamingChanged(
-        subId: Int,
+        subId: SubId,
         enabled: Boolean,
     ) {
         setBooleanPref(
@@ -94,7 +95,7 @@ internal class SubscriptionSettingsDelegateImpl @Inject constructor(
     }
 
     override fun onDeliveryReportsChanged(
-        subId: Int,
+        subId: SubId,
         enabled: Boolean,
     ) {
         setBooleanPref(
@@ -105,7 +106,7 @@ internal class SubscriptionSettingsDelegateImpl @Inject constructor(
     }
 
     override fun onGroupMmsChanged(
-        subId: Int,
+        subId: SubId,
         enabled: Boolean,
     ) {
         setBooleanPref(
@@ -116,7 +117,7 @@ internal class SubscriptionSettingsDelegateImpl @Inject constructor(
     }
 
     override fun onPhoneNumberChanged(
-        subId: Int,
+        subId: SubId,
         phoneNumber: String,
     ) {
         boundScope?.launch {
@@ -129,7 +130,7 @@ internal class SubscriptionSettingsDelegateImpl @Inject constructor(
     }
 
     private fun setBooleanPref(
-        subId: Int,
+        subId: SubId,
         pref: SubscriptionBooleanPref,
         enabled: Boolean,
     ) {

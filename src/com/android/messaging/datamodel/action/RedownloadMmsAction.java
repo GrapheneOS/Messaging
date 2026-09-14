@@ -36,7 +36,6 @@ import com.android.messaging.util.LogUtil;
  */
 public class RedownloadMmsAction extends Action implements Parcelable {
     private static final String TAG = LogUtil.BUGLE_DATAMODEL_TAG;
-    private static final int REQUEST_CODE_PENDING_INTENT = 101;
 
     private static final String KEY_SUB_ID = "sub_id";
 
@@ -52,10 +51,10 @@ public class RedownloadMmsAction extends Action implements Parcelable {
      * Get a pending intent of for downloading an MMS
      */
     public static PendingIntent getPendingIntentForRedownloadMms(
-            final Context context, final String messageId) {
+            final Context context, final String messageId, final int requestCode) {
         final Action action = new RedownloadMmsAction(messageId);
         return ActionService.makeStartActionPendingIntent(context,
-                action, REQUEST_CODE_PENDING_INTENT, false /*launchesAnActivity*/);
+                action, messageId, requestCode, false /*launchesAnActivity*/);
     }
 
     // Core parameters needed for all types of message

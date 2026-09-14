@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationpicker.viewmodel
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.domain.conversation.usecase.participant.ResolveConversationId
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveConversationIdResult
@@ -9,7 +10,6 @@ import com.android.messaging.testutil.TEST_RESOLVED_CONVERSATION_ID
 import com.android.messaging.ui.conversationpicker.ConversationPickerViewModel
 import com.android.messaging.ui.conversationpicker.delegate.DraftDelegate
 import com.android.messaging.ui.conversationpicker.delegate.TargetsDelegate
-import com.android.messaging.ui.conversationpicker.formatter.TargetTextFormatter
 import com.android.messaging.ui.conversationpicker.mapper.ContactTargetMapperImpl
 import com.android.messaging.ui.conversationpicker.model.DraftUiState
 import com.android.messaging.ui.conversationpicker.model.SelectionUiState
@@ -54,12 +54,7 @@ internal abstract class BaseConversationPickerViewModelTest {
         every { state } returns contactsState
     }
 
-    protected val textFormatter = mockk<TargetTextFormatter> {
-        every { wrap(any()) } answers { firstArg() }
-        every { detailsOrNull(any(), any()) } answers { secondArg() }
-    }
-
-    protected val contactTargetMapper = ContactTargetMapperImpl(textFormatter)
+    protected val contactTargetMapper = ContactTargetMapperImpl()
 
     protected val draftDelegate = mockk<DraftDelegate>(relaxed = true) {
         every { state } returns draftState
@@ -68,6 +63,7 @@ internal abstract class BaseConversationPickerViewModelTest {
 
     protected val simSelectionDelegate = mockk<SimSelectionDelegate>(relaxed = true) {
         every { state } returns simSelectionState
+        every { currentSelectedSelfParticipantId() } returns null
     }
 
     protected val resolveConversationId = mockk<ResolveConversationId>()
@@ -86,13 +82,13 @@ internal abstract class BaseConversationPickerViewModelTest {
     protected fun givenSelectedTargets(targets: List<TargetUiState>) {
         every { targetsDelegate.currentSelectedTargets } returns targets.toImmutableList()
         selectedIds.value = targets.map { it.selectionId }.toImmutableSet().let {
-            persistentSetOf<String>().addAll(it)
+            persistentSetOf<String>().addingAll(it)
         }
     }
 
     protected fun givenResolvedConversation(
         destination: String = TEST_CONTACT_DESTINATION,
-        conversationId: String = TEST_RESOLVED_CONVERSATION_ID,
+        conversationId: ConversationId = TEST_RESOLVED_CONVERSATION_ID,
     ) {
         coEvery { resolveConversationId(listOf(destination)) } returns
             ResolveConversationIdResult.Resolved(conversationId)
@@ -110,7 +106,7 @@ internal abstract class BaseConversationPickerViewModelTest {
             selection = SelectionUiState(
                 selectedIds = selectedTargets.map { it.selectionId }
                     .toImmutableSet()
-                    .let { persistentSetOf<String>().addAll(it) },
+                    .let { persistentSetOf<String>().addingAll(it) },
                 selectedTargets = selectedTargets.toImmutableList(),
             ),
         )

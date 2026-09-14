@@ -16,7 +16,9 @@
 
 package com.android.messaging.datamodel.action;
 
+import android.app.PendingIntent;
 import android.content.ContentValues;
+import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -34,6 +36,8 @@ import com.android.messaging.util.LogUtil;
 public class ResendMessageAction extends Action implements Parcelable {
     private static final String TAG = LogUtil.BUGLE_DATAMODEL_TAG;
 
+    private static final int REQUEST_CODE_PENDING_INTENT = 102;
+
     private static final String KEY_SUB_ID = "sub_id";
 
     /**
@@ -42,6 +46,14 @@ public class ResendMessageAction extends Action implements Parcelable {
     public static void resendMessage(final String messageId) {
         final ResendMessageAction action = new ResendMessageAction(messageId);
         action.start();
+    }
+
+    public static PendingIntent getPendingIntentForResendMessage(
+            final Context context, final String messageId) {
+        final Action action = new ResendMessageAction(messageId);
+        return ActionService.makeStartActionPendingIntent(context,
+                action, messageId, REQUEST_CODE_PENDING_INTENT,
+                false /*launchesAnActivity*/);
     }
 
     // Core parameters needed for all types of message

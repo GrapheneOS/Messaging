@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationpicker.delegate.targetsdelegate
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationpicker.model.TargetConversation
 import com.android.messaging.data.conversationpicker.repository.TargetsRepository
 import com.android.messaging.ui.conversationpicker.delegate.TargetsDelegateImpl
@@ -55,7 +56,7 @@ internal abstract class BaseTargetsDelegateTest {
     }
 
     protected fun shareTargetConversation(
-        conversationId: String,
+        conversationId: ConversationId,
         name: String,
         normalizedDestination: String? = null,
         isGroup: Boolean = false,

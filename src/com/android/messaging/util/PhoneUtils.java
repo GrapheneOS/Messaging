@@ -54,10 +54,10 @@ import androidx.collection.ArrayMap;
  * This class abstracts away platform dependency of calling telephony related
  * platform APIs, mostly involving TelephonyManager, SubscriptionManager and
  * a bit of SmsManager.
- *
+ * <p>
  * The class instance can only be obtained via the get(int subId) method parameterized
  * by a SIM subscription ID.
- *
+ * <p>
  * A convenient getDefault() method is provided for default subId (-1) on any platform
  */
 public class PhoneUtils {
@@ -104,15 +104,6 @@ public class PhoneUtils {
     }
 
     /**
-     * Get number of SIM slots
-     *
-     * @return the SIM slot count
-     */
-    public int getSimSlotCount() {
-        return mSubscriptionManager.getActiveSubscriptionInfoCountMax();
-    }
-
-    /**
      * Get SIM's carrier name
      *
      * @return the carrier name of the SIM
@@ -130,15 +121,6 @@ public class PhoneUtils {
             }
         }
         return null;
-    }
-
-    /**
-     * Check if there is SIM inserted on the device
-     *
-     * @return true if there is SIM inserted, false otherwise
-     */
-    public boolean hasSim() {
-        return mSubscriptionManager.getActiveSubscriptionInfoCount() > 0;
     }
 
     /**
@@ -167,15 +149,6 @@ public class PhoneUtils {
     }
 
     /**
-     * Get the mcc/mnc string
-     *
-     * @return the text of mccmnc string
-     */
-    public String getSimOperatorNumeric() {
-        return getMccMncString(getMccMnc());
-    }
-
-    /**
      * Get the SIM's self raw number, i.e. not canonicalized
      *
      * @param allowOverride Whether to use the app's setting to override the self number
@@ -191,21 +164,52 @@ public class PhoneUtils {
         }
 
         final SubscriptionInfo subInfo = getActiveSubscriptionInfo();
-        if (subInfo != null) {
-            String phoneNumber = subInfo.getNumber();
-            if (TextUtils.isEmpty(phoneNumber) && LogUtil.isLoggable(TAG, LogUtil.DEBUG)) {
-                LogUtil.d(TAG, "SubscriptionInfo phone number for self is empty!");
-            }
-            return phoneNumber;
+        if (subInfo == null) {
+            LogUtil.w(TAG, "PhoneUtils.getSelfRawNumber: subInfo is null for " + mSubId);
+            throw new IllegalStateException("No active subscription");
         }
-        LogUtil.w(TAG, "PhoneUtils.getSelfRawNumber: subInfo is null for " + mSubId);
-        throw new IllegalStateException("No active subscription");
+
+        final String carrierNumber = getCarrierKnownNumber(subInfo.getSubscriptionId());
+        if (!TextUtils.isEmpty(carrierNumber)) {
+            return carrierNumber;
+        }
+
+        final String phoneNumber = subInfo.getNumber();
+        if (TextUtils.isEmpty(phoneNumber) && LogUtil.isLoggable(TAG, LogUtil.DEBUG)) {
+            LogUtil.d(TAG, "SubscriptionInfo phone number for self is empty!");
+        }
+
+        return phoneNumber;
+    }
+
+    /**
+     * Ask telephony for an active subscription's number, from whichever source knows it.
+     *
+     * <p>{@link SubscriptionInfo#getNumber} reads the UICC alone, and plenty of carriers never
+     * write the MSISDN there -- the number is then only known from the carrier config or from the
+     * IMS registration. {@link SubscriptionManager#getPhoneNumber} consults all three.
+     *
+     * @param subId an active subscription id
+     * @return the number, or empty if telephony has none or will not tell us
+     */
+    private String getCarrierKnownNumber(final int subId) {
+        try {
+            return mSubscriptionManager.getPhoneNumber(subId);
+        } catch (final SecurityException e) {
+            // READ_PHONE_NUMBERS is declared but not granted; the UICC is all we get.
+            LogUtil.w(TAG, "PhoneUtils.getCarrierKnownNumber: not permitted for " + subId);
+            return "";
+        } catch (final IllegalArgumentException e) {
+            // The subscription went away between the two calls.
+            LogUtil.w(TAG, "PhoneUtils.getCarrierKnownNumber: unknown subscription " + subId);
+            return "";
+        }
     }
 
     /**
      * Returns the "effective" subId, or the subId used in the context of actual messages,
      * conversations and subscription-specific settings, for the given "nominal" sub id.
-     *
+     * <p>
      * DEFAULT_SELF_SUB_ID will be mapped to the system default subscription id for SMS.
      *
      * @param subId The input subId
@@ -258,10 +262,10 @@ public class PhoneUtils {
     /**
      * System may return a negative subId. Convert this into our own subId, so that we consistently
      * use -1 for invalid or default.
-     *
+     * <p>
      * see b/18629526 and b/18670346
      *
-     * @param intent The push intent from system
+     * @param intent    The push intent from system
      * @param extraName The name of the sub id extra
      * @return the subId that is valid and meaningful for the app
      */
@@ -273,7 +277,7 @@ public class PhoneUtils {
     /**
      * Get the subscription_id column value from a telephony provider cursor
      *
-     * @param cursor The database query cursor
+     * @param cursor     The database query cursor
      * @param subIdIndex The index of the subId column in the cursor
      * @return the subscription_id column value from the cursor
      */
@@ -493,7 +497,7 @@ public class PhoneUtils {
 
     // Put canonicalized phone number into cache
     private static void putCanonicalToCache(final String phoneText, String country,
-            final String canonical) {
+                                            final String canonical) {
         synchronized (sCanonicalPhoneNumberCache) {
             final ArrayMap<String, String> countryMap = getOrAddCountryMapInCacheLocked(country);
             countryMap.put(phoneText, canonical);
@@ -504,7 +508,7 @@ public class PhoneUtils {
      * Utility method to parse user input number into standard E164 number.
      *
      * @param phoneText Phone number text as input by user.
-     * @param country ISO country code based on which to parse the number.
+     * @param country   ISO country code based on which to parse the number.
      * @return E164 phone number. Returns null in case parsing failed.
      */
     @Nullable
@@ -530,7 +534,32 @@ public class PhoneUtils {
             }
         } catch (final NumberParseException e) {
             LogUtil.e(TAG, "PhoneUtils.getValidE164Number(): Not able to parse phone number "
-                        + LogUtil.sanitizePII(phoneText) + " for country " + country);
+                    + LogUtil.sanitizePII(phoneText) + " for country " + country);
+        }
+
+        return null;
+    }
+
+    @Nullable
+    public String getValidSelfE164Number(@NonNull final String phoneText) {
+        if (phoneText.codePoints().anyMatch(Character::isLetter)) {
+            return null;
+        }
+
+        final String country = getSimOrDefaultLocaleCountry();
+        final String validNumber = getValidE164Number(phoneText, country);
+        if (validNumber != null) {
+            return validNumber;
+        }
+
+        final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
+        try {
+            final PhoneNumber phoneNumber = phoneNumberUtil.parse(phoneText, country);
+            if (phoneNumberUtil.isPossibleNumber(phoneNumber)) {
+                return phoneNumberUtil.format(phoneNumber, PhoneNumberFormat.E164);
+            }
+        } catch (final NumberParseException e) {
+            // Not a phone number at all; getValidE164Number has already logged it.
         }
 
         return null;
@@ -700,7 +729,7 @@ public class PhoneUtils {
      * This uses an internal cache per country to speed up.
      *
      * @param phoneText The phone number to canonicalize
-     * @param country The ISO country code to use
+     * @param country   The ISO country code to use
      * @return the canonicalized number, or the original number if can't be parsed
      */
     private String getCanonicalByCountry(final String phoneText, final String country) {
@@ -839,10 +868,8 @@ public class PhoneUtils {
 
     @Nullable
     private static String formatForDisplayInternal(
-            @Nullable
-            final String phoneText,
-            @Nullable
-            final String country
+            @Nullable final String phoneText,
+            @Nullable final String country
     ) {
         // Only format a valid number which length >=6
         if (TextUtils.isEmpty(phoneText) ||
@@ -914,13 +941,6 @@ public class PhoneUtils {
     public boolean isAirplaneModeOn() {
         return Settings.Global.getInt(mContext.getContentResolver(),
                 Settings.Global.AIRPLANE_MODE_ON, 0) != 0;
-    }
-
-    public static String getMccMncString(int[] mccmnc) {
-        if (mccmnc == null || mccmnc.length != 2) {
-            return "000000";
-        }
-        return String.format(Locale.ROOT, "%03d%03d", mccmnc[0], mccmnc[1]);
     }
 
     public static String canonicalizeMccMnc(final String mcc, final String mnc) {

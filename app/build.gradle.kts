@@ -1,13 +1,14 @@
 import dev.detekt.gradle.Detekt
 import java.io.FileInputStream
 import java.util.Properties
-import org.gradle.api.tasks.testing.Test
 
 plugins {
     id("messaging.licenses")
     alias(libs.plugins.android.application)
     alias(libs.plugins.detekt)
     alias(libs.plugins.hilt)
+    jacoco
+    id("messaging.jacoco")
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.serialization)
@@ -47,8 +48,8 @@ tasks.withType<Detekt>().configureEach {
 }
 
 android {
-    compileSdk = 36
-    buildToolsVersion = "36.1.0"
+    compileSdk = 37
+    buildToolsVersion = "37.0.0"
 
     namespace = "com.android.messaging"
 
@@ -56,8 +57,7 @@ android {
         versionCode = 20000000 + 13
         versionName = "13"
         minSdk = 36
-        // Do not upgrade until Compose migration finished to prevent edge-to-edge issues
-        targetSdk = 35
+        targetSdk = 37
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         ndk {
@@ -79,12 +79,26 @@ android {
         compose = true
     }
 
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
+
     sourceSets.getByName("main") {
         assets.srcDir("../assets")
         manifest.srcFile("../AndroidManifest.xml")
         java.srcDirs("../src")
         kotlin.srcDirs("../src")
         res.srcDir("../res")
+    }
+
+    sourceSets.getByName("test") {
+        kotlin.srcDir("src/sharedTest/kotlin")
+    }
+
+    sourceSets.getByName("androidTest") {
+        kotlin.srcDir("src/sharedTest/kotlin")
     }
 
     val keystorePropertiesFile = rootProject.file("keystore.properties")
@@ -113,7 +127,7 @@ android {
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "../proguard.flags",
-                "../proguard-release.flags"
+                "../proguard-release.flags",
             )
 
             if (useKeystoreProperties) {
@@ -124,6 +138,8 @@ android {
         getByName("debug") {
             applicationIdSuffix = ".debug"
             resValue("string", "app_name", "Messaging d")
+            enableUnitTestCoverage = true
+            enableAndroidTestCoverage = true
         }
 
         create("perf") {
@@ -132,6 +148,22 @@ android {
             matchingFallbacks += listOf("release")
             resValue("string", "app_name", "Messaging d")
             signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+
+    testCoverage {
+        jacocoVersion = libs.versions.jacoco.get()
+    }
+
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            all { unitTest ->
+                unitTest.extensions.configure(JacocoTaskExtension::class.java) {
+                    isIncludeNoLocationClasses = true
+                    excludes = listOf("jdk.internal.*")
+                }
+            }
         }
     }
 
@@ -147,11 +179,6 @@ dependencies {
     implementation(libs.androidx.camera.core)
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.video)
-    implementation(libs.androidx.paging.compose)
-    implementation(libs.androidx.paging.runtime)
-    implementation(libs.androidx.palette)
-    implementation(libs.androidx.preference)
-    implementation(libs.androidx.recyclerview)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
@@ -159,11 +186,11 @@ dependencies {
     implementation(libs.androidx.compose.foundation.layout)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material3.adaptive)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
 
-    implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
@@ -175,14 +202,13 @@ dependencies {
     implementation(libs.androidx.photo.picker)
 
     implementation(libs.coil.compose)
-    implementation(libs.coil.network.okhttp)
+    implementation(libs.coil.gif)
     implementation(libs.glide)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
     implementation(libs.guava)
-    implementation(libs.jsr305)
 
     implementation(libs.kotlinx.collections.immutable)
     implementation(libs.kotlinx.coroutines.android)
@@ -191,12 +217,13 @@ dependencies {
     implementation(libs.libphonenumber)
 
     implementation(project(":lib:platform_frameworks_opt_chips"))
-    implementation(project(":lib:platform_frameworks_opt_photoviewer"))
     implementation(project(":lib:platform_frameworks_opt_vcard"))
 
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
     testImplementation(libs.junit4)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
@@ -207,14 +234,10 @@ dependencies {
 
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    androidTestImplementation(libs.androidx.test.espresso.contrib)
     androidTestImplementation(libs.androidx.test.espresso.core)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.rules)
     androidTestImplementation(libs.androidx.test.runner)
-
-    androidTestImplementation(libs.hilt.android.testing)
-    kspAndroidTest(libs.hilt.compiler)
 
     androidTestImplementation(libs.mockk)
     androidTestImplementation(libs.mockk.agent)

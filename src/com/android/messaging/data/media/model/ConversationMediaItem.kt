@@ -8,8 +8,3 @@ internal data class ConversationMediaItem(
     val height: Int?,
     val durationMillis: Long?,
 )
-
-internal enum class ConversationMediaType {
-    Image,
-    Video,
-}

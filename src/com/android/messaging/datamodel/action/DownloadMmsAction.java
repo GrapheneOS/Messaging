@@ -118,6 +118,14 @@ public class DownloadMmsAction extends Action implements Parcelable {
         final MessageData message = BugleDatabaseOperations.readMessage(db, messageId);
         if (message != null && message.canDownloadMessage()) {
             final Uri notificationUri = message.getSmsMessageUri();
+            if (notificationUri == null) {
+                LogUtil.w(TAG, "DownloadMmsAction: message " + messageId
+                        + " has no notification uri; skipping download");
+                updateMessageStatus(null, messageId, message.getConversationId(),
+                        MessageData.BUGLE_STATUS_INCOMING_DOWNLOAD_FAILED,
+                        MessageData.RAW_TELEPHONY_STATUS_UNDEFINED);
+                return true;
+            }
             final String conversationId = message.getConversationId();
             final int status = message.getStatus();
 

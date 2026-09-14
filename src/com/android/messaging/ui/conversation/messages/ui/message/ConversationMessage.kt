@@ -21,10 +21,12 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.sms.cleanseMmsSubject
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageContent
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel.Status
+import com.android.messaging.ui.conversation.messages.ui.attachment.OnConversationAttachmentClick
 import com.android.messaging.ui.conversation.preview.previewAudioPart
 import com.android.messaging.ui.conversation.preview.previewFilePart
 import com.android.messaging.ui.conversation.preview.previewImagePart
@@ -47,8 +49,10 @@ internal fun ConversationMessage(
     isSelected: Boolean = false,
     isSelectionMode: Boolean = false,
     showIncomingParticipantIdentity: Boolean = true,
+    youTubeLinkPreviewsEnabled: Boolean = false,
     simDisplayName: String? = null,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit = { _, _ -> },
+    onAttachmentClick: OnConversationAttachmentClick =
+        { _, _, _ -> },
     onExternalUriClick: (String) -> Unit = {},
     onMessageClick: () -> Unit = {},
     onMessageAvatarClick: () -> Unit = {},
@@ -64,6 +68,7 @@ internal fun ConversationMessage(
         val layout = rememberConversationMessageLayout(
             message = message,
             showIncomingParticipantIdentity = showIncomingParticipantIdentity,
+            youTubeLinkPreviewsEnabled = youTubeLinkPreviewsEnabled,
         )
 
         val maxBubbleWidth = remember(maxWidth) {
@@ -126,6 +131,7 @@ internal enum class ConversationMessageBubbleLayoutMode {
 private fun rememberConversationMessageLayout(
     message: ConversationMessageUiModel,
     showIncomingParticipantIdentity: Boolean,
+    youTubeLinkPreviewsEnabled: Boolean,
 ): ConversationMessageLayout {
     val bubbleShape = remember(
         message.canClusterWithPrevious,
@@ -134,7 +140,10 @@ private fun rememberConversationMessageLayout(
         messageBubbleShape(message = message)
     }
 
-    val content = rememberConversationMessageContent(message = message)
+    val content = rememberConversationMessageContent(
+        message = message,
+        youTubeLinkPreviewsEnabled = youTubeLinkPreviewsEnabled,
+    )
     val metadataText = rememberConversationMessageMetadataText(message = message)
 
     val showSender = message.isIncoming &&
@@ -194,6 +203,7 @@ private fun conversationMessageMaxBubbleWidth(
 @Composable
 private fun rememberConversationMessageContent(
     message: ConversationMessageUiModel,
+    youTubeLinkPreviewsEnabled: Boolean,
 ): ConversationMessageContent {
     val resources = LocalResources.current
     val configuration = LocalConfiguration.current
@@ -213,11 +223,13 @@ private fun rememberConversationMessageContent(
         message.text,
         message.mmsSubject,
         message.parts,
+        youTubeLinkPreviewsEnabled,
         subjectText,
     ) {
         buildConversationMessageContent(
             message = message,
             subjectText = subjectText,
+            youTubeLinkPreviewsEnabled = youTubeLinkPreviewsEnabled,
         )
     }
 }
@@ -271,7 +283,7 @@ private fun ConversationMessageContent(
     layout: ConversationMessageLayout,
     maxBubbleWidth: Dp,
     simDisplayName: String?,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onMessageClick: () -> Unit,
     onMessageAvatarClick: () -> Unit,
@@ -453,7 +465,7 @@ private fun ConversationMessageIncomingStatusPreview() {
     ConversationMessagePreviewColumn {
         ConversationMessagePreviewItem(
             message = previewIncomingMessage(
-                messageId = "incoming-complete",
+                messageId = MessageId("incoming-complete"),
                 text = "Incoming complete message.",
                 status = Status.Incoming.Complete,
             ),
@@ -461,7 +473,7 @@ private fun ConversationMessageIncomingStatusPreview() {
         )
         ConversationMessagePreviewItem(
             message = previewIncomingMessage(
-                messageId = "incoming-unknown",
+                messageId = MessageId("incoming-unknown"),
                 text = "Incoming message with unknown status.",
                 status = Status.Unknown,
                 protocol = ConversationMessageUiModel.Protocol.UNKNOWN,
@@ -491,7 +503,7 @@ private fun ConversationMessageAttachmentContentPreview() {
     ConversationMessagePreviewColumn {
         ConversationMessagePreviewItem(
             message = previewIncomingMessage(
-                messageId = "incoming-image-only",
+                messageId = MessageId("incoming-image-only"),
                 text = null,
                 parts = persistentListOf(previewImagePart(text = null)),
                 protocol = ConversationMessageUiModel.Protocol.MMS,
@@ -501,7 +513,7 @@ private fun ConversationMessageAttachmentContentPreview() {
         )
         ConversationMessagePreviewItem(
             message = previewIncomingMessage(
-                messageId = "incoming-image-only-selected",
+                messageId = MessageId("incoming-image-only-selected"),
                 text = null,
                 parts = persistentListOf(previewImagePart(text = null)),
                 protocol = ConversationMessageUiModel.Protocol.MMS,
@@ -513,7 +525,7 @@ private fun ConversationMessageAttachmentContentPreview() {
         )
         ConversationMessagePreviewItem(
             message = previewIncomingMessage(
-                messageId = "incoming-media-with-subject",
+                messageId = MessageId("incoming-media-with-subject"),
                 text = "Long body text below the gallery with a URL " +
                     "https://example.com/trip-notes.",
                 parts = persistentListOf(
@@ -529,7 +541,7 @@ private fun ConversationMessageAttachmentContentPreview() {
         )
         ConversationMessagePreviewItem(
             message = previewOutgoingMessage(
-                messageId = "outgoing-audio",
+                messageId = MessageId("outgoing-audio"),
                 text = null,
                 parts = persistentListOf(previewAudioPart(text = "Voice note caption")),
                 status = Status.Outgoing.Delivered,
@@ -541,7 +553,7 @@ private fun ConversationMessageAttachmentContentPreview() {
         )
         ConversationMessagePreviewItem(
             message = previewIncomingMessage(
-                messageId = "incoming-vcard",
+                messageId = MessageId("incoming-vcard"),
                 text = null,
                 parts = persistentListOf(previewVCardPart()),
                 protocol = ConversationMessageUiModel.Protocol.MMS,
@@ -551,7 +563,7 @@ private fun ConversationMessageAttachmentContentPreview() {
         )
         ConversationMessagePreviewItem(
             message = previewOutgoingMessage(
-                messageId = "outgoing-file-unsupported",
+                messageId = MessageId("outgoing-file-unsupported"),
                 text = null,
                 parts = persistentListOf(previewFilePart(text = "Unsupported PDF attachment")),
                 status = Status.Outgoing.Complete,
@@ -563,7 +575,7 @@ private fun ConversationMessageAttachmentContentPreview() {
         )
         ConversationMessagePreviewItem(
             message = previewOutgoingMessage(
-                messageId = "outgoing-youtube-preview",
+                messageId = MessageId("outgoing-youtube-preview"),
                 text = "Watch this: https://www.youtube.com/watch?v=dQw4w9WgXcQ",
                 status = Status.Outgoing.Delivered,
             ),
@@ -578,7 +590,7 @@ private fun ConversationMessageClusterSelectionPreview() {
     ConversationMessagePreviewColumn {
         ConversationMessagePreviewItem(
             message = previewIncomingMessage(
-                messageId = "incoming-cluster-start",
+                messageId = MessageId("incoming-cluster-start"),
                 text = "Incoming cluster starts here.",
             ).copy(
                 canClusterWithNext = true,
@@ -587,7 +599,7 @@ private fun ConversationMessageClusterSelectionPreview() {
         )
         ConversationMessagePreviewItem(
             message = previewIncomingMessage(
-                messageId = "incoming-cluster-middle",
+                messageId = MessageId("incoming-cluster-middle"),
                 text = "Incoming cluster middle.",
             ).copy(
                 canClusterWithPrevious = true,
@@ -597,7 +609,7 @@ private fun ConversationMessageClusterSelectionPreview() {
         )
         ConversationMessagePreviewItem(
             message = previewIncomingMessage(
-                messageId = "incoming-cluster-end",
+                messageId = MessageId("incoming-cluster-end"),
                 text = "Incoming cluster ends here.",
             ).copy(
                 canClusterWithPrevious = true,
@@ -606,7 +618,7 @@ private fun ConversationMessageClusterSelectionPreview() {
         )
         ConversationMessagePreviewItem(
             message = previewOutgoingMessage(
-                messageId = "outgoing-cluster-start",
+                messageId = MessageId("outgoing-cluster-start"),
                 text = "Outgoing cluster starts here.",
             ).copy(
                 canClusterWithNext = true,
@@ -615,7 +627,7 @@ private fun ConversationMessageClusterSelectionPreview() {
         )
         ConversationMessagePreviewItem(
             message = previewOutgoingMessage(
-                messageId = "outgoing-cluster-end",
+                messageId = MessageId("outgoing-cluster-end"),
                 text = "Outgoing cluster ends here.",
             ).copy(
                 canClusterWithPrevious = true,
@@ -624,7 +636,7 @@ private fun ConversationMessageClusterSelectionPreview() {
         )
         ConversationMessagePreviewItem(
             message = previewIncomingMessage(
-                messageId = "incoming-identity-hidden",
+                messageId = MessageId("incoming-identity-hidden"),
                 text = "Incoming without participant identity.",
             ),
             showIncomingParticipantIdentity = false,
@@ -632,7 +644,7 @@ private fun ConversationMessageClusterSelectionPreview() {
         )
         ConversationMessagePreviewItem(
             message = previewIncomingMessage(
-                messageId = "incoming-selection-unselected",
+                messageId = MessageId("incoming-selection-unselected"),
                 text = "Selection mode, not selected.",
             ),
             isSelectionMode = true,
@@ -640,7 +652,7 @@ private fun ConversationMessageClusterSelectionPreview() {
         )
         ConversationMessagePreviewItem(
             message = previewOutgoingMessage(
-                messageId = "outgoing-selection-selected",
+                messageId = MessageId("outgoing-selection-selected"),
                 text = "Selection mode, selected.",
                 status = Status.Outgoing.Failed,
             ),

@@ -53,10 +53,10 @@ internal fun PreviewRecipientSelectionContactRow(
 internal fun previewRecipientSelectionContactRowGroupedItems():
     ImmutableList<RecipientPickerListItem> {
     return persistentListOf<RecipientPickerListItem>()
-        .add(previewRecipientSelectionSingleDestinationContactItem())
-        .add(previewRecipientSelectionSyntheticPhoneItem())
-        .add(previewRecipientSelectionMultiDestinationContactItem())
-        .add(previewRecipientSelectionEmptyDestinationContactItem())
+        .adding(previewRecipientSelectionSingleDestinationContactItem())
+        .adding(previewRecipientSelectionSyntheticPhoneItem())
+        .adding(previewRecipientSelectionMultiDestinationContactItem())
+        .adding(previewRecipientSelectionEmptyDestinationContactItem())
 }
 
 internal fun previewRecipientSelectionSingleDestinationContactItem(
@@ -109,7 +109,7 @@ internal fun previewRecipientSelectionMultiDestinationContactItem():
             displayName = "Ada Lovelace",
             photoUri = null,
             destinations = persistentListOf<ContactDestinationUiModel>()
-                .add(
+                .adding(
                     previewContactDestination(
                         contactId = 3L,
                         dataId = 31L,
@@ -121,7 +121,7 @@ internal fun previewRecipientSelectionMultiDestinationContactItem():
                         isSuperPrimary = true,
                     ),
                 )
-                .add(
+                .adding(
                     previewContactDestination(
                         contactId = 3L,
                         dataId = 32L,
@@ -131,7 +131,7 @@ internal fun previewRecipientSelectionMultiDestinationContactItem():
                         type = Phone.TYPE_WORK,
                     ),
                 )
-                .add(
+                .adding(
                     previewContactDestination(
                         contactId = 3L,
                         dataId = 33L,
@@ -166,7 +166,7 @@ internal fun previewRecipientSelectionLongMultiDestinationContactItem():
             displayName = PREVIEW_LONG_CONTACT_NAME,
             photoUri = null,
             destinations = persistentListOf<ContactDestinationUiModel>()
-                .add(
+                .adding(
                     previewContactDestination(
                         contactId = 5L,
                         dataId = 51L,
@@ -177,7 +177,7 @@ internal fun previewRecipientSelectionLongMultiDestinationContactItem():
                         customLabel = "Emergency escalation mobile",
                     ),
                 )
-                .add(
+                .adding(
                     previewContactDestination(
                         contactId = 5L,
                         dataId = 52L,

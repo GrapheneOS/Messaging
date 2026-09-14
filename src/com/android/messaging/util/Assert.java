@@ -17,8 +17,6 @@ package com.android.messaging.util;
 
 import android.os.Looper;
 
-import java.util.Arrays;
-
 public final class Assert {
     public static @interface RunsOnMainThread {}
     public static @interface DoesNotRunOnMainThread {}
@@ -66,17 +64,6 @@ public final class Assert {
     }
 
     /**
-     * Halt execution if this is not an eng build.
-     * <p>Intended for use in code paths that should be run only for tests and never on
-     * a real build.
-     * <p>Note that this will crash on a user build even though asserts don't normally
-     * crash on a user build.
-     */
-    public static void isEngBuild() {
-        isTrueReleaseCheck(sIsEngBuild);
-    }
-
-    /**
      * Halt execution if this isn't the case.
      */
     public static void isTrue(final boolean condition) {
@@ -120,15 +107,6 @@ public final class Assert {
                 && (expected == null || actual == null || !expected.equals(actual))) {
             fail("Expected " + expected + " but got " + actual, false);
         }
-    }
-
-    public static void oneOf(final int actual, final int ...expected) {
-        for (int value : expected) {
-            if (actual == value) {
-                return;
-            }
-        }
-        fail("Expected value to be one of " + Arrays.toString(expected) + " but was " + actual);
     }
 
     public static void inRange(

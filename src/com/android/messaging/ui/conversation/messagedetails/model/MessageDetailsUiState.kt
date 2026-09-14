@@ -15,5 +15,6 @@ internal sealed interface MessageDetailsUiState {
     data class Content(
         val preview: ConversationMessageUiModel,
         val details: ConversationMessageDetails,
+        val youTubeLinkPreviewsEnabled: Boolean = false,
     ) : MessageDetailsUiState
 }

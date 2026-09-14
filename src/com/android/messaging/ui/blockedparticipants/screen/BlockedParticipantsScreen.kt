@@ -20,11 +20,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,46 +30,45 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.ui.blockedparticipants.common.BlockedParticipantItem
 import com.android.messaging.ui.blockedparticipants.common.BlockedParticipantsTopAppBar
 import com.android.messaging.ui.blockedparticipants.common.ItemDividerHorizontalInset
 import com.android.messaging.ui.blockedparticipants.common.ScreenContentPadding
-import com.android.messaging.ui.blockedparticipants.common.contentSurfaceShape
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantUiState
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsAction as Action
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsNavEvent as NavEvent
 import com.android.messaging.ui.blockedparticipants.screen.model.BlockedParticipantsUiState as State
+import com.android.messaging.ui.common.components.contentSurfaceShape
+import com.android.messaging.ui.common.components.safeDrawingContentPadding
+import com.android.messaging.ui.core.CollectEvents
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 
 @Composable
 internal fun BlockedParticipantsScreen(
+    screenModel: BlockedParticipantsScreenModel,
     effectHandler: BlockedParticipantsEffectHandler,
     onNavigateBack: () -> Unit,
+    onNavigateToConversation: (ConversationId) -> Unit,
     modifier: Modifier = Modifier,
-    screenModel: BlockedParticipantsScreenModel = viewModel<BlockedParticipantsViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
 
-    val currentEffectHandler by rememberUpdatedState(effectHandler)
-    LaunchedEffect(screenModel) {
-        screenModel.effects.collect { effect ->
-            currentEffectHandler.handle(effect)
-        }
-    }
+    CollectEvents(
+        events = screenModel.effects,
+        onEvent = effectHandler::handle,
+    )
 
-    val currentOnNavigateBack by rememberUpdatedState(onNavigateBack)
-    LaunchedEffect(screenModel) {
-        screenModel.navigationEvents.collect { event ->
-            when (event) {
-                NavEvent.CloseAfterLastUnblock -> currentOnNavigateBack()
-            }
+    CollectEvents(events = screenModel.navigationEvents) { event ->
+        when (event) {
+            is NavEvent.CloseAfterLastUnblock -> onNavigateBack()
+            is NavEvent.OpenParticipantChat -> onNavigateToConversation(event.conversationId)
         }
     }
 
@@ -127,7 +124,7 @@ private fun BlockedParticipantsContent(
                     BlockedParticipantsList(
                         uiState = uiState,
                         onAction = onAction,
-                        bottomPadding = contentPadding.calculateBottomPadding(),
+                        scaffoldContentPadding = contentPadding,
                     )
                 }
             }
@@ -146,20 +143,19 @@ private fun BlockedParticipantsContent(
 private fun BlockedParticipantsList(
     uiState: State,
     onAction: (Action) -> Unit,
-    bottomPadding: Dp,
+    scaffoldContentPadding: PaddingValues,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
+        contentPadding = safeDrawingContentPadding(
             top = ScreenContentPadding,
-            bottom = ScreenContentPadding + bottomPadding,
-            start = ScreenContentPadding,
-            end = ScreenContentPadding,
+            bottom = ScreenContentPadding + scaffoldContentPadding.calculateBottomPadding(),
+            horizontal = ScreenContentPadding,
         ),
     ) {
         itemsIndexed(
             items = uiState.participants,
-            key = { _, participant -> participant.participantId },
+            key = { _, participant -> participant.participantId.value },
         ) { index, participant ->
             Column {
                 if (index > 0) {
@@ -201,7 +197,7 @@ private fun BlockedParticipantsList(
                     }.takeIf { participant.canCall },
                     onContactClick = {
                         onAction(Action.ParticipantContactInfoClicked(participant))
-                    }.takeIf { hasDestination },
+                    }.takeIf { participant.canShowContact },
                 )
             }
         }
@@ -248,8 +244,8 @@ private fun BlockedParticipantsContentPreview() {
                 isLoading = false,
                 participants = persistentListOf(
                     BlockedParticipantUiState(
-                        participantId = "1",
-                        conversationId = "c1",
+                        participantId = ParticipantId("1"),
+                        conversationId = ConversationId("c1"),
                         avatarUri = null,
                         displayName = "Spam Caller",
                         details = "+31 6 1234 5678",
@@ -257,11 +253,12 @@ private fun BlockedParticipantsContentPreview() {
                         lookupKey = null,
                         normalizedDestination = "+31612345678",
                         canCall = true,
+                        canShowContact = true,
                         isContactSaved = true,
                     ),
                     BlockedParticipantUiState(
-                        participantId = "2",
-                        conversationId = "c2",
+                        participantId = ParticipantId("2"),
+                        conversationId = ConversationId("c2"),
                         avatarUri = null,
                         displayName = "+31 6 0000 1111",
                         details = null,
@@ -269,10 +266,11 @@ private fun BlockedParticipantsContentPreview() {
                         lookupKey = null,
                         normalizedDestination = "+31600001111",
                         canCall = true,
+                        canShowContact = true,
                         isContactSaved = false,
                     ),
                 ),
-                selectedParticipantIds = persistentSetOf("2"),
+                selectedParticipantIds = persistentSetOf(ParticipantId("2")),
             ),
             onAction = {},
             onNavigateBack = {},

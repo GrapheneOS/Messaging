@@ -24,6 +24,7 @@ internal sealed interface ConversationMessagePartUiModel {
         val contentUri: Uri?
         val width: Int
         val height: Int
+        val partId: String
 
         @Immutable
         data class Audio(
@@ -32,6 +33,8 @@ internal sealed interface ConversationMessagePartUiModel {
             override val contentUri: Uri?,
             override val width: Int,
             override val height: Int,
+            override val partId: String = "",
+            val durationMillis: Long = 0L,
         ) : Attachment
 
         @Immutable
@@ -41,6 +44,7 @@ internal sealed interface ConversationMessagePartUiModel {
             override val contentUri: Uri?,
             override val width: Int,
             override val height: Int,
+            override val partId: String = "",
         ) : Attachment
 
         @Immutable
@@ -50,6 +54,7 @@ internal sealed interface ConversationMessagePartUiModel {
             override val contentUri: Uri?,
             override val width: Int,
             override val height: Int,
+            override val partId: String = "",
         ) : Attachment
 
         @Immutable
@@ -60,6 +65,7 @@ internal sealed interface ConversationMessagePartUiModel {
             override val width: Int,
             override val height: Int,
             val vCardUiModel: ConversationVCardAttachmentUiModel,
+            override val partId: String = "",
         ) : Attachment
 
         @Immutable
@@ -69,6 +75,7 @@ internal sealed interface ConversationMessagePartUiModel {
             override val contentUri: Uri?,
             override val width: Int,
             override val height: Int,
+            override val partId: String = "",
         ) : Attachment
     }
 }

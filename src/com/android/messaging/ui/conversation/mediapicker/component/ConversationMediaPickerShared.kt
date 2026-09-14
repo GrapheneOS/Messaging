@@ -28,17 +28,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.android.messaging.ui.common.components.mediapreview.mediaOverlayContainerColor
+import com.android.messaging.ui.common.components.mediapreview.mediaOverlayContentColor
 import com.android.messaging.ui.core.MessagingPreviewColumn
 
 private val PICKER_CONTROL_BUTTON_SIZE = 48.dp
-
-internal fun pickerOverlayContainerColor(alpha: Float): Color {
-    return Color.Black.copy(alpha = alpha)
-}
-
-internal fun pickerOverlayContentColor(alpha: Float = 1f): Color {
-    return Color.White.copy(alpha = alpha)
-}
 
 @Composable
 internal fun PermissionFallback(
@@ -106,7 +100,7 @@ internal fun PermissionFallback(
 internal fun PickerOverlayBackgroundButton(
     modifier: Modifier = Modifier,
     buttonSize: Dp = PICKER_CONTROL_BUTTON_SIZE,
-    containerColor: Color = pickerOverlayContainerColor(alpha = 0.48f),
+    containerColor: Color = mediaOverlayContainerColor(alpha = 0.48f),
     contentDescription: String,
     iconSize: Dp = 24.dp,
     imageVector: ImageVector,
@@ -119,7 +113,7 @@ internal fun PickerOverlayBackgroundButton(
         shape = CircleShape,
         colors = IconButtonDefaults.filledIconButtonColors(
             containerColor = containerColor,
-            contentColor = pickerOverlayContentColor(),
+            contentColor = mediaOverlayContentColor(),
         ),
     ) {
         Icon(
@@ -145,10 +139,10 @@ internal fun PickerOverlayIconButton(
         onClick = onClick,
         enabled = enabled,
         colors = IconButtonDefaults.filledIconButtonColors(
-            containerColor = pickerOverlayContainerColor(alpha = 0.5f),
-            contentColor = pickerOverlayContentColor(),
-            disabledContainerColor = pickerOverlayContainerColor(alpha = 0.25f),
-            disabledContentColor = pickerOverlayContentColor(alpha = 0.5f),
+            containerColor = mediaOverlayContainerColor(alpha = 0.5f),
+            contentColor = mediaOverlayContentColor(),
+            disabledContainerColor = mediaOverlayContainerColor(alpha = 0.25f),
+            disabledContentColor = mediaOverlayContentColor(alpha = 0.5f),
         ),
         shape = CircleShape,
     ) {

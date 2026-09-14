@@ -82,6 +82,6 @@ internal class DraftDelegateReviewTest : BaseDraftDelegateTest() {
     }
 
     private fun selectedIds(ids: Set<String>): MutableStateFlow<ImmutableSet<String>> {
-        return MutableStateFlow(persistentSetOf<String>().addAll(ids))
+        return MutableStateFlow(persistentSetOf<String>().addingAll(ids))
     }
 }

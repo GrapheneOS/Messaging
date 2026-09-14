@@ -1,12 +1,9 @@
 package com.android.messaging.ui.conversation.screen.model
 
 import android.content.Intent
-import android.net.Uri
-import com.android.messaging.datamodel.data.MessageData
+import com.android.messaging.ui.contact.model.AddContactRequest
 
 internal sealed interface ConversationScreenEffect {
-    data object CloseConversation : ConversationScreenEffect
-
     data class RequestDefaultSmsRole(
         val isSending: Boolean,
     ) : ConversationScreenEffect
@@ -19,16 +16,13 @@ internal sealed interface ConversationScreenEffect {
         val intent: Intent,
     ) : ConversationScreenEffect
 
-    data class LaunchForwardMessage(
-        val message: MessageData,
-    ) : ConversationScreenEffect
-
     data object NotifyDraftSent : ConversationScreenEffect
 
     data class OpenAttachmentPreview(
         val contentType: String,
         val contentUri: String,
         val imageCollectionUri: String?,
+        val initialPhotoOccurrenceIndex: Int = 0,
     ) : ConversationScreenEffect
 
     data class OpenExternalUri(
@@ -56,14 +50,16 @@ internal sealed interface ConversationScreenEffect {
         val messageResId: Int,
     ) : ConversationScreenEffect
 
-    data class ShowOrAddParticipantContact(
+    data class ShowParticipantContactCard(
         val contactId: Long,
-        val contactLookupKey: String?,
-        val avatarUri: Uri?,
-        val normalizedDestination: String?,
+        val contactLookupKey: String,
     ) : ConversationScreenEffect
 
-    data class NavigateToMessageDetails(
-        val messageId: String,
+    data class AddParticipantContact(
+        val request: AddContactRequest,
+    ) : ConversationScreenEffect
+
+    data class NavigateToVCardDetail(
+        val uri: String,
     ) : ConversationScreenEffect
 }

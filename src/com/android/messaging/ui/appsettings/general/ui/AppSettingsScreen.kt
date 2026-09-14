@@ -18,8 +18,8 @@ import com.android.messaging.ui.appsettings.common.SettingsCategoryHeader
 import com.android.messaging.ui.appsettings.common.SettingsClickableItem
 import com.android.messaging.ui.appsettings.common.SettingsSwitchItem
 import com.android.messaging.ui.appsettings.common.SettingsTopAppBar
+import com.android.messaging.ui.appsettings.general.model.AppSettingsAction as Action
 import com.android.messaging.ui.appsettings.general.model.AppSettingsUiState
-import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
 import com.android.messaging.ui.core.MessagingPreviewTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,9 +28,11 @@ internal fun AppSettingsScreen(
     appSettings: AppSettingsUiState,
     onAction: (Action) -> Unit,
     onNavigateBack: () -> Unit,
+    onPrivacyClick: () -> Unit,
     modifier: Modifier = Modifier,
     isTopLevel: Boolean = false,
-    onAdvancedClick: (() -> Unit)? = null,
+    hasAdvancedSettings: Boolean = false,
+    onAdvancedClick: () -> Unit = {},
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val title = if (isTopLevel) {
@@ -56,9 +58,10 @@ internal fun AppSettingsScreen(
             coreSettingsItems(
                 appSettings = appSettings,
                 onAction = onAction,
+                onPrivacyClick = onPrivacyClick,
             )
 
-            if (isTopLevel && onAdvancedClick != null) {
+            if (isTopLevel && hasAdvancedSettings) {
                 advancedSettingsItem(onAdvancedClick)
             }
 
@@ -75,6 +78,7 @@ internal fun AppSettingsScreen(
 private fun LazyListScope.coreSettingsItems(
     appSettings: AppSettingsUiState,
     onAction: (Action) -> Unit,
+    onPrivacyClick: () -> Unit,
 ) {
     item(key = "default_sms_app") {
         SettingsClickableItem(
@@ -102,6 +106,13 @@ private fun LazyListScope.coreSettingsItems(
             onCheckedChange = {
                 onAction(Action.SendSoundChanged(it))
             },
+        )
+    }
+
+    item(key = "privacy") {
+        SettingsClickableItem(
+            title = stringResource(R.string.privacy_settings_activity_title),
+            onClick = onPrivacyClick,
         )
     }
 }
@@ -179,7 +190,9 @@ private fun AppSettingsScreenTopLevelPreview() {
             ),
             onAction = {},
             onNavigateBack = {},
+            onPrivacyClick = {},
             isTopLevel = true,
+            hasAdvancedSettings = true,
             onAdvancedClick = {},
         )
     }
@@ -200,6 +213,7 @@ private fun AppSettingsScreenDebugPreview() {
             ),
             onAction = {},
             onNavigateBack = {},
+            onPrivacyClick = {},
         )
     }
 }

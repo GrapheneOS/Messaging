@@ -1,12 +1,14 @@
 package com.android.messaging.ui.conversationsettings.screen
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.domain.conversation.usecase.participant.ResolveContactAction
 import com.android.messaging.domain.conversation.usecase.participant.ResolveConversationId
+import com.android.messaging.domain.conversation.usecase.participant.model.ResolveContactActionResult
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveConversationIdResult
-import com.android.messaging.ui.UIIntents
+import com.android.messaging.ui.contact.model.AddContactRequest
 import com.android.messaging.ui.conversationsettings.screen.delegate.ConversationSettingsDelegate
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsAction as Action
 import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsNavEvent as NavEvent
@@ -23,23 +25,25 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
+internal const val CONVERSATION_SETTINGS_CONVERSATION_ID_ARG = "conversationId"
+
 internal interface ConversationSettingsScreenModel {
     val effects: Flow<Effect>
     val navigationEvents: Flow<NavEvent>
     val uiState: StateFlow<State>
-    val rootConversationId: String
+    val rootConversationId: ConversationId
 
     fun refreshState()
     fun onAction(action: Action)
 
-    fun setConversationId(conversationId: String)
+    fun setConversationId(conversationId: ConversationId)
 }
 
 @HiltViewModel
 internal class ConversationSettingsViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
     private val delegate: ConversationSettingsDelegate,
     private val resolveConversationId: ResolveConversationId,
+    private val resolveContactAction: ResolveContactAction,
 ) : ViewModel(),
     ConversationSettingsScreenModel {
 
@@ -51,14 +55,11 @@ internal class ConversationSettingsViewModel @Inject constructor(
 
     override val uiState: StateFlow<State> = delegate.state
 
-    override val rootConversationId: String = requireNotNull(
-        savedStateHandle[UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID],
-    ) { "conversationId is required" }
+    override val rootConversationId: ConversationId = delegate.rootConversationId
 
     private var resolveConversationJob: Job? = null
 
     init {
-        delegate.setConversationId(rootConversationId)
         delegate.bind(viewModelScope)
     }
 
@@ -110,10 +111,7 @@ internal class ConversationSettingsViewModel @Inject constructor(
     private fun handleParticipantAction(action: ParticipantAction) {
         when (action) {
             is ParticipantAction.ParticipantPressed -> {
-                resolveConversation(
-                    action.destination,
-                    shouldOpenChat = true,
-                )
+                onParticipantPressed(destination = action.destination)
             }
 
             is ParticipantAction.ParticipantLongPressed -> {
@@ -132,9 +130,23 @@ internal class ConversationSettingsViewModel @Inject constructor(
             }
 
             is ParticipantAction.ParticipantContactInfoClicked -> {
-                showOrAddContact(action.participant)
+                emitContactAction(participant = action.participant)
             }
         }
+    }
+
+    private fun onParticipantPressed(destination: String) {
+        val state = uiState.value
+
+        if (state.otherParticipant != null) {
+            emitNavigationEvent(NavEvent.OpenParticipantChat(state.conversationId))
+            return
+        }
+
+        resolveConversation(
+            destination,
+            shouldOpenChat = true,
+        )
     }
 
     private fun handleNotificationsClicked() {
@@ -147,18 +159,39 @@ internal class ConversationSettingsViewModel @Inject constructor(
         )
     }
 
-    private fun showOrAddContact(participant: ParticipantUiState) {
-        emitEffect(
-            Effect.ShowOrAddContact(
-                contactId = participant.contactId,
-                contactLookupKey = participant.lookupKey,
-                avatarUri = participant.avatarUri,
-                normalizedDestination = participant.normalizedDestination,
-            ),
+    private fun emitContactAction(participant: ParticipantUiState) {
+        val contactAction = resolveContactAction(
+            contactId = participant.contactId,
+            lookupKey = participant.lookupKey,
+            destination = participant.normalizedDestination,
         )
+
+        when (contactAction) {
+            is ResolveContactActionResult.ShowContactCard -> {
+                emitEffect(
+                    Effect.ShowContactCard(
+                        contactId = contactAction.contactId,
+                        contactLookupKey = contactAction.lookupKey,
+                    ),
+                )
+            }
+
+            is ResolveContactActionResult.AddContact -> {
+                emitEffect(
+                    Effect.AddContact(
+                        request = AddContactRequest(
+                            destination = contactAction.destination,
+                            avatarUri = participant.avatarUri,
+                        ),
+                    ),
+                )
+            }
+
+            ResolveContactActionResult.Unavailable -> Unit
+        }
     }
 
-    override fun setConversationId(conversationId: String) {
+    override fun setConversationId(conversationId: ConversationId) {
         delegate.setConversationId(conversationId)
     }
 
@@ -180,7 +213,7 @@ internal class ConversationSettingsViewModel @Inject constructor(
         when (result) {
             is ResolveConversationIdResult.Resolved -> {
                 if (shouldOpenChat) {
-                    emitEffect(Effect.OpenParticipantChat(result.conversationId))
+                    emitNavigationEvent(NavEvent.OpenParticipantChat(result.conversationId))
                 } else {
                     emitNavigationEvent(NavEvent.OpenParticipantInfo(result.conversationId))
                 }

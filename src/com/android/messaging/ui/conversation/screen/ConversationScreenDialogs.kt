@@ -26,12 +26,15 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
 import com.android.messaging.R
+import com.android.messaging.ui.conversation.CONVERSATION_DELETE_MESSAGES_CONFIRM_BUTTON_TEST_TAG
+import com.android.messaging.ui.conversation.CONVERSATION_DELETE_MESSAGES_DISMISS_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_SUBJECT_DIALOG_CLEAR_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_SUBJECT_DIALOG_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_SUBJECT_DIALOG_TEXT_FIELD_TEST_TAG
 import com.android.messaging.ui.conversation.screen.model.ConversationAttachmentLimitWarning
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageDeleteConfirmationUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaffoldUiState
+import com.android.messaging.ui.conversationlist.common.dialog.ConversationListDeleteDialog
 
 @Composable
 internal fun ConversationScreenDialogs(
@@ -55,7 +58,8 @@ internal fun ConversationScreenDialogs(
     }
 
     if (uiState.isDeleteConversationConfirmationVisible) {
-        ConversationDeleteConversationDialog(
+        ConversationListDeleteDialog(
+            selectedCount = 1,
             onConfirm = screenModel::confirmDeleteConversation,
             onDismiss = screenModel::dismissDeleteConversationConfirmation,
         )
@@ -123,35 +127,6 @@ private fun ConversationAttachmentLimitWarningDialog(
             ConversationAttachmentLimitWarning.ComposingAttachmentLimitReached,
             ConversationAttachmentLimitWarning.SendingVideoAttachmentLimitReached,
             -> null
-        },
-    )
-}
-
-@Composable
-private fun ConversationDeleteConversationDialog(
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = pluralStringResource(
-                    id = R.plurals.delete_conversations_confirmation_dialog_title,
-                    count = 1,
-                    1,
-                ),
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(text = stringResource(R.string.delete_conversation_confirmation_button))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = stringResource(R.string.delete_conversation_decline_button))
-            }
         },
     )
 }
@@ -268,6 +243,9 @@ private fun ConversationDeleteMessagesDialog(
         },
         confirmButton = {
             TextButton(
+                modifier = Modifier.testTag(
+                    tag = CONVERSATION_DELETE_MESSAGES_CONFIRM_BUTTON_TEST_TAG,
+                ),
                 onClick = onConfirm,
             ) {
                 Text(
@@ -277,6 +255,9 @@ private fun ConversationDeleteMessagesDialog(
         },
         dismissButton = {
             TextButton(
+                modifier = Modifier.testTag(
+                    tag = CONVERSATION_DELETE_MESSAGES_DISMISS_BUTTON_TEST_TAG,
+                ),
                 onClick = onDismiss,
             ) {
                 Text(

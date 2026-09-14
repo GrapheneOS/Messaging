@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversationpicker.model
 
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
 
@@ -10,7 +11,7 @@ internal sealed interface ConversationPickerAction {
     sealed interface DraftAction : ConversationPickerAction
 
     data class SimSelected(
-        val selfParticipantId: String,
+        val selfParticipantId: ParticipantId,
     ) : ConversationPickerAction
 
     data class TargetClicked(

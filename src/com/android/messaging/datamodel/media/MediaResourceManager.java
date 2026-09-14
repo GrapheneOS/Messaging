@@ -76,8 +76,8 @@ import java.util.concurrent.ThreadFactory;
  *
  * <li>For the UI component that requests the media resource, let it implement
  *    {@link MediaResourceLoadListener} interface to listen for resource load callback. Let the
- *    UI component call MediaResourceManager.requestMediaResourceAsync() to request a media source.
- *    (example: {@link com.android.messaging.ui.ContactIconView}</li>
+ *    UI component call MediaResourceManager.requestMediaResourceAsync() to request a media
+ *    source.</li>
  * </ol>
  */
 public class MediaResourceManager {

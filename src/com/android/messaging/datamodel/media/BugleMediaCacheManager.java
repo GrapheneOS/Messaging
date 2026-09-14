@@ -27,10 +27,7 @@ public class BugleMediaCacheManager extends MediaCacheManager {
     // List of available cache ids.
     public static final int DEFAULT_IMAGE_CACHE = 1;
     public static final int AVATAR_IMAGE_CACHE = 2;
-    public static final int VCARD_CACHE = 3;
 
-    // VCard cache size - we compute the size by count, not by bytes.
-    private static final int VCARD_CACHE_SIZE = 5;
     private static final int SHARED_IMAGE_CACHE_SIZE = 1024 * 10;   // 10MB
 
     @Override
@@ -41,9 +38,6 @@ public class BugleMediaCacheManager extends MediaCacheManager {
 
             case AVATAR_IMAGE_CACHE:
                 return new PoolableImageCache(id, "AvatarImageCache");
-
-            case VCARD_CACHE:
-                return new MediaCache<VCardResource>(VCARD_CACHE_SIZE, id, "VCardCache");
 
             default:
                 Assert.fail("BugleMediaCacheManager: unsupported cache id " + id);

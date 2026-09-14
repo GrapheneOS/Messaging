@@ -6,8 +6,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
@@ -26,7 +26,9 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.subscription.model.Subscription
+import com.android.messaging.ui.common.components.bottomBarInsets
 import com.android.messaging.ui.conversation.CONVERSATION_SIM_SELECTOR_SHEET_TEST_TAG
 import com.android.messaging.ui.conversation.composer.model.ConversationSimSelectorUiState
 import com.android.messaging.ui.conversation.conversationSimSelectorItemTestTag
@@ -41,7 +43,7 @@ private val SHEET_VERTICAL_PADDING = 8.dp
 @Composable
 internal fun ConversationSimSelectorSheet(
     uiState: ConversationSimSelectorUiState,
-    onSimSelected: (String) -> Unit,
+    onSimSelected: (ParticipantId) -> Unit,
     onDismissRequest: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(
@@ -63,12 +65,12 @@ internal fun ConversationSimSelectorSheet(
 @Composable
 private fun ConversationSimSelectorSheetContent(
     uiState: ConversationSimSelectorUiState,
-    onSimSelected: (String) -> Unit,
+    onSimSelected: (ParticipantId) -> Unit,
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .navigationBarsPadding()
+            .windowInsetsPadding(bottomBarInsets())
             .padding(vertical = SHEET_VERTICAL_PADDING),
     ) {
         Text(

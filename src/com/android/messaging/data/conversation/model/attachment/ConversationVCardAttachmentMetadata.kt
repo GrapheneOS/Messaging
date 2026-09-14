@@ -1,6 +1,7 @@
 package com.android.messaging.data.conversation.model.attachment
 
 import androidx.compose.runtime.Immutable
+import com.android.messaging.data.vcard.model.VCardAvatarPhoto
 
 @Immutable
 internal sealed interface ConversationVCardAttachmentMetadata {
@@ -17,9 +18,10 @@ internal sealed interface ConversationVCardAttachmentMetadata {
     @Immutable
     data class Loaded(
         val type: ConversationVCardAttachmentType,
-        val avatarUri: String?,
-        val displayName: String?,
-        val details: String?,
+        val avatarPhoto: VCardAvatarPhoto?,
+        val entryCount: Int,
+        val singleDisplayName: String?,
+        val normalizedDestination: String?,
         val locationAddress: String?,
     ) : ConversationVCardAttachmentMetadata
 }

@@ -1,0 +1,45 @@
+package com.android.messaging.ui.conversationlist.chats.model
+
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.ui.contact.model.AddContactRequest
+import kotlinx.collections.immutable.ImmutableList
+
+internal sealed interface ConversationListEffect {
+
+    data object OpenDebugOptions : ConversationListEffect
+    data object ScrollToTop : ConversationListEffect
+
+    data class ArchiveStatusChanged(
+        val conversationIds: ImmutableList<ConversationId>,
+        val isArchived: Boolean,
+    ) : ConversationListEffect
+
+    data class PreparePinAnimation(
+        val conversationIds: ImmutableList<ConversationId>,
+        val isPinned: Boolean,
+    ) : ConversationListEffect
+
+    data class PlaceCall(
+        val destination: String,
+    ) : ConversationListEffect
+
+    data class ShowContactCard(
+        val contactId: Long,
+        val contactLookupKey: String,
+    ) : ConversationListEffect
+
+    data class AddContact(
+        val request: AddContactRequest,
+    ) : ConversationListEffect
+
+    data class ConfirmBlock(
+        val conversationId: ConversationId,
+        val destination: String,
+    ) : ConversationListEffect
+
+    data class ConversationBlocked(
+        val conversationId: ConversationId,
+        val destination: String,
+        val success: Boolean,
+    ) : ConversationListEffect
+}

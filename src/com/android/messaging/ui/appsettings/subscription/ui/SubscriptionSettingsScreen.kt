@@ -1,5 +1,6 @@
 package com.android.messaging.ui.appsettings.subscription.ui
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,7 +26,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,13 +37,15 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.ui.appsettings.common.SettingsCategoryHeader
 import com.android.messaging.ui.appsettings.common.SettingsClickableItem
 import com.android.messaging.ui.appsettings.common.SettingsSwitchItem
 import com.android.messaging.ui.appsettings.common.SettingsTopAppBar
-import com.android.messaging.ui.appsettings.screen.SettingsScreenModel
-import com.android.messaging.ui.appsettings.screen.model.SettingsAction as Action
+import com.android.messaging.ui.appsettings.subscription.model.PhoneNumberDialogUiState
+import com.android.messaging.ui.appsettings.subscription.model.SubscriptionSettingsAction as Action
 import com.android.messaging.ui.appsettings.subscription.model.SubscriptionUiState
+import com.android.messaging.ui.common.text.asLtrText
 import com.android.messaging.ui.core.MessagingPreviewTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,11 +55,11 @@ internal fun SubscriptionSettingsScreen(
     title: String,
     onAction: (Action) -> Unit,
     onNavigateBack: () -> Unit,
+    phoneNumberDialogState: PhoneNumberDialogUiState,
     modifier: Modifier = Modifier,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    var showGroupMmsDialog by remember { mutableStateOf(false) }
-    var showPhoneNumberDialog by remember { mutableStateOf(false) }
+    var showGroupMmsDialog by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -76,7 +79,7 @@ internal fun SubscriptionSettingsScreen(
                 subscriptionSettings = subscriptionSettings,
                 onAction = onAction,
                 onGroupMmsClick = { showGroupMmsDialog = true },
-                onPhoneNumberClick = { showPhoneNumberDialog = true },
+                onPhoneNumberClick = { onAction(Action.PhoneNumberClicked) },
             )
             advancedSettingsItems(
                 subscriptionSettings = subscriptionSettings,
@@ -88,10 +91,9 @@ internal fun SubscriptionSettingsScreen(
     SubscriptionDialogs(
         subscriptionSettings = subscriptionSettings,
         onAction = onAction,
+        phoneNumberDialogState = phoneNumberDialogState,
         showGroupMmsDialog = showGroupMmsDialog,
         onDismissGroupMms = { showGroupMmsDialog = false },
-        showPhoneNumberDialog = showPhoneNumberDialog,
-        onDismissPhoneNumber = { showPhoneNumberDialog = false },
     )
 }
 
@@ -99,10 +101,9 @@ internal fun SubscriptionSettingsScreen(
 private fun SubscriptionDialogs(
     subscriptionSettings: SubscriptionUiState,
     onAction: (Action) -> Unit,
+    phoneNumberDialogState: PhoneNumberDialogUiState,
     showGroupMmsDialog: Boolean,
     onDismissGroupMms: () -> Unit,
-    showPhoneNumberDialog: Boolean,
-    onDismissPhoneNumber: () -> Unit,
 ) {
     if (showGroupMmsDialog) {
         GroupMmsDialog(
@@ -110,24 +111,25 @@ private fun SubscriptionDialogs(
             onDismiss = onDismissGroupMms,
             onConfirm = { enabled ->
                 onAction(
-                    Action.GroupMmsChanged(subscriptionSettings.subId, enabled),
+                    Action.GroupMmsChanged(enabled),
                 )
                 onDismissGroupMms()
             },
         )
     }
 
-    if (showPhoneNumberDialog) {
+    if (phoneNumberDialogState.isVisible) {
         PhoneNumberDialog(
             currentNumber = subscriptionSettings.phoneNumber.ifEmpty {
                 subscriptionSettings.defaultPhoneNumber
             },
-            onDismiss = onDismissPhoneNumber,
+            isInvalid = phoneNumberDialogState.isInvalid,
+            onErrorDismissed = { onAction(Action.PhoneNumberErrorDismissed) },
+            onDismiss = { onAction(Action.PhoneNumberDialogDismissed) },
             onConfirm = { phoneNumber ->
                 onAction(
-                    Action.PhoneNumberChanged(subscriptionSettings.subId, phoneNumber),
+                    Action.PhoneNumberConfirmed(phoneNumber),
                 )
-                onDismissPhoneNumber()
             },
         )
     }
@@ -163,36 +165,70 @@ private fun LazyListScope.mmsSettingsItems(
     item(key = "phone_number") {
         SettingsClickableItem(
             title = stringResource(R.string.mms_phone_number_pref_title),
-            summary = subscriptionSettings.displayDetail,
+            summary = subscriptionSettings.displayDetail.asLtrText(),
             onClick = onPhoneNumberClick,
         )
     }
 
-    item(key = "auto_retrieve_mms") {
-        SettingsSwitchItem(
-            title = stringResource(R.string.auto_retrieve_mms_pref_title),
-            summary = stringResource(R.string.auto_retrieve_mms_pref_summary),
-            checked = subscriptionSettings.autoRetrieveMms,
-            enabled = subscriptionSettings.isDefaultSmsApp,
-            onCheckedChange = { enabled ->
-                onAction(
-                    Action.AutoRetrieveMmsChanged(subscriptionSettings.subId, enabled),
-                )
-            },
-        )
-    }
+    autoRetrieveMmsItems(
+        subscriptionSettings = subscriptionSettings,
+        onAction = onAction,
+    )
+}
 
-    item(key = "auto_retrieve_mms_roaming") {
+private fun LazyListScope.autoRetrieveMmsItems(
+    subscriptionSettings: SubscriptionUiState,
+    onAction: (Action) -> Unit,
+) {
+    autoRetrieveSwitchItem(
+        key = "auto_retrieve_mms",
+        subscriptionSettings = subscriptionSettings,
+        titleResId = R.string.auto_retrieve_mms_pref_title,
+        summaryResId = R.string.auto_retrieve_mms_pref_summary,
+        checked = subscriptionSettings.autoRetrieveMms,
+        dependencyEnabled = true,
+        onCheckedChange = { enabled ->
+            onAction(Action.AutoRetrieveMmsChanged(enabled))
+        },
+    )
+
+    autoRetrieveSwitchItem(
+        key = "auto_retrieve_mms_roaming",
+        subscriptionSettings = subscriptionSettings,
+        titleResId = R.string.auto_retrieve_mms_when_roaming_pref_title,
+        summaryResId = R.string.auto_retrieve_mms_when_roaming_pref_summary,
+        checked = subscriptionSettings.autoRetrieveMmsWhenRoaming,
+        dependencyEnabled = subscriptionSettings.autoRetrieveMms,
+        onCheckedChange = { enabled ->
+            onAction(Action.AutoRetrieveMmsWhenRoamingChanged(enabled))
+        },
+    )
+}
+
+private fun LazyListScope.autoRetrieveSwitchItem(
+    key: String,
+    subscriptionSettings: SubscriptionUiState,
+    @StringRes titleResId: Int,
+    @StringRes summaryResId: Int,
+    checked: Boolean,
+    dependencyEnabled: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    item(key = key) {
         SettingsSwitchItem(
-            title = stringResource(R.string.auto_retrieve_mms_when_roaming_pref_title),
-            summary = stringResource(R.string.auto_retrieve_mms_when_roaming_pref_summary),
-            checked = subscriptionSettings.autoRetrieveMmsWhenRoaming,
-            enabled = subscriptionSettings.isDefaultSmsApp && subscriptionSettings.autoRetrieveMms,
-            onCheckedChange = { enabled ->
-                onAction(
-                    Action.AutoRetrieveMmsWhenRoamingChanged(subscriptionSettings.subId, enabled),
-                )
+            title = stringResource(titleResId),
+            summary = when {
+                subscriptionSettings.isSecondaryUser -> {
+                    stringResource(R.string.auto_retrieve_mms_secondary_user_summary)
+                }
+
+                else -> stringResource(summaryResId)
             },
+            checked = checked,
+            enabled = subscriptionSettings.isDefaultSmsApp &&
+                dependencyEnabled &&
+                !subscriptionSettings.isSecondaryUser,
+            onCheckedChange = onCheckedChange,
         )
     }
 }
@@ -223,7 +259,7 @@ private fun LazyListScope.advancedSettingsItems(
                 enabled = subscriptionSettings.isDefaultSmsApp,
                 onCheckedChange = { enabled ->
                     onAction(
-                        Action.DeliveryReportsChanged(subscriptionSettings.subId, enabled),
+                        Action.DeliveryReportsChanged(enabled),
                     )
                 },
             )
@@ -236,7 +272,7 @@ private fun LazyListScope.advancedSettingsItems(
                 title = stringResource(R.string.wireless_alerts_title),
                 onClick = {
                     onAction(
-                        Action.WirelessAlertsClicked(subscriptionSettings.subId),
+                        Action.WirelessAlertsClicked,
                     )
                 },
             )
@@ -250,7 +286,7 @@ private fun GroupMmsDialog(
     onDismiss: () -> Unit,
     onConfirm: (Boolean) -> Unit,
 ) {
-    var selectedEnabled by remember { mutableStateOf(isEnabled) }
+    var selectedEnabled by rememberSaveable { mutableStateOf(isEnabled) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -314,12 +350,14 @@ private fun GroupMmsOption(
 }
 
 @Composable
-private fun PhoneNumberDialog(
+internal fun PhoneNumberDialog(
     currentNumber: String,
+    isInvalid: Boolean,
+    onErrorDismissed: () -> Unit,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit,
 ) {
-    var phoneNumber by remember { mutableStateOf(currentNumber) }
+    var phoneNumber by rememberSaveable { mutableStateOf(currentNumber) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -329,10 +367,23 @@ private fun PhoneNumberDialog(
         text = {
             OutlinedTextField(
                 value = phoneNumber,
-                onValueChange = { phoneNumber = it },
+                onValueChange = {
+                    phoneNumber = it
+                    if (isInvalid) {
+                        onErrorDismissed()
+                    }
+                },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 singleLine = true,
+                isError = isInvalid,
+                supportingText = when {
+                    isInvalid -> {
+                        { Text(text = stringResource(R.string.invalid_self_phone_number)) }
+                    }
+
+                    else -> null
+                },
             )
         },
         confirmButton = {
@@ -357,6 +408,7 @@ private fun SubscriptionSettingsScreenDefaultSmsPreview() {
             title = "SIM 1",
             onAction = {},
             onNavigateBack = {},
+            phoneNumberDialogState = PhoneNumberDialogUiState(),
         )
     }
 }
@@ -370,6 +422,7 @@ private fun SubscriptionSettingsScreenNotDefaultSmsPreview() {
             title = "SIM 2",
             onAction = {},
             onNavigateBack = {},
+            phoneNumberDialogState = PhoneNumberDialogUiState(),
         )
     }
 }
@@ -404,6 +457,8 @@ private fun PhoneNumberDialogPreview() {
     MessagingPreviewTheme {
         PhoneNumberDialog(
             currentNumber = "+31 6 1234 5678",
+            isInvalid = false,
+            onErrorDismissed = {},
             onDismiss = {},
             onConfirm = {},
         )
@@ -412,7 +467,7 @@ private fun PhoneNumberDialogPreview() {
 
 private fun previewSubscriptionSettings(isDefaultSmsApp: Boolean): SubscriptionUiState {
     return SubscriptionUiState(
-        subId = 1,
+        subId = SubId(1),
         displayName = "SIM 1",
         displayDetail = "+31 6 1234 5678",
         phoneNumber = "+31 6 1234 5678",

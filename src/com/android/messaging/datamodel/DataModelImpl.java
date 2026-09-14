@@ -18,16 +18,12 @@ package com.android.messaging.datamodel;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
-import android.net.Uri;
 import android.telephony.SubscriptionManager;
 
 import com.android.messaging.datamodel.action.ActionService;
 import com.android.messaging.datamodel.action.BackgroundWorker;
 import com.android.messaging.datamodel.action.FixupMessageStatusOnStartupAction;
 import com.android.messaging.datamodel.action.ProcessPendingMessagesAction;
-import com.android.messaging.datamodel.data.ContactListItemData;
-import com.android.messaging.datamodel.data.ContactPickerData;
-import com.android.messaging.datamodel.data.ContactPickerData.ContactPickerDataListener;
 import com.android.messaging.datamodel.data.ConversationData;
 import com.android.messaging.datamodel.data.ConversationData.ConversationDataListener;
 import com.android.messaging.datamodel.data.ConversationListData;
@@ -37,9 +33,7 @@ import com.android.messaging.datamodel.data.GalleryGridItemData;
 import com.android.messaging.datamodel.data.LaunchConversationData;
 import com.android.messaging.datamodel.data.LaunchConversationData.LaunchConversationDataListener;
 import com.android.messaging.datamodel.data.MediaPickerData;
-import com.android.messaging.datamodel.data.MessagePartData;
 import com.android.messaging.datamodel.data.ParticipantData;
-import com.android.messaging.datamodel.data.VCardContactItemData;
 import com.android.messaging.sms.MmsConfig;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.Assert.DoesNotRunOnMainThread;
@@ -82,17 +76,6 @@ public class DataModelImpl extends DataModel {
     }
 
     @Override
-    public ContactListItemData createContactListItemData() {
-        return new ContactListItemData();
-    }
-
-    @Override
-    public ContactPickerData createContactPickerData(final Context context,
-            final ContactPickerDataListener listener) {
-        return new ContactPickerData(context, listener);
-    }
-
-    @Override
     public MediaPickerData createMediaPickerData(final Context context) {
         return new MediaPickerData(context);
     }
@@ -106,18 +89,6 @@ public class DataModelImpl extends DataModel {
     public LaunchConversationData createLaunchConversationData(
             final LaunchConversationDataListener listener) {
        return new LaunchConversationData(listener);
-    }
-
-    @Override
-    public VCardContactItemData createVCardContactItemData(final Context context,
-            final MessagePartData data) {
-        return new VCardContactItemData(context, data);
-    }
-
-    @Override
-    public VCardContactItemData createVCardContactItemData(final Context context,
-            final Uri vCardUri) {
-        return new VCardContactItemData(context, vCardUri);
     }
 
     @Override

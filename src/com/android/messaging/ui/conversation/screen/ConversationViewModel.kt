@@ -5,15 +5,21 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.media.model.ConversationCapturedMedia
 import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.domain.conversation.usecase.action.CreateDefaultSmsRoleRequest
+import com.android.messaging.domain.conversation.usecase.participant.CanAddContact
 import com.android.messaging.domain.conversation.usecase.participant.CanAddMoreConversationParticipants
-import com.android.messaging.domain.conversation.usecase.telephony.IsDeviceVoiceCapable
-import com.android.messaging.domain.conversation.usecase.telephony.IsEmergencyPhoneNumber
+import com.android.messaging.domain.conversation.usecase.participant.ResolveContactAction
+import com.android.messaging.domain.conversation.usecase.participant.model.ResolveContactActionResult
+import com.android.messaging.domain.conversation.usecase.telephony.CanPlacePhoneCall
+import com.android.messaging.ui.contact.model.AddContactRequest
 import com.android.messaging.ui.conversation.audio.delegate.ConversationAudioRecordingDelegate
 import com.android.messaging.ui.conversation.composer.delegate.ConversationComposerAttachmentsDelegate
 import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftDelegate
@@ -34,32 +40,37 @@ import com.android.messaging.ui.conversation.screen.model.ConversationMediaPicke
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
+import com.android.messaging.ui.conversation.screen.model.ConversationScreenNavEvent as NavEvent
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaffoldUiState
+import com.android.messaging.util.ContentType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 internal interface ConversationScreenModel {
     val effects: Flow<ConversationScreenEffect>
+    val navigationEvents: Flow<NavEvent>
     val mediaPickerOverlayUiState: StateFlow<ConversationMediaPickerOverlayUiState>
     val scaffoldUiState: StateFlow<ConversationScreenScaffoldUiState>
 
-    fun onConversationIdChanged(conversationId: String?)
+    fun onConversationIdChanged(conversationId: ConversationId?)
     fun onOpenStartupAttachment(
-        conversationId: String,
+        conversationId: ConversationId,
         startupAttachment: ConversationEntryStartupAttachment,
     )
 
     fun onSeedDraft(
-        conversationId: String,
+        conversationId: ConversationId,
         draft: ConversationDraft,
     )
 
@@ -70,18 +81,19 @@ internal interface ConversationScreenModel {
     fun onMessageAttachmentClicked(
         contentType: String,
         contentUri: String,
+        partId: String,
     )
 
-    fun onMessageClick(messageId: String)
-    fun onMessageAvatarClick(messageId: String)
-    fun onMessageDownloadClick(messageId: String)
-    fun onMessageLongClick(messageId: String)
-    fun onMessageResendClick(messageId: String)
+    fun onMessageClick(messageId: MessageId)
+    fun onMessageAvatarClick(messageId: MessageId)
+    fun onMessageDownloadClick(messageId: MessageId)
+    fun onMessageLongClick(messageId: MessageId)
+    fun onMessageResendClick(messageId: MessageId)
     fun onMessageSelectionActionClick(action: ConversationMessageSelectionAction)
 
     fun onCallClick()
 
-    fun onSimSelected(selfParticipantId: String)
+    fun onSimSelected(selfParticipantId: ParticipantId)
 
     fun onExternalUriClicked(uri: String)
 
@@ -90,8 +102,7 @@ internal interface ConversationScreenModel {
     fun onContactCardPicked(contactUri: String?)
     fun onMessageTextChanged(text: String)
     fun tryStartAddingAttachment(): Boolean
-    fun onAudioRecordingStart()
-    fun onLockedAudioRecordingStart()
+    fun onAudioRecordingStart(isLocked: Boolean)
     fun onAudioRecordingLock(): Boolean
     fun onAudioRecordingFinish()
     fun onAudioRecordingCancel()
@@ -116,6 +127,7 @@ internal interface ConversationScreenModel {
 
     fun onArchiveConversationClick()
     fun onUnarchiveConversationClick()
+    fun onUnblockClick()
     fun onAddContactClick()
     fun onDeleteConversationClick()
     fun confirmDeleteConversation()
@@ -142,27 +154,29 @@ internal class ConversationViewModel @Inject constructor(
     private val conversationFocusDelegate: ConversationFocusDelegate,
     private val conversationSubscriptionSelectionDelegate:
     ConversationSubscriptionSelectionDelegate,
-    private val conversationComposerUiStateMapper: ConversationComposerUiStateMapper,
+    conversationComposerUiStateMapper: ConversationComposerUiStateMapper,
     private val simSelectionRepository: ConversationSimSelectionRepository,
     private val canAddMoreConversationParticipants: CanAddMoreConversationParticipants,
+    private val canAddContact: CanAddContact,
+    private val canPlacePhoneCall: CanPlacePhoneCall,
     private val createDefaultSmsRoleRequest: CreateDefaultSmsRoleRequest,
-    private val isDeviceVoiceCapable: IsDeviceVoiceCapable,
-    private val isEmergencyPhoneNumber: IsEmergencyPhoneNumber,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
     private val savedStateHandle: SavedStateHandle,
+    private val resolveContactAction: ResolveContactAction,
 ) : ViewModel(),
     ConversationScreenModel {
 
-    private val conversationIdFlow: StateFlow<String?> = savedStateHandle.getStateFlow(
-        key = CONVERSATION_ID_KEY,
-        initialValue = null,
+    private val conversationIdFlow: MutableStateFlow<ConversationId?> = MutableStateFlow(
+        ConversationId.fromOrNull(savedStateHandle[CONVERSATION_ID_KEY]),
     )
     private val _effects = MutableSharedFlow<ConversationScreenEffect>(
         extraBufferCapacity = 1,
     )
+    private val _navigationEvents = MutableSharedFlow<NavEvent>(extraBufferCapacity = 1)
 
     override val effects = _effects.asSharedFlow()
+    override val navigationEvents = _navigationEvents.asSharedFlow()
 
     init {
         initializeDelegates()
@@ -268,9 +282,10 @@ internal class ConversationViewModel @Inject constructor(
             canCall = canCall(metadataState = metadataState),
             canArchive = isPresent && presentMetadata?.isArchived == false,
             canUnarchive = isPresent && presentMetadata?.isArchived == true,
-            canAddContact = canAddContact(metadataState = metadataState),
+            canAddContact = isAddContactAvailable(metadataState = metadataState),
             canDeleteConversation = isPresent,
             canEditSubject = isPresent,
+            isBlocked = presentMetadata?.isBlocked == true,
             attachmentLimitWarning = attachmentLimitWarning,
             isDeleteConversationConfirmationVisible = isDeleteConversationConfirmationVisible,
             isSubjectDialogVisible = isSubjectDialogVisible,
@@ -346,32 +361,31 @@ internal class ConversationViewModel @Inject constructor(
             conversationIdFlow = conversationIdFlow,
         )
         conversationSubscriptionSelectionDelegate.bind(scope = viewModelScope)
-        bindDelegateEffects()
+        bindDelegateStreams()
     }
 
-    private fun bindDelegateEffects() {
+    private fun bindDelegateStreams() {
         viewModelScope.launch(defaultDispatcher) {
-            conversationDraftDelegate.effects.collect(_effects::emit)
+            merge(
+                conversationDraftDelegate.effects,
+                conversationMediaPickerDelegate.effects,
+                conversationMessageSelectionDelegate.effects,
+                conversationMetadataDelegate.effects,
+            ).collect(_effects::emit)
         }
         viewModelScope.launch(defaultDispatcher) {
-            conversationMediaPickerDelegate.effects.collect(_effects::emit)
-        }
-        viewModelScope.launch(defaultDispatcher) {
-            conversationMessageSelectionDelegate.effects.collect(_effects::emit)
-        }
-        viewModelScope.launch(defaultDispatcher) {
-            conversationMetadataDelegate.effects.collect(_effects::emit)
+            merge(
+                conversationMessageSelectionDelegate.navigationEvents,
+                conversationMetadataDelegate.navigationEvents,
+            ).collect(_navigationEvents::emit)
         }
     }
 
-    override fun onConversationIdChanged(conversationId: String?) {
-        updateConversationId(conversationId = conversationId)
-    }
-
-    private fun updateConversationId(conversationId: String?) {
+    override fun onConversationIdChanged(conversationId: ConversationId?) {
         if (conversationId != conversationIdFlow.value) {
             conversationMessageSelectionDelegate.dismissMessageSelection()
-            savedStateHandle[CONVERSATION_ID_KEY] = conversationId
+            conversationIdFlow.value = conversationId
+            savedStateHandle[CONVERSATION_ID_KEY] = conversationId?.value
         }
     }
 
@@ -391,27 +405,25 @@ internal class ConversationViewModel @Inject constructor(
         return when {
             metadataState !is ConversationMetadataUiState.Present -> false
             metadataState.participantCount != 1 -> false
-            metadataState.otherParticipantPhoneNumber == null -> false
-            !isDeviceVoiceCapable() -> false
-            isEmergencyPhoneNumber(metadataState.otherParticipantPhoneNumber) -> false
-            else -> true
+            else -> canPlacePhoneCall(metadataState.otherParticipantPhoneNumber)
         }
     }
 
-    private fun canAddContact(
+    private fun isAddContactAvailable(
         metadataState: ConversationMetadataUiState,
     ): Boolean {
         return when {
             metadataState !is ConversationMetadataUiState.Present -> false
-            metadataState.participantCount != 1 -> false
-            metadataState.otherParticipantPhoneNumber.isNullOrBlank() -> false
-            !metadataState.otherParticipantContactLookupKey.isNullOrBlank() -> false
-            else -> true
+            else -> canAddContact(
+                isGroup = metadataState.participantCount != 1,
+                lookupKey = metadataState.otherParticipantContactLookupKey,
+                destination = metadataState.otherParticipantPhoneNumber,
+            )
         }
     }
 
     override fun onSeedDraft(
-        conversationId: String,
+        conversationId: ConversationId,
         draft: ConversationDraft,
     ) {
         conversationDraftDelegate.seedDraft(
@@ -421,66 +433,67 @@ internal class ConversationViewModel @Inject constructor(
     }
 
     override fun onOpenStartupAttachment(
-        conversationId: String,
+        conversationId: ConversationId,
         startupAttachment: ConversationEntryStartupAttachment,
     ) {
         val imageCollectionUri = MessagingContentProvider
-            .buildConversationImagesUri(conversationId)
+            .buildConversationImagesUri(conversationId.value)
             ?.toString()
 
-        viewModelScope.launch(defaultDispatcher) {
-            _effects.emit(
-                ConversationScreenEffect.OpenAttachmentPreview(
-                    contentType = startupAttachment.contentType,
-                    contentUri = startupAttachment.contentUri,
-                    imageCollectionUri = imageCollectionUri,
-                ),
-            )
-        }
+        emitEffect(
+            attachmentPreviewEffect(
+                contentType = startupAttachment.contentType,
+                contentUri = startupAttachment.contentUri,
+                imageCollectionUri = imageCollectionUri,
+            ),
+        )
     }
 
     override fun onAttachmentClicked(attachment: ComposerAttachmentUiModel.Resolved) {
-        val imageCollectionUri = conversationIdFlow
-            .value
-            ?.let(MessagingContentProvider::buildDraftImagesUri)
+        val imageCollectionUri = conversationIdFlow.value
+            ?.let { MessagingContentProvider.buildDraftImagesUri(it.value) }
             ?.toString()
 
-        viewModelScope.launch(defaultDispatcher) {
-            _effects.emit(
-                ConversationScreenEffect.OpenAttachmentPreview(
-                    contentType = attachment.contentType,
-                    contentUri = attachment.contentUri,
-                    imageCollectionUri = imageCollectionUri,
-                ),
-            )
-        }
+        emitEffect(
+            attachmentPreviewEffect(
+                contentType = attachment.contentType,
+                contentUri = attachment.contentUri,
+                imageCollectionUri = imageCollectionUri,
+            ),
+        )
     }
 
     override fun onMessageAttachmentClicked(
         contentType: String,
         contentUri: String,
+        partId: String,
     ) {
-        val imageCollectionUri = conversationIdFlow
-            .value
-            ?.let(MessagingContentProvider::buildConversationImagesUri)
+        val imageCollectionUri = conversationIdFlow.value
+            ?.let { MessagingContentProvider.buildConversationImagesUri(it.value) }
             ?.toString()
 
-        viewModelScope.launch(defaultDispatcher) {
-            _effects.emit(
-                ConversationScreenEffect.OpenAttachmentPreview(
-                    contentType = contentType,
-                    contentUri = contentUri,
-                    imageCollectionUri = imageCollectionUri,
-                ),
+        val initialPhotoOccurrenceIndex =
+            conversationMessagesDelegate.resolvePhotoViewerInitialOccurrenceIndex(
+                contentType = contentType,
+                partId = partId,
+                contentUri = contentUri,
             )
-        }
+
+        emitEffect(
+            attachmentPreviewEffect(
+                contentType = contentType,
+                contentUri = contentUri,
+                imageCollectionUri = imageCollectionUri,
+                initialPhotoOccurrenceIndex = initialPhotoOccurrenceIndex,
+            ),
+        )
     }
 
-    override fun onMessageClick(messageId: String) {
+    override fun onMessageClick(messageId: MessageId) {
         conversationMessageSelectionDelegate.onMessageClick(messageId = messageId)
     }
 
-    override fun onMessageAvatarClick(messageId: String) {
+    override fun onMessageAvatarClick(messageId: MessageId) {
         val message = when (val messagesState = conversationMessagesDelegate.state.value) {
             is ConversationMessagesUiState.Present -> {
                 messagesState
@@ -488,7 +501,6 @@ internal class ConversationViewModel @Inject constructor(
                     .firstOrNull { candidate ->
                         candidate.messageId == messageId
                     }
-                    ?.takeIf { it.canShowContactCard }
             }
 
             else -> null
@@ -498,27 +510,46 @@ internal class ConversationViewModel @Inject constructor(
             return
         }
 
-        viewModelScope.launch(defaultDispatcher) {
-            _effects.emit(
-                ConversationScreenEffect.ShowOrAddParticipantContact(
-                    contactId = message.senderContactId,
-                    contactLookupKey = message.senderContactLookupKey,
-                    avatarUri = message.senderAvatarUri,
-                    normalizedDestination = message.senderNormalizedDestination,
-                ),
-            )
+        val contactAction = resolveContactAction(
+            contactId = message.senderContactId,
+            lookupKey = message.senderContactLookupKey,
+            destination = message.senderNormalizedDestination,
+        )
+
+        when (contactAction) {
+            is ResolveContactActionResult.ShowContactCard -> {
+                emitEffect(
+                    ConversationScreenEffect.ShowParticipantContactCard(
+                        contactId = contactAction.contactId,
+                        contactLookupKey = contactAction.lookupKey,
+                    ),
+                )
+            }
+
+            is ResolveContactActionResult.AddContact -> {
+                emitEffect(
+                    ConversationScreenEffect.AddParticipantContact(
+                        request = AddContactRequest(
+                            destination = contactAction.destination,
+                            avatarUri = message.senderAvatarUri?.toString(),
+                        ),
+                    ),
+                )
+            }
+
+            ResolveContactActionResult.Unavailable -> Unit
         }
     }
 
-    override fun onMessageDownloadClick(messageId: String) {
+    override fun onMessageDownloadClick(messageId: MessageId) {
         conversationMessageSelectionDelegate.onMessageDownloadClick(messageId = messageId)
     }
 
-    override fun onMessageLongClick(messageId: String) {
+    override fun onMessageLongClick(messageId: MessageId) {
         conversationMessageSelectionDelegate.onMessageLongClick(messageId = messageId)
     }
 
-    override fun onMessageResendClick(messageId: String) {
+    override fun onMessageResendClick(messageId: MessageId) {
         conversationMessageSelectionDelegate.onMessageResendClick(messageId = messageId)
     }
 
@@ -532,21 +563,18 @@ internal class ConversationViewModel @Inject constructor(
                 ConversationMetadataUiState.Present
             )
             ?.otherParticipantPhoneNumber
-            ?.takeUnless(isEmergencyPhoneNumber::invoke)
+            ?.takeIf(canPlacePhoneCall::invoke)
             ?: return
 
-        viewModelScope.launch(defaultDispatcher) {
-            _effects.emit(
-                ConversationScreenEffect.PlacePhoneCall(
-                    phoneNumber = phoneNumber,
-                ),
-            )
-        }
+        emitEffect(
+            ConversationScreenEffect.PlacePhoneCall(
+                phoneNumber = phoneNumber,
+            ),
+        )
     }
 
-    override fun onSimSelected(selfParticipantId: String) {
-        if (selfParticipantId.isBlank()) return
-        val conversationId = conversationIdFlow.value?.takeIf(String::isNotBlank) ?: return
+    override fun onSimSelected(selfParticipantId: ParticipantId) {
+        val conversationId = conversationIdFlow.value?.takeIf { it.isNotBlank() } ?: return
 
         conversationDraftDelegate.onSelfParticipantIdChanged(
             conversationId = conversationId,
@@ -559,13 +587,11 @@ internal class ConversationViewModel @Inject constructor(
     }
 
     override fun onExternalUriClicked(uri: String) {
-        viewModelScope.launch(defaultDispatcher) {
-            _effects.emit(
-                ConversationScreenEffect.OpenExternalUri(
-                    uri = uri,
-                ),
-            )
-        }
+        emitEffect(
+            ConversationScreenEffect.OpenExternalUri(
+                uri = uri,
+            ),
+        )
     }
 
     override fun onPhotoPickerMediaSelected(contentUris: List<String>) {
@@ -588,12 +614,8 @@ internal class ConversationViewModel @Inject constructor(
         return conversationDraftDelegate.tryStartAddingAttachment()
     }
 
-    override fun onAudioRecordingStart() {
-        startAudioRecording(isLocked = false)
-    }
-
-    override fun onLockedAudioRecordingStart() {
-        startAudioRecording(isLocked = true)
+    override fun onAudioRecordingStart(isLocked: Boolean) {
+        startAudioRecording(isLocked = isLocked)
     }
 
     private fun startAudioRecording(isLocked: Boolean) {
@@ -681,25 +703,16 @@ internal class ConversationViewModel @Inject constructor(
     }
 
     override fun onDefaultSmsRolePromptActionClick() {
-        viewModelScope.launch(defaultDispatcher) {
-            when (val requestIntent = createDefaultSmsRoleRequest()) {
-                null -> {
-                    _effects.emit(
-                        ConversationScreenEffect.ShowMessage(
-                            messageResId = R.string.activity_not_found_message,
-                        ),
-                    )
-                }
+        val effect = when (val requestIntent = createDefaultSmsRoleRequest()) {
+            null -> ConversationScreenEffect.ShowMessage(
+                messageResId = R.string.activity_not_found_message,
+            )
 
-                else -> {
-                    _effects.emit(
-                        ConversationScreenEffect.LaunchDefaultSmsRoleRequest(
-                            intent = requestIntent,
-                        ),
-                    )
-                }
-            }
+            else -> ConversationScreenEffect.LaunchDefaultSmsRoleRequest(
+                intent = requestIntent,
+            )
         }
+        emitEffect(effect)
     }
 
     override fun onDefaultSmsRoleRequestResult(resultCode: Int) {
@@ -711,13 +724,11 @@ internal class ConversationViewModel @Inject constructor(
             return
         }
 
-        viewModelScope.launch(defaultDispatcher) {
-            _effects.emit(
-                ConversationScreenEffect.ShowMessage(
-                    messageResId = R.string.toast_after_setting_default_sms_app,
-                ),
-            )
-        }
+        emitEffect(
+            ConversationScreenEffect.ShowMessage(
+                messageResId = R.string.toast_after_setting_default_sms_app,
+            ),
+        )
     }
 
     private fun handlePendingDefaultSmsRoleRequestResult(resultCode: Int): Boolean {
@@ -735,13 +746,11 @@ internal class ConversationViewModel @Inject constructor(
     }
 
     override fun onDefaultSmsRoleRequestLaunchFailed() {
-        viewModelScope.launch(defaultDispatcher) {
-            _effects.emit(
-                ConversationScreenEffect.ShowMessage(
-                    messageResId = R.string.activity_not_found_message,
-                ),
-            )
-        }
+        emitEffect(
+            ConversationScreenEffect.ShowMessage(
+                messageResId = R.string.activity_not_found_message,
+            ),
+        )
     }
 
     override fun persistDraft() {
@@ -754,6 +763,10 @@ internal class ConversationViewModel @Inject constructor(
 
     override fun onUnarchiveConversationClick() {
         conversationMetadataDelegate.onUnarchiveConversationClick()
+    }
+
+    override fun onUnblockClick() {
+        conversationMetadataDelegate.onUnblockConversationClick()
     }
 
     override fun onAddContactClick() {
@@ -789,6 +802,8 @@ internal class ConversationViewModel @Inject constructor(
     }
 
     override fun onScreenForegrounded(cancelNotification: Boolean) {
+        conversationComposerAttachmentsDelegate.refresh()
+        conversationMessagesDelegate.refresh()
         conversationFocusDelegate.setScreenFocused(
             focused = true,
             cancelNotification = cancelNotification,
@@ -808,9 +823,37 @@ internal class ConversationViewModel @Inject constructor(
         super.onCleared()
     }
 
+    private fun emitEffect(effect: ConversationScreenEffect) {
+        viewModelScope.launch(defaultDispatcher) {
+            _effects.emit(effect)
+        }
+    }
+
     private companion object {
         private const val CONVERSATION_ID_KEY = "conversation_id"
         private const val STATEFLOW_STOP_TIMEOUT_MILLIS = 5_000L
+    }
+}
+
+private fun attachmentPreviewEffect(
+    contentType: String,
+    contentUri: String,
+    imageCollectionUri: String?,
+    initialPhotoOccurrenceIndex: Int = 0,
+): ConversationScreenEffect {
+    return when {
+        ContentType.isVCardType(contentType) -> {
+            ConversationScreenEffect.NavigateToVCardDetail(uri = contentUri)
+        }
+
+        else -> {
+            ConversationScreenEffect.OpenAttachmentPreview(
+                contentType = contentType,
+                contentUri = contentUri,
+                imageCollectionUri = imageCollectionUri,
+                initialPhotoOccurrenceIndex = initialPhotoOccurrenceIndex,
+            )
+        }
     }
 }
 

@@ -1,6 +1,8 @@
 package com.android.messaging.ui.conversation.metadata.delegate
 
 import com.android.messaging.R
+import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepository
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.di.core.DefaultDispatcher
@@ -10,6 +12,7 @@ import com.android.messaging.ui.conversation.common.ConversationScreenDelegate
 import com.android.messaging.ui.conversation.metadata.mapper.ConversationMetadataUiStateMapper
 import com.android.messaging.ui.conversation.metadata.model.ConversationMetadataUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
+import com.android.messaging.ui.conversation.screen.model.ConversationScreenNavEvent as NavEvent
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -28,10 +31,12 @@ import kotlinx.coroutines.launch
 internal interface ConversationMetadataDelegate :
     ConversationScreenDelegate<ConversationMetadataUiState> {
     val effects: Flow<ConversationScreenEffect>
+    val navigationEvents: Flow<NavEvent>
     val isDeleteConversationConfirmationVisible: StateFlow<Boolean>
 
     fun onArchiveConversationClick()
     fun onUnarchiveConversationClick()
+    fun onUnblockConversationClick()
     fun onAddContactClick()
     fun onDeleteConversationClick()
     fun confirmDeleteConversation()
@@ -42,6 +47,7 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
     private val checkConversationActionRequirements: CheckConversationActionRequirements,
     private val conversationsRepository: ConversationsRepository,
     private val conversationMetadataUiStateMapper: ConversationMetadataUiStateMapper,
+    private val blockedParticipantsRepository: BlockedParticipantsRepository,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
 ) : ConversationMetadataDelegate {
@@ -49,23 +55,25 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
     private val _effects = MutableSharedFlow<ConversationScreenEffect>(
         extraBufferCapacity = 1,
     )
+    private val _navigationEvents = MutableSharedFlow<NavEvent>(extraBufferCapacity = 1)
     private val _state = MutableStateFlow<ConversationMetadataUiState>(
         value = ConversationMetadataUiState.Loading,
     )
     private val _isDeleteConversationConfirmationVisible = MutableStateFlow(value = false)
 
     override val effects = _effects.asSharedFlow()
+    override val navigationEvents = _navigationEvents.asSharedFlow()
     override val state = _state.asStateFlow()
     override val isDeleteConversationConfirmationVisible =
         _isDeleteConversationConfirmationVisible.asStateFlow()
 
     private var boundScope: CoroutineScope? = null
-    private var boundConversationIdFlow: StateFlow<String?>? = null
+    private var boundConversationIdFlow: StateFlow<ConversationId?>? = null
     private var latestMetadata: ConversationMetadata? = null
 
     override fun bind(
         scope: CoroutineScope,
-        conversationIdFlow: StateFlow<String?>,
+        conversationIdFlow: StateFlow<ConversationId?>,
     ) {
         if (boundScope != null) {
             return
@@ -86,7 +94,13 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
 
                 conversationsRepository
                     .getConversationMetadata(conversationId = conversationId)
-                    .onEach { metadata -> latestMetadata = metadata }
+                    .onEach { metadata ->
+                        if (latestMetadata != null && metadata == null) {
+                            _navigationEvents.emit(NavEvent.CloseConversation)
+                        }
+
+                        latestMetadata = metadata
+                    }
                     .map { metadata ->
                         when {
                             metadata != null -> {
@@ -108,7 +122,7 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
 
         boundScope?.launch(defaultDispatcher) {
             conversationsRepository.archiveConversation(conversationId = conversationId)
-            _effects.emit(ConversationScreenEffect.CloseConversation)
+            _navigationEvents.emit(NavEvent.CloseConversation)
         }
     }
 
@@ -117,6 +131,22 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
 
         boundScope?.launch(defaultDispatcher) {
             conversationsRepository.unarchiveConversation(conversationId = conversationId)
+        }
+    }
+
+    override fun onUnblockConversationClick() {
+        val conversationId = currentConversationId ?: return
+        val normalizedDestination = latestMetadata
+            ?.otherParticipantNormalizedDestination
+            ?.takeIf { it.isNotBlank() }
+            ?: return
+
+        boundScope?.launch(defaultDispatcher) {
+            blockedParticipantsRepository.setDestinationBlocked(
+                destination = normalizedDestination,
+                conversationId = conversationId,
+                isBlocked = false,
+            )
         }
     }
 
@@ -186,7 +216,7 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
                 conversationId = conversationId,
                 cutoffTimestamp = cutoffTimestamp,
             )
-            _effects.emit(ConversationScreenEffect.CloseConversation)
+            _navigationEvents.emit(NavEvent.CloseConversation)
         }
     }
 
@@ -194,7 +224,7 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
         _isDeleteConversationConfirmationVisible.value = false
     }
 
-    private val currentConversationId: String?
+    private val currentConversationId: ConversationId?
         get() {
             return boundConversationIdFlow
                 ?.value

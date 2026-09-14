@@ -1,5 +1,8 @@
 package com.android.messaging.ui.conversation.messages.mapper
 
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.datamodel.data.MessagePartData
@@ -10,22 +13,31 @@ import com.android.messaging.ui.conversation.messages.model.message.Conversation
 import com.android.messaging.ui.conversation.messages.model.message.MmsDownloadUiModel
 import com.android.messaging.util.ContentType
 import com.android.messaging.util.LogUtil
+import com.android.messaging.util.OsUtil
 import javax.inject.Inject
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 internal interface ConversationMessageUiModelMapper {
-    fun map(data: ConversationMessageData): ConversationMessageUiModel
+    fun map(data: ConversationMessageData): ConversationMessageUiModel?
 }
 
 internal class ConversationMessageUiModelMapperImpl @Inject constructor(
     private val conversationVCardAttachmentUiModelMapper: ConversationVCardAttachmentUiModelMapper,
 ) : ConversationMessageUiModelMapper {
 
-    override fun map(data: ConversationMessageData): ConversationMessageUiModel {
+    override fun map(data: ConversationMessageData): ConversationMessageUiModel? {
+        val messageId = MessageId.fromOrNull(data.messageId)
+        val conversationId = ConversationId.fromOrNull(data.conversationId)
+
+        if (messageId == null || conversationId == null) {
+            LogUtil.e(LOG_TAG, "Dropping conversation message with missing ids")
+            return null
+        }
+
         return ConversationMessageUiModel(
-            messageId = data.messageId ?: "",
-            conversationId = data.conversationId ?: "",
+            messageId = messageId,
+            conversationId = conversationId,
             text = data.text,
             parts = data
                 .parts
@@ -38,7 +50,6 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor(
             displayTimestamp = conversationMessageDisplayTimestamp(
                 sentTimestamp = data.sentTimeStamp,
                 receivedTimestamp = data.receivedTimeStamp,
-                isIncoming = data.isIncoming,
             ),
             status = mapStatus(data.status),
             isIncoming = data.isIncoming,
@@ -48,8 +59,8 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor(
             senderContactLookupKey = data.senderContactLookupKey,
             senderNormalizedDestination = data.senderNormalizedDestination
                 ?.takeIf { it.isNotBlank() },
-            senderParticipantId = data.participantId?.takeIf { it.isNotBlank() },
-            selfParticipantId = data.selfParticipantId?.takeIf { it.isNotBlank() },
+            senderParticipantId = ParticipantId.fromOrNull(data.participantId),
+            selfParticipantId = ParticipantId.fromOrNull(data.selfParticipantId),
             canClusterWithPrevious = data.canClusterWithPreviousMessage,
             canClusterWithNext = data.canClusterWithNextMessage,
             canCopyMessageToClipboard = data.canCopyMessageToClipboard,
@@ -93,6 +104,7 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor(
                 state = state,
                 sizeBytes = data.smsMessageSize.toLong(),
                 expiryTimestamp = data.mmsExpiry,
+                isSecondaryUser = OsUtil.isSecondaryUser(),
             )
         }
     }
@@ -121,6 +133,20 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor(
                 )
             }
 
+            else -> mapAttachmentPart(
+                part = part,
+                contentType = contentType,
+            )
+        }
+    }
+
+    private fun mapAttachmentPart(
+        part: MessagePartData,
+        contentType: String,
+    ): ConversationMessagePartUiModel.Attachment {
+        val partId = part.partId.orEmpty()
+
+        return when {
             ContentType.isAudioType(contentType) -> {
                 ConversationMessagePartUiModel.Attachment.Audio(
                     text = part.text,
@@ -128,6 +154,7 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor(
                     contentUri = part.contentUri,
                     width = part.width,
                     height = part.height,
+                    partId = partId,
                 )
             }
 
@@ -138,6 +165,7 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor(
                     contentUri = part.contentUri,
                     width = part.width,
                     height = part.height,
+                    partId = partId,
                 )
             }
 
@@ -151,6 +179,7 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor(
                     vCardUiModel = conversationVCardAttachmentUiModelMapper.map(
                         metadata = null,
                     ),
+                    partId = partId,
                 )
             }
 
@@ -161,6 +190,7 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor(
                     contentUri = part.contentUri,
                     width = part.width,
                     height = part.height,
+                    partId = partId,
                 )
             }
 
@@ -171,6 +201,7 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor(
                     contentUri = part.contentUri,
                     width = part.width,
                     height = part.height,
+                    partId = partId,
                 )
             }
         }
@@ -231,17 +262,10 @@ internal class ConversationMessageUiModelMapperImpl @Inject constructor(
     private fun conversationMessageDisplayTimestamp(
         sentTimestamp: Long,
         receivedTimestamp: Long,
-        isIncoming: Boolean,
     ): Long {
-        val primaryTimestamp = when {
-            isIncoming -> receivedTimestamp
-            else -> sentTimestamp
-        }
-
         return when {
-            primaryTimestamp > 0L -> primaryTimestamp
-            isIncoming -> sentTimestamp
-            else -> receivedTimestamp
+            receivedTimestamp > 0L -> receivedTimestamp
+            else -> sentTimestamp
         }
     }
 

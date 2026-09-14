@@ -1,14 +1,19 @@
 package com.android.messaging.ui.conversation.screen.viewmodel
 
 import androidx.lifecycle.SavedStateHandle
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
+import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
 import com.android.messaging.domain.conversation.usecase.action.CreateDefaultSmsRoleRequest
+import com.android.messaging.domain.conversation.usecase.participant.CanAddContact
 import com.android.messaging.domain.conversation.usecase.participant.CanAddMoreConversationParticipants
-import com.android.messaging.domain.conversation.usecase.telephony.IsDeviceVoiceCapable
-import com.android.messaging.domain.conversation.usecase.telephony.IsEmergencyPhoneNumber
+import com.android.messaging.domain.conversation.usecase.participant.ResolveContactAction
+import com.android.messaging.domain.conversation.usecase.participant.model.ResolveContactActionResult
+import com.android.messaging.domain.conversation.usecase.telephony.CanPlacePhoneCall
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.ui.conversation.audio.delegate.ConversationAudioRecordingDelegate
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingUiState
@@ -27,6 +32,7 @@ import com.android.messaging.ui.conversation.metadata.delegate.ConversationMetad
 import com.android.messaging.ui.conversation.metadata.model.ConversationMetadataUiState
 import com.android.messaging.ui.conversation.screen.ConversationViewModel
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
+import com.android.messaging.util.ContentType
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -66,8 +72,8 @@ internal class ConversationViewModelSimSelectionTest {
     private val subscriptionsRepository = mockk<SubscriptionsRepository>()
     private val canAddMoreConversationParticipants = mockk<CanAddMoreConversationParticipants>()
     private val createDefaultSmsRoleRequest = mockk<CreateDefaultSmsRoleRequest>()
-    private val isDeviceVoiceCapable = mockk<IsDeviceVoiceCapable>()
-    private val isEmergencyPhoneNumber = mockk<IsEmergencyPhoneNumber>()
+    private val canAddContact = mockk<CanAddContact>()
+    private val canPlacePhoneCall = mockk<CanPlacePhoneCall>()
 
     @Before
     fun setUp() {
@@ -97,11 +103,19 @@ internal class ConversationViewModelSimSelectionTest {
             ConversationMessagesUiState.Loading,
         )
         every { conversationMessagesDelegate.bind(any(), any()) } just runs
+        every {
+            conversationMessagesDelegate.resolvePhotoViewerInitialOccurrenceIndex(
+                contentType = any(),
+                partId = any(),
+                contentUri = any(),
+            )
+        } returns 0
 
         every { conversationMessageSelectionDelegate.state } returns MutableStateFlow(
             ConversationMessageSelectionUiState(),
         )
         every { conversationMessageSelectionDelegate.effects } returns emptyFlow()
+        every { conversationMessageSelectionDelegate.navigationEvents } returns emptyFlow()
         every { conversationMessageSelectionDelegate.bind(any(), any()) } just runs
         every { conversationMessageSelectionDelegate.dismissMessageSelection() } just runs
 
@@ -118,6 +132,7 @@ internal class ConversationViewModelSimSelectionTest {
             conversationMetadataDelegate.isDeleteConversationConfirmationVisible
         } returns MutableStateFlow(false)
         every { conversationMetadataDelegate.effects } returns emptyFlow()
+        every { conversationMetadataDelegate.navigationEvents } returns emptyFlow()
         every { conversationMetadataDelegate.bind(any(), any()) } just runs
 
         every { conversationFocusDelegate.bind(any(), any()) } just runs
@@ -136,13 +151,52 @@ internal class ConversationViewModelSimSelectionTest {
 
         every { subscriptionsRepository.observeActiveSubscriptions() } returns emptyFlow()
         every { subscriptionsRepository.observeDefaultSmsSubscriptionId() } returns emptyFlow()
-        every { subscriptionsRepository.getDefaultSmsSubscriptionId() } returns DEFAULT_SUB_ID
+        every { subscriptionsRepository.getDefaultSmsSubscriptionId() } returns
+            SubId(DEFAULT_SUB_ID)
         every {
             simSelectionRepository.setSelectedSelfId(
                 conversationId = any(),
                 selfId = any(),
             )
         } just runs
+    }
+
+    @Test
+    fun onMessageAttachmentClicked_whenImageAttachment_resolvesPhotoOccurrenceIndex() {
+        val viewModel = createViewModel()
+
+        viewModel.onMessageAttachmentClicked(
+            contentType = ContentType.IMAGE_JPEG,
+            contentUri = ATTACHMENT_URI,
+            partId = ATTACHMENT_PART_ID,
+        )
+
+        verify(exactly = 1) {
+            conversationMessagesDelegate.resolvePhotoViewerInitialOccurrenceIndex(
+                contentType = ContentType.IMAGE_JPEG,
+                partId = ATTACHMENT_PART_ID,
+                contentUri = ATTACHMENT_URI,
+            )
+        }
+    }
+
+    @Test
+    fun onMessageAttachmentClicked_whenNonImageAttachment_delegatesOccurrenceResolution() {
+        val viewModel = createViewModel()
+
+        viewModel.onMessageAttachmentClicked(
+            contentType = ContentType.VIDEO_MP4,
+            contentUri = ATTACHMENT_URI,
+            partId = ATTACHMENT_PART_ID,
+        )
+
+        verify(exactly = 1) {
+            conversationMessagesDelegate.resolvePhotoViewerInitialOccurrenceIndex(
+                contentType = ContentType.VIDEO_MP4,
+                partId = ATTACHMENT_PART_ID,
+                contentUri = ATTACHMENT_URI,
+            )
+        }
     }
 
     @Test
@@ -197,7 +251,7 @@ internal class ConversationViewModelSimSelectionTest {
             ),
         )
         every { subscriptionsRepository.observeDefaultSmsSubscriptionId() } returns flowOf(
-            SECOND_SUB_ID,
+            SubId(SECOND_SUB_ID),
         )
 
         val viewModel = createViewModel()
@@ -215,7 +269,7 @@ internal class ConversationViewModelSimSelectionTest {
                 composerAvailability = any(),
                 subscriptions = any(),
                 areSubscriptionsLoaded = true,
-                defaultSmsSubscriptionId = SECOND_SUB_ID,
+                defaultSmsSubscriptionId = SubId(SECOND_SUB_ID),
             )
         }
 
@@ -226,7 +280,7 @@ internal class ConversationViewModelSimSelectionTest {
     fun composerState_afterDefaultSmsSubscriptionChange_remapsWithNewDefault() = runTest(
         context = mainDispatcherRule.testDispatcher,
     ) {
-        val defaultSmsSubscriptionIdFlow = MutableStateFlow(FIRST_SUB_ID)
+        val defaultSmsSubscriptionIdFlow = MutableStateFlow(SubId(FIRST_SUB_ID))
         every { subscriptionsRepository.observeActiveSubscriptions() } returns flowOf(
             persistentListOf(
                 firstSubscription(),
@@ -252,11 +306,11 @@ internal class ConversationViewModelSimSelectionTest {
                 composerAvailability = any(),
                 subscriptions = any(),
                 areSubscriptionsLoaded = true,
-                defaultSmsSubscriptionId = FIRST_SUB_ID,
+                defaultSmsSubscriptionId = SubId(FIRST_SUB_ID),
             )
         }
 
-        defaultSmsSubscriptionIdFlow.value = SECOND_SUB_ID
+        defaultSmsSubscriptionIdFlow.value = SubId(SECOND_SUB_ID)
         runCurrent()
 
         verify(atLeast = 1) {
@@ -267,7 +321,7 @@ internal class ConversationViewModelSimSelectionTest {
                 composerAvailability = any(),
                 subscriptions = any(),
                 areSubscriptionsLoaded = true,
-                defaultSmsSubscriptionId = SECOND_SUB_ID,
+                defaultSmsSubscriptionId = SubId(SECOND_SUB_ID),
             )
         }
 
@@ -293,8 +347,11 @@ internal class ConversationViewModelSimSelectionTest {
             simSelectionRepository = simSelectionRepository,
             canAddMoreConversationParticipants = canAddMoreConversationParticipants,
             createDefaultSmsRoleRequest = createDefaultSmsRoleRequest,
-            isDeviceVoiceCapable = isDeviceVoiceCapable,
-            isEmergencyPhoneNumber = isEmergencyPhoneNumber,
+            canAddContact = canAddContact,
+            resolveContactAction = ResolveContactAction { _, _, _ ->
+                ResolveContactActionResult.Unavailable
+            },
+            canPlacePhoneCall = canPlacePhoneCall,
             defaultDispatcher = mainDispatcherRule.testDispatcher,
             savedStateHandle = SavedStateHandle(),
         )
@@ -302,8 +359,8 @@ internal class ConversationViewModelSimSelectionTest {
 
     private fun firstSubscription(): Subscription {
         return Subscription(
-            selfParticipantId = FIRST_SELF_PARTICIPANT_ID,
-            subId = FIRST_SUB_ID,
+            selfParticipantId = ParticipantId(FIRST_SELF_PARTICIPANT_ID),
+            subId = SubId(FIRST_SUB_ID),
             label = ConversationSubscriptionLabel.Named(name = "SIM 1"),
             displayDestination = null,
             displaySlotId = 1,
@@ -313,8 +370,8 @@ internal class ConversationViewModelSimSelectionTest {
 
     private fun secondSubscription(): Subscription {
         return Subscription(
-            selfParticipantId = SECOND_SELF_PARTICIPANT_ID,
-            subId = SECOND_SUB_ID,
+            selfParticipantId = ParticipantId(SECOND_SELF_PARTICIPANT_ID),
+            subId = SubId(SECOND_SUB_ID),
             label = ConversationSubscriptionLabel.Named(name = "SIM 2"),
             displayDestination = null,
             displaySlotId = 2,
@@ -323,8 +380,10 @@ internal class ConversationViewModelSimSelectionTest {
     }
 
     private companion object {
-        private const val CONVERSATION_ID = "conversation-1"
-        private const val PICKED_SELF_PARTICIPANT_ID = "self-participant-2"
+        private val CONVERSATION_ID = ConversationId("conversation-1")
+        private const val ATTACHMENT_PART_ID = "attachment-part-1"
+        private const val ATTACHMENT_URI = "content://example/attachment/1"
+        private val PICKED_SELF_PARTICIPANT_ID = ParticipantId("self-participant-2")
         private const val FIRST_SELF_PARTICIPANT_ID = "self-participant-1"
         private const val SECOND_SELF_PARTICIPANT_ID = "self-participant-2"
         private const val DEFAULT_SUB_ID = -1

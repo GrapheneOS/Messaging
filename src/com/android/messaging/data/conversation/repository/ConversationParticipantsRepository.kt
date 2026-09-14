@@ -3,6 +3,8 @@ package com.android.messaging.data.conversation.repository
 import android.content.ContentResolver
 import android.database.ContentObserver
 import android.net.Uri
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.recipient.ConversationRecipient
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.data.ParticipantData
@@ -21,7 +23,7 @@ import kotlinx.coroutines.flow.map
 
 internal interface ConversationParticipantsRepository {
     fun getParticipants(
-        conversationId: String,
+        conversationId: ConversationId,
     ): Flow<ImmutableList<ConversationRecipient>>
 }
 
@@ -34,9 +36,9 @@ internal class ConversationParticipantsRepositoryImpl @Inject constructor(
 ) : ConversationParticipantsRepository {
 
     override fun getParticipants(
-        conversationId: String,
+        conversationId: ConversationId,
     ): Flow<ImmutableList<ConversationRecipient>> {
-        val uri = MessagingContentProvider.buildConversationParticipantsUri(conversationId)
+        val uri = MessagingContentProvider.buildConversationParticipantsUri(conversationId.value)
 
         return observeUri(uri = uri)
             .flowOn(defaultDispatcher)
@@ -98,7 +100,7 @@ internal class ConversationParticipantsRepositoryImpl @Inject constructor(
         val displayName = participant.getDisplayName(true)
 
         return ConversationRecipient(
-            id = participant.id,
+            id = ParticipantId(participant.id),
             displayName = displayName,
             destination = destination,
             photoUri = participant.profilePhotoUri,

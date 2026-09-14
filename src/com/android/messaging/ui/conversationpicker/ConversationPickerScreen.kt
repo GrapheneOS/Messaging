@@ -4,9 +4,13 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Transition
+import androidx.compose.animation.core.rememberTransition
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -14,16 +18,12 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -34,7 +34,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,13 +48,18 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.ui.common.components.composer.MESSAGE_COMPOSE_FIELD_TEST_TAG
 import com.android.messaging.ui.common.components.composer.MessageComposeBar
 import com.android.messaging.ui.common.components.composer.MessageSendButton
+import com.android.messaging.ui.common.components.contentSurfaceShape
+import com.android.messaging.ui.common.components.displayCornerRadius
+import com.android.messaging.ui.common.components.imeAwareBottomBarInsets
 import com.android.messaging.ui.common.components.mediapreview.MediaPreviewBackground
+import com.android.messaging.ui.common.components.safeDrawingContentPadding
 import com.android.messaging.ui.common.components.selection.LocalSelectionListItemColors
 import com.android.messaging.ui.common.components.selection.SelectionListContent
 import com.android.messaging.ui.common.components.selection.selectionListItemColors
@@ -63,41 +69,43 @@ import com.android.messaging.ui.conversationpicker.common.PickerTopAppBar
 import com.android.messaging.ui.conversationpicker.common.ScreenContentPadding
 import com.android.messaging.ui.conversationpicker.common.SelectedTargetsBar
 import com.android.messaging.ui.conversationpicker.common.composeSubjectSlot
-import com.android.messaging.ui.conversationpicker.common.contentSurfaceShape
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerAction as Action
+import com.android.messaging.ui.conversationpicker.model.ConversationPickerLabels
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerUiState as State
 import com.android.messaging.ui.conversationpicker.model.DraftUiState
 import com.android.messaging.ui.conversationpicker.model.RecentTargetsUiState
 import com.android.messaging.ui.conversationpicker.model.SelectionUiState
 import com.android.messaging.ui.conversationpicker.model.TargetUiState
 import com.android.messaging.ui.conversationpicker.model.TargetsUiState
+import com.android.messaging.ui.core.CollectEvents
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import com.android.messaging.ui.recipientselection.component.RecipientSelectionContactsContent
 import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerUiState
 import com.android.messaging.ui.subscription.component.SimSelectorRow
 import com.android.messaging.ui.subscription.mapper.rememberSimSelectorUiState
 import com.android.messaging.ui.subscription.model.SimSelectionUiState
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.coroutines.launch
 
 @Composable
 internal fun ConversationPickerScreen(
+    screenModel: ConversationPickerScreenModel,
     isInitialDraftLoading: Boolean,
     initialDraft: ConversationDraft?,
     effectHandler: ConversationPickerEffectHandler,
     onNavigateBack: () -> Unit,
     allowMultiSelect: Boolean,
+    labels: ConversationPickerLabels,
     modifier: Modifier = Modifier,
-    screenModel: ConversationPickerScreenModel = viewModel<ConversationPickerViewModel>(),
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
 
-    val currentEffectHandler by rememberUpdatedState(effectHandler)
-    LaunchedEffect(screenModel) {
-        screenModel.effects.collect { effect ->
-            currentEffectHandler.handle(effect)
-        }
-    }
+    CollectEvents(
+        events = screenModel.effects,
+        onEvent = effectHandler::handle,
+    )
 
     LaunchedEffect(isInitialDraftLoading) {
         if (!isInitialDraftLoading) {
@@ -128,6 +136,7 @@ internal fun ConversationPickerScreen(
             permissionLauncher.launch(Manifest.permission.READ_CONTACTS)
         },
         allowMultiSelect = allowMultiSelect,
+        labels = labels,
         modifier = modifier,
     )
 }
@@ -146,9 +155,17 @@ private fun PickerContent(
     onNavigateBack: () -> Unit,
     onGrantContactsPermission: () -> Unit,
     allowMultiSelect: Boolean,
+    labels: ConversationPickerLabels,
     modifier: Modifier = Modifier,
 ) {
     val searchState = rememberTextFieldState()
+    val reviewTransition = remember {
+        PickerReviewTransition(isReviewing = uiState.draft.isReviewing)
+    }
+    val transition = rememberTransition(
+        transitionState = reviewTransition.transitionState,
+        label = "picker_review",
+    )
 
     LaunchedEffect(searchState) {
         snapshotFlow { searchState.text.toString() }
@@ -157,28 +174,77 @@ private fun PickerContent(
             }
     }
 
+    LaunchedEffect(uiState.draft.isReviewing) {
+        reviewTransition.settleTo(isReviewing = uiState.draft.isReviewing)
+    }
+
     PickerBackHandlers(
         uiState = uiState,
         searchState = searchState,
+        reviewTransition = reviewTransition,
         onAction = onAction,
     )
 
-    if (uiState.draft.isReviewing) {
-        PickerReviewScaffold(
-            uiState = uiState,
-            onAction = onAction,
-            modifier = modifier,
+    AnimatedPickerContent(
+        uiState = uiState,
+        searchState = searchState,
+        reviewTransition = reviewTransition,
+        transition = transition,
+        onAction = onAction,
+        onNavigateBack = onNavigateBack,
+        onGrantContactsPermission = onGrantContactsPermission,
+        allowMultiSelect = allowMultiSelect,
+        labels = labels,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun AnimatedPickerContent(
+    uiState: State,
+    searchState: TextFieldState,
+    reviewTransition: PickerReviewTransition,
+    transition: Transition<Boolean>,
+    onAction: (Action) -> Unit,
+    onNavigateBack: () -> Unit,
+    onGrantContactsPermission: () -> Unit,
+    allowMultiSelect: Boolean,
+    labels: ConversationPickerLabels,
+    modifier: Modifier = Modifier,
+) {
+    transition.AnimatedContent(
+        modifier = modifier.background(MaterialTheme.colorScheme.background),
+        transitionSpec = {
+            reviewTransition.stepContentTransform(isForward = targetState)
+        },
+    ) { isReviewing ->
+        val pageModifier = Modifier.clip(
+            shape = RoundedCornerShape(size = displayCornerRadius()),
         )
-    } else {
-        PickerScaffold(
-            uiState = uiState,
-            searchState = searchState,
-            onAction = onAction,
-            onNavigateBack = onNavigateBack,
-            onGrantContactsPermission = onGrantContactsPermission,
-            allowMultiSelect = allowMultiSelect,
-            modifier = modifier,
-        )
+
+        when {
+            isReviewing -> {
+                PickerReviewScaffold(
+                    uiState = uiState,
+                    onAction = onAction,
+                    labels = labels,
+                    modifier = pageModifier,
+                )
+            }
+
+            else -> {
+                PickerScaffold(
+                    uiState = uiState,
+                    searchState = searchState,
+                    onAction = onAction,
+                    onNavigateBack = onNavigateBack,
+                    onGrantContactsPermission = onGrantContactsPermission,
+                    allowMultiSelect = allowMultiSelect,
+                    labels = labels,
+                    modifier = pageModifier,
+                )
+            }
+        }
     }
 }
 
@@ -186,20 +252,35 @@ private fun PickerContent(
 private fun PickerBackHandlers(
     uiState: State,
     searchState: TextFieldState,
+    reviewTransition: PickerReviewTransition,
     onAction: (Action) -> Unit,
 ) {
     val isReviewing = uiState.draft.isReviewing
     val inSelectionMode = uiState.targets.selection.selectedIds.isNotEmpty()
     val isSearchActive = uiState.targets.isSearchActive
+    val settleScope = rememberCoroutineScope()
 
-    BackHandler(enabled = isReviewing || inSelectionMode || isSearchActive) {
+    PredictiveBackHandler(enabled = isReviewing) { progress ->
+        try {
+            progress.collect { backEvent ->
+                reviewTransition.seekToTargets(backEvent = backEvent)
+            }
+            onAction(Action.ReviewDismissed)
+        } catch (cancellation: CancellationException) {
+            settleScope.launch {
+                reviewTransition.settleTo(isReviewing = isReviewing)
+            }
+            throw cancellation
+        }
+    }
+
+    BackHandler(enabled = !isReviewing && (inSelectionMode || isSearchActive)) {
         when {
-            isReviewing -> onAction(Action.ReviewDismissed)
             isSearchActive -> {
                 searchState.clearText()
                 onAction(Action.SearchClosed)
             }
-            inSelectionMode -> onAction(Action.SelectionCleared)
+            else -> onAction(Action.SelectionCleared)
         }
     }
 }
@@ -212,6 +293,7 @@ private fun PickerScaffold(
     onNavigateBack: () -> Unit,
     onGrantContactsPermission: () -> Unit,
     allowMultiSelect: Boolean,
+    labels: ConversationPickerLabels,
     modifier: Modifier = Modifier,
 ) {
     val inSelectionMode = uiState.targets.selection.selectedIds.isNotEmpty()
@@ -226,6 +308,7 @@ private fun PickerScaffold(
                 inSelectionMode = inSelectionMode,
                 onAction = onAction,
                 onNavigateBack = onNavigateBack,
+                labels = labels,
             )
         },
     ) { contentPadding ->
@@ -256,6 +339,7 @@ private fun PickerScaffold(
                             onAction = onAction,
                             onGrantContactsPermission = onGrantContactsPermission,
                             bottomPadding = contentPadding.calculateBottomPadding(),
+                            labels = labels,
                         )
                     }
                 }
@@ -272,6 +356,7 @@ private fun PickerTargetsContent(
     onAction: (Action) -> Unit,
     onGrantContactsPermission: () -> Unit,
     bottomPadding: Dp,
+    labels: ConversationPickerLabels,
     modifier: Modifier = Modifier,
 ) {
     if (!uiState.contacts.hasContactsPermission) {
@@ -282,6 +367,7 @@ private fun PickerTargetsContent(
             onAction = onAction,
             onGrantContactsPermission = onGrantContactsPermission,
             bottomPadding = bottomPadding,
+            labels = labels,
             modifier = modifier,
         )
         return
@@ -294,6 +380,7 @@ private fun PickerTargetsContent(
         onAction = onAction,
         onGrantContactsPermission = onGrantContactsPermission,
         bottomPadding = bottomPadding,
+        labels = labels,
         modifier = modifier,
     )
 }
@@ -306,15 +393,15 @@ private fun PickerRecentTargetsContent(
     onAction: (Action) -> Unit,
     onGrantContactsPermission: () -> Unit,
     bottomPadding: Dp,
+    labels: ConversationPickerLabels,
     modifier: Modifier = Modifier,
 ) {
     SelectionListContent(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
-            start = ScreenContentPadding,
+        contentPadding = safeDrawingContentPadding(
             top = ScreenContentPadding,
-            end = ScreenContentPadding,
             bottom = bottomPadding,
+            horizontal = ScreenContentPadding,
         ),
         canLoadMore = false,
         isLoading = false,
@@ -333,6 +420,7 @@ private fun PickerRecentTargetsContent(
                 hasContactsPermission = uiState.contacts.hasContactsPermission,
                 onAction = onAction,
                 onGrantContactsPermission = onGrantContactsPermission,
+                recentConversationsTitle = labels.recentConversationsTitle,
                 modifier = Modifier.animateItem(),
             )
         }
@@ -347,17 +435,18 @@ private fun PickerContactsTargetsContent(
     onAction: (Action) -> Unit,
     onGrantContactsPermission: () -> Unit,
     bottomPadding: Dp,
+    labels: ConversationPickerLabels,
     modifier: Modifier = Modifier,
 ) {
     RecipientSelectionContactsContent(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
-            start = ScreenContentPadding,
+        contentPadding = safeDrawingContentPadding(
             top = ScreenContentPadding,
-            end = ScreenContentPadding,
             bottom = bottomPadding,
+            horizontal = ScreenContentPadding,
         ),
         uiState = uiState.asRecipientSelectionState(),
+        emptyStateText = labels.emptyStateText,
         rowDecorators = pickerContactRowDecorators,
         onLoadMore = { onAction(Action.LoadMoreContacts) },
         onPrimaryActionClick = {},
@@ -393,6 +482,7 @@ private fun PickerContactsTargetsContent(
                         hasContactsPermission = uiState.contacts.hasContactsPermission,
                         onAction = onAction,
                         onGrantContactsPermission = onGrantContactsPermission,
+                        recentConversationsTitle = labels.recentConversationsTitle,
                     )
                 }
             }
@@ -407,6 +497,7 @@ private fun PickerTopBar(
     inSelectionMode: Boolean,
     onAction: (Action) -> Unit,
     onNavigateBack: () -> Unit,
+    labels: ConversationPickerLabels,
 ) {
     Column(
         modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainer),
@@ -416,6 +507,8 @@ private fun PickerTopBar(
             inSelectionMode = inSelectionMode,
             selectedCount = uiState.targets.selection.selectedIds.size,
             searchState = searchState,
+            title = labels.title,
+            searchHint = labels.searchHint,
             onNavigateBack = onNavigateBack,
             onSearchOpen = { onAction(Action.SearchOpened) },
             onSearchClose = {
@@ -444,6 +537,7 @@ private fun PickerTopBar(
 private fun PickerReviewScaffold(
     uiState: State,
     onAction: (Action) -> Unit,
+    labels: ConversationPickerLabels,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -454,6 +548,7 @@ private fun PickerReviewScaffold(
                 modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainer),
             ) {
                 PickerReviewTopAppBar(
+                    title = labels.title,
                     onBack = { onAction(Action.ReviewDismissed) },
                 )
 
@@ -523,9 +618,7 @@ private fun PickerReviewContent(
             PickerReviewComposeBar(
                 uiState = uiState,
                 onAction = onAction,
-                modifier = Modifier.windowInsetsPadding(
-                    WindowInsets.ime.union(WindowInsets.navigationBars),
-                ),
+                modifier = Modifier.windowInsetsPadding(imeAwareBottomBarInsets()),
             )
         }
     }
@@ -534,7 +627,7 @@ private fun PickerReviewContent(
 @Composable
 private fun PickerReviewSimSelector(
     sim: SimSelectionUiState,
-    onSimSelected: (String) -> Unit,
+    onSimSelected: (ParticipantId) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val simSelectorUiState = rememberSimSelectorUiState(
@@ -558,7 +651,6 @@ private fun PickerReviewSimSelector(
         ),
         selectedContentDescription = stringResource(id = R.string.sim_selector_item_selected),
         onSimSelected = onSimSelected,
-        showDestination = true,
     )
 }
 
@@ -595,7 +687,7 @@ private fun PickerReviewComposeBar(
 private fun PickerContentPreview() {
     val targets = persistentListOf(
         TargetUiState.Conversation(
-            conversationId = "1",
+            conversationId = ConversationId("1"),
             normalizedDestination = "+31612345678",
             displayName = "Jane Doe",
             details = "+31 6 1234 5678",
@@ -603,7 +695,7 @@ private fun PickerContentPreview() {
             isGroup = false,
         ),
         TargetUiState.Conversation(
-            conversationId = "2",
+            conversationId = ConversationId("2"),
             normalizedDestination = null,
             displayName = "Project group",
             details = null,
@@ -625,6 +717,7 @@ private fun PickerContentPreview() {
             onNavigateBack = {},
             onGrantContactsPermission = {},
             allowMultiSelect = true,
+            labels = ConversationPickerLabels.Share,
         )
     }
 }
@@ -634,7 +727,7 @@ private fun PickerContentPreview() {
 private fun PickerSelectionPreview() {
     val targets = persistentListOf(
         TargetUiState.Conversation(
-            conversationId = "1",
+            conversationId = ConversationId("1"),
             normalizedDestination = "+31612345678",
             displayName = "Jane Doe",
             details = "+31 6 1234 5678",
@@ -642,7 +735,7 @@ private fun PickerSelectionPreview() {
             isGroup = false,
         ),
         TargetUiState.Conversation(
-            conversationId = "2",
+            conversationId = ConversationId("2"),
             normalizedDestination = null,
             displayName = "Project group",
             details = null,
@@ -671,6 +764,7 @@ private fun PickerSelectionPreview() {
             onNavigateBack = {},
             onGrantContactsPermission = {},
             allowMultiSelect = true,
+            labels = ConversationPickerLabels.Share,
         )
     }
 }
@@ -688,6 +782,7 @@ private fun PickerEmptyPreview() {
             onNavigateBack = {},
             onGrantContactsPermission = {},
             allowMultiSelect = true,
+            labels = ConversationPickerLabels.Share,
         )
     }
 }
@@ -706,6 +801,7 @@ private fun PickerContactsPermissionPreview() {
             onNavigateBack = {},
             onGrantContactsPermission = {},
             allowMultiSelect = true,
+            labels = ConversationPickerLabels.Share,
         )
     }
 }

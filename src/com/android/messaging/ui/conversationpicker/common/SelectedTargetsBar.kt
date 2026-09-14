@@ -45,8 +45,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.common.components.participant.ParticipantAvatar
 import com.android.messaging.ui.common.components.selection.SelectionListItemTokens
+import com.android.messaging.ui.common.text.asLtrText
 import com.android.messaging.ui.conversationpicker.model.TargetUiState
 import com.android.messaging.ui.core.MessagingPreviewColumn
 import kotlinx.collections.immutable.ImmutableList
@@ -185,19 +187,22 @@ private fun SelectedTargetChip(
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val displayName = target.displayName.asLtrText()
+
     Column(
         modifier = modifier.width(SelectedChipAvatarSize),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         SelectedTargetChipAvatar(
             target = target,
+            displayName = displayName,
             onRemove = onRemove,
         )
 
         Spacer(modifier = Modifier.height(SelectedChipLabelSpacing))
 
         Text(
-            text = target.displayName,
+            text = displayName,
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = SelectedChipLabelHeight),
@@ -213,6 +218,7 @@ private fun SelectedTargetChip(
 @Composable
 private fun SelectedTargetChipAvatar(
     target: TargetUiState,
+    displayName: String,
     onRemove: () -> Unit,
 ) {
     val avatarContent = target.avatarContent()
@@ -247,7 +253,7 @@ private fun SelectedTargetChipAvatar(
                 imageVector = Icons.Default.Close,
                 contentDescription = stringResource(
                     R.string.share_selection_remove,
-                    target.displayName,
+                    displayName,
                 ),
                 modifier = Modifier.size(SelectedChipRemoveIconSize),
                 tint = MaterialTheme.colorScheme.onSurface,
@@ -263,7 +269,7 @@ private fun SelectedTargetsBarPreview() {
         SelectedTargetsBar(
             targets = persistentListOf(
                 TargetUiState.Conversation(
-                    conversationId = "1",
+                    conversationId = ConversationId("1"),
                     normalizedDestination = "+31612345678",
                     displayName = "Jane Doe",
                     details = "+31 6 1234 5678",
@@ -271,7 +277,7 @@ private fun SelectedTargetsBarPreview() {
                     isGroup = false,
                 ),
                 TargetUiState.Conversation(
-                    conversationId = "2",
+                    conversationId = ConversationId("2"),
                     normalizedDestination = null,
                     displayName = "Project group",
                     details = null,

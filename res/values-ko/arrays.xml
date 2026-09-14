@@ -21,17 +21,4 @@
     <item msgid="8900116186849071724">"제목 없음"</item>
     <item msgid="272485471009191934">"nosubject"</item>
   </string-array>
-  <string-array name="notification_reply_choices">
-    <item msgid="1875991048685328264">"예"</item>
-    <item msgid="6049132459802288033">"아니요"</item>
-    <item msgid="3084376867445867895">"알겠습니다"</item>
-    <item msgid="3155097332660174689">"하하"</item>
-    <item msgid="2611328818571146775">"감사합니다."</item>
-    <item msgid="4881335087096496747">"동의합니다"</item>
-    <item msgid="2422296858597420738">"좋습니다."</item>
-    <item msgid="4805581752819452687">"가는 중입니다"</item>
-    <item msgid="4746700499431366214">"나중에 연락드리겠습니다"</item>
-    <item msgid="4342041517788201970">":)"</item>
-    <item msgid="7439437911747961187">":("</item>
-  </string-array>
 </resources>

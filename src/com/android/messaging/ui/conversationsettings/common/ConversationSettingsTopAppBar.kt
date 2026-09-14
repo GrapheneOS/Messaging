@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.common.components.participant.ParticipantAvatar
 import com.android.messaging.ui.common.components.participant.participantAvatarLabel
+import com.android.messaging.ui.common.components.participant.participantColorSeed
 import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,6 +64,9 @@ internal fun ConversationSettingsTopAppBar(
                     fallbackLabel = participantAvatarLabel(
                         source = participant?.displayName,
                     ).takeUnless { isBlocked },
+                    colorSeedCode = participantColorSeed(
+                        normalizedDestination = participant?.normalizedDestination,
+                    ),
                 )
 
                 Spacer(modifier = Modifier.width(12.dp))

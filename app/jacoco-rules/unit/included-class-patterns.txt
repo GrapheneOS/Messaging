@@ -1,0 +1,10 @@
+# Unit-test class-directory include patterns.
+com/android/messaging/data/**
+com/android/messaging/domain/**
+com/android/messaging/sms/**
+com/android/messaging/ui/appsettings/**
+com/android/messaging/ui/contact/**
+com/android/messaging/ui/conversation/**
+com/android/messaging/ui/core/**
+com/android/messaging/util/core/**
+com/android/messaging/util/db/**

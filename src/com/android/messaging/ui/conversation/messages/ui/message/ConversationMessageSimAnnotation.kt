@@ -1,11 +1,12 @@
 package com.android.messaging.ui.conversation.messages.ui.message
 
+import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 
 internal fun resolveConversationMessageSimDisplayName(
     message: ConversationMessageUiModel,
     messageBelow: ConversationMessageUiModel?,
-    simDisplayNameByParticipantId: Map<String, String>,
+    simDisplayNameByParticipantId: Map<ParticipantId, String>,
 ): String? {
     val selfParticipantId = message.selfParticipantId
     val displayName = selfParticipantId?.let(simDisplayNameByParticipantId::get)

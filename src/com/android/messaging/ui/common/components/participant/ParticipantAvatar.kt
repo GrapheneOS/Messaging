@@ -34,6 +34,31 @@ internal fun ParticipantAvatar(
     shape: Shape = CircleShape,
     isSelected: Boolean = false,
 ) {
+    ParticipantAvatar(
+        avatarImage = avatarUri
+            ?.takeIf { it.isNotBlank() }
+            ?.let(ParticipantAvatarImage::Uri),
+        fallbackIcon = fallbackIcon,
+        fallbackSize = fallbackSize,
+        fallbackLabel = fallbackLabel,
+        modifier = modifier,
+        colorSeedCode = colorSeedCode,
+        shape = shape,
+        isSelected = isSelected,
+    )
+}
+
+@Composable
+internal fun ParticipantAvatar(
+    avatarImage: ParticipantAvatarImage?,
+    fallbackIcon: ImageVector,
+    fallbackSize: Dp,
+    fallbackLabel: String?,
+    modifier: Modifier = Modifier,
+    colorSeedCode: String? = null,
+    shape: Shape = CircleShape,
+    isSelected: Boolean = false,
+) {
     val fallbackColors = resolvedFallbackColors(
         colorSeedCode = colorSeedCode,
         isSelected = isSelected,
@@ -55,9 +80,12 @@ internal fun ParticipantAvatar(
                 )
             }
 
-            !avatarUri.isNullOrBlank() -> {
+            avatarImage != null -> {
                 AsyncImage(
-                    model = avatarUri,
+                    model = when (avatarImage) {
+                        is ParticipantAvatarImage.Bytes -> avatarImage.value
+                        is ParticipantAvatarImage.Uri -> avatarImage.value
+                    },
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
@@ -119,11 +147,17 @@ internal fun participantColorSeed(normalizedDestination: String?): String? {
 }
 
 internal fun participantAvatarLabel(source: String?): String? {
-    val trimmedSource = source?.trim()
+    val trimmedSource = source
+        ?.trim()
+        ?.dropWhile(::isFormatChar)
 
     return when {
         trimmedSource.isNullOrBlank() -> null
         MmsSmsUtils.isPhoneNumber(trimmedSource) -> null
         else -> trimmedSource.first().uppercaseChar().toString()
     }
+}
+
+private fun isFormatChar(char: Char): Boolean {
+    return char.category == CharCategory.FORMAT
 }

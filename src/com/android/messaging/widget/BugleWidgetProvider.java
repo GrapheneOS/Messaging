@@ -85,8 +85,8 @@ public class BugleWidgetProvider extends BaseWidgetProvider {
         remoteViews.setOnClickPendingIntent(R.id.widget_header, clickIntent);
 
         // On click intent for Compose
-        clickIntent = UIIntents.get().getWidgetPendingIntentForConversationActivity(context,
-                null /*conversationId*/, WIDGET_NEW_CONVERSATION_REQUEST_CODE);
+        clickIntent = UIIntents.get().getWidgetPendingIntentForNewConversation(context,
+                WIDGET_NEW_CONVERSATION_REQUEST_CODE);
         remoteViews.setOnClickPendingIntent(R.id.widget_compose, clickIntent);
 
         // On click intent for Conversation
@@ -109,6 +109,7 @@ public class BugleWidgetProvider extends BaseWidgetProvider {
             LogUtil.v(TAG, "notifyConversationListChanged");
         }
         final Intent intent = new Intent(ACTION_NOTIFY_CONVERSATIONS_CHANGED);
+        intent.setPackage(context.getPackageName());
         context.sendBroadcast(intent);
     }
 }

@@ -1,0 +1,380 @@
+package com.android.messaging.ui.conversationlist.chats.mapper
+
+import android.content.Context
+import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
+import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
+import com.android.messaging.data.phone.formatter.PhoneNumberFormatter
+import com.android.messaging.domain.conversation.usecase.avatar.ResolveAvatarUri
+import com.android.messaging.domain.conversation.usecase.participant.CanAddContact
+import com.android.messaging.domain.conversation.usecase.participant.CanShowOrAddContact
+import com.android.messaging.domain.conversation.usecase.participant.IsContactSaved
+import com.android.messaging.domain.conversation.usecase.telephony.CanPlacePhoneCall
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState
+import com.android.messaging.ui.conversationlist.chats.model.SelectionActionsUiState
+import com.android.messaging.ui.conversationlist.conversationItem
+import com.android.messaging.ui.conversationlist.mapper.ConversationListContentUiStateMapperImpl
+import com.android.messaging.ui.conversationlist.mapper.ConversationListItemUiMapperImpl
+import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
+import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
+import com.android.messaging.ui.conversationlist.snapshotOf
+import com.android.messaging.util.OsUtil
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.toPersistentList
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+
+internal class ConversationListUiStateMapperImplTest {
+
+    private val canAddContact = mockk<CanAddContact>(relaxed = true)
+    private val canPlacePhoneCall = mockk<CanPlacePhoneCall>(relaxed = true)
+    private val canShowOrAddContact = mockk<CanShowOrAddContact>(relaxed = true)
+    private val isContactSaved = mockk<IsContactSaved>(relaxed = true)
+    private val phoneNumberFormatter = mockk<PhoneNumberFormatter>(relaxed = true)
+    private val resolveAvatarUri = mockk<ResolveAvatarUri>(relaxed = true)
+
+    private val itemUiMapper = ConversationListItemUiMapperImpl(
+        context = mockk<Context>(relaxed = true),
+        canPlacePhoneCall = canPlacePhoneCall,
+        canShowOrAddContact = canShowOrAddContact,
+        isContactSaved = isContactSaved,
+        phoneNumberFormatter = phoneNumberFormatter,
+        resolveAvatarUri = resolveAvatarUri,
+    )
+
+    private val contentMapper = ConversationListContentUiStateMapperImpl(
+        itemUiMapper = itemUiMapper,
+    )
+
+    private val mapper = ConversationListUiStateMapperImpl(
+        canAddContact = canAddContact,
+        contentMapper = contentMapper,
+    )
+
+    @Before
+    fun setUp() {
+        mockkStatic(OsUtil::class)
+        every { OsUtil.isSecondaryUser() } returns false
+    }
+
+    @After
+    fun tearDown() {
+        unmockkStatic(OsUtil::class)
+    }
+
+    @Test
+    fun map_pinnedConversation_marksItemPinned() {
+        val state = mapper.map(
+            snapshot = snapshotOf(
+                conversationItem(
+                    conversationId = ConversationId("pinned"),
+                    isPinned = true,
+                ),
+            ),
+            selectedConversationIds = persistentListOf(),
+            openedConversationId = null,
+            isScrollToTopVisible = false,
+            isDebugEnabled = false,
+        )
+
+        assertTrue(singleItem(state).isPinned)
+    }
+
+    @Test
+    fun map_unpinnedConversation_marksItemNotPinned() {
+        val state = mapper.map(
+            snapshot = snapshotOf(
+                conversationItem(
+                    conversationId = ConversationId("plain"),
+                    isPinned = false,
+                ),
+            ),
+            selectedConversationIds = persistentListOf(),
+            openedConversationId = null,
+            isScrollToTopVisible = false,
+            isDebugEnabled = false,
+        )
+
+        assertFalse(singleItem(state).isPinned)
+    }
+
+    @Test
+    fun map_noSelection_leavesToggleStatesNull() {
+        val state = mapper.map(
+            snapshot = snapshotOf(conversationItem(conversationId = ConversationId("a"))),
+            selectedConversationIds = persistentListOf(),
+            openedConversationId = null,
+            isScrollToTopVisible = false,
+            isDebugEnabled = false,
+        )
+
+        val actions = state.selection.actions
+        assertEquals(0, state.selection.selectedCount)
+        assertNull(actions.allSelectedArePinned)
+        assertNull(actions.allSelectedAreSnoozed)
+        assertNull(actions.allSelectedAreRead)
+    }
+
+    @Test
+    fun map_singleSelectedPinnedSnoozedUnread_derivesToggleStatesFromSelection() {
+        val state = mapper.map(
+            snapshot = snapshotOf(
+                conversationItem(
+                    conversationId = ConversationId("selected"),
+                    isPinned = true,
+                    isSnoozed = true,
+                    isRead = false,
+                ),
+            ),
+            selectedConversationIds = persistentListOf(ConversationId("selected")),
+            openedConversationId = null,
+            isScrollToTopVisible = false,
+            isDebugEnabled = false,
+        )
+
+        val actions = state.selection.actions
+        assertTrue(requireNotNull(actions.allSelectedArePinned))
+        assertTrue(requireNotNull(actions.allSelectedAreSnoozed))
+        assertFalse(requireNotNull(actions.allSelectedAreRead))
+    }
+
+    @Test
+    fun map_mixedSelection_offersTheSameTogglesWhicheverRowWasTappedFirst() {
+        val snapshot = mixedSnapshot()
+
+        val plainTappedFirst = selectionActions(snapshot, "plain", "marked")
+        val markedTappedFirst = selectionActions(snapshot, "marked", "plain")
+
+        assertEquals(plainTappedFirst, markedTappedFirst)
+    }
+
+    @Test
+    fun map_mixedSelection_offersToPinSnoozeAndMarkTheWholeSelectionRead() {
+        val actions = selectionActions(mixedSnapshot(), "marked", "plain")
+
+        assertFalse(requireNotNull(actions.allSelectedArePinned))
+        assertFalse(requireNotNull(actions.allSelectedAreSnoozed))
+        assertFalse(requireNotNull(actions.allSelectedAreRead))
+    }
+
+    @Test
+    fun map_selectionThatIsEntirelyPinnedSnoozedAndRead_offersTheOppositeActions() {
+        val snapshot = snapshotOf(
+            conversationItem(
+                conversationId = ConversationId("a"),
+                isPinned = true,
+                isSnoozed = true,
+                isRead = true,
+            ),
+            conversationItem(
+                conversationId = ConversationId("b"),
+                isPinned = true,
+                isSnoozed = true,
+                isRead = true,
+            ),
+        )
+
+        val actions = selectionActions(snapshot, "a", "b")
+
+        assertTrue(requireNotNull(actions.allSelectedArePinned))
+        assertTrue(requireNotNull(actions.allSelectedAreSnoozed))
+        assertTrue(requireNotNull(actions.allSelectedAreRead))
+    }
+
+    @Test
+    fun map_selection_exposesSelectedCount() {
+        val state = mapper.map(
+            snapshot = snapshotOf(
+                conversationItem(conversationId = ConversationId("a")),
+                conversationItem(conversationId = ConversationId("b")),
+            ),
+            selectedConversationIds = persistentListOf(ConversationId("a"), ConversationId("b")),
+            openedConversationId = null,
+            isScrollToTopVisible = false,
+            isDebugEnabled = false,
+        )
+
+        assertEquals(2, state.selection.selectedCount)
+    }
+
+    @Test
+    fun map_senderName_preservesItForSnippetAccessibility() {
+        val state = mapper.map(
+            snapshot = snapshotOf(
+                conversationItem(
+                    conversationId = ConversationId("group"),
+                    senderName = "Jane",
+                ),
+            ),
+            selectedConversationIds = persistentListOf(),
+            openedConversationId = null,
+            isScrollToTopVisible = false,
+            isDebugEnabled = false,
+        )
+
+        assertEquals("Jane", singleItem(state).snippet.senderName)
+    }
+
+    @Test
+    fun map_visibleDraft_takesPrecedenceOverLatestMessage() {
+        val state = mapper.map(
+            snapshot = snapshotOf(
+                conversationItem(
+                    conversationId = ConversationId("a"),
+                    isDraftVisible = true,
+                    draftSnippet = "Draft body",
+                    draftSubject = "Draft subject",
+                ),
+            ),
+            selectedConversationIds = persistentListOf(),
+            openedConversationId = null,
+            isScrollToTopVisible = false,
+            isDebugEnabled = false,
+        )
+
+        val item = singleItem(state)
+        assertTrue(item.snippet.isDraft)
+        assertEquals("Draft body", item.snippet.text)
+        assertEquals("Draft subject", item.subject)
+        assertEquals(ConversationListMessageStatus.Draft, item.status)
+        assertTrue(item.isOutgoing)
+    }
+
+    @Test
+    fun map_incomingMmsDownloadStatus_preservesDownloadStatus() {
+        val state = mapper.map(
+            snapshot = snapshotOf(
+                conversationItem(
+                    conversationId = ConversationId("mms"),
+                    status = ConversationListMessageStatus.IncomingAwaitingManualDownload,
+                ),
+            ),
+            selectedConversationIds = persistentListOf(),
+            openedConversationId = null,
+            isScrollToTopVisible = false,
+            isDebugEnabled = false,
+        )
+
+        val item = singleItem(state)
+        assertEquals(ConversationListMessageStatus.IncomingAwaitingManualDownload, item.status)
+        assertEquals(R.string.message_title_manual_download, item.mmsDownloadTitleResId)
+        assertFalse(item.isOutgoing)
+    }
+
+    @Test
+    fun map_incomingMmsDownloadStatusAsSecondaryUser_referralsToOwnerUser() {
+        every { OsUtil.isSecondaryUser() } returns true
+
+        val state = mapper.map(
+            snapshot = snapshotOf(
+                conversationItem(
+                    conversationId = ConversationId("mms"),
+                    status = ConversationListMessageStatus.IncomingAwaitingManualDownload,
+                ),
+            ),
+            selectedConversationIds = persistentListOf(),
+            openedConversationId = null,
+            isScrollToTopVisible = false,
+            isDebugEnabled = false,
+        )
+
+        val item = singleItem(state)
+        assertEquals(ConversationListMessageStatus.IncomingAwaitingManualDownload, item.status)
+        assertEquals(R.string.message_title_download_secondary_user, item.mmsDownloadTitleResId)
+    }
+
+    @Test
+    fun map_callableSavedContact_populatesAvatarCapabilities() {
+        every { canPlacePhoneCall(any()) } returns true
+        every { canShowOrAddContact(any(), any(), any(), any()) } returns true
+        every { isContactSaved(any(), any()) } returns true
+
+        val state = mapper.map(
+            snapshot = snapshotOf(
+                conversationItem(
+                    conversationId = ConversationId("a"),
+                    contactId = 42L,
+                    lookupKey = "lookup",
+                ),
+            ),
+            selectedConversationIds = persistentListOf(),
+            openedConversationId = null,
+            isScrollToTopVisible = false,
+            isDebugEnabled = false,
+        )
+
+        val avatar = singleItem(state).avatar
+        assertTrue(avatar.canCall)
+        assertTrue(avatar.canShowContact)
+        assertTrue(avatar.isContactSaved)
+        assertEquals("+1555000a", avatar.normalizedDestination)
+    }
+
+    @Test
+    fun map_selectedBlockedConversation_propagatesScreenState() {
+        val state = mapper.map(
+            snapshot = ConversationListSnapshot(
+                items = persistentListOf(conversationItem(conversationId = ConversationId("a"))),
+                blockedDestinations = persistentSetOf("+1555000a"),
+                hasFirstSyncCompleted = true,
+            ),
+            selectedConversationIds = persistentListOf(ConversationId("a")),
+            openedConversationId = null,
+            isScrollToTopVisible = true,
+            isDebugEnabled = true,
+        )
+
+        assertTrue(singleItem(state).isSelected)
+        assertTrue(state.isScrollToTopVisible)
+        assertTrue(state.hasBlockedParticipants)
+        assertTrue(state.isDebugEnabled)
+        assertFalse(state.selection.actions.canBlock)
+    }
+
+    private fun mixedSnapshot(): ConversationListSnapshot {
+        return snapshotOf(
+            conversationItem(
+                conversationId = ConversationId("plain"),
+                isPinned = false,
+                isSnoozed = false,
+                isRead = true,
+            ),
+            conversationItem(
+                conversationId = ConversationId("marked"),
+                isPinned = true,
+                isSnoozed = true,
+                isRead = false,
+            ),
+        )
+    }
+
+    private fun selectionActions(
+        snapshot: ConversationListSnapshot,
+        vararg selectedIds: String,
+    ): SelectionActionsUiState {
+        return mapper.map(
+            snapshot = snapshot,
+            selectedConversationIds = selectedIds.map(::ConversationId).toPersistentList(),
+            openedConversationId = null,
+            isScrollToTopVisible = false,
+            isDebugEnabled = false,
+        ).selection.actions
+    }
+
+    private fun singleItem(
+        state: ConversationListUiState,
+    ): ConversationListItemUiModel {
+        return (state.content as ConversationListContentUiState.Items).items.single()
+    }
+}

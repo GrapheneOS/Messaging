@@ -1,12 +1,13 @@
 package com.android.messaging.ui.conversation.screen.model
 
 import androidx.compose.runtime.Immutable
+import com.android.messaging.data.conversation.model.MessageId
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentSetOf
 
 @Immutable
 internal data class ConversationMessageSelectionUiState(
-    val selectedMessageIds: ImmutableSet<String> = persistentSetOf(),
+    val selectedMessageIds: ImmutableSet<MessageId> = persistentSetOf(),
     val availableActions: ImmutableSet<ConversationMessageSelectionAction> = persistentSetOf(),
     val deleteConfirmation: ConversationMessageDeleteConfirmationUiState? = null,
 ) {
@@ -22,7 +23,7 @@ internal data class ConversationMessageSelectionUiState(
 
 @Immutable
 internal data class ConversationMessageDeleteConfirmationUiState(
-    val messageIds: ImmutableSet<String> = persistentSetOf(),
+    val messageIds: ImmutableSet<MessageId> = persistentSetOf(),
 )
 
 internal enum class ConversationMessageSelectionAction {

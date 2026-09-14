@@ -54,7 +54,7 @@ internal fun ConversationGalleryVisualAttachments(
     attachments: ImmutableList<ConversationMessageAttachment>,
     hasTextAboveVisualAttachments: Boolean,
     hasTextBelowVisualAttachments: Boolean,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
 ) {
@@ -95,7 +95,7 @@ internal fun ConversationStandaloneVisualAttachment(
     attachment: ConversationMessageAttachment,
     hasTextAboveVisualAttachments: Boolean,
     hasTextBelowVisualAttachments: Boolean,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
 ) {
@@ -120,7 +120,7 @@ private fun ConversationVisualAttachmentGrid(
     attachments: ImmutableList<ConversationMessageAttachment>,
     hasTextAboveVisualAttachments: Boolean,
     hasTextBelowVisualAttachments: Boolean,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
 ) {
@@ -177,7 +177,7 @@ private fun ConversationVisualAttachmentCard(
     attachment: ConversationMessageAttachment,
     aspectRatio: Float,
     attachmentShape: RoundedCornerShape,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
 ) {
@@ -203,7 +203,7 @@ private fun ConversationVisualAttachmentSurface(
     attachment: ConversationMessageAttachment,
     attachmentShape: RoundedCornerShape,
     contentScale: ContentScale,
-    onAttachmentClick: (contentType: String, contentUri: String) -> Unit,
+    onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
     overlay: @Composable BoxScope.() -> Unit,
@@ -411,7 +411,7 @@ private fun ConversationVisualAttachmentsPreview() {
                 attachments = previewMessageAttachments(),
                 hasTextAboveVisualAttachments = false,
                 hasTextBelowVisualAttachments = true,
-                onAttachmentClick = { _, _ -> },
+                onAttachmentClick = { _, _, _ -> },
                 onExternalUriClick = {},
                 onMessageLongClick = {},
             )
@@ -419,7 +419,7 @@ private fun ConversationVisualAttachmentsPreview() {
                 attachment = previewMessageAttachments().first(),
                 hasTextAboveVisualAttachments = true,
                 hasTextBelowVisualAttachments = false,
-                onAttachmentClick = { _, _ -> },
+                onAttachmentClick = { _, _, _ -> },
                 onExternalUriClick = {},
                 onMessageLongClick = {},
             )
@@ -427,7 +427,7 @@ private fun ConversationVisualAttachmentsPreview() {
                 attachments = persistentListOf(previewMessageAttachments().last()),
                 hasTextAboveVisualAttachments = false,
                 hasTextBelowVisualAttachments = false,
-                onAttachmentClick = { _, _ -> },
+                onAttachmentClick = { _, _, _ -> },
                 onExternalUriClick = {},
                 onMessageLongClick = {},
             )

@@ -33,6 +33,9 @@ import com.android.messaging.util.Assert.DoesNotRunOnMainThread;
 import com.android.messaging.util.LogUtil;
 import com.google.common.annotations.VisibleForTesting;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * TODO: Open Issues:
  * - Should we be storing the draft messages in the regular messages table or should we have a
@@ -108,6 +111,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         /* If this conversation is archived */
         public static final String ARCHIVE_STATUS = "archive_status";
 
+        /* If this conversation is pinned to the top of the conversation list */
+        public static final String PINNED = "pinned";
+
         /* Timestamp for sorting purposes */
         public static final String SORT_TIMESTAMP = "sort_timestamp";
 
@@ -175,6 +181,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     + ConversationColumns.DRAFT_PREVIEW_URI + " TEXT, "
                     + ConversationColumns.DRAFT_PREVIEW_CONTENT_TYPE + " TEXT, "
                     + ConversationColumns.ARCHIVE_STATUS + " INT DEFAULT(0), "
+                    + ConversationColumns.PINNED + " INT DEFAULT(0), "
                     + ConversationColumns.SORT_TIMESTAMP + " INT DEFAULT(0), "
                     + ConversationColumns.LAST_READ_TIMESTAMP + " INT DEFAULT(0), "
                     + ConversationColumns.ICON + " TEXT, "
@@ -206,6 +213,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "CREATE INDEX index_" + CONVERSATIONS_TABLE + "_" + ConversationColumns.SORT_TIMESTAMP
             + " ON " +  CONVERSATIONS_TABLE
             + "(" + ConversationColumns.SORT_TIMESTAMP + ")";
+
+    static final String CONVERSATIONS_TABLE_PINNED_INDEX_SQL =
+            "CREATE INDEX index_" + CONVERSATIONS_TABLE + "_" + ConversationColumns.PINNED
+            + " ON " +  CONVERSATIONS_TABLE
+            + "(" + ConversationColumns.PINNED + ")";
 
     // Messages table schema
     public static class MessageColumns implements BaseColumns {
@@ -544,6 +556,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String[] CREATE_INDEX_SQLS = new String[] {
         CONVERSATIONS_TABLE_SMS_THREAD_ID_INDEX_SQL,
         CONVERSATIONS_TABLE_ARCHIVE_STATUS_INDEX_SQL,
+        CONVERSATIONS_TABLE_PINNED_INDEX_SQL,
         CONVERSATIONS_TABLE_SORT_TIMESTAMP_INDEX_SQL,
         MESSAGES_TABLE_SORT_INDEX_SQL,
         MESSAGES_TABLE_STATUS_SEEN_INDEX_SQL,
@@ -684,31 +697,43 @@ public class DatabaseHelper extends SQLiteOpenHelper {
      * Drops all user-defined tables from the given database.
      */
     private static void dropAllTables(final SQLiteDatabase db) {
-        final Cursor tableCursor =
-                db.query(PRIMARY_TABLE, PRIMARY_COLUMNS, "type='table'", null, null, null, null);
-        if (tableCursor != null) {
-            try {
-                final String dropPrefix = "DROP TABLE IF EXISTS ";
-                while (tableCursor.moveToNext()) {
-                    final String tableName = tableCursor.getString(0);
-
-                    // Skip special tables
-                    if (tableName.startsWith("android_") || tableName.startsWith("sqlite_")) {
-                        continue;
-                    }
-                    try {
-                        db.execSQL(dropPrefix + tableName);
-                    } catch (final SQLException ex) {
-                        if (LogUtil.isLoggable(LogUtil.BUGLE_TAG, LogUtil.DEBUG)) {
-                            LogUtil.d(LogUtil.BUGLE_TAG, "unable to drop table " + tableName + " "
-                                    + ex);
-                        }
-                    }
+        // Drop order matters while foreign keys are enforced: dropping a parent leaves its children
+        // referencing a table that no longer exists, and their own DROP then fails to compile. Keep
+        // retrying the ones that failed instead of encoding the dependency order here.
+        List<String> tables = queryUserDefinedNames(db, "table");
+        while (!tables.isEmpty()) {
+            final List<String> undropped = new ArrayList<>();
+            for (final String tableName : tables) {
+                try {
+                    db.execSQL("DROP TABLE IF EXISTS " + tableName);
+                } catch (final SQLException ex) {
+                    undropped.add(tableName);
                 }
-            } finally {
-                tableCursor.close();
+            }
+            if (undropped.size() == tables.size()) {
+                LogUtil.e(LogUtil.BUGLE_TAG, "unable to drop tables " + undropped);
+                return;
+            }
+            tables = undropped;
+        }
+    }
+
+    /**
+     * Names of the user-defined entities of the given sqlite_master type, excluding the ones
+     * Android and SQLite own.
+     */
+    private static List<String> queryUserDefinedNames(final SQLiteDatabase db, final String type) {
+        final List<String> names = new ArrayList<>();
+        try (final Cursor cursor = db.query(PRIMARY_TABLE, PRIMARY_COLUMNS, "type=?",
+                new String[] { type }, null, null, null)) {
+            while (cursor.moveToNext()) {
+                final String name = cursor.getString(0);
+                if (!name.startsWith("android_") && !name.startsWith("sqlite_")) {
+                    names.add(name);
+                }
             }
         }
+        return names;
     }
 
     /**
@@ -803,14 +828,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             db.execSQL(sql);
         }
 
-        // Enable foreign key constraints
-        db.execSQL("PRAGMA foreign_keys=ON;");
-
         // Add the default self participant. The default self will be assigned a proper slot id
         // during participant refresh.
         db.execSQL(getCreateSelfParticipantSql(ParticipantData.DEFAULT_SELF_SUB_ID));
 
         DataModel.get().onCreateTables(db);
+    }
+
+    @Override
+    public void onConfigure(SQLiteDatabase db) {
+        // The schema declares ON DELETE CASCADE, but foreign keys are enforced per connection and
+        // "PRAGMA foreign_keys" is a no-op inside the transaction onCreate()/onUpgrade() run in.
+        db.setForeignKeyConstraintsEnabled(true);
     }
 
     @Override

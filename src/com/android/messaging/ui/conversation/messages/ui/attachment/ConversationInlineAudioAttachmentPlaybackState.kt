@@ -23,13 +23,19 @@ private val audioProgressUpdateIntervalMs = 250L.milliseconds
 @Composable
 internal fun rememberConversationInlineAudioAttachmentPlaybackState(
     contentUri: String,
+    durationMillis: Long,
 ): ConversationInlineAudioAttachmentPlaybackState {
     val playbackState = remember(contentUri) {
         ConversationInlineAudioAttachmentPlaybackState(
+            initialDurationMillis = durationMillis,
             onPlaybackFailure = {
                 UiUtils.showToastAtBottom(R.string.audio_recording_replay_failed)
             },
         )
+    }
+
+    LaunchedEffect(playbackState, durationMillis) {
+        playbackState.seedDurationMillis(durationMillis)
     }
 
     DisposableEffect(contentUri) {
@@ -50,9 +56,10 @@ internal fun rememberConversationInlineAudioAttachmentPlaybackState(
 
 @Stable
 internal class ConversationInlineAudioAttachmentPlaybackState(
+    initialDurationMillis: Long = 0L,
     private val onPlaybackFailure: () -> Unit,
 ) {
-    var durationMillis by mutableLongStateOf(0L)
+    var durationMillis by mutableLongStateOf(initialDurationMillis)
         private set
 
     var isPlaying by mutableStateOf(false)
@@ -84,6 +91,12 @@ internal class ConversationInlineAudioAttachmentPlaybackState(
                 positionMillis = positionMillis,
             )
         }
+
+    fun seedDurationMillis(seededDurationMillis: Long) {
+        if (!isPrepared && seededDurationMillis > 0L) {
+            durationMillis = seededDurationMillis
+        }
+    }
 
     fun release() {
         mediaPlayer?.release()
@@ -173,7 +186,6 @@ internal class ConversationInlineAudioAttachmentPlaybackState(
     private fun handlePlaybackFailure() {
         onPlaybackFailure()
         release()
-        durationMillis = 0L
         positionMillis = 0L
         hasPlaybackCompleted = false
     }

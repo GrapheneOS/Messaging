@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.focus.delegate
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.datamodel.BugleNotifications
 import com.android.messaging.datamodel.DataModel
 import com.android.messaging.di.core.DefaultDispatcher
@@ -15,7 +16,7 @@ import kotlinx.coroutines.launch
 internal interface ConversationFocusDelegate {
     fun bind(
         scope: CoroutineScope,
-        conversationIdFlow: StateFlow<String?>,
+        conversationIdFlow: StateFlow<ConversationId?>,
     )
 
     fun setScreenFocused(
@@ -35,7 +36,7 @@ internal class ConversationFocusDelegateImpl @Inject constructor(
 
     override fun bind(
         scope: CoroutineScope,
-        conversationIdFlow: StateFlow<String?>,
+        conversationIdFlow: StateFlow<ConversationId?>,
     ) {
         if (boundScope != null) {
             return
@@ -71,10 +72,10 @@ internal class ConversationFocusDelegateImpl @Inject constructor(
                         }
 
                         else -> {
-                            DataModel.get().setFocusedConversation(focused.conversationId)
+                            DataModel.get().setFocusedConversation(focused.conversationId.value)
 
                             BugleNotifications.markMessagesAsRead(
-                                focused.conversationId,
+                                focused.conversationId.value,
                                 focused.cancelNotification,
                             )
                         }
@@ -101,7 +102,7 @@ internal class ConversationFocusDelegateImpl @Inject constructor(
     }
 
     private data class FocusedConversation(
-        val conversationId: String,
+        val conversationId: ConversationId,
         val cancelNotification: Boolean,
     )
 }

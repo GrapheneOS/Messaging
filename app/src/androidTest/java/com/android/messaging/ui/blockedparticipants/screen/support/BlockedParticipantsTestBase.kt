@@ -2,6 +2,7 @@ package com.android.messaging.ui.blockedparticipants.screen.support
 
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.blockedparticipants.screen.BlockedParticipantsEffectHandler
 import com.android.messaging.ui.blockedparticipants.screen.BlockedParticipantsScreen
 import com.android.messaging.ui.blockedparticipants.screen.BlockedParticipantsScreenModel
@@ -29,6 +30,7 @@ internal abstract class BlockedParticipantsTestBase {
         extraBufferCapacity = 1,
     )
     protected val onNavigateBackCalls = mutableListOf<Unit>()
+    protected val onNavigateToConversationCalls = mutableListOf<ConversationId>()
 
     protected lateinit var screenModel: BlockedParticipantsScreenModel
     protected lateinit var effectHandler: BlockedParticipantsEffectHandler
@@ -49,6 +51,7 @@ internal abstract class BlockedParticipantsTestBase {
                 BlockedParticipantsScreen(
                     effectHandler = effectHandler,
                     onNavigateBack = { onNavigateBackCalls += Unit },
+                    onNavigateToConversation = { onNavigateToConversationCalls += it },
                     screenModel = screenModel,
                 )
             }

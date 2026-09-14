@@ -21,17 +21,4 @@
     <item msgid="8900116186849071724">"intet emne"</item>
     <item msgid="272485471009191934">"nosubject"</item>
   </string-array>
-  <string-array name="notification_reply_choices">
-    <item msgid="1875991048685328264">"Ja"</item>
-    <item msgid="6049132459802288033">"Nej"</item>
-    <item msgid="3084376867445867895">"OK"</item>
-    <item msgid="3155097332660174689">"Haha"</item>
-    <item msgid="2611328818571146775">"Tak"</item>
-    <item msgid="4881335087096496747">"Jeg er enig"</item>
-    <item msgid="2422296858597420738">"Sådan!"</item>
-    <item msgid="4805581752819452687">"Er på vej"</item>
-    <item msgid="4746700499431366214">"Jeg vender tilbage til dig lidt senere"</item>
-    <item msgid="4342041517788201970">":)"</item>
-    <item msgid="7439437911747961187">":("</item>
-  </string-array>
 </resources>

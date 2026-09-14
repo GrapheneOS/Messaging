@@ -4,6 +4,8 @@ import com.android.messaging.data.appsettings.repository.AppSettingsRepository
 import com.android.messaging.data.appsettings.repository.AppSettingsRepositoryImpl
 import com.android.messaging.data.subscriptionsettings.repository.SubscriptionSettingsRepository
 import com.android.messaging.data.subscriptionsettings.repository.SubscriptionSettingsRepositoryImpl
+import com.android.messaging.domain.subscriptionsettings.usecase.IsValidSelfPhoneNumber
+import com.android.messaging.domain.subscriptionsettings.usecase.IsValidSelfPhoneNumberImpl
 import com.android.messaging.domain.subscriptionsettings.usecase.SetSubscriptionPhoneNumber
 import com.android.messaging.domain.subscriptionsettings.usecase.SetSubscriptionPhoneNumberImpl
 import com.android.messaging.ui.appsettings.general.mapper.AppSettingsUiStateMapper
@@ -49,4 +51,10 @@ internal abstract class SettingsBindsModule {
     abstract fun bindSetSubscriptionPhoneNumber(
         impl: SetSubscriptionPhoneNumberImpl,
     ): SetSubscriptionPhoneNumber
+
+    @Binds
+    @Reusable
+    abstract fun bindIsValidSelfPhoneNumber(
+        impl: IsValidSelfPhoneNumberImpl,
+    ): IsValidSelfPhoneNumber
 }

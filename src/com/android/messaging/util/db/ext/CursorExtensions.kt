@@ -8,6 +8,10 @@ fun Cursor.getStringOrNull(columnName: String): String? {
         .let(::getStringOrNull)
 }
 
+fun Cursor.getNonBlankStringOrNull(columnIndex: Int): String? {
+    return getStringOrNull(columnIndex)?.takeIf { it.isNotBlank() }
+}
+
 fun Cursor.getStringOrEmpty(columnName: String): String {
     return getStringOrNull(columnName = columnName).orEmpty()
 }

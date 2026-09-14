@@ -1,0 +1,587 @@
+package com.android.messaging.ui.conversationlist.chats
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversationlist.model.ConversationListItem
+import com.android.messaging.data.conversationlist.model.ConversationListMode
+import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
+import com.android.messaging.data.conversationlist.repository.ConversationListRepository
+import com.android.messaging.data.conversationsettings.model.SnoozeOption
+import com.android.messaging.data.debug.DebugFeaturesProvider
+import com.android.messaging.domain.conversation.usecase.participant.ResolveContactAction
+import com.android.messaging.domain.conversation.usecase.participant.model.ResolveContactActionResult
+import com.android.messaging.ui.contact.model.AddContactRequest
+import com.android.messaging.ui.conversationlist.chats.mapper.ConversationListUiStateMapper
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListEffect as Effect
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListNavEvent as NavEvent
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState as State
+import com.android.messaging.ui.conversationlist.delegate.ConversationListActionsDelegate
+import com.android.messaging.ui.conversationlist.delegate.ConversationListOptimisticSnapshotDelegate
+import com.android.messaging.ui.conversationlist.delegate.ConversationListSelectionDelegate
+import com.android.messaging.ui.conversationlist.model.ConversationListAvatarUiModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+
+internal interface ConversationListScreenModel {
+    val effects: Flow<Effect>
+    val navigationEvents: Flow<NavEvent>
+    val uiState: StateFlow<State>
+
+    fun onAction(action: Action)
+}
+
+@HiltViewModel
+internal class ConversationListViewModel @Inject constructor(
+    private val repository: ConversationListRepository,
+    uiStateMapper: ConversationListUiStateMapper,
+    private val selectionDelegate: ConversationListSelectionDelegate,
+    private val actionsDelegate: ConversationListActionsDelegate,
+    private val optimisticSnapshotDelegate: ConversationListOptimisticSnapshotDelegate,
+    private val resolveContactAction: ResolveContactAction,
+    private val debugFeaturesProvider: DebugFeaturesProvider,
+) : ViewModel(),
+    ConversationListScreenModel {
+
+    private val isScrollToTopVisible = MutableStateFlow(false)
+    private val isDebugEnabled = MutableStateFlow(debugFeaturesProvider.isEnabled())
+    private val openedConversationId = MutableStateFlow<ConversationId?>(value = null)
+
+    private val snapshot: StateFlow<ConversationListSnapshot?> = optimisticSnapshotDelegate.snapshot
+
+    private val _effects = Channel<Effect>(Channel.BUFFERED)
+    override val effects: Flow<Effect> = _effects.receiveAsFlow()
+
+    private val _navigationEvents = Channel<NavEvent>(Channel.BUFFERED)
+    override val navigationEvents: Flow<NavEvent> = _navigationEvents.receiveAsFlow()
+
+    override val uiState: StateFlow<State> = combine(
+        snapshot.filterNotNull(),
+        selectionDelegate.selectedIds,
+        openedConversationId,
+        isScrollToTopVisible,
+        isDebugEnabled,
+    ) { snapshot, selectedIds, openedId, isScrollToTopVisible, isDebugEnabled ->
+        uiStateMapper.map(
+            snapshot = snapshot,
+            selectedConversationIds = selectedIds,
+            openedConversationId = openedId,
+            isScrollToTopVisible = isScrollToTopVisible,
+            isDebugEnabled = isDebugEnabled,
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(
+            stopTimeoutMillis = STATEFLOW_STOP_TIMEOUT_MILLIS,
+        ),
+        initialValue = State(),
+    )
+
+    init {
+        optimisticSnapshotDelegate.bind(
+            scope = viewModelScope,
+            mode = ConversationListMode.Inbox,
+        )
+        selectionDelegate.bind(
+            scope = viewModelScope,
+            snapshot = snapshot,
+        )
+    }
+
+    override fun onAction(action: Action) {
+        when (action) {
+            is Action.ConfirmationAction -> onConfirmationAction(action)
+            is Action.LifecycleAction -> onLifecycleAction(action)
+            is Action.ListAction -> onListAction(action)
+            is Action.NavigationAction -> onNavigationAction(action)
+            is Action.SelectionAction -> onSelectionAction(action)
+            is Action.SnackbarAction -> onSnackbarAction(action)
+            is Action.PaneStateAction -> onPaneStateAction(action)
+        }
+    }
+
+    private fun onConfirmationAction(action: Action.ConfirmationAction) {
+        when (action) {
+            is Action.BlockConfirmed -> {
+                onBlockConfirmed(
+                    conversationId = action.conversationId,
+                    destination = action.destination,
+                )
+            }
+
+            is Action.DeleteConfirmed -> {
+                onDeleteConfirmed()
+            }
+        }
+    }
+
+    private fun onSnackbarAction(action: Action.SnackbarAction) {
+        when (action) {
+            is Action.ArchiveSnackbarDismissed -> {
+                optimisticSnapshotDelegate.discardRemoval(action.conversationIds)
+            }
+
+            is Action.ArchiveUndoClicked -> {
+                onArchiveUndoClicked(
+                    conversationIds = action.conversationIds,
+                    isArchived = action.isArchived,
+                )
+            }
+
+            is Action.BlockUndoClicked -> {
+                viewModelScope.launch {
+                    actionsDelegate.unblock(
+                        conversationId = action.conversationId,
+                        destination = action.destination,
+                    )
+                }
+            }
+        }
+    }
+
+    private fun onPaneStateAction(action: Action.PaneStateAction) {
+        when (action) {
+            is Action.OpenedConversationChanged -> {
+                openedConversationId.value = action.conversationId
+            }
+        }
+    }
+
+    private fun onBlockConfirmed(
+        conversationId: ConversationId,
+        destination: String,
+    ) {
+        viewModelScope.launch {
+            val success = actionsDelegate.block(
+                conversationId = conversationId,
+                destination = destination,
+            )
+
+            if (success) {
+                _navigationEvents.trySend(NavEvent.CloseConversation(conversationId))
+            }
+
+            _effects.trySend(
+                Effect.ConversationBlocked(
+                    conversationId = conversationId,
+                    destination = destination,
+                    success = success,
+                ),
+            )
+        }
+
+        selectionDelegate.clear()
+    }
+
+    private fun onDeleteConfirmed() {
+        val selectedItems = currentSelectedItems()
+
+        if (selectedItems.isEmpty()) {
+            return
+        }
+
+        actionsDelegate.delete(selectedItems)
+        selectionDelegate.clear()
+    }
+
+    private fun onArchiveUndoClicked(
+        conversationIds: List<ConversationId>,
+        isArchived: Boolean,
+    ) {
+        when {
+            isArchived -> optimisticSnapshotDelegate.restore(conversationIds)
+            else -> optimisticSnapshotDelegate.remove(conversationIds)
+        }
+
+        viewModelScope.launch {
+            actionsDelegate.setArchived(
+                conversationIds = conversationIds,
+                isArchived = !isArchived,
+            )
+        }
+    }
+
+    private fun onLifecycleAction(action: Action.LifecycleAction) {
+        when (action) {
+            Action.ScreenResumed -> {
+                isDebugEnabled.value = debugFeaturesProvider.isEnabled()
+                repository.refresh()
+            }
+        }
+    }
+
+    private fun onListAction(action: Action.ListAction) {
+        when (action) {
+            is Action.AvatarMessageClicked -> {
+                _navigationEvents.trySend(NavEvent.OpenConversation(action.conversationId))
+            }
+
+            is Action.AvatarCallClicked -> {
+                _effects.trySend(Effect.PlaceCall(action.destination))
+            }
+
+            is Action.ConversationClicked -> {
+                onConversationClick(action.conversationId)
+            }
+
+            is Action.ConversationLongClicked -> {
+                onConversationLongClick(action.conversationId)
+            }
+
+            is Action.NewestConversationVisibilityChanged -> {
+                onNewestConversationVisibilityChanged(action.isVisible)
+            }
+
+            is Action.AvatarContactClicked -> {
+                onAvatarContactClick(action.avatar)
+            }
+
+            is Action.AvatarInfoClicked -> {
+                _navigationEvents.trySend(NavEvent.OpenConversationSettings(action.conversationId))
+            }
+
+            is Action.ConversationSwipedToArchive -> {
+                onConversationSwipedToArchive(action.conversationId)
+            }
+
+            is Action.ConversationSwipedToToggleRead -> {
+                onConversationSwipedToToggleRead(action.conversationId)
+            }
+        }
+    }
+
+    private fun onConversationClick(conversationId: ConversationId) {
+        when {
+            currentSelectedItems().isNotEmpty() -> {
+                selectionDelegate.toggle(conversationId)
+            }
+
+            else -> {
+                _navigationEvents.trySend(NavEvent.OpenConversation(conversationId))
+            }
+        }
+    }
+
+    private fun onConversationLongClick(conversationId: ConversationId) {
+        selectionDelegate.toggle(conversationId)
+    }
+
+    private fun onNewestConversationVisibilityChanged(isVisible: Boolean) {
+        val shouldShowScrollToTop = !isVisible
+
+        if (isScrollToTopVisible.value == shouldShowScrollToTop) {
+            return
+        }
+
+        isScrollToTopVisible.value = shouldShowScrollToTop
+        repository.setNewestConversationVisible(isVisible)
+    }
+
+    private fun onAvatarContactClick(avatar: ConversationListAvatarUiModel) {
+        val contactAction = resolveContactAction(
+            contactId = avatar.contactId,
+            lookupKey = avatar.lookupKey,
+            destination = avatar.normalizedDestination,
+        )
+
+        when (contactAction) {
+            is ResolveContactActionResult.ShowContactCard -> {
+                _effects.trySend(
+                    Effect.ShowContactCard(
+                        contactId = contactAction.contactId,
+                        contactLookupKey = contactAction.lookupKey,
+                    ),
+                )
+            }
+
+            is ResolveContactActionResult.AddContact -> {
+                _effects.trySend(
+                    Effect.AddContact(
+                        request = AddContactRequest(
+                            destination = contactAction.destination,
+                            avatarUri = avatar.uri,
+                        ),
+                    ),
+                )
+            }
+
+            ResolveContactActionResult.Unavailable -> Unit
+        }
+    }
+
+    private fun onConversationSwipedToArchive(conversationId: ConversationId) {
+        archive(conversationIds = listOf(conversationId))
+    }
+
+    private fun archive(conversationIds: List<ConversationId>) {
+        optimisticSnapshotDelegate.remove(conversationIds)
+        viewModelScope.launch {
+            actionsDelegate.setArchived(
+                conversationIds = conversationIds,
+                isArchived = true,
+            )
+        }
+
+        conversationIds.forEach { conversationId ->
+            _navigationEvents.trySend(NavEvent.CloseConversation(conversationId))
+        }
+
+        _effects.trySend(
+            Effect.ArchiveStatusChanged(
+                conversationIds = conversationIds.toImmutableList(),
+                isArchived = true,
+            ),
+        )
+    }
+
+    private fun onConversationSwipedToToggleRead(conversationId: ConversationId) {
+        val item = itemById(conversationId) ?: return
+
+        val shouldMarkRead = !item.latestMessage.isRead
+        val conversationIds = listOf(conversationId)
+
+        optimisticSnapshotDelegate.markRead(
+            conversationIds = conversationIds,
+            isRead = shouldMarkRead,
+        )
+
+        viewModelScope.launch {
+            actionsDelegate.setRead(
+                conversationIds = conversationIds,
+                isRead = shouldMarkRead,
+            )
+        }
+    }
+
+    private fun onNavigationAction(action: Action.NavigationAction) {
+        when (action) {
+            Action.ArchivedConversationsClicked -> {
+                _navigationEvents.trySend(NavEvent.OpenArchivedConversations)
+            }
+
+            Action.BlockedParticipantsClicked -> {
+                _navigationEvents.trySend(NavEvent.OpenBlockedParticipants)
+            }
+
+            Action.DebugOptionsClicked -> {
+                _effects.trySend(Effect.OpenDebugOptions)
+            }
+
+            Action.ScrollToTopClicked -> {
+                _effects.trySend(Effect.ScrollToTop)
+            }
+
+            Action.SettingsClicked -> {
+                _navigationEvents.trySend(NavEvent.OpenSettings)
+            }
+
+            Action.StartChatClicked -> {
+                _navigationEvents.trySend(NavEvent.OpenNewChat)
+            }
+        }
+    }
+
+    private fun onSelectionAction(action: Action.SelectionAction) {
+        when (action) {
+            is Action.AddContactClicked -> {
+                onAddContactClick()
+            }
+
+            is Action.ArchiveClicked -> {
+                onArchiveClick()
+            }
+
+            is Action.BlockClicked -> {
+                onBlockClick()
+            }
+
+            is Action.MarkReadClicked -> {
+                onMarkRead(isRead = true)
+            }
+
+            is Action.MarkUnreadClicked -> {
+                onMarkRead(isRead = false)
+            }
+
+            is Action.PinClicked -> {
+                onPinClick(isPinned = true)
+            }
+
+            is Action.UnpinClicked -> {
+                onPinClick(isPinned = false)
+            }
+
+            is Action.PinAnimationPrepared -> {
+                commitPinChange(
+                    conversationIds = action.conversationIds,
+                    isPinned = action.isPinned,
+                )
+            }
+
+            is Action.SnoozeOptionSelected -> {
+                onSnoozeOptionSelected(action.option)
+            }
+
+            is Action.UnsnoozeClicked -> {
+                onUnsnoozeClick()
+            }
+
+            is Action.SelectionCleared -> {
+                selectionDelegate.clear()
+            }
+        }
+    }
+
+    private fun onAddContactClick() {
+        val destination = singleSelectedDestination() ?: return
+
+        _effects.trySend(
+            Effect.AddContact(
+                request = AddContactRequest(
+                    destination = destination,
+                    avatarUri = null,
+                ),
+            ),
+        )
+
+        selectionDelegate.clear()
+    }
+
+    private fun onArchiveClick() {
+        withSelectedIds { conversationIds ->
+            archive(conversationIds = conversationIds)
+            selectionDelegate.clear()
+        }
+    }
+
+    private fun onBlockClick() {
+        val selectedItem = singleSelectedItem() ?: return
+        val destination = singleSelectedDestination() ?: return
+
+        _effects.trySend(
+            Effect.ConfirmBlock(
+                conversationId = selectedItem.conversationId,
+                destination = destination,
+            ),
+        )
+    }
+
+    private fun onMarkRead(isRead: Boolean) {
+        withSelectedIds { conversationIds ->
+            optimisticSnapshotDelegate.markRead(
+                conversationIds = conversationIds,
+                isRead = isRead,
+            )
+
+            viewModelScope.launch {
+                actionsDelegate.setRead(
+                    conversationIds = conversationIds,
+                    isRead = isRead,
+                )
+            }
+
+            selectionDelegate.clear()
+        }
+    }
+
+    private fun onPinClick(isPinned: Boolean) {
+        withSelectedIds { conversationIds ->
+            _effects.trySend(
+                Effect.PreparePinAnimation(
+                    conversationIds = conversationIds.toImmutableList(),
+                    isPinned = isPinned,
+                ),
+            )
+        }
+    }
+
+    private fun commitPinChange(
+        conversationIds: List<ConversationId>,
+        isPinned: Boolean,
+    ) {
+        optimisticSnapshotDelegate.pin(
+            conversationIds = conversationIds,
+            isPinned = isPinned,
+        )
+
+        viewModelScope.launch {
+            actionsDelegate.setPinned(
+                conversationIds = conversationIds,
+                isPinned = isPinned,
+            )
+        }
+
+        selectionDelegate.clear()
+    }
+
+    private fun onSnoozeOptionSelected(option: SnoozeOption) {
+        withSelectedIds { conversationIds ->
+            actionsDelegate.snooze(
+                conversationIds = conversationIds,
+                option = option,
+            )
+            selectionDelegate.clear()
+        }
+    }
+
+    private fun onUnsnoozeClick() {
+        withSelectedIds { conversationIds ->
+            actionsDelegate.unsnooze(conversationIds)
+            selectionDelegate.clear()
+        }
+    }
+
+    private inline fun withSelectedIds(block: (List<ConversationId>) -> Unit) {
+        val selectedItems = currentSelectedItems()
+
+        if (selectedItems.isEmpty()) {
+            return
+        }
+
+        block(selectedItems.map(ConversationListItem::conversationId))
+    }
+
+    private fun itemById(conversationId: ConversationId): ConversationListItem? {
+        return snapshot.value
+            ?.items
+            ?.firstOrNull { item -> item.conversationId == conversationId }
+    }
+
+    private fun singleSelectedItem(): ConversationListItem? {
+        return currentSelectedItems().singleOrNull()
+    }
+
+    private fun currentSelectedItems(): List<ConversationListItem> {
+        val currentSelectedIds = selectionDelegate.selectedIds.value
+
+        return snapshot.value
+            ?.items
+            .orEmpty()
+            .filter { item ->
+                item.conversationId in currentSelectedIds
+            }
+    }
+
+    private fun singleSelectedDestination(): String? {
+        return singleSelectedItem()
+            ?.participant
+            ?.otherNormalizedDestination
+            ?.takeIf(String::isNotBlank)
+    }
+
+    private companion object {
+        private const val STATEFLOW_STOP_TIMEOUT_MILLIS = 5_000L
+    }
+}

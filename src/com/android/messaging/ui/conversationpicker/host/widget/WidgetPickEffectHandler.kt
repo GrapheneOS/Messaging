@@ -5,6 +5,7 @@ import android.app.Activity.RESULT_OK
 import android.appwidget.AppWidgetManager
 import android.content.Intent
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.conversationpicker.ConversationPickerEffectHandler
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerEffect as Effect
 import com.android.messaging.util.UiUtils
@@ -31,8 +32,8 @@ internal class WidgetPickEffectHandler(
         }
     }
 
-    private fun bindConversationToWidget(conversationId: String) {
-        WidgetConversationPrefs.saveConversationIdPref(appWidgetId, conversationId)
+    private fun bindConversationToWidget(conversationId: ConversationId) {
+        WidgetConversationPrefs.saveConversationIdPref(appWidgetId, conversationId.value)
         WidgetConversationProvider.rebuildWidget(activity, appWidgetId)
 
         val resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)

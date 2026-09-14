@@ -1,0 +1,212 @@
+package com.android.messaging.ui.conversation.navigation
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavKey
+import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.ui.common.components.consumeOppositePaneInsets
+import com.android.messaging.ui.contact.navigation.navigateToAddContact
+import com.android.messaging.ui.conversation.addparticipants.AddParticipantsScreen
+import com.android.messaging.ui.conversation.addparticipants.AddParticipantsViewModel
+import com.android.messaging.ui.conversation.addparticipants.rememberAddParticipantsEffectHandler
+import com.android.messaging.ui.conversation.entry.ConversationEntryScreenModel
+import com.android.messaging.ui.conversation.entry.NewChatScreen
+import com.android.messaging.ui.conversation.entry.NewChatViewModel
+import com.android.messaging.ui.conversation.entry.model.ConversationEntryUiState
+import com.android.messaging.ui.conversation.entry.rememberNewChatEffectHandler
+import com.android.messaging.ui.conversation.messagedetails.MessageDetailsScreen
+import com.android.messaging.ui.conversation.messagedetails.MessageDetailsViewModel
+import com.android.messaging.ui.conversation.screen.ConversationScreen
+import com.android.messaging.ui.conversation.screen.ConversationViewModel
+import com.android.messaging.ui.conversation.screen.model.ConversationPendingLaunchPayload
+import com.android.messaging.ui.navigation.LocalNavigator
+import com.android.messaging.ui.navigation.SeededViewModelStoreOwner
+import com.android.messaging.ui.navigation.paneTitleMetadata
+
+internal fun EntryProviderScope<NavKey>.conversationEntries() {
+    entry<ConversationNavKey>(
+        metadata = conversationDetailPaneMetadata() +
+            paneTitleMetadata(R.string.conversation_pane_title),
+        content = conversationScreenRouteContent(),
+    )
+    entry<NewChatNavKey>(
+        metadata = paneTitleMetadata(R.string.start_new_conversation),
+        content = newChatRouteContent(),
+    )
+    entry<AddParticipantsNavKey>(
+        metadata = paneTitleMetadata(R.string.conversation_add_people),
+        content = addParticipantsRouteContent(),
+    )
+    entry<MessageDetailsNavKey>(
+        metadata = paneTitleMetadata(R.string.message_details_title),
+        content = messageDetailsRouteContent(),
+    )
+}
+
+private fun conversationScreenRouteContent(): @Composable (ConversationNavKey) -> Unit {
+    return { navKey ->
+        val entryNavState = LocalConversationEntryNavState.current
+        val entryUiState by entryNavState.model.uiState.collectAsStateWithLifecycle()
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .consumeOppositePaneInsets(),
+        ) {
+            ConversationRoute(
+                conversationId = navKey.conversationId,
+                isLaunchedFromBubble = entryNavState.isLaunchedFromBubble,
+                entryModel = entryNavState.model,
+                entryUiState = entryUiState,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ConversationRoute(
+    conversationId: ConversationId,
+    isLaunchedFromBubble: Boolean,
+    entryModel: ConversationEntryScreenModel,
+    entryUiState: ConversationEntryUiState,
+) {
+    val navigator = rememberConversationNavigator()
+    val appNavigator = LocalNavigator.current
+    val pendingPayload = pendingLaunchPayloadForConversation(
+        entryUiState = entryUiState,
+        conversationId = conversationId,
+    )
+
+    ConversationScreen(
+        screenModel = hiltViewModel<ConversationViewModel>(),
+        conversationId = conversationId,
+        cancelIncomingNotification = !isLaunchedFromBubble,
+        onAddPeopleClick = {
+            navigator.navigateToAddParticipants(conversationId = conversationId)
+        },
+        onConversationDetailsClick = {
+            navigator.navigateToConversationSettings(conversationId = conversationId)
+        },
+        onNavigateToMessageDetails = { messageId ->
+            navigator.navigateToMessageDetails(
+                conversationId = conversationId,
+                messageId = messageId,
+            )
+        },
+        onNavigateToVCardDetail = { uri ->
+            navigator.navigateToVCardDetail(uri = uri)
+        },
+        onNavigateToPhotoViewer = { launchRequest ->
+            navigator.navigateToPhotoViewer(
+                conversationId = conversationId,
+                launchRequest = launchRequest,
+            )
+        },
+        onNavigateToAddContact = { request ->
+            appNavigator.navigateToAddContact(request = request)
+        },
+        onNavigateToForward = { messageId ->
+            navigator.navigateToForward(
+                conversationId = conversationId,
+                messageId = messageId,
+            )
+        },
+        onNavigateBack = appNavigator::back,
+        onCloseConversation = {
+            appNavigator.closeConversation(conversationId = conversationId)
+        },
+        pendingLaunchPayload = pendingPayload,
+        onPendingDraftConsumed = {
+            entryModel.onDraftPayloadConsumed(conversationId = conversationId)
+        },
+        onPendingScrollPositionConsumed = {
+            entryModel.onScrollPositionConsumed(conversationId = conversationId)
+        },
+        onPendingSelfParticipantIdConsumed = {
+            entryModel.onPendingSelfParticipantIdConsumed(conversationId = conversationId)
+        },
+        onPendingStartupAttachmentConsumed = {
+            entryModel.onStartupAttachmentConsumed(conversationId = conversationId)
+        },
+    )
+}
+
+private fun newChatRouteContent(): @Composable (NewChatNavKey) -> Unit {
+    return {
+        val entryModel = LocalConversationEntryNavState.current.model
+        val navigator = rememberConversationNavigator()
+        val appNavigator = LocalNavigator.current
+        val effectHandler = rememberNewChatEffectHandler()
+
+        NewChatScreen(
+            screenModel = hiltViewModel<NewChatViewModel>(),
+            effectHandler = effectHandler,
+            onNavigateBack = appNavigator::back,
+            onNavigateToConversation = { conversationId, selfParticipantId ->
+                entryModel.onConversationNavigationRequested(
+                    conversationId = conversationId,
+                    pendingSelfParticipantId = selfParticipantId,
+                )
+                navigator.navigateToConversation(conversationId = conversationId)
+            },
+        )
+    }
+}
+
+private fun addParticipantsRouteContent(): @Composable (AddParticipantsNavKey) -> Unit {
+    return { navKey ->
+        val navigator = rememberConversationNavigator()
+        val appNavigator = LocalNavigator.current
+        val effectHandler = rememberAddParticipantsEffectHandler()
+
+        AddParticipantsScreen(
+            screenModel = hiltViewModel<AddParticipantsViewModel>(),
+            effectHandler = effectHandler,
+            conversationId = navKey.conversationId,
+            onNavigateBack = appNavigator::back,
+            onNavigateToConversation = { resolvedConversationId ->
+                navigator.replaceCurrentConversation(conversationId = resolvedConversationId)
+            },
+        )
+    }
+}
+
+private fun messageDetailsRouteContent(): @Composable (MessageDetailsNavKey) -> Unit {
+    return { navKey ->
+        val navigator = LocalNavigator.current
+        val defaultArgs = remember(navKey) {
+            messageDetailsDefaultArgs(navKey = navKey)
+        }
+
+        SeededViewModelStoreOwner(defaultArgs = defaultArgs) {
+            MessageDetailsScreen(
+                screenModel = hiltViewModel<MessageDetailsViewModel>(),
+                onNavigateBack = navigator::back,
+            )
+        }
+    }
+}
+
+private fun pendingLaunchPayloadForConversation(
+    entryUiState: ConversationEntryUiState,
+    conversationId: ConversationId,
+): ConversationPendingLaunchPayload {
+    if (entryUiState.conversationId != conversationId) {
+        return ConversationPendingLaunchPayload()
+    }
+
+    return ConversationPendingLaunchPayload(
+        draft = entryUiState.pendingDraft,
+        scrollPosition = entryUiState.pendingScrollPosition,
+        selfParticipantId = entryUiState.pendingSelfParticipantId,
+        startupAttachment = entryUiState.pendingStartupAttachment,
+    )
+}

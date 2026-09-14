@@ -12,6 +12,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
@@ -24,11 +25,14 @@ import com.android.messaging.ui.common.components.mediapreview.MediaReviewDelete
 import com.android.messaging.ui.common.components.mediapreview.mediaReviewPageTransform
 import com.android.messaging.ui.common.components.mediapreview.rememberMediaReviewRemovalState
 import com.android.messaging.ui.conversation.composer.model.ComposerAttachmentUiModel
+import com.android.messaging.ui.conversation.conversationMediaReviewPreviewTestTag
 import com.android.messaging.ui.conversation.preview.previewResolvedImageAttachment
 import com.android.messaging.ui.conversation.preview.previewResolvedVideoAttachment
 import com.android.messaging.ui.core.MessagingPreviewColumn
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+
+internal const val PICKER_REVIEW_PAGE_REMOVE_ANIMATION_DURATION_MILLIS = 160
 
 @Composable
 internal fun ConversationMediaReviewPageCard(
@@ -68,6 +72,11 @@ internal fun ConversationMediaReviewPageCard(
         ConversationMediaReviewPreview(
             modifier = Modifier
                 .fillMaxSize()
+                .testTag(
+                    tag = conversationMediaReviewPreviewTestTag(
+                        contentUri = attachment.contentUri,
+                    ),
+                )
                 .clickable(
                     enabled = removalState.isInteractionEnabled,
                     onClick = { onAttachmentPreviewClick(attachment) },

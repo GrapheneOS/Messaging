@@ -191,7 +191,7 @@ private fun SyncEmbeddedPhotoPickerExpansionEffect(
         }
             .distinctUntilChanged()
             .collect { isExpanded ->
-                embeddedPhotoPickerState.setCurrentExpanded(expanded = isExpanded)
+                embeddedPhotoPickerState.isExpanded = isExpanded
             }
     }
 }

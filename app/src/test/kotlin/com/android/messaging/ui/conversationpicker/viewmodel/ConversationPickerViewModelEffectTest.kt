@@ -1,9 +1,11 @@
 package com.android.messaging.ui.conversationpicker.viewmodel
 
 import app.cash.turbine.test
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.domain.conversationpicker.model.SendTarget
 import com.android.messaging.testutil.TEST_RESOLVED_CONVERSATION_ID
+import com.android.messaging.testutil.assertThat
 import com.android.messaging.testutil.contactTarget
 import com.android.messaging.testutil.conversationTarget
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerAction as Action
@@ -25,10 +27,10 @@ internal class ConversationPickerViewModelEffectTest : BaseConversationPickerVie
             viewModel.effects.test {
                 viewModel.onAction(
                     Action.TargetClicked(
-                        conversationTarget(conversationId = "42"),
+                        conversationTarget(conversationId = ConversationId("42")),
                     ),
                 )
-                assertEquals(Effect.OpenConversation("42"), awaitItem())
+                assertThat(awaitItem()).isEqualTo(Effect.OpenConversation(ConversationId("42")))
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -78,7 +80,7 @@ internal class ConversationPickerViewModelEffectTest : BaseConversationPickerVie
 
             givenSelectedTargets(
                 listOf(
-                    conversationTarget(conversationId = "1"),
+                    conversationTarget(conversationId = ConversationId("1")),
                     contactTarget(contactId = 2L, destination = "+15550002"),
                 ),
             )
@@ -90,7 +92,7 @@ internal class ConversationPickerViewModelEffectTest : BaseConversationPickerVie
                 val effect = awaitItem() as Effect.SendToSelected
                 assertEquals(
                     setOf(
-                        SendTarget.Conversation("1"),
+                        SendTarget.Conversation(ConversationId("1")),
                         SendTarget.Contact("+15550002"),
                     ),
                     effect.targets,
@@ -105,7 +107,7 @@ internal class ConversationPickerViewModelEffectTest : BaseConversationPickerVie
         runTest(mainDispatcherRule.testDispatcher) {
             givenSelectedTargets(
                 listOf(
-                    conversationTarget(conversationId = "1"),
+                    conversationTarget(conversationId = ConversationId("1")),
                 ),
             )
 

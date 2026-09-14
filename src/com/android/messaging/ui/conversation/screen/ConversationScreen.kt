@@ -2,7 +2,6 @@ package com.android.messaging.ui.conversation.screen
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -11,36 +10,41 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.geometry.Rect as ComposeRect
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.android.messaging.data.conversation.model.draft.ConversationDraft
+import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.data.conversation.model.ParticipantId
+import com.android.messaging.ui.common.components.snackbar.MessagingSnackbarHost
+import com.android.messaging.ui.contact.model.AddContactRequest
 import com.android.messaging.ui.conversation.composer.ui.ConversationComposerSection
 import com.android.messaging.ui.conversation.composer.ui.ConversationSimSelectorSheet
-import com.android.messaging.ui.conversation.entry.model.ConversationEntryStartupAttachment
 import com.android.messaging.ui.conversation.mediapicker.rememberConversationMediaPickerPermissionState
 import com.android.messaging.ui.conversation.mediapicker.rememberConversationMediaPickerState
 import com.android.messaging.ui.conversation.metadata.ui.ConversationTopAppBar
+import com.android.messaging.ui.conversation.screen.model.ConversationPendingLaunchPayload
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaffoldUiState
+import com.android.messaging.ui.photoviewer.model.PhotoViewerLaunchRequest
 
 @Composable
 internal fun ConversationScreen(
+    screenModel: ConversationScreenModel,
     modifier: Modifier = Modifier,
-    conversationId: String? = null,
-    launchGeneration: Int? = null,
+    conversationId: ConversationId? = null,
     cancelIncomingNotification: Boolean = true,
     onAddPeopleClick: () -> Unit,
     onConversationDetailsClick: () -> Unit,
-    onNavigateToMessageDetails: (messageId: String) -> Unit,
+    onNavigateToMessageDetails: (messageId: MessageId) -> Unit,
+    onNavigateToVCardDetail: (uri: String) -> Unit,
+    onNavigateToPhotoViewer: (PhotoViewerLaunchRequest) -> Unit,
+    onNavigateToAddContact: (AddContactRequest) -> Unit,
+    onNavigateToForward: (messageId: MessageId) -> Unit,
     onNavigateBack: () -> Unit,
-    pendingDraft: ConversationDraft? = null,
-    pendingScrollPosition: Int? = null,
-    pendingSelfParticipantId: String? = null,
-    pendingStartupAttachment: ConversationEntryStartupAttachment? = null,
-    onPendingDraftConsumed: () -> Unit = {},
-    onPendingScrollPositionConsumed: () -> Unit = {},
-    onPendingSelfParticipantIdConsumed: () -> Unit = {},
-    onPendingStartupAttachmentConsumed: () -> Unit = {},
-    screenModel: ConversationScreenModel = hiltViewModel<ConversationViewModel>(),
+    onCloseConversation: () -> Unit,
+    pendingLaunchPayload: ConversationPendingLaunchPayload,
+    onPendingDraftConsumed: () -> Unit,
+    onPendingScrollPositionConsumed: () -> Unit,
+    onPendingSelfParticipantIdConsumed: () -> Unit,
+    onPendingStartupAttachmentConsumed: () -> Unit,
 ) {
     val messageFieldFocusRequester = remember { FocusRequester() }
     val mediaPickerState = rememberConversationMediaPickerState()
@@ -61,18 +65,19 @@ internal fun ConversationScreen(
 
     ConversationScreenRouteEffects(
         conversationId = conversationId,
-        launchGeneration = launchGeneration,
         cancelIncomingNotification = cancelIncomingNotification,
-        pendingDraft = pendingDraft,
-        pendingSelfParticipantId = pendingSelfParticipantId,
-        pendingStartupAttachment = pendingStartupAttachment,
+        pendingLaunchPayload = pendingLaunchPayload,
         scaffoldUiState = scaffoldUiState,
         snackbarHostState = snackbarHostState,
         hostBoundsState = hostBoundsState,
         permissionState = permissionState,
         screenModel = screenModel,
         onNavigateToMessageDetails = onNavigateToMessageDetails,
-        onNavigateBack = onNavigateBack,
+        onNavigateToVCardDetail = onNavigateToVCardDetail,
+        onNavigateToPhotoViewer = onNavigateToPhotoViewer,
+        onNavigateToAddContact = onNavigateToAddContact,
+        onNavigateToForward = onNavigateToForward,
+        onCloseConversation = onCloseConversation,
         onPendingDraftConsumed = onPendingDraftConsumed,
         onPendingSelfParticipantIdConsumed = onPendingSelfParticipantIdConsumed,
         onPendingStartupAttachmentConsumed = onPendingStartupAttachmentConsumed,
@@ -86,7 +91,7 @@ internal fun ConversationScreen(
         mediaPickerState = mediaPickerState,
         snackbarHostState = snackbarHostState,
         messageFieldFocusRequester = messageFieldFocusRequester,
-        pendingScrollPosition = pendingScrollPosition,
+        pendingScrollPosition = pendingLaunchPayload.scrollPosition,
         onPendingScrollPositionConsumed = onPendingScrollPositionConsumed,
         onAddPeopleClick = onAddPeopleClick,
         onConversationDetailsClick = onConversationDetailsClick,
@@ -108,7 +113,7 @@ internal fun ConversationScreen(
 @Composable
 internal fun ConversationScreenScaffold(
     modifier: Modifier = Modifier,
-    conversationId: String?,
+    conversationId: ConversationId?,
     uiState: ConversationScreenScaffoldUiState,
     snackbarHostState: SnackbarHostState,
     isMediaPickerOpen: Boolean,
@@ -133,7 +138,7 @@ internal fun ConversationScreenScaffold(
 
     Scaffold(
         modifier = modifier,
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { MessagingSnackbarHost(hostState = snackbarHostState) },
         topBar = {
             ConversationScreenTopBar(
                 uiState = uiState,
@@ -174,6 +179,7 @@ internal fun ConversationScreenScaffold(
             onMessageLongClick = screenModel::onMessageLongClick,
             onMessageResendClick = screenModel::onMessageResendClick,
             onSimSelectorClick = showSimSelectorSheet,
+            onUnblockClick = screenModel::onUnblockClick,
         )
     }
 
@@ -295,7 +301,7 @@ private fun ConversationScreenBottomBar(
 private fun ConversationScreenSimSelectorSheet(
     simSheetState: ConversationSimSheetState,
     uiState: ConversationScreenScaffoldUiState,
-    onSimSelected: (String) -> Unit,
+    onSimSelected: (ParticipantId) -> Unit,
 ) {
     if (!simSheetState.isVisible || !uiState.composer.simSelector.isAvailable) {
         return

@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.mediapicker.delegate
 
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.data.conversation.model.draft.PhotoPickerDraftAttachment
 import com.android.messaging.data.media.model.ConversationCapturedMedia
@@ -37,7 +38,7 @@ internal interface ConversationMediaPickerDelegate {
 
     fun bind(
         scope: CoroutineScope,
-        conversationIdFlow: StateFlow<String?>,
+        conversationIdFlow: StateFlow<ConversationId?>,
     )
 
     fun onPhotoPickerMediaSelected(contentUris: List<String>)
@@ -82,7 +83,7 @@ internal class ConversationMediaPickerDelegateImpl @Inject constructor(
 
     override fun bind(
         scope: CoroutineScope,
-        conversationIdFlow: StateFlow<String?>,
+        conversationIdFlow: StateFlow<ConversationId?>,
     ) {
         if (boundScope != null) {
             return
