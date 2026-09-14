@@ -30,7 +30,7 @@ photo-picker = "1.0.0-alpha02"
 
 junit4 = "4.13.2"
 mockk = "1.14.11"
-robolectric = "4.16.1"
+robolectric = "4.17"
 turbine = "1.2.1"
 
 androidx-test-espresso = "3.7.0"
