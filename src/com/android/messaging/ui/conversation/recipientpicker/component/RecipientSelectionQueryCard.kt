@@ -42,6 +42,10 @@ import com.android.messaging.ui.recipientselection.preview.previewRecipientSelec
 import kotlinx.collections.immutable.ImmutableList
 
 private val recipientSelectionInputRowMinHeight = 32.dp
+private val recipientSelectionInputRowPadding = PaddingValues(
+    horizontal = 16.dp,
+    vertical = 12.dp,
+)
 
 internal fun recipientSelectionQueryCardUiState(
     uiState: RecipientSelectionContentUiState,
@@ -232,7 +236,6 @@ private fun RecipientSelectionInputRow(
             currentKeyboardController.value?.show()
         }
     }
-    val outerPadding = recipientSelectionInputRowPadding(hasChips = recipients.isNotEmpty())
 
     BoxWithConstraints(
         modifier = Modifier
@@ -241,7 +244,7 @@ private fun RecipientSelectionInputRow(
                 enabled = queryFieldUiState.enabled,
                 onTap = onInputAreaTap,
             )
-            .padding(paddingValues = outerPadding),
+            .padding(paddingValues = recipientSelectionInputRowPadding),
     ) {
         RecipientSelectionSelectedRecipientChips(
             recipients = recipients,
@@ -273,17 +276,6 @@ private fun RecipientSelectionInputRow(
                 )
             },
         )
-    }
-}
-
-private fun recipientSelectionInputRowPadding(hasChips: Boolean): PaddingValues {
-    return when {
-        hasChips -> {
-            PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp)
-        }
-        else -> {
-            PaddingValues(horizontal = 16.dp, vertical = 12.dp)
-        }
     }
 }
 
