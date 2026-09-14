@@ -13,11 +13,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Group
@@ -49,15 +47,12 @@ internal fun NewChatCreateGroupHeader(
         enter = newGroupButtonEnterTransition(),
         exit = newGroupButtonExitTransition(),
     ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(space = 12.dp),
-        ) {
-            NewGroupButton(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = onCreateGroupClick,
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-        }
+        NewGroupButton(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 10.dp),
+            onClick = onCreateGroupClick,
+        )
     }
 }
 
