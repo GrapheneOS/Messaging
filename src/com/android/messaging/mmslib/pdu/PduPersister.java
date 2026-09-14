@@ -973,6 +973,9 @@ public class PduPersister {
         } catch (final FileNotFoundException e) {
             Log.e(TAG, "Failed to open Input/Output stream.", e);
             throw new MmsException(e);
+        } catch (final SecurityException e) {
+            Log.e(TAG, "Not allowed to read " + dataUri, e);
+            throw new MmsException(e);
         } catch (final IOException e) {
             Log.e(TAG, "Failed to read/write data.", e);
             throw new MmsException(e);

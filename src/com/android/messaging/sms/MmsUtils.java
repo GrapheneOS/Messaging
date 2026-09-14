@@ -2175,6 +2175,10 @@ public class MmsUtils {
                     requireReadReport, expiryTime, priority, timestampMillis);
         } catch (final InvalidHeaderValueException e) {
             LogUtil.e(TAG, "InvalidHeaderValue creating sendReq PDU");
+        } catch (final SecurityException e) {
+            // An attachment uri we can no longer read, e.g. a MediaStore uri left in an old
+            // draft. Fail the send cleanly instead of taking the process down.
+            LogUtil.e(TAG, "Not allowed to read attachment creating sendReq PDU", e);
         } catch (final OutOfMemoryError e) {
             LogUtil.e(TAG, "Out of memory error creating sendReq PDU");
         }
