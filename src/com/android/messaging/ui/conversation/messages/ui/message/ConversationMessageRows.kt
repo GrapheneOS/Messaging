@@ -18,13 +18,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.text
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.android.messaging.R
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.conversation.conversationMessageBubbleTestTag
 import com.android.messaging.ui.conversation.conversationMessageSelectionRowTestTag
@@ -245,12 +249,17 @@ private fun Modifier.conversationMessageBubbleInteractionModifier(
     onMessageResendClick: () -> Unit,
 ): Modifier {
     val hapticFeedback = LocalHapticFeedback.current
+    val senderAnnouncement = conversationMessageSenderAnnouncement(
+        message = message,
+        isSenderLabelVisible = layout.showSender,
+    )
     val bubbleModifier = this
         .testTag(
             tag = conversationMessageBubbleTestTag(
                 messageId = message.messageId,
             ),
         )
+        .conversationMessageSenderSemantics(announcement = senderAnnouncement)
         .clip(shape = layout.bubbleShape)
 
     return when {
@@ -270,6 +279,38 @@ private fun Modifier.conversationMessageBubbleInteractionModifier(
                     onMessageLongClick()
                 },
             )
+        }
+    }
+}
+
+@Composable
+private fun conversationMessageSenderAnnouncement(
+    message: ConversationMessageUiModel,
+    isSenderLabelVisible: Boolean,
+): String? {
+    return when {
+        !message.isIncoming -> stringResource(id = R.string.outgoing_sender_content_description)
+        isSenderLabelVisible -> null
+
+        else -> {
+            stringResource(
+                id = R.string.incoming_sender_content_description,
+                message
+                    .senderDisplayName
+                    ?.takeIf(String::isNotBlank)
+                    ?: stringResource(id = R.string.unknown_sender),
+            )
+        }
+    }
+}
+
+private fun Modifier.conversationMessageSenderSemantics(announcement: String?): Modifier {
+    return when {
+        announcement == null -> this
+        else -> {
+            semantics {
+                text = AnnotatedString(text = announcement)
+            }
         }
     }
 }
