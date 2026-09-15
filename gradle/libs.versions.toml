@@ -3,7 +3,7 @@ agp = "9.3.2"
 detekt = "2.0.0-alpha.6"
 hilt = "2.60.1"
 jacoco = "0.8.15"
-kotlin = "2.4.10"
+kotlin = "2.4.20"
 kotlinx-serialization = "1.11.0"
 ksp = "2.3.11"
 
