@@ -468,11 +468,7 @@ private fun ScrollToTargetMessage(
 internal fun messagePositionToDisplayIndex(position: Int, size: Int): Int {
     return when {
         size <= 0 -> 0
-
-        else -> {
-            val lastIndex = size - 1
-            (lastIndex - position).coerceIn(0, lastIndex)
-        }
+        else -> position.coerceIn(0, size - 1)
     }
 }
 

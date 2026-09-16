@@ -118,8 +118,9 @@ internal class ConversationScreenScrollBehaviorTest : BaseConversationScreenTest
 
         composeTestRule.waitForIdle()
 
+        // The widget hands over a newest first position, so 5 is the sixth message from the end.
         composeTestRule
-            .onNodeWithTag(conversationMessageItemTestTag(messageId = MessageId("message-6")))
+            .onNodeWithTag(conversationMessageItemTestTag(messageId = MessageId("message-45")))
             .assertIsDisplayed()
         composeTestRule.runOnIdle {
             assertEquals(1, consumedCount)
