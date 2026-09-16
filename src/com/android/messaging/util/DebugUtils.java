@@ -210,6 +210,19 @@ public class DebugUtils {
             }
         });
 
+        arrayAdapter.add(new DebugAction("Seed huge conversation") {
+            @Override
+            public void run() {
+                SafeAsyncTask.executeOnThreadPool(() -> {
+                    TestDataSeeder.seedHugeConversation();
+                    ThreadUtil.getMainThreadHandler().post(() ->
+                            Toast.makeText(host, "Huge conversation seeded", Toast.LENGTH_SHORT)
+                                    .show()
+                    );
+                });
+            }
+        });
+
         arrayAdapter.add(new DebugAction("Clear seeded test data") {
             @Override
             public void run() {
