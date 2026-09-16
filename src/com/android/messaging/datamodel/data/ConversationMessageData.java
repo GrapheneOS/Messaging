@@ -822,8 +822,14 @@ public class ConversationMessageData {
 
     // Note that we sort DESC and ConversationData reverses the cursor.  This is a performance
     // issue (improvement) for large cursors.
+    //
+    // Grouped by the message rather than by parts.message_id, which is the same key for every
+    // message that has parts but is null for every message that has none - an outgoing mms
+    // carrying only a subject is stored without any. Those all share the one null group, so
+    // grouping by it returns a single row for all of them and the rest of them never reach the
+    // conversation at all.
     private static final String CONVERSATION_MESSAGES_QUERY_SQL_GROUP_BY =
-            " GROUP BY " + DatabaseHelper.PARTS_TABLE + '.' + PartColumns.MESSAGE_ID
+            " GROUP BY " + DatabaseHelper.MESSAGES_TABLE + '.' + MessageColumns._ID
           + " ORDER BY "
           + DatabaseHelper.MESSAGES_TABLE + '.' + MessageColumns.RECEIVED_TIMESTAMP + " DESC";
 
