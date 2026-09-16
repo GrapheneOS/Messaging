@@ -54,7 +54,9 @@ public class ConversationImagePartsView {
             + DatabaseHelper.MESSAGES_TABLE + '.' + MessageColumns.RECEIVED_TIMESTAMP
             + " as " + Columns.RECEIVED_TIMESTAMP + ", "
             + DatabaseHelper.MESSAGES_TABLE + '.' + MessageColumns.STATUS
-            + " as " + Columns.STATUS + " "
+            + " as " + Columns.STATUS + ", "
+            + DatabaseHelper.PARTS_TABLE + '.' + PartColumns._ID
+            + " as " + Columns.PART_ID + " "
 
             + " FROM " + DatabaseHelper.MESSAGES_TABLE + " LEFT JOIN " + DatabaseHelper.PARTS_TABLE
             + " ON (" + DatabaseHelper.MESSAGES_TABLE + "." + MessageColumns._ID
@@ -82,6 +84,7 @@ public class ConversationImagePartsView {
         static final String DISPLAY_DESTINATION = ParticipantColumns.DISPLAY_DESTINATION;
         static final String RECEIVED_TIMESTAMP = MessageColumns.RECEIVED_TIMESTAMP;
         static final String STATUS = MessageColumns.STATUS;
+        static final String PART_ID = "part_id";
     }
 
     public interface PhotoViewQuery {
@@ -95,6 +98,7 @@ public class ConversationImagePartsView {
             Columns.DISPLAY_DESTINATION,
             Columns.RECEIVED_TIMESTAMP,
             Columns.STATUS,
+            Columns.PART_ID,
         };
 
         public final int INDEX_URI = 0;
@@ -106,6 +110,7 @@ public class ConversationImagePartsView {
         public final int INDEX_DISPLAY_DESTINATION = 5;
         public final int INDEX_RECEIVED_TIMESTAMP = 6;
         public final int INDEX_STATUS = 7;
+        public final int INDEX_PART_ID = 8;
     }
 
     static final String getViewName() {

@@ -79,6 +79,7 @@ internal class PhotoViewerRepositoryImplTest {
             assertEquals(true, result.items[0].isIncoming)
             assertEquals(
                 PhotoViewerItem(
+                    partId = "part-2",
                     contentUri = Uri.parse("content://example/content/2?updated=true"),
                     contentType = IMAGE_JPEG,
                     isIncoming = false,
@@ -93,7 +94,7 @@ internal class PhotoViewerRepositoryImplTest {
     }
 
     @Test
-    fun getPhotoViewerItems_whenInitialUriHasDuplicates_usesOccurrenceIndex() {
+    fun getPhotoViewerItems_whenInitialUriHasDuplicates_usesPartId() {
         runTest(context = testDispatcher) {
             val duplicateContentUri = "content://example/content/shared"
             val cursor = MatrixCursor(ConversationImagePartsView.PhotoViewQuery.PROJECTION).apply {
@@ -130,7 +131,7 @@ internal class PhotoViewerRepositoryImplTest {
             val result = repository.getPhotoViewerItems(
                 photosUri = photosUri,
                 initialPhotoUri = Uri.parse(duplicateContentUri),
-                initialPhotoOccurrenceIndex = 2,
+                initialPartId = "part-3",
             ).firstLoadedForTest()
 
             assertEquals(2, result.initialIndex)
@@ -387,6 +388,7 @@ internal class PhotoViewerRepositoryImplTest {
         senderDestination: String,
         receivedTimestampMillis: Long,
         status: Int,
+        partId: String? = "part-${count + 1}",
     ) {
         addRow(
             arrayOf<Any?>(
@@ -398,6 +400,7 @@ internal class PhotoViewerRepositoryImplTest {
                 senderDestination,
                 receivedTimestampMillis,
                 status,
+                partId,
             ),
         )
     }

@@ -472,19 +472,12 @@ internal class ConversationViewModel @Inject constructor(
             ?.let { MessagingContentProvider.buildConversationImagesUri(it.value) }
             ?.toString()
 
-        val initialPhotoOccurrenceIndex =
-            conversationMessagesDelegate.resolvePhotoViewerInitialOccurrenceIndex(
-                contentType = contentType,
-                partId = partId,
-                contentUri = contentUri,
-            )
-
         emitEffect(
             attachmentPreviewEffect(
                 contentType = contentType,
                 contentUri = contentUri,
                 imageCollectionUri = imageCollectionUri,
-                initialPhotoOccurrenceIndex = initialPhotoOccurrenceIndex,
+                initialPartId = partId,
             ),
         )
     }
@@ -839,7 +832,7 @@ private fun attachmentPreviewEffect(
     contentType: String,
     contentUri: String,
     imageCollectionUri: String?,
-    initialPhotoOccurrenceIndex: Int = 0,
+    initialPartId: String? = null,
 ): ConversationScreenEffect {
     return when {
         ContentType.isVCardType(contentType) -> {
@@ -851,7 +844,7 @@ private fun attachmentPreviewEffect(
                 contentType = contentType,
                 contentUri = contentUri,
                 imageCollectionUri = imageCollectionUri,
-                initialPhotoOccurrenceIndex = initialPhotoOccurrenceIndex,
+                initialPartId = initialPartId,
             )
         }
     }

@@ -5,6 +5,7 @@ import androidx.compose.runtime.Immutable
 
 @Immutable
 internal data class PhotoViewerItem(
+    val partId: String?,
     val contentUri: Uri,
     val contentType: String,
     val isIncoming: Boolean,
