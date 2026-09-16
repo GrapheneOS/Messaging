@@ -56,7 +56,10 @@ internal class ConversationMessagesDelegateBindingTest : BaseConversationMessage
             assertEquals(ConversationMessagesUiState.Loading, delegate.state.value)
             verify(exactly = 0) {
                 @Suppress("UnusedFlow")
-                conversationsRepository.getConversationMessages(conversationId = any())
+                conversationsRepository.getConversationMessages(
+                    conversationId = any(),
+                    windowSizes = any(),
+                )
             }
         }
     }
@@ -89,6 +92,7 @@ internal class ConversationMessagesDelegateBindingTest : BaseConversationMessage
                 @Suppress("UnusedFlow")
                 conversationsRepository.getConversationMessages(
                     conversationId = ConversationId("conversation-rebound"),
+                    windowSizes = any(),
                 )
             }
         }
@@ -134,13 +138,15 @@ internal class ConversationMessagesDelegateBindingTest : BaseConversationMessage
             verify(exactly = 1) {
                 @Suppress("UnusedFlow")
                 conversationsRepository.getConversationMessages(
-                    conversationId = CONVERSATION_ID
+                    conversationId = CONVERSATION_ID,
+                    windowSizes = any(),
                 )
             }
             verify(exactly = 1) {
                 @Suppress("UnusedFlow")
                 conversationsRepository.getConversationMessages(
-                    conversationId = ConversationId("conversation-2")
+                    conversationId = ConversationId("conversation-2"),
+                    windowSizes = any(),
                 )
             }
         }

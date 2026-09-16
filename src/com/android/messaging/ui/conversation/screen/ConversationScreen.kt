@@ -173,6 +173,7 @@ internal fun ConversationScreenScaffold(
             onPendingScrollPositionConsumed = onPendingScrollPositionConsumed,
             onAttachmentClick = screenModel::onMessageAttachmentClicked,
             onExternalUriClick = screenModel::onExternalUriClicked,
+            onLoadOlderMessages = screenModel::onLoadOlderMessages,
             onMessageClick = screenModel::onMessageClick,
             onMessageAvatarClick = screenModel::onMessageAvatarClick,
             onMessageDownloadClick = screenModel::onMessageDownloadClick,
@@ -183,6 +184,19 @@ internal fun ConversationScreenScaffold(
         )
     }
 
+    ConversationScreenOverlays(
+        simSheetState = simSheetState,
+        uiState = uiState,
+        screenModel = screenModel,
+    )
+}
+
+@Composable
+private fun ConversationScreenOverlays(
+    simSheetState: ConversationSimSheetState,
+    uiState: ConversationScreenScaffoldUiState,
+    screenModel: ConversationScreenModel,
+) {
     ConversationScreenDialogs(uiState = uiState, screenModel = screenModel)
 
     ConversationScreenSimSelectorSheet(

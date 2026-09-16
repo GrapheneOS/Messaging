@@ -84,6 +84,7 @@ internal interface ConversationScreenModel {
         partId: String,
     )
 
+    fun onLoadOlderMessages()
     fun onMessageClick(messageId: MessageId)
     fun onMessageAvatarClick(messageId: MessageId)
     fun onMessageDownloadClick(messageId: MessageId)
@@ -480,6 +481,10 @@ internal class ConversationViewModel @Inject constructor(
                 initialPartId = partId,
             ),
         )
+    }
+
+    override fun onLoadOlderMessages() {
+        conversationMessagesDelegate.loadOlderMessages()
     }
 
     override fun onMessageClick(messageId: MessageId) {
