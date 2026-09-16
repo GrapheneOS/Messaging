@@ -326,9 +326,9 @@ internal class ConversationsRepositoryImpl @Inject constructor(
 
             else -> {
                 MessagingContentProvider
-                    .buildConversationMessagesUri(conversationId.value)
+                    .buildConversationMessageUri(conversationId.value, messageId.value)
                     .let(::queryConversationMessages)
-                    .firstOrNull { it.messageId == messageId.value }
+                    .firstOrNull()
             }
         }
     }
