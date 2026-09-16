@@ -100,7 +100,7 @@ class ConversationLaunchStoreTest {
         val intent = Intent()
             .putExtra(UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID, CONVERSATION_ID_VALUE)
             .putExtra(UIIntents.UI_INTENT_EXTRA_DRAFT_DATA, MessageData())
-            .putExtra(UIIntents.UI_INTENT_EXTRA_MESSAGE_POSITION, 4)
+            .putExtra(UIIntents.UI_INTENT_EXTRA_MESSAGE_ID, "4")
 
         store.requests.test {
             store.submitIntent(intent = intent)
@@ -112,7 +112,7 @@ class ConversationLaunchStoreTest {
 
             assertThat(replayed.conversationId).isEqualTo(CONVERSATION_ID)
             assertNull(replayed.draftData)
-            assertNull(replayed.messagePosition)
+            assertNull(replayed.messageId)
             cancelAndIgnoreRemainingEvents()
         }
     }

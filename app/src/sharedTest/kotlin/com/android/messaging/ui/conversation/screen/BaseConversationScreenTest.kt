@@ -57,8 +57,8 @@ internal abstract class BaseConversationScreenTest {
         onPendingDraftConsumed: () -> Unit = {},
         onPendingSelfParticipantIdConsumed: () -> Unit = {},
         onPendingStartupAttachmentConsumed: () -> Unit = {},
-        pendingScrollPosition: Int? = null,
-        onPendingScrollPositionConsumed: () -> Unit = {},
+        pendingScrollMessageId: MessageId? = null,
+        onPendingScrollMessageIdConsumed: () -> Unit = {},
     ) {
         composeTestRule.setContent {
             val content: @Composable () -> Unit = {
@@ -76,14 +76,14 @@ internal abstract class BaseConversationScreenTest {
                     onCloseConversation = {},
                     pendingLaunchPayload = ConversationPendingLaunchPayload(
                         draft = pendingDraft,
-                        scrollPosition = pendingScrollPosition,
+                        scrollMessageId = pendingScrollMessageId,
                         selfParticipantId = ParticipantId.fromOrNull(pendingSelfParticipantId),
                         startupAttachment = pendingStartupAttachment,
                     ),
                     onPendingDraftConsumed = onPendingDraftConsumed,
                     onPendingSelfParticipantIdConsumed = onPendingSelfParticipantIdConsumed,
                     onPendingStartupAttachmentConsumed = onPendingStartupAttachmentConsumed,
-                    onPendingScrollPositionConsumed = onPendingScrollPositionConsumed,
+                    onPendingScrollMessageIdConsumed = onPendingScrollMessageIdConsumed,
                     screenModel = screenModel,
                 )
             }

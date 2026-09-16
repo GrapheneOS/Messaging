@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.entry
 
 import android.content.Intent
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.testutil.TEST_CONVERSATION_ID_VALUE as CONVERSATION_ID_VALUE
@@ -66,7 +67,7 @@ class ConversationLaunchRequestIntentTest {
             .putExtra(UIIntents.UI_INTENT_EXTRA_DRAFT_DATA, MessageData())
             .putExtra(UIIntents.UI_INTENT_EXTRA_ATTACHMENT_URI, ATTACHMENT_URI)
             .putExtra(UIIntents.UI_INTENT_EXTRA_ATTACHMENT_TYPE, "image/png")
-            .putExtra(UIIntents.UI_INTENT_EXTRA_MESSAGE_POSITION, 4)
+            .putExtra(UIIntents.UI_INTENT_EXTRA_MESSAGE_ID, "4")
 
         val request = intent.toConversationLaunchRequest()
 
@@ -74,7 +75,7 @@ class ConversationLaunchRequestIntentTest {
         assertNotNull(request.draftData)
         assertThat(request.startupAttachmentUri).isEqualTo(ATTACHMENT_URI)
         assertThat(request.startupAttachmentType).isEqualTo("image/png")
-        assertThat(request.messagePosition).isEqualTo(4)
+        assertThat(request.messageId).isEqualTo(MessageId("4"))
     }
 
     @Test
@@ -85,7 +86,7 @@ class ConversationLaunchRequestIntentTest {
         assertNull(request.draftData)
         assertNull(request.startupAttachmentUri)
         assertNull(request.startupAttachmentType)
-        assertNull(request.messagePosition)
+        assertNull(request.messageId)
     }
 
     @Test
@@ -101,30 +102,16 @@ class ConversationLaunchRequestIntentTest {
     }
 
     @Test
-    fun toConversationLaunchRequest_withNegativeMessagePosition_mapsItToNull() {
-        val intent = Intent().putExtra(UIIntents.UI_INTENT_EXTRA_MESSAGE_POSITION, -1)
-
-        assertNull(intent.toConversationLaunchRequest().messagePosition)
-    }
-
-    @Test
-    fun toConversationLaunchRequest_withFirstMessagePosition_keepsTheBoundaryValue() {
-        val intent = Intent().putExtra(UIIntents.UI_INTENT_EXTRA_MESSAGE_POSITION, 0)
-
-        assertThat(intent.toConversationLaunchRequest().messagePosition).isEqualTo(0)
-    }
-
-    @Test
     fun toConversationLaunchRequest_stripsTheOneShotExtrasFromTheIntent() {
         val intent = Intent()
             .putExtra(UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID, CONVERSATION_ID_VALUE)
             .putExtra(UIIntents.UI_INTENT_EXTRA_DRAFT_DATA, MessageData())
-            .putExtra(UIIntents.UI_INTENT_EXTRA_MESSAGE_POSITION, 4)
+            .putExtra(UIIntents.UI_INTENT_EXTRA_MESSAGE_ID, "4")
 
         intent.toConversationLaunchRequest()
 
         assertFalse(intent.hasExtra(UIIntents.UI_INTENT_EXTRA_DRAFT_DATA))
-        assertFalse(intent.hasExtra(UIIntents.UI_INTENT_EXTRA_MESSAGE_POSITION))
+        assertFalse(intent.hasExtra(UIIntents.UI_INTENT_EXTRA_MESSAGE_ID))
         assertTrue(intent.hasExtra(UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID))
     }
 

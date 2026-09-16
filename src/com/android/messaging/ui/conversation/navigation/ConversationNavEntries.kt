@@ -127,8 +127,8 @@ private fun ConversationRoute(
         onPendingDraftConsumed = {
             entryModel.onDraftPayloadConsumed(conversationId = conversationId)
         },
-        onPendingScrollPositionConsumed = {
-            entryModel.onScrollPositionConsumed(conversationId = conversationId)
+        onPendingScrollMessageIdConsumed = {
+            entryModel.onScrollMessageIdConsumed(conversationId = conversationId)
         },
         onPendingSelfParticipantIdConsumed = {
             entryModel.onPendingSelfParticipantIdConsumed(conversationId = conversationId)
@@ -205,7 +205,7 @@ private fun pendingLaunchPayloadForConversation(
 
     return ConversationPendingLaunchPayload(
         draft = entryUiState.pendingDraft,
-        scrollPosition = entryUiState.pendingScrollPosition,
+        scrollMessageId = entryUiState.pendingScrollMessageId,
         selfParticipantId = entryUiState.pendingSelfParticipantId,
         startupAttachment = entryUiState.pendingStartupAttachment,
     )

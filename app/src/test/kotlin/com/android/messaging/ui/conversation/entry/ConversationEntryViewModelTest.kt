@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.entry
 import androidx.lifecycle.SavedStateHandle
 import com.android.messaging.data.conversation.mapper.ConversationMessageDataDraftMapper
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.datamodel.data.MessageData
@@ -46,7 +47,7 @@ internal class ConversationEntryViewModelTest {
                         draftData = draftData,
                         startupAttachmentUri = "content://media/1",
                         startupAttachmentType = "image/png",
-                        messagePosition = 12,
+                        messageId = MessageId("12"),
                     ),
                 )
                 advanceUntilIdle()
@@ -55,7 +56,7 @@ internal class ConversationEntryViewModelTest {
                     ConversationEntryUiState(
                         conversationId = CONVERSATION_ID,
                         pendingDraft = mappedDraft,
-                        pendingScrollPosition = 12,
+                        pendingScrollMessageId = MessageId("12"),
                         pendingStartupAttachment = ConversationEntryStartupAttachment(
                             contentType = "image/png",
                             contentUri = "content://media/1",
@@ -128,7 +129,7 @@ internal class ConversationEntryViewModelTest {
                     draftData = mockk(),
                     startupAttachmentUri = "content://media/1",
                     startupAttachmentType = "image/png",
-                    messagePosition = 3,
+                    messageId = MessageId("3"),
                 ),
             )
             advanceUntilIdle()
@@ -138,7 +139,7 @@ internal class ConversationEntryViewModelTest {
             )
 
             viewModel.onDraftPayloadConsumed(conversationId = ConversationId("other"))
-            viewModel.onScrollPositionConsumed(conversationId = ConversationId("other"))
+            viewModel.onScrollMessageIdConsumed(conversationId = ConversationId("other"))
             viewModel.onStartupAttachmentConsumed(conversationId = ConversationId("other"))
             viewModel.onPendingSelfParticipantIdConsumed(conversationId = ConversationId("other"))
 
@@ -146,7 +147,7 @@ internal class ConversationEntryViewModelTest {
                 ConversationDraft(messageText = "Mapped"),
                 viewModel.uiState.value.pendingDraft,
             )
-            assertEquals(3, viewModel.uiState.value.pendingScrollPosition)
+            assertEquals(MessageId("3"), viewModel.uiState.value.pendingScrollMessageId)
             assertThat(viewModel.uiState.value.pendingSelfParticipantId).isEqualTo(
                 ParticipantId("self-1"),
             )
@@ -159,12 +160,12 @@ internal class ConversationEntryViewModelTest {
             )
 
             viewModel.onDraftPayloadConsumed(conversationId = CONVERSATION_ID)
-            viewModel.onScrollPositionConsumed(conversationId = CONVERSATION_ID)
+            viewModel.onScrollMessageIdConsumed(conversationId = CONVERSATION_ID)
             viewModel.onStartupAttachmentConsumed(conversationId = CONVERSATION_ID)
             viewModel.onPendingSelfParticipantIdConsumed(conversationId = CONVERSATION_ID)
 
             assertNull(viewModel.uiState.value.pendingDraft)
-            assertNull(viewModel.uiState.value.pendingScrollPosition)
+            assertNull(viewModel.uiState.value.pendingScrollMessageId)
             assertNull(viewModel.uiState.value.pendingSelfParticipantId)
             assertNull(viewModel.uiState.value.pendingStartupAttachment)
         }
@@ -190,7 +191,7 @@ internal class ConversationEntryViewModelTest {
                     draftData = draftData,
                     startupAttachmentUri = "content://media/1",
                     startupAttachmentType = "image/png",
-                    messagePosition = 12,
+                    messageId = MessageId("12"),
                 ),
             )
             advanceUntilIdle()
@@ -206,7 +207,7 @@ internal class ConversationEntryViewModelTest {
                 ConversationEntryUiState(
                     conversationId = CONVERSATION_ID,
                     pendingDraft = mappedDraft,
-                    pendingScrollPosition = 12,
+                    pendingScrollMessageId = MessageId("12"),
                     pendingStartupAttachment = ConversationEntryStartupAttachment(
                         contentType = "image/png",
                         contentUri = "content://media/1",
