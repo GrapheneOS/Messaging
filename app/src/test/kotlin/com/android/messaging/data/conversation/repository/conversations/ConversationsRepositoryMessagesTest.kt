@@ -9,19 +9,24 @@ import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.datamodel.data.MessageData
-import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -30,13 +35,17 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
     @Test
     fun getConversationMessages_registersAndUnregistersObserverForCollection() {
         runTest(
-            context = mainDispatcherRule.testDispatcher
+            context = mainDispatcherRule.testDispatcher,
         ) {
             val registeredObservers = mutableListOf<ContentObserver>()
             val capturedProjections = mutableListOf<Array<String>?>()
             val repository = createRepository()
             val expectedUri = MessagingContentProvider.buildConversationMessagesUri(
-                CONVERSATION_ID.value
+                CONVERSATION_ID.value,
+            )
+            val expectedQueryUri = MessagingContentProvider.buildConversationMessagesUri(
+                CONVERSATION_ID.value,
+                TEST_WINDOW_SIZE,
             )
 
             stubObserverRegistration(
@@ -44,13 +53,16 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
                 expectedUri = expectedUri,
             )
             stubQuery(
-                expectedUri = expectedUri,
+                expectedUri = expectedQueryUri,
                 capturedProjections = capturedProjections,
                 result = createConversationMessagesCursor(rows = emptyList()),
             )
 
-            repository.getConversationMessages(conversationId = CONVERSATION_ID).test {
-                assertTrue(awaitItem().isEmpty())
+            repository.getConversationMessages(
+                conversationId = CONVERSATION_ID,
+                windowSizes = flowOf(TEST_WINDOW_SIZE),
+            ).test {
+                assertTrue(awaitItem().messages.isEmpty())
                 cancelAndIgnoreRemainingEvents()
             }
 
@@ -74,13 +86,17 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
     @Test
     fun getConversationMessages_emitsMessagesInUiOrderWithLegacyClusteringRules() {
         runTest(
-            context = mainDispatcherRule.testDispatcher
+            context = mainDispatcherRule.testDispatcher,
         ) {
             val registeredObservers = mutableListOf<ContentObserver>()
             val capturedProjections = mutableListOf<Array<String>?>()
             val repository = createRepository()
             val expectedUri = MessagingContentProvider.buildConversationMessagesUri(
-                CONVERSATION_ID.value
+                CONVERSATION_ID.value,
+            )
+            val expectedQueryUri = MessagingContentProvider.buildConversationMessagesUri(
+                CONVERSATION_ID.value,
+                TEST_WINDOW_SIZE,
             )
             val messagesInUiOrder = listOf(
                 messageRow(
@@ -146,13 +162,16 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
                 expectedUri = expectedUri,
             )
             stubQuery(
-                expectedUri = expectedUri,
+                expectedUri = expectedQueryUri,
                 capturedProjections = capturedProjections,
                 result = createConversationMessagesCursor(rows = messagesInUiOrder.asReversed()),
             )
 
-            repository.getConversationMessages(conversationId = CONVERSATION_ID).test {
-                val messages = awaitItem()
+            repository.getConversationMessages(
+                conversationId = CONVERSATION_ID,
+                windowSizes = flowOf(TEST_WINDOW_SIZE),
+            ).test {
+                val messages = awaitItem().messages
 
                 assertEquals(
                     messagesInUiOrder.map { it.messageId },
@@ -202,7 +221,7 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
                 cancelAndIgnoreRemainingEvents()
             }
 
-            verify(exactly = 1) { contentResolver.query(expectedUri, any(), null, null, null) }
+            verify(exactly = 1) { contentResolver.query(expectedQueryUri, any(), null, null, null) }
             assertEquals(
                 ConversationMessageData.getProjection().toList(),
                 capturedProjections.single()?.toList(),
@@ -213,13 +232,17 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
     @Test
     fun getConversationMessages_requeriesWhenObserverChanges() {
         runTest(
-            context = mainDispatcherRule.testDispatcher
+            context = mainDispatcherRule.testDispatcher,
         ) {
             val registeredObservers = mutableListOf<ContentObserver>()
             val capturedProjections = mutableListOf<Array<String>?>()
             val repository = createRepository()
             val expectedUri = MessagingContentProvider.buildConversationMessagesUri(
-                CONVERSATION_ID.value
+                CONVERSATION_ID.value,
+            )
+            val expectedQueryUri = MessagingContentProvider.buildConversationMessagesUri(
+                CONVERSATION_ID.value,
+                TEST_WINDOW_SIZE,
             )
             val firstMessage = messageRow(
                 messageId = "first",
@@ -244,7 +267,7 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
             )
             every {
                 contentResolver.query(
-                    expectedUri,
+                    expectedQueryUri,
                     any(),
                     null,
                     null,
@@ -261,14 +284,17 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
                 }
             }
 
-            repository.getConversationMessages(conversationId = CONVERSATION_ID).test {
-                assertEquals(listOf("first"), awaitItem().map { it.messageId })
+            repository.getConversationMessages(
+                conversationId = CONVERSATION_ID,
+                windowSizes = flowOf(TEST_WINDOW_SIZE),
+            ).test {
+                assertEquals(listOf("first"), awaitItem().messages.map { it.messageId })
 
                 registeredObservers.single().onChange(false)
 
                 assertEquals(
                     listOf("first", "second"),
-                    awaitItem().map { it.messageId },
+                    awaitItem().messages.map { it.messageId },
                 )
 
                 cancelAndIgnoreRemainingEvents()
@@ -276,7 +302,7 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
 
             verify(exactly = 2) {
                 contentResolver.query(
-                    expectedUri,
+                    expectedQueryUri,
                     any(),
                     null,
                     null,
@@ -296,13 +322,17 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
     @Test
     fun getConversationMessages_singleMessageHasNoClustering() {
         runTest(
-            context = mainDispatcherRule.testDispatcher
+            context = mainDispatcherRule.testDispatcher,
         ) {
             val registeredObservers = mutableListOf<ContentObserver>()
             val capturedProjections = mutableListOf<Array<String>?>()
             val repository = createRepository()
             val expectedUri = MessagingContentProvider.buildConversationMessagesUri(
-                CONVERSATION_ID.value
+                CONVERSATION_ID.value,
+            )
+            val expectedQueryUri = MessagingContentProvider.buildConversationMessagesUri(
+                CONVERSATION_ID.value,
+                TEST_WINDOW_SIZE,
             )
             val singleMessage = messageRow(
                 messageId = "only",
@@ -318,13 +348,16 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
                 expectedUri = expectedUri,
             )
             stubQuery(
-                expectedUri = expectedUri,
+                expectedUri = expectedQueryUri,
                 capturedProjections = capturedProjections,
                 result = createConversationMessagesCursor(rows = listOf(singleMessage)),
             )
 
-            repository.getConversationMessages(conversationId = CONVERSATION_ID).test {
-                val messages = awaitItem()
+            repository.getConversationMessages(
+                conversationId = CONVERSATION_ID,
+                windowSizes = flowOf(TEST_WINDOW_SIZE),
+            ).test {
+                val messages = awaitItem().messages
 
                 assertEquals(1, messages.size)
                 assertEquals("only", messages[0].messageId)
@@ -342,13 +375,17 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
     @Test
     fun getConversationMessages_clustersAtExactlyOneMinuteButNotOneMillisOver() {
         runTest(
-            context = mainDispatcherRule.testDispatcher
+            context = mainDispatcherRule.testDispatcher,
         ) {
             val registeredObservers = mutableListOf<ContentObserver>()
             val capturedProjections = mutableListOf<Array<String>?>()
             val repository = createRepository()
             val expectedUri = MessagingContentProvider.buildConversationMessagesUri(
-                CONVERSATION_ID.value
+                CONVERSATION_ID.value,
+            )
+            val expectedQueryUri = MessagingContentProvider.buildConversationMessagesUri(
+                CONVERSATION_ID.value,
+                TEST_WINDOW_SIZE,
             )
             val messagesInUiOrder = listOf(
                 messageRow(
@@ -382,13 +419,16 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
                 expectedUri = expectedUri,
             )
             stubQuery(
-                expectedUri = expectedUri,
+                expectedUri = expectedQueryUri,
                 capturedProjections = capturedProjections,
                 result = createConversationMessagesCursor(rows = messagesInUiOrder.asReversed()),
             )
 
-            repository.getConversationMessages(conversationId = CONVERSATION_ID).test {
-                val messages = awaitItem()
+            repository.getConversationMessages(
+                conversationId = CONVERSATION_ID,
+                windowSizes = flowOf(TEST_WINDOW_SIZE),
+            ).test {
+                val messages = awaitItem().messages
 
                 assertEquals(3, messages.size)
 
@@ -416,13 +456,17 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
     @Test
     fun getConversationMessages_doesNotClusterFailedMessageWithDeliveredNeighbours() {
         runTest(
-            context = mainDispatcherRule.testDispatcher
+            context = mainDispatcherRule.testDispatcher,
         ) {
             val registeredObservers = mutableListOf<ContentObserver>()
             val capturedProjections = mutableListOf<Array<String>?>()
             val repository = createRepository()
             val expectedUri = MessagingContentProvider.buildConversationMessagesUri(
-                CONVERSATION_ID.value
+                CONVERSATION_ID.value,
+            )
+            val expectedQueryUri = MessagingContentProvider.buildConversationMessagesUri(
+                CONVERSATION_ID.value,
+                TEST_WINDOW_SIZE,
             )
             val messagesInUiOrder = listOf(
                 messageRow(
@@ -464,13 +508,16 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
                 expectedUri = expectedUri,
             )
             stubQuery(
-                expectedUri = expectedUri,
+                expectedUri = expectedQueryUri,
                 capturedProjections = capturedProjections,
                 result = createConversationMessagesCursor(rows = messagesInUiOrder.asReversed()),
             )
 
-            repository.getConversationMessages(conversationId = CONVERSATION_ID).test {
-                val messages = awaitItem()
+            repository.getConversationMessages(
+                conversationId = CONVERSATION_ID,
+                windowSizes = flowOf(TEST_WINDOW_SIZE),
+            ).test {
+                val messages = awaitItem().messages
 
                 assertEquals(
                     messagesInUiOrder.map { it.messageId },
@@ -509,13 +556,17 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
     @Test
     fun getConversationMessages_doesNotClusterConsecutiveFailedMessages() {
         runTest(
-            context = mainDispatcherRule.testDispatcher
+            context = mainDispatcherRule.testDispatcher,
         ) {
             val registeredObservers = mutableListOf<ContentObserver>()
             val capturedProjections = mutableListOf<Array<String>?>()
             val repository = createRepository()
             val expectedUri = MessagingContentProvider.buildConversationMessagesUri(
-                CONVERSATION_ID.value
+                CONVERSATION_ID.value,
+            )
+            val expectedQueryUri = MessagingContentProvider.buildConversationMessagesUri(
+                CONVERSATION_ID.value,
+                TEST_WINDOW_SIZE,
             )
             val messagesInUiOrder = listOf(
                 messageRow(
@@ -549,13 +600,16 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
                 expectedUri = expectedUri,
             )
             stubQuery(
-                expectedUri = expectedUri,
+                expectedUri = expectedQueryUri,
                 capturedProjections = capturedProjections,
                 result = createConversationMessagesCursor(rows = messagesInUiOrder.asReversed()),
             )
 
-            repository.getConversationMessages(conversationId = CONVERSATION_ID).test {
-                val messages = awaitItem()
+            repository.getConversationMessages(
+                conversationId = CONVERSATION_ID,
+                windowSizes = flowOf(TEST_WINDOW_SIZE),
+            ).test {
+                val messages = awaitItem().messages
 
                 assertEquals(3, messages.size)
 
@@ -577,13 +631,17 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
     @Test
     fun getConversationMessages_stillClustersOutgoingMessagesWithDifferentSuccessStatuses() {
         runTest(
-            context = mainDispatcherRule.testDispatcher
+            context = mainDispatcherRule.testDispatcher,
         ) {
             val registeredObservers = mutableListOf<ContentObserver>()
             val capturedProjections = mutableListOf<Array<String>?>()
             val repository = createRepository()
             val expectedUri = MessagingContentProvider.buildConversationMessagesUri(
-                CONVERSATION_ID.value
+                CONVERSATION_ID.value,
+            )
+            val expectedQueryUri = MessagingContentProvider.buildConversationMessagesUri(
+                CONVERSATION_ID.value,
+                TEST_WINDOW_SIZE,
             )
             val messagesInUiOrder = listOf(
                 messageRow(
@@ -617,13 +675,16 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
                 expectedUri = expectedUri,
             )
             stubQuery(
-                expectedUri = expectedUri,
+                expectedUri = expectedQueryUri,
                 capturedProjections = capturedProjections,
                 result = createConversationMessagesCursor(rows = messagesInUiOrder.asReversed()),
             )
 
-            repository.getConversationMessages(conversationId = CONVERSATION_ID).test {
-                val messages = awaitItem()
+            repository.getConversationMessages(
+                conversationId = CONVERSATION_ID,
+                windowSizes = flowOf(TEST_WINDOW_SIZE),
+            ).test {
+                val messages = awaitItem().messages
 
                 assertEquals(3, messages.size)
 
@@ -655,13 +716,17 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
     @Test
     fun getConversationMessages_returnsEmptyListWhenQueryReturnsNull() {
         runTest(
-            context = mainDispatcherRule.testDispatcher
+            context = mainDispatcherRule.testDispatcher,
         ) {
             val registeredObservers = mutableListOf<ContentObserver>()
             val capturedProjections = mutableListOf<Array<String>?>()
             val repository = createRepository()
             val expectedUri = MessagingContentProvider.buildConversationMessagesUri(
-                CONVERSATION_ID.value
+                CONVERSATION_ID.value,
+            )
+            val expectedQueryUri = MessagingContentProvider.buildConversationMessagesUri(
+                CONVERSATION_ID.value,
+                TEST_WINDOW_SIZE,
             )
 
             stubObserverRegistration(
@@ -669,13 +734,16 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
                 expectedUri = expectedUri,
             )
             stubQuery(
-                expectedUri = expectedUri,
+                expectedUri = expectedQueryUri,
                 capturedProjections = capturedProjections,
                 result = null,
             )
 
-            repository.getConversationMessages(conversationId = CONVERSATION_ID).test {
-                assertTrue(awaitItem().isEmpty())
+            repository.getConversationMessages(
+                conversationId = CONVERSATION_ID,
+                windowSizes = flowOf(TEST_WINDOW_SIZE),
+            ).test {
+                assertTrue(awaitItem().messages.isEmpty())
                 cancelAndIgnoreRemainingEvents()
             }
 
@@ -686,7 +754,240 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
         }
     }
 
-    private fun createConversationMessagesCursor(rows: List<TestMessageRow>): Cursor {
+    @Test
+    fun getConversationMessages_reportsMoreWhenTheWindowIsFull() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher,
+        ) {
+            val registeredObservers = mutableListOf<ContentObserver>()
+            val capturedProjections = mutableListOf<Array<String>?>()
+            val repository = createRepository()
+            val expectedUri = MessagingContentProvider.buildConversationMessagesUri(
+                CONVERSATION_ID.value,
+            )
+            val expectedQueryUri = MessagingContentProvider.buildConversationMessagesUri(
+                CONVERSATION_ID.value,
+                WINDOW_SIZE_OF_TWO,
+            )
+
+            stubObserverRegistration(
+                registeredObservers = registeredObservers,
+                expectedUri = expectedUri,
+            )
+            stubQuery(
+                expectedUri = expectedQueryUri,
+                capturedProjections = capturedProjections,
+                result = createConversationMessagesCursor(
+                    rows = listOf(
+                        messageRow(
+                            messageId = "newest",
+                            participantId = "participant-a",
+                            selfParticipantId = "self-1",
+                            receivedTimestamp = 2_000L,
+                            status = MessageData.BUGLE_STATUS_INCOMING_COMPLETE,
+                            text = "Newest",
+                        ),
+                        messageRow(
+                            messageId = "older",
+                            participantId = "participant-a",
+                            selfParticipantId = "self-1",
+                            receivedTimestamp = 1_000L,
+                            status = MessageData.BUGLE_STATUS_INCOMING_COMPLETE,
+                            text = "Older",
+                        ),
+                    ),
+                ),
+            )
+
+            repository.getConversationMessages(
+                conversationId = CONVERSATION_ID,
+                windowSizes = flowOf(WINDOW_SIZE_OF_TWO),
+            ).test {
+                assertTrue(awaitItem().hasMore)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    @Test
+    fun getConversationMessages_reportsNoMoreWhenTheWindowIsNotFull() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher,
+        ) {
+            val registeredObservers = mutableListOf<ContentObserver>()
+            val capturedProjections = mutableListOf<Array<String>?>()
+            val repository = createRepository()
+            val expectedUri = MessagingContentProvider.buildConversationMessagesUri(
+                CONVERSATION_ID.value,
+            )
+            val expectedQueryUri = MessagingContentProvider.buildConversationMessagesUri(
+                CONVERSATION_ID.value,
+                WINDOW_SIZE_OF_TWO,
+            )
+
+            stubObserverRegistration(
+                registeredObservers = registeredObservers,
+                expectedUri = expectedUri,
+            )
+            stubQuery(
+                expectedUri = expectedQueryUri,
+                capturedProjections = capturedProjections,
+                result = createConversationMessagesCursor(
+                    rows = listOf(
+                        messageRow(
+                            messageId = "only",
+                            participantId = "participant-a",
+                            selfParticipantId = "self-1",
+                            receivedTimestamp = 1_000L,
+                            status = MessageData.BUGLE_STATUS_INCOMING_COMPLETE,
+                            text = "Only",
+                        ),
+                    ),
+                ),
+            )
+
+            repository.getConversationMessages(
+                conversationId = CONVERSATION_ID,
+                windowSizes = flowOf(WINDOW_SIZE_OF_TWO),
+            ).test {
+                assertEquals(false, awaitItem().hasMore)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    @Test
+    fun getConversationMessages_requeriesWithTheLargerWindowWhenItGrows() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher,
+        ) {
+            val registeredObservers = mutableListOf<ContentObserver>()
+            val capturedProjections = mutableListOf<Array<String>?>()
+            val repository = createRepository()
+            val expectedUri = MessagingContentProvider.buildConversationMessagesUri(
+                CONVERSATION_ID.value,
+            )
+            val newestMessage = messageRow(
+                messageId = "newest",
+                participantId = "participant-a",
+                selfParticipantId = "self-1",
+                receivedTimestamp = 2_000L,
+                status = MessageData.BUGLE_STATUS_INCOMING_COMPLETE,
+                text = "Newest",
+            )
+            val olderMessage = messageRow(
+                messageId = "older",
+                participantId = "participant-a",
+                selfParticipantId = "self-1",
+                receivedTimestamp = 1_000L,
+                status = MessageData.BUGLE_STATUS_INCOMING_COMPLETE,
+                text = "Older",
+            )
+            val windowSizes = MutableStateFlow(value = 1)
+
+            stubObserverRegistration(
+                registeredObservers = registeredObservers,
+                expectedUri = expectedUri,
+            )
+            stubQuery(
+                expectedUri = MessagingContentProvider.buildConversationMessagesUri(
+                    CONVERSATION_ID.value,
+                    1,
+                ),
+                capturedProjections = capturedProjections,
+                result = createConversationMessagesCursor(rows = listOf(newestMessage)),
+            )
+            stubQuery(
+                expectedUri = MessagingContentProvider.buildConversationMessagesUri(
+                    CONVERSATION_ID.value,
+                    WINDOW_SIZE_OF_TWO,
+                ),
+                capturedProjections = capturedProjections,
+                result = createConversationMessagesCursor(
+                    rows = listOf(newestMessage, olderMessage),
+                ),
+            )
+
+            repository.getConversationMessages(
+                conversationId = CONVERSATION_ID,
+                windowSizes = windowSizes,
+            ).test {
+                assertEquals(listOf("newest"), awaitItem().messages.map { it.messageId })
+
+                windowSizes.value = WINDOW_SIZE_OF_TWO
+
+                // The query is newest first and the repository walks the cursor backwards, so the
+                // window reaches the ui oldest first.
+                assertEquals(
+                    listOf("older", "newest"),
+                    awaitItem().messages.map { it.messageId },
+                )
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    @Test
+    fun getConversationMessages_whenTheCollectorLeavesMidWalk_stopsWalkingTheCursor() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher,
+        ) {
+            val repository = createRepository()
+            var cursorMoves = 0
+            var collection: Job? = null
+            val cursor = createConversationMessagesCursor(
+                rows = List(ROW_COUNT) { index ->
+                    messageRow(
+                        messageId = "message-$index",
+                        participantId = "participant-1",
+                        selfParticipantId = "self-1",
+                        receivedTimestamp = index.toLong(),
+                        status = MessageData.BUGLE_STATUS_INCOMING_COMPLETE,
+                        text = "message $index",
+                    )
+                },
+                onCursorMove = {
+                    cursorMoves += 1
+                    if (cursorMoves == CANCEL_AFTER_CURSOR_MOVES) {
+                        collection?.cancel()
+                    }
+                },
+            )
+
+            stubObserverRegistration(
+                registeredObservers = mutableListOf(),
+                expectedUri = MessagingContentProvider.buildConversationMessagesUri(
+                    CONVERSATION_ID.value,
+                ),
+            )
+            stubQuery(
+                expectedUri = MessagingContentProvider.buildConversationMessagesUri(
+                    CONVERSATION_ID.value,
+                    TEST_WINDOW_SIZE,
+                ),
+                capturedProjections = mutableListOf(),
+                result = cursor,
+            )
+
+            collection = backgroundScope.launch {
+                repository.getConversationMessages(
+                    conversationId = CONVERSATION_ID,
+                    windowSizes = flowOf(TEST_WINDOW_SIZE),
+                ).collect { }
+            }
+            runCurrent()
+
+            assertTrue(
+                "kept walking after the screen left: $cursorMoves moves for $ROW_COUNT rows",
+                cursorMoves < ROW_COUNT,
+            )
+        }
+    }
+
+    private fun createConversationMessagesCursor(
+        rows: List<TestMessageRow>,
+        onCursorMove: () -> Unit = {},
+    ): Cursor {
         val projection = ConversationMessageData.getProjection()
         val rowsByColumn = rows.map { it.toColumnValues() }
         var position = -1
@@ -718,6 +1019,7 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
 
                 else -> {
                     position = positionToMove
+                    onCursorMove()
                     true
                 }
             }
@@ -871,5 +1173,9 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
 
     private companion object {
         private const val TEXT_CONTENT_TYPE = "text/plain"
+        private const val TEST_WINDOW_SIZE = 500
+        private const val WINDOW_SIZE_OF_TWO = 2
+        private const val ROW_COUNT = 10
+        private const val CANCEL_AFTER_CURSOR_MOVES = 2
     }
 }

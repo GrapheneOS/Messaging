@@ -3,7 +3,6 @@ package com.android.messaging.ui.conversation.messages.delegate.conversationmess
 import app.cash.turbine.test
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.datamodel.data.ConversationMessageData
-import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagesUiState
 import io.mockk.verify
 import kotlinx.collections.immutable.persistentListOf
@@ -17,6 +16,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -56,7 +56,10 @@ internal class ConversationMessagesDelegateBindingTest : BaseConversationMessage
             assertEquals(ConversationMessagesUiState.Loading, delegate.state.value)
             verify(exactly = 0) {
                 @Suppress("UnusedFlow")
-                conversationsRepository.getConversationMessages(conversationId = any())
+                conversationsRepository.getConversationMessages(
+                    conversationId = any(),
+                    windowSizes = any(),
+                )
             }
         }
     }
@@ -89,6 +92,7 @@ internal class ConversationMessagesDelegateBindingTest : BaseConversationMessage
                 @Suppress("UnusedFlow")
                 conversationsRepository.getConversationMessages(
                     conversationId = ConversationId("conversation-rebound"),
+                    windowSizes = any(),
                 )
             }
         }
@@ -134,13 +138,15 @@ internal class ConversationMessagesDelegateBindingTest : BaseConversationMessage
             verify(exactly = 1) {
                 @Suppress("UnusedFlow")
                 conversationsRepository.getConversationMessages(
-                    conversationId = CONVERSATION_ID
+                    conversationId = CONVERSATION_ID,
+                    windowSizes = any(),
                 )
             }
             verify(exactly = 1) {
                 @Suppress("UnusedFlow")
                 conversationsRepository.getConversationMessages(
-                    conversationId = ConversationId("conversation-2")
+                    conversationId = ConversationId("conversation-2"),
+                    windowSizes = any(),
                 )
             }
         }

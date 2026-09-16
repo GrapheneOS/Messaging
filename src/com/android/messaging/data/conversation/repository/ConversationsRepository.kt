@@ -9,6 +9,7 @@ import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetailsData
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetailsResult
+import com.android.messaging.data.conversation.model.message.ConversationMessagesWindow
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
 import com.android.messaging.data.conversation.model.send.ConversationSendData
@@ -34,15 +35,18 @@ import com.android.messaging.util.db.ReversedCursor
 import com.android.messaging.util.db.ext.getInt
 import com.android.messaging.util.db.ext.getLong
 import com.android.messaging.util.db.ext.getStringOrEmpty
-import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 internal interface ConversationsRepository {
     fun getConversationMetadata(conversationId: ConversationId): Flow<ConversationMetadata?>
@@ -51,7 +55,14 @@ internal interface ConversationsRepository {
         conversationId: ConversationId,
     ): ConversationMetadata?
 
-    fun getConversationMessages(conversationId: ConversationId): Flow<List<ConversationMessageData>>
+    /**
+     * Newest-first window over a conversation, re-queried whenever the conversation changes or
+     * [windowSizes] asks for a larger window.
+     */
+    fun getConversationMessages(
+        conversationId: ConversationId,
+        windowSizes: Flow<Int>,
+    ): Flow<ConversationMessagesWindow>
 
     suspend fun getConversationSendData(
         conversationId: ConversationId,
@@ -133,14 +144,28 @@ internal class ConversationsRepositoryImpl @Inject constructor(
 
     override fun getConversationMessages(
         conversationId: ConversationId,
-    ): Flow<List<ConversationMessageData>> {
-        val uri = MessagingContentProvider.buildConversationMessagesUri(conversationId.value)
+        windowSizes: Flow<Int>,
+    ): Flow<ConversationMessagesWindow> {
+        val notifyUri = MessagingContentProvider.buildConversationMessagesUri(conversationId.value)
 
-        return observeUri(uri = uri)
+        return combine(
+            observeUri(uri = notifyUri),
+            windowSizes,
+        ) { _, windowSize -> windowSize }
             .flowOn(defaultDispatcher)
             .conflate()
-            .map {
-                queryConversationMessages(uri = uri)
+            .map { windowSize ->
+                val messages = queryConversationMessages(
+                    uri = MessagingContentProvider.buildConversationMessagesUri(
+                        conversationId.value,
+                        windowSize,
+                    ),
+                )
+
+                ConversationMessagesWindow(
+                    messages = messages,
+                    hasMore = messages.size >= windowSize,
+                )
             }
             .flowOn(messagingDbDispatcher)
     }
@@ -317,7 +342,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun getConversationMessageData(
+    private suspend fun getConversationMessageData(
         conversationId: ConversationId,
         messageId: MessageId,
     ): ConversationMessageData? {
@@ -327,7 +352,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
             else -> {
                 MessagingContentProvider
                     .buildConversationMessageUri(conversationId.value, messageId.value)
-                    .let(::queryConversationMessages)
+                    .let { uri -> queryConversationMessages(uri = uri) }
                     .firstOrNull()
             }
         }
@@ -391,7 +416,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
             }
     }
 
-    private fun loadMessageDetailsData(
+    private suspend fun loadMessageDetailsData(
         conversationId: ConversationId,
         messageId: MessageId,
     ): ConversationMessageDetailsData? {
@@ -471,7 +496,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
             }
     }
 
-    private fun queryConversationMessages(uri: Uri): List<ConversationMessageData> {
+    private suspend fun queryConversationMessages(uri: Uri): List<ConversationMessageData> {
         return contentResolver
             .query(
                 uri,
@@ -485,6 +510,8 @@ internal class ConversationsRepositoryImpl @Inject constructor(
 
                 buildList(capacity = rawCursor.count) {
                     while (reversedCursor.moveToNext()) {
+                        currentCoroutineContext().ensureActive()
+
                         add(ConversationMessageData().apply { bind(reversedCursor) })
                     }
                 }

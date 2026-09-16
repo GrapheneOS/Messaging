@@ -9,7 +9,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.geometry.Rect as ComposeRect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
@@ -24,6 +23,7 @@ import com.android.messaging.ui.conversation.metadata.ui.ConversationTopAppBar
 import com.android.messaging.ui.conversation.screen.model.ConversationPendingLaunchPayload
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaffoldUiState
 import com.android.messaging.ui.photoviewer.model.PhotoViewerLaunchRequest
+import androidx.compose.ui.geometry.Rect as ComposeRect
 
 @Composable
 internal fun ConversationScreen(
@@ -173,6 +173,7 @@ internal fun ConversationScreenScaffold(
             onPendingScrollPositionConsumed = onPendingScrollPositionConsumed,
             onAttachmentClick = screenModel::onMessageAttachmentClicked,
             onExternalUriClick = screenModel::onExternalUriClicked,
+            onLoadOlderMessages = screenModel::onLoadOlderMessages,
             onMessageClick = screenModel::onMessageClick,
             onMessageAvatarClick = screenModel::onMessageAvatarClick,
             onMessageDownloadClick = screenModel::onMessageDownloadClick,
@@ -183,6 +184,19 @@ internal fun ConversationScreenScaffold(
         )
     }
 
+    ConversationScreenOverlays(
+        simSheetState = simSheetState,
+        uiState = uiState,
+        screenModel = screenModel,
+    )
+}
+
+@Composable
+private fun ConversationScreenOverlays(
+    simSheetState: ConversationSimSheetState,
+    uiState: ConversationScreenScaffoldUiState,
+    screenModel: ConversationScreenModel,
+) {
     ConversationScreenDialogs(uiState = uiState, screenModel = screenModel)
 
     ConversationScreenSimSelectorSheet(
