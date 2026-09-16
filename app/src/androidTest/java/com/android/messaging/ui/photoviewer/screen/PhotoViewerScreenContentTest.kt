@@ -619,6 +619,7 @@ internal class PhotoViewerScreenContentTest {
         isDraft: Boolean = false,
     ): PhotoViewerItem {
         return PhotoViewerItem(
+            partId = "part-$index",
             contentUri = photoViewerImageUri(),
             contentType = IMAGE_JPEG,
             isIncoming = isIncoming,

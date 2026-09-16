@@ -7,7 +7,6 @@ import android.content.Intent
 import android.content.res.Resources
 import android.net.Uri
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.geometry.Rect as ComposeRect
 import com.android.messaging.Factory
 import com.android.messaging.R
 import com.android.messaging.ui.UIIntents
@@ -25,7 +24,6 @@ import io.mockk.runs
 import io.mockk.slot
 import io.mockk.unmockkAll
 import io.mockk.verify
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -34,8 +32,8 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import androidx.compose.ui.geometry.Rect as ComposeRect
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 internal class ConversationAttachmentPreviewEffectTest {
 
@@ -96,7 +94,7 @@ internal class ConversationAttachmentPreviewEffectTest {
                             right = 7,
                             bottom = 9,
                         ),
-                        initialPhotoOccurrenceIndex = 0,
+                        initialPartId = null,
                     ),
                 ),
                 launchRequests,

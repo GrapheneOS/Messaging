@@ -50,7 +50,7 @@ internal suspend fun openAttachmentPreviewEffect(
             initialPhotoUri = effect.contentUri,
             photosUri = imageCollectionUri,
             sourceBounds = hostBounds.toPhotoViewerSourceBounds(),
-            initialPhotoOccurrenceIndex = effect.initialPhotoOccurrenceIndex,
+            initialPartId = effect.initialPartId,
         ),
     )
 }

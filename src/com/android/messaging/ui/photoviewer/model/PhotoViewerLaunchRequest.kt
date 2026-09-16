@@ -9,14 +9,14 @@ internal data class PhotoViewerLaunchRequest(
     val initialPhotoUri: String,
     val photosUri: String,
     val sourceBounds: PhotoViewerSourceBounds,
-    val initialPhotoOccurrenceIndex: Int = 0,
+    val initialPartId: String? = null,
 )
 
 @Immutable
 internal data class PhotoViewerLaunchRequestKey(
     val initialPhotoUri: String,
     val photosUri: String,
-    val initialPhotoOccurrenceIndex: Int,
+    val initialPartId: String?,
 )
 
 internal fun photoViewerLaunchRequestKey(
@@ -25,6 +25,6 @@ internal fun photoViewerLaunchRequestKey(
     return PhotoViewerLaunchRequestKey(
         initialPhotoUri = launchRequest.initialPhotoUri,
         photosUri = launchRequest.photosUri,
-        initialPhotoOccurrenceIndex = launchRequest.initialPhotoOccurrenceIndex,
+        initialPartId = launchRequest.initialPartId,
     )
 }

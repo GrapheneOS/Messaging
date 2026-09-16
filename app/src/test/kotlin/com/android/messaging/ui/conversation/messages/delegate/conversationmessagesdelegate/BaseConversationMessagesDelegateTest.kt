@@ -10,7 +10,6 @@ import com.android.messaging.data.conversation.repository.ConversationVCardMetad
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.domain.media.usecase.ResolveAudioDurationMillis
-import com.android.messaging.domain.photoviewer.usecase.ResolveConversationPhotoViewerInitialOccurrenceIndex
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.attachment.mapper.ConversationVCardAttachmentUiModelMapper
@@ -50,8 +49,6 @@ internal abstract class BaseConversationMessagesDelegateTest {
             conversationsRepository = conversationsRepository,
             appSettingsRepository = appSettingsRepository,
             resolveAudioDurationMillis = resolveAudioDurationMillis,
-            resolveInitialPhotoOccurrenceIndex =
-                mockk<ResolveConversationPhotoViewerInitialOccurrenceIndex>(relaxed = true),
             conversationMessageUiModelMapper = messageUiModelMapper,
             conversationVCardAttachmentUiModelMapper = vCardUiModelMapper,
             conversationVCardMetadataRepository = vCardMetadataRepository,
