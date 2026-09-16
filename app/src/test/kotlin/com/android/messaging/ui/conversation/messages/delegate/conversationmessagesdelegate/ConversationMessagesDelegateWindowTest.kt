@@ -4,6 +4,7 @@ import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.message.ConversationMessagesWindow
 import com.android.messaging.datamodel.data.ConversationMessageData
+import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagesUiState
 import io.mockk.every
 import io.mockk.mockk
@@ -21,7 +22,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)

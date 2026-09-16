@@ -14,6 +14,7 @@ import com.android.messaging.data.conversation.repository.ConversationsRepositor
 import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.domain.media.usecase.ResolveAudioDurationMillis
 import com.android.messaging.testutil.MainDispatcherRule
+import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.attachment.mapper.ConversationVCardAttachmentUiModelMapper
 import com.android.messaging.ui.conversation.attachment.model.ConversationVCardAttachmentUiModel
 import com.android.messaging.ui.conversation.messages.delegate.ConversationMessagesDelegateImpl
@@ -30,7 +31,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.TestScope
 import org.junit.Rule
-import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 
 internal abstract class BaseConversationMessagesDelegateTest {
 

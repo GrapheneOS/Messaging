@@ -15,6 +15,7 @@ import com.android.messaging.datamodel.data.ConversationListItemData
 import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.datamodel.data.ParticipantData
+import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.testutil.assertThat
 import com.android.messaging.testutil.createParticipantsCursor
 import com.android.messaging.testutil.participantRow
@@ -29,7 +30,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 
 @RunWith(RobolectricTestRunner::class)
 internal class ConversationsRepositoryDirectLookupTest : BaseConversationsRepositoryTest() {

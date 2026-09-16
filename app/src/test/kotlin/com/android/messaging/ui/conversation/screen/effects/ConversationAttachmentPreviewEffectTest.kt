@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.res.Resources
 import android.net.Uri
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.geometry.Rect as ComposeRect
 import com.android.messaging.Factory
 import com.android.messaging.R
 import com.android.messaging.ui.UIIntents
@@ -32,7 +33,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import androidx.compose.ui.geometry.Rect as ComposeRect
 
 @RunWith(RobolectricTestRunner::class)
 internal class ConversationAttachmentPreviewEffectTest {

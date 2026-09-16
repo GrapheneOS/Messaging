@@ -4,10 +4,15 @@ import android.os.Bundle
 import androidx.lifecycle.SavedStateHandle
 import com.android.messaging.data.conversation.model.message.ConversationMessagesWindow
 import com.android.messaging.datamodel.data.ConversationMessageData
+import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.spyk
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ExperimentalForInheritanceCoroutinesApi
@@ -24,11 +29,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.util.ReflectionHelpers
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.coroutines.CoroutineContext
-import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)

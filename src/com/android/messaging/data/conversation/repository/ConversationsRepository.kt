@@ -35,6 +35,7 @@ import com.android.messaging.util.db.ReversedCursor
 import com.android.messaging.util.db.ext.getInt
 import com.android.messaging.util.db.ext.getLong
 import com.android.messaging.util.db.ext.getStringOrEmpty
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.currentCoroutineContext
@@ -46,7 +47,6 @@ import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 internal interface ConversationsRepository {
     fun getConversationMetadata(conversationId: ConversationId): Flow<ConversationMetadata?>

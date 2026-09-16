@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.geometry.Rect as ComposeRect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
@@ -23,7 +24,6 @@ import com.android.messaging.ui.conversation.metadata.ui.ConversationTopAppBar
 import com.android.messaging.ui.conversation.screen.model.ConversationPendingLaunchPayload
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaffoldUiState
 import com.android.messaging.ui.photoviewer.model.PhotoViewerLaunchRequest
-import androidx.compose.ui.geometry.Rect as ComposeRect
 
 @Composable
 internal fun ConversationScreen(

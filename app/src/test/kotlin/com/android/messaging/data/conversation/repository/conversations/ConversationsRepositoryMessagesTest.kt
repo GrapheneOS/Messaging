@@ -9,6 +9,7 @@ import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.datamodel.data.MessageData
+import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -26,7 +27,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)

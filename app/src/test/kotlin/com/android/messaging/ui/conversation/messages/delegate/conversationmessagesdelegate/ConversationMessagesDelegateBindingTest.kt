@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.messages.delegate.conversationmess
 import app.cash.turbine.test
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.datamodel.data.ConversationMessageData
+import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagesUiState
 import io.mockk.verify
 import kotlinx.collections.immutable.persistentListOf
@@ -16,7 +17,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
