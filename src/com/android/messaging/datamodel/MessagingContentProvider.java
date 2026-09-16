@@ -72,6 +72,8 @@ public class MessagingContentProvider extends ContentProvider {
     public static final Uri CONVERSATION_MESSAGES_URI = Uri.parse(CONTENT_AUTHORITY +
             MESSAGES_QUERY + "/conversation");
 
+    private static final String QUERY_PARAMETER_MESSAGE_ID = "message_id";
+
     // Conversation participants query
     private static final String PARTICIPANTS_QUERY = "participants";
 
@@ -176,6 +178,20 @@ public class MessagingContentProvider extends ContentProvider {
         final Uri.Builder builder = CONVERSATION_MESSAGES_URI.buildUpon();
         builder.appendPath(conversationId);
         return builder.build();
+    }
+
+    /**
+     * Build a uri for a single message of a conversation. Callers after one message must not walk
+     * the whole conversation to find it.
+     */
+    public static Uri buildConversationMessageUri(
+            final String conversationId,
+            final String messageId
+    ) {
+        return buildConversationMessagesUri(conversationId)
+                .buildUpon()
+                .appendQueryParameter(QUERY_PARAMETER_MESSAGE_ID, messageId)
+                .build();
     }
 
     public static void notifyMessagesChanged(final String conversationId) {
@@ -375,12 +391,36 @@ public class MessagingContentProvider extends ContentProvider {
         return cursor;
     }
 
-    private Cursor queryConversationMessages(final String conversationId, final Uri notifyUri) {
-        final String[] queryArgs = { conversationId };
+    private Cursor queryConversationMessages(final String conversationId, final Uri uri) {
+        final String messageId = uri.getQueryParameter(QUERY_PARAMETER_MESSAGE_ID);
+        final String[] queryArgs = messageId != null
+                ? new String[] { conversationId, messageId }
+                : new String[] { conversationId };
+
         final Cursor cursor = getDatabaseWrapper().rawQuery(
-                ConversationMessageData.getConversationMessagesQuerySql(), queryArgs);
-        cursor.setNotificationUri(getContext().getContentResolver(), notifyUri);
+                getConversationMessagesSql(uri),
+                queryArgs
+        );
+        // Notifications are sent on the bare uri, so register for them on the bare uri too.
+        cursor.setNotificationUri(
+                getContext().getContentResolver(),
+                buildConversationMessagesUri(conversationId)
+        );
+
         return cursor;
+    }
+
+    /**
+     * The query a conversation messages uri asks for: one message, or the whole conversation.
+     */
+    @VisibleForTesting
+    public static String getConversationMessagesSql(final Uri uri) {
+        final String messageId = uri.getQueryParameter(QUERY_PARAMETER_MESSAGE_ID);
+        if (messageId != null) {
+            return ConversationMessageData.getConversationMessageQuerySql();
+        }
+
+        return ConversationMessageData.getConversationMessagesQuerySql();
     }
 
     @Override

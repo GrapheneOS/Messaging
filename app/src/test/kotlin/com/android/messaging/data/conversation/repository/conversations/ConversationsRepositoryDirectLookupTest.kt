@@ -15,7 +15,6 @@ import com.android.messaging.datamodel.data.ConversationListItemData
 import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.datamodel.data.ParticipantData
-import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.testutil.assertThat
 import com.android.messaging.testutil.createParticipantsCursor
 import com.android.messaging.testutil.participantRow
@@ -23,7 +22,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -31,8 +29,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 internal class ConversationsRepositoryDirectLookupTest : BaseConversationsRepositoryTest() {
 
@@ -59,7 +57,7 @@ internal class ConversationsRepositoryDirectLookupTest : BaseConversationsReposi
             context = mainDispatcherRule.testDispatcher,
         ) {
             val metadataUri = MessagingContentProvider.buildConversationMetadataUri(
-                CONVERSATION_ID.value
+                CONVERSATION_ID.value,
             )
             val participantsUri = MessagingContentProvider
                 .buildConversationParticipantsUri(CONVERSATION_ID.value)
@@ -137,7 +135,7 @@ internal class ConversationsRepositoryDirectLookupTest : BaseConversationsReposi
             context = mainDispatcherRule.testDispatcher,
         ) {
             val metadataUri = MessagingContentProvider.buildConversationMetadataUri(
-                CONVERSATION_ID.value
+                CONVERSATION_ID.value,
             )
             val participantsUri = MessagingContentProvider
                 .buildConversationParticipantsUri(CONVERSATION_ID.value)
@@ -196,8 +194,9 @@ internal class ConversationsRepositoryDirectLookupTest : BaseConversationsReposi
         runTest(
             context = mainDispatcherRule.testDispatcher,
         ) {
-            val messagesUri = MessagingContentProvider.buildConversationMessagesUri(
-                CONVERSATION_ID.value
+            val messagesUri = MessagingContentProvider.buildConversationMessageUri(
+                CONVERSATION_ID.value,
+                "message-1",
             )
             val participantsUri = MessagingContentProvider
                 .buildConversationParticipantsUri(CONVERSATION_ID.value)

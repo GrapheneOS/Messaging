@@ -647,6 +647,20 @@ public class ConversationMessageData {
                 + CONVERSATION_MESSAGES_QUERY_SQL_GROUP_BY;
     }
 
+    /**
+     * Query for a single message of a conversation, by message id. Callers that want one message
+     * must not walk the whole conversation to find it.
+     */
+    public static final String getConversationMessageQuerySql() {
+        return CONVERSATION_MESSAGES_QUERY_SQL
+                + " AND "
+                // Inject the conversation id and the message id
+                + DatabaseHelper.MESSAGES_TABLE + "." + MessageColumns.CONVERSATION_ID + "=?"
+                + " AND "
+                + DatabaseHelper.MESSAGES_TABLE + "." + MessageColumns._ID + "=?)"
+                + CONVERSATION_MESSAGES_QUERY_SQL_GROUP_BY;
+    }
+
     static final String getConversationMessageIdsQuerySql() {
         return CONVERSATION_MESSAGES_IDS_QUERY_SQL
                 + " AND "
