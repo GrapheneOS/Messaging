@@ -7,6 +7,7 @@ import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListMode
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.data.debug.DebugFeaturesProvider
+import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.domain.conversation.usecase.participant.ResolveContactAction
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveContactActionResult
 import com.android.messaging.ui.contact.model.AddContactRequest
@@ -22,6 +23,7 @@ import com.android.messaging.ui.conversationlist.model.ConversationListAvatarUiM
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
@@ -31,6 +33,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -52,6 +55,8 @@ internal class ArchivedConversationListViewModel @Inject constructor(
     uiStateMapper: ArchivedConversationListUiStateMapper,
     private val resolveContactAction: ResolveContactAction,
     debugFeaturesProvider: DebugFeaturesProvider,
+    @param:DefaultDispatcher
+    private val defaultDispatcher: CoroutineDispatcher,
 ) : ViewModel(),
     ArchivedConversationListScreenModel {
 
@@ -74,22 +79,24 @@ internal class ArchivedConversationListViewModel @Inject constructor(
             selectedConversationIds = selectedIds,
             isDebugEnabled = isDebugEnabled,
         )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(
-            stopTimeoutMillis = STATEFLOW_STOP_TIMEOUT_MILLIS,
-        ),
-        initialValue = State(),
-    )
+    }
+        .flowOn(defaultDispatcher)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(
+                stopTimeoutMillis = STATEFLOW_STOP_TIMEOUT_MILLIS,
+            ),
+            initialValue = State(),
+        )
 
     init {
         optimisticSnapshotDelegate.bind(
             scope = viewModelScope,
-            mode = ConversationListMode.Archived
+            mode = ConversationListMode.Archived,
         )
         selectionDelegate.bind(
             scope = viewModelScope,
-            snapshot = snapshot
+            snapshot = snapshot,
         )
 
         viewModelScope.launch {

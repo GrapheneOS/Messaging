@@ -261,6 +261,7 @@ class ConversationListViewModelTest {
             optimisticSnapshotDelegate = optimisticSnapshotDelegate,
             debugFeaturesProvider = debugFeaturesProvider,
             resolveContactAction = resolveContactAction,
+            defaultDispatcher = mainDispatcherRule.testDispatcher,
         )
     }
 }
