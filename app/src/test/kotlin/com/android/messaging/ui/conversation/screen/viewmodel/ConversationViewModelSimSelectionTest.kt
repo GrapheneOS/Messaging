@@ -103,14 +103,6 @@ internal class ConversationViewModelSimSelectionTest {
             ConversationMessagesUiState.Loading,
         )
         every { conversationMessagesDelegate.bind(any(), any()) } just runs
-        every {
-            conversationMessagesDelegate.resolvePhotoViewerInitialOccurrenceIndex(
-                contentType = any(),
-                partId = any(),
-                contentUri = any(),
-            )
-        } returns 0
-
         every { conversationMessageSelectionDelegate.state } returns MutableStateFlow(
             ConversationMessageSelectionUiState(),
         )
@@ -159,44 +151,6 @@ internal class ConversationViewModelSimSelectionTest {
                 selfId = any(),
             )
         } just runs
-    }
-
-    @Test
-    fun onMessageAttachmentClicked_whenImageAttachment_resolvesPhotoOccurrenceIndex() {
-        val viewModel = createViewModel()
-
-        viewModel.onMessageAttachmentClicked(
-            contentType = ContentType.IMAGE_JPEG,
-            contentUri = ATTACHMENT_URI,
-            partId = ATTACHMENT_PART_ID,
-        )
-
-        verify(exactly = 1) {
-            conversationMessagesDelegate.resolvePhotoViewerInitialOccurrenceIndex(
-                contentType = ContentType.IMAGE_JPEG,
-                partId = ATTACHMENT_PART_ID,
-                contentUri = ATTACHMENT_URI,
-            )
-        }
-    }
-
-    @Test
-    fun onMessageAttachmentClicked_whenNonImageAttachment_delegatesOccurrenceResolution() {
-        val viewModel = createViewModel()
-
-        viewModel.onMessageAttachmentClicked(
-            contentType = ContentType.VIDEO_MP4,
-            contentUri = ATTACHMENT_URI,
-            partId = ATTACHMENT_PART_ID,
-        )
-
-        verify(exactly = 1) {
-            conversationMessagesDelegate.resolvePhotoViewerInitialOccurrenceIndex(
-                contentType = ContentType.VIDEO_MP4,
-                partId = ATTACHMENT_PART_ID,
-                contentUri = ATTACHMENT_URI,
-            )
-        }
     }
 
     @Test

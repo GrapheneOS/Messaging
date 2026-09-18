@@ -62,6 +62,8 @@ private const val SEED_AUDIO_FREQUENCY_HZ = 440.0
 private const val SEED_ANIMATED_GIF_WIDTH = 96
 private const val SEED_ANIMATED_GIF_HEIGHT = 96
 
+private const val HUGE_CONVERSATION_MESSAGE_COUNT = 80_000
+
 private const val MINUTES = 60 * 1000L
 private const val HOURS = 60 * MINUTES
 private const val DAYS = 24 * HOURS
@@ -89,7 +91,7 @@ fun seedTestData(context: Context) {
 
     val (simAId, simBId) = resolveDualSimSelfIds(context = context)
 
-    val testImages = buildTestImages(context)
+    val testImages = buildTestImages()
     val testAnimatedGif = buildTestAnimatedGif()
     val testAudio = buildTestAudio()
     val testVideo = buildTestVideo(context)
@@ -282,7 +284,7 @@ fun clearSeededTestData(context: Context) {
     LogUtil.d(TAG, "Seeded test data cleared")
 }
 
-private fun buildTestImages(context: Context): List<String> {
+private fun buildTestImages(): List<String> {
     val specs = listOf(
         SeedImageSpec(
             fileId = SEED_IMAGE_1_FILE_ID,
@@ -2101,4 +2103,85 @@ private fun seedScenarioK(
     }
 
     finalizeConversation(db, convId, latestMsgId, latestTime, latestText)
+}
+
+/**
+ * Seeds a single very large conversation for large-conversation performance testing.
+ *
+ * Kept out of [seedTestData] so that the instrumented test suite, which seeds on every run, is
+ * not slowed down by it.
+ */
+fun seedHugeConversation() {
+    val db = DataModel.get().getDatabase()
+
+    val selfId = findSelfParticipantId(db) ?: run {
+        LogUtil.w(TAG, "No self participant found \u2014 open the app at least once before seeding")
+        return
+    }
+
+    db.withTransaction {
+        val victorId = upsertParticipant(
+            db,
+            "${TEST_PHONE_PREFIX}099999",
+            "Victor Voluminous",
+            "Victor",
+        )
+        seedScenarioHuge(
+            db = db,
+            selfId = selfId,
+            victorId = victorId,
+            now = System.currentTimeMillis(),
+        )
+    }
+
+    MessagingContentProvider.notifyConversationListChanged()
+    LogUtil.d(TAG, "Huge conversation seeded successfully")
+}
+
+/**
+ * 1:1 SMS thread with Victor holding [HUGE_CONVERSATION_MESSAGE_COUNT] messages, one per minute.
+ */
+private fun seedScenarioHuge(
+    db: DatabaseWrapper,
+    selfId: String,
+    victorId: String,
+    now: Long,
+) {
+    val baseTime = now - HUGE_CONVERSATION_MESSAGE_COUNT * MINUTES
+    val conversationId = createConversation(
+        db = db,
+        name = "Victor Voluminous",
+        selfId = selfId,
+        participantIds = listOf(victorId),
+        sortTimestamp = baseTime,
+    )
+
+    var latestMessageId = 0L
+    var latestTime = baseTime
+    for (index in 0 until HUGE_CONVERSATION_MESSAGE_COUNT) {
+        val isIncoming = index % 3 != 1
+        latestTime = baseTime + index * MINUTES
+        latestMessageId = insertTextMessage(
+            db = db,
+            conversationId = conversationId,
+            senderId = if (isIncoming) victorId else selfId,
+            selfId = selfId,
+            text = "Message $index of $HUGE_CONVERSATION_MESSAGE_COUNT",
+            status = when {
+                isIncoming -> MessageData.BUGLE_STATUS_INCOMING_COMPLETE
+                else -> MessageData.BUGLE_STATUS_OUTGOING_COMPLETE
+            },
+            protocol = MessageData.PROTOCOL_SMS,
+            timestamp = latestTime,
+        )
+    }
+
+    finalizeConversation(
+        db = db,
+        conversationId = conversationId,
+        latestMessageId = latestMessageId,
+        latestTimestamp = latestTime,
+        snippetText = "Message ${HUGE_CONVERSATION_MESSAGE_COUNT - 1} of " +
+            "$HUGE_CONVERSATION_MESSAGE_COUNT",
+    )
 }

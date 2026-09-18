@@ -6,19 +6,24 @@ import org.junit.Test
 class MessagePositionToDisplayIndexTest {
 
     @Test
-    fun position0_inFiveItemList_mapsToLastDisplayIndex() {
-        assertEquals(4, messagePositionToDisplayIndex(position = 0, size = 5))
+    fun position0_inFiveItemList_mapsToNewestDisplayIndex() {
+        assertEquals(0, messagePositionToDisplayIndex(position = 0, size = 5))
     }
 
     @Test
-    fun lastPosition_mapsToFirstDisplayIndex() {
-        assertEquals(0, messagePositionToDisplayIndex(position = 4, size = 5))
+    fun lastPosition_mapsToOldestDisplayIndex() {
+        assertEquals(4, messagePositionToDisplayIndex(position = 4, size = 5))
     }
 
     @Test
-    fun positionAtOrBeyondSize_clampsToZero() {
-        assertEquals(0, messagePositionToDisplayIndex(position = 5, size = 5))
-        assertEquals(0, messagePositionToDisplayIndex(position = 100, size = 5))
+    fun positionAtOrBeyondSize_clampsToLastDisplayIndex() {
+        assertEquals(4, messagePositionToDisplayIndex(position = 5, size = 5))
+        assertEquals(4, messagePositionToDisplayIndex(position = 100, size = 5))
+    }
+
+    @Test
+    fun negativePosition_clampsToZero() {
+        assertEquals(0, messagePositionToDisplayIndex(position = -1, size = 5))
     }
 
     @Test

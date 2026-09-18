@@ -9,7 +9,6 @@ import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
-import com.android.messaging.data.media.model.ConversationCapturedMedia
 import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.di.core.DefaultDispatcher
@@ -29,7 +28,9 @@ import com.android.messaging.ui.conversation.composer.model.ComposerAttachmentUi
 import com.android.messaging.ui.conversation.composer.model.ConversationComposerUiState
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryStartupAttachment
 import com.android.messaging.ui.conversation.focus.delegate.ConversationFocusDelegate
+import com.android.messaging.ui.conversation.mediapicker.delegate.ConversationMediaPickerAttachmentActions
 import com.android.messaging.ui.conversation.mediapicker.delegate.ConversationMediaPickerDelegate
+import com.android.messaging.ui.conversation.messages.delegate.ConversationMessageSelectionActions
 import com.android.messaging.ui.conversation.messages.delegate.ConversationMessageSelectionDelegate
 import com.android.messaging.ui.conversation.messages.delegate.ConversationMessagesDelegate
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagesUiState
@@ -37,7 +38,6 @@ import com.android.messaging.ui.conversation.metadata.delegate.ConversationMetad
 import com.android.messaging.ui.conversation.metadata.model.ConversationMetadataUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationAttachmentLimitWarning
 import com.android.messaging.ui.conversation.screen.model.ConversationMediaPickerOverlayUiState
-import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenNavEvent as NavEvent
@@ -57,7 +57,9 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-internal interface ConversationScreenModel {
+internal interface ConversationScreenModel :
+    ConversationMediaPickerAttachmentActions,
+    ConversationMessageSelectionActions {
     val effects: Flow<ConversationScreenEffect>
     val navigationEvents: Flow<NavEvent>
     val mediaPickerOverlayUiState: StateFlow<ConversationMediaPickerOverlayUiState>
@@ -84,12 +86,8 @@ internal interface ConversationScreenModel {
         partId: String,
     )
 
-    fun onMessageClick(messageId: MessageId)
+    fun onLoadOlderMessages()
     fun onMessageAvatarClick(messageId: MessageId)
-    fun onMessageDownloadClick(messageId: MessageId)
-    fun onMessageLongClick(messageId: MessageId)
-    fun onMessageResendClick(messageId: MessageId)
-    fun onMessageSelectionActionClick(action: ConversationMessageSelectionAction)
 
     fun onCallClick()
 
@@ -97,26 +95,17 @@ internal interface ConversationScreenModel {
 
     fun onExternalUriClicked(uri: String)
 
-    fun onPhotoPickerMediaSelected(contentUris: List<String>)
-    fun onPhotoPickerMediaDeselected(contentUris: List<String>)
-    fun onContactCardPicked(contactUri: String?)
     fun onMessageTextChanged(text: String)
     fun tryStartAddingAttachment(): Boolean
     fun onAudioRecordingStart(isLocked: Boolean)
     fun onAudioRecordingLock(): Boolean
     fun onAudioRecordingFinish()
     fun onAudioRecordingCancel()
-    fun onCapturedMediaReady(capturedMedia: ConversationCapturedMedia)
-    fun onRemovePendingAttachment(pendingAttachmentId: String)
-    fun onRemoveResolvedAttachment(contentUri: String)
     fun onUpdateAttachmentCaption(
         contentUri: String,
         captionText: String,
     )
 
-    fun dismissDeleteMessageConfirmation()
-    fun dismissMessageSelection()
-    fun confirmDeleteSelectedMessages()
     fun onSendClick()
     fun dismissAttachmentLimitWarning()
     fun sendAnywayAfterAttachmentLimitWarning()
@@ -165,7 +154,9 @@ internal class ConversationViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val resolveContactAction: ResolveContactAction,
 ) : ViewModel(),
-    ConversationScreenModel {
+    ConversationScreenModel,
+    ConversationMediaPickerAttachmentActions by conversationMediaPickerDelegate,
+    ConversationMessageSelectionActions by conversationMessageSelectionDelegate {
 
     private val conversationIdFlow: MutableStateFlow<ConversationId?> = MutableStateFlow(
         ConversationId.fromOrNull(savedStateHandle[CONVERSATION_ID_KEY]),
@@ -472,25 +463,18 @@ internal class ConversationViewModel @Inject constructor(
             ?.let { MessagingContentProvider.buildConversationImagesUri(it.value) }
             ?.toString()
 
-        val initialPhotoOccurrenceIndex =
-            conversationMessagesDelegate.resolvePhotoViewerInitialOccurrenceIndex(
-                contentType = contentType,
-                partId = partId,
-                contentUri = contentUri,
-            )
-
         emitEffect(
             attachmentPreviewEffect(
                 contentType = contentType,
                 contentUri = contentUri,
                 imageCollectionUri = imageCollectionUri,
-                initialPhotoOccurrenceIndex = initialPhotoOccurrenceIndex,
+                initialPartId = partId,
             ),
         )
     }
 
-    override fun onMessageClick(messageId: MessageId) {
-        conversationMessageSelectionDelegate.onMessageClick(messageId = messageId)
+    override fun onLoadOlderMessages() {
+        conversationMessagesDelegate.loadOlderMessages()
     }
 
     override fun onMessageAvatarClick(messageId: MessageId) {
@@ -541,22 +525,6 @@ internal class ConversationViewModel @Inject constructor(
         }
     }
 
-    override fun onMessageDownloadClick(messageId: MessageId) {
-        conversationMessageSelectionDelegate.onMessageDownloadClick(messageId = messageId)
-    }
-
-    override fun onMessageLongClick(messageId: MessageId) {
-        conversationMessageSelectionDelegate.onMessageLongClick(messageId = messageId)
-    }
-
-    override fun onMessageResendClick(messageId: MessageId) {
-        conversationMessageSelectionDelegate.onMessageResendClick(messageId = messageId)
-    }
-
-    override fun onMessageSelectionActionClick(action: ConversationMessageSelectionAction) {
-        conversationMessageSelectionDelegate.onMessageSelectionActionClick(action = action)
-    }
-
     override fun onCallClick() {
         val phoneNumber = (
             conversationMetadataDelegate.state.value as?
@@ -592,18 +560,6 @@ internal class ConversationViewModel @Inject constructor(
                 uri = uri,
             ),
         )
-    }
-
-    override fun onPhotoPickerMediaSelected(contentUris: List<String>) {
-        conversationMediaPickerDelegate.onPhotoPickerMediaSelected(contentUris = contentUris)
-    }
-
-    override fun onPhotoPickerMediaDeselected(contentUris: List<String>) {
-        conversationMediaPickerDelegate.onPhotoPickerMediaDeselected(contentUris = contentUris)
-    }
-
-    override fun onContactCardPicked(contactUri: String?) {
-        conversationMediaPickerDelegate.onContactCardPicked(contactUri = contactUri)
     }
 
     override fun onMessageTextChanged(text: String) {
@@ -656,18 +612,6 @@ internal class ConversationViewModel @Inject constructor(
         conversationAudioRecordingDelegate.cancelRecording()
     }
 
-    override fun onCapturedMediaReady(capturedMedia: ConversationCapturedMedia) {
-        conversationMediaPickerDelegate.onCapturedMediaReady(capturedMedia = capturedMedia)
-    }
-
-    override fun onRemovePendingAttachment(pendingAttachmentId: String) {
-        conversationMediaPickerDelegate.onRemovePendingAttachment(pendingAttachmentId)
-    }
-
-    override fun onRemoveResolvedAttachment(contentUri: String) {
-        conversationMediaPickerDelegate.onRemoveResolvedAttachment(contentUri = contentUri)
-    }
-
     override fun onUpdateAttachmentCaption(
         contentUri: String,
         captionText: String,
@@ -676,18 +620,6 @@ internal class ConversationViewModel @Inject constructor(
             contentUri = contentUri,
             captionText = captionText,
         )
-    }
-
-    override fun dismissDeleteMessageConfirmation() {
-        conversationMessageSelectionDelegate.dismissDeleteMessageConfirmation()
-    }
-
-    override fun dismissMessageSelection() {
-        conversationMessageSelectionDelegate.dismissMessageSelection()
-    }
-
-    override fun confirmDeleteSelectedMessages() {
-        conversationMessageSelectionDelegate.confirmDeleteSelectedMessages()
     }
 
     override fun onSendClick() {
@@ -839,7 +771,7 @@ private fun attachmentPreviewEffect(
     contentType: String,
     contentUri: String,
     imageCollectionUri: String?,
-    initialPhotoOccurrenceIndex: Int = 0,
+    initialPartId: String? = null,
 ): ConversationScreenEffect {
     return when {
         ContentType.isVCardType(contentType) -> {
@@ -851,7 +783,7 @@ private fun attachmentPreviewEffect(
                 contentType = contentType,
                 contentUri = contentUri,
                 imageCollectionUri = imageCollectionUri,
-                initialPhotoOccurrenceIndex = initialPhotoOccurrenceIndex,
+                initialPartId = initialPartId,
             )
         }
     }

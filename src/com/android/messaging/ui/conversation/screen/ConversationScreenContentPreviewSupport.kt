@@ -65,6 +65,7 @@ internal fun ConversationScreenContentPreview(
             contentPadding = PaddingValues(),
             pendingScrollPosition = null,
             onPendingScrollPositionConsumed = {},
+            onLoadOlderMessages = {},
             onAttachmentClick = { _, _, _ -> },
             onExternalUriClick = {},
             onMessageClick = {},

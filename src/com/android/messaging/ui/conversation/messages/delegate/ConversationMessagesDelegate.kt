@@ -1,24 +1,20 @@
 package com.android.messaging.ui.conversation.messages.delegate
 
-import androidx.core.net.toUri
+import android.os.Bundle
+import androidx.lifecycle.SavedStateHandle
 import com.android.messaging.data.appsettings.repository.AppSettingsRepository
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentMetadata
 import com.android.messaging.data.conversation.repository.ConversationVCardMetadataRepository
 import com.android.messaging.data.conversation.repository.ConversationsRepository
-import com.android.messaging.datamodel.data.ConversationMessageData
-import com.android.messaging.datamodel.data.MessagePartData
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.domain.media.usecase.ResolveAudioDurationMillis
-import com.android.messaging.domain.photoviewer.model.ConversationPhotoViewerAttachment
-import com.android.messaging.domain.photoviewer.usecase.ResolveConversationPhotoViewerInitialOccurrenceIndex
 import com.android.messaging.ui.conversation.attachment.mapper.ConversationVCardAttachmentUiModelMapper
 import com.android.messaging.ui.conversation.common.ConversationScreenDelegate
 import com.android.messaging.ui.conversation.messages.mapper.ConversationMessageUiModelMapper
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagesUiState
-import com.android.messaging.util.ContentType
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -42,28 +38,24 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal interface ConversationMessagesDelegate :
     ConversationScreenDelegate<ConversationMessagesUiState> {
     fun refresh()
 
-    fun resolvePhotoViewerInitialOccurrenceIndex(
-        contentType: String,
-        partId: String,
-        contentUri: String,
-    ): Int
+    fun loadOlderMessages()
 }
 
 internal class ConversationMessagesDelegateImpl @Inject constructor(
     private val conversationsRepository: ConversationsRepository,
     private val appSettingsRepository: AppSettingsRepository,
     private val resolveAudioDurationMillis: ResolveAudioDurationMillis,
-    private val resolveInitialPhotoOccurrenceIndex:
-    ResolveConversationPhotoViewerInitialOccurrenceIndex,
     private val conversationMessageUiModelMapper: ConversationMessageUiModelMapper,
     private val conversationVCardAttachmentUiModelMapper: ConversationVCardAttachmentUiModelMapper,
     private val conversationVCardMetadataRepository: ConversationVCardMetadataRepository,
+    savedStateHandle: SavedStateHandle,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
 ) : ConversationMessagesDelegate {
@@ -71,15 +63,34 @@ internal class ConversationMessagesDelegateImpl @Inject constructor(
     private val _state = MutableStateFlow<ConversationMessagesUiState>(
         value = ConversationMessagesUiState.Loading,
     )
-    private val currentMessages = MutableStateFlow<List<ConversationMessageData>>(
-        value = emptyList(),
-    )
 
     override val state = _state.asStateFlow()
 
     private val refreshTriggers = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
+    private val windowStates = MutableStateFlow(value = savedStateHandle.restoredWindowState())
+
+    private val windowSizes = windowStates
+        .map { windowState -> windowState.size }
+        .distinctUntilChanged()
+
+    private val loadedMessageCounts = MutableStateFlow(value = 0)
+    private val hasOlderMessages = MutableStateFlow(value = false)
+
+    private val hasPendingLoadOlderMessages = MutableStateFlow(value = false)
+
     private var isBound = false
+
+    init {
+        savedStateHandle.setSavedStateProvider(WINDOW_KEY) {
+            val windowState = windowStates.value
+
+            Bundle().apply {
+                putString(WINDOW_CONVERSATION_ID_KEY, windowState.conversationId)
+                putInt(WINDOW_SIZE_KEY, windowState.size)
+            }
+        }
+    }
 
     override fun bind(
         scope: CoroutineScope,
@@ -93,12 +104,16 @@ internal class ConversationMessagesDelegateImpl @Inject constructor(
 
         scope.launch(defaultDispatcher) {
             conversationIdFlow.collectLatest { conversationId ->
-                currentMessages.value = emptyList()
                 _state.value = ConversationMessagesUiState.Loading
+                loadedMessageCounts.value = 0
+                hasOlderMessages.value = false
+                hasPendingLoadOlderMessages.value = false
 
                 if (conversationId == null) {
                     return@collectLatest
                 }
+
+                resetWindowUnlessRestored(conversationId = conversationId)
 
                 observeConversationMessagesUiState(
                     conversationId = conversationId,
@@ -113,23 +128,35 @@ internal class ConversationMessagesDelegateImpl @Inject constructor(
         refreshTriggers.tryEmit(Unit)
     }
 
-    override fun resolvePhotoViewerInitialOccurrenceIndex(
-        contentType: String,
-        partId: String,
-        contentUri: String,
-    ): Int {
-        return when {
-            ContentType.isImageType(contentType) -> {
-                resolveInitialPhotoOccurrenceIndex(
-                    partId = partId,
-                    contentUri = contentUri.toUri(),
-                    attachments = buildConversationPhotoViewerAttachments(
-                        messages = currentMessages.value,
-                    ),
+    override fun loadOlderMessages() {
+        hasPendingLoadOlderMessages.value = true
+
+        if (hasOlderMessages.value) {
+            growWindow()
+        }
+    }
+
+    private fun growWindow() {
+        if (!hasPendingLoadOlderMessages.compareAndSet(expect = true, update = false)) {
+            return
+        }
+
+        windowStates.update { windowState ->
+            windowState.copy(
+                size = maxOf(windowState.size, loadedMessageCounts.value * 2),
+            )
+        }
+    }
+
+    private fun resetWindowUnlessRestored(conversationId: ConversationId) {
+        windowStates.update { windowState ->
+            when (windowState.conversationId) {
+                conversationId.value -> windowState
+                else -> ConversationMessagesWindowState(
+                    conversationId = conversationId.value,
+                    size = CONVERSATION_MESSAGES_WINDOW_STEP,
                 )
             }
-
-            else -> 0
         }
     }
 
@@ -139,12 +166,21 @@ internal class ConversationMessagesDelegateImpl @Inject constructor(
     ): Flow<ConversationMessagesUiState> {
         return combine(
             conversationsRepository
-                .getConversationMessages(conversationId = conversationId)
-                .onEach { messages ->
-                    currentMessages.value = messages
+                .getConversationMessages(
+                    conversationId = conversationId,
+                    windowSizes = windowSizes,
+                )
+                .onEach { window ->
+                    loadedMessageCounts.value = window.messages.size
+                    hasOlderMessages.value = window.hasMore
+
+                    if (window.hasMore && hasPendingLoadOlderMessages.value) {
+                        growWindow()
+                    }
                 }
-                .map { messages ->
-                    messages
+                .map { window ->
+                    window
+                        .messages
                         .asSequence()
                         .mapNotNull(conversationMessageUiModelMapper::map)
                         .toImmutableList()
@@ -320,47 +356,31 @@ internal class ConversationMessagesDelegateImpl @Inject constructor(
         }
     }
 
-    private fun buildConversationPhotoViewerAttachments(
-        messages: List<ConversationMessageData>,
-    ): Sequence<ConversationPhotoViewerAttachment> {
-        return messages.asSequence().flatMap { message ->
-            buildConversationPhotoViewerAttachments(message = message)
-        }
-    }
+    /**
+     * The loaded window and the conversation it was loaded for, kept together so that they are saved
+     * and restored as one value and a window can never be read back onto another conversation.
+     */
+    private data class ConversationMessagesWindowState(
+        val conversationId: String?,
+        val size: Int,
+    )
 
-    private fun buildConversationPhotoViewerAttachments(
-        message: ConversationMessageData,
-    ): Sequence<ConversationPhotoViewerAttachment> {
-        val parts = message.parts ?: return emptySequence()
+    /** The window a restored process is handed, or a fresh one. */
+    private fun SavedStateHandle.restoredWindowState(): ConversationMessagesWindowState {
+        val savedWindow = get<Bundle>(WINDOW_KEY)
 
-        return parts
-            .asSequence()
-            .withIndex()
-            .filter { indexedPart ->
-                indexedPart.value.isImage
-            }
-            .sortedWith(comparator = photoViewerAttachmentPartComparator)
-            .mapNotNull { indexedPart ->
-                val part = indexedPart.value
-                val contentUri = part.contentUri ?: return@mapNotNull null
-
-                ConversationPhotoViewerAttachment(
-                    partId = part.partId.orEmpty(),
-                    contentUri = contentUri,
-                )
-            }
+        return ConversationMessagesWindowState(
+            conversationId = savedWindow?.getString(WINDOW_CONVERSATION_ID_KEY),
+            size = savedWindow?.getInt(WINDOW_SIZE_KEY, CONVERSATION_MESSAGES_WINDOW_STEP)
+                ?: CONVERSATION_MESSAGES_WINDOW_STEP,
+        )
     }
 
     private companion object {
-        private val photoViewerAttachmentPartComparator =
-            compareBy<IndexedValue<MessagePartData>> { indexedPart ->
-                indexedPart.value.partId?.toLongOrNull() == null
-            }.thenBy { indexedPart ->
-                indexedPart.value.partId?.toLongOrNull() ?: Long.MAX_VALUE
-            }.thenBy { indexedPart ->
-                indexedPart.value.partId.orEmpty()
-            }.thenBy { indexedPart ->
-                indexedPart.index
-            }
+        private const val CONVERSATION_MESSAGES_WINDOW_STEP = 500
+
+        private const val WINDOW_KEY = "conversation_messages_window"
+        private const val WINDOW_SIZE_KEY = "size"
+        private const val WINDOW_CONVERSATION_ID_KEY = "conversation"
     }
 }

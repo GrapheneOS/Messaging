@@ -6,8 +6,6 @@ import com.android.messaging.domain.photoviewer.usecase.NormalizePhotoViewerUri
 import com.android.messaging.domain.photoviewer.usecase.NormalizePhotoViewerUriImpl
 import com.android.messaging.domain.photoviewer.usecase.PreparePhotoViewerSendUri
 import com.android.messaging.domain.photoviewer.usecase.PreparePhotoViewerSendUriImpl
-import com.android.messaging.domain.photoviewer.usecase.ResolveConversationPhotoViewerInitialOccurrenceIndex
-import com.android.messaging.domain.photoviewer.usecase.ResolveConversationPhotoViewerInitialOccurrenceIndexImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Reusable
@@ -23,12 +21,6 @@ internal abstract class PhotoViewerBindsModule {
     abstract fun bindNormalizePhotoViewerUri(
         impl: NormalizePhotoViewerUriImpl,
     ): NormalizePhotoViewerUri
-
-    @Binds
-    @Reusable
-    abstract fun bindResolveConversationPhotoViewerInitialOccurrenceIndex(
-        impl: ResolveConversationPhotoViewerInitialOccurrenceIndexImpl,
-    ): ResolveConversationPhotoViewerInitialOccurrenceIndex
 
     @Binds
     @Reusable

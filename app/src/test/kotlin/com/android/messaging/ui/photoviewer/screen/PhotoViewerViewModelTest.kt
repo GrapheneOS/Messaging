@@ -516,7 +516,7 @@ internal class PhotoViewerViewModelTest {
             repository.getPhotoViewerItems(
                 photosUri = any(),
                 initialPhotoUri = any(),
-                initialPhotoOccurrenceIndex = any(),
+                initialPartId = any(),
             )
         } returns results
 
@@ -554,6 +554,7 @@ internal class PhotoViewerViewModelTest {
 
         fun photoViewerItem(index: Int): PhotoViewerItem {
             return PhotoViewerItem(
+                partId = "part-$index",
                 contentUri = Uri.parse("content://example/content/$index"),
                 contentType = IMAGE_JPEG,
                 isIncoming = true,

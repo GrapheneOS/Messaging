@@ -93,7 +93,7 @@ internal class PhotoViewerViewModel @Inject constructor(
                 .getPhotoViewerItems(
                     photosUri = launchRequest.photosUri.toUri(),
                     initialPhotoUri = launchRequest.initialPhotoUri.toUri(),
-                    initialPhotoOccurrenceIndex = launchRequest.initialPhotoOccurrenceIndex,
+                    initialPartId = launchRequest.initialPartId,
                 )
                 .catch { throwable ->
                     if (throwable is CancellationException) {

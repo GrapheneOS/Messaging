@@ -38,7 +38,7 @@ internal interface PhotoViewerRepository {
     fun getPhotoViewerItems(
         photosUri: Uri,
         initialPhotoUri: Uri,
-        initialPhotoOccurrenceIndex: Int = 0,
+        initialPartId: String? = null,
     ): Flow<PhotoViewerItemsLoadResult>
 }
 
@@ -54,7 +54,7 @@ internal class PhotoViewerRepositoryImpl @Inject constructor(
     override fun getPhotoViewerItems(
         photosUri: Uri,
         initialPhotoUri: Uri,
-        initialPhotoOccurrenceIndex: Int,
+        initialPartId: String?,
     ): Flow<PhotoViewerItemsLoadResult> {
         return observeUri(uri = photosUri)
             .flowOn(defaultDispatcher)
@@ -62,7 +62,7 @@ internal class PhotoViewerRepositoryImpl @Inject constructor(
                 loadPhotoViewerItems(
                     photosUri = photosUri,
                     initialPhotoUri = initialPhotoUri,
-                    initialPhotoOccurrenceIndex = initialPhotoOccurrenceIndex,
+                    initialPartId = initialPartId,
                 ).recoverPhotoViewerItemsLoadFailure(photosUri = photosUri)
             }
             .recoverPhotoViewerItemsLoadFailure(photosUri = photosUri)
@@ -71,7 +71,7 @@ internal class PhotoViewerRepositoryImpl @Inject constructor(
     private fun loadPhotoViewerItems(
         photosUri: Uri,
         initialPhotoUri: Uri,
-        initialPhotoOccurrenceIndex: Int,
+        initialPartId: String?,
     ): Flow<PhotoViewerItemsLoadResult> {
         return typedFlow { queryItems(photosUri = photosUri) }
             .flowOn(messagingDbDispatcher)
@@ -80,7 +80,7 @@ internal class PhotoViewerRepositoryImpl @Inject constructor(
                     photoViewerItems = buildPhotoViewerItems(
                         queriedItems = queriedItems,
                         initialPhotoUri = initialPhotoUri,
-                        initialPhotoOccurrenceIndex = initialPhotoOccurrenceIndex,
+                        initialPartId = initialPartId,
                     ),
                 )
 
@@ -92,7 +92,7 @@ internal class PhotoViewerRepositoryImpl @Inject constructor(
     private fun buildPhotoViewerItems(
         queriedItems: List<PhotoViewerItem>,
         initialPhotoUri: Uri,
-        initialPhotoOccurrenceIndex: Int,
+        initialPartId: String?,
     ): PhotoViewerItems {
         val items = queriedItems.toImmutableList()
 
@@ -101,7 +101,7 @@ internal class PhotoViewerRepositoryImpl @Inject constructor(
             initialIndex = resolveInitialIndex(
                 items = items,
                 initialPhotoUri = initialPhotoUri,
-                initialPhotoOccurrenceIndex = initialPhotoOccurrenceIndex,
+                initialPartId = initialPartId,
             ),
         )
     }
@@ -159,6 +159,9 @@ internal class PhotoViewerRepositoryImpl @Inject constructor(
                 val contentUri = contentUriString.toUri()
 
                 PhotoViewerItem(
+                    partId = getNonBlankStringOrNull(
+                        columnIndex = ConversationImagePartsView.PhotoViewQuery.INDEX_PART_ID,
+                    ),
                     contentUri = contentUri,
                     contentType = contentType,
                     isIncoming = MessageData.getIsIncoming(status),
@@ -184,29 +187,35 @@ internal class PhotoViewerRepositoryImpl @Inject constructor(
         }
     }
 
+    /**
+     * The part id identifies the tapped attachment even when the same photo was sent several
+     * times: the uri alone cannot tell two copies apart. Falls back to the uri for callers that
+     * have no part id, and to the first item when nothing matches.
+     */
     private fun resolveInitialIndex(
         items: List<PhotoViewerItem>,
         initialPhotoUri: Uri,
-        initialPhotoOccurrenceIndex: Int,
+        initialPartId: String?,
     ): Int {
-        val normalizedInitialPhotoUri = normalizePhotoViewerUri(uri = initialPhotoUri)
-        val requestedOccurrenceIndex = initialPhotoOccurrenceIndex.coerceAtLeast(
-            minimumValue = 0,
-        )
-        val matchingIndexes = items
-            .mapIndexedNotNull { index, item ->
-                when {
-                    normalizePhotoViewerUri(
-                        uri = item.contentUri,
-                    ) == normalizedInitialPhotoUri -> index
-                    else -> null
-                }
+        val partIdMatchIndex = when {
+            initialPartId.isNullOrBlank() -> -1
+            else -> {
+                items.indexOfFirst { item -> item.partId == initialPartId }
             }
-        val matchIndex = matchingIndexes.getOrNull(index = requestedOccurrenceIndex)
-            ?: matchingIndexes.firstOrNull()
-            ?: -1
+        }
 
-        return matchIndex.coerceAtLeast(minimumValue = 0)
+        if (partIdMatchIndex >= 0) {
+            return partIdMatchIndex
+        }
+
+        val normalizedInitialPhotoUri = normalizePhotoViewerUri(uri = initialPhotoUri)
+
+        return items
+            .indexOfFirst { item ->
+                val normalizedPhotoUri = normalizePhotoViewerUri(uri = item.contentUri)
+                normalizedPhotoUri == normalizedInitialPhotoUri
+            }
+            .coerceAtLeast(minimumValue = 0)
     }
 
     private fun Flow<PhotoViewerItemsLoadResult>.recoverPhotoViewerItemsLoadFailure(

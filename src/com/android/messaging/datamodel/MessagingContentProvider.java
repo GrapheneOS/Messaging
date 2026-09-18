@@ -72,6 +72,9 @@ public class MessagingContentProvider extends ContentProvider {
     public static final Uri CONVERSATION_MESSAGES_URI = Uri.parse(CONTENT_AUTHORITY +
             MESSAGES_QUERY + "/conversation");
 
+    private static final String QUERY_PARAMETER_LIMIT = "limit";
+    private static final String QUERY_PARAMETER_MESSAGE_ID = "message_id";
+
     // Conversation participants query
     private static final String PARTICIPANTS_QUERY = "participants";
 
@@ -176,6 +179,38 @@ public class MessagingContentProvider extends ContentProvider {
         final Uri.Builder builder = CONVERSATION_MESSAGES_URI.buildUpon();
         builder.appendPath(conversationId);
         return builder.build();
+    }
+
+    /**
+     * Build a messages uri restricted to the newest {@code limit} messages of the conversation.
+     *
+     * <p>The limit travels as a query parameter so that the uri still matches the unrestricted one
+     * for both {@link UriMatcher} and content observer purposes: neither looks at the query.
+     */
+    public static Uri buildConversationMessagesUri(
+            final String conversationId,
+            final int limit
+    ) {
+        Assert.isTrue(limit > 0);
+
+        return buildConversationMessagesUri(conversationId)
+                .buildUpon()
+                .appendQueryParameter(QUERY_PARAMETER_LIMIT, Integer.toString(limit))
+                .build();
+    }
+
+    /**
+     * Build a uri for a single message of a conversation. Callers after one message must not walk
+     * the whole conversation to find it.
+     */
+    public static Uri buildConversationMessageUri(
+            final String conversationId,
+            final String messageId
+    ) {
+        return buildConversationMessagesUri(conversationId)
+                .buildUpon()
+                .appendQueryParameter(QUERY_PARAMETER_MESSAGE_ID, messageId)
+                .build();
     }
 
     public static void notifyMessagesChanged(final String conversationId) {
@@ -375,12 +410,59 @@ public class MessagingContentProvider extends ContentProvider {
         return cursor;
     }
 
-    private Cursor queryConversationMessages(final String conversationId, final Uri notifyUri) {
-        final String[] queryArgs = { conversationId };
+    private Cursor queryConversationMessages(final String conversationId, final Uri uri) {
+        final String messageId = uri.getQueryParameter(QUERY_PARAMETER_MESSAGE_ID);
+        final String[] queryArgs = messageId != null
+                ? new String[] { conversationId, messageId }
+                : new String[] { conversationId };
+
         final Cursor cursor = getDatabaseWrapper().rawQuery(
-                ConversationMessageData.getConversationMessagesQuerySql(), queryArgs);
-        cursor.setNotificationUri(getContext().getContentResolver(), notifyUri);
+                getConversationMessagesSql(uri),
+                queryArgs
+        );
+        // Notifications are sent on the bare uri, so register for them on the bare uri too.
+        cursor.setNotificationUri(
+                getContext().getContentResolver(),
+                buildConversationMessagesUri(conversationId)
+        );
+
         return cursor;
+    }
+
+    /**
+     * The query a conversation messages uri asks for: one message, the newest {@code limit} of
+     * them, or the whole conversation. This is where the window stops being a uri and starts
+     * being a smaller read, so it is worth a test of its own.
+     */
+    @VisibleForTesting
+    public static String getConversationMessagesSql(final Uri uri) {
+        final String messageId = uri.getQueryParameter(QUERY_PARAMETER_MESSAGE_ID);
+        if (messageId != null) {
+            return ConversationMessageData.getConversationMessageQuerySql();
+        }
+
+        final String limit = uri.getQueryParameter(QUERY_PARAMETER_LIMIT);
+        if (limit != null) {
+            return ConversationMessageData.getConversationMessagesWindowedQuerySql(
+                    parseLimit(limit));
+        }
+
+        return ConversationMessageData.getConversationMessagesQuerySql();
+    }
+
+    private static int parseLimit(final String limit) {
+        final int parsed;
+        try {
+            parsed = Integer.parseInt(limit);
+        } catch (final NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid limit " + limit, e);
+        }
+
+        if (parsed <= 0) {
+            throw new IllegalArgumentException("Invalid limit " + limit);
+        }
+
+        return parsed;
     }
 
     @Override

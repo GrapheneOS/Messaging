@@ -90,6 +90,7 @@ internal class ConversationViewModelAttachmentPreviewTest : BaseConversationView
                         imageCollectionUri = MessagingContentProvider
                             .buildConversationImagesUri(CONVERSATION_ID.value)
                             .toString(),
+                        initialPartId = "part-1",
                     ),
                     awaitItem(),
                 )

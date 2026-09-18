@@ -44,8 +44,12 @@ import com.android.messaging.ui.conversation.metadata.model.ConversationMetadata
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaffoldUiState
 import com.android.messaging.ui.subscription.mapper.resolveDisplayName
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 
 private const val SMOOTH_SCROLL_JUMP_THRESHOLD = 15
+
+private const val LOAD_OLDER_MESSAGES_THRESHOLD = 100
 
 private data class ConversationLatestScrollSnapshot(
     val isScrolledToLatestMessage: Boolean,
@@ -63,6 +67,7 @@ internal fun ConversationScreenContent(
     onPendingScrollPositionConsumed: () -> Unit,
     onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
+    onLoadOlderMessages: () -> Unit,
     onMessageClick: (MessageId) -> Unit,
     onMessageAvatarClick: (MessageId) -> Unit,
     onMessageDownloadClick: (MessageId) -> Unit,
@@ -110,6 +115,7 @@ internal fun ConversationScreenContent(
                     onPendingScrollPositionConsumed = onPendingScrollPositionConsumed,
                     onAttachmentClick = onAttachmentClick,
                     onExternalUriClick = onExternalUriClick,
+                    onLoadOlderMessages = onLoadOlderMessages,
                     onMessageClick = onMessageClick,
                     onMessageAvatarClick = onMessageAvatarClick,
                     onMessageDownloadClick = onMessageDownloadClick,
@@ -171,6 +177,7 @@ private fun ConversationScreenPresentContent(
     onPendingScrollPositionConsumed: () -> Unit,
     onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
+    onLoadOlderMessages: () -> Unit,
     onMessageClick: (MessageId) -> Unit,
     onMessageAvatarClick: (MessageId) -> Unit,
     onMessageDownloadClick: (MessageId) -> Unit,
@@ -209,6 +216,12 @@ private fun ConversationScreenPresentContent(
         messages = messagesState.messages,
         listState = messagesListState,
         onConsumed = onPendingScrollPositionConsumed,
+    )
+
+    LoadOlderMessagesOnScrollBack(
+        conversationId = conversationId,
+        listState = messagesListState,
+        onLoadOlderMessages = onLoadOlderMessages,
     )
 
     ConversationMessages(
@@ -383,6 +396,35 @@ private fun isScrolledToLatestMessage(listState: LazyListState): Boolean {
         listState.firstVisibleItemScrollOffset == 0
 }
 
+/**
+ * The list is reversed, so the last visible item is the oldest loaded message. Getting close to it
+ * asks for a larger window; the delegate ignores the request when the whole conversation is loaded.
+ */
+@Composable
+private fun LoadOlderMessagesOnScrollBack(
+    conversationId: ConversationId?,
+    listState: LazyListState,
+    onLoadOlderMessages: () -> Unit,
+) {
+    LaunchedEffect(
+        conversationId,
+        listState,
+    ) {
+        snapshotFlow {
+            val layoutInfo = listState.layoutInfo
+            val lastVisibleItemIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index
+
+            // Before the first measure pass nothing is visible yet, and asking then would grow the
+            // window on every conversation open.
+            lastVisibleItemIndex != null &&
+                lastVisibleItemIndex >= layoutInfo.totalItemsCount - LOAD_OLDER_MESSAGES_THRESHOLD
+        }
+            .distinctUntilChanged()
+            .filter { isNearOldestLoadedMessage -> isNearOldestLoadedMessage }
+            .collect { onLoadOlderMessages() }
+    }
+}
+
 @Composable
 private fun ScrollToTargetMessage(
     conversationId: ConversationId?,
@@ -426,11 +468,7 @@ private fun ScrollToTargetMessage(
 internal fun messagePositionToDisplayIndex(position: Int, size: Int): Int {
     return when {
         size <= 0 -> 0
-
-        else -> {
-            val lastIndex = size - 1
-            (lastIndex - position).coerceIn(0, lastIndex)
-        }
+        else -> position.coerceIn(0, size - 1)
     }
 }
 
