@@ -298,7 +298,7 @@ private fun Modifier.copyOnLongPress(
         .pointerInput(value) {
             detectTapGestures(onLongPress = { onCopy(value) })
         }
-        .semantics {
+        .semantics(mergeDescendants = true) {
             customActions = listOf(
                 CustomAccessibilityAction(label = copyLabel) {
                     onCopy(value)

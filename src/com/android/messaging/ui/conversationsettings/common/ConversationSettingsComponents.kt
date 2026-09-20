@@ -28,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
@@ -88,16 +89,9 @@ internal fun ConversationHeader(
         if (title.isNotEmpty()) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = title,
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.graphicsLayer {
-                    alpha = 1f - collapseProgress()
-                },
+            ExpandedTitle(
+                title = title,
+                collapseProgress = collapseProgress,
             )
         }
     }
@@ -178,6 +172,22 @@ internal fun ParticipantItem(
         onCallClick = onCallClick,
         onContactClick = onContactClick,
         modifier = modifier,
+    )
+}
+
+@Composable
+private fun ExpandedTitle(
+    title: String,
+    collapseProgress: () -> Float,
+) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.headlineSmall,
+        color = MaterialTheme.colorScheme.onSurface,
+        textAlign = TextAlign.Center,
+        maxLines = 3,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier.alpha(alpha = 1f - collapseProgress()),
     )
 }
 

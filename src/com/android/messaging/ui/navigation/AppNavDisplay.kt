@@ -29,12 +29,17 @@ internal fun AppNavDisplay(
     val listDetailPaneDecorator = rememberListDetailPaneNavEntryDecorator(showsTwoPanes)
     val displayCornerDecorator = rememberDisplayCornerNavEntryDecorator()
     val paneTitleDecorator = rememberPaneTitleNavEntryDecorator()
+    val enteringBackDecorator = rememberEnteringBackNavEntryDecorator(
+        canPop = backStack.size > 1,
+        onBack = onBack,
+    )
     val entryDecorators = remember(
         saveableStateHolderDecorator,
         viewModelStoreDecorator,
         listDetailPaneDecorator,
         displayCornerDecorator,
         paneTitleDecorator,
+        enteringBackDecorator,
     ) {
         listOf(
             saveableStateHolderDecorator,
@@ -42,6 +47,7 @@ internal fun AppNavDisplay(
             listDetailPaneDecorator,
             displayCornerDecorator,
             paneTitleDecorator,
+            enteringBackDecorator,
         )
     }
 

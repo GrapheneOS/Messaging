@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListLayoutInfo
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -87,6 +88,8 @@ import com.android.messaging.ui.core.CollectEvents
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+
+private const val HEADER_COLLAPSE_DISTANCE_FRACTION = 0.9f
 
 @Composable
 internal fun ConversationSettingsScreen(
@@ -245,17 +248,44 @@ private fun rememberCollapseProgress(
 ): ComposeState<Float> {
     return remember {
         derivedStateOf {
-            if (listState.firstVisibleItemIndex > 0) {
-                return@derivedStateOf 1f
-            }
+            val layoutInfo = listState.layoutInfo
+            val scrollOffset = listState.firstVisibleItemScrollOffset
 
-            val headerInfo = listState.layoutInfo.visibleItemsInfo.firstOrNull()
-            if (headerInfo == null || headerInfo.size == 0) {
-                return@derivedStateOf 0f
+            when {
+                listState.firstVisibleItemIndex > 0 -> 1f
+                else -> headerCollapseProgress(
+                    scrollOffset = scrollOffset,
+                    headerSize = layoutInfo.visibleItemsInfo.firstOrNull()?.size ?: 0,
+                    maxScrollDistance = layoutInfo.maxScrollDistance(scrollOffset = scrollOffset),
+                )
             }
+        }
+    }
+}
 
-            val scrollOffset = listState.firstVisibleItemScrollOffset.toFloat()
-            (scrollOffset / headerInfo.size.toFloat()).coerceIn(0f, 1f)
+internal fun headerCollapseProgress(
+    scrollOffset: Int,
+    headerSize: Int,
+    maxScrollDistance: Int?,
+): Float {
+    val collapseDistance = headerSize * HEADER_COLLAPSE_DISTANCE_FRACTION
+    val collapsesFully = collapseDistance > 0f &&
+        (maxScrollDistance == null || maxScrollDistance >= collapseDistance)
+
+    return when {
+        collapsesFully -> (scrollOffset / collapseDistance).coerceIn(0f, 1f)
+        else -> 0f
+    }
+}
+
+private fun LazyListLayoutInfo.maxScrollDistance(scrollOffset: Int): Int? {
+    val lastItem = visibleItemsInfo.lastOrNull()
+
+    return when {
+        lastItem == null || lastItem.index != totalItemsCount - 1 -> null
+        else -> {
+            val contentEnd = lastItem.offset + lastItem.size + afterContentPadding
+            scrollOffset + (contentEnd - viewportEndOffset).coerceAtLeast(0)
         }
     }
 }

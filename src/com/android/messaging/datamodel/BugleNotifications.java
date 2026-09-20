@@ -16,17 +16,15 @@
 
 package com.android.messaging.datamodel;
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Matrix;
 import android.media.AudioManager;
 import android.net.Uri;
-import android.service.notification.StatusBarNotification;
 import android.text.TextUtils;
-import android.text.format.DateUtils;
 
 import androidx.annotation.VisibleForTesting;
 import androidx.core.app.NotificationCompat;
@@ -41,7 +39,7 @@ import androidx.core.graphics.drawable.IconCompat;
 
 import com.android.messaging.Factory;
 import com.android.messaging.R;
-import com.android.messaging.data.conversationsettings.repository.ConversationSnoozeQuery;
+import com.android.messaging.data.conversationsettings.repository.ConversationNotificationRepository;
 import com.android.messaging.datamodel.MessageNotificationState.Conversation;
 import com.android.messaging.datamodel.action.MarkAsReadAction;
 import com.android.messaging.datamodel.action.MarkAsSeenAction;
@@ -53,7 +51,6 @@ import com.android.messaging.datamodel.media.ImageRequestDescriptor;
 import com.android.messaging.datamodel.media.ImageResource;
 import com.android.messaging.datamodel.media.MediaRequest;
 import com.android.messaging.datamodel.media.MediaResourceManager;
-import com.android.messaging.datamodel.media.UriImageRequestDescriptor;
 import com.android.messaging.sms.MmsSmsUtils;
 import com.android.messaging.sms.MmsUtils;
 import com.android.messaging.ui.UIIntents;
@@ -62,26 +59,20 @@ import com.android.messaging.util.AvatarUriUtil;
 import com.android.messaging.util.LogUtil;
 import com.android.messaging.util.NotificationChannelUtil;
 import com.android.messaging.util.NotificationPlayer;
-import com.android.messaging.util.OsUtil;
 import com.android.messaging.util.PendingIntentConstants;
 import com.android.messaging.util.PhoneUtils;
 import com.android.messaging.util.RingtoneUtil;
 import com.android.messaging.util.ThreadUtil;
 import com.android.messaging.util.UriUtil;
-import com.android.messaging.util.exif.ExifInterface;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import dagger.hilt.android.EntryPointAccessors;
+
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.Optional;
 
 /**
  * Handle posting, updating and removing all conversation notifications.<p>
@@ -100,10 +91,8 @@ public class BugleNotifications {
     // Logging
     public static final String TAG = LogUtil.BUGLE_NOTIFICATIONS_TAG;
 
-    @VisibleForTesting
-    public static final int REQUEST_CODE_REDOWNLOAD_MMS = 101;
-
     // Constants to use for update.
+    @SuppressWarnings("unused")
     public static final int UPDATE_NONE = 0;
     public static final int UPDATE_MESSAGES = 1;
     public static final int UPDATE_ERRORS = 2;
@@ -111,7 +100,6 @@ public class BugleNotifications {
 
     private static final String SMS_NOTIFICATION_TAG = ":sms:";
     private static final String SMS_ERROR_NOTIFICATION_TAG = ":error:";
-    public static final String SMS_OVERFLOW_NOTIFICATION_TAG = ":sms:overflow:";
 
     /**
      * Upper bound on the number of {@link Person} entries attached to a conversation notification.
@@ -119,18 +107,6 @@ public class BugleNotifications {
      */
     @VisibleForTesting
     public static final int MAX_NOTIFICATION_PEOPLE = 25;
-
-    @VisibleForTesting
-    public static final int MAX_CONVERSATION_NOTIFICATIONS = 40;
-
-    private static final int NOTIFICATION_IMAGE_MAX_SIZE = 1024;
-    private static final int NOTIFICATION_IMAGE_QUALITY = 85;
-    private static final long NOTIFICATION_IMAGE_SWEEP_GRACE_MILLIS =
-            30 * DateUtils.SECOND_IN_MILLIS;
-    private static final long NOTIFICATION_IMAGE_SWEEP_INTERVAL_MILLIS =
-            5 * DateUtils.MINUTE_IN_MILLIS;
-
-    private static final AtomicLong sLastNotificationImageSweep = new AtomicLong();
 
     /**
      * This is the volume at which to play the observable-conversation notification sound,
@@ -162,87 +138,25 @@ public class BugleNotifications {
         }
         Assert.isNotMainThread();
 
-        final long passStart = System.currentTimeMillis();
-        try {
-            if (!PhoneUtils.getDefault().isDefaultSmsApp()) {
-                LogUtil.d(TAG, "Skipping notification: not the default SMS app");
-                cancel(PendingIntentConstants.SMS_NOTIFICATION_ID);
-                return;
-            }
-            if (conversationId != null
-                    && ConversationSnoozeQuery.isConversationSnoozed(conversationId)) {
-                LogUtil.d(TAG, "Skipping notification: conversation snoozed, id="
-                        + conversationId);
-                cancel(PendingIntentConstants.SMS_NOTIFICATION_ID, conversationId);
-                return;
-            }
-            if ((coverage & UPDATE_MESSAGES) != 0) {
-                createMessageNotification(conversationId);
-            }
-            if ((coverage & UPDATE_ERRORS) != 0) {
-                MessageNotificationState.checkFailedMessages();
-            }
-        } finally {
-            if (isNotificationImageSweepDue(passStart)) {
-                sweepNotificationImages(passStart);
-            }
-        }
-    }
-
-    private static boolean isNotificationImageSweepDue(final long passStart) {
-        final long lastSweep = sLastNotificationImageSweep.get();
-        return passStart - lastSweep >= NOTIFICATION_IMAGE_SWEEP_INTERVAL_MILLIS
-                && sLastNotificationImageSweep.compareAndSet(lastSweep, passStart);
-    }
-
-    @VisibleForTesting
-    static void sweepNotificationImages(final long passStart) {
-        final Set<String> live = new HashSet<>();
-        final StatusBarNotification[] activeNotifications = NotificationChannelUtil.INSTANCE
-                .getNotificationManager()
-                .getActiveNotifications();
-
-        for (final StatusBarNotification posted : activeNotifications) {
-            final MessagingStyle style = MessagingStyle
-                    .extractMessagingStyleFromNotification(posted.getNotification());
-
-            if (style == null) {
-                continue;
-            }
-
-            for (final MessagingStyle.Message message : style.getMessages()) {
-                final Uri dataUri = message.getDataUri();
-
-                if (!NotificationImageProvider.isNotificationImageUri(dataUri)) {
-                    continue;
-                }
-
-                final File liveFile = NotificationImageProvider.getFileFromUri(dataUri);
-                if (liveFile != null) {
-                    live.add(liveFile.getName());
-                }
-            }
-        }
-
-        final long cutoff = passStart - NOTIFICATION_IMAGE_SWEEP_GRACE_MILLIS;
-        for (final File file : NotificationImageProvider.listImageFiles()) {
-            if (file.lastModified() >= cutoff || live.contains(file.getName())) {
-                continue;
-            }
-            if (!file.delete()) {
-                LogUtil.w(TAG, "Could not delete the orphaned notification image "
-                        + file.getAbsolutePath());
-            }
-        }
-    }
-
-    @VisibleForTesting
-    static void createMessageNotification(final String conversationId) {
-        if (!TextUtils.isEmpty(conversationId) && isConversationBlocked(conversationId)) {
-            LogUtil.d(TAG, "Skipping notification: conversation blocked, id=" + conversationId);
+        if (!PhoneUtils.getDefault().isDefaultSmsApp()) {
+            LogUtil.d(TAG, "Skipping notification: not the default SMS app");
+            cancel(PendingIntentConstants.SMS_NOTIFICATION_ID);
             return;
         }
+        if (conversationId != null && isConversationSnoozed(conversationId)) {
+            LogUtil.d(TAG, "Skipping notification: conversation snoozed, id=" + conversationId);
+            cancel(PendingIntentConstants.SMS_NOTIFICATION_ID, conversationId);
+            return;
+        }
+        if ((coverage & UPDATE_MESSAGES) != 0) {
+            createMessageNotification(conversationId);
+        }
+        if ((coverage & UPDATE_ERRORS) != 0) {
+            MessageNotificationState.checkFailedMessages();
+        }
+    }
 
+    private static void createMessageNotification(final String conversationId) {
         final MessageNotificationState state = MessageNotificationState.getNotificationState();
         final boolean softSound = DataModel.get().isNewMessageObservable(conversationId);
 
@@ -254,80 +168,38 @@ public class BugleNotifications {
                 // 1. Access the database to check the participant's blocked status
                 final DatabaseWrapper db = DataModel.get().getDatabase();
 
-                // 2. Query the participant table for this specific conversation ID
-                final String query = "SELECT " + DatabaseHelper.ParticipantColumns.BLOCKED +
-                        " FROM " + DatabaseHelper.PARTICIPANTS_TABLE +
-                        " INNER JOIN " + DatabaseHelper.CONVERSATION_PARTICIPANTS_TABLE +
-                        " ON " + DatabaseHelper.PARTICIPANTS_TABLE + "." + DatabaseHelper.ParticipantColumns._ID +
-                        " = " + DatabaseHelper.CONVERSATION_PARTICIPANTS_TABLE + "." + DatabaseHelper.ConversationParticipantsColumns.PARTICIPANT_ID +
-                        " WHERE " + DatabaseHelper.CONVERSATION_PARTICIPANTS_TABLE + "." + DatabaseHelper.ConversationParticipantsColumns.CONVERSATION_ID + " = ?";
+                // 2. Query the messages table to find the specific sender of the most recent message in this conversation,
+                // and join with the participants table to check if that exact sender is blocked.
+                final String query = "SELECT " + DatabaseHelper.PARTICIPANTS_TABLE + "." + DatabaseHelper.ParticipantColumns.BLOCKED +
+                        " FROM " + DatabaseHelper.MESSAGES_TABLE +
+                        " INNER JOIN " + DatabaseHelper.PARTICIPANTS_TABLE +
+                        " ON " + DatabaseHelper.MESSAGES_TABLE + "." + DatabaseHelper.MessageColumns.SENDER_PARTICIPANT_ID +
+                        " = " + DatabaseHelper.PARTICIPANTS_TABLE + "." + DatabaseHelper.ParticipantColumns._ID +
+                        " WHERE " + DatabaseHelper.MESSAGES_TABLE + "." + DatabaseHelper.MessageColumns.CONVERSATION_ID + " = ?" +
+                        " ORDER BY " + DatabaseHelper.MESSAGES_TABLE + "." + DatabaseHelper.MessageColumns.RECEIVED_TIMESTAMP + " DESC LIMIT 1";
 
                 try (android.database.Cursor cursor = db.rawQuery(query, new String[] { conversationId })) {
-                    if (cursor != null) {
-                        while (cursor.moveToNext()) {
-                            // If any participant in this conversation has BLOCKED = 1, flag it
-                            if (cursor.getInt(0) == 1) {
-                                isBlocked = true;
-                                break;
-                            }
-                        }
+                    if (cursor != null && cursor.moveToFirst()) {
+                        // If the specific sender of the newest message is blocked, flag it
+                        isBlocked = (cursor.getInt(0) == 1);
                     }
                 }
 
-                // 3. The Gatekeeper: Only play the sound if the conversation is NOT blocked
+                // 3. The Gatekeeper: Only play the sound if the actual sender is NOT blocked
                 if (!isBlocked) {
                     final Uri ringtoneUri = getNotificationRingtoneUriForConversationId(conversationId);
                     playObservableConversationNotificationSound(ringtoneUri);
                 } else {
-                    LogUtil.v(TAG, "Suppressed audio for blocked observable conversation.");
+                    LogUtil.v(TAG, "Suppressed audio for blocked sender in observable conversation.");
                 }
             }
-            updateOverflowNotification(0);
             return;
         }
 
-        // Send per-conversation notifications (if there are multiple conversations). The list
-        // holds every conversation with unseen messages, so it has to be iterated: picking one
-        // entry notifies whichever conversation holds the newest unseen message and silently
-        // drops the rest, and there is no summary notification to surface them.
-        final List<Conversation> notifiable = state.mConversationsList.mConversations.stream()
-                .filter(conv -> !isConversationBlocked(conv.mConversationId))
-                .filter(conv -> !ConversationSnoozeQuery.isConversationSnoozed(
-                        conv.mConversationId))
-                .toList();
-
-        notifiable.stream()
-                .limit(MAX_CONVERSATION_NOTIFICATIONS)
-                .forEach(conv -> processAndSend(state, conv));
-
-        updateOverflowNotification(notifiable.size() - MAX_CONVERSATION_NOTIFICATIONS);
-    }
-
-    private static void updateOverflowNotification(final int overflowCount) {
-        final Context context = Factory.get().getApplicationContext();
-        final NotificationManagerCompat notificationManager =
-                NotificationManagerCompat.from(context);
-        final String tag = buildNotificationTag(SMS_OVERFLOW_NOTIFICATION_TAG, null);
-        if (overflowCount <= 0) {
-            notificationManager.cancel(tag, PendingIntentConstants.SMS_NOTIFICATION_ID);
-            return;
-        }
-
-        final Notification notification = new NotificationCompat.Builder(context,
-                NotificationChannelUtil.INCOMING_MESSAGES)
-                .setContentTitle(context.getResources().getQuantityString(
-                        R.plurals.notification_more_conversations, overflowCount, overflowCount))
-                .setSmallIcon(R.drawable.ic_sms_light)
-                .setContentIntent(
-                        UIIntents.get().getPendingIntentForConversationListActivity(context))
-                .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
-                .setOnlyAlertOnce(true)
-                .setAutoCancel(true)
-                .build();
-
-        postNotification(notificationManager, tag, PendingIntentConstants.SMS_NOTIFICATION_ID,
-                notification);
+        // Send per-conversation notifications (if there are multiple conversations).
+        Optional<Conversation> conversation =
+                state.mConversationsList.mConversations.stream().findFirst();
+        conversation.ifPresent(conv -> processAndSend(state, conv));
     }
 
     /**
@@ -335,6 +207,7 @@ public class BugleNotifications {
      *
      * @param type Message or error notifications from Constants.
      */
+    @SuppressWarnings("SameParameterValue")
     private static synchronized void cancel(final int type) {
         cancel(type, null);
     }
@@ -368,26 +241,20 @@ public class BugleNotifications {
         }
     }
 
+    private static boolean isConversationSnoozed(final String conversationId) {
+        final Context context = Factory.get().getApplicationContext();
+        final ConversationNotificationRepository repository = EntryPointAccessors
+                .fromApplication(context, ConversationNotificationRepository.Provider.class)
+                .conversationNotificationRepository();
+        return repository.isSnoozed(conversationId);
+    }
+
     private static Uri getNotificationRingtoneUriForConversationId(final String conversationId) {
         final DatabaseWrapper db = DataModel.get().getDatabase();
         final ConversationListItemData convData =
                 ConversationListItemData.getExistingConversation(db, conversationId);
         return RingtoneUtil.getNotificationRingtoneUri(conversationId,
                 convData != null ? convData.getNotificationSoundUri() : null);
-    }
-
-    private static boolean isConversationBlocked(final String conversationId) {
-        final DatabaseWrapper db = DataModel.get().getDatabase();
-        final ConversationListItemData convData =
-                ConversationListItemData.getExistingConversation(db, conversationId);
-
-        if (convData == null) {
-            return false;
-        }
-
-        final String otherDestination = convData.getOtherParticipantNormalizedDestination();
-        return otherDestination != null
-                && BugleDatabaseOperations.isBlockedDestination(db, otherDestination);
     }
 
     /**
@@ -415,12 +282,8 @@ public class BugleNotifications {
     static String buildNotificationTag(final int type, final String conversationId) {
         String tag = null;
         switch(type) {
-            case PendingIntentConstants.SMS_NOTIFICATION_ID:
-                tag = buildNotificationTag(SMS_NOTIFICATION_TAG, conversationId);
-                break;
-            case PendingIntentConstants.MSG_SEND_ERROR:
-                tag = buildNotificationTag(SMS_ERROR_NOTIFICATION_TAG, null);
-                break;
+            case PendingIntentConstants.SMS_NOTIFICATION_ID -> tag = buildNotificationTag(SMS_NOTIFICATION_TAG, conversationId);
+            case PendingIntentConstants.MSG_SEND_ERROR -> tag = buildNotificationTag(SMS_ERROR_NOTIFICATION_TAG, null);
         }
         return tag;
     }
@@ -487,8 +350,8 @@ public class BugleNotifications {
         }
     }
 
-    @VisibleForTesting
-    static void processAndSend(final MessageNotificationState state, final Conversation conversation) {
+    @SuppressLint("MissingPermission")
+    private static void processAndSend(final MessageNotificationState state, final Conversation conversation) {
         final Context context = Factory.get().getApplicationContext();
         final String conversationId = conversation.mConversationId;
         final NotificationCompat.Builder notifBuilder =
@@ -608,11 +471,9 @@ public class BugleNotifications {
         notifBuilder.addAction(replyActionBuilder.build());
 
         final String messageId = conversation.getLatestMessageId();
-        if (conversation.getDoesLatestMessageNeedDownload() && messageId != null
-                && !OsUtil.isSecondaryUser()) {
+        if (conversation.getDoesLatestMessageNeedDownload() && messageId != null) {
             final PendingIntent downloadPendingIntent =
-                    RedownloadMmsAction.getPendingIntentForRedownloadMms(context,
-                            messageId, REQUEST_CODE_REDOWNLOAD_MMS);
+                    RedownloadMmsAction.getPendingIntentForRedownloadMms(context, messageId);
 
             final NotificationCompat.Action.Builder actionBuilder =
                     new NotificationCompat.Action.Builder(R.drawable.ic_file_download_light,
@@ -640,22 +501,10 @@ public class BugleNotifications {
         Notification notification = notifBuilder.build();
         notification.flags |= Notification.FLAG_AUTO_CANCEL;
 
-        if (postNotification(notificationManager, notificationTag, type, notification)) {
-            LogUtil.i(TAG, "Notifying for conversation " + conversationId + "; "
-                    + "tag = " + notificationTag + ", type = " + type);
-        }
-    }
+        notificationManager.notify(notificationTag, type, notification);
 
-    @VisibleForTesting
-    static boolean postNotification(final NotificationManagerCompat notificationManager,
-            final String tag, final int type, final Notification notification) {
-        try {
-            notificationManager.notify(tag, type, notification);
-            return true;
-        } catch (SecurityException e) {
-            LogUtil.e(TAG, "Dropping notification: cannot grant access to its attachment", e);
-            return false;
-        }
+        LogUtil.i(TAG, "Notifying for conversation " + conversationId + "; "
+                + "tag = " + notificationTag + ", type = " + type);
     }
 
     /**
@@ -678,12 +527,7 @@ public class BugleNotifications {
                 OBSERVABLE_CONVERSATION_NOTIFICATION_VOLUME);
 
         // Stop the sound after five seconds to handle continuous ringtones
-        ThreadUtil.getMainThreadHandler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                player.stop();
-            }
-        }, 5000);
+        ThreadUtil.getMainThreadHandler().postDelayed(player::stop, 5000);
     }
 
     /**
@@ -701,6 +545,7 @@ public class BugleNotifications {
         MarkAsReadAction.markAsRead(conversationId, cancelNotification);
     }
 
+    @SuppressLint("MissingPermission")
     public static void notifyEmergencySmsFailed(final String emergencyNumber,
                                                 final String conversationId) {
         final Context context = Factory.get().getApplicationContext();
@@ -765,72 +610,7 @@ public class BugleNotifications {
         return null;
     }
 
-    static Uri getNotificationImageUri(final Context context, final Uri imageUri) {
-        if (imageUri == null) {
-            return null;
-        }
-
-        final Uri notificationImageUri = NotificationImageProvider.buildNotificationImageUri();
-        if (notificationImageUri == null) {
-            return null;
-        }
-        final File imageFile = NotificationImageProvider.getFileFromUri(notificationImageUri);
-        if (imageFile == null) {
-            return null;
-        }
-
-        final ImageRequestDescriptor descriptor = new UriImageRequestDescriptor(
-                imageUri,
-                NOTIFICATION_IMAGE_MAX_SIZE,
-                NOTIFICATION_IMAGE_MAX_SIZE,
-                false,
-                true,
-                false,
-                0,
-                0
-        );
-        final MediaRequest<ImageResource> imageRequest = descriptor.buildSyncMediaRequest(context);
-        final ImageResource image = MediaResourceManager.get().requestMediaResourceSync(
-                imageRequest);
-        if (image == null) {
-            LogUtil.w(TAG, "Could not decode the attachment for its notification");
-            imageFile.delete();
-            return null;
-        }
-
-        final File tempFile = new File(imageFile.getPath() + ".tmp");
-        boolean written = false;
-        try (OutputStream out = new FileOutputStream(tempFile)) {
-            written = orientUpright(image).compress(Bitmap.CompressFormat.JPEG,
-                    NOTIFICATION_IMAGE_QUALITY, out);
-        } catch (final IOException | RuntimeException | OutOfMemoryError e) {
-            LogUtil.e(TAG, "Failed to write the notification image", e);
-        } finally {
-            image.release();
-        }
-
-        if (!written || !tempFile.renameTo(imageFile)) {
-            tempFile.delete();
-            imageFile.delete();
-            return null;
-        }
-        return notificationImageUri;
-    }
-
-    private static Bitmap orientUpright(final ImageResource image) {
-        final Bitmap bitmap = image.getBitmap();
-        final ExifInterface.OrientationParams params =
-                ExifInterface.getOrientationParams(image.getOrientation());
-        if (params.rotation == 0 && params.scaleX == 1 && params.scaleY == 1) {
-            return bitmap;
-        }
-        final Matrix matrix = new Matrix();
-        matrix.postRotate(params.rotation);
-        matrix.postScale(params.scaleX, params.scaleY);
-        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix,
-                false);
-    }
-
+    @SuppressLint("MissingPermission")
     public static void updateWithInlineReply(final String conversationId, final String message) {
         Context context = Factory.get().getApplicationContext();
         Notification activeNotification =
@@ -850,8 +630,8 @@ public class BugleNotifications {
                 recoveredBuilder.setOnlyAlertOnce(true);
 
                 String tag = buildNotificationTag(PendingIntentConstants.SMS_NOTIFICATION_ID, conversationId);
-                postNotification(NotificationManagerCompat.from(context), tag,
-                        PendingIntentConstants.SMS_NOTIFICATION_ID, recoveredBuilder.build());
+                NotificationManagerCompat.from(context)
+                        .notify(tag, PendingIntentConstants.SMS_NOTIFICATION_ID, recoveredBuilder.build());
             }
         }
     }
@@ -870,11 +650,7 @@ public class BugleNotifications {
 
         IconCompat icon;
         IconCompat personIcon = person.getIcon();
-        if (personIcon != null) {
-            icon = personIcon;
-        } else {
-            icon = IconCompat.createWithResource(context, R.drawable.ic_launcher_foreground);
-        }
+        icon = java.util.Objects.requireNonNullElseGet(personIcon, () -> IconCompat.createWithResource(context, R.drawable.ic_launcher_foreground));
         shortcutBuilder.setIcon(icon);
 
         ShortcutManagerCompat.pushDynamicShortcut(context, shortcutBuilder.build());

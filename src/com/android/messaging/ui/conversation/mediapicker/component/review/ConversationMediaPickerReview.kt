@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AddAPhoto
 import androidx.compose.material.icons.rounded.Close
@@ -37,6 +38,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -399,9 +402,7 @@ private fun ReviewCaptionTextField(
         mutableStateOf(value = false)
     }
     var fieldValue by remember(attachmentContentUri) {
-        mutableStateOf(
-            value = captionText.toCaptionTextFieldValue(),
-        )
+        mutableStateOf(value = captionText.toCaptionTextFieldValue())
     }
 
     LaunchedEffect(attachmentContentUri, captionText) {
@@ -450,6 +451,10 @@ private fun ReviewCaptionTextField(
             )
         },
         singleLine = true,
+        keyboardOptions = KeyboardOptions(
+            capitalization = KeyboardCapitalization.Sentences,
+            keyboardType = KeyboardType.ShortMessage,
+        ),
     )
 }
 

@@ -24,10 +24,12 @@ import com.android.messaging.ui.recipientselection.component.row.CONTACT_ID
 import com.android.messaging.ui.recipientselection.component.row.MOBILE_NORMALIZED_DESTINATION
 import com.android.messaging.ui.recipientselection.component.row.contactItem
 import com.android.messaging.ui.recipientselection.component.row.selectedRecipient
+import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
 import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerUiState
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -74,20 +76,7 @@ class NewChatScreenTest {
         val screenModel = createScreenModel(
             initialUiState = NewChatUiState(
                 recipientPickerUiState = RecipientPickerUiState(
-                    items = persistentListOf(
-                        *Array(size = 30) { index ->
-                            contactItem(
-                                id = index.toLong(),
-                                displayName = "Contact $index",
-                                destination = "+1 555 ${
-                                    index.toString().padStart(length = 4, padChar = '0')
-                                }",
-                                normalizedDestination = "+1555${
-                                    index.toString().padStart(length = 4, padChar = '0')
-                                }",
-                            )
-                        },
-                    ),
+                    items = contactItems(count = 30),
                     canLoadMore = true,
                 ),
             ),
@@ -220,6 +209,50 @@ class NewChatScreenTest {
             .assertCountEquals(expectedSize = 1)
     }
 
+    @Test
+    fun createGroupButton_staysVisibleWhileTheContactListScrolls() {
+        val screenModel = createScreenModel(
+            initialUiState = NewChatUiState(
+                recipientPickerUiState = RecipientPickerUiState(
+                    items = contactItems(count = 30),
+                ),
+            ),
+        )
+
+        setContent(screenModel = screenModel)
+
+        composeTestRule
+            .onNode(matcher = hasScrollToIndexAction())
+            .performScrollToIndex(index = 29)
+        composeTestRule.waitForIdle()
+
+        composeTestRule
+            .onNodeWithTag(testTag = NEW_CHAT_CREATE_GROUP_BUTTON_TEST_TAG)
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun leavingCreateGroupMode_showsTheCreateGroupButtonAgain() {
+        val uiState = MutableStateFlow(
+            NewChatUiState(
+                recipientPickerUiState = RecipientPickerUiState(
+                    items = contactItems(count = 30),
+                ),
+            ),
+        )
+
+        setContent(screenModel = createScreenModel(uiStateFlow = uiState))
+
+        uiState.value = uiState.value.copy(isCreatingGroup = true)
+        composeTestRule.waitForIdle()
+        uiState.value = uiState.value.copy(isCreatingGroup = false)
+        composeTestRule.waitForIdle()
+
+        composeTestRule
+            .onNodeWithTag(testTag = NEW_CHAT_CREATE_GROUP_BUTTON_TEST_TAG)
+            .assertIsDisplayed()
+    }
+
     private fun setContent(screenModel: NewChatScreenModel) {
         composeTestRule.setContent {
             AppTheme {
@@ -233,11 +266,32 @@ class NewChatScreenTest {
         }
     }
 
+    private fun contactItems(count: Int): ImmutableList<RecipientPickerListItem.Contact> {
+        return persistentListOf(
+            *Array(size = count) { index ->
+                val suffix = index.toString().padStart(length = 4, padChar = '0')
+
+                contactItem(
+                    id = index.toLong(),
+                    displayName = "Contact $index",
+                    destination = "+1 555 $suffix",
+                    normalizedDestination = "+1555$suffix",
+                )
+            },
+        )
+    }
+
     private fun createScreenModel(initialUiState: NewChatUiState): NewChatScreenModel {
+        return createScreenModel(uiStateFlow = MutableStateFlow(value = initialUiState))
+    }
+
+    private fun createScreenModel(
+        uiStateFlow: MutableStateFlow<NewChatUiState>,
+    ): NewChatScreenModel {
         return mockk<NewChatScreenModel>(relaxed = true) {
             every { effects } returns MutableSharedFlow()
             every { navigationEvents } returns MutableSharedFlow()
-            every { uiState } returns MutableStateFlow(value = initialUiState)
+            every { uiState } returns uiStateFlow
         }
     }
 }

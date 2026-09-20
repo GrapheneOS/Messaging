@@ -3,6 +3,7 @@ package com.android.messaging.data.conversation.mapper
 import android.net.Uri
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
+import com.android.messaging.datamodel.MediaScratchFileProvider
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.datamodel.data.MessagePartData
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
@@ -30,7 +31,7 @@ class ConversationMessageDataDraftMapperImplTest {
             MessagePartData.createMediaMessagePart(
                 "Caption",
                 "image/jpeg",
-                Uri.parse("content://media/image/1"),
+                scratchUri("1.jpg"),
                 640,
                 480,
             ),
@@ -48,7 +49,7 @@ class ConversationMessageDataDraftMapperImplTest {
             listOf(
                 createAttachment(
                     contentType = "image/jpeg",
-                    contentUri = "content://media/image/1",
+                    contentUri = scratchUri("1.jpg").toString(),
                     captionText = "Caption",
                     width = 640,
                     height = 480,
@@ -100,7 +101,7 @@ class ConversationMessageDataDraftMapperImplTest {
         messageData.addPart(
             MessagePartData.createMediaMessagePart(
                 "image/png",
-                Uri.parse("content://media/image/2"),
+                scratchUri("2.png"),
                 MessagePartData.UNSPECIFIED_SIZE,
                 MessagePartData.UNSPECIFIED_SIZE,
             ),
@@ -110,7 +111,7 @@ class ConversationMessageDataDraftMapperImplTest {
         val attachment = draft.attachments.single()
 
         assertEquals("image/png", attachment.contentType)
-        assertEquals("content://media/image/2", attachment.contentUri)
+        assertEquals(scratchUri("2.png").toString(), attachment.contentUri)
         assertEquals("", attachment.captionText)
         assertNull(attachment.width)
         assertNull(attachment.height)
@@ -126,7 +127,7 @@ class ConversationMessageDataDraftMapperImplTest {
         messageData.addPart(
             MessagePartData.createMediaMessagePart(
                 "",
-                Uri.parse("content://media/image/3"),
+                scratchUri("3.jpg"),
                 320,
                 240,
             ),
@@ -142,7 +143,7 @@ class ConversationMessageDataDraftMapperImplTest {
         messageData.addPart(
             MessagePartData.createMediaMessagePart(
                 "audio/mp3",
-                Uri.parse("content://media/audio/4"),
+                scratchUri("4.mp3"),
                 0,
                 0,
             ),
@@ -154,7 +155,7 @@ class ConversationMessageDataDraftMapperImplTest {
             listOf(
                 createAttachment(
                     contentType = "audio/mp3",
-                    contentUri = "content://media/audio/4",
+                    contentUri = scratchUri("4.mp3").toString(),
                     width = 0,
                     height = 0,
                 ),
@@ -164,27 +165,54 @@ class ConversationMessageDataDraftMapperImplTest {
     }
 
     @Test
-    fun map_dropsAttachmentsBackedByPhotoPickerUris() {
+    fun map_dropsAttachmentsBackedByMediaStoreUris() {
         val messageData = MessageData.createDraftSmsMessage(
             CONVERSATION_ID.value,
             "self-1",
             "Hello",
         )
-        messageData.addPart(
-            MessagePartData.createMediaMessagePart(
-                "image/jpeg",
-                Uri.parse(
-                    "content://media/picker/0/" +
-                        "com.android.providers.media.photopicker/media/1",
+        listOf(
+            "content://media/picker/0/com.android.providers.media.photopicker/media/1",
+            "content://media/external/images/media/1",
+            "content://com.android.providers.media.documents/document/image%3A1",
+            // An authority that merely starts with "media" belongs to somebody else.
+            "content://media.example/images/1",
+            // Forwarding seeds a raw mms part uri, readable as the default SMS app.
+            "content://mms/part/1",
+        ).forEach { contentUri ->
+            messageData.addPart(
+                MessagePartData.createMediaMessagePart(
+                    "image/jpeg",
+                    Uri.parse(contentUri),
+                    320,
+                    240,
                 ),
-                320,
-                240,
-            ),
-        )
+            )
+        }
 
         val draft = mapper.map(messageData = messageData)
 
-        assertEquals(emptyList<ConversationDraftAttachment>(), draft.attachments)
+        assertEquals(
+            listOf(
+                createAttachment(
+                    contentType = "image/jpeg",
+                    contentUri = "content://media.example/images/1",
+                    width = 320,
+                    height = 240,
+                ),
+                createAttachment(
+                    contentType = "image/jpeg",
+                    contentUri = "content://mms/part/1",
+                    width = 320,
+                    height = 240,
+                ),
+            ),
+            draft.attachments,
+        )
+    }
+
+    private fun scratchUri(name: String): Uri {
+        return MediaScratchFileProvider.getUriBuilder().appendPath(name).build()
     }
 
     private fun createAttachment(

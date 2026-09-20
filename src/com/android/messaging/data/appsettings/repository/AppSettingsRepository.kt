@@ -38,6 +38,10 @@ internal class AppSettingsRepositoryImpl @Inject constructor(
                     context.getString(R.string.send_sound_pref_key),
                     resources.getBoolean(R.bool.send_sound_pref_default),
                 ),
+                inConversationSoundEnabled = appPrefs.getBoolean(
+                    context.getString(R.string.in_conversation_sound_pref_key),
+                    resources.getBoolean(R.bool.in_conversation_sound_pref_default),
+                ),
                 youTubeLinkPreviewsEnabled = readYouTubeLinkPreviewsEnabled(),
                 isDebugEnabled = debugFeaturesProvider.isEnabled(),
                 dumpSmsEnabled = appPrefs.getBoolean(

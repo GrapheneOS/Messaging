@@ -8,9 +8,7 @@ import com.android.messaging.datamodel.action.BackgroundWorker;
 import com.android.messaging.datamodel.data.ConversationData;
 import com.android.messaging.datamodel.data.ConversationListData;
 import com.android.messaging.datamodel.data.DraftMessageData;
-import com.android.messaging.datamodel.data.GalleryGridItemData;
 import com.android.messaging.datamodel.data.LaunchConversationData;
-import com.android.messaging.datamodel.data.MediaPickerData;
 import com.android.messaging.util.Assert;
 
 public class ActionSyncTestDataModel extends DataModel {
@@ -34,16 +32,6 @@ public class ActionSyncTestDataModel extends DataModel {
     public ConversationData createConversationData(final Context context,
             final ConversationData.ConversationDataListener listener,
             final String conversationId) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public MediaPickerData createMediaPickerData(final Context context) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public GalleryGridItemData createGalleryGridItemData() {
         throw new UnsupportedOperationException();
     }
 

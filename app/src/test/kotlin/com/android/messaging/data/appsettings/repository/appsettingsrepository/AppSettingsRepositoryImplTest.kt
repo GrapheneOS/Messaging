@@ -62,6 +62,9 @@ internal class AppSettingsRepositoryImplTest {
         every { factory.getPhoneUtils(ParticipantData.DEFAULT_SELF_SUB_ID) } returns phoneUtils
         every { context.resources } returns resources
         every { context.getString(R.string.send_sound_pref_key) } returns SEND_SOUND_PREF_KEY
+        every {
+            context.getString(R.string.in_conversation_sound_pref_key)
+        } returns IN_CONVERSATION_SOUND_PREF_KEY
         every { context.getString(R.string.dump_sms_pref_key) } returns DUMP_SMS_PREF_KEY
         every { context.getString(R.string.dump_mms_pref_key) } returns DUMP_MMS_PREF_KEY
         every {
@@ -72,6 +75,9 @@ internal class AppSettingsRepositoryImplTest {
         } returns YOUTUBE_LINK_PREVIEWS_DEFAULT
         every { resources.getBoolean(R.bool.send_sound_pref_default) } returns
             SEND_SOUND_DEFAULT
+        every {
+            resources.getBoolean(R.bool.in_conversation_sound_pref_default)
+        } returns IN_CONVERSATION_SOUND_DEFAULT
         every { resources.getBoolean(R.bool.dump_sms_pref_default) } returns DUMP_SMS_DEFAULT
         every { resources.getBoolean(R.bool.dump_mms_pref_default) } returns DUMP_MMS_DEFAULT
     }
@@ -88,6 +94,12 @@ internal class AppSettingsRepositoryImplTest {
             every { phoneUtils.defaultSmsAppLabel } returns DEFAULT_SMS_APP_LABEL
             every { debugFeaturesProvider.isEnabled() } returns true
             every { appPrefs.getBoolean(SEND_SOUND_PREF_KEY, SEND_SOUND_DEFAULT) } returns false
+            every {
+                appPrefs.getBoolean(
+                    IN_CONVERSATION_SOUND_PREF_KEY,
+                    IN_CONVERSATION_SOUND_DEFAULT,
+                )
+            } returns true
             every { appPrefs.getBoolean(DUMP_SMS_PREF_KEY, DUMP_SMS_DEFAULT) } returns true
             every { appPrefs.getBoolean(DUMP_MMS_PREF_KEY, DUMP_MMS_DEFAULT) } returns false
             every {
@@ -104,12 +116,17 @@ internal class AppSettingsRepositoryImplTest {
             assertTrue(result.isDefaultSmsApp)
             assertEquals(DEFAULT_SMS_APP_LABEL, result.defaultSmsAppLabel)
             assertFalse(result.sendSoundEnabled)
+            assertTrue(result.inConversationSoundEnabled)
             assertTrue(result.youTubeLinkPreviewsEnabled)
             assertTrue(result.isDebugEnabled)
             assertTrue(result.dumpSmsEnabled)
             assertFalse(result.dumpMmsEnabled)
             verify(exactly = 1) {
                 appPrefs.getBoolean(SEND_SOUND_PREF_KEY, SEND_SOUND_DEFAULT)
+                appPrefs.getBoolean(
+                    IN_CONVERSATION_SOUND_PREF_KEY,
+                    IN_CONVERSATION_SOUND_DEFAULT,
+                )
                 appPrefs.getBoolean(
                     YOUTUBE_LINK_PREVIEWS_PREF_KEY,
                     YOUTUBE_LINK_PREVIEWS_DEFAULT,
@@ -133,6 +150,10 @@ internal class AppSettingsRepositoryImplTest {
                 enabled = true,
             )
             repository.setBooleanPref(
+                pref = AppBooleanPref.IN_CONVERSATION_SOUND,
+                enabled = true,
+            )
+            repository.setBooleanPref(
                 pref = AppBooleanPref.DUMP_SMS,
                 enabled = false,
             )
@@ -148,6 +169,10 @@ internal class AppSettingsRepositoryImplTest {
             verify(exactly = 1) {
                 appPrefs.putBoolean(
                     SEND_SOUND_PREF_KEY,
+                    true,
+                )
+                appPrefs.putBoolean(
+                    IN_CONVERSATION_SOUND_PREF_KEY,
                     true,
                 )
                 appPrefs.putBoolean(
@@ -213,6 +238,8 @@ internal class AppSettingsRepositoryImplTest {
         private const val DUMP_MMS_PREF_KEY = "dump_mms"
         private const val DUMP_SMS_DEFAULT = true
         private const val DUMP_SMS_PREF_KEY = "dump_sms"
+        private const val IN_CONVERSATION_SOUND_DEFAULT = false
+        private const val IN_CONVERSATION_SOUND_PREF_KEY = "in_conversation_sound"
         private const val SEND_SOUND_DEFAULT = true
         private const val SEND_SOUND_PREF_KEY = "send_sound"
         private const val YOUTUBE_LINK_PREVIEWS_DEFAULT = false

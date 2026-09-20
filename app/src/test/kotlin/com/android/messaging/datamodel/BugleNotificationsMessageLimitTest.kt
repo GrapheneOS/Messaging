@@ -85,6 +85,7 @@ class BugleNotificationsMessageLimitTest {
             "Message $messageId",
             null,
             null,
+            null,
             false,
             null,
             messageId,

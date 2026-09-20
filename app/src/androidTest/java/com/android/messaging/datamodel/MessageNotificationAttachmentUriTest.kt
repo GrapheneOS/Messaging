@@ -179,12 +179,34 @@ class MessageNotificationAttachmentUriTest {
         )
     }
 
+    /**
+     * Re-minting the file per pass is what put the `SMS_DELIVER` broadcast over its deadline: every
+     * pass decoded and re-compressed the same attachment again. The file is named after the part,
+     * so a pass that has already transcoded it reuses it.
+     */
     @Test
-    fun createStyledMessage_calledTwice_doesNotReuseTheSameFile() {
+    fun createStyledMessage_calledTwiceForTheSamePart_reusesTheTranscodedFile() {
         val first = messageLineInfo(attachmentUri).createStyledMessage(SENDER).dataUri
         val second = messageLineInfo(attachmentUri).createStyledMessage(SENDER).dataUri
 
-        assertNotEquals("the same file was handed to two notifications", first, second)
+        assertNotNull("no image was attached to the notification", first)
+        assertEquals("the attachment was transcoded a second time", first, second)
+        assertEquals(
+            "reusing the transcode still left a second file behind",
+            1,
+            NotificationImageProvider.listImageFiles().size,
+        )
+    }
+
+    /** Parts must not share a file, or a conversation gets handed another one's photo. */
+    @Test
+    fun createStyledMessage_forDifferentParts_usesDifferentFiles() {
+        val first = messageLineInfo(attachmentUri, PART_ID).createStyledMessage(SENDER).dataUri
+        val second =
+            messageLineInfo(attachmentUri, OTHER_PART_ID).createStyledMessage(SENDER).dataUri
+
+        assertNotNull("no image was attached to the notification", first)
+        assertNotEquals("two parts were handed the same file", first, second)
     }
 
     /**
@@ -193,7 +215,9 @@ class MessageNotificationAttachmentUriTest {
      */
     @Test
     fun sweepNotificationImages_keepsPostedImagesAndDeletesOrphans() {
-        val orphan = imageFileOf(NotificationImageProvider.buildNotificationImageUri())
+        val orphan = imageFileOf(
+            messageLineInfo(attachmentUri, OTHER_PART_ID).createStyledMessage(SENDER).dataUri,
+        )
         val message = messageLineInfo(attachmentUri).createStyledMessage(SENDER)
         val posted = imageFileOf(message.dataUri)
         assertTrue("the platform refused to grant access to the attached image", post(message))
@@ -268,16 +292,20 @@ class MessageNotificationAttachmentUriTest {
         )
     }
 
-    private fun messageLineInfo(uri: Uri): MessageNotificationState.MessageLineInfo {
+    private fun messageLineInfo(
+        uri: Uri,
+        partId: String = PART_ID,
+    ): MessageNotificationState.MessageLineInfo {
         return MessageNotificationState.MessageLineInfo(
             // authorId, authorFullName, authorFirstName
             "author",
             "Sender",
             "Sender",
-            // text, attachmentUri, attachmentType
+            // text, attachmentUri, attachmentType, attachmentPartId
             "Check out this photo!",
             uri,
             ContentType.IMAGE_JPEG,
+            partId,
             // isManualDownloadNeeded, avatarUri, messageId, timestamp, contactUriString
             false,
             null,
@@ -297,6 +325,8 @@ class MessageNotificationAttachmentUriTest {
         const val POST_POLL_MILLIS = 50L
         const val NOTIFICATION_ID = 0x7103
         const val NOTIFICATION_TAG = "BUG-015"
+        const val PART_ID = "7"
+        const val OTHER_PART_ID = "8"
         val UNGRANTABLE_URI: Uri = Uri.parse("content://call_log/calls/1")
         val SELF: Person = Person.Builder().setName("Me").build()
         val SENDER: Person = Person.Builder().setName("Sender").setKey("author").build()

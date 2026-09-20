@@ -26,6 +26,7 @@ import com.android.messaging.datamodel.data.MessageData;
 import com.android.messaging.datamodel.data.ParticipantData;
 import com.android.messaging.sms.MmsUtils;
 import com.android.messaging.util.AccessibilityUtil;
+import com.android.messaging.util.InConversationSound;
 import com.android.messaging.util.PhoneUtils;
 import com.android.messaging.util.ThreadUtil;
 
@@ -98,6 +99,9 @@ public class BugleActionToasts {
     public static void onMessageReceived(final String conversationId,
             @Nullable final ParticipantData sender, @Nullable final MessageData message) {
         final Context context = Factory.get().getApplicationContext();
+        if (DataModel.get().isNewMessageObservable(conversationId)) {
+            InConversationSound.playIfEnabled(conversationId);
+        }
         if (AccessibilityUtil.isTouchExplorationEnabled(context)) {
             final boolean isFocusedConversation = DataModel.get().isFocusedConversation(
                     conversationId);

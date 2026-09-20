@@ -20,6 +20,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -71,15 +72,9 @@ internal fun ConversationSettingsTopAppBar(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.graphicsLayer {
-                        alpha = collapseProgress()
-                    },
+                CollapsedTitle(
+                    title = title,
+                    collapseProgress = collapseProgress,
                 )
             }
         },
@@ -94,5 +89,20 @@ internal fun ConversationSettingsTopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.background,
         ),
+    )
+}
+
+@Composable
+private fun CollapsedTitle(
+    title: String,
+    collapseProgress: () -> Float,
+) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleMedium,
+        color = MaterialTheme.colorScheme.onSurface,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier.alpha(alpha = collapseProgress()),
     )
 }

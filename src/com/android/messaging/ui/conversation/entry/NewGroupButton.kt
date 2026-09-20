@@ -13,11 +13,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Group
@@ -40,7 +38,7 @@ import com.android.messaging.ui.conversation.NEW_CHAT_CREATE_GROUP_BUTTON_TEST_T
 import com.android.messaging.ui.core.MessagingPreviewColumn
 
 @Composable
-internal fun NewChatRecipientSelectionTopListContent(
+internal fun NewChatCreateGroupHeader(
     isCreatingGroup: Boolean,
     onCreateGroupClick: () -> Unit,
 ) {
@@ -49,15 +47,12 @@ internal fun NewChatRecipientSelectionTopListContent(
         enter = newGroupButtonEnterTransition(),
         exit = newGroupButtonExitTransition(),
     ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(space = 12.dp),
-        ) {
-            NewGroupButton(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = onCreateGroupClick,
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-        }
+        NewGroupButton(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 10.dp),
+            onClick = onCreateGroupClick,
+        )
     }
 }
 
@@ -139,9 +134,9 @@ private fun <T> newChatSpatialAnimationSpec(): FiniteAnimationSpec<T> {
 
 @PreviewLightDark
 @Composable
-private fun NewChatRecipientSelectionTopListContentPreview() {
+private fun NewChatCreateGroupHeaderPreview() {
     MessagingPreviewColumn {
-        NewChatRecipientSelectionTopListContent(
+        NewChatCreateGroupHeader(
             isCreatingGroup = false,
             onCreateGroupClick = {},
         )

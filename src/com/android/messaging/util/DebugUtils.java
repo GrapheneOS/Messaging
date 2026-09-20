@@ -31,7 +31,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 
-import static androidx.appcompat.R.style.Theme_AppCompat_Light_Dialog_Alert;
+import static androidx.appcompat.R.style.Theme_AppCompat_DayNight_Dialog_Alert;
 
 import com.android.messaging.Factory;
 import com.android.messaging.R;
@@ -69,7 +69,7 @@ public class DebugUtils {
     public static final int DEBUG_SOUND_SERVER_REQUEST = 0;
     public static final int DEBUG_SOUND_DB_OP = 1;
 
-    private static final int DIALOG_THEME = Theme_AppCompat_Light_Dialog_Alert;
+    private static final int DIALOG_THEME = Theme_AppCompat_DayNight_Dialog_Alert;
 
     public static void maybePlayDebugNoise(final Context context, final int sound) {
         if (sDebugNoise) {

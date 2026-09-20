@@ -4,52 +4,57 @@ import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.FiniteAnimationSpec
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.fadeIn
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.ui.graphics.TransformOrigin
 import androidx.navigationevent.NavigationEvent
+import androidx.navigationevent.NavigationEvent.SwipeEdge
+import kotlin.math.roundToInt
 
-internal fun predictiveBackContentTransform(swipeEdge: Int): ContentTransform {
-    return predictiveBackEnter() togetherWith predictiveBackExit(swipeEdge = swipeEdge)
+internal fun predictiveBackContentTransform(
+    @SwipeEdge swipeEdge: Int,
+): ContentTransform {
+    return EnterTransition.None togetherWith predictiveBackExit(swipeEdge = swipeEdge)
 }
 
-private fun predictiveBackEnter(): EnterTransition {
-    return fadeIn(animationSpec = predictiveBackSpec())
-}
-
-private fun predictiveBackExit(swipeEdge: Int): ExitTransition {
-    return scaleOut(
+private fun predictiveBackExit(
+    @SwipeEdge swipeEdge: Int,
+): ExitTransition {
+    val shrink = scaleOut(
         animationSpec = predictiveBackSpec(),
         targetScale = PREDICTIVE_BACK_TARGET_SCALE,
-        transformOrigin = predictiveBackTransformOrigin(swipeEdge = swipeEdge),
     )
-}
-
-private fun predictiveBackTransformOrigin(swipeEdge: Int): TransformOrigin {
-    val pivotFractionX = when (swipeEdge) {
-        NavigationEvent.EDGE_LEFT -> TRAILING_PIVOT_FRACTION
-        NavigationEvent.EDGE_RIGHT -> LEADING_PIVOT_FRACTION
-        else -> CENTER_PIVOT_FRACTION
+    val push = slideOutHorizontally(animationSpec = predictiveBackSpec()) { fullWidth ->
+        predictiveBackTranslation(swipeEdge = swipeEdge, fullWidth = fullWidth)
     }
 
-    return TransformOrigin(
-        pivotFractionX = pivotFractionX,
-        pivotFractionY = CENTER_PIVOT_FRACTION,
+    return shrink + push
+}
+
+internal fun predictiveBackTranslation(
+    @SwipeEdge swipeEdge: Int,
+    fullWidth: Int,
+): Int {
+    val slack = fullWidth * (1f - PREDICTIVE_BACK_TARGET_SCALE) / 2f
+    val travel = (slack - fullWidth * PREDICTIVE_BACK_EDGE_MARGIN_FRACTION).roundToInt()
+
+    return when (swipeEdge) {
+        NavigationEvent.EDGE_LEFT -> travel
+        NavigationEvent.EDGE_RIGHT -> -travel
+        else -> 0
+    }
+}
+
+internal fun <T> predictiveBackSpec(): FiniteAnimationSpec<T> {
+    return tween(
+        durationMillis = PREDICTIVE_BACK_DURATION_MILLIS,
+        easing = LinearEasing,
     )
 }
 
-private fun <T> predictiveBackSpec(): FiniteAnimationSpec<T> {
-    return spring(
-        dampingRatio = PREDICTIVE_BACK_DAMPING_RATIO,
-        stiffness = PREDICTIVE_BACK_STIFFNESS,
-    )
-}
+internal const val PREDICTIVE_BACK_TARGET_SCALE = 0.75f
+internal const val PREDICTIVE_BACK_EDGE_MARGIN_FRACTION = 0.025f
 
-private const val PREDICTIVE_BACK_TARGET_SCALE = 0.9f
-private const val PREDICTIVE_BACK_DAMPING_RATIO = 1.0f
-private const val PREDICTIVE_BACK_STIFFNESS = 1600.0f
-private const val LEADING_PIVOT_FRACTION = 0f
-private const val CENTER_PIVOT_FRACTION = 0.5f
-private const val TRAILING_PIVOT_FRACTION = 1f
+private const val PREDICTIVE_BACK_DURATION_MILLIS = 100

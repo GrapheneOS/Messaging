@@ -1,11 +1,13 @@
 package com.android.messaging.data.conversation.mapper
 
+import androidx.core.net.toUri
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.datamodel.data.MessagePartData
 import com.android.messaging.util.LogUtil
+import com.android.messaging.util.UriUtil
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
 
@@ -43,8 +45,8 @@ internal class ConversationMessageDataDraftMapperImpl @Inject constructor() :
         val contentUri = part.contentUri?.toString()?.takeIf { it.isNotBlank() }
 
         return when {
-            isPhotoPickerUri(contentUri) -> {
-                LogUtil.w(TAG, "Dropping draft attachment backed by photo picker URI")
+            isMediaStoreUri(contentUri) -> {
+                LogUtil.w(TAG, "Dropping draft attachment backed by MediaStore URI")
                 null
             }
 
@@ -73,12 +75,18 @@ internal class ConversationMessageDataDraftMapperImpl @Inject constructor() :
         return size.takeIf { it != MessagePartData.UNSPECIFIED_SIZE }
     }
 
-    private fun isPhotoPickerUri(uri: String?): Boolean {
-        return uri?.startsWith(prefix = PHOTO_PICKER_URI_PREFIX) == true
+    /**
+     * The app holds no media read permissions, so a MediaStore URI is unreadable unless a grant
+     * came with it, and a grant never survives into a persisted draft. No live path stores one
+     * anyway - every picker copies its selection into scratch space first - so these only turn up
+     * in drafts written by the pre-Compose gallery picker. Drop them rather than restore an
+     * attachment that can only fail.
+     */
+    private fun isMediaStoreUri(uri: String?): Boolean {
+        return uri != null && UriUtil.isMediaStoreUri(uri.toUri())
     }
 
     private companion object {
         private const val TAG = "ConversationMsgDataDraftMapper"
-        private const val PHOTO_PICKER_URI_PREFIX = "content://media/picker/"
     }
 }

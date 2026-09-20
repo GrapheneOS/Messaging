@@ -9,6 +9,7 @@ import com.android.messaging.data.conversationlist.model.ConversationListSnapsho
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
 import com.android.messaging.data.conversationsettings.model.SnoozeOption
 import com.android.messaging.data.debug.DebugFeaturesProvider
+import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.domain.conversation.usecase.participant.ResolveContactAction
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveContactActionResult
 import com.android.messaging.ui.contact.model.AddContactRequest
@@ -24,6 +25,7 @@ import com.android.messaging.ui.conversationlist.model.ConversationListAvatarUiM
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,6 +33,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -52,6 +55,8 @@ internal class ConversationListViewModel @Inject constructor(
     private val optimisticSnapshotDelegate: ConversationListOptimisticSnapshotDelegate,
     private val resolveContactAction: ResolveContactAction,
     private val debugFeaturesProvider: DebugFeaturesProvider,
+    @param:DefaultDispatcher
+    private val defaultDispatcher: CoroutineDispatcher,
 ) : ViewModel(),
     ConversationListScreenModel {
 
@@ -81,13 +86,15 @@ internal class ConversationListViewModel @Inject constructor(
             isScrollToTopVisible = isScrollToTopVisible,
             isDebugEnabled = isDebugEnabled,
         )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(
-            stopTimeoutMillis = STATEFLOW_STOP_TIMEOUT_MILLIS,
-        ),
-        initialValue = State(),
-    )
+    }
+        .flowOn(defaultDispatcher)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(
+                stopTimeoutMillis = STATEFLOW_STOP_TIMEOUT_MILLIS,
+            ),
+            initialValue = State(),
+        )
 
     init {
         optimisticSnapshotDelegate.bind(

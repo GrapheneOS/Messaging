@@ -80,10 +80,23 @@ public abstract class FileProvider extends ContentProvider {
      * @return unique uri that can be used to write temporary files
      */
     protected static Uri buildFileUri(final String authority, final String extension) {
-        final long fileId = Math.abs(RANDOM_ID.nextLong());
+        return buildFileUri(authority, extension,
+                String.valueOf(Math.abs(RANDOM_ID.nextLong())));
+    }
+
+    /**
+     * Build uri for a file with a caller-chosen id, so that the same logical content maps to the
+     * same file on every call. The id must satisfy {@link #isValidFileId}.
+     * @param authority authority with which to populate uri
+     * @param extension optional file extension
+     * @param fileId the file id to use
+     * @return uri naming that file
+     */
+    protected static Uri buildFileUri(final String authority, final String extension,
+            final String fileId) {
         final Uri.Builder builder = (new Uri.Builder()).authority(authority).scheme(
                 ContentResolver.SCHEME_CONTENT);
-        builder.appendPath(String.valueOf(fileId));
+        builder.appendPath(fileId);
         if (!TextUtils.isEmpty(extension)) {
             builder.appendQueryParameter(FILE_EXTENSION_PARAM_KEY, extension);
         }

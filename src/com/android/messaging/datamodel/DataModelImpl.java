@@ -29,10 +29,8 @@ import com.android.messaging.datamodel.data.ConversationData.ConversationDataLis
 import com.android.messaging.datamodel.data.ConversationListData;
 import com.android.messaging.datamodel.data.ConversationListData.ConversationListDataListener;
 import com.android.messaging.datamodel.data.DraftMessageData;
-import com.android.messaging.datamodel.data.GalleryGridItemData;
 import com.android.messaging.datamodel.data.LaunchConversationData;
 import com.android.messaging.datamodel.data.LaunchConversationData.LaunchConversationDataListener;
-import com.android.messaging.datamodel.data.MediaPickerData;
 import com.android.messaging.datamodel.data.ParticipantData;
 import com.android.messaging.sms.MmsConfig;
 import com.android.messaging.util.Assert;
@@ -73,16 +71,6 @@ public class DataModelImpl extends DataModel {
     public ConversationData createConversationData(final Context context,
             final ConversationDataListener listener, final String conversationId) {
         return new ConversationData(context, listener, conversationId);
-    }
-
-    @Override
-    public MediaPickerData createMediaPickerData(final Context context) {
-        return new MediaPickerData(context);
-    }
-
-    @Override
-    public GalleryGridItemData createGalleryGridItemData() {
-        return new GalleryGridItemData();
     }
 
     @Override
