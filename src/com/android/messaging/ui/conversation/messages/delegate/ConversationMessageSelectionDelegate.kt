@@ -37,11 +37,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-internal interface ConversationMessageSelectionDelegate :
-    ConversationScreenDelegate<ConversationMessageSelectionUiState> {
-    val effects: Flow<Effect>
-    val navigationEvents: Flow<NavEvent>
-
+internal interface ConversationMessageSelectionActions {
     fun onMessageClick(messageId: MessageId)
 
     fun onMessageDownloadClick(messageId: MessageId)
@@ -57,6 +53,13 @@ internal interface ConversationMessageSelectionDelegate :
     fun dismissMessageSelection()
 
     fun confirmDeleteSelectedMessages()
+}
+
+internal interface ConversationMessageSelectionDelegate :
+    ConversationScreenDelegate<ConversationMessageSelectionUiState>,
+    ConversationMessageSelectionActions {
+    val effects: Flow<Effect>
+    val navigationEvents: Flow<NavEvent>
 
     fun onDefaultSmsRoleRequestResult(resultCode: Int): Boolean
 }
