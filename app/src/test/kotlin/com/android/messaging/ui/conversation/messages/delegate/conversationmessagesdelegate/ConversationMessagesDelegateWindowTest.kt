@@ -94,15 +94,15 @@ internal class ConversationMessagesDelegateWindowTest : BaseConversationMessages
     }
 
     @Test
-    fun bind_afterProcessDeath_restoresTheGrownWindowAndItsMessages() {
+    fun bind_afterProcessDeath_restoresTheGrownWindowUpToTheCap() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val windowSizes = givenConversationMessagesUpTo(messageCount = LARGE_WINDOW)
             val delegate = createBoundDelegate(
                 conversationIdFlow = MutableStateFlow(CONVERSATION_ID),
             )
             runCurrent()
-            // 500, 1000, 2000, 4000, 8000: each request doubles what the one before it loaded,
-            // and past 4000 so that a window capped at the step this started from fails here.
+            // Grow from 500 to 8000, well past the 4000 restore cap, so restore must clamp to
+            // the cap rather than retain 8000 or fall back to 500.
             repeat(4) {
                 delegate.loadOlderMessages()
                 runCurrent()
@@ -116,9 +116,9 @@ internal class ConversationMessagesDelegateWindowTest : BaseConversationMessages
             )
             runCurrent()
 
-            assertEquals(LARGE_WINDOW, windowSizes().first())
+            assertEquals(DEFAULT_WINDOW * 8, windowSizes().first())
             val messages = (restored.state.value as ConversationMessagesUiState.Present).messages
-            assertEquals(LARGE_WINDOW, messages.size)
+            assertEquals(DEFAULT_WINDOW * 8, messages.size)
             assertEquals(MessageId(OLDEST_MESSAGE_ID), messages.first().messageId)
         }
     }

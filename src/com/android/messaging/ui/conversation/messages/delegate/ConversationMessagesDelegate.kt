@@ -368,16 +368,27 @@ internal class ConversationMessagesDelegateImpl @Inject constructor(
     /** The window a restored process is handed, or a fresh one. */
     private fun SavedStateHandle.restoredWindowState(): ConversationMessagesWindowState {
         val savedWindow = get<Bundle>(WINDOW_KEY)
+        val savedSize = savedWindow?.getInt(WINDOW_SIZE_KEY, CONVERSATION_MESSAGES_WINDOW_STEP)
+            ?: CONVERSATION_MESSAGES_WINDOW_STEP
 
         return ConversationMessagesWindowState(
             conversationId = savedWindow?.getString(WINDOW_CONVERSATION_ID_KEY),
-            size = savedWindow?.getInt(WINDOW_SIZE_KEY, CONVERSATION_MESSAGES_WINDOW_STEP)
-                ?: CONVERSATION_MESSAGES_WINDOW_STEP,
+            size = savedSize.coerceIn(CONVERSATION_MESSAGES_WINDOW_STEP, MAX_RESTORED_WINDOW_SIZE),
         )
     }
 
     private companion object {
         private const val CONVERSATION_MESSAGES_WINDOW_STEP = 500
+
+        /**
+         * 4000 is three doublings from the 500 step: enough to keep a restored deep scroll
+         * position in the window while keeping the first query after process death fast.
+         * LazyListState clamps an out-of-range restored index to the oldest loaded row, where
+         * the existing scroll-back trigger grows the window again on demand. The lower bound
+         * also neutralizes corrupt or zero saved values before the provider's `limit > 0`
+         * assertion.
+         */
+        private const val MAX_RESTORED_WINDOW_SIZE = CONVERSATION_MESSAGES_WINDOW_STEP * 8
 
         private const val WINDOW_KEY = "conversation_messages_window"
         private const val WINDOW_SIZE_KEY = "size"
