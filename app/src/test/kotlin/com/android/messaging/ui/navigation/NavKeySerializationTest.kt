@@ -101,7 +101,7 @@ class NavKeySerializationTest {
                         right = 110,
                         bottom = 220,
                     ),
-                    initialPhotoOccurrenceIndex = 2,
+                    initialPartId = "part-2",
                 ),
             ),
         )

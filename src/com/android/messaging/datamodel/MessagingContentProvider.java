@@ -72,6 +72,9 @@ public class MessagingContentProvider extends ContentProvider {
     public static final Uri CONVERSATION_MESSAGES_URI = Uri.parse(CONTENT_AUTHORITY +
             MESSAGES_QUERY + "/conversation");
 
+    private static final String QUERY_PARAMETER_LIMIT = "limit";
+    private static final String QUERY_PARAMETER_MESSAGE_ID = "message_id";
+
     // Conversation participants query
     private static final String PARTICIPANTS_QUERY = "participants";
 
@@ -176,6 +179,38 @@ public class MessagingContentProvider extends ContentProvider {
         final Uri.Builder builder = CONVERSATION_MESSAGES_URI.buildUpon();
         builder.appendPath(conversationId);
         return builder.build();
+    }
+
+    /**
+     * Build a messages uri restricted to the newest {@code limit} messages of the conversation.
+     *
+     * <p>The limit travels as a query parameter so that the uri still matches the unrestricted one
+     * for both {@link UriMatcher} and content observer purposes: neither looks at the query.
+     */
+    public static Uri buildConversationMessagesUri(
+            final String conversationId,
+            final int limit
+    ) {
+        Assert.isTrue(limit > 0);
+
+        return buildConversationMessagesUri(conversationId)
+                .buildUpon()
+                .appendQueryParameter(QUERY_PARAMETER_LIMIT, Integer.toString(limit))
+                .build();
+    }
+
+    /**
+     * Build a uri for a single message of a conversation. Callers after one message must not walk
+     * the whole conversation to find it.
+     */
+    public static Uri buildConversationMessageUri(
+            final String conversationId,
+            final String messageId
+    ) {
+        return buildConversationMessagesUri(conversationId)
+                .buildUpon()
+                .appendQueryParameter(QUERY_PARAMETER_MESSAGE_ID, messageId)
+                .build();
     }
 
     public static void notifyMessagesChanged(final String conversationId) {
@@ -375,12 +410,46 @@ public class MessagingContentProvider extends ContentProvider {
         return cursor;
     }
 
-    private Cursor queryConversationMessages(final String conversationId, final Uri notifyUri) {
-        final String[] queryArgs = { conversationId };
-        final Cursor cursor = getDatabaseWrapper().rawQuery(
-                ConversationMessageData.getConversationMessagesQuerySql(), queryArgs);
-        cursor.setNotificationUri(getContext().getContentResolver(), notifyUri);
+    private Cursor queryConversationMessages(final String conversationId, final Uri uri) {
+        final String messageId = uri.getQueryParameter(QUERY_PARAMETER_MESSAGE_ID);
+        final String limit = uri.getQueryParameter(QUERY_PARAMETER_LIMIT);
+
+        final String sql;
+        final String[] queryArgs;
+        if (messageId != null) {
+            sql = ConversationMessageData.getConversationMessageQuerySql();
+            queryArgs = new String[] { conversationId, messageId };
+        } else if (limit != null) {
+            sql = ConversationMessageData.getConversationMessagesWindowedQuerySql();
+            queryArgs = new String[] { conversationId, Integer.toString(parseLimit(limit)) };
+        } else {
+            sql = ConversationMessageData.getConversationMessagesQuerySql();
+            queryArgs = new String[] { conversationId };
+        }
+
+        final Cursor cursor = getDatabaseWrapper().rawQuery(sql, queryArgs);
+        // Notifications are sent on the bare uri, so register for them on the bare uri too.
+        cursor.setNotificationUri(
+                getContext().getContentResolver(),
+                buildConversationMessagesUri(conversationId)
+        );
+
         return cursor;
+    }
+
+    private static int parseLimit(final String limit) {
+        final int parsed;
+        try {
+            parsed = Integer.parseInt(limit);
+        } catch (final NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid limit " + limit, e);
+        }
+
+        if (parsed <= 0) {
+            throw new IllegalArgumentException("Invalid limit " + limit);
+        }
+
+        return parsed;
     }
 
     @Override

@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.messaging.data.conversation.mapper.ConversationMessageDataDraftMapper
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryLaunchRequest
@@ -27,7 +28,7 @@ internal interface ConversationEntryScreenModel {
 
     fun onDraftPayloadConsumed(conversationId: ConversationId)
 
-    fun onScrollPositionConsumed(conversationId: ConversationId)
+    fun onScrollMessageIdConsumed(conversationId: ConversationId)
 
     fun onPendingSelfParticipantIdConsumed(conversationId: ConversationId)
 
@@ -70,7 +71,7 @@ internal class ConversationEntryViewModel @Inject constructor(
                 pendingDraft = launchRequest.draftData?.let { messageData ->
                     conversationMessageDataDraftMapper.map(messageData = messageData)
                 },
-                pendingScrollPosition = launchRequest.messagePosition,
+                pendingScrollMessageId = launchRequest.messageId,
                 pendingStartupAttachment = buildStartupAttachmentOrNull(
                     contentUri = launchRequest.startupAttachmentUri,
                     contentType = launchRequest.startupAttachmentType,
@@ -78,7 +79,7 @@ internal class ConversationEntryViewModel @Inject constructor(
             ),
         )
         savedStateHandle[PENDING_DRAFT_DATA_KEY] = launchRequest.draftData
-        savedStateHandle[PENDING_SCROLL_POSITION_KEY] = launchRequest.messagePosition
+        savedStateHandle[PENDING_SCROLL_MESSAGE_ID_KEY] = launchRequest.messageId?.value
     }
 
     override fun onDraftPayloadConsumed(conversationId: ConversationId) {
@@ -98,19 +99,19 @@ internal class ConversationEntryViewModel @Inject constructor(
         }
     }
 
-    override fun onScrollPositionConsumed(conversationId: ConversationId) {
+    override fun onScrollMessageIdConsumed(conversationId: ConversationId) {
         val currentUiState = _uiState.value
 
-        val hasPendingScrollPosition = currentUiState.pendingScrollPosition != null
+        val hasPendingScrollMessageId = currentUiState.pendingScrollMessageId != null
 
-        if (currentUiState.conversationId == conversationId && hasPendingScrollPosition) {
+        if (currentUiState.conversationId == conversationId && hasPendingScrollMessageId) {
             updateUiState(
                 currentUiState.copy(
-                    pendingScrollPosition = null,
+                    pendingScrollMessageId = null,
                 ),
             )
 
-            savedStateHandle[PENDING_SCROLL_POSITION_KEY] = null
+            savedStateHandle[PENDING_SCROLL_MESSAGE_ID_KEY] = null
         }
     }
 
@@ -154,7 +155,9 @@ internal class ConversationEntryViewModel @Inject constructor(
         return ConversationEntryUiState(
             conversationId = ConversationId.fromOrNull(savedStateHandle[CONVERSATION_ID_KEY]),
             pendingDraft = pendingDraftData?.let(conversationMessageDataDraftMapper::map),
-            pendingScrollPosition = savedStateHandle[PENDING_SCROLL_POSITION_KEY],
+            pendingScrollMessageId = MessageId.fromOrNull(
+                savedStateHandle[PENDING_SCROLL_MESSAGE_ID_KEY],
+            ),
             pendingSelfParticipantId = ParticipantId.fromOrNull(
                 savedStateHandle[PENDING_SELF_PARTICIPANT_ID_KEY],
             ),
@@ -227,7 +230,7 @@ internal class ConversationEntryViewModel @Inject constructor(
     private companion object {
         private const val CONVERSATION_ID_KEY = "conversation_id"
         private const val PENDING_DRAFT_DATA_KEY = "pending_draft_data"
-        private const val PENDING_SCROLL_POSITION_KEY = "pending_scroll_position"
+        private const val PENDING_SCROLL_MESSAGE_ID_KEY = "pending_scroll_message_id"
         private const val PENDING_SELF_PARTICIPANT_ID_KEY = "pending_self_participant_id"
         private const val PENDING_STARTUP_ATTACHMENT_TYPE_KEY = "pending_startup_attachment_type"
         private const val PENDING_STARTUP_ATTACHMENT_URI_KEY = "pending_startup_attachment_uri"

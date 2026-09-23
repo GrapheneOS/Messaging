@@ -6,6 +6,7 @@ import androidx.core.content.contentValuesOf
 import com.android.messaging.FactoryTestAccess
 import com.android.messaging.R
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
+import com.android.messaging.datamodel.DatabaseHelper.MessageColumns
 import com.android.messaging.datamodel.data.ConversationListItemData
 import com.android.messaging.testutil.installTestFactory
 import io.mockk.unmockkAll
@@ -126,6 +127,35 @@ class DatabaseUpgradeHelperTest {
 
             assertTrue(db.hasColumn(table, pinned))
             assertTrue(db.hasIndex("index_${table}_$pinned"))
+        }
+    }
+
+    @Test
+    fun upgradeToVersion5_createsConversationTimestampIndex() {
+        SQLiteDatabase.create(null).use { db ->
+            db.execSQL(
+                "CREATE TABLE ${DatabaseHelper.MESSAGES_TABLE} (" +
+                    "_id INTEGER PRIMARY KEY, " +
+                    "${MessageColumns.CONVERSATION_ID} INTEGER, " +
+                    "${MessageColumns.RECEIVED_TIMESTAMP} INTEGER)",
+            )
+
+            DatabaseUpgradeHelper().upgradeToVersion5(db)
+
+            assertTrue(
+                db.hasIndex("index_${DatabaseHelper.MESSAGES_TABLE}_conversation_timestamp"),
+            )
+        }
+    }
+
+    @Test
+    fun upgradeToVersion5_whenTheIndexCannotBeCreated_stillReachesVersion5() {
+        SQLiteDatabase.create(null).use { db ->
+            // No messages table: execSQL throws exactly as it would with no room left on the disk.
+            assertEquals(5, DatabaseUpgradeHelper().upgradeToVersion5(db))
+            assertFalse(
+                db.hasIndex("index_${DatabaseHelper.MESSAGES_TABLE}_conversation_timestamp"),
+            )
         }
     }
 

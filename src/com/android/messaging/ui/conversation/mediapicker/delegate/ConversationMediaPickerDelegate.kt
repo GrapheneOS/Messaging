@@ -32,15 +32,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-internal interface ConversationMediaPickerDelegate {
-    val effects: Flow<ConversationScreenEffect>
-    val photoPickerSourceContentUriByAttachmentContentUri: StateFlow<ImmutableMap<String, String>>
-
-    fun bind(
-        scope: CoroutineScope,
-        conversationIdFlow: StateFlow<ConversationId?>,
-    )
-
+internal interface ConversationMediaPickerAttachmentActions {
     fun onPhotoPickerMediaSelected(contentUris: List<String>)
 
     fun onPhotoPickerMediaDeselected(contentUris: List<String>)
@@ -52,6 +44,16 @@ internal interface ConversationMediaPickerDelegate {
     fun onRemovePendingAttachment(pendingAttachmentId: String)
 
     fun onRemoveResolvedAttachment(contentUri: String)
+}
+
+internal interface ConversationMediaPickerDelegate : ConversationMediaPickerAttachmentActions {
+    val effects: Flow<ConversationScreenEffect>
+    val photoPickerSourceContentUriByAttachmentContentUri: StateFlow<ImmutableMap<String, String>>
+
+    fun bind(
+        scope: CoroutineScope,
+        conversationIdFlow: StateFlow<ConversationId?>,
+    )
 
     fun onScreenCleared()
 }

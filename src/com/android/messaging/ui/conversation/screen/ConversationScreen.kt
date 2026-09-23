@@ -42,7 +42,7 @@ internal fun ConversationScreen(
     onCloseConversation: () -> Unit,
     pendingLaunchPayload: ConversationPendingLaunchPayload,
     onPendingDraftConsumed: () -> Unit,
-    onPendingScrollPositionConsumed: () -> Unit,
+    onPendingScrollMessageIdConsumed: () -> Unit,
     onPendingSelfParticipantIdConsumed: () -> Unit,
     onPendingStartupAttachmentConsumed: () -> Unit,
 ) {
@@ -91,8 +91,8 @@ internal fun ConversationScreen(
         mediaPickerState = mediaPickerState,
         snackbarHostState = snackbarHostState,
         messageFieldFocusRequester = messageFieldFocusRequester,
-        pendingScrollPosition = pendingLaunchPayload.scrollPosition,
-        onPendingScrollPositionConsumed = onPendingScrollPositionConsumed,
+        pendingScrollMessageId = pendingLaunchPayload.scrollMessageId,
+        onPendingScrollMessageIdConsumed = onPendingScrollMessageIdConsumed,
         onAddPeopleClick = onAddPeopleClick,
         onConversationDetailsClick = onConversationDetailsClick,
         onNavigateBack = onNavigateBack,
@@ -118,8 +118,8 @@ internal fun ConversationScreenScaffold(
     snackbarHostState: SnackbarHostState,
     isMediaPickerOpen: Boolean,
     messageFieldFocusRequester: FocusRequester,
-    pendingScrollPosition: Int?,
-    onPendingScrollPositionConsumed: () -> Unit,
+    pendingScrollMessageId: MessageId?,
+    onPendingScrollMessageIdConsumed: () -> Unit,
     onAddPeopleClick: () -> Unit,
     onConversationDetailsClick: () -> Unit,
     onNavigateBack: () -> Unit,
@@ -169,10 +169,11 @@ internal fun ConversationScreenScaffold(
             uiState = uiState,
             snackbarHostState = snackbarHostState,
             contentPadding = contentPadding,
-            pendingScrollPosition = pendingScrollPosition,
-            onPendingScrollPositionConsumed = onPendingScrollPositionConsumed,
+            pendingScrollMessageId = pendingScrollMessageId,
+            onPendingScrollMessageIdConsumed = onPendingScrollMessageIdConsumed,
             onAttachmentClick = screenModel::onMessageAttachmentClicked,
             onExternalUriClick = screenModel::onExternalUriClicked,
+            onLoadOlderMessages = screenModel::onLoadOlderMessages,
             onMessageClick = screenModel::onMessageClick,
             onMessageAvatarClick = screenModel::onMessageAvatarClick,
             onMessageDownloadClick = screenModel::onMessageDownloadClick,
@@ -183,6 +184,19 @@ internal fun ConversationScreenScaffold(
         )
     }
 
+    ConversationScreenOverlays(
+        simSheetState = simSheetState,
+        uiState = uiState,
+        screenModel = screenModel,
+    )
+}
+
+@Composable
+private fun ConversationScreenOverlays(
+    simSheetState: ConversationSimSheetState,
+    uiState: ConversationScreenScaffoldUiState,
+    screenModel: ConversationScreenModel,
+) {
     ConversationScreenDialogs(uiState = uiState, screenModel = screenModel)
 
     ConversationScreenSimSelectorSheet(

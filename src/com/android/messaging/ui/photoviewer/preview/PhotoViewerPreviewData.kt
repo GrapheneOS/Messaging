@@ -15,6 +15,7 @@ internal fun previewPhotoViewerItems(): ImmutableList<PhotoViewerItem> {
 
 internal fun previewPhotoViewerItem(index: Int): PhotoViewerItem {
     return PhotoViewerItem(
+        partId = index.toString(),
         contentUri = "content://example/content/$index".toUri(),
         contentType = "image/jpeg",
         isIncoming = true,

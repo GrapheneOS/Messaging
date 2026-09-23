@@ -647,6 +647,47 @@ public class ConversationMessageData {
                 + CONVERSATION_MESSAGES_QUERY_SQL_GROUP_BY;
     }
 
+    /**
+     * Query for the newest {@code limit} messages of one conversation, newest first.
+     *
+     * <p>The limit has to be applied to the messages table before the joins and the aggregation.
+     * A LIMIT on the outer statement would not help: the GROUP BY is on messages._id while the
+     * ORDER BY is on messages.received_timestamp, so SQLite sorts every message of the conversation
+     * into a temp b-tree before it can honour the limit, and a conversation with tens of thousands
+     * of messages never finishes loading. Restricting the subquery keeps both temp b-trees down to
+     * the size of the window. Relies on index_messages_conversation_timestamp.
+     *
+     * <p>The limit is bound as the second query argument. SQLite converts a numeric TEXT binding
+     * for LIMIT, and callers validate the value before binding it.
+     */
+    public static String getConversationMessagesWindowedQuerySql() {
+        return "SELECT "
+                + CONVERSATION_MESSAGES_QUERY_PROJECTION_SQL
+                + " FROM (SELECT * FROM " + DatabaseHelper.MESSAGES_TABLE
+                + " WHERE " + MessageColumns.STATUS
+                + " <> " + MessageData.BUGLE_STATUS_OUTGOING_DRAFT
+                // Inject the conversation id
+                + " AND " + MessageColumns.CONVERSATION_ID + "=?"
+                + " ORDER BY " + MessageColumns.RECEIVED_TIMESTAMP + " DESC"
+                + " LIMIT ?) AS " + DatabaseHelper.MESSAGES_TABLE
+                + CONVERSATION_MESSAGES_QUERY_JOINS_SQL
+                + CONVERSATION_MESSAGES_QUERY_SQL_GROUP_BY;
+    }
+
+    /**
+     * Query for a single message of a conversation, by message id. Callers that want one message
+     * must not walk the whole conversation to find it.
+     */
+    public static final String getConversationMessageQuerySql() {
+        return CONVERSATION_MESSAGES_QUERY_SQL
+                + " AND "
+                // Inject the conversation id and the message id
+                + DatabaseHelper.MESSAGES_TABLE + "." + MessageColumns.CONVERSATION_ID + "=?"
+                + " AND "
+                + DatabaseHelper.MESSAGES_TABLE + "." + MessageColumns._ID + "=?)"
+                + CONVERSATION_MESSAGES_QUERY_SQL_GROUP_BY;
+    }
+
     static final String getConversationMessageIdsQuerySql() {
         return CONVERSATION_MESSAGES_IDS_QUERY_SQL
                 + " AND "
@@ -792,9 +833,8 @@ public class ConversationMessageData {
             + DatabaseHelper.PARTICIPANTS_TABLE + '.' + ParticipantColumns.LOOKUP_KEY
             + " as " + ConversationMessageViewColumns.SENDER_CONTACT_LOOKUP_KEY + " ";
 
-    private static final String CONVERSATION_MESSAGES_QUERY_FROM_WHERE_SQL =
-            " FROM " + DatabaseHelper.MESSAGES_TABLE
-            + " LEFT JOIN " + DatabaseHelper.PARTS_TABLE
+    private static final String CONVERSATION_MESSAGES_QUERY_JOINS_SQL =
+            " LEFT JOIN " + DatabaseHelper.PARTS_TABLE
             + " ON (" + DatabaseHelper.MESSAGES_TABLE + "." + MessageColumns._ID
             + "=" + DatabaseHelper.PARTS_TABLE + "." + PartColumns.MESSAGE_ID + ") "
             + " LEFT JOIN " + DatabaseHelper.PARTICIPANTS_TABLE
@@ -802,7 +842,11 @@ public class ConversationMessageData {
             + '=' + DatabaseHelper.PARTICIPANTS_TABLE + '.' + ParticipantColumns._ID + ")"
             + " LEFT JOIN " + DatabaseHelper.CONVERSATIONS_TABLE
             + " ON (" + DatabaseHelper.MESSAGES_TABLE + '.' + MessageColumns.CONVERSATION_ID
-            + '=' + DatabaseHelper.CONVERSATIONS_TABLE + '.' + ConversationColumns._ID + ")"
+            + '=' + DatabaseHelper.CONVERSATIONS_TABLE + '.' + ConversationColumns._ID + ")";
+
+    private static final String CONVERSATION_MESSAGES_QUERY_FROM_WHERE_SQL =
+            " FROM " + DatabaseHelper.MESSAGES_TABLE
+            + CONVERSATION_MESSAGES_QUERY_JOINS_SQL
             // Exclude draft messages from main view
             + " WHERE (" + DatabaseHelper.MESSAGES_TABLE + "." + MessageColumns.STATUS
             + " <> " + MessageData.BUGLE_STATUS_OUTGOING_DRAFT;
@@ -824,8 +868,15 @@ public class ConversationMessageData {
 
     // Note that we sort DESC and ConversationData reverses the cursor.  This is a performance
     // issue (improvement) for large cursors.
+    //
+    // Grouped by the message rather than by parts.message_id, which is the same key for every
+    // message that has parts but is null for every message that has none - an outgoing mms
+    // carrying only a subject is stored without any. Those all share the one null group, so
+    // grouping by it returns a single row for all of them and the rest of them never reach the
+    // conversation at all. It also makes the row count shorter than the window that was asked
+    // for, which is what tells a windowed caller there is nothing older left to load.
     private static final String CONVERSATION_MESSAGES_QUERY_SQL_GROUP_BY =
-            " GROUP BY " + DatabaseHelper.PARTS_TABLE + '.' + PartColumns.MESSAGE_ID
+            " GROUP BY " + DatabaseHelper.MESSAGES_TABLE + '.' + MessageColumns._ID
           + " ORDER BY "
           + DatabaseHelper.MESSAGES_TABLE + '.' + MessageColumns.RECEIVED_TIMESTAMP + " DESC";
 

@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.entry
 import android.content.Intent
 import android.text.TextUtils
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryLaunchRequest
@@ -28,14 +29,13 @@ internal fun Intent.toConversationLaunchRequest(): ConversationEntryLaunchReques
         startupAttachmentType = getStringExtra(
             UIIntents.UI_INTENT_EXTRA_ATTACHMENT_TYPE
         )?.takeUnless(TextUtils::isEmpty),
-        messagePosition = getIntExtra(
-            UIIntents.UI_INTENT_EXTRA_MESSAGE_POSITION,
-            -1,
-        ).takeIf { position -> position >= 0 },
+        messageId = MessageId.fromOrNull(
+            getStringExtra(UIIntents.UI_INTENT_EXTRA_MESSAGE_ID),
+        ),
     )
 
     removeExtra(UIIntents.UI_INTENT_EXTRA_DRAFT_DATA)
-    removeExtra(UIIntents.UI_INTENT_EXTRA_MESSAGE_POSITION)
+    removeExtra(UIIntents.UI_INTENT_EXTRA_MESSAGE_ID)
 
     return launchRequest
 }

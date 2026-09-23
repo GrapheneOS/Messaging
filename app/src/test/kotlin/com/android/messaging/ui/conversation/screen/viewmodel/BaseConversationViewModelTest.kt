@@ -56,7 +56,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.junit.Rule
 
-@OptIn(ExperimentalCoroutinesApi::class)
 internal abstract class BaseConversationViewModelTest {
 
     @get:Rule
@@ -269,9 +268,6 @@ internal abstract class BaseConversationViewModelTest {
         )
         val mock = mockk<ConversationMessagesDelegate>(relaxed = true)
         every { mock.state } returns stateFlow
-        every {
-            mock.resolvePhotoViewerInitialOccurrenceIndex(any(), any(), any())
-        } returns 0
         every {
             mock.bind(any(), any())
         } answers {

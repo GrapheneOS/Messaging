@@ -1,16 +1,18 @@
 package com.android.messaging.ui.conversation.messages.delegate.conversationmessagesdelegate
 
 import android.net.Uri
+import android.os.Parcel
+import androidx.lifecycle.SavedStateHandle
 import com.android.messaging.data.appsettings.repository.AppSettingsRepository
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentMetadata
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentType
+import com.android.messaging.data.conversation.model.message.ConversationMessagesWindow
 import com.android.messaging.data.conversation.repository.ConversationVCardMetadataRepository
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.domain.media.usecase.ResolveAudioDurationMillis
-import com.android.messaging.domain.photoviewer.usecase.ResolveConversationPhotoViewerInitialOccurrenceIndex
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.attachment.mapper.ConversationVCardAttachmentUiModelMapper
@@ -23,13 +25,13 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.TestScope
 import org.junit.Rule
 
-@OptIn(ExperimentalCoroutinesApi::class)
 internal abstract class BaseConversationMessagesDelegateTest {
 
     @get:Rule
@@ -44,36 +46,64 @@ internal abstract class BaseConversationMessagesDelegateTest {
     protected val messageUiModelMapper = mockk<ConversationMessageUiModelMapper>()
     protected val vCardUiModelMapper = mockk<ConversationVCardAttachmentUiModelMapper>()
     protected val vCardMetadataRepository = mockk<ConversationVCardMetadataRepository>()
+    protected val savedStateHandle = SavedStateHandle()
 
-    protected fun createDelegate(): ConversationMessagesDelegateImpl {
+    protected fun createDelegate(
+        savedStateHandle: SavedStateHandle = this.savedStateHandle,
+        defaultDispatcher: CoroutineDispatcher = mainDispatcherRule.testDispatcher,
+    ): ConversationMessagesDelegateImpl {
         return ConversationMessagesDelegateImpl(
             conversationsRepository = conversationsRepository,
             appSettingsRepository = appSettingsRepository,
             resolveAudioDurationMillis = resolveAudioDurationMillis,
-            resolveInitialPhotoOccurrenceIndex =
-                mockk<ResolveConversationPhotoViewerInitialOccurrenceIndex>(relaxed = true),
             conversationMessageUiModelMapper = messageUiModelMapper,
             conversationVCardAttachmentUiModelMapper = vCardUiModelMapper,
             conversationVCardMetadataRepository = vCardMetadataRepository,
-            defaultDispatcher = mainDispatcherRule.testDispatcher,
+            savedStateHandle = savedStateHandle,
+            defaultDispatcher = defaultDispatcher,
         )
     }
 
     protected fun TestScope.createBoundDelegate(
         conversationIdFlow: StateFlow<ConversationId?>,
+        savedStateHandle: SavedStateHandle =
+            this@BaseConversationMessagesDelegateTest.savedStateHandle,
+        defaultDispatcher: CoroutineDispatcher = mainDispatcherRule.testDispatcher,
     ): ConversationMessagesDelegateImpl {
-        return createDelegate().also { delegate ->
+        return createDelegate(
+            savedStateHandle = savedStateHandle,
+            defaultDispatcher = defaultDispatcher,
+        ).also { delegate ->
             delegate.bind(scope = backgroundScope, conversationIdFlow = conversationIdFlow)
+        }
+    }
+
+    /** What a restored process is handed: these values, through what the framework saves. */
+    protected fun SavedStateHandle.afterProcessDeath(): SavedStateHandle {
+        val parcel = Parcel.obtain()
+
+        return try {
+            parcel.writeBundle(savedStateProvider().saveState())
+            parcel.setDataPosition(0)
+            SavedStateHandle.createHandle(parcel.readBundle(), null)
+        } finally {
+            parcel.recycle()
         }
     }
 
     protected fun givenConversationMessages(
         messages: Flow<List<ConversationMessageData>>,
         conversationId: ConversationId = CONVERSATION_ID,
+        hasMore: Boolean = false,
     ) {
         every {
-            conversationsRepository.getConversationMessages(conversationId = conversationId)
-        } returns messages
+            conversationsRepository.getConversationMessages(
+                conversationId = conversationId,
+                windowSizes = any(),
+            )
+        } returns messages.map { currentMessages ->
+            ConversationMessagesWindow(messages = currentMessages, hasMore = hasMore)
+        }
     }
 
     protected fun givenVCardMetadata(

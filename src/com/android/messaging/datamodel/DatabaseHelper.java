@@ -319,6 +319,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     + MessageColumns.STATUS + ", "
                     + MessageColumns.RECEIVED_TIMESTAMP + ")";
 
+    // Serves the windowed conversation messages query: the newest N messages of one conversation.
+    // MESSAGES_TABLE_SORT_INDEX_SQL cannot, because STATUS sits between CONVERSATION_ID and
+    // RECEIVED_TIMESTAMP and the query filters STATUS with a non-indexable "<>".
+    static final String MESSAGES_TABLE_CONVERSATION_TIMESTAMP_INDEX_SQL =
+            "CREATE INDEX IF NOT EXISTS index_" + MESSAGES_TABLE + "_conversation_timestamp ON "
+                    + MESSAGES_TABLE + "("
+                    + MessageColumns.CONVERSATION_ID + ", "
+                    + MessageColumns.RECEIVED_TIMESTAMP + ")";
+
     private static final String MESSAGES_TABLE_STATUS_SEEN_INDEX_SQL =
             "CREATE INDEX index_" + MESSAGES_TABLE + "_status_seen ON " +  MESSAGES_TABLE + "("
                     + MessageColumns.STATUS + ", "
@@ -561,6 +570,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         CONVERSATIONS_TABLE_SORT_TIMESTAMP_INDEX_SQL,
         MESSAGES_TABLE_SORT_INDEX_SQL,
         MESSAGES_TABLE_STATUS_SEEN_INDEX_SQL,
+        MESSAGES_TABLE_CONVERSATION_TIMESTAMP_INDEX_SQL,
         PARTS_TABLE_MESSAGE_INDEX_SQL,
         CONVERSATION_PARTICIPANTS_TABLE_CONVERSATION_ID_INDEX_SQL,
     };

@@ -17,6 +17,7 @@ package com.android.messaging.datamodel;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 
 import com.android.messaging.Factory;
 import com.android.messaging.util.Assert;
@@ -54,6 +55,9 @@ public class DatabaseUpgradeHelper {
         }
         if (currentVersion < 4) {
             currentVersion = upgradeToVersion4(db);
+        }
+        if (currentVersion < 5) {
+            currentVersion = upgradeToVersion5(db);
         }
         // Rebuild all the views
         final Context context = Factory.get().getApplicationContext();
@@ -127,6 +131,32 @@ public class DatabaseUpgradeHelper {
         LogUtil.i(TAG, "Upgraded database to version 4");
 
         return 4;
+    }
+
+    /**
+     * Adds the index that lets the conversation view fetch only the newest N messages of a
+     * conversation. Without it SQLite sorts every message of the conversation before applying the
+     * limit, which is what made very large conversations never finish loading. The view gains a
+     * part id column in the same release, but the views are rebuilt unconditionally above.
+     */
+    @VisibleForTesting
+    public int upgradeToVersion5(final SQLiteDatabase db) {
+        // Unlike every upgrade before it, this one costs time and disk proportional to the
+        // messages table, so it is the first one that can realistically fail - out of space on a
+        // device holding tens of thousands of messages, say. Letting that reach doOnUpgrade()
+        // would rebuild every table and take the user's messages with it, and the windowed query
+        // is merely slower without the index, never wrong. Nothing retries it: the version is
+        // still returned as 5, so a device that fails here stays without the index and pays the
+        // sort for every window it loads. That is the price of not losing the messages.
+        try {
+            db.execSQL(DatabaseHelper.MESSAGES_TABLE_CONVERSATION_TIMESTAMP_INDEX_SQL);
+        } catch (final SQLiteException ex) {
+            LogUtil.e(TAG, "Failed to create the conversation timestamp index", ex);
+        }
+
+        LogUtil.i(TAG, "Upgraded database to version 5");
+
+        return 5;
     }
 
     /**

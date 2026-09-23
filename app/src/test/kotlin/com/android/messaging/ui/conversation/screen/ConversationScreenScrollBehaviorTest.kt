@@ -99,7 +99,7 @@ internal class ConversationScreenScrollBehaviorTest : BaseConversationScreenTest
     }
 
     @Test
-    fun pendingScrollPosition_anchorsTargetMessage_andInvokesConsumed() {
+    fun pendingScrollMessageId_anchorsTargetMessage_andInvokesConsumed() {
         val screenModel = createScreenModel()
         screenModel.scaffoldUiStateFlow.value = createPresentUiState(
             messages = createMessages(
@@ -112,14 +112,14 @@ internal class ConversationScreenScrollBehaviorTest : BaseConversationScreenTest
 
         setContent(
             screenModel = screenModel.model,
-            pendingScrollPosition = 5,
-            onPendingScrollPositionConsumed = { consumedCount += 1 },
+            pendingScrollMessageId = MessageId("message-45"),
+            onPendingScrollMessageIdConsumed = { consumedCount += 1 },
         )
 
         composeTestRule.waitForIdle()
 
         composeTestRule
-            .onNodeWithTag(conversationMessageItemTestTag(messageId = MessageId("message-6")))
+            .onNodeWithTag(conversationMessageItemTestTag(messageId = MessageId("message-45")))
             .assertIsDisplayed()
         composeTestRule.runOnIdle {
             assertEquals(1, consumedCount)
@@ -127,7 +127,7 @@ internal class ConversationScreenScrollBehaviorTest : BaseConversationScreenTest
     }
 
     @Test
-    fun nullPendingScrollPosition_doesNotInvokeConsumed() {
+    fun nullPendingScrollMessageId_doesNotInvokeConsumed() {
         val screenModel = createScreenModel()
         screenModel.scaffoldUiStateFlow.value = createPresentUiState(
             messages = createMessages(
@@ -140,14 +140,52 @@ internal class ConversationScreenScrollBehaviorTest : BaseConversationScreenTest
 
         setContent(
             screenModel = screenModel.model,
-            pendingScrollPosition = null,
-            onPendingScrollPositionConsumed = { consumedCount += 1 },
+            pendingScrollMessageId = null,
+            onPendingScrollMessageIdConsumed = { consumedCount += 1 },
         )
 
         composeTestRule.waitForIdle()
 
         composeTestRule.runOnIdle {
             assertEquals(0, consumedCount)
+        }
+    }
+
+    @Test
+    fun missingPendingScrollMessageId_consumesOnceWithoutChangingVisibleItem() {
+        val screenModel = createScreenModel()
+        val uiState = createPresentUiState(
+            messages = createMessages(
+                count = 50,
+                latestMessageId = "message-50",
+                latestMessageIncoming = false,
+            ),
+        )
+        screenModel.scaffoldUiStateFlow.value = uiState
+        var consumedCount = 0
+
+        setContent(
+            screenModel = screenModel.model,
+            pendingScrollMessageId = MessageId("missing-message"),
+            onPendingScrollMessageIdConsumed = { consumedCount += 1 },
+        )
+
+        composeTestRule.waitForIdle()
+
+        composeTestRule
+            .onNodeWithTag(conversationMessageItemTestTag(messageId = MessageId("message-50")))
+            .assertIsDisplayed()
+        composeTestRule.runOnIdle {
+            assertEquals(1, consumedCount)
+            screenModel.scaffoldUiStateFlow.value = uiState.copy(isBlocked = true)
+        }
+        composeTestRule.waitForIdle()
+
+        composeTestRule
+            .onNodeWithTag(conversationMessageItemTestTag(messageId = MessageId("message-50")))
+            .assertIsDisplayed()
+        composeTestRule.runOnIdle {
+            assertEquals(1, consumedCount)
         }
     }
 }

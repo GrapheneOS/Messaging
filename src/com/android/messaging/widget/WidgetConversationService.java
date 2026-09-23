@@ -105,10 +105,13 @@ public class WidgetConversationService extends RemoteViewsService {
                 LogUtil.w(TAG, "doQuery no conversation id");
                 return null;
             }
-            final Uri uri = MessagingContentProvider.buildConversationMessagesUri(mConversationId);
+
+            final Uri uri = MessagingContentProvider.buildConversationMessagesUri(
+                    mConversationId, MAX_ITEMS_TO_SHOW + 1);
             if (uri != null) {
                 LogUtil.w(TAG, "doQuery uri: " + uri.toString());
             }
+
             return mContext.getContentResolver().query(uri,
                     ConversationMessageData.getProjection(),
                     null,       // where
@@ -162,20 +165,14 @@ public class WidgetConversationService extends RemoteViewsService {
                 int attachmentStringId = 0;
                 remoteViews.setViewVisibility(R.id.attachmentFrame, View.GONE);
 
-                int scrollToPosition = originalPosition;
-                final int cursorCount = mCursor.getCount();
-                if (cursorCount > MAX_ITEMS_TO_SHOW) {
-                    scrollToPosition += cursorCount - MAX_ITEMS_TO_SHOW;
-                }
                 if (LogUtil.isLoggable(TAG, LogUtil.VERBOSE)) {
                     LogUtil.v(TAG, "getViewAt position: " + originalPosition +
                             " computed position: " + position +
-                            " scrollToPosition: " + scrollToPosition +
-                            " cursorCount: " + cursorCount +
+                            " cursorCount: " + mCursor.getCount() +
                             " MAX_ITEMS_TO_SHOW: " + MAX_ITEMS_TO_SHOW);
                 }
 
-                intent.putExtra(UIIntents.UI_INTENT_EXTRA_MESSAGE_POSITION, scrollToPosition);
+                intent.putExtra(UIIntents.UI_INTENT_EXTRA_MESSAGE_ID, message.getMessageId());
                 if (message.hasAttachments()) {
                     final List<MessagePartData> attachments = message.getAttachments();
                     for (MessagePartData part : attachments) {

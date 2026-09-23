@@ -23,7 +23,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -32,7 +31,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 internal class ConversationsRepositoryDirectLookupTest : BaseConversationsRepositoryTest() {
 
@@ -59,7 +57,7 @@ internal class ConversationsRepositoryDirectLookupTest : BaseConversationsReposi
             context = mainDispatcherRule.testDispatcher,
         ) {
             val metadataUri = MessagingContentProvider.buildConversationMetadataUri(
-                CONVERSATION_ID.value
+                CONVERSATION_ID.value,
             )
             val participantsUri = MessagingContentProvider
                 .buildConversationParticipantsUri(CONVERSATION_ID.value)
@@ -137,7 +135,7 @@ internal class ConversationsRepositoryDirectLookupTest : BaseConversationsReposi
             context = mainDispatcherRule.testDispatcher,
         ) {
             val metadataUri = MessagingContentProvider.buildConversationMetadataUri(
-                CONVERSATION_ID.value
+                CONVERSATION_ID.value,
             )
             val participantsUri = MessagingContentProvider
                 .buildConversationParticipantsUri(CONVERSATION_ID.value)
@@ -196,8 +194,9 @@ internal class ConversationsRepositoryDirectLookupTest : BaseConversationsReposi
         runTest(
             context = mainDispatcherRule.testDispatcher,
         ) {
-            val messagesUri = MessagingContentProvider.buildConversationMessagesUri(
-                CONVERSATION_ID.value
+            val messagesUri = MessagingContentProvider.buildConversationMessageUri(
+                CONVERSATION_ID.value,
+                "message-1",
             )
             val participantsUri = MessagingContentProvider
                 .buildConversationParticipantsUri(CONVERSATION_ID.value)

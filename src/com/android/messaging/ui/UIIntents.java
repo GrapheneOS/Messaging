@@ -78,8 +78,8 @@ public abstract class UIIntents {
 
     public static final String UI_INTENT_EXTRA_SELF_ID = "self_id";
 
-    // Message position to scroll to.
-    public static final String UI_INTENT_EXTRA_MESSAGE_POSITION = "message_position";
+    // Message id to scroll to.
+    public static final String UI_INTENT_EXTRA_MESSAGE_ID = "message_id";
 
     public static final String ACTION_MESSAGE_READ = "com.android.messaging.action.MESSAGE_READ";
 
