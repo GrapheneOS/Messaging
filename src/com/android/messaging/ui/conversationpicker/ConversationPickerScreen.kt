@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.PredictiveBackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
@@ -35,7 +34,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,6 +57,8 @@ import com.android.messaging.ui.common.components.contentSurfaceShape
 import com.android.messaging.ui.common.components.displayCornerRadius
 import com.android.messaging.ui.common.components.imeAwareBottomBarInsets
 import com.android.messaging.ui.common.components.mediapreview.MediaPreviewBackground
+import com.android.messaging.ui.common.components.predictiveBackPage
+import com.android.messaging.ui.common.components.rememberPredictiveBackContentTransform
 import com.android.messaging.ui.common.components.safeDrawingContentPadding
 import com.android.messaging.ui.common.components.selection.LocalSelectionListItemColors
 import com.android.messaging.ui.common.components.selection.SelectionListContent
@@ -84,10 +84,8 @@ import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerU
 import com.android.messaging.ui.subscription.component.SimSelectorRow
 import com.android.messaging.ui.subscription.mapper.rememberSimSelectorUiState
 import com.android.messaging.ui.subscription.model.SimSelectionUiState
-import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
-import kotlinx.coroutines.launch
 
 @Composable
 internal fun ConversationPickerScreen(
@@ -212,15 +210,23 @@ private fun AnimatedPickerContent(
     labels: ConversationPickerLabels,
     modifier: Modifier = Modifier,
 ) {
+    val predictiveBackContentTransform = rememberPredictiveBackContentTransform()
+
     transition.AnimatedContent(
         modifier = modifier.background(MaterialTheme.colorScheme.background),
         transitionSpec = {
-            reviewTransition.stepContentTransform(isForward = targetState)
+            reviewTransition.stepContentTransform(
+                isForward = targetState,
+                predictiveBackContentTransform = predictiveBackContentTransform,
+            )
         },
     ) { isReviewing ->
-        val pageModifier = Modifier.clip(
-            shape = RoundedCornerShape(size = displayCornerRadius()),
-        )
+        val pageModifier = Modifier
+            .predictiveBackPage(
+                transition = this.transition,
+                isOpen = isReviewing == uiState.draft.isReviewing,
+            )
+            .clip(shape = RoundedCornerShape(size = displayCornerRadius()))
 
         when {
             isReviewing -> {
@@ -258,21 +264,12 @@ private fun PickerBackHandlers(
     val isReviewing = uiState.draft.isReviewing
     val inSelectionMode = uiState.targets.selection.selectedIds.isNotEmpty()
     val isSearchActive = uiState.targets.isSearchActive
-    val settleScope = rememberCoroutineScope()
 
-    PredictiveBackHandler(enabled = isReviewing) { progress ->
-        try {
-            progress.collect { backEvent ->
-                reviewTransition.seekToTargets(backEvent = backEvent)
-            }
-            onAction(Action.ReviewDismissed)
-        } catch (cancellation: CancellationException) {
-            settleScope.launch {
-                reviewTransition.settleTo(isReviewing = isReviewing)
-            }
-            throw cancellation
-        }
-    }
+    PickerReviewBackHandler(
+        reviewTransition = reviewTransition,
+        enabled = isReviewing,
+        onDismissed = { onAction(Action.ReviewDismissed) },
+    )
 
     BackHandler(enabled = !isReviewing && (inSelectionMode || isSearchActive)) {
         when {

@@ -13,7 +13,7 @@ import androidx.navigation3.scene.DialogSceneStrategy
 import androidx.navigation3.scene.SceneStrategy
 import androidx.navigation3.ui.NavDisplay
 import com.android.messaging.ui.common.components.horizontalSlideContentTransform
-import com.android.messaging.ui.common.components.predictiveBackContentTransform
+import com.android.messaging.ui.common.components.rememberPredictiveBackContentTransform
 
 @Composable
 internal fun AppNavDisplay(
@@ -28,13 +28,16 @@ internal fun AppNavDisplay(
     val saveableStateHolderDecorator = rememberSaveableStateHolderNavEntryDecorator<NavKey>()
     val viewModelStoreDecorator = rememberViewModelStoreNavEntryDecorator<NavKey>()
     val listDetailPaneDecorator = rememberListDetailPaneNavEntryDecorator(showsTwoPanes)
-    val displayCornerDecorator = rememberDisplayCornerNavEntryDecorator()
+    val displayCornerDecorator = rememberDisplayCornerNavEntryDecorator(
+        topContentKey = topContentKey,
+    )
     val paneTitleDecorator = rememberPaneTitleNavEntryDecorator()
     val enteringBackDecorator = rememberEnteringBackNavEntryDecorator(
         canPop = backStack.size > 1,
         topContentKey = topContentKey,
         onBack = onBack,
     )
+    val predictiveBackContentTransform = rememberPredictiveBackContentTransform()
     val entryDecorators = remember(
         saveableStateHolderDecorator,
         viewModelStoreDecorator,
@@ -63,9 +66,7 @@ internal fun AppNavDisplay(
         sceneStrategies = sceneStrategies,
         transitionSpec = { horizontalSlideContentTransform(isForward = true) },
         popTransitionSpec = { horizontalSlideContentTransform(isForward = false) },
-        predictivePopTransitionSpec = { swipeEdge ->
-            predictiveBackContentTransform(swipeEdge = swipeEdge)
-        },
+        predictivePopTransitionSpec = { swipeEdge -> predictiveBackContentTransform(swipeEdge) },
         entryProvider = entryProvider,
     )
 }

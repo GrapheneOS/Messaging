@@ -21,7 +21,7 @@ import androidx.navigation3.ui.LocalNavAnimatedContentScope
  * entering too until the swipe's cancel settles, and the platform starts a swipe made meanwhile
  * right away. Intercepting that swipe would pop without seeking, and the handler would go away
  * mid-swipe once the cancel settles; navigationevent then never resets the dispatcher's
- * `transitionState`.
+ * `transitionState`, which the pages' predictive back animations read.
  *
  * Only `PreEnter -> Visible` counts. A cancelled predictive back leaves the entry at
  * `PostExit -> Visible`, which Compose can report as running again later
