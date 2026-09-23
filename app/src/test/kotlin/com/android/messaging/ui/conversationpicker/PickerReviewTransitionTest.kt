@@ -16,6 +16,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import com.android.messaging.ui.common.components.PredictiveBackSwipes
+import com.android.messaging.ui.common.components.PredictiveBackSwipes.Companion.START_Y
+import com.android.messaging.ui.common.components.PredictiveBackSwipes.Companion.assertEasesBack
+import com.android.messaging.ui.common.components.PredictiveBackSwipes.Companion.assertFollows
 import com.android.messaging.ui.common.components.predictiveBackPage
 import com.android.messaging.ui.common.components.rememberPredictiveBackContentTransform
 import org.junit.Assert.assertEquals
@@ -79,16 +82,18 @@ class PickerReviewTransitionTest {
     }
 
     @Test
-    fun cancelledReview_keepsThePickerFullSize() {
-        swipes.start()
+    fun cancelledReview_easesBackWhileThePickerStaysFullSize() {
+        val touchDeltaY = swipes.pageHeight / 4f
+        swipes.start(touchDeltaY = touchDeltaY)
 
         composeTestRule.mainClock.autoAdvance = false
         swipes.dispatch { onBackPressedDispatcher.dispatchOnBackCancelled() }
         val pickerScales = mutableListOf<Float>()
-        swipes.advanceFrames {
+        val frames = swipes.advanceFrames {
             swipes.page(tag = PICKER)?.let { pickerScales += it.scale }
         }
 
+        assertEasesBack(touchDeltaY = touchDeltaY, frames = frames)
         // Reversing the transition instead would give the revealed picker the closing page's exit.
         assertTrue("picker scales $pickerScales", pickerScales.isNotEmpty())
         for (scale in pickerScales) {
@@ -99,16 +104,18 @@ class PickerReviewTransitionTest {
 
     @Test
     fun swipeDuringACancel_takesThePageOver() {
-        swipes.start()
+        val touchDeltaY = swipes.pageHeight / 4f
+        swipes.start(touchDeltaY = touchDeltaY)
         val swipeScale = checkNotNull(swipes.page()).scale
 
         composeTestRule.mainClock.autoAdvance = false
         swipes.dispatch { onBackPressedDispatcher.dispatchOnBackCancelled() }
         swipes.advanceFrames(count = 2)
-        swipes.start()
+        swipes.start(touchDeltaY = -touchDeltaY, startY = START_Y + touchDeltaY)
         val page = swipes.advanceFrames(count = FRAMES_TO_SEEK).last()
 
         assertEquals(swipeScale, page.scale, SCALE_TOLERANCE)
+        assertFollows(touchDeltaY = -touchDeltaY, page = page)
 
         swipes.dispatch { onBackPressedDispatcher.onBackPressed() }
         assertFalse(isReviewing)
@@ -118,7 +125,7 @@ class PickerReviewTransitionTest {
     @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Test
     fun heldReview_staysUntilCancelledAndGrowsBack() {
-        swipes.start(progress = 1f)
+        swipes.start(touchDeltaY = 0f, progress = 1f)
         composeTestRule.mainClock.autoAdvance = false
         // Held past the transition's length.
         swipes.advanceFrames()

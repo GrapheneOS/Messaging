@@ -17,7 +17,11 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.common.components.PredictiveBackSwipes
+import com.android.messaging.ui.common.components.PredictiveBackSwipes.Companion.MIN_EXPECTED_SHIFT
 import com.android.messaging.ui.common.components.PredictiveBackSwipes.Companion.PIXEL_TOLERANCE
+import com.android.messaging.ui.common.components.PredictiveBackSwipes.Companion.START_Y
+import com.android.messaging.ui.common.components.PredictiveBackSwipes.Companion.assertEasesBack
+import com.android.messaging.ui.common.components.PredictiveBackSwipes.Companion.assertFollows
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -64,11 +68,84 @@ class PredictiveBackNavDisplayTest {
         }
     }
 
+    @Test
+    fun closingPage_followsTheFinger() {
+        swipes.start(touchDeltaY = 0f)
+
+        for (touchDeltaY in listOf(swipes.pageHeight / 4f, -swipes.pageHeight / 4f)) {
+            swipes.moveFinger(touchDeltaY = touchDeltaY)
+            assertFollows(touchDeltaY = touchDeltaY, page = swipes.page())
+        }
+    }
+
+    @Test
+    fun cancelledPage_easesBackToTheMiddleAsItGrows() {
+        val touchDeltaY = swipes.pageHeight / 4f
+        swipes.start(touchDeltaY = touchDeltaY)
+
+        composeTestRule.mainClock.autoAdvance = false
+        swipes.dispatch { onBackPressedDispatcher.dispatchOnBackCancelled() }
+
+        assertEasesBack(touchDeltaY = touchDeltaY, frames = swipes.advanceFrames())
+    }
+
+    // The platform plays a cancelled swipe back before it starts the next one, so taking the page
+    // over from wherever the cancel is looks seamless.
+    @Test
+    fun swipeDuringACancel_takesThePageOver() {
+        val touchDeltaY = swipes.pageHeight / 4f
+        swipes.start(touchDeltaY = touchDeltaY)
+        val swipeScale = checkNotNull(swipes.page()).scale
+
+        composeTestRule.mainClock.autoAdvance = false
+        swipes.dispatch { onBackPressedDispatcher.dispatchOnBackCancelled() }
+        swipes.advanceFrames(count = 2)
+        swipes.start(touchDeltaY = -touchDeltaY, startY = START_Y + touchDeltaY)
+        val page = swipes.advanceFrames(count = FRAMES_TO_SEEK).last()
+
+        assertEquals(swipeScale, page.scale, SCALE_TOLERANCE)
+        assertFollows(touchDeltaY = -touchDeltaY, page = page)
+        // Held past where the cancel would have settled.
+        assertFollows(touchDeltaY = -touchDeltaY, page = swipes.advanceFrames().last())
+
+        swipes.dispatch { onBackPressedDispatcher.dispatchOnBackCancelled() }
+        composeTestRule.mainClock.autoAdvance = true
+        composeTestRule.waitForIdle()
+        assertThat(backStack.toList()).isEqualTo(listOf(TestKey(FIRST), TestKey(SECOND)))
+
+        // The next swipe follows its own finger, not the one before it.
+        swipes.start(touchDeltaY = touchDeltaY)
+        assertFollows(touchDeltaY = touchDeltaY, page = swipes.page())
+        swipes.dispatch { onBackPressedDispatcher.onBackPressed() }
+        assertThat(backStack.toList()).isEqualTo(listOf(TestKey(FIRST)))
+    }
+
+    @Test
+    fun committedPage_keepsItsShiftAsItLeaves() {
+        val touchDeltaY = swipes.pageHeight / 4f
+        swipes.start(touchDeltaY = touchDeltaY)
+
+        composeTestRule.mainClock.autoAdvance = false
+        swipes.dispatch { onBackPressedDispatcher.onBackPressed() }
+        val frames = swipes.advanceFrames(count = FRAMES_BEFORE_NEXT_SWIPE)
+        // Nothing closes the page with the next swipe, so it mustn't move it either.
+        swipes.start(touchDeltaY = -touchDeltaY, startY = START_Y + touchDeltaY)
+        val laterFrames = swipes.advanceFrames()
+
+        assertTrue("frames $laterFrames", laterFrames.isNotEmpty())
+        for (frame in frames + laterFrames) {
+            assertTrue("shift ${frame.shift}", frame.shift > MIN_EXPECTED_SHIFT)
+            val expected = frame.expectedShift(touchDeltaY = touchDeltaY)
+            assertEquals(expected, frame.shift, PIXEL_TOLERANCE)
+        }
+        assertThat(backStack.toList()).isEqualTo(listOf(TestKey(FIRST)))
+    }
+
     // Holding Back with three-button navigation plays the swipe to its end and holds it there.
     @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Test
     fun heldSwipe_keepsBothPagesInPlace() {
-        swipes.start(progress = 1f)
+        swipes.start(touchDeltaY = 0f, progress = 1f)
 
         assertEquals(TARGET_SCALE, checkNotNull(swipes.page()).scale, SCALE_TOLERANCE)
         assertEquals(1f, swipes.closingPageAlpha(), TOLERANCE)
@@ -79,7 +156,7 @@ class PredictiveBackNavDisplayTest {
     @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Test
     fun heldSwipe_growsBackWhenCancelled() {
-        swipes.start(progress = 1f)
+        swipes.start(touchDeltaY = 0f, progress = 1f)
 
         composeTestRule.mainClock.autoAdvance = false
         swipes.dispatch { onBackPressedDispatcher.dispatchOnBackCancelled() }
@@ -104,7 +181,7 @@ class PredictiveBackNavDisplayTest {
     @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Test
     fun heldSwipe_settlesTheRevealedPageWhenReleased() {
-        swipes.start(progress = 1f)
+        swipes.start(touchDeltaY = 0f, progress = 1f)
 
         composeTestRule.mainClock.autoAdvance = false
         swipes.dispatch { onBackPressedDispatcher.onBackPressed() }
@@ -133,7 +210,7 @@ class PredictiveBackNavDisplayTest {
     @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Test
     fun committedPage_keepsFading_whenAnotherSwipeStarts() {
-        swipes.start()
+        swipes.start(touchDeltaY = 0f)
         composeTestRule.mainClock.autoAdvance = false
         swipes.dispatch { onBackPressedDispatcher.onBackPressed() }
 
@@ -144,7 +221,7 @@ class PredictiveBackNavDisplayTest {
             }
         }
         swipes.advanceFrames(count = FRAMES_BEFORE_NEXT_SWIPE, onFrame = recordAlpha)
-        swipes.start()
+        swipes.start(touchDeltaY = 0f)
         swipes.advanceFrames(onFrame = recordAlpha)
 
         assertTrue("alphas $alphas", alphas.size > FRAMES_BEFORE_NEXT_SWIPE)
@@ -190,6 +267,7 @@ class PredictiveBackNavDisplayTest {
         const val FIRST = "first"
         const val SECOND = "second"
         const val FRAMES_BEFORE_NEXT_SWIPE = 5
+        const val FRAMES_TO_SEEK = 2
         const val SCALE_TOLERANCE = 0.001f
         const val TARGET_SCALE = 0.85f
         const val MIN_EASING_FRAMES = 3

@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
@@ -31,12 +32,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.lerp
 import androidx.navigationevent.NavigationEvent
 import androidx.navigationevent.NavigationEvent.SwipeEdge
 import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.NavigationEventTransitionState.InProgress
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
+import kotlin.math.abs
 import kotlin.math.roundToInt
+import kotlin.math.sign
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 
@@ -94,10 +98,10 @@ internal fun <T> predictiveBackGestureSpec(): FiniteAnimationSpec<T> {
 }
 
 /**
- * Plays what [rememberPredictiveBackContentTransform]'s transition can't: only once the swipe
- * commits does the closing page fade and the revealed page slide into place as its scrim lifts.
- * Holding the swipe at its end, as holding Back with three-button navigation does, keeps both
- * pages where they are, and cancelling it plays the transition back.
+ * Plays what [rememberPredictiveBackContentTransform]'s transition can't: the closing page follows
+ * the finger up and down, and only once the swipe commits does it fade and the revealed page slide
+ * into place as its scrim lifts. Holding the swipe at its end, as holding Back with three-button
+ * navigation does, keeps both pages where they are, and cancelling it plays the transition back.
  *
  * [isOpen] is whether this is the page the user is on. A commit takes the closing page off and
  * puts the revealed one on, so that's how each tells a commit from a cancel.
@@ -112,7 +116,9 @@ internal fun Modifier.predictiveBackPage(
         ?.navigationEventDispatcher
         ?.transitionState
 
-    val revealOffsetPx = with(LocalDensity.current) { REVEAL_OFFSET.toPx() }
+    val density = LocalDensity.current
+    val edgeMarginPx = with(density) { EDGE_MARGIN.toPx() }
+    val revealOffsetPx = with(density) { REVEAL_OFFSET.toPx() }
 
     val scrimAlpha = when {
         isSystemInDarkTheme() -> DARK_SCRIM_ALPHA
@@ -128,11 +134,24 @@ internal fun Modifier.predictiveBackPage(
     )
 
     val settle = rememberSettle(role = role, isOpen = isOpen)
+    val finger = rememberPredictiveBackFinger(gestureState = gestureState, isOpen = isOpen)
 
     return this
         .graphicsLayer {
             translationX = -revealOffsetPx * (1f - settle.value)
             if (role == PageRole.Closing) {
+                val scale = lerp(
+                    start = 1f,
+                    stop = PREDICTIVE_BACK_TARGET_SCALE,
+                    fraction = PredictiveBackGestureEasing.transform(progress.value),
+                )
+                val shift = predictiveBackVerticalShift(
+                    touchDeltaY = finger.touchDeltaY,
+                    scale = scale,
+                    height = size.height,
+                    edgeMarginPx = edgeMarginPx,
+                )
+                translationY = shift / scale
                 alpha = predictiveBackReleaseAlpha(
                     progress = progress.value,
                     releaseProgress = releaseProgress.floatValue,
@@ -232,6 +251,20 @@ private fun rememberSettle(role: PageRole, isOpen: Boolean): State<Float> {
     return settle.asState()
 }
 
+@Composable
+private fun rememberPredictiveBackFinger(
+    gestureState: StateFlow<NavigationEventTransitionState>?,
+    isOpen: Boolean,
+): PredictiveBackFinger {
+    val currentIsOpen by rememberUpdatedState(isOpen)
+    val finger = remember { PredictiveBackFinger() }
+    LaunchedEffect(finger, gestureState) {
+        gestureState?.collect { state -> finger.track(state = state, isOpen = currentIsOpen) }
+    }
+
+    return finger
+}
+
 /**
  * The closing page fades over what's left of the transition once the swipe commits at
  * [releaseProgress]; NaN while it hasn't.
@@ -251,6 +284,48 @@ private enum class PageRole {
     Closing,
     Revealed,
     Other,
+}
+
+/**
+ * Follows the latest gesture state only, so a cancel and the next swipe's start that both land
+ * before it looks count as one swipe, as they do for NavDisplay.
+ */
+private class PredictiveBackFinger {
+    private var startTouchY = Float.NaN
+
+    var touchDeltaY by mutableFloatStateOf(0f)
+        private set
+
+    /** Only the open page follows the finger, so a committed page keeps its shift as it leaves. */
+    fun track(state: NavigationEventTransitionState, isOpen: Boolean) {
+        val event = (state as? InProgress)?.latestEvent
+        when {
+            event == null -> startTouchY = Float.NaN
+            !isOpen -> Unit
+            startTouchY.isNaN() -> {
+                startTouchY = event.touchY
+                touchDeltaY = 0f
+            }
+            else -> touchDeltaY = event.touchY - startTouchY
+        }
+    }
+}
+
+internal fun predictiveBackVerticalShift(
+    touchDeltaY: Float,
+    scale: Float,
+    height: Float,
+    edgeMarginPx: Float,
+): Float {
+    val room = height * (1f - scale) / 2f - edgeMarginPx
+    if (room <= 0f) {
+        return 0f
+    }
+
+    val travel = (abs(touchDeltaY) / (height / 2f)).coerceAtMost(1f)
+    val deceleratedTravel = 1f - (1f - travel) * (1f - travel)
+
+    return room * deceleratedTravel * sign(touchDeltaY)
 }
 
 private val PredictiveBackGestureEasing = CubicBezierEasing(0.1f, 0.1f, 0f, 1f)

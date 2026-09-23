@@ -78,6 +78,33 @@ class PredictiveBackTransitionTest {
         assertEquals(1f, releaseAlpha(progress = 1f, releaseProgress = 1f), TOLERANCE)
     }
 
+    @Test
+    fun predictiveBackVerticalShift_atFullDragStopsTheMarginFromTheScreenEdge() {
+        val scaledHalfHeight = FULL_HEIGHT * PREDICTIVE_BACK_TARGET_SCALE / 2f
+
+        for (touchDeltaY in listOf(FULL_HEIGHT / 2f, FULL_HEIGHT.toFloat())) {
+            val bottomEdge = FULL_HEIGHT / 2f + scaledHalfHeight + verticalShift(touchDeltaY)
+            val topEdge = FULL_HEIGHT / 2f - scaledHalfHeight + verticalShift(-touchDeltaY)
+
+            assertEquals((FULL_HEIGHT - EDGE_MARGIN_PX).toFloat(), bottomEdge, TOLERANCE)
+            assertEquals(EDGE_MARGIN_PX.toFloat(), topEdge, TOLERANCE)
+        }
+    }
+
+    @Test
+    fun predictiveBackVerticalShift_deceleratesWithFingerTravel() {
+        val fullShift = verticalShift(touchDeltaY = FULL_HEIGHT / 2f)
+
+        // A quarter of the height is half the travel: 1 - (1 - 0.5)^2
+        assertEquals(0.75f * fullShift, verticalShift(touchDeltaY = FULL_HEIGHT / 4f), TOLERANCE)
+    }
+
+    @Test
+    fun predictiveBackVerticalShift_staysPutWithoutTravelOrRoom() {
+        assertEquals(0f, verticalShift(touchDeltaY = 0f), TOLERANCE)
+        assertEquals(0f, verticalShift(touchDeltaY = FULL_HEIGHT / 2f, scale = 1f), TOLERANCE)
+    }
+
     private fun FiniteAnimationSpec<Float>.valueAt(fraction: Float): Float {
         val vectorized = vectorize(Float.VectorConverter)
         val start = AnimationVector1D(0f)
@@ -100,8 +127,21 @@ class PredictiveBackTransitionTest {
         )
     }
 
+    private fun verticalShift(
+        touchDeltaY: Float,
+        scale: Float = PREDICTIVE_BACK_TARGET_SCALE,
+    ): Float {
+        return predictiveBackVerticalShift(
+            touchDeltaY = touchDeltaY,
+            scale = scale,
+            height = FULL_HEIGHT.toFloat(),
+            edgeMarginPx = EDGE_MARGIN_PX.toFloat(),
+        )
+    }
+
     private companion object {
         const val FULL_WIDTH = 1080
+        const val FULL_HEIGHT = 2340
         const val EDGE_MARGIN_PX = 21
         const val TOLERANCE = 0.01f
     }

@@ -9,15 +9,31 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.unit.dp
+import kotlin.math.abs
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 
 internal class PredictiveBackSwipes(
     private val composeTestRule: AndroidComposeTestRule<*, ComponentActivity>,
     private val closingPageTag: String,
 ) {
-    fun start(progress: Float = PROGRESS) {
-        dispatch { onBackPressedDispatcher.dispatchOnBackStarted(backEvent()) }
+    val pageHeight: Float
+        get() = checkNotNull(page(tag = closingPageTag)).height
+
+    private var startY = START_Y
+
+    fun start(touchDeltaY: Float, startY: Float = START_Y, progress: Float = PROGRESS) {
+        this.startY = startY
+        dispatch { onBackPressedDispatcher.dispatchOnBackStarted(backEvent(touchY = startY)) }
+        moveFinger(touchDeltaY = touchDeltaY, progress = progress)
+    }
+
+    fun moveFinger(touchDeltaY: Float, progress: Float = PROGRESS) {
         dispatch {
-            onBackPressedDispatcher.dispatchOnBackProgressed(backEvent(progress = progress))
+            onBackPressedDispatcher.dispatchOnBackProgressed(
+                backEvent(touchY = startY + touchDeltaY, progress = progress),
+            )
         }
     }
 
@@ -39,8 +55,14 @@ internal class PredictiveBackSwipes(
     fun page(tag: String = closingPageTag): Page? {
         val node = composeTestRule.onAllNodesWithTag(tag).fetchSemanticsNodes().singleOrNull()
             ?: return null
+        val bounds = node.boundsInRoot
 
-        return Page(scale = node.boundsInRoot.width / node.size.width)
+        return Page(
+            shift = bounds.center.y - node.size.height / 2f,
+            scale = bounds.width / node.size.width,
+            height = node.size.height.toFloat(),
+            edgeMarginPx = with(composeTestRule.density) { EDGE_MARGIN.toPx() },
+        )
     }
 
     fun bounds(tag: String): Rect? {
@@ -59,22 +81,66 @@ internal class PredictiveBackSwipes(
         return composeTestRule.onRoot().captureToImage().toPixelMap()[x.toInt(), y.toInt()]
     }
 
-    private fun backEvent(progress: Float = 0f): BackEventCompat {
+    private fun backEvent(touchY: Float, progress: Float = 0f): BackEventCompat {
         return BackEventCompat(
             touchX = 0f,
-            touchY = 0f,
+            touchY = touchY,
             progress = progress,
             swipeEdge = BackEventCompat.EDGE_LEFT,
         )
     }
 
     data class Page(
+        val shift: Float,
         val scale: Float,
-    )
+        val height: Float,
+        val edgeMarginPx: Float,
+    ) {
+        /** The shift for a finger moved by [touchDeltaY], at the scale the page is drawn at. */
+        fun expectedShift(touchDeltaY: Float): Float {
+            return predictiveBackVerticalShift(
+                touchDeltaY = touchDeltaY,
+                scale = scale,
+                height = height,
+                edgeMarginPx = edgeMarginPx,
+            )
+        }
+    }
 
     companion object {
         const val PROGRESS = 0.5f
         const val PIXEL_TOLERANCE = 1f
+        const val MIN_EXPECTED_SHIFT = 5f
+        const val START_Y = 200f
         private const val ANIMATION_FRAMES = 40
+        private const val MIN_EASING_FRAMES = 3
+        private val EDGE_MARGIN = 8.dp
+
+        fun assertFollows(touchDeltaY: Float, page: Page?) {
+            val expected = checkNotNull(page).expectedShift(touchDeltaY = touchDeltaY)
+
+            // Guards against a screen too small for any shift, which would pass trivially.
+            assertTrue("expected shift $expected", abs(expected) > MIN_EXPECTED_SHIFT)
+            assertEquals("moved by $touchDeltaY", expected, page.shift, PIXEL_TOLERANCE)
+        }
+
+        /** Checks the page eases back to the middle with the gesture that moved it by [touchDeltaY]. */
+        fun assertEasesBack(touchDeltaY: Float, frames: List<Page>) {
+            for (frame in frames) {
+                assertEquals(
+                    "frames $frames",
+                    frame.expectedShift(touchDeltaY = touchDeltaY),
+                    frame.shift,
+                    PIXEL_TOLERANCE,
+                )
+            }
+            for ((previous, next) in frames.zipWithNext()) {
+                assertTrue("frames $frames", next.shift <= previous.shift + PIXEL_TOLERANCE)
+            }
+            val firstShift = frames.first().shift
+            val easingFrames = frames.count { it.shift in MIN_EXPECTED_SHIFT..firstShift - 1f }
+            assertTrue("frames $frames", easingFrames >= MIN_EASING_FRAMES)
+            assertEquals(0f, frames.last().shift, PIXEL_TOLERANCE)
+        }
     }
 }
