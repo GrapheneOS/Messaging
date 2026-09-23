@@ -24,6 +24,7 @@ internal fun AppNavDisplay(
     showsTwoPanes: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    val topContentKey = backStack.lastOrNull()?.let(entryProvider)?.contentKey
     val saveableStateHolderDecorator = rememberSaveableStateHolderNavEntryDecorator<NavKey>()
     val viewModelStoreDecorator = rememberViewModelStoreNavEntryDecorator<NavKey>()
     val listDetailPaneDecorator = rememberListDetailPaneNavEntryDecorator(showsTwoPanes)
@@ -31,6 +32,7 @@ internal fun AppNavDisplay(
     val paneTitleDecorator = rememberPaneTitleNavEntryDecorator()
     val enteringBackDecorator = rememberEnteringBackNavEntryDecorator(
         canPop = backStack.size > 1,
+        topContentKey = topContentKey,
         onBack = onBack,
     )
     val entryDecorators = remember(
