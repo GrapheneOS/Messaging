@@ -53,6 +53,7 @@
     <string name="mediapicker_gallery_title">Choose media</string>
     <string name="conversation_message_selection_title">%d</string>
     <string name="conversation_message_select">Select</string>
+    <string name="conversation_attachment_open">Open</string>
     <string name="mediapicker_audio_title">Record audio</string>
     <string name="mediapicker_contact_title">Choose a contact</string>
     <string name="conversation_media_picker_allow_camera">Allow camera</string>

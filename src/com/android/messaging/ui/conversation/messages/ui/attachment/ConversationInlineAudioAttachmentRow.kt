@@ -104,6 +104,11 @@ internal fun ConversationInlineAudioAttachmentRowContent(
 
         else -> {
             Modifier.combinedClickable(
+                onClickLabel = when {
+                    isPlaying -> stringResource(R.string.audio_pause_content_description)
+                    else -> stringResource(R.string.audio_play_content_description)
+                },
+                onLongClickLabel = stringResource(R.string.conversation_message_select),
                 onClick = onClick,
                 onLongClick = onLongClick,
             )

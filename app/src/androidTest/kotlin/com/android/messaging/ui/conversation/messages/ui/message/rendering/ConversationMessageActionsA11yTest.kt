@@ -1,8 +1,10 @@
 package com.android.messaging.ui.conversation.messages.ui.message.rendering
 
+import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
@@ -117,6 +119,68 @@ internal class ConversationMessageActionsA11yTest : BaseConversationMessageRende
                 "reading the message out of order in the list. Next: " + next?.dumpSubtree(),
             next != null && bubble.hasDescendant(node = next),
         )
+    }
+
+    @Test
+    fun screenReaderNamesTheImageAndOffersToOpenIt() {
+        setConversationMessageContent(
+            message = message(text = MESSAGE_TEXT, parts = persistentListOf(imagePart())),
+        )
+        composeTestRule.waitForIdle()
+
+        val pictureLabel = targetContext.getString(R.string.conversation_list_snippet_picture)
+        val openLabel = targetContext.getString(R.string.conversation_attachment_open)
+        val pictureNodes = awaitFocusableNodesSpeaking(text = pictureLabel)
+        val image = pictureNodes.firstOrNull { node ->
+            node.actionLabel(id = AccessibilityAction.ACTION_CLICK.id) == openLabel
+        }
+        assertNotNull(
+            "No screen reader stop speaking \"$pictureLabel\" offers \"$openLabel\". Nodes: " +
+                pictureNodes.joinToString { it.dumpSubtree() },
+            image,
+        )
+        assertEquals(
+            targetContext.getString(R.string.conversation_message_select),
+            image!!.actionLabel(id = AccessibilityAction.ACTION_LONG_CLICK.id),
+        )
+
+        assertTrue(image.performAction(AccessibilityNodeInfo.ACTION_CLICK))
+
+        verify(timeout = ACTION_TIMEOUT_MILLIS) {
+            onAttachmentClick(IMAGE_CONTENT_TYPE, IMAGE_CONTENT_URI, any())
+        }
+    }
+
+    @Test
+    fun screenReaderReadsTheImageOfAFailedMessageWithTheMessageThatResendsIt() {
+        setConversationMessageContent(
+            message = message(
+                text = MESSAGE_TEXT,
+                parts = persistentListOf(imagePart()),
+                status = ConversationMessageUiModel.Status.Outgoing.Failed,
+                canResendMessage = true,
+            ),
+        )
+        composeTestRule.waitForIdle()
+
+        val pictureLabel = targetContext.getString(R.string.conversation_list_snippet_picture)
+        val pictureNodes = awaitFocusableNodesSpeaking(text = pictureLabel)
+
+        assertTrue(
+            "TalkBack stops on \"$pictureLabel\" apart from its message, where double-tap " +
+                "resends the message instead of opening the image. Nodes: " +
+                pictureNodes.joinToString { it.dumpSubtree() },
+            pictureNodes.isNotEmpty() &&
+                pictureNodes.all { node ->
+                    node.subtreeText().contains(MESSAGE_TEXT) &&
+                        node.actionLabel(id = AccessibilityAction.ACTION_CLICK.id) ==
+                        targetContext.getString(R.string.action_send)
+                },
+        )
+    }
+
+    private fun AccessibilityNodeInfo.actionLabel(id: Int): String? {
+        return actionList.singleOrNull { it.id == id }?.label?.toString()
     }
 
     private fun label(action: ConversationMessageAction): String {
