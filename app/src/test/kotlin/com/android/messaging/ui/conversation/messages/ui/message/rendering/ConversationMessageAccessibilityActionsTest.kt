@@ -4,6 +4,7 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsConfiguration
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.text.AnnotatedString
@@ -11,6 +12,7 @@ import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.conversation.conversationMessageSelectionRowTestTag
+import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
 import io.mockk.verify
@@ -156,6 +158,91 @@ internal class ConversationMessageAccessibilityActionsTest :
         assertTrue(texts.all { it.getLinkAnnotations(start = 0, end = it.length).isEmpty() })
     }
 
+    @Test
+    fun imageIsNamedAndOffersToOpenIt() {
+        setConversationMessageContent(
+            message = message(text = null, parts = persistentListOf(imagePart())),
+        )
+
+        val config = imageNodeConfig()
+
+        assertEquals(
+            targetContext.getString(R.string.conversation_attachment_open),
+            config[SemanticsActions.OnClick].label,
+        )
+        assertEquals(
+            targetContext.getString(R.string.conversation_message_select),
+            config[SemanticsActions.OnLongClick].label,
+        )
+    }
+
+    @Test
+    fun imageOfAMessageWithItsOwnTapIsReadWithTheMessageThatTakesTheTap() {
+        setConversationMessageContent(
+            message = message(
+                parts = persistentListOf(imagePart()),
+                status = ConversationMessageUiModel.Status.Outgoing.Failed,
+                canResendMessage = true,
+            ),
+        )
+
+        val config = imageNodeConfig()
+
+        assertTrue(
+            config[SemanticsProperties.Text].contains(AnnotatedString(text = DEFAULT_BODY_TEXT)),
+        )
+        assertEquals(
+            targetContext.getString(R.string.action_send),
+            config[SemanticsActions.OnClick].label,
+        )
+    }
+
+    @Test
+    fun imageInSelectionModeIsReadWithTheMessageThatTakesTheTap() {
+        setConversationMessageContent(
+            message = message(parts = persistentListOf(imagePart())),
+            isSelectionMode = true,
+        )
+
+        assertTrue(
+            imageNodeConfig()[SemanticsProperties.Text]
+                .contains(AnnotatedString(text = DEFAULT_BODY_TEXT)),
+        )
+    }
+
+    @Test
+    fun attachmentWithNothingToOpenOffersNoTap() {
+        setConversationMessageContent(
+            message = message(
+                parts = persistentListOf(
+                    ConversationMessagePartUiModel.Attachment.File(
+                        text = null,
+                        contentType = FILE_CONTENT_TYPE,
+                        contentUri = null,
+                        width = 0,
+                        height = 0,
+                    ),
+                ),
+            ),
+        )
+
+        val config = composeTestRule
+            .onNodeWithText(text = FILE_CONTENT_TYPE)
+            .fetchSemanticsNode()
+            .config
+
+        assertNull(config.getOrNull(SemanticsActions.OnClick))
+    }
+
+    private fun imageNodeConfig(): SemanticsConfiguration {
+        return composeTestRule
+            .onNodeWithContentDescription(
+                label = targetContext.getString(R.string.conversation_list_snippet_picture),
+            )
+            .fetchSemanticsNode()
+            .config
+    }
+
     private fun bodyTextNodeConfig(): SemanticsConfiguration {
         return composeTestRule
             .onNodeWithText(text = DEFAULT_BODY_TEXT)
@@ -172,6 +259,7 @@ internal class ConversationMessageAccessibilityActionsTest :
     }
 
     private companion object {
+        private const val FILE_CONTENT_TYPE = "application/pdf"
         private const val SIM_DISPLAY_NAME = "Work"
     }
 }

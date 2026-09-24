@@ -107,13 +107,9 @@ internal fun ConversationMessageBubbleRow(
             layout = layout,
             maxBubbleWidth = maxBubbleWidth,
             simDisplayName = simDisplayName,
-            onAttachmentClick = { contentType, contentUri, partId ->
-                when {
-                    isSelectionMode -> onMessageClick()
-                    message.canDownloadMessage -> onMessageDownloadClick()
-                    message.canResendMessage -> onMessageResendClick()
-                    else -> onAttachmentClick(contentType, contentUri, partId)
-                }
+            onAttachmentClick = when {
+                isSelectionMode || message.canDownloadMessage || message.canResendMessage -> null
+                else -> onAttachmentClick
             },
             onExternalUriClick = { uri ->
                 when {

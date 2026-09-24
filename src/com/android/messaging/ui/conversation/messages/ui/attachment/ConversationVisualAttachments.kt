@@ -1,7 +1,6 @@
 package com.android.messaging.ui.conversation.messages.ui.attachment
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -28,10 +27,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import com.android.messaging.R
 import com.android.messaging.ui.common.components.attachment.MediaThumbnail
 import com.android.messaging.ui.conversation.messages.model.attachment.ConversationMessageAttachment
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
@@ -54,7 +57,7 @@ internal fun ConversationGalleryVisualAttachments(
     attachments: ImmutableList<ConversationMessageAttachment>,
     hasTextAboveVisualAttachments: Boolean,
     hasTextBelowVisualAttachments: Boolean,
-    onAttachmentClick: OnConversationAttachmentClick,
+    onAttachmentClick: OnConversationAttachmentClick?,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
 ) {
@@ -95,7 +98,7 @@ internal fun ConversationStandaloneVisualAttachment(
     attachment: ConversationMessageAttachment,
     hasTextAboveVisualAttachments: Boolean,
     hasTextBelowVisualAttachments: Boolean,
-    onAttachmentClick: OnConversationAttachmentClick,
+    onAttachmentClick: OnConversationAttachmentClick?,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
 ) {
@@ -120,7 +123,7 @@ private fun ConversationVisualAttachmentGrid(
     attachments: ImmutableList<ConversationMessageAttachment>,
     hasTextAboveVisualAttachments: Boolean,
     hasTextBelowVisualAttachments: Boolean,
-    onAttachmentClick: OnConversationAttachmentClick,
+    onAttachmentClick: OnConversationAttachmentClick?,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
 ) {
@@ -177,7 +180,7 @@ private fun ConversationVisualAttachmentCard(
     attachment: ConversationMessageAttachment,
     aspectRatio: Float,
     attachmentShape: RoundedCornerShape,
-    onAttachmentClick: OnConversationAttachmentClick,
+    onAttachmentClick: OnConversationAttachmentClick?,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
 ) {
@@ -203,7 +206,7 @@ private fun ConversationVisualAttachmentSurface(
     attachment: ConversationMessageAttachment,
     attachmentShape: RoundedCornerShape,
     contentScale: ContentScale,
-    onAttachmentClick: OnConversationAttachmentClick,
+    onAttachmentClick: OnConversationAttachmentClick?,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
     overlay: @Composable BoxScope.() -> Unit,
@@ -212,21 +215,22 @@ private fun ConversationVisualAttachmentSurface(
     val openAction = remember(attachment) {
         attachment.toConversationAttachmentOpenActionOrNull()
     }
+    val description = stringResource(
+        id = when {
+            attachment.requiresPlaybackAffordance() -> R.string.conversation_list_snippet_video
+            else -> R.string.conversation_list_snippet_picture
+        },
+    )
 
     Surface(
         modifier = modifier
             .clip(shape = attachmentShape)
-            .combinedClickable(
-                enabled = true,
-                onClick = {
-                    openAction?.let { action ->
-                        dispatchConversationAttachmentOpenAction(
-                            action = action,
-                            onAttachmentClick = onAttachmentClick,
-                            onExternalUriClick = onExternalUriClick,
-                        )
-                    }
-                },
+            .semantics { contentDescription = description }
+            .conversationAttachmentClickable(
+                onClick = openAction.toConversationAttachmentClickOrNull(
+                    onAttachmentClick = onAttachmentClick,
+                    onExternalUriClick = onExternalUriClick,
+                ),
                 onLongClick = onMessageLongClick,
             ),
         shape = attachmentShape,

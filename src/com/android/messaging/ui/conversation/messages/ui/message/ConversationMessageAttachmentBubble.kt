@@ -33,7 +33,7 @@ internal fun ConversationMessageAttachmentOnlyBubble(
     message: ConversationMessageUiModel,
     isSelected: Boolean,
     isSelectionMode: Boolean,
-    onAttachmentClick: OnConversationAttachmentClick,
+    onAttachmentClick: OnConversationAttachmentClick?,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
 ) {
@@ -63,7 +63,7 @@ internal fun ConversationMessageAttachmentSurfaceBubble(
     isSelected: Boolean,
     message: ConversationMessageUiModel,
     isSelectionMode: Boolean,
-    onAttachmentClick: OnConversationAttachmentClick,
+    onAttachmentClick: OnConversationAttachmentClick?,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
 ) {
@@ -130,7 +130,7 @@ private fun ConversationMessageAttachmentBubbleContent(
     message: ConversationMessageUiModel,
     isSelected: Boolean,
     isSelectionMode: Boolean,
-    onAttachmentClick: OnConversationAttachmentClick,
+    onAttachmentClick: OnConversationAttachmentClick?,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
 ) {

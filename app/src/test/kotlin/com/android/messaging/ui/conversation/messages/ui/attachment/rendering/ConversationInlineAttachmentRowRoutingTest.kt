@@ -1,8 +1,13 @@
 package com.android.messaging.ui.conversation.messages.ui.attachment.rendering
 
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import com.android.common.test.helpers.targetContext
+import com.android.messaging.R
 import io.mockk.verify
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -139,6 +144,23 @@ internal class ConversationInlineAttachmentRowRoutingTest :
                 onMessageLongClick.invoke()
             }
         }
+    }
+
+    @Test
+    fun audioContent_labelsTheTapAsPlayAndTheLongPressAsSelect() {
+        setAudioRowContent(isSelectionMode = false)
+
+        val playDescription = targetContext.getString(R.string.audio_play_content_description)
+        val config = composeTestRule
+            .onNodeWithContentDescription(label = playDescription)
+            .fetchSemanticsNode()
+            .config
+
+        assertEquals(playDescription, config[SemanticsActions.OnClick].label)
+        assertEquals(
+            targetContext.getString(R.string.conversation_message_select),
+            config[SemanticsActions.OnLongClick].label,
+        )
     }
 
     @Test
