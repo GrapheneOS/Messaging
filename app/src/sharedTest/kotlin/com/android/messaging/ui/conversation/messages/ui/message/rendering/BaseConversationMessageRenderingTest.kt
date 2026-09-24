@@ -8,10 +8,12 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.performTouchInput
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.datamodel.data.ParticipantData
@@ -25,6 +27,7 @@ import com.android.messaging.ui.conversation.messages.model.message.MmsDownloadU
 import com.android.messaging.ui.conversation.messages.ui.message.ConversationMessage
 import com.android.messaging.ui.conversation.messages.ui.message.ConversationMessageAvatar
 import com.android.messaging.ui.conversation.messages.ui.message.ConversationMmsDownloadBody
+import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
 import com.android.messaging.ui.core.AppTheme
 import io.mockk.clearAllMocks
 import io.mockk.mockk
@@ -42,6 +45,8 @@ internal abstract class BaseConversationMessageRenderingTest {
     protected val onAvatarClick = mockk<() -> Unit>(relaxed = true)
     protected val onDownloadClick = mockk<() -> Unit>(relaxed = true)
     protected val onExternalUriClick = mockk<(String) -> Unit>(relaxed = true)
+    protected val onMessageActionClick =
+        mockk<(ConversationMessageAction) -> Unit>(relaxed = true)
     protected val onMessageClick = mockk<() -> Unit>(relaxed = true)
     protected val onMessageLongClick = mockk<() -> Unit>(relaxed = true)
     protected val onResendClick = mockk<() -> Unit>(relaxed = true)
@@ -72,6 +77,7 @@ internal abstract class BaseConversationMessageRenderingTest {
                     onMessageClick = onMessageClick,
                     onMessageAvatarClick = onAvatarClick,
                     onMessageDownloadClick = onDownloadClick,
+                    onMessageActionClick = onMessageActionClick,
                     onMessageLongClick = onMessageLongClick,
                     onMessageResendClick = onResendClick,
                     onSimSelectorClick = onSimSelectorClick,
@@ -198,6 +204,7 @@ internal abstract class BaseConversationMessageRenderingTest {
         composeTestRule
             .onNodeWithTag(
                 testTag = conversationMessageBubbleTestTag(messageId = MessageId(messageId)),
+                useUnmergedTree = true,
             )
             .performClick()
     }
@@ -206,8 +213,9 @@ internal abstract class BaseConversationMessageRenderingTest {
         composeTestRule
             .onNodeWithTag(
                 testTag = conversationMessageBubbleTestTag(messageId = MessageId(messageId)),
+                useUnmergedTree = true,
             )
-            .performSemanticsAction(SemanticsActions.OnLongClick)
+            .performTouchInput { longClick() }
     }
 
     protected fun clickSelectionRow(messageId: String = DEFAULT_MESSAGE_ID) {

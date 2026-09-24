@@ -1,7 +1,11 @@
 package com.android.messaging.ui.conversation.messages.ui.message
 
-import androidx.compose.foundation.combinedClickable
+import android.view.accessibility.AccessibilityManager
+import android.view.accessibility.AccessibilityManager.TouchExplorationStateChangeListener
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,23 +15,36 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.text
+import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.toSize
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.conversation.conversationMessageBubbleTestTag
@@ -43,6 +60,8 @@ import com.android.messaging.ui.conversation.preview.previewMmsDownloadUiModel
 import com.android.messaging.ui.conversation.preview.previewOutgoingMessage
 import com.android.messaging.ui.conversation.preview.previewVCardPart
 import com.android.messaging.ui.conversation.preview.previewVideoPart
+import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
+import com.android.messaging.ui.conversation.screen.model.availableMessageActions
 import com.android.messaging.ui.core.MessagingPreviewColumn
 import kotlinx.collections.immutable.persistentListOf
 
@@ -54,6 +73,7 @@ internal fun ConversationMessageBubbleRow(
     layout: ConversationMessageLayout,
     maxBubbleWidth: Dp,
     simDisplayName: String?,
+    bubbleRipple: ConversationMessageBubbleRipple,
     onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onMessageClick: () -> Unit,
@@ -72,10 +92,11 @@ internal fun ConversationMessageBubbleRow(
         onMessageLongClick = onMessageLongClick,
     ) {
         ConversationMessageBubble(
-            modifier = Modifier.conversationMessageBubbleInteractionModifier(
+            modifier = Modifier.conversationMessageBubbleModifier(
                 message = message,
                 isSelectionMode = isSelectionMode,
                 layout = layout,
+                bubbleRipple = bubbleRipple,
                 onMessageDownloadClick = onMessageDownloadClick,
                 onMessageLongClick = onMessageLongClick,
                 onMessageResendClick = onMessageResendClick,
@@ -119,19 +140,7 @@ private fun ConversationMessageBubbleRowContainer(
     content: @Composable () -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag(
-                tag = conversationMessageSelectionRowTestTag(
-                    messageId = message.messageId,
-                ),
-            )
-            .conversationMessageSelectionModeRowModifier(
-                isSelected = isSelected,
-                isSelectionMode = isSelectionMode,
-                onMessageClick = onMessageClick,
-                onMessageLongClick = onMessageLongClick,
-            ),
+        modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         ConversationMessageSelectionIndicator(
@@ -204,51 +213,102 @@ private fun conversationMessageRowHorizontalArrangement(
     }
 }
 
+/**
+ * Handles clicks for the whole message, bubble and metadata, so that a screen reader reads them as
+ * one item that offers the message actions. The ripple is still drawn on the bubble only.
+ */
 @Composable
-private fun Modifier.conversationMessageSelectionModeRowModifier(
+internal fun Modifier.conversationMessageInteractionModifier(
+    message: ConversationMessageUiModel,
     isSelected: Boolean,
     isSelectionMode: Boolean,
+    bubbleRipple: ConversationMessageBubbleRipple,
     onMessageClick: () -> Unit,
+    onMessageDownloadClick: () -> Unit,
+    onMessageActionClick: (ConversationMessageAction) -> Unit,
     onMessageLongClick: () -> Unit,
+    onMessageResendClick: () -> Unit,
 ): Modifier {
-    val hapticFeedback = LocalHapticFeedback.current
-    val interactionSource = remember { MutableInteractionSource() }
-    return when {
-        !isSelectionMode -> this
+    val messageActions = message.availableMessageActions().map { action ->
+        CustomAccessibilityAction(
+            label = stringResource(id = action.labelRes),
+        ) {
+            onMessageActionClick(action)
+            true
+        }
+    }
+    // A screen reader presses the middle of the message, which can be beside the bubble
+    val isWholeMessageTouchable = rememberIsTouchExplorationEnabled() || isSelectionMode
 
-        else -> {
-            this
-                .semantics {
+    return this
+        .testTag(
+            tag = conversationMessageSelectionRowTestTag(
+                messageId = message.messageId,
+            ),
+        )
+        .onPlaced { coordinates ->
+            bubbleRipple.messageCoordinates = coordinates
+        }
+        .semantics {
+            // The attachments, links and avatar inside the message come first: TalkBack drops a
+            // node's link to its own descendant, which leaves the message out of order in the
+            // reversed list
+            traversalIndex = 1f
+
+            when {
+                isSelectionMode -> {
                     role = Role.Checkbox
                     selected = isSelected
                 }
-                .combinedClickable(
-                    interactionSource = interactionSource,
-                    indication = null,
-                    enabled = true,
-                    onClick = {
-                        hapticFeedback.performHapticFeedback(HapticFeedbackType.ContextClick)
-                        onMessageClick()
-                    },
-                    onLongClick = {
-                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onMessageLongClick()
-                    },
-                )
+
+                else -> customActions = messageActions
+            }
         }
-    }
+        .conversationMessageClickable(
+            message = message,
+            isSelectionMode = isSelectionMode,
+            isWholeMessageTouchable = isWholeMessageTouchable,
+            interactionSource = bubbleRipple.messageInteractionSource,
+            onMessageClick = onMessageClick,
+            onMessageDownloadClick = onMessageDownloadClick,
+            onMessageLongClick = onMessageLongClick,
+            onMessageResendClick = onMessageResendClick,
+        )
 }
 
 @Composable
-private fun Modifier.conversationMessageBubbleInteractionModifier(
+private fun rememberIsTouchExplorationEnabled(): Boolean {
+    val accessibilityManager = LocalContext.current
+        .getSystemService(AccessibilityManager::class.java)
+    var isTouchExplorationEnabled by remember(accessibilityManager) {
+        mutableStateOf(accessibilityManager.isTouchExplorationEnabled)
+    }
+
+    DisposableEffect(accessibilityManager) {
+        val listener = TouchExplorationStateChangeListener { isEnabled ->
+            isTouchExplorationEnabled = isEnabled
+        }
+        accessibilityManager.addTouchExplorationStateChangeListener(listener)
+        isTouchExplorationEnabled = accessibilityManager.isTouchExplorationEnabled
+
+        onDispose {
+            accessibilityManager.removeTouchExplorationStateChangeListener(listener)
+        }
+    }
+
+    return isTouchExplorationEnabled
+}
+
+@Composable
+private fun Modifier.conversationMessageBubbleModifier(
     message: ConversationMessageUiModel,
     isSelectionMode: Boolean,
     layout: ConversationMessageLayout,
+    bubbleRipple: ConversationMessageBubbleRipple,
     onMessageDownloadClick: () -> Unit,
     onMessageLongClick: () -> Unit,
     onMessageResendClick: () -> Unit,
 ): Modifier {
-    val hapticFeedback = LocalHapticFeedback.current
     val senderAnnouncement = conversationMessageSenderAnnouncement(
         message = message,
         isSenderLabelVisible = layout.showSender,
@@ -261,25 +321,95 @@ private fun Modifier.conversationMessageBubbleInteractionModifier(
         )
         .conversationMessageSenderSemantics(announcement = senderAnnouncement)
         .clip(shape = layout.bubbleShape)
+        .onPlaced { coordinates ->
+            bubbleRipple.bubbleCoordinates = coordinates
+        }
 
     return when {
         isSelectionMode -> bubbleModifier
 
         else -> {
-            bubbleModifier.combinedClickable(
-                enabled = true,
-                onClick = {
-                    when {
-                        message.canDownloadMessage -> onMessageDownloadClick()
-                        message.canResendMessage -> onMessageResendClick()
-                    }
-                },
-                onLongClick = {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onMessageLongClick()
-                },
-            )
+            bubbleModifier
+                .indication(
+                    interactionSource = bubbleRipple.bubbleInteractionSource,
+                    indication = LocalIndication.current,
+                )
+                .conversationMessageBubbleClickable(
+                    interactionSource = bubbleRipple.bubbleInteractionSource,
+                    onClick = message.conversationMessageTap(
+                        onMessageDownloadClick = onMessageDownloadClick,
+                        onMessageResendClick = onMessageResendClick,
+                    ),
+                    onLongClick = onMessageLongClick,
+                )
         }
+    }
+}
+
+@Composable
+internal fun rememberConversationMessageBubbleRipple(): ConversationMessageBubbleRipple {
+    val bubbleRipple = remember { ConversationMessageBubbleRipple() }
+
+    LaunchedEffect(bubbleRipple) {
+        bubbleRipple.replayPressesOnBubble()
+    }
+
+    return bubbleRipple
+}
+
+/**
+ * Replays the interactions of the message's click handler, such as keyboard focus and presses, on
+ * the bubble, with press positions moved into the bubble's coordinates. Presses outside the bubble
+ * show no ripple. Touch presses on the bubble go to [bubbleInteractionSource] directly.
+ */
+@Stable
+internal class ConversationMessageBubbleRipple {
+    val messageInteractionSource = MutableInteractionSource()
+    val bubbleInteractionSource = MutableInteractionSource()
+    var messageCoordinates: LayoutCoordinates? = null
+    var bubbleCoordinates: LayoutCoordinates? = null
+
+    suspend fun replayPressesOnBubble() {
+        var bubblePress: PressInteraction.Press? = null
+
+        messageInteractionSource.interactions.collect { interaction ->
+            val bubbleInteraction = when (interaction) {
+                is PressInteraction.Press -> {
+                    bubblePress = bubblePositionOrNull(messagePosition = interaction.pressPosition)
+                        ?.let(PressInteraction::Press)
+                    bubblePress
+                }
+
+                is PressInteraction.Release -> {
+                    bubblePress?.let(PressInteraction::Release)
+                }
+
+                is PressInteraction.Cancel -> {
+                    bubblePress?.let(PressInteraction::Cancel)
+                }
+
+                else -> interaction
+            }
+
+            bubbleInteraction?.let { bubbleInteractionSource.emit(interaction = it) }
+        }
+    }
+
+    /** Returns [messagePosition] in the bubble's coordinates, or null when it's beside the bubble. */
+    fun bubblePositionOrNull(messagePosition: Offset): Offset? {
+        val message = messageCoordinates?.takeIf(LayoutCoordinates::isAttached)
+        val bubble = bubbleCoordinates?.takeIf(LayoutCoordinates::isAttached)
+        if (message == null || bubble == null) {
+            return null
+        }
+
+        val bubblePosition = bubble.localPositionOf(
+            sourceCoordinates = message,
+            relativeToSource = messagePosition,
+        )
+        val bubbleBounds = Rect(offset = Offset.Zero, size = bubble.size.toSize())
+
+        return bubblePosition.takeIf { bubbleBounds.contains(offset = it) }
     }
 }
 
@@ -729,6 +859,7 @@ private fun ConversationMessageRowsPreviewItem(
             layout = layout,
             maxBubbleWidth = 320.dp,
             simDisplayName = simDisplayName,
+            bubbleRipple = rememberConversationMessageBubbleRipple(),
             onAttachmentClick = { _, _, _ -> },
             onExternalUriClick = {},
             onMessageClick = {},

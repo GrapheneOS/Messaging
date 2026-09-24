@@ -6,7 +6,7 @@ import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.media.model.AttachmentToSave
 import com.android.messaging.data.media.model.SaveAttachmentsResult
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
-import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
+import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
 import io.mockk.every
@@ -50,9 +50,9 @@ internal class ConversationMessageSelectionDelegateSaveAttachmentTest :
 
                 assertEquals(
                     persistentSetOf(
-                        ConversationMessageSelectionAction.Delete,
-                        ConversationMessageSelectionAction.SaveAttachment,
-                        ConversationMessageSelectionAction.Details,
+                        ConversationMessageAction.Delete,
+                        ConversationMessageAction.SaveAttachment,
+                        ConversationMessageAction.Details,
                     ),
                     harness.delegate.state.value.availableActions,
                 )
@@ -102,7 +102,7 @@ internal class ConversationMessageSelectionDelegateSaveAttachmentTest :
 
                 harness.delegate.effects.test {
                     harness.delegate.onMessageSelectionActionClick(
-                        action = ConversationMessageSelectionAction.SaveAttachment,
+                        action = ConversationMessageAction.SaveAttachment,
                     )
                     advanceUntilIdle()
 
@@ -186,7 +186,7 @@ internal class ConversationMessageSelectionDelegateSaveAttachmentTest :
                 advanceUntilIdle()
 
                 harness.delegate.onMessageSelectionActionClick(
-                    action = ConversationMessageSelectionAction.SaveAttachment,
+                    action = ConversationMessageAction.SaveAttachment,
                 )
                 advanceUntilIdle()
 

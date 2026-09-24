@@ -2,7 +2,7 @@ package com.android.messaging.ui.conversation.messages.delegate.selection
 
 import app.cash.turbine.test
 import com.android.messaging.data.conversation.model.MessageId
-import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
+import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -40,7 +40,7 @@ internal class ConversationMessageSelectionDelegateShareTest :
 
                 harness.delegate.effects.test {
                     harness.delegate.onMessageSelectionActionClick(
-                        action = ConversationMessageSelectionAction.Share,
+                        action = ConversationMessageAction.Share,
                     )
                     advanceUntilIdle()
 
@@ -82,7 +82,7 @@ internal class ConversationMessageSelectionDelegateShareTest :
 
                 harness.delegate.effects.test {
                     harness.delegate.onMessageSelectionActionClick(
-                        action = ConversationMessageSelectionAction.Share,
+                        action = ConversationMessageAction.Share,
                     )
                     advanceUntilIdle()
 

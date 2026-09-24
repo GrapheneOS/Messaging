@@ -9,7 +9,7 @@ import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.conversation.CONVERSATION_SELECTION_OVERFLOW_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.conversationMessageSelectionActionButtonTestTag
 import com.android.messaging.ui.conversation.screen.BaseConversationScreenTest
-import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
+import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
 import io.mockk.verify
 import kotlinx.collections.immutable.persistentSetOf
@@ -26,23 +26,23 @@ internal class ConversationSelectionTopAppBarResidualActionsTest : BaseConversat
         setSelectionContent(
             screenModel = screenModel,
             actions = listOf(
-                ConversationMessageSelectionAction.Download,
-                ConversationMessageSelectionAction.Resend,
+                ConversationMessageAction.Download,
+                ConversationMessageAction.Resend,
             ),
         )
 
-        clickSelectionAction(action = ConversationMessageSelectionAction.Download)
-        clickSelectionAction(action = ConversationMessageSelectionAction.Resend)
+        clickSelectionAction(action = ConversationMessageAction.Download)
+        clickSelectionAction(action = ConversationMessageAction.Resend)
 
         composeTestRule.runOnIdle {
             verify(exactly = 1) {
                 screenModel.model.onMessageSelectionActionClick(
-                    action = ConversationMessageSelectionAction.Download,
+                    action = ConversationMessageAction.Download,
                 )
             }
             verify(exactly = 1) {
                 screenModel.model.onMessageSelectionActionClick(
-                    action = ConversationMessageSelectionAction.Resend,
+                    action = ConversationMessageAction.Resend,
                 )
             }
         }
@@ -54,31 +54,31 @@ internal class ConversationSelectionTopAppBarResidualActionsTest : BaseConversat
         setSelectionContent(
             screenModel = screenModel,
             actions = listOf(
-                ConversationMessageSelectionAction.Share,
-                ConversationMessageSelectionAction.Forward,
-                ConversationMessageSelectionAction.Details,
+                ConversationMessageAction.Share,
+                ConversationMessageAction.Forward,
+                ConversationMessageAction.Details,
             ),
         )
 
-        clickOverflowSelectionAction(action = ConversationMessageSelectionAction.Share)
-        assertOverflowActionHidden(action = ConversationMessageSelectionAction.Share)
-        clickOverflowSelectionAction(action = ConversationMessageSelectionAction.Forward)
-        clickOverflowSelectionAction(action = ConversationMessageSelectionAction.Details)
+        clickOverflowSelectionAction(action = ConversationMessageAction.Share)
+        assertOverflowActionHidden(action = ConversationMessageAction.Share)
+        clickOverflowSelectionAction(action = ConversationMessageAction.Forward)
+        clickOverflowSelectionAction(action = ConversationMessageAction.Details)
 
         composeTestRule.runOnIdle {
             verify(exactly = 1) {
                 screenModel.model.onMessageSelectionActionClick(
-                    action = ConversationMessageSelectionAction.Share,
+                    action = ConversationMessageAction.Share,
                 )
             }
             verify(exactly = 1) {
                 screenModel.model.onMessageSelectionActionClick(
-                    action = ConversationMessageSelectionAction.Forward,
+                    action = ConversationMessageAction.Forward,
                 )
             }
             verify(exactly = 1) {
                 screenModel.model.onMessageSelectionActionClick(
-                    action = ConversationMessageSelectionAction.Details,
+                    action = ConversationMessageAction.Details,
                 )
             }
         }
@@ -86,7 +86,7 @@ internal class ConversationSelectionTopAppBarResidualActionsTest : BaseConversat
 
     private fun setSelectionContent(
         screenModel: ScreenModelHandle,
-        actions: List<ConversationMessageSelectionAction>,
+        actions: List<ConversationMessageAction>,
     ) {
         screenModel.scaffoldUiStateFlow.value = createPresentUiState(
             messages = createMessages(
@@ -103,14 +103,14 @@ internal class ConversationSelectionTopAppBarResidualActionsTest : BaseConversat
         setContent(screenModel = screenModel.model)
     }
 
-    private fun clickSelectionAction(action: ConversationMessageSelectionAction) {
+    private fun clickSelectionAction(action: ConversationMessageAction) {
         composeTestRule
             .onNodeWithTag(selectionActionTag(action = action))
             .assertIsDisplayed()
             .performClick()
     }
 
-    private fun clickOverflowSelectionAction(action: ConversationMessageSelectionAction) {
+    private fun clickOverflowSelectionAction(action: ConversationMessageAction) {
         composeTestRule
             .onNodeWithTag(CONVERSATION_SELECTION_OVERFLOW_BUTTON_TEST_TAG)
             .assertIsDisplayed()
@@ -119,13 +119,13 @@ internal class ConversationSelectionTopAppBarResidualActionsTest : BaseConversat
     }
 
     @Suppress("SameParameterValue")
-    private fun assertOverflowActionHidden(action: ConversationMessageSelectionAction) {
+    private fun assertOverflowActionHidden(action: ConversationMessageAction) {
         composeTestRule
             .onAllNodesWithTag(selectionActionTag(action = action))
             .assertCountEquals(expectedSize = 0)
     }
 
-    private fun selectionActionTag(action: ConversationMessageSelectionAction): String {
+    private fun selectionActionTag(action: ConversationMessageAction): String {
         return conversationMessageSelectionActionButtonTestTag(action = action.name)
     }
 

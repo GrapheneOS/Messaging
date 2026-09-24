@@ -17,6 +17,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.isTraversalGroup
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -35,6 +37,7 @@ import com.android.messaging.ui.conversation.preview.previewMmsDownloadUiModel
 import com.android.messaging.ui.conversation.preview.previewOutgoingMessage
 import com.android.messaging.ui.conversation.preview.previewVCardPart
 import com.android.messaging.ui.conversation.preview.previewVideoPart
+import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
 import kotlinx.collections.immutable.persistentListOf
 
 private const val MESSAGE_BUBBLE_MAX_WIDTH_DP = 360
@@ -57,6 +60,7 @@ internal fun ConversationMessage(
     onMessageClick: () -> Unit = {},
     onMessageAvatarClick: () -> Unit = {},
     onMessageDownloadClick: () -> Unit = {},
+    onMessageActionClick: (ConversationMessageAction) -> Unit = {},
     onMessageLongClick: () -> Unit = {},
     onMessageResendClick: () -> Unit = {},
     onSimSelectorClick: () -> Unit = {},
@@ -87,7 +91,11 @@ internal fun ConversationMessage(
         }
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            // Scopes the traversal index that conversationMessageInteractionModifier gives the
+            // message to this message
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics { isTraversalGroup = true },
             horizontalArrangement = messageHorizontalArrangement(message = message),
         ) {
             ConversationMessageContent(
@@ -102,6 +110,7 @@ internal fun ConversationMessage(
                 onMessageClick = onMessageClick,
                 onMessageAvatarClick = onMessageAvatarClick,
                 onMessageDownloadClick = onMessageDownloadClick,
+                onMessageActionClick = onMessageActionClick,
                 onMessageLongClick = onMessageLongClick,
                 onMessageResendClick = onMessageResendClick,
                 onSimSelectorClick = onSimSelectorClick,
@@ -288,11 +297,25 @@ private fun ConversationMessageContent(
     onMessageClick: () -> Unit,
     onMessageAvatarClick: () -> Unit,
     onMessageDownloadClick: () -> Unit,
+    onMessageActionClick: (ConversationMessageAction) -> Unit,
     onMessageLongClick: () -> Unit,
     onMessageResendClick: () -> Unit,
     onSimSelectorClick: () -> Unit,
 ) {
+    val bubbleRipple = rememberConversationMessageBubbleRipple()
+
     Column(
+        modifier = Modifier.conversationMessageInteractionModifier(
+            message = message,
+            isSelected = isSelected,
+            isSelectionMode = isSelectionMode,
+            bubbleRipple = bubbleRipple,
+            onMessageClick = onMessageClick,
+            onMessageDownloadClick = onMessageDownloadClick,
+            onMessageActionClick = onMessageActionClick,
+            onMessageLongClick = onMessageLongClick,
+            onMessageResendClick = onMessageResendClick,
+        ),
         horizontalAlignment = messageContentHorizontalAlignment(message = message),
     ) {
         ConversationMessageBubbleRow(
@@ -302,6 +325,7 @@ private fun ConversationMessageContent(
             layout = layout,
             maxBubbleWidth = maxBubbleWidth,
             simDisplayName = simDisplayName,
+            bubbleRipple = bubbleRipple,
             onAttachmentClick = onAttachmentClick,
             onExternalUriClick = onExternalUriClick,
             onMessageClick = onMessageClick,

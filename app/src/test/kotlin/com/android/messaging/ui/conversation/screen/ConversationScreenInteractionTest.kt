@@ -18,7 +18,7 @@ import com.android.messaging.ui.conversation.CONVERSATION_SEND_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.conversationMessageBubbleTestTag
 import com.android.messaging.ui.conversation.conversationMessageSelectionRowTestTag
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
-import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
+import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
 import io.mockk.every
 import io.mockk.verify
@@ -133,7 +133,11 @@ internal class ConversationScreenInteractionTest : BaseConversationScreenTest() 
         setContent(screenModel = screenModel.model)
 
         composeTestRule
-            .onNodeWithTag(conversationMessageBubbleTestTag(messageId = MessageId("message-3")))
+            .onNodeWithTag(
+                testTag = conversationMessageSelectionRowTestTag(
+                    messageId = MessageId("message-3"),
+                ),
+            )
             .performSemanticsAction(SemanticsActions.OnLongClick)
 
         composeTestRule.runOnIdle {
@@ -155,8 +159,8 @@ internal class ConversationScreenInteractionTest : BaseConversationScreenTest() 
             selection = ConversationMessageSelectionUiState(
                 selectedMessageIds = persistentSetOf(MessageId("message-3")),
                 availableActions = persistentSetOf(
-                    ConversationMessageSelectionAction.Copy,
-                    ConversationMessageSelectionAction.Delete,
+                    ConversationMessageAction.Copy,
+                    ConversationMessageAction.Delete,
                 ),
             ),
         )
@@ -207,7 +211,10 @@ internal class ConversationScreenInteractionTest : BaseConversationScreenTest() 
             .onNodeWithText(failedStatusText, substring = true)
             .assertIsDisplayed()
         composeTestRule
-            .onNodeWithTag(conversationMessageBubbleTestTag(messageId = MessageId("message-2")))
+            .onNodeWithTag(
+                testTag = conversationMessageBubbleTestTag(messageId = MessageId("message-2")),
+                useUnmergedTree = true,
+            )
             .performClick()
 
         composeTestRule.runOnIdle {
