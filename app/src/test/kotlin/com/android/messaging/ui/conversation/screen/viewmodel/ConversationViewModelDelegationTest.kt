@@ -3,7 +3,7 @@ package com.android.messaging.ui.conversation.screen.viewmodel
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
-import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
+import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -61,7 +61,7 @@ internal class ConversationViewModelDelegationTest : BaseConversationViewModelTe
             )
 
             viewModel.onMessageSelectionActionClick(
-                action = ConversationMessageSelectionAction.Delete,
+                action = ConversationMessageAction.Delete,
             )
             viewModel.onMessageTextChanged(text = "Hello")
             viewModel.onAudioRecordingStart(isLocked = false)
@@ -78,7 +78,7 @@ internal class ConversationViewModelDelegationTest : BaseConversationViewModelTe
 
             verify(exactly = 1) {
                 messageSelectionDelegate.mock.onMessageSelectionActionClick(
-                    action = ConversationMessageSelectionAction.Delete,
+                    action = ConversationMessageAction.Delete,
                 )
             }
             verify(exactly = 1) {

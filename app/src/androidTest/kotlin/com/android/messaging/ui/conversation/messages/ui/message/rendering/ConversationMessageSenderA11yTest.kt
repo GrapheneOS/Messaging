@@ -1,6 +1,5 @@
 package com.android.messaging.ui.conversation.messages.ui.message.rendering
 
-import android.view.accessibility.AccessibilityNodeInfo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.android.messaging.R
@@ -50,7 +49,7 @@ internal class ConversationMessageSenderA11yTest : BaseConversationMessageRender
 
         assertTrue(
             "No screen reader focusable node speaks the message body \"$body\" at all. Tree: " +
-                dumpTree(),
+                dumpActiveWindow(),
             bubbleNodes.isNotEmpty(),
         )
 
@@ -60,50 +59,6 @@ internal class ConversationMessageSenderA11yTest : BaseConversationMessageRender
                 bubbleNodes.joinToString { it.dumpSubtree() },
             bubbleNodes.any { node -> node.subtreeText().contains(announcement) },
         )
-    }
-
-    /** The bubbles TalkBack would stop on and read the body out from. */
-    private fun awaitFocusableNodesSpeaking(text: String): List<AccessibilityNodeInfo> {
-        val uiAutomation = InstrumentationRegistry.getInstrumentation().uiAutomation
-        repeat(A11Y_TREE_POLL_ATTEMPTS) {
-            val matches = uiAutomation.rootInActiveWindow?.collectNodes().orEmpty().filter { node ->
-                node.isScreenReaderFocusable && node.subtreeText().contains(text)
-            }
-            if (matches.isNotEmpty()) {
-                return matches
-            }
-            Thread.sleep(A11Y_TREE_POLL_INTERVAL_MILLIS)
-        }
-        return emptyList()
-    }
-
-    private fun dumpTree(): String {
-        val uiAutomation = InstrumentationRegistry.getInstrumentation().uiAutomation
-        return uiAutomation.rootInActiveWindow?.dumpSubtree() ?: "<no active window>"
-    }
-
-    private fun AccessibilityNodeInfo.subtreeText(): String {
-        return collectNodes().joinToString(separator = " ") { node ->
-            listOfNotNull(node.text, node.contentDescription).joinToString(separator = " ")
-        }
-    }
-
-    private fun AccessibilityNodeInfo.dumpSubtree(): String {
-        return collectNodes().joinToString(separator = " / ") { it.describe() }
-    }
-
-    private fun AccessibilityNodeInfo.collectNodes(): List<AccessibilityNodeInfo> {
-        return buildList {
-            add(this@collectNodes)
-            repeat(childCount) { index ->
-                getChild(index)?.let { addAll(it.collectNodes()) }
-            }
-        }
-    }
-
-    private fun AccessibilityNodeInfo.describe(): String {
-        return "[text=$text, contentDescription=$contentDescription, " +
-            "screenReaderFocusable=$isScreenReaderFocusable]"
     }
 
     private fun string(resourceId: Int, vararg formatArgs: Any): String {
@@ -117,7 +72,5 @@ internal class ConversationMessageSenderA11yTest : BaseConversationMessageRender
         private const val INCOMING_TEXT = "Can you review this before tonight?"
         private const val OUTGOING_TEXT = "I am on my way."
         private const val SENDER_DISPLAY_NAME = "Ada Lovelace"
-        private const val A11Y_TREE_POLL_ATTEMPTS = 20
-        private const val A11Y_TREE_POLL_INTERVAL_MILLIS = 250L
     }
 }

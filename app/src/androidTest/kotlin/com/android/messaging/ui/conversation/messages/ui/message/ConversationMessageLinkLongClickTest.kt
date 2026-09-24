@@ -148,6 +148,7 @@ class ConversationMessageLinkLongClickTest {
                 testTag = conversationMessageBubbleTestTag(
                     messageId = MESSAGE_ID,
                 ),
+                useUnmergedTree = true,
             )
             .performTouchInput {
                 longClick(position = center)

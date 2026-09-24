@@ -16,11 +16,12 @@ import com.android.messaging.ui.conversation.common.ConversationScreenDelegate
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagesUiState
+import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageDeleteConfirmationUiState
-import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect as Effect
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenNavEvent as NavEvent
+import com.android.messaging.ui.conversation.screen.model.availableMessageActions
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentSetOf
@@ -46,7 +47,12 @@ internal interface ConversationMessageSelectionActions {
 
     fun onMessageResendClick(messageId: MessageId)
 
-    fun onMessageSelectionActionClick(action: ConversationMessageSelectionAction)
+    fun onMessageActionClick(
+        messageId: MessageId,
+        action: ConversationMessageAction,
+    )
+
+    fun onMessageSelectionActionClick(action: ConversationMessageAction)
 
     fun dismissDeleteMessageConfirmation()
 
@@ -123,38 +129,27 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
         resendMessageWhenActionRequirementsSatisfied(messageId = messageId)
     }
 
-    override fun onMessageSelectionActionClick(action: ConversationMessageSelectionAction) {
-        when (action) {
-            ConversationMessageSelectionAction.Copy -> {
-                copySelectedMessageText()
+    override fun onMessageActionClick(
+        messageId: MessageId,
+        action: ConversationMessageAction,
+    ) {
+        messageOrNull(messageId = messageId)
+            ?.takeIf { action in it.availableMessageActions() }
+            ?.let { message ->
+                runSingleMessageAction(message = message, action = action)
             }
+    }
 
-            ConversationMessageSelectionAction.Delete -> {
+    override fun onMessageSelectionActionClick(action: ConversationMessageAction) {
+        when (action) {
+            ConversationMessageAction.Delete -> {
                 requestDeleteSelectedMessages()
             }
 
-            ConversationMessageSelectionAction.Details -> {
-                openSelectedMessageDetails()
-            }
-
-            ConversationMessageSelectionAction.Download -> {
-                downloadSelectedMessage()
-            }
-
-            ConversationMessageSelectionAction.Forward -> {
-                forwardSelectedMessage()
-            }
-
-            ConversationMessageSelectionAction.Resend -> {
-                resendSelectedMessage()
-            }
-
-            ConversationMessageSelectionAction.SaveAttachment -> {
-                saveSelectedMessageAttachments()
-            }
-
-            ConversationMessageSelectionAction.Share -> {
-                shareSelectedMessage()
+            else -> {
+                singleSelectedMessageOrNull()?.let { message ->
+                    runSingleMessageAction(message = message, action = action)
+                }
             }
         }
     }
@@ -221,9 +216,30 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
         messageSelectionState.value = ConversationMessageSelectionState()
     }
 
-    private fun copySelectedMessageText() {
-        val selectedMessage = singleSelectedMessageOrNull() ?: return
-        val text = selectedMessage.text?.takeIf(String::isNotBlank) ?: return
+    private fun runSingleMessageAction(
+        message: ConversationMessageUiModel,
+        action: ConversationMessageAction,
+    ) {
+        when (action) {
+            ConversationMessageAction.Copy -> copyMessageText(message = message)
+            ConversationMessageAction.Delete -> {
+                requestDeleteMessagesWhenActionRequirementsSatisfied(
+                    messageIds = persistentSetOf(message.messageId),
+                )
+            }
+            ConversationMessageAction.Details -> openMessageDetails(message = message)
+            ConversationMessageAction.Download -> downloadMessage(message = message)
+            ConversationMessageAction.Forward -> forwardMessage(message = message)
+            ConversationMessageAction.Resend -> resendMessage(message = message)
+            ConversationMessageAction.SaveAttachment -> {
+                saveMessageAttachments(message = message)
+            }
+            ConversationMessageAction.Share -> shareMessage(message = message)
+        }
+    }
+
+    private fun copyMessageText(message: ConversationMessageUiModel) {
+        val text = message.text?.takeIf(String::isNotBlank) ?: return
 
         clipboardManager.setPrimaryClip(
             ClipData.newPlainText(
@@ -235,11 +251,9 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
         clearMessageSelection()
     }
 
-    private fun downloadSelectedMessage() {
-        val selectedMessage = singleSelectedMessageOrNull() ?: return
-
+    private fun downloadMessage(message: ConversationMessageUiModel) {
         clearMessageSelection()
-        downloadMessageWhenActionRequirementsSatisfied(messageId = selectedMessage.messageId)
+        downloadMessageWhenActionRequirementsSatisfied(messageId = message.messageId)
     }
 
     private fun emitEffect(effect: Effect) {
@@ -248,18 +262,14 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
         }
     }
 
-    private fun forwardSelectedMessage() {
-        val selectedMessage = singleSelectedMessageOrNull() ?: return
-
+    private fun forwardMessage(message: ConversationMessageUiModel) {
         clearMessageSelection()
-        _navigationEvents.tryEmit(NavEvent.ForwardMessage(selectedMessage.messageId))
+        _navigationEvents.tryEmit(NavEvent.ForwardMessage(message.messageId))
     }
 
-    private fun openSelectedMessageDetails() {
-        val selectedMessage = singleSelectedMessageOrNull() ?: return
-
+    private fun openMessageDetails(message: ConversationMessageUiModel) {
         clearMessageSelection()
-        _navigationEvents.tryEmit(NavEvent.NavigateToMessageDetails(selectedMessage.messageId))
+        _navigationEvents.tryEmit(NavEvent.NavigateToMessageDetails(message.messageId))
     }
 
     private fun requestDeleteSelectedMessages() {
@@ -272,12 +282,10 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
         requestDeleteMessagesWhenActionRequirementsSatisfied(messageIds = selectedMessageIds)
     }
 
-    private fun resendSelectedMessage() {
-        val selectedMessage = singleSelectedMessageOrNull() ?: return
-
+    private fun resendMessage(message: ConversationMessageUiModel) {
         clearMessageSelection()
 
-        resendMessageWhenActionRequirementsSatisfied(messageId = selectedMessage.messageId)
+        resendMessageWhenActionRequirementsSatisfied(messageId = message.messageId)
     }
 
     private fun downloadMessageWhenActionRequirementsSatisfied(messageId: MessageId) {
@@ -398,17 +406,14 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
     }
 
     private fun singleSelectedMessageOrNull(): ConversationMessageUiModel? {
-        val messagesUiState = conversationMessagesDelegate.state.value
-        val selectedMessageIds = state
-            .value
-            .selectedMessageIds
-            .takeIf { it.size == 1 }
-            ?: return null
+        return state.value.selectedMessageIds.singleOrNull()?.let(::messageOrNull)
+    }
 
-        return when (messagesUiState) {
+    private fun messageOrNull(messageId: MessageId): ConversationMessageUiModel? {
+        return when (val messagesUiState = conversationMessagesDelegate.state.value) {
             is ConversationMessagesUiState.Present -> {
                 messagesUiState.messages.firstOrNull { message ->
-                    message.messageId == selectedMessageIds.first()
+                    message.messageId == messageId
                 }
             }
 
@@ -416,10 +421,8 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
         }
     }
 
-    private fun saveSelectedMessageAttachments() {
-        val selectedMessage = singleSelectedMessageOrNull() ?: return
-
-        val attachments = selectedMessage.parts
+    private fun saveMessageAttachments(message: ConversationMessageUiModel) {
+        val attachments = message.parts
             .asSequence()
             .filterIsInstance<ConversationMessagePartUiModel.Attachment>()
             .filterNot { it.contentType.isBlank() }
@@ -459,14 +462,13 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
         }
     }
 
-    private fun shareSelectedMessage() {
-        val selectedMessage = singleSelectedMessageOrNull() ?: return
-        val messageText = selectedMessage.text?.takeIf(String::isNotBlank)
+    private fun shareMessage(message: ConversationMessageUiModel) {
+        val messageText = message.text?.takeIf(String::isNotBlank)
 
         val firstAttachment = when {
             messageText != null -> null
             else -> {
-                selectedMessage.parts
+                message.parts
                     .asSequence()
                     .mapNotNull { part ->
                         part as? ConversationMessagePartUiModel.Attachment
@@ -562,52 +564,17 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
     private fun availableSelectionActions(
         selectedMessage: ConversationMessageUiModel?,
         selectedMessageCount: Int,
-    ): ImmutableSet<ConversationMessageSelectionAction> {
+    ): ImmutableSet<ConversationMessageAction> {
         return when {
             selectedMessageCount <= 0 -> persistentSetOf()
             selectedMessageCount > 1 || selectedMessage == null -> {
                 persistentSetOf(
-                    ConversationMessageSelectionAction.Delete,
+                    ConversationMessageAction.Delete,
                 )
             }
 
-            else -> {
-                availableSingleMessageSelectionActions(selectedMessage = selectedMessage)
-            }
+            else -> selectedMessage.availableMessageActions()
         }
-    }
-
-    private fun availableSingleMessageSelectionActions(
-        selectedMessage: ConversationMessageUiModel,
-    ): ImmutableSet<ConversationMessageSelectionAction> {
-        val actions = LinkedHashSet<ConversationMessageSelectionAction>()
-
-        if (selectedMessage.canDownloadMessage) {
-            actions += ConversationMessageSelectionAction.Download
-        }
-
-        if (selectedMessage.canResendMessage) {
-            actions += ConversationMessageSelectionAction.Resend
-        }
-
-        actions += ConversationMessageSelectionAction.Delete
-
-        if (selectedMessage.canForwardMessage) {
-            actions += ConversationMessageSelectionAction.Share
-            actions += ConversationMessageSelectionAction.Forward
-        }
-
-        if (selectedMessage.canSaveAttachments) {
-            actions += ConversationMessageSelectionAction.SaveAttachment
-        }
-
-        if (selectedMessage.canCopyMessageToClipboard) {
-            actions += ConversationMessageSelectionAction.Copy
-        }
-
-        actions += ConversationMessageSelectionAction.Details
-
-        return actions.toImmutableSet()
     }
 }
 

@@ -1,7 +1,7 @@
 package com.android.messaging.ui.conversation.messages.delegate.selection
 
 import com.android.messaging.data.conversation.model.MessageId
-import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
+import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
 import io.mockk.verify
 import kotlinx.collections.immutable.persistentSetOf
@@ -36,7 +36,7 @@ internal class ConversationMessageSelectionDelegateDeleteTest :
                 advanceUntilIdle()
 
                 harness.delegate.onMessageSelectionActionClick(
-                    action = ConversationMessageSelectionAction.Delete,
+                    action = ConversationMessageAction.Delete,
                 )
                 advanceUntilIdle()
 
@@ -75,7 +75,7 @@ internal class ConversationMessageSelectionDelegateDeleteTest :
                 harness.delegate.onMessageClick(messageId = MessageId("message-2"))
                 advanceUntilIdle()
                 harness.delegate.onMessageSelectionActionClick(
-                    action = ConversationMessageSelectionAction.Delete,
+                    action = ConversationMessageAction.Delete,
                 )
                 advanceUntilIdle()
 

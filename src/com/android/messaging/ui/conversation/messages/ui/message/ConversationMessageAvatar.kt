@@ -9,8 +9,6 @@ import androidx.compose.material.icons.rounded.Person
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.data.conversation.model.MessageId
@@ -35,8 +33,6 @@ internal fun ConversationMessageAvatar(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
-    val hapticFeedback = LocalHapticFeedback.current
-
     ParticipantAvatar(
         avatarUri = message.senderAvatarUri?.toString(),
         size = CONVERSATION_MESSAGE_AVATAR_SIZE,
@@ -46,10 +42,7 @@ internal fun ConversationMessageAvatar(
             .combinedClickable(
                 enabled = true,
                 onClick = onClick,
-                onLongClick = {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onLongClick()
-                },
+                onLongClick = onLongClick,
             ),
         colorSeedCode = participantColorSeed(
             normalizedDestination = message.senderNormalizedDestination,
