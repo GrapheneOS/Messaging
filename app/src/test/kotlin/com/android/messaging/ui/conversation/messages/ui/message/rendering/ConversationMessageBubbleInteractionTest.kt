@@ -439,6 +439,32 @@ internal class ConversationMessageBubbleInteractionTest :
     }
 
     @Test
+    fun touchExploration_visualAttachmentClickOfMessageWithoutTapIsNoOp() {
+        enableTouchExploration()
+        setConversationMessageContent(
+            message = message(
+                text = null,
+                parts = persistentListOf(
+                    imagePart(),
+                ),
+                protocol = ConversationMessageUiModel.Protocol.MMS,
+            ),
+            showIncomingParticipantIdentity = false,
+        )
+
+        clickBubble()
+
+        composeTestRule.runOnIdle {
+            verify(exactly = 0) {
+                onAttachmentClick.invoke(any(), any(), any())
+            }
+            verify(exactly = 0) {
+                onMessageLongClick.invoke()
+            }
+        }
+    }
+
+    @Test
     fun heldEnterKeyWithKeyRepeat_selectsOnlyTheFocusedMessageWhichKeepsFocus() {
         var selectedMessageIds by mutableStateOf(emptySet<String>())
         val focusedMessageIds = mutableListOf<String>()

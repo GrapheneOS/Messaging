@@ -74,6 +74,13 @@ internal class ConversationMessageAccessibilityActionsTest :
     }
 
     @Test
+    fun messageWhoseTapDoesNothingOffersNoTap() {
+        setConversationMessageContent(message = message())
+
+        assertNull(bodyTextNodeConfig().getOrNull(SemanticsActions.OnClick))
+    }
+
+    @Test
     fun selectionModeOffersTheTapThatTogglesTheMessage() {
         setConversationMessageContent(message = message(), isSelectionMode = true)
 

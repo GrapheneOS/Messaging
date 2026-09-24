@@ -336,7 +336,7 @@ private fun Modifier.conversationMessageBubbleModifier(
                 )
                 .conversationMessageBubbleClickable(
                     interactionSource = bubbleRipple.bubbleInteractionSource,
-                    onClick = message.conversationMessageTap(
+                    onClick = message.conversationMessageTapOrNull(
                         onMessageDownloadClick = onMessageDownloadClick,
                         onMessageResendClick = onMessageResendClick,
                     ),
