@@ -13,10 +13,13 @@ import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import com.android.messaging.ui.conversation.messages.ui.message.ConversationMessageBubbleRipple
+import com.android.messaging.ui.conversation.messages.ui.message.conversationMessageBubbleClickable
+import com.android.messaging.ui.conversation.messages.ui.message.conversationMessageNonTouchClickable
 import kotlinx.coroutines.launch
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
@@ -34,6 +37,7 @@ internal class ConversationMessageBubbleRippleTest {
 
     private val bubbleRipple = ConversationMessageBubbleRipple()
     private val bubbleInteractions = mutableListOf<Interaction>()
+    private var longPressCount = 0
 
     @Test
     fun pressOnTheBubbleStartsTheRippleUnderTheFinger() {
@@ -64,7 +68,81 @@ internal class ConversationMessageBubbleRippleTest {
         }
     }
 
-    private fun setMessageWithBubbleOnTheRightHalf() {
+    @Test
+    fun tapOnAMessageWithoutATapStillRipplesTheBubble() {
+        setMessageWithBubbleOnTheRightHalf(hasTap = false)
+
+        clickMessageAt(widthFraction = 0.75f)
+
+        composeTestRule.runOnIdle {
+            assertEquals(
+                listOf(PressInteraction.Press::class, PressInteraction.Release::class),
+                bubbleInteractions.map { it::class },
+            )
+        }
+    }
+
+    @Test
+    fun longPressOnAMessageWithoutATapSelectsItAndRipplesUntilRelease() {
+        setMessageWithBubbleOnTheRightHalf(hasTap = false)
+
+        composeTestRule
+            .onNodeWithTag(testTag = MESSAGE_TAG)
+            .performTouchInput {
+                longClick(position = Offset(x = width * 0.75f, y = height / 2f))
+            }
+
+        composeTestRule.runOnIdle {
+            assertEquals(1, longPressCount)
+            assertEquals(
+                listOf(PressInteraction.Press::class, PressInteraction.Release::class),
+                bubbleInteractions.map { it::class },
+            )
+        }
+    }
+
+    @Test
+    fun pressLeavingAMessageWithoutATapBeforeTheTapTimeoutShowsNoRipple() {
+        setMessageWithBubbleOnTheRightHalf(hasTap = false)
+
+        composeTestRule
+            .onNodeWithTag(testTag = MESSAGE_TAG)
+            .performTouchInput {
+                down(position = Offset(x = width * 0.75f, y = height / 2f))
+                moveTo(position = Offset(x = width * 0.75f, y = height * 3f))
+                up()
+            }
+
+        composeTestRule.runOnIdle {
+            assertTrue(bubbleInteractions.isEmpty())
+            assertEquals(0, longPressCount)
+        }
+    }
+
+    @Test
+    fun pressLeavingTheBubbleSidewaysCancelsTheLongPress() {
+        setMessageWithBubbleOnTheRightHalf(hasTap = false)
+
+        composeTestRule
+            .onNodeWithTag(testTag = MESSAGE_TAG)
+            .performTouchInput {
+                down(position = Offset(x = width * 0.75f, y = height / 2f))
+                advanceEventTime(durationMillis = 200)
+                moveTo(position = Offset(x = width * 0.25f, y = height / 2f))
+                advanceEventTime(durationMillis = viewConfiguration.longPressTimeoutMillis * 2)
+                up()
+            }
+
+        composeTestRule.runOnIdle {
+            assertEquals(0, longPressCount)
+            assertEquals(
+                listOf(PressInteraction.Press::class, PressInteraction.Cancel::class),
+                bubbleInteractions.map { it::class },
+            )
+        }
+    }
+
+    private fun setMessageWithBubbleOnTheRightHalf(hasTap: Boolean = true) {
         composeTestRule.setContent {
             LaunchedEffect(bubbleRipple) {
                 launch {
@@ -80,17 +158,46 @@ internal class ConversationMessageBubbleRippleTest {
                     .testTag(tag = MESSAGE_TAG)
                     .size(width = 200.dp, height = 100.dp)
                     .onPlaced { coordinates -> bubbleRipple.messageCoordinates = coordinates }
-                    .clickable(
-                        interactionSource = bubbleRipple.messageInteractionSource,
-                        indication = null,
-                        onClick = {},
+                    .then(
+                        when {
+                            hasTap -> {
+                                Modifier.clickable(
+                                    interactionSource = bubbleRipple.messageInteractionSource,
+                                    indication = null,
+                                    onClick = {},
+                                )
+                            }
+
+                            else -> {
+                                Modifier.conversationMessageNonTouchClickable(
+                                    interactionSource = bubbleRipple.messageInteractionSource,
+                                    onClickLabel = null,
+                                    onClick = null,
+                                    onLongClickLabel = null,
+                                    onLongClick = { longPressCount++ },
+                                )
+                            }
+                        },
                     ),
             ) {
                 Spacer(modifier = Modifier.size(size = 100.dp))
                 Spacer(
                     modifier = Modifier
                         .size(size = 100.dp)
-                        .onPlaced { coordinates -> bubbleRipple.bubbleCoordinates = coordinates },
+                        .onPlaced { coordinates -> bubbleRipple.bubbleCoordinates = coordinates }
+                        .then(
+                            when {
+                                hasTap -> Modifier
+
+                                else -> {
+                                    Modifier.conversationMessageBubbleClickable(
+                                        interactionSource = bubbleRipple.bubbleInteractionSource,
+                                        onClick = null,
+                                        onLongClick = { longPressCount++ },
+                                    )
+                                }
+                            },
+                        ),
                 )
             }
         }

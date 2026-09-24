@@ -4,7 +4,10 @@ import android.view.ViewConfiguration
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.PressGestureScope
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.runtime.Composable
@@ -25,6 +28,7 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalInputModeManager
@@ -42,8 +46,9 @@ import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Tap and long press of a message. The tap toggles the selection in selection mode, otherwise it
- * downloads or resends the message. Touch is taken on the whole message when
- * [isWholeMessageTouchable], otherwise it's left to [conversationMessageBubbleClickable].
+ * downloads or resends the message, or does nothing, in which case no tap is offered at all. Touch
+ * is taken on the whole message when [isWholeMessageTouchable], otherwise it's left to
+ * [conversationMessageBubbleClickable].
  */
 @Composable
 internal fun Modifier.conversationMessageClickable(
@@ -79,7 +84,7 @@ internal fun Modifier.conversationMessageClickable(
         }
 
         else -> {
-            message.conversationMessageTap(
+            message.conversationMessageTapOrNull(
                 onMessageDownloadClick = onMessageDownloadClick,
                 onMessageResendClick = onMessageResendClick,
             )
@@ -100,11 +105,18 @@ internal fun Modifier.conversationMessageClickable(
         .then(
             when {
                 isWholeMessageTouchable -> {
-                    Modifier.conversationMessageBubbleClickable(
-                        interactionSource = interactionSource,
-                        onClick = onClick,
-                        onLongClick = onMessageLongClick,
-                    )
+                    Modifier
+                        .conversationMessageBubbleClickable(
+                            interactionSource = interactionSource,
+                            onClick = onClick,
+                            onLongClick = onMessageLongClick,
+                        )
+                        .then(
+                            when (onClick) {
+                                null -> Modifier.consumeTapsBeforeContent()
+                                else -> Modifier
+                            },
+                        )
                 }
 
                 else -> Modifier
@@ -113,30 +125,31 @@ internal fun Modifier.conversationMessageClickable(
 }
 
 /**
- * The tap of a message outside selection mode: downloads or resends it, or does nothing.
+ * The tap of a message outside selection mode: downloads or resends it, or null when it does
+ * nothing.
  */
-internal fun ConversationMessageUiModel.conversationMessageTap(
+internal fun ConversationMessageUiModel.conversationMessageTapOrNull(
     onMessageDownloadClick: () -> Unit,
     onMessageResendClick: () -> Unit,
-): () -> Unit {
+): (() -> Unit)? {
     return when {
         canDownloadMessage -> onMessageDownloadClick
         canResendMessage -> onMessageResendClick
-        else -> {
-            {}
-        }
+        else -> null
     }
 }
 
 /**
- * [combinedClickable] without touch, which [conversationMessageBubbleClickable] takes instead.
+ * [combinedClickable] without touch, and without the tap when [onClick] is null: a screen reader
+ * always offers the tap of [combinedClickable] as "double-tap to activate", and switching to it on
+ * gaining the tap, as on entering selection mode, would take keyboard focus away from the message.
  * Holding an enter key long presses it as with [combinedClickable].
  */
 @Composable
 internal fun Modifier.conversationMessageNonTouchClickable(
     interactionSource: MutableInteractionSource,
     onClickLabel: String?,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)?,
     onLongClickLabel: String?,
     onLongClick: () -> Unit,
 ): Modifier {
@@ -149,9 +162,11 @@ internal fun Modifier.conversationMessageNonTouchClickable(
 
     return this
         .semantics(mergeDescendants = true) {
-            onClick(label = onClickLabel) {
-                currentOnClick()
-                true
+            if (onClick != null) {
+                onClick(label = onClickLabel) {
+                    currentOnClick?.invoke()
+                    true
+                }
             }
             onLongClick(label = onLongClickLabel) {
                 currentOnLongClick()
@@ -183,7 +198,7 @@ internal fun Modifier.conversationMessageNonTouchClickable(
                     keyLongPressJob = null
                     if (pressJob?.isActive == true) {
                         pressJob.cancel()
-                        currentOnClick()
+                        currentOnClick?.invoke()
                     }
                     pressJob != null
                 }
@@ -203,7 +218,7 @@ internal fun Modifier.conversationMessageNonTouchClickable(
 @Composable
 internal fun Modifier.conversationMessageBubbleClickable(
     interactionSource: MutableInteractionSource,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)?,
     onLongClick: () -> Unit,
 ): Modifier {
     val hapticFeedback = LocalHapticFeedback.current
@@ -215,12 +230,28 @@ internal fun Modifier.conversationMessageBubbleClickable(
             onPress = { position ->
                 emitPress(position = position, interactionSource = interactionSource)
             },
-            onTap = { currentOnClick() },
+            onTap = { currentOnClick?.invoke() },
             onLongPress = {
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                 currentOnLongClick()
             },
         )
+    }
+}
+
+/**
+ * Keeps taps from the links and attachments of a message without a tap that's touched as a whole,
+ * which only a screen reader does: its double-tap on the message taps the middle of it. Links and
+ * attachments have double-taps of their own.
+ */
+private fun Modifier.consumeTapsBeforeContent(): Modifier {
+    return pointerInput(Unit) {
+        awaitEachGesture {
+            awaitFirstDown(pass = PointerEventPass.Initial)
+            withTimeoutOrNull(timeMillis = viewConfiguration.longPressTimeoutMillis) {
+                waitForUpOrCancellation(pass = PointerEventPass.Initial)
+            }?.consume()
+        }
     }
 }
 

@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.messages.ui.message.rendering
 
 import android.content.Context
 import android.os.SystemClock
+import android.view.ViewConfiguration
 import android.view.textclassifier.TextClassificationManager
 import android.view.textclassifier.TextClassifier
 import android.view.textclassifier.TextLinks
@@ -37,6 +38,26 @@ internal class ConversationMessageTextLinkGestureTest : BaseConversationMessageR
                     }
                 },
             )
+    }
+
+    @Test
+    fun touchExploration_linkTapOfMessageWithoutTapNeitherOpensNorSelects() {
+        enableTouchExploration()
+        setLinkMessageContent()
+
+        clickLinkText()
+        composeTestRule.mainClock.advanceTimeBy(
+            milliseconds = ViewConfiguration.getLongPressTimeout() * 2L,
+        )
+
+        composeTestRule.runOnIdle {
+            verify(exactly = 0) {
+                onExternalUriClick.invoke(any())
+            }
+            verify(exactly = 0) {
+                onMessageLongClick.invoke()
+            }
+        }
     }
 
     @Test

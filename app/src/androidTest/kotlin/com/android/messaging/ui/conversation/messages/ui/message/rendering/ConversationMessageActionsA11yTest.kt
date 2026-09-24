@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.messages.ui.message.rendering
 
+import android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.android.messaging.R
@@ -7,6 +8,7 @@ import com.android.messaging.ui.conversation.messages.model.message.Conversation
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
 import io.mockk.verify
 import kotlinx.collections.immutable.persistentListOf
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -47,6 +49,32 @@ internal class ConversationMessageActionsA11yTest : BaseConversationMessageRende
         verify(timeout = ACTION_TIMEOUT_MILLIS) {
             onMessageActionClick(ConversationMessageAction.Copy)
         }
+    }
+
+    @Test
+    fun screenReaderOffersNoDoubleTapOnAMessageWhoseTapDoesNothing() {
+        setConversationMessageContent(message = message(text = MESSAGE_TEXT))
+        composeTestRule.waitForIdle()
+
+        val bubble = awaitFocusableNodesSpeaking(text = MESSAGE_TEXT).single()
+        val selectLabel = InstrumentationRegistry
+            .getInstrumentation()
+            .targetContext
+            .getString(R.string.conversation_message_select)
+
+        assertFalse(
+            "TalkBack says \"double-tap to activate\" on a message whose tap does nothing. " +
+                "Node: " + bubble.dumpSubtree(),
+            bubble.isClickable ||
+                bubble.actionList.any { it.id == AccessibilityAction.ACTION_CLICK.id },
+        )
+        assertEquals(
+            selectLabel,
+            bubble.actionList
+                .single { it.id == AccessibilityAction.ACTION_LONG_CLICK.id }
+                .label
+                ?.toString(),
+        )
     }
 
     @Test
