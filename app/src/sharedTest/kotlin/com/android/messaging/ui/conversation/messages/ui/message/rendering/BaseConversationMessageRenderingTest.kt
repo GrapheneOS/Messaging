@@ -5,7 +5,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
@@ -13,6 +16,7 @@ import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
+import com.android.messaging.testutil.TEST_WAIT_TIMEOUT_MILLIS
 import com.android.messaging.ui.conversation.conversationMessageBubbleTestTag
 import com.android.messaging.ui.conversation.conversationMessageSelectionRowTestTag
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
@@ -224,6 +228,19 @@ internal abstract class BaseConversationMessageRenderingTest {
         composeTestRule
             .onNodeWithTag(testTag = AVATAR_TAG)
             .performClick()
+    }
+
+    protected fun awaitLinkAnnotated(text: String) {
+        composeTestRule.waitUntil(timeoutMillis = TEST_WAIT_TIMEOUT_MILLIS) {
+            composeTestRule
+                .onAllNodesWithText(text = text, useUnmergedTree = true)
+                .fetchSemanticsNodes()
+                .any { node ->
+                    node.config
+                        .getOrNull(SemanticsProperties.Text)
+                        ?.any { it.hasLinkAnnotations(start = 0, end = it.length) } == true
+                }
+        }
     }
 
     protected companion object {
