@@ -30,7 +30,7 @@ import androidx.compose.ui.input.pointer.AwaitPointerEventScope
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventTimeoutCancellationException
 import androidx.compose.ui.input.pointer.PointerInputScope
-import androidx.compose.ui.input.pointer.changedToUp
+import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.input.pointer.isOutOfBounds
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -257,7 +257,7 @@ private suspend fun AwaitPointerEventScope.consumeConversationTextGestureUntilUp
             change.consume()
         }
 
-        val allPointersUp = event.changes.all { change -> change.changedToUp() }
+        val allPointersUp = event.changes.all { change -> change.changedToUpIgnoreConsumed() }
 
         if (allPointersUp) {
             isPointerActive = false
@@ -279,7 +279,9 @@ private suspend fun AwaitPointerEventScope.awaitConversationTextLongPressConfirm
                     )
                 }
 
-                val allPointersUp = event.changes.all { change -> change.changedToUp() }
+                val allPointersUp = event.changes.all { change ->
+                    change.changedToUpIgnoreConsumed()
+                }
 
                 if (allPointersUp) {
                     isPointerActive = false
