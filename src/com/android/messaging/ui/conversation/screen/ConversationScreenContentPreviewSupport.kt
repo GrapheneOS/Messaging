@@ -31,7 +31,7 @@ import com.android.messaging.ui.conversation.preview.previewOutgoingMessage
 import com.android.messaging.ui.conversation.preview.previewSubscription
 import com.android.messaging.ui.conversation.preview.previewVCardPart
 import com.android.messaging.ui.conversation.preview.previewVideoPart
-import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
+import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaffoldUiState
 import com.android.messaging.ui.core.MessagingPreviewTheme
@@ -71,6 +71,7 @@ internal fun ConversationScreenContentPreview(
             onMessageClick = {},
             onMessageAvatarClick = {},
             onMessageDownloadClick = {},
+            onMessageActionClick = { _, _ -> },
             onMessageLongClick = {},
             onMessageResendClick = {},
             onSimSelectorClick = {},
@@ -145,10 +146,10 @@ internal fun previewConversationScreenContentSelectionUiState(): ConversationScr
                 MessageId("screen-group-failed"),
             ),
             availableActions = persistentSetOf(
-                ConversationMessageSelectionAction.Copy,
-                ConversationMessageSelectionAction.Delete,
-                ConversationMessageSelectionAction.Forward,
-                ConversationMessageSelectionAction.SaveAttachment,
+                ConversationMessageAction.Copy,
+                ConversationMessageAction.Delete,
+                ConversationMessageAction.Forward,
+                ConversationMessageAction.SaveAttachment,
             ),
         ),
     )

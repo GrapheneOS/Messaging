@@ -2,7 +2,7 @@ package com.android.messaging.ui.conversation.messages.delegate.selection
 
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
-import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
+import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -43,11 +43,11 @@ internal class ConversationMessageSelectionDelegateSelectionTest :
                 )
                 assertEquals(
                     persistentSetOf(
-                        ConversationMessageSelectionAction.Delete,
-                        ConversationMessageSelectionAction.Share,
-                        ConversationMessageSelectionAction.Forward,
-                        ConversationMessageSelectionAction.Copy,
-                        ConversationMessageSelectionAction.Details,
+                        ConversationMessageAction.Delete,
+                        ConversationMessageAction.Share,
+                        ConversationMessageAction.Forward,
+                        ConversationMessageAction.Copy,
+                        ConversationMessageAction.Details,
                     ),
                     harness.delegate.state.value.availableActions,
                 )
@@ -103,7 +103,7 @@ internal class ConversationMessageSelectionDelegateSelectionTest :
                     harness.delegate.state.value.selectedMessageIds,
                 )
                 assertEquals(
-                    persistentSetOf(ConversationMessageSelectionAction.Delete),
+                    persistentSetOf(ConversationMessageAction.Delete),
                     harness.delegate.state.value.availableActions,
                 )
 
@@ -133,7 +133,7 @@ internal class ConversationMessageSelectionDelegateSelectionTest :
                 harness.delegate.onMessageLongClick(messageId = MessageId("message-1"))
                 advanceUntilIdle()
                 harness.delegate.onMessageSelectionActionClick(
-                    action = ConversationMessageSelectionAction.Delete,
+                    action = ConversationMessageAction.Delete,
                 )
                 advanceUntilIdle()
 

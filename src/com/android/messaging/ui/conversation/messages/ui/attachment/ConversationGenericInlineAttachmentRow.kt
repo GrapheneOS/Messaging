@@ -1,6 +1,5 @@
 package com.android.messaging.ui.conversation.messages.ui.attachment
 
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,7 +28,7 @@ import com.android.messaging.ui.core.MessagingPreviewColumn
 @Composable
 internal fun ConversationGenericInlineAttachmentRow(
     attachment: ConversationInlineAttachment.File,
-    onAttachmentClick: OnConversationAttachmentClick,
+    onAttachmentClick: OnConversationAttachmentClick?,
     onExternalUriClick: (String) -> Unit,
     onLongClick: () -> Unit,
 ) {
@@ -39,15 +38,10 @@ internal fun ConversationGenericInlineAttachmentRow(
 
     val subtitle = attachment.subtitleTextResId?.let { stringResource(it) }
 
-    val onClick = attachment.openAction?.let { action ->
-        {
-            dispatchConversationAttachmentOpenAction(
-                action = action,
-                onAttachmentClick = onAttachmentClick,
-                onExternalUriClick = onExternalUriClick,
-            )
-        }
-    }
+    val onClick = attachment.openAction.toConversationAttachmentClickOrNull(
+        onAttachmentClick = onAttachmentClick,
+        onExternalUriClick = onExternalUriClick,
+    )
 
     val shape = RectangleShape
 
@@ -55,13 +49,7 @@ internal fun ConversationGenericInlineAttachmentRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape = shape)
-            .combinedClickable(
-                enabled = true,
-                onClick = {
-                    onClick?.invoke()
-                },
-                onLongClick = onLongClick,
-            ),
+            .conversationAttachmentClickable(onClick = onClick, onLongClick = onLongClick),
         color = MaterialTheme.colorScheme.surfaceContainerHighest,
         shape = shape,
     ) {

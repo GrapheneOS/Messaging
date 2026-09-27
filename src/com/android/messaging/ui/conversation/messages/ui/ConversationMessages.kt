@@ -39,6 +39,7 @@ import com.android.messaging.ui.conversation.messages.ui.message.formatDateSepar
 import com.android.messaging.ui.conversation.messages.ui.message.resolveConversationMessageSimDisplayName
 import com.android.messaging.ui.conversation.preview.previewMessages
 import com.android.messaging.ui.conversation.preview.previewSubscriptions
+import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import com.android.messaging.ui.subscription.mapper.resolveDisplayName
 import java.util.TimeZone
@@ -85,6 +86,7 @@ internal fun ConversationMessages(
     onMessageClick: (MessageId) -> Unit,
     onMessageAvatarClick: (MessageId) -> Unit,
     onMessageDownloadClick: (MessageId) -> Unit,
+    onMessageActionClick: (MessageId, ConversationMessageAction) -> Unit,
     onMessageLongClick: (MessageId) -> Unit,
     onMessageResendClick: (MessageId) -> Unit,
     onSimSelectorClick: () -> Unit = {},
@@ -134,6 +136,7 @@ internal fun ConversationMessages(
             onMessageClick = onMessageClick,
             onMessageAvatarClick = onMessageAvatarClick,
             onMessageDownloadClick = onMessageDownloadClick,
+            onMessageActionClick = onMessageActionClick,
             onMessageLongClick = onMessageLongClick,
             onMessageResendClick = onMessageResendClick,
             onSimSelectorClick = onSimSelectorClick,
@@ -154,6 +157,7 @@ private fun LazyListScope.conversationMessageItems(
     onMessageClick: (MessageId) -> Unit,
     onMessageAvatarClick: (MessageId) -> Unit,
     onMessageDownloadClick: (MessageId) -> Unit,
+    onMessageActionClick: (MessageId, ConversationMessageAction) -> Unit,
     onMessageLongClick: (MessageId) -> Unit,
     onMessageResendClick: (MessageId) -> Unit,
     onSimSelectorClick: () -> Unit,
@@ -185,6 +189,7 @@ private fun LazyListScope.conversationMessageItems(
             onMessageClick = onMessageClick,
             onMessageAvatarClick = onMessageAvatarClick,
             onMessageDownloadClick = onMessageDownloadClick,
+            onMessageActionClick = onMessageActionClick,
             onMessageLongClick = onMessageLongClick,
             onMessageResendClick = onMessageResendClick,
             onSimSelectorClick = onSimSelectorClick,
@@ -306,6 +311,7 @@ private fun ConversationMessagesItem(
     onMessageClick: (MessageId) -> Unit,
     onMessageAvatarClick: (MessageId) -> Unit,
     onMessageDownloadClick: (MessageId) -> Unit,
+    onMessageActionClick: (MessageId, ConversationMessageAction) -> Unit,
     onMessageLongClick: (MessageId) -> Unit,
     onMessageResendClick: (MessageId) -> Unit,
     onSimSelectorClick: () -> Unit,
@@ -348,6 +354,9 @@ private fun ConversationMessagesItem(
             },
             onMessageDownloadClick = {
                 onMessageDownloadClick(message.messageId)
+            },
+            onMessageActionClick = { action ->
+                onMessageActionClick(message.messageId, action)
             },
             onMessageLongClick = {
                 onMessageLongClick(message.messageId)
@@ -528,6 +537,7 @@ private fun ConversationMessagesPreview() {
             onMessageClick = {},
             onMessageAvatarClick = {},
             onMessageDownloadClick = {},
+            onMessageActionClick = { _, _ -> },
             onMessageLongClick = {},
             onMessageResendClick = {},
             onSimSelectorClick = {},

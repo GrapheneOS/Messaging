@@ -5,7 +5,7 @@ import app.cash.turbine.test
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.domain.conversation.usecase.action.ConversationActionRequirementsResult
-import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
+import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
 import io.mockk.verify
@@ -41,7 +41,7 @@ internal class ConversationMessageSelectionDelegateResendTest :
                 advanceUntilIdle()
 
                 harness.delegate.onMessageSelectionActionClick(
-                    action = ConversationMessageSelectionAction.Resend,
+                    action = ConversationMessageAction.Resend,
                 )
                 advanceUntilIdle()
 
@@ -106,7 +106,7 @@ internal class ConversationMessageSelectionDelegateResendTest :
 
                 harness.delegate.effects.test {
                     harness.delegate.onMessageSelectionActionClick(
-                        action = ConversationMessageSelectionAction.Resend,
+                        action = ConversationMessageAction.Resend,
                     )
                     advanceUntilIdle()
 
@@ -146,7 +146,7 @@ internal class ConversationMessageSelectionDelegateResendTest :
 
                 harness.delegate.effects.test {
                     harness.delegate.onMessageSelectionActionClick(
-                        action = ConversationMessageSelectionAction.Resend,
+                        action = ConversationMessageAction.Resend,
                     )
                     advanceUntilIdle()
 
@@ -188,7 +188,7 @@ internal class ConversationMessageSelectionDelegateResendTest :
 
                 harness.delegate.effects.test {
                     harness.delegate.onMessageSelectionActionClick(
-                        action = ConversationMessageSelectionAction.Resend,
+                        action = ConversationMessageAction.Resend,
                     )
                     advanceUntilIdle()
 
@@ -258,7 +258,7 @@ internal class ConversationMessageSelectionDelegateResendTest :
 
                 harness.delegate.effects.test {
                     harness.delegate.onMessageSelectionActionClick(
-                        action = ConversationMessageSelectionAction.Resend,
+                        action = ConversationMessageAction.Resend,
                     )
                     advanceUntilIdle()
                     awaitItem()

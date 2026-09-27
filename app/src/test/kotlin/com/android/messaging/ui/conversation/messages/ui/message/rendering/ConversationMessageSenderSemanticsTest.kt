@@ -6,7 +6,7 @@ import androidx.compose.ui.text.AnnotatedString
 import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.MessageId
-import com.android.messaging.ui.conversation.conversationMessageBubbleTestTag
+import com.android.messaging.ui.conversation.conversationMessageSelectionRowTestTag
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -28,7 +28,7 @@ internal class ConversationMessageSenderSemanticsTest : BaseConversationMessageR
                 AnnotatedString(text = incomingAnnouncement(sender = SENDER_DISPLAY_NAME)),
                 AnnotatedString(text = DEFAULT_BODY_TEXT),
             ),
-            bubbleText(),
+            announcedSenderAndBody(),
         )
     }
 
@@ -48,7 +48,7 @@ internal class ConversationMessageSenderSemanticsTest : BaseConversationMessageR
                 ),
                 AnnotatedString(text = DEFAULT_BODY_TEXT),
             ),
-            bubbleText(),
+            announcedSenderAndBody(),
         )
     }
 
@@ -64,7 +64,7 @@ internal class ConversationMessageSenderSemanticsTest : BaseConversationMessageR
                 AnnotatedString(text = incomingAnnouncement(sender = SENDER_DISPLAY_NAME)),
                 AnnotatedString(text = DEFAULT_BODY_TEXT),
             ),
-            bubbleText(),
+            announcedSenderAndBody(),
         )
     }
 
@@ -80,7 +80,7 @@ internal class ConversationMessageSenderSemanticsTest : BaseConversationMessageR
                 AnnotatedString(text = SENDER_DISPLAY_NAME),
                 AnnotatedString(text = DEFAULT_BODY_TEXT),
             ),
-            bubbleText(),
+            announcedSenderAndBody(),
         )
     }
 
@@ -95,7 +95,7 @@ internal class ConversationMessageSenderSemanticsTest : BaseConversationMessageR
                 ),
                 AnnotatedString(text = DEFAULT_BODY_TEXT),
             ),
-            bubbleText(),
+            announcedSenderAndBody(),
         )
     }
 
@@ -115,15 +115,17 @@ internal class ConversationMessageSenderSemanticsTest : BaseConversationMessageR
         return targetContext.getString(R.string.incoming_sender_content_description, sender)
     }
 
-    private fun bubbleText(): List<AnnotatedString> {
+    /** The start of what a screen reader reads for the message; the metadata follows it. */
+    private fun announcedSenderAndBody(): List<AnnotatedString> {
         return composeTestRule
             .onNodeWithTag(
-                testTag = conversationMessageBubbleTestTag(
+                testTag = conversationMessageSelectionRowTestTag(
                     messageId = MessageId(DEFAULT_MESSAGE_ID),
                 ),
             )
             .fetchSemanticsNode()
             .config[SemanticsProperties.Text]
+            .take(n = 2)
     }
 
     private companion object {

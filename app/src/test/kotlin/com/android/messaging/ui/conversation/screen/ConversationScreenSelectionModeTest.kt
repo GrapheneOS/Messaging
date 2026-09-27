@@ -13,8 +13,8 @@ import com.android.messaging.ui.conversation.CONVERSATION_DELETE_MESSAGES_CONFIR
 import com.android.messaging.ui.conversation.CONVERSATION_DELETE_MESSAGES_DISMISS_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_SELECTION_OVERFLOW_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.conversationMessageSelectionActionButtonTestTag
+import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageDeleteConfirmationUiState
-import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
 import io.mockk.verify
 import kotlinx.collections.immutable.persistentSetOf
@@ -37,8 +37,8 @@ internal class ConversationScreenSelectionModeTest : BaseConversationScreenTest(
             selection = ConversationMessageSelectionUiState(
                 selectedMessageIds = persistentSetOf(MessageId("message-1")),
                 availableActions = persistentSetOf(
-                    ConversationMessageSelectionAction.Copy,
-                    ConversationMessageSelectionAction.Delete,
+                    ConversationMessageAction.Copy,
+                    ConversationMessageAction.Delete,
                 ),
             ),
         )
@@ -48,7 +48,7 @@ internal class ConversationScreenSelectionModeTest : BaseConversationScreenTest(
         composeTestRule
             .onNodeWithTag(
                 conversationMessageSelectionActionButtonTestTag(
-                    action = ConversationMessageSelectionAction.Copy.name,
+                    action = ConversationMessageAction.Copy.name,
                 ),
             )
             .assertIsDisplayed()
@@ -56,7 +56,7 @@ internal class ConversationScreenSelectionModeTest : BaseConversationScreenTest(
         composeTestRule.runOnIdle {
             verify(exactly = 1) {
                 screenModel.model.onMessageSelectionActionClick(
-                    action = ConversationMessageSelectionAction.Copy,
+                    action = ConversationMessageAction.Copy,
                 )
             }
         }
@@ -64,7 +64,7 @@ internal class ConversationScreenSelectionModeTest : BaseConversationScreenTest(
         composeTestRule
             .onNodeWithTag(
                 conversationMessageSelectionActionButtonTestTag(
-                    action = ConversationMessageSelectionAction.Delete.name,
+                    action = ConversationMessageAction.Delete.name,
                 ),
             )
             .assertIsDisplayed()
@@ -72,7 +72,7 @@ internal class ConversationScreenSelectionModeTest : BaseConversationScreenTest(
         composeTestRule.runOnIdle {
             verify(exactly = 1) {
                 screenModel.model.onMessageSelectionActionClick(
-                    action = ConversationMessageSelectionAction.Delete,
+                    action = ConversationMessageAction.Delete,
                 )
             }
         }
@@ -80,14 +80,14 @@ internal class ConversationScreenSelectionModeTest : BaseConversationScreenTest(
         composeTestRule
             .onNodeWithTag(
                 conversationMessageSelectionActionButtonTestTag(
-                    action = ConversationMessageSelectionAction.Copy.name,
+                    action = ConversationMessageAction.Copy.name,
                 ),
             )
             .assertIsDisplayed()
         composeTestRule
             .onNodeWithTag(
                 conversationMessageSelectionActionButtonTestTag(
-                    action = ConversationMessageSelectionAction.Delete.name,
+                    action = ConversationMessageAction.Delete.name,
                 ),
             )
             .assertIsDisplayed()
@@ -108,8 +108,8 @@ internal class ConversationScreenSelectionModeTest : BaseConversationScreenTest(
             selection = ConversationMessageSelectionUiState(
                 selectedMessageIds = persistentSetOf(MessageId("message-1")),
                 availableActions = persistentSetOf(
-                    ConversationMessageSelectionAction.Delete,
-                    ConversationMessageSelectionAction.SaveAttachment,
+                    ConversationMessageAction.Delete,
+                    ConversationMessageAction.SaveAttachment,
                 ),
             ),
         )
@@ -119,7 +119,7 @@ internal class ConversationScreenSelectionModeTest : BaseConversationScreenTest(
         composeTestRule
             .onAllNodesWithTag(
                 conversationMessageSelectionActionButtonTestTag(
-                    action = ConversationMessageSelectionAction.SaveAttachment.name,
+                    action = ConversationMessageAction.SaveAttachment.name,
                 ),
             )
             .assertCountEquals(expectedSize = 0)
@@ -132,7 +132,7 @@ internal class ConversationScreenSelectionModeTest : BaseConversationScreenTest(
         composeTestRule
             .onNodeWithTag(
                 conversationMessageSelectionActionButtonTestTag(
-                    action = ConversationMessageSelectionAction.SaveAttachment.name,
+                    action = ConversationMessageAction.SaveAttachment.name,
                 ),
             )
             .assertIsDisplayed()
@@ -141,7 +141,7 @@ internal class ConversationScreenSelectionModeTest : BaseConversationScreenTest(
         composeTestRule.runOnIdle {
             verify(exactly = 1) {
                 screenModel.model.onMessageSelectionActionClick(
-                    action = ConversationMessageSelectionAction.SaveAttachment,
+                    action = ConversationMessageAction.SaveAttachment,
                 )
             }
         }
@@ -162,7 +162,7 @@ internal class ConversationScreenSelectionModeTest : BaseConversationScreenTest(
                     MessageId("message-2")
                 ),
                 availableActions = persistentSetOf(
-                    ConversationMessageSelectionAction.Delete,
+                    ConversationMessageAction.Delete,
                 ),
             ),
         )
@@ -180,14 +180,14 @@ internal class ConversationScreenSelectionModeTest : BaseConversationScreenTest(
         composeTestRule
             .onNodeWithTag(
                 conversationMessageSelectionActionButtonTestTag(
-                    action = ConversationMessageSelectionAction.Delete.name,
+                    action = ConversationMessageAction.Delete.name,
                 ),
             )
             .assertIsDisplayed()
         composeTestRule
             .onAllNodesWithTag(
                 conversationMessageSelectionActionButtonTestTag(
-                    action = ConversationMessageSelectionAction.Copy.name,
+                    action = ConversationMessageAction.Copy.name,
                 ),
             )
             .assertCountEquals(expectedSize = 0)
@@ -205,7 +205,7 @@ internal class ConversationScreenSelectionModeTest : BaseConversationScreenTest(
             selection = ConversationMessageSelectionUiState(
                 selectedMessageIds = persistentSetOf(MessageId("message-1")),
                 availableActions = persistentSetOf(
-                    ConversationMessageSelectionAction.Delete,
+                    ConversationMessageAction.Delete,
                 ),
                 deleteConfirmation = ConversationMessageDeleteConfirmationUiState(
                     messageIds = persistentSetOf(MessageId("message-1")),

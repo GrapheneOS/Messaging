@@ -1,7 +1,7 @@
 package com.android.messaging.ui.conversation.screen
 
 import com.android.messaging.data.conversation.model.MessageId
-import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
+import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
 import io.mockk.verify
 import kotlinx.collections.immutable.persistentSetOf
@@ -24,7 +24,7 @@ internal class ConversationScreenSelectionBackTest : BaseConversationScreenTest(
             selection = ConversationMessageSelectionUiState(
                 selectedMessageIds = persistentSetOf(MessageId("message-2")),
                 availableActions = persistentSetOf(
-                    ConversationMessageSelectionAction.Delete,
+                    ConversationMessageAction.Delete,
                 ),
             ),
         )

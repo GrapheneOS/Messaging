@@ -35,7 +35,7 @@ import com.android.messaging.R
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.conversation.CONVERSATION_SELECTION_OVERFLOW_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.conversationMessageSelectionActionButtonTestTag
-import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionAction
+import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.ImmutableList
@@ -45,24 +45,24 @@ import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toPersistentList
 
 private val messageSelectionActions = persistentListOf(
-    ConversationMessageSelectionAction.Download,
-    ConversationMessageSelectionAction.Resend,
-    ConversationMessageSelectionAction.Copy,
-    ConversationMessageSelectionAction.Delete,
+    ConversationMessageAction.Download,
+    ConversationMessageAction.Resend,
+    ConversationMessageAction.Copy,
+    ConversationMessageAction.Delete,
 )
 
-private val conversationMessageSelectionActions = persistentListOf(
-    ConversationMessageSelectionAction.Share,
-    ConversationMessageSelectionAction.Forward,
-    ConversationMessageSelectionAction.SaveAttachment,
-    ConversationMessageSelectionAction.Details,
+private val conversationMessageActions = persistentListOf(
+    ConversationMessageAction.Share,
+    ConversationMessageAction.Forward,
+    ConversationMessageAction.SaveAttachment,
+    ConversationMessageAction.Details,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ConversationSelectionTopAppBar(
     selection: ConversationMessageSelectionUiState,
-    onActionClick: (ConversationMessageSelectionAction) -> Unit,
+    onActionClick: (ConversationMessageAction) -> Unit,
     onDismissSelection: () -> Unit,
 ) {
     var isOverflowExpanded by remember {
@@ -73,7 +73,7 @@ internal fun ConversationSelectionTopAppBar(
     val overflowActions = remember(availableActions) {
         selectionActionsInOrder(
             availableActions = availableActions,
-            orderedActions = conversationMessageSelectionActions,
+            orderedActions = conversationMessageActions,
         )
     }
 
@@ -125,11 +125,11 @@ private fun ConversationSelectionNavigationIcon(onDismissSelection: () -> Unit) 
 
 @Composable
 private fun ConversationSelectionActions(
-    availableActions: ImmutableSet<ConversationMessageSelectionAction>,
-    overflowActions: ImmutableList<ConversationMessageSelectionAction>,
+    availableActions: ImmutableSet<ConversationMessageAction>,
+    overflowActions: ImmutableList<ConversationMessageAction>,
     isOverflowExpanded: Boolean,
     onOverflowExpandedChange: (Boolean) -> Unit,
-    onActionClick: (ConversationMessageSelectionAction) -> Unit,
+    onActionClick: (ConversationMessageAction) -> Unit,
 ) {
     val primaryActions = remember(availableActions) {
         selectionActionsInOrder(
@@ -182,10 +182,10 @@ private fun ConversationSelectionOverflowButton(onClick: () -> Unit) {
 
 @Composable
 private fun ConversationSelectionOverflowMenu(
-    actions: ImmutableList<ConversationMessageSelectionAction>,
+    actions: ImmutableList<ConversationMessageAction>,
     expanded: Boolean,
     onDismissRequest: () -> Unit,
-    onActionClick: (ConversationMessageSelectionAction) -> Unit,
+    onActionClick: (ConversationMessageAction) -> Unit,
 ) {
     DropdownMenu(
         expanded = expanded,
@@ -199,7 +199,7 @@ private fun ConversationSelectionOverflowMenu(
                     ),
                 ),
                 text = {
-                    Text(text = selectionActionLabel(action = action))
+                    Text(text = stringResource(id = action.labelRes))
                 },
                 onClick = {
                     onDismissRequest()
@@ -228,8 +228,8 @@ private fun conversationSelectionTopAppBarColors(): TopAppBarColors {
 
 @Composable
 private fun ConversationSelectionActionButton(
-    action: ConversationMessageSelectionAction,
-    onActionClick: (ConversationMessageSelectionAction) -> Unit,
+    action: ConversationMessageAction,
+    onActionClick: (ConversationMessageAction) -> Unit,
 ) {
     IconButton(
         modifier = Modifier.testTag(
@@ -241,64 +241,32 @@ private fun ConversationSelectionActionButton(
     ) {
         Icon(
             imageVector = selectionActionIcon(action = action),
-            contentDescription = selectionActionLabel(action = action),
+            contentDescription = stringResource(id = action.labelRes),
         )
     }
 }
 
 private fun selectionActionsInOrder(
-    availableActions: ImmutableSet<ConversationMessageSelectionAction>,
-    orderedActions: ImmutableList<ConversationMessageSelectionAction>,
-): ImmutableList<ConversationMessageSelectionAction> {
+    availableActions: ImmutableSet<ConversationMessageAction>,
+    orderedActions: ImmutableList<ConversationMessageAction>,
+): ImmutableList<ConversationMessageAction> {
     return orderedActions.filter { action ->
         availableActions.contains(action)
     }.toPersistentList()
 }
 
 private fun selectionActionIcon(
-    action: ConversationMessageSelectionAction,
+    action: ConversationMessageAction,
 ): ImageVector {
     return when (action) {
-        ConversationMessageSelectionAction.Copy -> Icons.Rounded.ContentCopy
-        ConversationMessageSelectionAction.Delete -> Icons.Rounded.Delete
-        ConversationMessageSelectionAction.Details -> Icons.Rounded.Info
-        ConversationMessageSelectionAction.Download -> Icons.Rounded.FileDownload
-        ConversationMessageSelectionAction.Forward -> Icons.AutoMirrored.Rounded.Forward
-        ConversationMessageSelectionAction.Resend -> Icons.AutoMirrored.Rounded.Send
-        ConversationMessageSelectionAction.SaveAttachment -> Icons.Rounded.Save
-        ConversationMessageSelectionAction.Share -> Icons.Rounded.Share
-    }
-}
-
-@Composable
-private fun selectionActionLabel(
-    action: ConversationMessageSelectionAction,
-): String {
-    return when (action) {
-        ConversationMessageSelectionAction.Copy -> {
-            stringResource(R.string.message_context_menu_copy_text)
-        }
-        ConversationMessageSelectionAction.Delete -> {
-            stringResource(R.string.action_delete_message)
-        }
-        ConversationMessageSelectionAction.Details -> {
-            stringResource(R.string.message_context_menu_view_details)
-        }
-        ConversationMessageSelectionAction.Download -> {
-            stringResource(R.string.action_download)
-        }
-        ConversationMessageSelectionAction.Forward -> {
-            stringResource(R.string.message_context_menu_forward_message)
-        }
-        ConversationMessageSelectionAction.Resend -> {
-            stringResource(R.string.action_send)
-        }
-        ConversationMessageSelectionAction.SaveAttachment -> {
-            stringResource(R.string.action_save_attachment)
-        }
-        ConversationMessageSelectionAction.Share -> {
-            stringResource(R.string.action_share)
-        }
+        ConversationMessageAction.Copy -> Icons.Rounded.ContentCopy
+        ConversationMessageAction.Delete -> Icons.Rounded.Delete
+        ConversationMessageAction.Details -> Icons.Rounded.Info
+        ConversationMessageAction.Download -> Icons.Rounded.FileDownload
+        ConversationMessageAction.Forward -> Icons.AutoMirrored.Rounded.Forward
+        ConversationMessageAction.Resend -> Icons.AutoMirrored.Rounded.Send
+        ConversationMessageAction.SaveAttachment -> Icons.Rounded.Save
+        ConversationMessageAction.Share -> Icons.Rounded.Share
     }
 }
 
@@ -310,10 +278,10 @@ private fun ConversationSelectionTopAppBarSingleMessagePreview() {
             selection = ConversationMessageSelectionUiState(
                 selectedMessageIds = persistentSetOf(MessageId("message-1")),
                 availableActions = persistentSetOf(
-                    ConversationMessageSelectionAction.Copy,
-                    ConversationMessageSelectionAction.Delete,
-                    ConversationMessageSelectionAction.Forward,
-                    ConversationMessageSelectionAction.Share,
+                    ConversationMessageAction.Copy,
+                    ConversationMessageAction.Delete,
+                    ConversationMessageAction.Forward,
+                    ConversationMessageAction.Share,
                 ),
             ),
             onActionClick = { _ -> },
@@ -334,11 +302,11 @@ private fun ConversationSelectionTopAppBarMultiMessagePreview() {
                     MessageId("message-3")
                 ),
                 availableActions = persistentSetOf(
-                    ConversationMessageSelectionAction.Delete,
-                    ConversationMessageSelectionAction.SaveAttachment,
-                    ConversationMessageSelectionAction.Details,
-                    ConversationMessageSelectionAction.Resend,
-                    ConversationMessageSelectionAction.Download,
+                    ConversationMessageAction.Delete,
+                    ConversationMessageAction.SaveAttachment,
+                    ConversationMessageAction.Details,
+                    ConversationMessageAction.Resend,
+                    ConversationMessageAction.Download,
                 ),
             ),
             onActionClick = { _ -> },

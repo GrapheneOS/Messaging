@@ -1,6 +1,5 @@
 package com.android.messaging.ui.conversation.messages.ui.attachment
 
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,19 +31,14 @@ private const val PREVIEW_LONG_LOCATION_SUBTITLE =
 internal fun ConversationVCardInlineAttachmentRow(
     attachment: ConversationInlineAttachment.VCard,
     isSelectionMode: Boolean,
-    onAttachmentClick: OnConversationAttachmentClick,
+    onAttachmentClick: OnConversationAttachmentClick?,
     onExternalUriClick: (String) -> Unit,
     onLongClick: () -> Unit,
 ) {
-    val onClick = attachment.openAction?.let { action ->
-        {
-            dispatchConversationAttachmentOpenAction(
-                action = action,
-                onAttachmentClick = onAttachmentClick,
-                onExternalUriClick = onExternalUriClick,
-            )
-        }
-    }
+    val onClick = attachment.openAction.toConversationAttachmentClickOrNull(
+        onAttachmentClick = onAttachmentClick,
+        onExternalUriClick = onExternalUriClick,
+    )
 
     ConversationVCardInlineAttachmentRowContent(
         attachment = attachment,
@@ -64,10 +58,8 @@ internal fun ConversationVCardInlineAttachmentRowContent(
     val modifier = when {
         isSelectionMode -> Modifier
         else -> {
-            Modifier.combinedClickable(
-                onClick = {
-                    onClick?.invoke()
-                },
+            Modifier.conversationAttachmentClickable(
+                onClick = onClick,
                 onLongClick = onLongClick,
             )
         }

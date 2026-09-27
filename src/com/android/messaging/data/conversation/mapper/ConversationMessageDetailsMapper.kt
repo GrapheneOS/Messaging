@@ -105,18 +105,16 @@ internal class ConversationMessageDetailsMapperImpl @Inject constructor() :
         self: ParticipantData?,
         activeSubscriptionCount: Int,
     ): ConversationSubscriptionLabel? {
-        val subscriptionName = self?.subscriptionName
-
         return when {
             self == null || activeSubscriptionCount < 2 -> null
-
             !self.isActiveSubscription || self.isDefaultSelf -> null
 
-            subscriptionName.isNullOrBlank() -> {
-                ConversationSubscriptionLabel.Slot(self.displaySlotId)
+            else -> {
+                self.subscriptionName
+                    ?.takeIf(String::isNotBlank)
+                    ?.let(ConversationSubscriptionLabel::Named)
+                    ?: ConversationSubscriptionLabel.Slot(self.displaySlotId)
             }
-
-            else -> ConversationSubscriptionLabel.Named(subscriptionName)
         }
     }
 }

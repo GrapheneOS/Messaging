@@ -41,6 +41,7 @@ import com.android.messaging.ui.conversation.messages.model.message.Conversation
 import com.android.messaging.ui.conversation.messages.ui.ConversationMessages
 import com.android.messaging.ui.conversation.messages.ui.attachment.OnConversationAttachmentClick
 import com.android.messaging.ui.conversation.metadata.model.ConversationMetadataUiState
+import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaffoldUiState
 import com.android.messaging.ui.subscription.mapper.resolveDisplayName
 import kotlinx.collections.immutable.ImmutableList
@@ -70,6 +71,7 @@ internal fun ConversationScreenContent(
     onMessageClick: (MessageId) -> Unit,
     onMessageAvatarClick: (MessageId) -> Unit,
     onMessageDownloadClick: (MessageId) -> Unit,
+    onMessageActionClick: (MessageId, ConversationMessageAction) -> Unit,
     onMessageLongClick: (MessageId) -> Unit,
     onMessageResendClick: (MessageId) -> Unit,
     onSimSelectorClick: () -> Unit,
@@ -118,6 +120,7 @@ internal fun ConversationScreenContent(
                     onMessageClick = onMessageClick,
                     onMessageAvatarClick = onMessageAvatarClick,
                     onMessageDownloadClick = onMessageDownloadClick,
+                    onMessageActionClick = onMessageActionClick,
                     onMessageLongClick = onMessageLongClick,
                     onMessageResendClick = onMessageResendClick,
                     onSimSelectorClick = onSimSelectorClick,
@@ -180,6 +183,7 @@ private fun ConversationScreenPresentContent(
     onMessageClick: (MessageId) -> Unit,
     onMessageAvatarClick: (MessageId) -> Unit,
     onMessageDownloadClick: (MessageId) -> Unit,
+    onMessageActionClick: (MessageId, ConversationMessageAction) -> Unit,
     onMessageLongClick: (MessageId) -> Unit,
     onMessageResendClick: (MessageId) -> Unit,
     onSimSelectorClick: () -> Unit,
@@ -241,6 +245,7 @@ private fun ConversationScreenPresentContent(
         onMessageClick = onMessageClick,
         onMessageAvatarClick = onMessageAvatarClick,
         onMessageDownloadClick = onMessageDownloadClick,
+        onMessageActionClick = onMessageActionClick,
         onMessageLongClick = onMessageLongClick,
         onMessageResendClick = onMessageResendClick,
         onSimSelectorClick = onSimSelectorClick,

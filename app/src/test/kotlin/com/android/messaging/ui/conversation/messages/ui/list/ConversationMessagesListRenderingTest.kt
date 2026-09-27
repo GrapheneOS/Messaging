@@ -7,6 +7,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -27,6 +28,7 @@ import com.android.messaging.ui.conversation.conversationMessageItemTestTag
 import com.android.messaging.ui.conversation.conversationMessageSelectionRowTestTag
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.ui.ConversationMessages
+import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
 import com.android.messaging.ui.core.AppTheme
 import io.mockk.clearAllMocks
 import io.mockk.mockk
@@ -52,6 +54,8 @@ internal class ConversationMessagesListRenderingTest {
     private val onMessageAvatarClick = mockk<(MessageId) -> Unit>(relaxed = true)
     private val onMessageClick = mockk<(MessageId) -> Unit>(relaxed = true)
     private val onMessageDownloadClick = mockk<(MessageId) -> Unit>(relaxed = true)
+    private val onMessageActionClick =
+        mockk<(MessageId, ConversationMessageAction) -> Unit>(relaxed = true)
     private val onMessageLongClick = mockk<(MessageId) -> Unit>(relaxed = true)
     private val onMessageResendClick = mockk<(MessageId) -> Unit>(relaxed = true)
     private val onSimSelectorClick = mockk<() -> Unit>(relaxed = true)
@@ -216,6 +220,7 @@ internal class ConversationMessagesListRenderingTest {
                     onMessageClick = onMessageClick,
                     onMessageAvatarClick = onMessageAvatarClick,
                     onMessageDownloadClick = onMessageDownloadClick,
+                    onMessageActionClick = onMessageActionClick,
                     onMessageLongClick = onMessageLongClick,
                     onMessageResendClick = onMessageResendClick,
                     onSimSelectorClick = onSimSelectorClick,
@@ -242,8 +247,9 @@ internal class ConversationMessagesListRenderingTest {
         composeTestRule
             .onNodeWithTag(
                 testTag = conversationMessageBubbleTestTag(messageId = MessageId(messageId)),
+                useUnmergedTree = true,
             )
-            .performSemanticsAction(SemanticsActions.OnLongClick)
+            .performTouchInput { longClick() }
     }
 
     private fun sendSubscription(): Subscription {

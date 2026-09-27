@@ -111,6 +111,7 @@ internal fun ConversationScreen(
 }
 
 @Composable
+@Suppress("LongMethod") // Long arguments list, not too much logic, so it's ok to suppress
 internal fun ConversationScreenScaffold(
     modifier: Modifier = Modifier,
     conversationId: ConversationId?,
@@ -177,6 +178,7 @@ internal fun ConversationScreenScaffold(
             onMessageClick = screenModel::onMessageClick,
             onMessageAvatarClick = screenModel::onMessageAvatarClick,
             onMessageDownloadClick = screenModel::onMessageDownloadClick,
+            onMessageActionClick = screenModel::onMessageActionClick,
             onMessageLongClick = screenModel::onMessageLongClick,
             onMessageResendClick = screenModel::onMessageResendClick,
             onSimSelectorClick = showSimSelectorSheet,

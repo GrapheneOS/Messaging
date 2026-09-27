@@ -1,12 +1,8 @@
 package com.android.messaging.ui.conversation.messages.ui.message.rendering
 
-import androidx.compose.ui.semantics.SemanticsProperties
-import androidx.compose.ui.semantics.getOrNull
-import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.android.messaging.testutil.TEST_WAIT_TIMEOUT_MILLIS
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import io.mockk.verify
 import org.junit.Test
@@ -64,20 +60,6 @@ internal class ConversationMessageTextLinkRoutingTest : BaseConversationMessageR
             verify(exactly = 0) {
                 onMessageClick.invoke()
             }
-        }
-    }
-
-    @Suppress("SameParameterValue")
-    private fun awaitLinkAnnotated(text: String) {
-        composeTestRule.waitUntil(timeoutMillis = TEST_WAIT_TIMEOUT_MILLIS) {
-            composeTestRule
-                .onAllNodesWithText(text = text, useUnmergedTree = true)
-                .fetchSemanticsNodes()
-                .any { node ->
-                    node.config
-                        .getOrNull(SemanticsProperties.Text)
-                        ?.any { it.hasLinkAnnotations(start = 0, end = it.length) } == true
-                }
         }
     }
 

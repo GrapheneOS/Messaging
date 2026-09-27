@@ -13,7 +13,10 @@ import io.mockk.mockk
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 internal class ConversationMessageDetailsMapperImplTest {
 
     private val mapper = ConversationMessageDetailsMapperImpl()
@@ -310,6 +313,20 @@ internal class ConversationMessageDetailsMapperImplTest {
     }
 
     @Test
+    fun map_multiSim_inactiveSubscription_hasNoSubscriptionLabel() {
+        val result = mapper.map(
+            data = detailsData(
+                message = message(isSms = true),
+                selfParticipant = ParticipantData.getSelfParticipant(INACTIVE_SUB_ID),
+            ),
+            activeSubscriptionCount = 2,
+            debug = null,
+        )
+
+        assertNull(result.subscriptionLabel)
+    }
+
+    @Test
     fun map_passesThroughDebugModel() {
         val debug = ConversationMessageDetails.Debug(
             messageId = MessageId("id"),
@@ -400,5 +417,9 @@ internal class ConversationMessageDetailsMapperImplTest {
         return mockk {
             every { iterator() } answers { participants.toMutableList().iterator() }
         }
+    }
+
+    private companion object {
+        private const val INACTIVE_SUB_ID = 5
     }
 }

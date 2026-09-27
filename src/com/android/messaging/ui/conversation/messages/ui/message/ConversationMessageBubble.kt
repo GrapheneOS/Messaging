@@ -45,7 +45,7 @@ internal fun ConversationMessageBubble(
     layout: ConversationMessageLayout,
     maxBubbleWidth: Dp,
     simDisplayName: String?,
-    onAttachmentClick: OnConversationAttachmentClick,
+    onAttachmentClick: OnConversationAttachmentClick?,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
 ) {
@@ -104,7 +104,7 @@ private fun ConversationMessageTextSurfaceBubble(
     message: ConversationMessageUiModel,
     isSelectionMode: Boolean,
     simDisplayName: String?,
-    onAttachmentClick: OnConversationAttachmentClick,
+    onAttachmentClick: OnConversationAttachmentClick?,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
 ) {
@@ -164,7 +164,7 @@ private fun ConversationMessageTextBubbleContent(
     isSelected: Boolean,
     isSelectionMode: Boolean,
     simDisplayName: String?,
-    onAttachmentClick: OnConversationAttachmentClick,
+    onAttachmentClick: OnConversationAttachmentClick?,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
 ) {
@@ -219,7 +219,7 @@ private fun ConversationMessageBody(
     content: ConversationMessageContent,
     isIncoming: Boolean,
     isSelectionMode: Boolean,
-    onAttachmentClick: OnConversationAttachmentClick,
+    onAttachmentClick: OnConversationAttachmentClick?,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
 ) {
