@@ -20,6 +20,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
@@ -112,15 +113,20 @@ private fun RecipientSelectionQueryCardBody(
     val queryFieldUiState = queryFieldUiState(uiState = uiState)
     val editableText = recipientSelectionQueryFieldEditableText(uiState = queryFieldUiState)
     val textFieldState = rememberTextFieldState(initialText = editableText)
+    val sentQueries = remember {
+        RecipientSelectionSentQueries(initialQuery = queryFieldUiState.query)
+    }
 
     RecipientSelectionQueryFieldEditableTextReconcileEffect(
         textFieldState = textFieldState,
         editableText = editableText,
         queryFieldUiState = queryFieldUiState,
+        sentQueries = sentQueries,
     )
     RecipientSelectionQueryFieldStateObservationEffect(
         textFieldState = textFieldState,
         queryFieldUiState = queryFieldUiState,
+        sentQueries = sentQueries,
         onQueryChanged = onQueryChanged,
         onSelectedRecipientBackspace = onSelectedRecipientBackspace,
     )
@@ -142,21 +148,70 @@ private fun RecipientSelectionQueryCardBody(
     )
 }
 
+@Stable
+internal class RecipientSelectionSentQueries(
+    initialQuery: String,
+) {
+    private val pendingQueries = ArrayDeque<String>()
+    private var latestQuery = initialQuery
+
+    fun trySend(query: String): Boolean {
+        if (query == latestQuery) {
+            return false
+        }
+
+        pendingQueries.addLast(query)
+        latestQuery = query
+        return true
+    }
+
+    fun consumeEcho(stateQuery: String): Boolean {
+        val index = pendingQueries.indexOf(stateQuery)
+
+        if (index < 0) {
+            acceptStateQuery(stateQuery = stateQuery)
+            return false
+        }
+
+        repeat(times = index + 1) { pendingQueries.removeFirst() }
+        return true
+    }
+
+    fun acceptStateQuery(stateQuery: String) {
+        pendingQueries.clear()
+        latestQuery = stateQuery
+    }
+}
+
 @Composable
 private fun RecipientSelectionQueryFieldEditableTextReconcileEffect(
     textFieldState: TextFieldState,
     editableText: String,
     queryFieldUiState: RecipientSelectionQueryFieldUiState,
+    sentQueries: RecipientSelectionSentQueries,
 ) {
-    // Soft-IME backspace deletes the sentinel from the buffer without changing editableText when
-    // chips remain; re-key on the chip list so the reconcile re-fires and re-installs the sentinel
+    LaunchedEffect(queryFieldUiState.selectedRecipients) {
+        sentQueries.acceptStateQuery(stateQuery = queryFieldUiState.query)
+        textFieldState.replaceTextIfDifferent(text = editableText)
+    }
 
-    LaunchedEffect(editableText, queryFieldUiState.selectedRecipients) {
-        if (textFieldState.text.toString() != editableText) {
-            textFieldState.edit {
-                replace(0, length, editableText)
-                placeCursorAtEnd()
-            }
+    LaunchedEffect(editableText) {
+        val isEcho = sentQueries.consumeEcho(stateQuery = queryFieldUiState.query)
+        val visibleQuery = recipientSelectionVisibleQueryText(
+            fieldText = textFieldState.text.toString(),
+        )
+
+        if (!isEcho || visibleQuery == queryFieldUiState.query) {
+            textFieldState.replaceTextIfDifferent(text = editableText)
+        }
+    }
+}
+
+private fun TextFieldState.replaceTextIfDifferent(text: String) {
+    if (this.text.toString() != text) {
+        edit {
+            replace(0, length, text)
+            placeCursorAtEnd()
         }
     }
 }
@@ -165,6 +220,7 @@ private fun RecipientSelectionQueryFieldEditableTextReconcileEffect(
 private fun RecipientSelectionQueryFieldStateObservationEffect(
     textFieldState: TextFieldState,
     queryFieldUiState: RecipientSelectionQueryFieldUiState,
+    sentQueries: RecipientSelectionSentQueries,
     onQueryChanged: (String) -> Unit,
     onSelectedRecipientBackspace: (SelectedRecipient) -> Unit,
 ) {
@@ -181,6 +237,7 @@ private fun RecipientSelectionQueryFieldStateObservationEffect(
                 previousText = previousText,
                 currentText = currentText,
                 uiState = currentQueryFieldUiState.value,
+                sentQueries = sentQueries,
                 onQueryChanged = currentOnQueryChanged.value,
                 onSelectedRecipientBackspace = currentOnSelectedRecipientBackspace.value,
             )
@@ -193,6 +250,7 @@ private fun handleRecipientSelectionTextFieldStateChange(
     previousText: String,
     currentText: String,
     uiState: RecipientSelectionQueryFieldUiState,
+    sentQueries: RecipientSelectionSentQueries,
     onQueryChanged: (String) -> Unit,
     onSelectedRecipientBackspace: (SelectedRecipient) -> Unit,
 ) {
@@ -211,7 +269,8 @@ private fun handleRecipientSelectionTextFieldStateChange(
 
         else -> {
             val visibleQuery = recipientSelectionVisibleQueryText(fieldText = currentText)
-            if (visibleQuery != uiState.query) {
+            // Compared with the latest send, not the state, which can still hold an older query
+            if (sentQueries.trySend(query = visibleQuery)) {
                 onQueryChanged(visibleQuery)
             }
         }
