@@ -19,11 +19,9 @@ internal fun RecipientSelectionContactAvatar(
     item: RecipientPickerListItem,
     isSelected: Boolean,
 ) {
-    val displayName = recipientSelectionItemPrimaryText(item = item)
-
     SelectionListAvatar(
         avatarUri = recipientSelectionPhotoUri(item = item),
-        fallbackLabel = participantAvatarLabel(source = displayName),
+        fallbackLabel = participantAvatarLabel(source = recipientSelectionAvatarName(item = item)),
         colorSeedCode = participantColorSeed(
             normalizedDestination = recipientSelectionNormalizedDestination(item = item),
         ),
@@ -43,6 +41,13 @@ internal fun recipientSelectionItemPrimaryText(
                 item.displayName,
             )
         }
+    }
+}
+
+private fun recipientSelectionAvatarName(item: RecipientPickerListItem): String {
+    return when (item) {
+        is RecipientPickerListItem.Contact -> item.contact.displayName
+        is RecipientPickerListItem.SyntheticPhone -> item.displayName
     }
 }
 
