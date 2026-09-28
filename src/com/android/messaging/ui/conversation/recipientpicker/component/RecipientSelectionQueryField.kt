@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.TextFieldDecorator
 import androidx.compose.foundation.text.input.TextFieldLineLimits
@@ -19,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -51,15 +53,15 @@ internal fun RecipientSelectionQueryField(
     modifier: Modifier = Modifier,
     maxWidth: Dp? = null,
 ) {
+    val fieldWidth = recipientSelectionQueryFieldWidth(
+        uiState = uiState,
+        maxWidth = maxWidth,
+    )
+
     BasicTextField(
         modifier = modifier
             .testTag(tag = RECIPIENT_SELECTION_QUERY_FIELD_TEST_TAG)
-            .width(
-                width = recipientSelectionQueryFieldWidth(
-                    uiState = uiState,
-                    maxWidth = maxWidth,
-                ),
-            )
+            .width(width = fieldWidth)
             .focusRequester(focusRequester = focusRequester)
             .onFocusChanged { focusState ->
                 onQueryFocusChanged(focusState.isFocused)
@@ -87,11 +89,16 @@ internal fun RecipientSelectionQueryField(
         outputTransformation = RecipientSelectionHiddenBackspaceTargetOutputTransformation,
         decorator = TextFieldDecorator { innerTextField ->
             Box(
-                modifier = Modifier.heightIn(min = 32.dp),
+                modifier = Modifier
+                    .heightIn(min = 32.dp)
+                    .clipToBounds(),
                 contentAlignment = Alignment.CenterStart,
             ) {
                 if (uiState.query.isEmpty()) {
                     Text(
+                        modifier = Modifier
+                            .wrapContentWidth(align = Alignment.Start, unbounded = true)
+                            .width(width = fieldWidth),
                         text = uiState.placeholderText,
                         style = recipientSelectionQueryPlaceholderTextStyle(uiState = uiState),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
