@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.KeyboardActionHandler
 import androidx.compose.foundation.text.input.TextFieldDecorator
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
@@ -31,6 +33,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
@@ -52,6 +55,7 @@ internal fun RecipientSelectionQueryField(
     focusRequester: FocusRequester,
     modifier: Modifier = Modifier,
     maxWidth: Dp? = null,
+    onKeyboardAction: KeyboardActionHandler? = null,
 ) {
     val fieldWidth = recipientSelectionQueryFieldWidth(
         uiState = uiState,
@@ -82,6 +86,8 @@ internal fun RecipientSelectionQueryField(
             },
         state = state,
         enabled = uiState.enabled,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        onKeyboardAction = onKeyboardAction,
         lineLimits = TextFieldLineLimits.SingleLine,
         textStyle = recipientSelectionQueryTextStyle(uiState = uiState),
         cursorBrush = SolidColor(value = MaterialTheme.colorScheme.primary),

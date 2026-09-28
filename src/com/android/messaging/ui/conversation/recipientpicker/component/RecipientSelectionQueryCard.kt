@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.text.input.KeyboardActionHandler
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.placeCursorAtEnd
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -76,6 +77,7 @@ internal fun RecipientSelectionQueryCard(
     onSelectedRecipientBackspace: (SelectedRecipient) -> Unit,
     focusRequester: FocusRequester,
     simSelectorSlot: (@Composable () -> Unit)?,
+    onKeyboardAction: KeyboardActionHandler? = null,
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -90,6 +92,7 @@ internal fun RecipientSelectionQueryCard(
                 onSelectedRecipientClick = onSelectedRecipientClick,
                 onSelectedRecipientBackspace = onSelectedRecipientBackspace,
                 focusRequester = focusRequester,
+                onKeyboardAction = onKeyboardAction,
             )
             simSelectorSlot?.invoke()
         }
@@ -104,6 +107,7 @@ private fun RecipientSelectionQueryCardBody(
     onSelectedRecipientClick: (SelectedRecipient) -> Unit,
     onSelectedRecipientBackspace: (SelectedRecipient) -> Unit,
     focusRequester: FocusRequester,
+    onKeyboardAction: KeyboardActionHandler?,
 ) {
     val queryFieldUiState = queryFieldUiState(uiState = uiState)
     val editableText = recipientSelectionQueryFieldEditableText(uiState = queryFieldUiState)
@@ -134,6 +138,7 @@ private fun RecipientSelectionQueryCardBody(
             uiState.chips.recipients.lastOrNull()?.let(onSelectedRecipientBackspace)
         },
         focusRequester = focusRequester,
+        onKeyboardAction = onKeyboardAction,
     )
 }
 
@@ -225,6 +230,7 @@ private fun RecipientSelectionInputRow(
     onSelectedRecipientClick: (SelectedRecipient) -> Unit,
     onLastSelectedRecipientRemove: () -> Unit,
     focusRequester: FocusRequester,
+    onKeyboardAction: KeyboardActionHandler?,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val currentOnQueryFocused = rememberUpdatedState(newValue = onQueryFocused)
@@ -273,6 +279,7 @@ private fun RecipientSelectionInputRow(
                     onLastSelectedRecipientRemove = onLastSelectedRecipientRemove,
                     focusRequester = focusRequester,
                     maxWidth = maxWidth,
+                    onKeyboardAction = onKeyboardAction,
                 )
             },
         )
