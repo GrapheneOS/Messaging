@@ -100,6 +100,7 @@ internal fun ConversationListScreen(
     )
 
     var pendingDelete by remember { mutableStateOf(false) }
+    var pendingDeleteConversationId by remember { mutableStateOf<ConversationId?>(null) }
     var pendingBlockConversationId by remember { mutableStateOf<ConversationId?>(null) }
     var pendingBlockDestination by remember { mutableStateOf<String?>(null) }
     var pendingSnooze by remember { mutableStateOf(false) }
@@ -128,6 +129,7 @@ internal fun ConversationListScreen(
             pendingBlockConversationId = conversationId
             pendingBlockDestination = destination
         },
+        onConfirmDelete = { pendingDeleteConversationId = it }
     )
 
     ConversationListScaffoldWithPinOverlay(
@@ -154,6 +156,8 @@ internal fun ConversationListScreen(
             pendingBlockDestination = null
         },
         onDismissSnooze = { pendingSnooze = false },
+        deleteConversationId = pendingDeleteConversationId,
+        onDismissDeleteConversation = { pendingDeleteConversationId = null },
     )
 }
 
@@ -214,6 +218,7 @@ private fun ConversationListEffects(
     pinAnimationController: OverlayReorderAnimationController<Model, ConversationId>,
     onAction: (Action) -> Unit,
     onConfirmBlock: (conversationId: ConversationId, destination: String) -> Unit,
+    onConfirmDelete: (conversationId: ConversationId) -> Unit,
 ) {
     val context = LocalContext.current
     val undoLabel = stringResource(R.string.snack_bar_undo)
@@ -224,6 +229,7 @@ private fun ConversationListEffects(
     val currentUndoLabel by rememberUpdatedState(undoLabel)
     val currentOnAction by rememberUpdatedState(onAction)
     val currentOnConfirmBlock by rememberUpdatedState(onConfirmBlock)
+    val currentOnConfirmDelete by rememberUpdatedState(onConfirmDelete)
 
     LaunchedEffect(effects) {
         effects.collect { effect ->
@@ -233,6 +239,10 @@ private fun ConversationListEffects(
                         effect.conversationId,
                         effect.destination,
                     )
+                }
+
+                is Effect.ConfirmDelete -> {
+                    currentOnConfirmDelete(effect.conversationId)
                 }
 
                 is Effect.ArchiveStatusChanged, is Effect.ConversationBlocked -> {

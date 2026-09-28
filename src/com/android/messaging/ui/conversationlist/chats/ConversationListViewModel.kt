@@ -131,6 +131,11 @@ internal class ConversationListViewModel @Inject constructor(
             is Action.DeleteConfirmed -> {
                 onDeleteConfirmed()
             }
+
+            is Action.ConversationDeleteConfirmed -> {
+                val item = itemById(action.conversationId) ?: return
+                actionsDelegate.delete(listOf(item))
+            }
         }
     }
 
@@ -266,6 +271,10 @@ internal class ConversationListViewModel @Inject constructor(
             is Action.ConversationSwipedToToggleRead -> {
                 onConversationSwipedToToggleRead(action.conversationId)
             }
+
+            is Action.ConversationSwipedToDelete -> {
+                onConversationSwipedToDelete(action.conversationId)
+            }
         }
     }
 
@@ -370,6 +379,11 @@ internal class ConversationListViewModel @Inject constructor(
                 isRead = shouldMarkRead,
             )
         }
+    }
+
+    private fun onConversationSwipedToDelete(conversationId: ConversationId) {
+        itemById(conversationId) ?: return
+        _effects.trySend(Effect.ConfirmDelete(conversationId))
     }
 
     private fun onNavigationAction(action: Action.NavigationAction) {

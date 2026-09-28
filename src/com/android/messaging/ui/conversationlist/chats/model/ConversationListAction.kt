@@ -27,6 +27,10 @@ internal sealed interface ConversationListAction {
         val destination: String,
     ) : ConfirmationAction
 
+    data class ConversationDeleteConfirmed(
+        val conversationId: ConversationId
+    ) : ConfirmationAction
+
     data object DeleteConfirmed : ConfirmationAction
     // endregion
 

@@ -18,11 +18,13 @@ import com.android.messaging.ui.core.MessagingPreviewTheme
 internal fun ConversationListDialogs(
     selectedCount: Int,
     isDeleteVisible: Boolean,
+    deleteConversationId: ConversationId?,
     blockConversationId: ConversationId?,
     blockDestination: String?,
     isSnoozeVisible: Boolean,
     onAction: (Action) -> Unit,
     onDismissDelete: () -> Unit,
+    onDismissDeleteConversation: () -> Unit,
     onDismissBlock: () -> Unit,
     onDismissSnooze: () -> Unit,
 ) {
@@ -44,6 +46,17 @@ internal fun ConversationListDialogs(
                 onDismissDelete()
             },
             onDismiss = onDismissDelete,
+        )
+    }
+
+    if (deleteConversationId != null) {
+        ConversationListDeleteDialog(
+            selectedCount = 1,
+            onConfirm = {
+                onAction(Action.ConversationDeleteConfirmed(deleteConversationId))
+                onDismissDeleteConversation()
+            },
+            onDismiss = onDismissDeleteConversation,
         )
     }
 
