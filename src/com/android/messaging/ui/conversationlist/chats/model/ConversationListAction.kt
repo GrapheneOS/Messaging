@@ -86,6 +86,10 @@ internal sealed interface ConversationListAction {
     data class ConversationSwipedToToggleRead(
         val conversationId: ConversationId,
     ) : ListAction
+
+    data class ConversationSwipedToDelete(
+        val conversationId: ConversationId,
+    ) : ListAction
     // endregion
 
     // region NavigationAction

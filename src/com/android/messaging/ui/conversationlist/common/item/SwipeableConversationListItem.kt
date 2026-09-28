@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MarkChatRead
 import androidx.compose.material.icons.filled.MarkChatUnread
 import androidx.compose.material.icons.filled.Unarchive
@@ -98,6 +99,7 @@ private val ItemAppearanceSpec = tween<Float>(durationMillis = ITEM_APPEARANCE_D
 internal enum class ConversationSwipeKind {
     Archive,
     Unarchive,
+    Delete,
     ToggleRead,
 }
 
@@ -489,12 +491,14 @@ private fun ConversationListSwipeBackground(
     val containerColor = when (background) {
         ConversationSwipeKind.Archive -> MaterialTheme.colorScheme.secondaryContainer
         ConversationSwipeKind.Unarchive -> MaterialTheme.colorScheme.secondaryContainer
+        ConversationSwipeKind.Delete -> MaterialTheme.colorScheme.secondaryContainer
         ConversationSwipeKind.ToggleRead -> MaterialTheme.colorScheme.tertiaryContainer
     }
 
     val contentColor = when (background) {
         ConversationSwipeKind.Archive -> MaterialTheme.colorScheme.onSecondaryContainer
         ConversationSwipeKind.Unarchive -> MaterialTheme.colorScheme.onSecondaryContainer
+        ConversationSwipeKind.Delete -> MaterialTheme.colorScheme.onSecondaryContainer
         ConversationSwipeKind.ToggleRead -> MaterialTheme.colorScheme.onTertiaryContainer
     }
 
@@ -531,6 +535,7 @@ private fun swipeBackgroundIcon(
     return when (background) {
         ConversationSwipeKind.Archive -> Icons.Filled.Archive
         ConversationSwipeKind.Unarchive -> Icons.Filled.Unarchive
+        ConversationSwipeKind.Delete -> Icons.Filled.Delete
         ConversationSwipeKind.ToggleRead -> when {
             isUnread -> Icons.Filled.MarkChatRead
             else -> Icons.Filled.MarkChatUnread
@@ -546,6 +551,7 @@ private fun swipeBackgroundDescription(
     return when (background) {
         ConversationSwipeKind.Archive -> stringResource(R.string.action_archive)
         ConversationSwipeKind.Unarchive -> stringResource(R.string.action_unarchive)
+        ConversationSwipeKind.Delete -> stringResource(R.string.action_delete)
         ConversationSwipeKind.ToggleRead -> when {
             isUnread -> stringResource(R.string.mark_as_read)
             else -> stringResource(R.string.mark_as_unread)

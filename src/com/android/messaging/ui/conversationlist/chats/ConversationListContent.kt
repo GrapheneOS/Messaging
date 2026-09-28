@@ -17,6 +17,7 @@ import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.common.components.PrimaryActionButton
 import com.android.messaging.ui.common.components.reorder.OverlayReorderAnimationController
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.*
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.common.item.ConversationSwipeKind
 import com.android.messaging.ui.conversationlist.common.list.ConversationListItemEvent
@@ -116,14 +117,19 @@ private fun ConversationListItemEvent.toChatAction(): Action {
 
         is ConversationListItemEvent.Swiped -> when (kind) {
             ConversationSwipeKind.ToggleRead -> {
-                Action.ConversationSwipedToToggleRead(conversationId)
+                ConversationSwipedToToggleRead(conversationId)
             }
 
             ConversationSwipeKind.Archive -> {
-                Action.ConversationSwipedToArchive(conversationId)
+                ConversationSwipedToArchive(conversationId)
+            }
+
+            ConversationSwipeKind.Delete -> {
+                ConversationSwipedToDelete(conversationId)
             }
 
             ConversationSwipeKind.Unarchive -> unsupportedSwipeKind(kind)
+
         }
     }
 }
