@@ -18,6 +18,17 @@ import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.common.components.PrimaryActionButton
 import com.android.messaging.ui.common.components.reorder.OverlayReorderAnimationController
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.AvatarCallClicked
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.AvatarContactClicked
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.AvatarInfoClicked
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.AvatarMessageClicked
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.ConversationClicked
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.ConversationLongClicked
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.ConversationSwipedToArchive
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.ConversationSwipedToDelete
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.ConversationSwipedToToggleRead
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.StartChatClicked
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState
 import com.android.messaging.ui.conversationlist.common.item.ConversationSwipeKind
 import com.android.messaging.ui.conversationlist.common.list.ConversationListItemEvent
 import com.android.messaging.ui.conversationlist.common.list.ConversationListItems
@@ -30,11 +41,6 @@ import com.android.messaging.ui.conversationlist.model.ConversationListContentUi
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel as Model
 import com.android.messaging.ui.core.MessagingPreviewTheme
 
-private val ChatSwipeSpec = ConversationListSwipeSpec(
-    startToEnd = ConversationSwipeKind.ToggleRead,
-    endToStart = ConversationSwipeKind.Archive,
-)
-
 @Composable
 internal fun ConversationListContent(
     content: ConversationListContentUiState,
@@ -44,6 +50,7 @@ internal fun ConversationListContent(
     isSelectionMode: Boolean,
     fabBottomReserve: Dp,
     pinAnimationController: OverlayReorderAnimationController<Model, ConversationId>?,
+    swipeSpec: ConversationListSwipeSpec,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -64,7 +71,7 @@ internal fun ConversationListContent(
                     actionButton = {
                         PrimaryActionButton(
                             text = stringResource(R.string.conversation_list_start_chat),
-                            onClick = { onAction(Action.StartChatClicked) },
+                            onClick = { onAction(StartChatClicked) },
                             leadingIcon = Icons.AutoMirrored.Rounded.Chat,
                         )
                     },
@@ -80,7 +87,7 @@ internal fun ConversationListContent(
                     scaffoldContentPadding = scaffoldContentPadding,
                     fabBottomReserve = fabBottomReserve,
                     pinAnimationController = pinAnimationController,
-                    swipeSpec = ChatSwipeSpec,
+                    swipeSpec = swipeSpec,
                     onItemEvent = { onAction(it.toChatAction()) },
                 )
             }
@@ -91,36 +98,40 @@ internal fun ConversationListContent(
 private fun ConversationListItemEvent.toChatAction(): Action {
     return when (this) {
         is ConversationListItemEvent.Clicked -> {
-            Action.ConversationClicked(conversationId)
+            ConversationClicked(conversationId)
         }
 
         is ConversationListItemEvent.LongClicked -> {
-            Action.ConversationLongClicked(conversationId)
+            ConversationLongClicked(conversationId)
         }
 
         is ConversationListItemEvent.AvatarMessageClicked -> {
-            Action.AvatarMessageClicked(conversationId)
+            AvatarMessageClicked(conversationId)
         }
 
         is ConversationListItemEvent.AvatarCallClicked -> {
-            Action.AvatarCallClicked(destination)
+            AvatarCallClicked(destination)
         }
 
         is ConversationListItemEvent.AvatarContactClicked -> {
-            Action.AvatarContactClicked(item.avatar)
+            AvatarContactClicked(item.avatar)
         }
 
         is ConversationListItemEvent.AvatarInfoClicked -> {
-            Action.AvatarInfoClicked(conversationId)
+            AvatarInfoClicked(conversationId)
         }
 
         is ConversationListItemEvent.Swiped -> when (kind) {
             ConversationSwipeKind.ToggleRead -> {
-                Action.ConversationSwipedToToggleRead(conversationId)
+                ConversationSwipedToToggleRead(conversationId)
             }
 
             ConversationSwipeKind.Archive -> {
-                Action.ConversationSwipedToArchive(conversationId)
+                ConversationSwipedToArchive(conversationId)
+            }
+
+            ConversationSwipeKind.Delete -> {
+                ConversationSwipedToDelete(conversationId)
             }
 
             ConversationSwipeKind.Unarchive -> unsupportedSwipeKind(kind)
@@ -140,6 +151,7 @@ private fun ConversationListContentEmptyPreview() {
             isSelectionMode = false,
             fabBottomReserve = 0.dp,
             pinAnimationController = null,
+            swipeSpec = ConversationListUiState().swipeSpec,
         )
     }
 }
@@ -156,6 +168,7 @@ private fun ConversationListContentWaitingForSyncPreview() {
             isSelectionMode = false,
             fabBottomReserve = 0.dp,
             pinAnimationController = null,
+            swipeSpec = ConversationListUiState().swipeSpec,
         )
     }
 }
@@ -174,6 +187,7 @@ private fun ConversationListContentItemsPreview() {
             isSelectionMode = false,
             fabBottomReserve = 0.dp,
             pinAnimationController = null,
+            swipeSpec = ConversationListUiState().swipeSpec,
         )
     }
 }
