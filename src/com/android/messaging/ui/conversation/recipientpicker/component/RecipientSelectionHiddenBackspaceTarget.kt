@@ -28,8 +28,13 @@ internal object RecipientSelectionHiddenBackspaceTargetOutputTransformation : Ou
 internal object RecipientSelectionHiddenBackspaceTargetInputTransformation : InputTransformation {
 
     override fun TextFieldBuffer.transformInput() {
-        if (length > 1 && asCharSequence()[0] == BACKSPACE_SENTINEL_CHAR) {
-            delete(0, 1)
+        // A tap can put the cursor before the sentinel, so text can land on either side of it
+        if (length > 1) {
+            for (index in length - 1 downTo 0) {
+                if (charAt(index) == BACKSPACE_SENTINEL_CHAR) {
+                    delete(index, index + 1)
+                }
+            }
         }
     }
 }
