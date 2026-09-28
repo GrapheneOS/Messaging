@@ -263,7 +263,8 @@ private fun RecipientSelectionInputRow(
                         .padding(end = 4.dp)
                         .height(height = recipientSelectionInputRowMinHeight)
                         .wrapContentHeight(align = Alignment.CenterVertically),
-                    text = prefixText,
+                    // Translations of the label end with a space; the end padding already separates it
+                    text = prefixText.trim(),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

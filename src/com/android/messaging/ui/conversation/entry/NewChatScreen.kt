@@ -349,7 +349,7 @@ private fun newChatRecipientSelectionStrings(
     hasSelectedRecipients: Boolean,
 ): RecipientSelectionStrings {
     return RecipientSelectionStrings(
-        queryPrefixText = stringResource(id = R.string.new_chat_recipient_prefix),
+        queryPrefixText = stringResource(id = R.string.to_address_label),
         queryPlaceholderText = newChatQueryHint(
             hasSelectedRecipients = hasSelectedRecipients,
         ),
