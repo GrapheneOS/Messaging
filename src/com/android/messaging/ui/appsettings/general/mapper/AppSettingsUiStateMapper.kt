@@ -26,6 +26,7 @@ internal class AppSettingsUiStateMapperImpl @Inject constructor(
             inConversationSoundEnabled = appSettings.inConversationSoundEnabled,
             youTubeLinkPreviewsEnabled = appSettings.youTubeLinkPreviewsEnabled,
             linkOpeningMode = appSettings.linkOpeningMode,
+            conversationSwipeSettings = appSettings.conversationSwipeSettings,
             isDebugEnabled = appSettings.isDebugEnabled,
             dumpSmsEnabled = appSettings.dumpSmsEnabled,
             dumpMmsEnabled = appSettings.dumpMmsEnabled,

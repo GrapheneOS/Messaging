@@ -112,9 +112,11 @@ class AppSettingsScreenTest {
         setContent(appSettings = appSettings)
 
         val debugTitle = composeTestRule.activity.getString(R.string.debug_category_pref_title)
+        scrollToText(text = debugTitle)
         composeTestRule.onNodeWithText(debugTitle).assertIsDisplayed()
 
         val dumpSmsTitle = composeTestRule.activity.getString(R.string.dump_sms_pref_title)
+        scrollToText(text = dumpSmsTitle)
         composeTestRule.onNodeWithText(dumpSmsTitle).assertIsDisplayed()
 
         val dumpMmsTitle = composeTestRule.activity.getString(R.string.dump_mms_pref_title)
@@ -132,6 +134,7 @@ class AppSettingsScreenTest {
         setContent(appSettings = appSettings)
 
         val title = composeTestRule.activity.getString(R.string.dump_sms_pref_title)
+        scrollToText(text = title)
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
@@ -162,6 +165,7 @@ class AppSettingsScreenTest {
         setContent()
 
         val title = composeTestRule.activity.getString(R.string.menu_license)
+        scrollToText(text = title)
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {

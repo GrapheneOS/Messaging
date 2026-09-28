@@ -25,6 +25,8 @@
     <bool name="youtube_link_previews_pref_default" translatable="false">false</bool>
     <string name="link_opening_pref_key" translatable="false">link_opening</string>
     <string name="link_opening_pref_default" translatable="false">ask</string>
+    <string name="conversation_swipe_start_to_end_pref_key" translatable="false">conversation_swipe_start_to_end</string>
+    <string name="conversation_swipe_end_to_start_pref_key" translatable="false">conversation_swipe_end_to_start</string>
 
     <!-- Subscription-specific settings. The values of these pref keys must be prefixed with
          "buglesub_" to allow for runtime checks -->
