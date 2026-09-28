@@ -4,8 +4,8 @@
 
 package com.android.messaging.ui.conversation.addparticipants
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -97,9 +97,8 @@ internal fun AddParticipantsScreen(
         },
     ) { contentPadding ->
         AddParticipantsRecipientSelectionContent(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues = contentPadding),
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = contentPadding,
             uiState = uiState,
             onLoadMore = screenModel::onLoadMore,
             onQueryChanged = screenModel::onQueryChanged,
@@ -117,8 +116,10 @@ private fun AddParticipantsRecipientSelectionContent(
     onQueryChanged: (String) -> Unit,
     onRecipientClick: (SelectedRecipient) -> Unit,
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(),
 ) {
     RecipientSelectionContent(
+        contentPadding = contentPadding,
         uiState = addParticipantsRecipientSelectionContentUiState(
             uiState = uiState,
             primaryActionText = stringResource(id = R.string.conversation_add_people),

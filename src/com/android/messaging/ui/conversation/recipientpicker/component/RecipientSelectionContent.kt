@@ -4,9 +4,15 @@ package com.android.messaging.ui.conversation.recipientpicker.component
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -20,6 +26,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
@@ -46,6 +53,7 @@ internal fun RecipientSelectionContent(
     rowDecorators: RecipientSelectionRowDecorators,
     onRecipientDestinationClick: OnRecipientDestinationAction,
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(),
     autoFocusQuery: Boolean = false,
     onLoadMore: () -> Unit = {},
     onPrimaryActionClick: () -> Unit = {},
@@ -69,6 +77,7 @@ internal fun RecipientSelectionContent(
 
     RecipientSelectionContentLayout(
         modifier = modifier,
+        contentPadding = contentPadding,
         pinnedTopContent = pinnedTopContent,
         queryArea = {
             RecipientSelectionArmedQueryArea(
@@ -84,6 +93,12 @@ internal fun RecipientSelectionContent(
         contactsArea = {
             RecipientSelectionArmedContactsArea(
                 modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    bottom = maxOf(
+                        contentPadding.calculateBottomPadding(),
+                        WindowInsets.ime.asPaddingValues().calculateBottomPadding(),
+                    ),
+                ),
                 uiState = uiState,
                 rowDecorators = rowDecorators,
                 armedDestination = armedDestination,
@@ -100,9 +115,12 @@ internal fun RecipientSelectionContent(
 private fun RecipientSelectionContentLayout(
     queryArea: @Composable () -> Unit,
     contactsArea: @Composable () -> Unit,
+    contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
     pinnedTopContent: (@Composable () -> Unit)? = null,
 ) {
+    val layoutDirection = LocalLayoutDirection.current
+
     Surface(
         modifier = modifier,
         color = MaterialTheme.colorScheme.surfaceContainer,
@@ -110,6 +128,11 @@ private fun RecipientSelectionContentLayout(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(
+                    start = contentPadding.calculateStartPadding(layoutDirection),
+                    top = contentPadding.calculateTopPadding(),
+                    end = contentPadding.calculateEndPadding(layoutDirection),
+                )
                 .padding(horizontal = 16.dp),
         ) {
             Spacer(modifier = Modifier.height(16.dp))
@@ -196,6 +219,7 @@ private fun RecipientSelectionArmedContactsArea(
     onRecipientDestinationLongClick: OnRecipientDestinationAction?,
     onLoadMore: () -> Unit,
     onPrimaryActionClick: () -> Unit,
+    contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
     val currentOnPrimaryActionClick = rememberUpdatedState(onPrimaryActionClick)
@@ -231,6 +255,7 @@ private fun RecipientSelectionArmedContactsArea(
 
     RecipientSelectionContactsContent(
         modifier = modifier,
+        contentPadding = contentPadding,
         uiState = uiState,
         rowDecorators = rowDecorators,
         onLoadMore = onLoadMore,
