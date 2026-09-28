@@ -5,6 +5,9 @@ import com.android.messaging.R
 import com.android.messaging.data.appsettings.model.AppBooleanPref
 import com.android.messaging.data.appsettings.model.AppSettings
 import com.android.messaging.data.appsettings.model.LinkOpeningMode
+import com.android.messaging.data.appsettings.model.ConversationSwipeOption
+import com.android.messaging.data.appsettings.model.ConversationSwipePref
+import com.android.messaging.data.appsettings.model.ConversationSwipeSettings
 import com.android.messaging.data.debug.DebugFeaturesProvider
 import com.android.messaging.di.core.IoDispatcher
 import com.android.messaging.util.BuglePrefs
@@ -18,8 +21,13 @@ internal interface AppSettingsRepository {
     suspend fun getAppSettings(): AppSettings
     suspend fun isYouTubeLinkPreviewsEnabled(): Boolean
     suspend fun getLinkOpeningMode(): LinkOpeningMode
+    suspend fun getConversationSwipeSettings(): ConversationSwipeSettings
     suspend fun setBooleanPref(pref: AppBooleanPref, enabled: Boolean)
     suspend fun setLinkOpeningMode(mode: LinkOpeningMode)
+    suspend fun setConversationSwipeOption(
+        pref: ConversationSwipePref,
+        option: ConversationSwipeOption,
+    )
 }
 
 internal class AppSettingsRepositoryImpl @Inject constructor(
@@ -47,6 +55,7 @@ internal class AppSettingsRepositoryImpl @Inject constructor(
                 ),
                 youTubeLinkPreviewsEnabled = readYouTubeLinkPreviewsEnabled(),
                 linkOpeningMode = readLinkOpeningMode(),
+                conversationSwipeSettings = readConversationSwipeSettings(),
                 isDebugEnabled = debugFeaturesProvider.isEnabled(),
                 dumpSmsEnabled = appPrefs.getBoolean(
                     context.getString(R.string.dump_sms_pref_key),
@@ -72,6 +81,12 @@ internal class AppSettingsRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getConversationSwipeSettings(): ConversationSwipeSettings {
+        return withContext(ioDispatcher) {
+            readConversationSwipeSettings()
+        }
+    }
+
     override suspend fun setBooleanPref(
         pref: AppBooleanPref,
         enabled: Boolean,
@@ -89,6 +104,18 @@ internal class AppSettingsRepositoryImpl @Inject constructor(
             BuglePrefs.getApplicationPrefs().putString(
                 context.getString(R.string.link_opening_pref_key),
                 mode.prefValue,
+            )
+        }
+    }
+
+    override suspend fun setConversationSwipeOption(
+        pref: ConversationSwipePref,
+        option: ConversationSwipeOption,
+    ) {
+        withContext(ioDispatcher) {
+            BuglePrefs.getApplicationPrefs().putString(
+                context.getString(pref.keyResId),
+                option.name,
             )
         }
     }
@@ -113,5 +140,24 @@ internal class AppSettingsRepositoryImpl @Inject constructor(
 
     private fun linkOpeningModeOrNull(prefValue: String?): LinkOpeningMode? {
         return LinkOpeningMode.entries.firstOrNull { mode -> mode.prefValue == prefValue }
+    }
+
+    private fun readConversationSwipeSettings(): ConversationSwipeSettings {
+        val default = ConversationSwipeSettings.Default
+
+        return ConversationSwipeSettings(
+            startToEnd = readConversationSwipeOption(ConversationSwipePref.START_TO_END)
+                ?: default.startToEnd,
+            endToStart = readConversationSwipeOption(ConversationSwipePref.END_TO_START)
+                ?: default.endToStart,
+        )
+    }
+
+    private fun readConversationSwipeOption(pref: ConversationSwipePref): ConversationSwipeOption? {
+        val stored = BuglePrefs.getApplicationPrefs().getString(
+            context.getString(pref.keyResId),
+            null,
+        )
+        return ConversationSwipeOption.entries.firstOrNull { it.name == stored }
     }
 }

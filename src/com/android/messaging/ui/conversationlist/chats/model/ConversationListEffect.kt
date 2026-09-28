@@ -38,6 +38,10 @@ internal sealed interface ConversationListEffect {
         val destination: String,
     ) : ConversationListEffect
 
+    data class ConfirmDelete(
+        val conversationIds: ImmutableList<ConversationId>,
+    ) : ConversationListEffect
+
     data class ConversationBlocked(
         val conversationId: ConversationId,
         val destination: String,

@@ -1,5 +1,6 @@
 package com.android.messaging.ui.appsettings.general.model
 
+import com.android.messaging.data.appsettings.model.ConversationSwipeOption
 import com.android.messaging.data.appsettings.model.LinkOpeningMode
 
 internal sealed interface AppSettingsAction {
@@ -13,6 +14,14 @@ internal sealed interface AppSettingsAction {
 
     data class DumpSmsChanged(
         val enabled: Boolean,
+    ) : AppSettingsAction
+
+    data class ConversationSwipeStartToEndOptionChanged(
+        val option: ConversationSwipeOption,
+    ) : AppSettingsAction
+
+    data class ConversationSwipeEndToStartOptionChanged(
+        val option: ConversationSwipeOption,
     ) : AppSettingsAction
 
     data class SendSoundChanged(

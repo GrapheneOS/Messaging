@@ -1,6 +1,8 @@
 package com.android.messaging.ui.appsettings.general.delegate
 
 import com.android.messaging.data.appsettings.model.AppBooleanPref
+import com.android.messaging.data.appsettings.model.ConversationSwipeOption
+import com.android.messaging.data.appsettings.model.ConversationSwipePref
 import com.android.messaging.data.appsettings.model.LinkOpeningMode
 import com.android.messaging.data.appsettings.repository.AppSettingsRepository
 import com.android.messaging.ui.appsettings.common.SettingsScreenDelegate
@@ -22,6 +24,8 @@ internal interface AppSettingsDelegate : SettingsScreenDelegate<AppSettingsUiSta
     fun onInConversationSoundChanged(enabled: Boolean)
     fun onYouTubeLinkPreviewsChanged(enabled: Boolean)
     fun onLinkOpeningModeChanged(mode: LinkOpeningMode)
+    fun onConversationSwipeStartToEndOptionChanged(option: ConversationSwipeOption)
+    fun onConversationSwipeEndToStartOptionChanged(option: ConversationSwipeOption)
     fun onDumpSmsChanged(enabled: Boolean)
     fun onDumpMmsChanged(enabled: Boolean)
 }
@@ -87,6 +91,20 @@ internal class AppSettingsDelegateImpl @Inject constructor(
         }
     }
 
+    override fun onConversationSwipeStartToEndOptionChanged(option: ConversationSwipeOption) {
+        setConversationSwipeOption(
+            pref = ConversationSwipePref.START_TO_END,
+            option = option,
+        )
+    }
+
+    override fun onConversationSwipeEndToStartOptionChanged(option: ConversationSwipeOption) {
+        setConversationSwipeOption(
+            pref = ConversationSwipePref.END_TO_START,
+            option = option,
+        )
+    }
+
     override fun onDumpSmsChanged(enabled: Boolean) {
         setBooleanPref(
             pref = AppBooleanPref.DUMP_SMS,
@@ -116,6 +134,19 @@ internal class AppSettingsDelegateImpl @Inject constructor(
     private fun writePref(write: suspend () -> Unit) {
         boundScope?.launch {
             write()
+            refresh()
+        }
+    }
+
+    private fun setConversationSwipeOption(
+        pref: ConversationSwipePref,
+        option: ConversationSwipeOption,
+    ) {
+        boundScope?.launch {
+            repository.setConversationSwipeOption(
+                pref = pref,
+                option = option,
+            )
             refresh()
         }
     }
