@@ -10,6 +10,7 @@ import com.android.messaging.R
 import com.android.messaging.ui.common.components.participant.participantAvatarLabel
 import com.android.messaging.ui.common.components.participant.participantColorSeed
 import com.android.messaging.ui.common.components.selection.SelectionListAvatar
+import com.android.messaging.ui.common.text.asLtrText
 import com.android.messaging.ui.core.MessagingPreviewColumn
 import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
 import com.android.messaging.ui.recipientselection.preview.previewRecipientPickerUiState
@@ -38,7 +39,7 @@ internal fun recipientSelectionItemPrimaryText(
         is RecipientPickerListItem.SyntheticPhone -> {
             stringResource(
                 id = R.string.contact_list_send_to_text,
-                item.displayName,
+                item.displayName.asLtrText(),
             )
         }
     }

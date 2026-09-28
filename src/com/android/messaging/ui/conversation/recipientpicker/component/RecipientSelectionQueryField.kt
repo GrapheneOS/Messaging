@@ -35,6 +35,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -175,12 +176,14 @@ private fun recipientSelectionQueryTextStyle(
 private fun recipientSelectionQueryPlaceholderTextStyle(
     uiState: RecipientSelectionQueryFieldUiState,
 ): TextStyle {
-    return when {
+    val textStyle = when {
         uiState.selectedRecipients.isEmpty() -> MaterialTheme.typography.bodyLarge
         else -> {
             MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Normal)
         }
     }
+
+    return textStyle.copy(textDirection = TextDirection.ContentOrLtr)
 }
 
 @PreviewLightDark
