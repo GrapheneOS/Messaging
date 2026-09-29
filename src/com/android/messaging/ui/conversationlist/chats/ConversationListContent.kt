@@ -33,7 +33,7 @@ import com.android.messaging.ui.core.MessagingPreviewTheme
 
 private val ChatSwipeSpec = ConversationListSwipeSpec(
     startToEnd = ConversationSwipeKind.ToggleRead,
-    endToStart = ConversationSwipeKind.Archive,
+    endToStart = ConversationSwipeKind.Delete,
 )
 
 @Composable

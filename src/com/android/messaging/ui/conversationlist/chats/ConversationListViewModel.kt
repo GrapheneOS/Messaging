@@ -129,12 +129,7 @@ internal class ConversationListViewModel @Inject constructor(
             }
 
             is Action.DeleteConfirmed -> {
-                onDeleteConfirmed()
-            }
-
-            is Action.ConversationDeleteConfirmed -> {
-                val item = itemById(action.conversationId) ?: return
-                actionsDelegate.delete(listOf(item))
+                delete(action.conversationIds)
             }
         }
     }
@@ -194,17 +189,6 @@ internal class ConversationListViewModel @Inject constructor(
             )
         }
 
-        selectionDelegate.clear()
-    }
-
-    private fun onDeleteConfirmed() {
-        val selectedItems = currentSelectedItems()
-
-        if (selectedItems.isEmpty()) {
-            return
-        }
-
-        actionsDelegate.delete(selectedItems)
         selectionDelegate.clear()
     }
 
@@ -273,7 +257,7 @@ internal class ConversationListViewModel @Inject constructor(
             }
 
             is Action.ConversationSwipedToDelete -> {
-                onConversationSwipedToDelete(action.conversationId)
+                requestDelete(listOf(action.conversationId))
             }
         }
     }
@@ -381,9 +365,18 @@ internal class ConversationListViewModel @Inject constructor(
         }
     }
 
-    private fun onConversationSwipedToDelete(conversationId: ConversationId) {
-        itemById(conversationId) ?: return
-        _effects.trySend(Effect.ConfirmDelete(conversationId))
+    private fun requestDelete(conversationIds: List<ConversationId>) {
+        _effects.trySend(Effect.ConfirmDelete(conversationIds.toImmutableList()))
+    }
+
+    private fun delete(conversationIds: List<ConversationId>) {
+        val items = conversationIds.mapNotNull(::itemById)
+        if (items.isEmpty()) {
+            return
+        }
+
+        actionsDelegate.delete(items)
+        selectionDelegate.clear()
     }
 
     private fun onNavigationAction(action: Action.NavigationAction) {
@@ -426,6 +419,10 @@ internal class ConversationListViewModel @Inject constructor(
 
             is Action.BlockClicked -> {
                 onBlockClick()
+            }
+
+            is Action.DeleteClicked -> {
+                withSelectedIds { requestDelete(it) }
             }
 
             is Action.MarkReadClicked -> {

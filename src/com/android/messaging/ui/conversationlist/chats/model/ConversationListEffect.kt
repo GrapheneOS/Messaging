@@ -38,7 +38,7 @@ internal sealed interface ConversationListEffect {
     ) : ConversationListEffect
 
     data class ConfirmDelete(
-        val conversationId: ConversationId,
+        val conversationIds: ImmutableList<ConversationId>,
     ) : ConversationListEffect
 
     data class ConversationBlocked(
