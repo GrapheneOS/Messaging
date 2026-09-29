@@ -36,6 +36,7 @@ internal fun ConversationMediaPickerCaptureScene(
                 .fillMaxSize(),
             cameraController = cameraController,
             cameraPermissionGranted = cameraPermissionGranted,
+            captureMode = captureMode,
             contentPadding = contentPadding,
             onRequestCameraPermission = onRequestCameraPermission,
         )
@@ -63,13 +64,19 @@ private fun ConversationMediaCameraPreviewRoute(
     modifier: Modifier = Modifier,
     cameraController: ConversationCameraController,
     cameraPermissionGranted: Boolean,
+    captureMode: ConversationCaptureMode,
     contentPadding: PaddingValues,
     onRequestCameraPermission: () -> Unit,
 ) {
     val surfaceRequest = cameraController.surfaceRequest.collectAsStateWithLifecycle()
+    val aspectRatio = when (captureMode) {
+        ConversationCaptureMode.Photo -> cameraController.photoAspectRatio
+        ConversationCaptureMode.Video -> cameraController.videoAspectRatio
+    }.collectAsStateWithLifecycle()
 
     ConversationMediaCameraPreviewSurface(
         modifier = modifier,
+        aspectRatio = aspectRatio.value,
         cameraPermissionGranted = cameraPermissionGranted,
         contentPadding = contentPadding,
         surfaceRequest = surfaceRequest.value,
