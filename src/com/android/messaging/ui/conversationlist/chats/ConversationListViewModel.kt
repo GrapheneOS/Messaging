@@ -348,19 +348,19 @@ internal class ConversationListViewModel @Inject constructor(
 
     private fun onConversationSwipedToToggleRead(conversationId: ConversationId) {
         val item = itemById(conversationId) ?: return
+        setRead(listOf(conversationId), isRead = !item.latestMessage.isRead)
+    }
 
-        val shouldMarkRead = !item.latestMessage.isRead
-        val conversationIds = listOf(conversationId)
-
+    private fun setRead(conversationIds: List<ConversationId>, isRead: Boolean) {
         optimisticSnapshotDelegate.markRead(
             conversationIds = conversationIds,
-            isRead = shouldMarkRead,
+            isRead = isRead,
         )
 
         viewModelScope.launch {
             actionsDelegate.setRead(
                 conversationIds = conversationIds,
-                isRead = shouldMarkRead,
+                isRead = isRead,
             )
         }
     }
@@ -371,11 +371,16 @@ internal class ConversationListViewModel @Inject constructor(
 
     private fun delete(conversationIds: List<ConversationId>) {
         val items = conversationIds.mapNotNull(::itemById)
+
         if (items.isEmpty()) {
             return
         }
 
         actionsDelegate.delete(items)
+        conversationIds.forEach { conversationId ->
+            _navigationEvents.trySend(NavEvent.CloseConversation(conversationId))
+        }
+
         selectionDelegate.clear()
     }
 
@@ -498,18 +503,7 @@ internal class ConversationListViewModel @Inject constructor(
 
     private fun onMarkRead(isRead: Boolean) {
         withSelectedIds { conversationIds ->
-            optimisticSnapshotDelegate.markRead(
-                conversationIds = conversationIds,
-                isRead = isRead,
-            )
-
-            viewModelScope.launch {
-                actionsDelegate.setRead(
-                    conversationIds = conversationIds,
-                    isRead = isRead,
-                )
-            }
-
+            setRead(conversationIds, isRead)
             selectionDelegate.clear()
         }
     }
