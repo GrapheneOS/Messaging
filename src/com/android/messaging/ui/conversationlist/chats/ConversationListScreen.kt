@@ -254,7 +254,7 @@ private fun ConversationListEffects(
                 }
 
                 Effect.ScrollToTop -> {
-                    listState.scrollToItem(index = 0)
+                    listState.animateScrollToItem(index = 0)
                 }
 
                 else -> currentEffectHandler.handle(effect)
