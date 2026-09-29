@@ -52,6 +52,7 @@ import com.android.messaging.R
 import com.android.messaging.ui.common.components.participant.ParticipantAvatar
 import com.android.messaging.ui.common.components.participant.participantAvatarLabel
 import com.android.messaging.ui.common.components.participant.participantColorSeed
+import com.android.messaging.ui.common.components.rememberIsLoadingIndicatorVisible
 import com.android.messaging.ui.common.text.asLtrText
 import com.android.messaging.ui.conversation.CONVERSATION_ADD_CONTACT_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_ADD_PEOPLE_BUTTON_TEST_TAG
@@ -126,6 +127,7 @@ internal fun ConversationTopAppBar(
         title = {
             ConversationTopAppBarTitle(
                 isClickable = isTitleClickable,
+                isLoading = metadata is ConversationMetadataUiState.Loading,
                 onClick = onTitleClick,
                 presentation = presentation,
             )
@@ -195,9 +197,16 @@ private fun rememberConversationTopAppBarPresentation(
 @Composable
 private fun ConversationTopAppBarTitle(
     isClickable: Boolean,
+    isLoading: Boolean,
     onClick: () -> Unit,
     presentation: ConversationTopAppBarPresentation,
 ) {
+    val isLoadingTitleVisible = rememberIsLoadingIndicatorVisible(isLoading = isLoading)
+
+    if (isLoading && !isLoadingTitleVisible) {
+        return
+    }
+
     Row(
         modifier = Modifier
             .heightIn(min = TopAppBarDefaults.TopAppBarExpandedHeight)

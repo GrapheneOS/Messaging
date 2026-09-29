@@ -10,6 +10,7 @@ import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
+import com.android.messaging.ui.common.components.LOADING_INDICATOR_DELAY
 import com.android.messaging.ui.conversation.CONVERSATION_ADD_CONTACT_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_ADD_PEOPLE_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_ARCHIVE_BUTTON_TEST_TAG
@@ -57,6 +58,10 @@ class ConversationTopAppBarTest {
             onTitleClick = { clicks += 1 },
         )
 
+        composeTestRule.mainClock.advanceTimeBy(
+            milliseconds = LOADING_INDICATOR_DELAY.inWholeMilliseconds,
+        )
+
         composeTestRule
             .onNodeWithTag(testTag = CONVERSATION_TOP_APP_BAR_TITLE_TEST_TAG)
             .performClick()
@@ -80,8 +85,16 @@ class ConversationTopAppBarTest {
     }
 
     @Test
-    fun loadingMetadata_showsFallbackTitleAndLoadingSubtitle() {
+    fun loadingMetadata_showsFallbackTitleAndLoadingSubtitleAfterDelay() {
         setContent(metadata = ConversationMetadataUiState.Loading)
+
+        composeTestRule
+            .onNodeWithText(text = targetContext.getString(R.string.loading_messages))
+            .assertDoesNotExist()
+
+        composeTestRule.mainClock.advanceTimeBy(
+            milliseconds = LOADING_INDICATOR_DELAY.inWholeMilliseconds,
+        )
 
         composeTestRule
             .onNodeWithText(text = targetContext.getString(R.string.app_name))
