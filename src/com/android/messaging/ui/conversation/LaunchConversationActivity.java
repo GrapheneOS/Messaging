@@ -71,12 +71,13 @@ public class LaunchConversationActivity extends Activity implements
                 recipients = commaSeparatedRecipients.split(",");
             }
             final boolean haveAddress = !TextUtils.isEmpty(intent.getStringExtra(ADDRESS));
-            final boolean haveEmail = !TextUtils.isEmpty(intent.getStringExtra(Intent.EXTRA_EMAIL));
+            final String[] emails = getEmailRecipients(intent);
+            final boolean haveEmail = emails != null;
             if (recipients == null && (haveAddress || haveEmail)) {
                 if (haveAddress) {
                     recipients = new String[] { intent.getStringExtra(ADDRESS) };
                 } else {
-                    recipients = new String[] { intent.getStringExtra(Intent.EXTRA_EMAIL) };
+                    recipients = emails;
                 }
             }
             if (recipients != null) {
@@ -109,10 +110,32 @@ public class LaunchConversationActivity extends Activity implements
         finish();
     }
 
-    private String[] trimInvalidRecipients(String[] recipients) {
+    /**
+     * {@link Intent#EXTRA_EMAIL} is documented as a String[], but senders also put a single
+     * String there, which is what this activity used to read. Accept both so neither kind of
+     * sender regresses. Returns null when no usable address is present.
+     */
+    static String[] getEmailRecipients(final Intent intent) {
+        final String[] emails = intent.getStringArrayExtra(Intent.EXTRA_EMAIL);
+        if (emails != null) {
+            final List<String> nonEmpty = new ArrayList<>(emails.length);
+            for (final String email : emails) {
+                if (!TextUtils.isEmpty(email)) {
+                    nonEmpty.add(email);
+                }
+            }
+            return nonEmpty.isEmpty() ? null : nonEmpty.toArray(new String[0]);
+        }
+        final String email = intent.getStringExtra(Intent.EXTRA_EMAIL);
+        return TextUtils.isEmpty(email) ? null : new String[] { email };
+    }
+
+    static String[] trimInvalidRecipients(String[] recipients) {
         List<String> trimmedRecipients = new ArrayList<>();
         for (String recipient : recipients) {
-            if (recipient.length() < MAX_RECIPIENT_LENGTH) {
+            // The recipients come from another app's intent extras, so entries may be null or
+            // empty; TextUtils.isEmpty() is null-safe where recipient.length() is not.
+            if (!TextUtils.isEmpty(recipient) && recipient.length() < MAX_RECIPIENT_LENGTH) {
                 trimmedRecipients.add(recipient);
             }
         }
