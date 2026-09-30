@@ -58,7 +58,7 @@ internal class ConversationSimSelectionRepositoryImpl @Inject constructor() :
         return "$PREF_KEY_PREFIX${conversationId.value}"
     }
 
-    private companion object {
+    companion object {
         const val PREF_KEY_PREFIX = "conversation_sim_selection_"
     }
 }

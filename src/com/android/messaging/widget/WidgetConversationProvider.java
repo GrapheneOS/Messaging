@@ -114,6 +114,13 @@ public class WidgetConversationProvider extends BaseWidgetProvider {
             // conversation data. We'll do excute this again off of the UI thread.
             final ConversationListItemData convData = isMainThread ?
                     null : getConversationData(context, conversationId);
+            if (!TextUtils.equals(conversationId,
+                    WidgetConversationPrefs.getConversationIdPref(appWidgetId))) {
+                // Reading the conversation can create the database, which resets every widget.
+                // Rebuild from what the widget shows now rather than put back what it showed.
+                rebuildWidget(context, appWidgetId);
+                return;
+            }
 
             // Launch an intent to avoid ANRs
             final Intent intent = new Intent(context, WidgetConversationService.class);

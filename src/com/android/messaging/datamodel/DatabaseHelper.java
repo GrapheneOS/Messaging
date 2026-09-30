@@ -36,6 +36,7 @@ import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * TODO: Open Issues:
@@ -67,6 +68,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String PARTS_TABLE = "parts";
     public static final String PARTICIPANTS_TABLE = "participants";
     public static final String CONVERSATION_PARTICIPANTS_TABLE = "conversation_participants";
+
+    @VisibleForTesting
+    static final long CONVERSATION_ID_SEED_MIN = 1L << 40;
+    private static final long CONVERSATION_ID_SEED_MAX = 1L << 52;
 
     // Views
     static final String DRAFT_PARTS_VIEW = "draft_parts_view";
@@ -835,6 +840,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             db.execSQL(sql);
         }
 
+        seedConversationIds(db);
+
         for (final String sql : CREATE_INDEX_SQLS) {
             db.execSQL(sql);
         }
@@ -852,6 +859,25 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(getCreateSelfParticipantSql(ParticipantData.DEFAULT_SELF_SUB_ID));
 
         DataModel.get().onCreateTables(db);
+    }
+
+    /**
+     * conversations._id names each conversation's notification channel, shortcut, widget and
+     * per-conversation prefs, and all of those outlive the database: a restore brings them back
+     * without it, and the OS restores notification channels on its own. A table counting from 1
+     * again would hand every new conversation the settings of whichever old one had its number,
+     * and deleting the old channels doesn't help, because recreating a deleted channel id brings
+     * its settings back. So each database starts its ids at a random point, far past any id
+     * counted from 1 and far from any other database's. Random rather than the clock, which can
+     * be wrong on first boot.
+     */
+    private static void seedConversationIds(final SQLiteDatabase db) {
+        final long seed = ThreadLocalRandom
+                .current()
+                .nextLong(CONVERSATION_ID_SEED_MIN, CONVERSATION_ID_SEED_MAX);
+
+        db.execSQL("INSERT INTO sqlite_sequence (name, seq) VALUES (?, ?)",
+                new Object[] {CONVERSATIONS_TABLE, seed});
     }
 
     @Override
