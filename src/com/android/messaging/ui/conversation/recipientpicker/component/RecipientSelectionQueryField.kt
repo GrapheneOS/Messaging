@@ -87,7 +87,7 @@ internal fun RecipientSelectionQueryField(
             },
         state = state,
         enabled = uiState.enabled,
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
         onKeyboardAction = onKeyboardAction,
         lineLimits = TextFieldLineLimits.SingleLine,
         textStyle = recipientSelectionQueryTextStyle(uiState = uiState),
