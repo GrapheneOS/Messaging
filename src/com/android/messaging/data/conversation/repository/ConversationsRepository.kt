@@ -18,6 +18,7 @@ import com.android.messaging.data.conversation.store.ConversationArchiveStore
 import com.android.messaging.data.conversation.store.ConversationPinStore
 import com.android.messaging.data.conversation.store.ConversationReadStore
 import com.android.messaging.data.conversation.store.ConversationSelfIdStore
+import com.android.messaging.data.conversationsettings.repository.ConversationNotificationRepository
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
 import com.android.messaging.datamodel.MessagingContentProvider
@@ -110,6 +111,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
     private val conversationReadStore: ConversationReadStore,
     private val conversationPinStore: ConversationPinStore,
     private val conversationArchiveStore: ConversationArchiveStore,
+    private val notificationRepository: ConversationNotificationRepository,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
     @param:MessagingDbDispatcher
@@ -121,12 +123,15 @@ internal class ConversationsRepositoryImpl @Inject constructor(
     ): Flow<ConversationMetadata?> {
         val uri = MessagingContentProvider.buildConversationMetadataUri(conversationId.value)
 
-        return observeUri(uri = uri)
-            .flowOn(defaultDispatcher)
-            .map {
-                queryConversationMetadata(uri = uri)
-            }
-            .flowOn(messagingDbDispatcher)
+        return combine(
+            observeUri(uri = uri).flowOn(defaultDispatcher),
+            notificationRepository.observeIsSnoozed(conversationId = conversationId),
+        ) { _, isSnoozed ->
+            queryConversationMetadata(
+                uri = uri,
+                isSnoozed = isSnoozed,
+            )
+        }.flowOn(messagingDbDispatcher)
     }
 
     override suspend fun getConversationMetadataSnapshot(
@@ -138,6 +143,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
         return withContext(context = messagingDbDispatcher) {
             queryConversationMetadata(
                 uri = uri,
+                isSnoozed = notificationRepository.isSnoozed(conversationId = conversationId),
             )
         }
     }
@@ -178,9 +184,14 @@ internal class ConversationsRepositoryImpl @Inject constructor(
             val metadata = when {
                 conversationId.isBlank() -> null
                 else -> {
-                    MessagingContentProvider
-                        .buildConversationMetadataUri(conversationId.value)
-                        .let(::queryConversationMetadata)
+                    queryConversationMetadata(
+                        uri = MessagingContentProvider.buildConversationMetadataUri(
+                            conversationId.value,
+                        ),
+                        isSnoozed = notificationRepository.isSnoozed(
+                            conversationId = conversationId,
+                        ),
+                    )
                 }
             }
 
@@ -358,7 +369,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun queryConversationMetadata(uri: Uri): ConversationMetadata? {
+    private fun queryConversationMetadata(uri: Uri, isSnoozed: Boolean): ConversationMetadata? {
         return contentResolver
             .query(
                 uri,
@@ -410,6 +421,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
                         ?.takeIf { it.isNotBlank() },
                     isArchived = cursor.getInt(ConversationColumns.ARCHIVE_STATUS) == 1,
                     isBlocked = otherParticipant?.isBlocked == true,
+                    isSnoozed = isSnoozed,
                     composerAvailability = ConversationComposerAvailability.Editable,
                     sortTimestamp = cursor.getLong(ConversationColumns.SORT_TIMESTAMP),
                 )

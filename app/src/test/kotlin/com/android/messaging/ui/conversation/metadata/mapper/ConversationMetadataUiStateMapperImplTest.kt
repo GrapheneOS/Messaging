@@ -18,7 +18,7 @@ class ConversationMetadataUiStateMapperImplTest {
     private val mapper = ConversationMetadataUiStateMapperImpl()
 
     @Test
-    fun map_oneOnOneConversation_usesSingleAvatarAndDisplayDestination() {
+    fun map_snoozedOneOnOneConversation_usesSingleAvatarDisplayDestinationAndSnooze() {
         val result = mapper.map(
             metadata = ConversationMetadata(
                 conversationName = "Carol",
@@ -32,6 +32,7 @@ class ConversationMetadataUiStateMapperImplTest {
                 otherParticipantPhotoUri = "content://contacts/people/1/photo",
                 isArchived = false,
                 isBlocked = false,
+                isSnoozed = true,
                 composerAvailability = ConversationComposerAvailability.Editable,
                 sortTimestamp = 0L,
             ),
@@ -52,6 +53,7 @@ class ConversationMetadataUiStateMapperImplTest {
                 isArchived = false,
                 isBlocked = false,
                 composerAvailability = ConversationComposerAvailability.Editable,
+                isSnoozed = true,
             )
         )
     }
@@ -71,6 +73,7 @@ class ConversationMetadataUiStateMapperImplTest {
                 otherParticipantPhotoUri = "content://contacts/people/1/photo",
                 isArchived = true,
                 isBlocked = false,
+                isSnoozed = false,
                 composerAvailability = ConversationComposerAvailability.Editable,
                 sortTimestamp = 0L,
             ),
