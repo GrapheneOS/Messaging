@@ -62,6 +62,7 @@ internal interface ConversationScreenModel :
     ConversationMessageSelectionActions {
     val effects: Flow<ConversationScreenEffect>
     val navigationEvents: Flow<NavEvent>
+    val archivedConversationIds: Flow<ConversationId>
     val mediaPickerOverlayUiState: StateFlow<ConversationMediaPickerOverlayUiState>
     val scaffoldUiState: StateFlow<ConversationScreenScaffoldUiState>
 
@@ -116,6 +117,7 @@ internal interface ConversationScreenModel :
 
     fun onArchiveConversationClick()
     fun onUnarchiveConversationClick()
+    fun onUndoArchiveClick(conversationId: ConversationId)
     fun onUnblockClick()
     fun onAddContactClick()
     fun onDeleteConversationClick()
@@ -168,6 +170,7 @@ internal class ConversationViewModel @Inject constructor(
 
     override val effects = _effects.asSharedFlow()
     override val navigationEvents = _navigationEvents.asSharedFlow()
+    override val archivedConversationIds = conversationMetadataDelegate.archivedConversationIds
 
     init {
         initializeDelegates()
@@ -695,6 +698,10 @@ internal class ConversationViewModel @Inject constructor(
 
     override fun onUnarchiveConversationClick() {
         conversationMetadataDelegate.onUnarchiveConversationClick()
+    }
+
+    override fun onUndoArchiveClick(conversationId: ConversationId) {
+        conversationMetadataDelegate.onUndoArchiveClick(conversationId = conversationId)
     }
 
     override fun onUnblockClick() {

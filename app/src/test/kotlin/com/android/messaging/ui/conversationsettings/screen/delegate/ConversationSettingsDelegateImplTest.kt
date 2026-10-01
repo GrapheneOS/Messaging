@@ -1,11 +1,13 @@
 package com.android.messaging.ui.conversationsettings.screen.delegate
 
 import androidx.lifecycle.SavedStateHandle
+import app.cash.turbine.test
 import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepository
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
 import com.android.messaging.data.conversation.repository.ConversationsRepository
+import com.android.messaging.data.conversation.store.ConversationArchiveEventsImpl
 import com.android.messaging.data.conversationsettings.model.ConversationSettingsData
 import com.android.messaging.data.conversationsettings.repository.ConversationNotificationRepository
 import com.android.messaging.data.conversationsettings.repository.ConversationSettingsRepository
@@ -34,6 +36,8 @@ internal class ConversationSettingsDelegateImplTest {
     private val subscriptionsRepository = mockk<SubscriptionsRepository>()
     private val setConversationSelfParticipantId =
         mockk<SetConversationSelfParticipantId>(relaxed = true)
+    private val conversationsRepository = mockk<ConversationsRepository>(relaxed = true)
+    private val conversationArchiveEvents = ConversationArchiveEventsImpl()
 
     @Test
     fun bind_conversationBoundToDefaultSelf_showsDefaultSmsSubscription() {
@@ -96,6 +100,42 @@ internal class ConversationSettingsDelegateImplTest {
         }
     }
 
+    @Test
+    fun setArchived_archiving_notifiesConversationListAndArchives() {
+        runTest {
+            val delegate = createDelegate(applicationScope = backgroundScope)
+
+            conversationArchiveEvents.archivedConversationIds.test {
+                delegate.setArchived(archived = true)
+
+                assertEquals(CONVERSATION_ID, awaitItem())
+                cancelAndIgnoreRemainingEvents()
+            }
+            runCurrent()
+
+            coVerify(exactly = 1) { conversationsRepository.archiveConversation(CONVERSATION_ID) }
+        }
+    }
+
+    @Test
+    fun setArchived_unarchiving_doesNotNotifyConversationList() {
+        runTest {
+            val delegate = createDelegate(applicationScope = backgroundScope)
+
+            conversationArchiveEvents.archivedConversationIds.test {
+                delegate.setArchived(archived = false)
+                runCurrent()
+
+                expectNoEvents()
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            coVerify(exactly = 1) {
+                conversationsRepository.unarchiveConversation(CONVERSATION_ID)
+            }
+        }
+    }
+
     private fun stubConversationSelfParticipantId(selfParticipantId: ParticipantId) {
         every { settingsRepository.getConversationSettings(CONVERSATION_ID) } returns flowOf(
             ConversationSettingsData(
@@ -121,8 +161,9 @@ internal class ConversationSettingsDelegateImplTest {
                 canShowOrAddContact = { _, _, _, _ -> false },
                 isContactSavedUseCase = { _, _ -> false },
             ),
-            conversationsRepository = mockk<ConversationsRepository>(relaxed = true),
+            conversationsRepository = conversationsRepository,
             blockedParticipantsRepository = mockk<BlockedParticipantsRepository>(relaxed = true),
+            conversationArchiveEvents = conversationArchiveEvents,
             setConversationSelfParticipantId = setConversationSelfParticipantId,
             applicationScope = applicationScope,
             savedStateHandle = SavedStateHandle(

@@ -12,6 +12,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.android.common.test.helpers.targetContext
 import com.android.messaging.FactoryTestAccess
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.store.ConversationArchiveEventsImpl
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
 import com.android.messaging.testutil.TestLifecycleOwner
 import com.android.messaging.testutil.installTestFactory
@@ -186,7 +187,9 @@ internal class ConversationListNewestConversationVisibilityTest {
             optimisticSnapshotDelegate = optimisticSnapshotDelegate,
             resolveContactAction = mockk(relaxed = true),
             debugFeaturesProvider = mockk(relaxed = true),
+            conversationArchiveEvents = ConversationArchiveEventsImpl(),
             defaultDispatcher = Dispatchers.Main,
+            mainDispatcher = Dispatchers.Main,
         )
     }
 

@@ -3,12 +3,15 @@ package com.android.messaging.ui.host
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.scene.SceneStrategy
 import com.android.messaging.domain.onboarding.usecase.SelfPhoneNumberPermissionPrompt
 import com.android.messaging.ui.conversation.navigation.ProvideConversationEntryNavState
+import com.android.messaging.ui.conversationlist.navigation.ConversationListNavKey
 import com.android.messaging.ui.navigation.AppNavDisplay
 import com.android.messaging.ui.navigation.LocalNavigator
 import com.android.messaging.ui.navigation.NavigationReducer
@@ -39,6 +42,10 @@ internal fun AppNavGraph(
         onFinish = onFinish,
     )
     val entryProvider = remember { appNavEntryProvider() }
+    // A shortcut or bubble host has no inbox until forwarding resets the stack to one.
+    val hasConversationList by remember(backStack) {
+        derivedStateOf { ConversationListNavKey in backStack }
+    }
 
     AppResumeEffect(
         backStack = backStack,
@@ -59,7 +66,10 @@ internal fun AppNavGraph(
     )
 
     CompositionLocalProvider(LocalNavigator provides navigator) {
-        ProvideConversationEntryNavState(isLaunchedFromBubble = isLaunchedFromBubble) {
+        ProvideConversationEntryNavState(
+            isLaunchedFromBubble = isLaunchedFromBubble,
+            hasConversationList = hasConversationList,
+        ) {
             AppNavDisplay(
                 backStack = backStack,
                 entryProvider = entryProvider,

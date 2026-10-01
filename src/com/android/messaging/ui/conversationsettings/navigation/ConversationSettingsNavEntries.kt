@@ -7,6 +7,7 @@ import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.android.messaging.R
 import com.android.messaging.ui.contact.navigation.navigateToAddContact
+import com.android.messaging.ui.conversation.navigation.LocalConversationEntryNavState
 import com.android.messaging.ui.conversation.navigation.rememberConversationNavigator
 import com.android.messaging.ui.conversationsettings.screen.ConversationSettingsScreen
 import com.android.messaging.ui.conversationsettings.screen.ConversationSettingsViewModel
@@ -25,6 +26,7 @@ internal fun EntryProviderScope<NavKey>.conversationSettingsEntries() {
 private fun conversationSettingsRouteContent(): @Composable (ConversationSettingsNavKey) -> Unit {
     return { navKey ->
         val navigator = LocalNavigator.current
+        val entryNavState = LocalConversationEntryNavState.current
         val conversationNavigator = rememberConversationNavigator()
         val effectHandler = rememberConversationSettingsEffectHandler(
             onNavigateToAddContact = { request ->
@@ -41,7 +43,14 @@ private fun conversationSettingsRouteContent(): @Composable (ConversationSetting
                 effectHandler = effectHandler,
                 onNavigateBack = navigator::back,
                 onCloseAfterArchive = {
-                    navigator.closeConversation(conversationId = navKey.conversationId)
+                    when {
+                        entryNavState.hasConversationList -> {
+                            navigator.closeConversation(conversationId = navKey.conversationId)
+                        }
+
+                        // The conversation stays open and offers Undo.
+                        else -> navigator.back()
+                    }
                 },
                 onNavigateToConversation = { conversationId ->
                     conversationNavigator.navigateToConversation(conversationId = conversationId)

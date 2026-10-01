@@ -137,7 +137,9 @@ internal abstract class BaseConversationScreenEffectsActionTest {
                                     onNavigateToMessageDetails(event.messageId)
                                 }
 
-                                is ConversationScreenNavEvent.ForwardMessage -> Unit
+                                ConversationScreenNavEvent.CloseAfterArchive,
+                                is ConversationScreenNavEvent.ForwardMessage,
+                                -> Unit
                             }
                         }
                         ConversationScreenEffects(

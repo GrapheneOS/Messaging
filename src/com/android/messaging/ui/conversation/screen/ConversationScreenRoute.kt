@@ -18,11 +18,14 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.geometry.Rect as ComposeRect
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalResources
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.ui.common.components.snackbar.showActionSnackbar
 import com.android.messaging.ui.contact.model.AddContactRequest
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingPhase
 import com.android.messaging.ui.conversation.mediapicker.ConversationMediaPickerOverlay
@@ -92,6 +95,7 @@ internal fun rememberAudioRecordingStartRequest(
 internal fun ConversationScreenRouteEffects(
     conversationId: ConversationId?,
     cancelIncomingNotification: Boolean,
+    offersArchiveUndo: Boolean,
     pendingLaunchPayload: ConversationPendingLaunchPayload,
     scaffoldUiState: ConversationScreenScaffoldUiState,
     snackbarHostState: SnackbarHostState,
@@ -135,6 +139,13 @@ internal fun ConversationScreenRouteEffects(
         when (event) {
             ConversationScreenNavEvent.CloseConversation -> onCloseConversation()
 
+            ConversationScreenNavEvent.CloseAfterArchive -> {
+                when {
+                    offersArchiveUndo -> Unit
+                    else -> onCloseConversation()
+                }
+            }
+
             is ConversationScreenNavEvent.NavigateToMessageDetails -> {
                 onNavigateToMessageDetails(event.messageId)
             }
@@ -145,6 +156,13 @@ internal fun ConversationScreenRouteEffects(
         }
     }
 
+    if (offersArchiveUndo) {
+        ConversationArchiveUndoEffect(
+            screenModel = screenModel,
+            snackbarHostState = snackbarHostState,
+        )
+    }
+
     ConversationScreenEffects(
         screenModel = screenModel,
         snackbarHostState = snackbarHostState,
@@ -153,6 +171,29 @@ internal fun ConversationScreenRouteEffects(
         onNavigateToPhotoViewer = onNavigateToPhotoViewer,
         onNavigateToAddContact = onNavigateToAddContact,
     )
+}
+
+// Without an inbox to return to, archiving keeps the conversation open and offers Undo here.
+@Composable
+private fun ConversationArchiveUndoEffect(
+    screenModel: ConversationScreenModel,
+    snackbarHostState: SnackbarHostState,
+) {
+    val resources = LocalResources.current
+
+    CollectEvents(events = screenModel.archivedConversationIds) { conversationId ->
+        // An Indefinite notice (new message) would otherwise hold Undo back.
+        snackbarHostState.currentSnackbarData?.dismiss()
+
+        val undoClicked = snackbarHostState.showActionSnackbar(
+            message = resources.getString(R.string.archived_toast_message, 1),
+            actionLabel = resources.getString(R.string.snack_bar_undo),
+        )
+
+        if (undoClicked) {
+            screenModel.onUndoArchiveClick(conversationId = conversationId)
+        }
+    }
 }
 
 @Composable

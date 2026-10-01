@@ -7,6 +7,7 @@ import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
 import com.android.messaging.data.conversation.repository.ConversationsRepository
+import com.android.messaging.data.conversation.store.ConversationArchiveEventsImpl
 import com.android.messaging.data.conversationsettings.repository.ConversationNotificationRepository
 import com.android.messaging.domain.conversation.usecase.action.ConversationActionRequirementsResult
 import com.android.messaging.testutil.MainDispatcherRule
@@ -36,16 +37,21 @@ class ConversationMetadataDelegateImplTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     @Test
-    fun onArchiveConversationClick_archivesViaRepositoryAndEmitsCloseConversation() {
+    fun onArchiveConversationClick_archivesViaRepositoryAndEmitsCloseAfterArchive() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val harness = createHarness(conversationId = ConversationId("conversation-42"))
 
             try {
-                harness.delegate.navigationEvents.test {
-                    harness.delegate.onArchiveConversationClick()
-                    advanceUntilIdle()
+                harness.delegate.archivedConversationIds.test {
+                    harness.delegate.navigationEvents.test {
+                        harness.delegate.onArchiveConversationClick()
+                        advanceUntilIdle()
 
-                    assertEquals(ConversationScreenNavEvent.CloseConversation, awaitItem())
+                        assertEquals(ConversationScreenNavEvent.CloseAfterArchive, awaitItem())
+                        cancelAndIgnoreRemainingEvents()
+                    }
+
+                    assertEquals(ConversationId("conversation-42"), awaitItem())
                     cancelAndIgnoreRemainingEvents()
                 }
 
@@ -76,6 +82,27 @@ class ConversationMetadataDelegateImplTest {
                 coVerify(exactly = 1) {
                     harness.conversationsRepository
                         .unarchiveConversation(conversationId = ConversationId("conversation-42"))
+                }
+            } finally {
+                harness.cancel()
+            }
+        }
+    }
+
+    @Test
+    fun onUndoArchiveClick_unarchivesTheGivenConversation() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val harness = createHarness(conversationId = ConversationId("conversation-42"))
+
+            try {
+                harness.delegate.onUndoArchiveClick(
+                    conversationId = ConversationId("conversation-7"),
+                )
+                advanceUntilIdle()
+
+                coVerify(exactly = 1) {
+                    harness.conversationsRepository
+                        .unarchiveConversation(conversationId = ConversationId("conversation-7"))
                 }
             } finally {
                 harness.cancel()
@@ -352,6 +379,7 @@ class ConversationMetadataDelegateImplTest {
             conversationsRepository = conversationsRepository,
             conversationMetadataUiStateMapper = mapper,
             blockedParticipantsRepository = mockk<BlockedParticipantsRepository>(relaxed = true),
+            conversationArchiveEvents = ConversationArchiveEventsImpl(),
             notificationRepository = notificationRepository,
             defaultDispatcher = dispatcher,
         )

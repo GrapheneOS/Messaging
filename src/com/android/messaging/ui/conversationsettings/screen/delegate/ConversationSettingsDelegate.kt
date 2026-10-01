@@ -5,6 +5,7 @@ import com.android.messaging.data.blockedparticipants.repository.BlockedParticip
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.repository.ConversationsRepository
+import com.android.messaging.data.conversation.store.ConversationArchiveEvents
 import com.android.messaging.data.conversationsettings.model.SnoozeOption
 import com.android.messaging.data.conversationsettings.repository.ConversationNotificationRepository
 import com.android.messaging.data.conversationsettings.repository.ConversationSettingsRepository
@@ -47,6 +48,7 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
     private val mapper: ConversationSettingsUiStateMapper,
     private val conversationsRepository: ConversationsRepository,
     private val blockedParticipantsRepository: BlockedParticipantsRepository,
+    private val conversationArchiveEvents: ConversationArchiveEvents,
     private val setConversationSelfParticipantId: SetConversationSelfParticipantId,
     @param:ApplicationCoroutineScope private val applicationScope: CoroutineScope,
     savedStateHandle: SavedStateHandle,
@@ -121,7 +123,11 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
 
         applicationScope.launch {
             when {
-                archived -> conversationsRepository.archiveConversation(conversationId)
+                archived -> {
+                    conversationArchiveEvents.notifyArchived(conversationId = conversationId)
+                    conversationsRepository.archiveConversation(conversationId)
+                }
+
                 else -> conversationsRepository.unarchiveConversation(conversationId)
             }
         }
