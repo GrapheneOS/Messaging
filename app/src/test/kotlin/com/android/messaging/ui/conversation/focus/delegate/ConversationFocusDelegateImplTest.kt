@@ -12,13 +12,17 @@ import io.mockk.mockkStatic
 import io.mockk.runs
 import io.mockk.unmockkStatic
 import io.mockk.verify
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -33,10 +37,17 @@ class ConversationFocusDelegateImplTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var dataModel: DataModel
+    private var focusedConversationId: String? = null
 
     @Before
     fun setUp() {
         dataModel = mockk(relaxed = true)
+        every { dataModel.setFocusedConversation(any()) } answers {
+            focusedConversationId = firstArg()
+        }
+        every { dataModel.isFocusedConversation(any()) } answers {
+            focusedConversationId != null && focusedConversationId == firstArg<String?>()
+        }
         mockkStatic(DataModel::class)
         every { DataModel.get() } returns dataModel
         mockkStatic(BugleNotifications::class)
@@ -138,26 +149,57 @@ class ConversationFocusDelegateImplTest {
         runTest(
             context = mainDispatcherRule.testDispatcher,
         ) {
-            val focusedConversationIds = mutableListOf<String?>()
-            every {
-                dataModel.setFocusedConversation(any<String>())
-            } answers {
-                focusedConversationIds.add(firstArg())
-            }
-            every {
-                dataModel.setFocusedConversation(null)
-            } answers {
-                focusedConversationIds.add(null)
-            }
             val conversationIdFlow = MutableStateFlow<ConversationId?>(value = CONVERSATION_ID)
             val delegate = createBoundDelegate(conversationIdFlow = conversationIdFlow)
 
             delegate.setScreenFocused(focused = true)
             runCurrent()
+            assertEquals(CONVERSATION_ID.value, focusedConversationId)
             delegate.setScreenFocused(focused = false)
             runCurrent()
 
-            assertEquals(listOf(null, CONVERSATION_ID.value, null), focusedConversationIds)
+            assertNull(focusedConversationId)
+        }
+    }
+
+    @Test
+    fun setScreenFocused_unfocusedAfterScopeIsCancelled_clearsFocusedConversation() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher,
+        ) {
+            val scope = CoroutineScope(context = Job())
+            val conversationIdFlow = MutableStateFlow<ConversationId?>(value = CONVERSATION_ID)
+            val delegate = createBoundDelegate(
+                conversationIdFlow = conversationIdFlow,
+                scope = scope,
+            )
+
+            delegate.setScreenFocused(focused = true)
+            runCurrent()
+            // ViewModel.clear() cancels viewModelScope before onCleared() unfocuses.
+            scope.cancel()
+            delegate.setScreenFocused(focused = false)
+            runCurrent()
+
+            assertNull(focusedConversationId)
+        }
+    }
+
+    @Test
+    fun setScreenFocused_unfocusedAfterAnotherConversationTookFocus_keepsThatFocus() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher,
+        ) {
+            val conversationIdFlow = MutableStateFlow<ConversationId?>(value = CONVERSATION_ID)
+            val delegate = createBoundDelegate(conversationIdFlow = conversationIdFlow)
+
+            delegate.setScreenFocused(focused = true)
+            runCurrent()
+            dataModel.setFocusedConversation("conversation-2")
+            delegate.setScreenFocused(focused = false)
+            runCurrent()
+
+            assertEquals("conversation-2", focusedConversationId)
         }
     }
 
@@ -231,11 +273,12 @@ class ConversationFocusDelegateImplTest {
 
     private fun TestScope.createBoundDelegate(
         conversationIdFlow: MutableStateFlow<ConversationId?>,
+        scope: CoroutineScope = backgroundScope,
     ): ConversationFocusDelegateImpl {
         val delegate = ConversationFocusDelegateImpl(
-            defaultDispatcher = mainDispatcherRule.testDispatcher,
+            mainDispatcher = mainDispatcherRule.testDispatcher,
         )
-        delegate.bind(scope = backgroundScope, conversationIdFlow = conversationIdFlow)
+        delegate.bind(scope = scope, conversationIdFlow = conversationIdFlow)
         runCurrent()
         return delegate
     }

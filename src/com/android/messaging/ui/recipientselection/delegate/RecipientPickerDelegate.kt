@@ -204,6 +204,7 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
             currentState.copy(
                 canLoadMore = false,
                 items = visibleItems,
+                itemsQuery = query,
                 hasContactsPermission = false,
                 isLoading = false,
                 isLoadingMore = false,
@@ -313,6 +314,7 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
                     contacts = result.page.contacts.map(contactUiModelMapper::map),
                     excludedDestinations = excludedDestinationsFlow.value,
                 ),
+                itemsQuery = result.query,
                 canLoadMore = result.page.nextOffset != null,
                 hasContactsPermission = true,
                 isLoading = false,

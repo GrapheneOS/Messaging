@@ -46,6 +46,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
@@ -181,7 +182,7 @@ private fun SelectedRecipientChipContent(
             modifier = Modifier
                 .widthIn(
                     // Backstop when ancestor measurement passes maxWidth = Infinity
-                    max = 1000.dp
+                    max = 1000.dp,
                 )
                 .defaultMinSize(minHeight = InputChipDefaults.Height)
                 .padding(
@@ -202,7 +203,9 @@ private fun SelectedRecipientChipContent(
                     ),
                 ),
                 text = recipient.label,
-                style = MaterialTheme.typography.labelLarge,
+                style = MaterialTheme.typography.labelLarge.copy(
+                    textDirection = TextDirection.ContentOrLtr,
+                ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )

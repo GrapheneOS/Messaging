@@ -114,6 +114,7 @@ public class DataModelImpl extends DataModel {
         LogUtil.w(LogUtil.BUGLE_TAG, "Rebuilt databases: reseting related state");
         // Clear other things that implicitly reference the DB
         SyncManager.resetLastSyncTimestamps();
+        StaleConversationState.clearStaleConversationState(mContext);
     }
 
     @Override

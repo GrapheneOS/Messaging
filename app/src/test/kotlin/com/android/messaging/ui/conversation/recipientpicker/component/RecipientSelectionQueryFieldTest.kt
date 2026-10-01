@@ -9,6 +9,7 @@ import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.requestFocus
+import androidx.compose.ui.text.TextRange
 import com.android.messaging.ui.conversation.RECIPIENT_SELECTION_QUERY_FIELD_TEST_TAG
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionQueryFieldUiState
 import com.android.messaging.ui.core.AppTheme
@@ -112,6 +113,37 @@ class RecipientSelectionQueryFieldTest {
         composeTestRule.runOnIdle {
             val currentText = state.text.toString()
             assertEquals("a", currentText)
+        }
+    }
+
+    @Test
+    fun typingBeforeSentinelEmitsQueryWithoutSentinel() {
+        val uiState = queryFieldUiState(query = "", recipientCount = 1)
+        val state = TextFieldState(initialText = recipientSelectionQueryFieldEditableText(uiState))
+        val focusRequester = FocusRequester()
+
+        composeTestRule.setContent {
+            AppTheme {
+                RecipientSelectionQueryField(
+                    uiState = uiState,
+                    state = state,
+                    onQueryFocusChanged = {},
+                    onLastSelectedRecipientRemove = {},
+                    focusRequester = focusRequester,
+                )
+            }
+        }
+
+        composeTestRule.runOnIdle {
+            state.edit { selection = TextRange(index = 0) }
+        }
+
+        composeTestRule
+            .onNodeWithTag(testTag = RECIPIENT_SELECTION_QUERY_FIELD_TEST_TAG)
+            .performTextInput(text = "5")
+
+        composeTestRule.runOnIdle {
+            assertEquals("5", state.text.toString())
         }
     }
 

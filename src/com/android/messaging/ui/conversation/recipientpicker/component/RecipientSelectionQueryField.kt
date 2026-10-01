@@ -8,7 +8,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.KeyboardActionHandler
 import androidx.compose.foundation.text.input.TextFieldDecorator
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
@@ -19,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -29,7 +33,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -50,16 +56,17 @@ internal fun RecipientSelectionQueryField(
     focusRequester: FocusRequester,
     modifier: Modifier = Modifier,
     maxWidth: Dp? = null,
+    onKeyboardAction: KeyboardActionHandler? = null,
 ) {
+    val fieldWidth = recipientSelectionQueryFieldWidth(
+        uiState = uiState,
+        maxWidth = maxWidth,
+    )
+
     BasicTextField(
         modifier = modifier
             .testTag(tag = RECIPIENT_SELECTION_QUERY_FIELD_TEST_TAG)
-            .width(
-                width = recipientSelectionQueryFieldWidth(
-                    uiState = uiState,
-                    maxWidth = maxWidth,
-                ),
-            )
+            .width(width = fieldWidth)
             .focusRequester(focusRequester = focusRequester)
             .onFocusChanged { focusState ->
                 onQueryFocusChanged(focusState.isFocused)
@@ -80,6 +87,8 @@ internal fun RecipientSelectionQueryField(
             },
         state = state,
         enabled = uiState.enabled,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
+        onKeyboardAction = onKeyboardAction,
         lineLimits = TextFieldLineLimits.SingleLine,
         textStyle = recipientSelectionQueryTextStyle(uiState = uiState),
         cursorBrush = SolidColor(value = MaterialTheme.colorScheme.primary),
@@ -87,11 +96,16 @@ internal fun RecipientSelectionQueryField(
         outputTransformation = RecipientSelectionHiddenBackspaceTargetOutputTransformation,
         decorator = TextFieldDecorator { innerTextField ->
             Box(
-                modifier = Modifier.heightIn(min = 32.dp),
+                modifier = Modifier
+                    .heightIn(min = 32.dp)
+                    .clipToBounds(),
                 contentAlignment = Alignment.CenterStart,
             ) {
                 if (uiState.query.isEmpty()) {
                     Text(
+                        modifier = Modifier
+                            .wrapContentWidth(align = Alignment.Start, unbounded = true)
+                            .width(width = fieldWidth),
                         text = uiState.placeholderText,
                         style = recipientSelectionQueryPlaceholderTextStyle(uiState = uiState),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -162,12 +176,14 @@ private fun recipientSelectionQueryTextStyle(
 private fun recipientSelectionQueryPlaceholderTextStyle(
     uiState: RecipientSelectionQueryFieldUiState,
 ): TextStyle {
-    return when {
+    val textStyle = when {
         uiState.selectedRecipients.isEmpty() -> MaterialTheme.typography.bodyLarge
         else -> {
             MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Normal)
         }
     }
+
+    return textStyle.copy(textDirection = TextDirection.ContentOrLtr)
 }
 
 @PreviewLightDark

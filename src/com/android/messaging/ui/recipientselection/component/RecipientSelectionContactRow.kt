@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import com.android.messaging.ui.common.components.selection.SelectionListItem
 import com.android.messaging.ui.common.components.selection.SelectionListItemTokens
 import com.android.messaging.ui.common.components.selection.SelectionListTrailingIndicator
+import com.android.messaging.ui.common.text.asLtrText
 import com.android.messaging.ui.contact.model.ContactDestinationUiModel
 import com.android.messaging.ui.core.MessagingPreviewColumn
 import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
@@ -130,7 +131,7 @@ private fun SingleDestinationContactRow(
     SelectionListItem(
         modifier = modifier,
         primaryText = item.contact.displayName,
-        secondaryText = destination.displayValue,
+        secondaryText = destination.displayValue.asLtrText(),
         isSelected = isSelected,
         enabled = enabled,
         shape = shape,
@@ -169,7 +170,7 @@ private fun SyntheticPhoneRow(
     SelectionListItem(
         modifier = modifier,
         primaryText = recipientSelectionItemPrimaryText(item = item),
-        secondaryText = item.secondaryText,
+        secondaryText = item.secondaryText.asLtrText(),
         isSelected = isSelected,
         enabled = enabled,
         shape = shape,

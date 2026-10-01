@@ -144,6 +144,7 @@ internal abstract class BaseConversationMediaCaptureComponentTest {
         setThemedContent {
             ConversationMediaCameraPreviewSurface(
                 modifier = Modifier.fillMaxSize(),
+                aspectRatio = null,
                 cameraPermissionGranted = cameraPermissionGranted,
                 contentPadding = PaddingValues(),
                 surfaceRequest = null,

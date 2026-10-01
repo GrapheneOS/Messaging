@@ -13,6 +13,7 @@ import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -115,6 +116,37 @@ class DatabaseUpgradeHelperTest {
         )
     }
 
+    /**
+     * Conversation ids name notification channels, shortcuts and per-conversation prefs, which
+     * outlive the database - restored without it, or left behind by a rebuild. Recreating a
+     * deleted channel id undeletes its old settings, so counting from 1 again would hand each new
+     * conversation the settings of whichever old one had its number.
+     */
+    @Test
+    fun rebuildTables_startsEachDatabasesConversationIdsAtItsOwnPointFarPastOne() {
+        SQLiteDatabase.create(null).use { db ->
+            DatabaseHelper.rebuildTables(db)
+            val firstId = db.insertConversation()
+            DatabaseHelper.rebuildTables(db)
+            val secondId = db.insertConversation()
+
+            assertTrue(firstId >= DatabaseHelper.CONVERSATION_ID_SEED_MIN)
+            assertTrue(secondId >= DatabaseHelper.CONVERSATION_ID_SEED_MIN)
+            assertNotEquals("a rebuilt database reused the old id space", firstId, secondId)
+        }
+    }
+
+    @Test
+    fun onCreate_startsConversationIdsFarPastOne() {
+        val context = RuntimeEnvironment.getApplication().applicationContext
+
+        SQLiteDatabase.create(null).use { db ->
+            DatabaseHelper.getInstance(context).onCreate(db)
+
+            assertTrue(db.insertConversation() >= DatabaseHelper.CONVERSATION_ID_SEED_MIN)
+        }
+    }
+
     @Test
     fun upgradeToVersion3_createsPinnedColumnAndIndex() {
         val table = DatabaseHelper.CONVERSATIONS_TABLE
@@ -157,6 +189,14 @@ class DatabaseUpgradeHelperTest {
                 db.hasIndex("index_${DatabaseHelper.MESSAGES_TABLE}_conversation_timestamp"),
             )
         }
+    }
+
+    private fun SQLiteDatabase.insertConversation(): Long {
+        return insert(
+            DatabaseHelper.CONVERSATIONS_TABLE,
+            null,
+            contentValuesOf(ConversationColumns.NAME to "Weekend plan"),
+        )
     }
 
     private fun SQLiteDatabase.hasColumn(table: String, column: String): Boolean {

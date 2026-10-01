@@ -705,8 +705,9 @@ public class ConversationMessageData {
                 + " AND "
                 + DatabaseHelper.MessageColumns.SEEN + " = 0"
                 + " AND ifnull(" + DatabaseHelper.PARTICIPANTS_TABLE + "." + ParticipantColumns.BLOCKED + ", 0) = 0"
-                + ")"
+                + "))"
                 + NOTIFICATION_QUERY_SQL_GROUP_BY;
+    
     }
 
     public static final String getWearableQuerySql() {

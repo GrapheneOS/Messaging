@@ -2,13 +2,16 @@ package com.android.messaging.ui.conversation.mediapicker.camera
 
 import android.Manifest
 import android.content.Context
+import android.hardware.display.DisplayManager
 import android.net.Uri
 import androidx.annotation.RequiresPermission
+import androidx.annotation.VisibleForTesting
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
+import androidx.camera.core.ResolutionInfo
 import androidx.camera.core.SurfaceRequest
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.FileOutputOptions
@@ -31,13 +34,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+private const val HALF_TURN_DEGREES = 180
+
 internal interface ConversationCameraController {
     val hasFlashUnit: StateFlow<Boolean>
     val isPhotoCaptureInProgress: StateFlow<Boolean>
     val isRecording: StateFlow<Boolean>
+    val photoAspectRatio: StateFlow<Float?>
     val photoFlashMode: StateFlow<ConversationPhotoFlashMode>
     val recordingDurationMillis: StateFlow<Long>
     val surfaceRequest: StateFlow<SurfaceRequest?>
+    val videoAspectRatio: StateFlow<Float?>
 
     fun bindToLifecycle(
         lifecycleOwner: LifecycleOwner,
@@ -72,19 +79,28 @@ private class ConversationCameraControllerImpl(
     private val applicationContext = context.applicationContext
     private val mainExecutor = ContextCompat.getMainExecutor(applicationContext)
 
+    private val displayRotationObserver = DisplayRotationObserver(
+        context = context,
+        onRotationChanged = ::updateTargetRotation,
+    )
+
     private val _hasFlashUnit = MutableStateFlow(false)
     private val _isPhotoCaptureInProgress = MutableStateFlow(false)
     private val _isRecording = MutableStateFlow(false)
+    private val _photoAspectRatio = MutableStateFlow<Float?>(null)
     private val _photoFlashMode = MutableStateFlow(ConversationPhotoFlashMode.Off)
     private val _recordingDurationMillis = MutableStateFlow(0L)
     private val _surfaceRequest = MutableStateFlow<SurfaceRequest?>(null)
+    private val _videoAspectRatio = MutableStateFlow<Float?>(null)
 
     override val hasFlashUnit = _hasFlashUnit.asStateFlow()
     override val isPhotoCaptureInProgress = _isPhotoCaptureInProgress.asStateFlow()
     override val isRecording = _isRecording.asStateFlow()
+    override val photoAspectRatio = _photoAspectRatio.asStateFlow()
     override val photoFlashMode = _photoFlashMode.asStateFlow()
     override val recordingDurationMillis = _recordingDurationMillis.asStateFlow()
     override val surfaceRequest = _surfaceRequest.asStateFlow()
+    override val videoAspectRatio = _videoAspectRatio.asStateFlow()
 
     private var activeRecordingSession: ActiveRecordingSession? = null
     private var bindGeneration = 0L
@@ -97,6 +113,7 @@ private class ConversationCameraControllerImpl(
         lifecycleOwner: LifecycleOwner,
         onError: (Throwable) -> Unit,
     ) {
+        displayRotationObserver.start()
         bindRequestLifecycleOwner = lifecycleOwner
         val requestedBindGeneration = ++bindGeneration
 
@@ -216,7 +233,17 @@ private class ConversationCameraControllerImpl(
         )
     }
 
+    private fun updateTargetRotation(rotation: Int) {
+        val currentBoundCameraSession = boundCameraSession ?: return
+
+        currentBoundCameraSession.preview.targetRotation = rotation
+        currentBoundCameraSession.imageCapture.targetRotation = rotation
+        currentBoundCameraSession.videoCapture.targetRotation = rotation
+        publishCaptureAspectRatios(boundCameraSession = currentBoundCameraSession)
+    }
+
     override fun unbind() {
+        displayRotationObserver.stop()
         invalidateCurrentBinding()
         stopRecordingForUnbind()
         clearBoundCameraReferences()
@@ -297,6 +324,7 @@ private class ConversationCameraControllerImpl(
             imageCapture = boundUseCases.imageCapture,
             lifecycleOwner = lifecycleOwner,
             lensFacing = selectedLensFacing,
+            preview = boundUseCases.preview,
             videoCapture = boundUseCases.videoCapture,
         )
         boundCameraSession = newBoundCameraSession
@@ -313,6 +341,7 @@ private class ConversationCameraControllerImpl(
 
     private fun createPreviewUseCase(): Preview {
         return Preview.Builder()
+            .setTargetRotation(displayRotationObserver.rotation)
             .build()
             .also { previewUseCase ->
                 previewUseCase.setSurfaceProvider { surfaceRequest ->
@@ -324,13 +353,16 @@ private class ConversationCameraControllerImpl(
     private fun createImageCaptureUseCase(): ImageCapture {
         return ImageCapture.Builder()
             .setFlashMode(preferredPhotoFlashMode.imageCaptureFlashMode)
+            .setTargetRotation(displayRotationObserver.rotation)
             .build()
     }
 
     private fun createVideoCaptureUseCase(): VideoCapture<Recorder> {
         val recorder = Recorder.Builder().build()
 
-        return VideoCapture.withOutput(recorder)
+        return VideoCapture.Builder(recorder)
+            .setTargetRotation(displayRotationObserver.rotation)
+            .build()
     }
 
     private fun publishBoundCameraState(boundCameraSession: BoundCameraSession) {
@@ -338,6 +370,14 @@ private class ConversationCameraControllerImpl(
         syncBoundImageCaptureFlashMode(
             imageCapture = boundCameraSession.imageCapture,
         )
+        publishCaptureAspectRatios(boundCameraSession = boundCameraSession)
+    }
+
+    private fun publishCaptureAspectRatios(boundCameraSession: BoundCameraSession) {
+        with(boundCameraSession) {
+            _photoAspectRatio.value = imageCapture.resolutionInfo?.toUprightAspectRatio()
+            _videoAspectRatio.value = videoCapture.resolutionInfo?.toUprightAspectRatio()
+        }
     }
 
     private fun getReadyImageCaptureOrReportError(
@@ -595,8 +635,10 @@ private class ConversationCameraControllerImpl(
 
         _isPhotoCaptureInProgress.value = false
         _isRecording.value = false
+        _photoAspectRatio.value = null
         _recordingDurationMillis.value = 0L
         _surfaceRequest.value = null
+        _videoAspectRatio.value = null
     }
 
     private fun resolveSwitchTargetLensFacing(currentLensFacing: Int): Int {
@@ -738,6 +780,7 @@ private class ConversationCameraControllerImpl(
         val imageCapture: ImageCapture,
         val lifecycleOwner: LifecycleOwner,
         val lensFacing: Int,
+        val preview: Preview,
         val videoCapture: VideoCapture<Recorder>,
     )
 
@@ -766,6 +809,50 @@ private class ConversationCameraControllerImpl(
 
     private companion object {
         private const val NANOS_PER_MILLISECOND = 1_000_000L
+    }
+}
+
+// MainActivity handles orientation changes itself, and a 90 to 270 degree turn changes no
+// configuration at all, so only a display listener sees every rotation.
+@Suppress("EmptyFunctionBlock")
+private class DisplayRotationObserver(
+    context: Context,
+    private val onRotationChanged: (Int) -> Unit,
+) : DisplayManager.DisplayListener {
+    private val display = context.display
+    private val displayManager = requireNotNull(
+        value = context.getSystemService(DisplayManager::class.java),
+    ) {
+        "DisplayManager is unavailable"
+    }
+
+    val rotation: Int
+        get() = display.rotation
+
+    fun start() {
+        displayManager.registerDisplayListener(this, null)
+    }
+
+    fun stop() {
+        displayManager.unregisterDisplayListener(this)
+    }
+
+    override fun onDisplayAdded(displayId: Int) {}
+
+    override fun onDisplayRemoved(displayId: Int) {}
+
+    override fun onDisplayChanged(displayId: Int) {
+        if (displayId == display.displayId) {
+            onRotationChanged(display.rotation)
+        }
+    }
+}
+
+@VisibleForTesting
+internal fun ResolutionInfo.toUprightAspectRatio(): Float {
+    return when (rotationDegrees % HALF_TURN_DEGREES) {
+        0 -> cropRect.width().toFloat() / cropRect.height()
+        else -> cropRect.height().toFloat() / cropRect.width()
     }
 }
 

@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -36,7 +35,6 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.common.components.PrimaryActionButton
-import com.android.messaging.ui.common.components.bottomBarInsets
 import com.android.messaging.ui.common.components.selection.SelectionListContent
 import com.android.messaging.ui.core.MessagingPreviewColumn
 import com.android.messaging.ui.recipientselection.model.section.RecipientContactListEntry
@@ -94,7 +92,7 @@ internal fun RecipientSelectionContactsContent(
         floatingActionContent = {
             PrimaryActionButton(
                 modifier = Modifier
-                    .windowInsetsPadding(bottomBarInsets())
+                    .padding(bottom = contentPadding.calculateBottomPadding())
                     .padding(end = 8.dp, bottom = 8.dp),
                 enabled = primaryAction?.isEnabled ?: false,
                 isLoading = primaryAction?.isLoading ?: false,

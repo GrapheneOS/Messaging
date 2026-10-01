@@ -35,6 +35,7 @@ import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.common.components.contentSurfaceShape
+import com.android.messaging.ui.common.components.rememberIsLoadingIndicatorVisible
 import com.android.messaging.ui.conversation.CONVERSATION_LOADING_INDICATOR_TEST_TAG
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagesUiState
@@ -81,6 +82,7 @@ internal fun ConversationScreenContent(
 
     val messagesState = uiState.messages
     val isContentLoaded = !shouldShowConversationScreenLoadingContent(uiState = uiState)
+    val isLoadingIndicatorVisible = rememberIsLoadingIndicatorVisible(isLoading = !isContentLoaded)
     val isBannerRevealed = rememberBlockedBannerRevealState(
         conversationId = conversationId,
         isBlocked = uiState.isBlocked,
@@ -100,6 +102,7 @@ internal fun ConversationScreenContent(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = contentPadding,
                     contentBackdropColor = contentBackdropColor,
+                    isIndicatorVisible = isLoadingIndicatorVisible,
                 )
             }
 
@@ -152,6 +155,7 @@ private fun ConversationScreenLoadingContent(
     modifier: Modifier,
     contentPadding: PaddingValues,
     contentBackdropColor: Color,
+    isIndicatorVisible: Boolean,
 ) {
     Box(
         modifier = modifier.conversationScreenContentModifier(
@@ -160,9 +164,11 @@ private fun ConversationScreenLoadingContent(
         ),
         contentAlignment = Alignment.Center,
     ) {
-        CircularProgressIndicator(
-            modifier = Modifier.testTag(CONVERSATION_LOADING_INDICATOR_TEST_TAG),
-        )
+        if (isIndicatorVisible) {
+            CircularProgressIndicator(
+                modifier = Modifier.testTag(CONVERSATION_LOADING_INDICATOR_TEST_TAG),
+            )
+        }
     }
 }
 

@@ -65,10 +65,12 @@ internal abstract class BaseConversationMediaPickerTest {
         every { cameraController.isPhotoCaptureInProgress } returns
             cameraState.isPhotoCaptureInProgress
         every { cameraController.isRecording } returns cameraState.isRecording
+        every { cameraController.photoAspectRatio } returns cameraState.photoAspectRatio
         every { cameraController.photoFlashMode } returns cameraState.photoFlashMode
         every { cameraController.recordingDurationMillis } returns
             cameraState.recordingDurationMillis
         every { cameraController.surfaceRequest } returns cameraState.surfaceRequest
+        every { cameraController.videoAspectRatio } returns cameraState.videoAspectRatio
         every { onAttachmentStartRequest.invoke() } returns true
     }
 
@@ -197,11 +199,13 @@ internal abstract class BaseConversationMediaPickerTest {
         val hasFlashUnit: MutableStateFlow<Boolean> = MutableStateFlow(false),
         val isPhotoCaptureInProgress: MutableStateFlow<Boolean> = MutableStateFlow(false),
         val isRecording: MutableStateFlow<Boolean> = MutableStateFlow(false),
+        val photoAspectRatio: MutableStateFlow<Float?> = MutableStateFlow(null),
         val photoFlashMode: MutableStateFlow<ConversationPhotoFlashMode> =
             MutableStateFlow(ConversationPhotoFlashMode.Off),
         val recordingDurationMillis: MutableStateFlow<Long> = MutableStateFlow(0L),
         val surfaceRequest: MutableStateFlow<SurfaceRequest?> =
             MutableStateFlow(null),
+        val videoAspectRatio: MutableStateFlow<Float?> = MutableStateFlow(null),
     )
 
     protected companion object {

@@ -20,6 +20,7 @@ import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.contact.model.AddContactRequest
@@ -219,12 +220,9 @@ private fun ConversationScreenLifecycleEffects(
     uiState: ConversationScreenScaffoldUiState,
     screenModel: ConversationScreenModel,
 ) {
-    LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
+    LifecycleResumeEffect(screenModel, cancelIncomingNotification) {
         screenModel.onScreenForegrounded(cancelNotification = cancelIncomingNotification)
-    }
-
-    LifecycleEventEffect(event = Lifecycle.Event.ON_PAUSE) {
-        screenModel.onScreenBackgrounded()
+        onPauseOrDispose { screenModel.onScreenBackgrounded() }
     }
 
     LifecycleEventEffect(event = Lifecycle.Event.ON_STOP) {

@@ -5,6 +5,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithTag
 import com.android.messaging.testutil.TEST_CONVERSATION_ID
+import com.android.messaging.ui.common.components.LOADING_INDICATOR_DELAY
 import com.android.messaging.ui.conversation.CONVERSATION_COMPOSE_BAR_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_LOADING_INDICATOR_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_MESSAGES_LIST_TEST_TAG
@@ -44,16 +45,28 @@ internal class ConversationScreenRenderingTest : BaseConversationScreenTest() {
             }
         }
 
+        composeTestRule.mainClock.advanceTimeBy(
+            milliseconds = LOADING_INDICATOR_DELAY.inWholeMilliseconds,
+        )
+
         composeTestRule
             .onNodeWithTag(CONVERSATION_LOADING_INDICATOR_TEST_TAG)
             .assertIsDisplayed()
     }
 
     @Test
-    fun loadingState_showsLoadingIndicator() {
+    fun loadingState_showsLoadingIndicatorAfterDelay() {
         val screenModel = createScreenModel()
 
         setContent(screenModel = screenModel.model)
+
+        composeTestRule
+            .onNodeWithTag(CONVERSATION_LOADING_INDICATOR_TEST_TAG)
+            .assertDoesNotExist()
+
+        composeTestRule.mainClock.advanceTimeBy(
+            milliseconds = LOADING_INDICATOR_DELAY.inWholeMilliseconds,
+        )
 
         composeTestRule
             .onNodeWithTag(CONVERSATION_LOADING_INDICATOR_TEST_TAG)
@@ -100,6 +113,10 @@ internal class ConversationScreenRenderingTest : BaseConversationScreenTest() {
         )
 
         setContent(screenModel = screenModel.model)
+
+        composeTestRule.mainClock.advanceTimeBy(
+            milliseconds = LOADING_INDICATOR_DELAY.inWholeMilliseconds,
+        )
 
         composeTestRule
             .onNodeWithTag(CONVERSATION_LOADING_INDICATOR_TEST_TAG)

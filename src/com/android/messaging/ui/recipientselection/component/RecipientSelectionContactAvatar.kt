@@ -10,6 +10,7 @@ import com.android.messaging.R
 import com.android.messaging.ui.common.components.participant.participantAvatarLabel
 import com.android.messaging.ui.common.components.participant.participantColorSeed
 import com.android.messaging.ui.common.components.selection.SelectionListAvatar
+import com.android.messaging.ui.common.text.asLtrText
 import com.android.messaging.ui.core.MessagingPreviewColumn
 import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
 import com.android.messaging.ui.recipientselection.preview.previewRecipientPickerUiState
@@ -19,11 +20,9 @@ internal fun RecipientSelectionContactAvatar(
     item: RecipientPickerListItem,
     isSelected: Boolean,
 ) {
-    val displayName = recipientSelectionItemPrimaryText(item = item)
-
     SelectionListAvatar(
         avatarUri = recipientSelectionPhotoUri(item = item),
-        fallbackLabel = participantAvatarLabel(source = displayName),
+        fallbackLabel = participantAvatarLabel(source = recipientSelectionAvatarName(item = item)),
         colorSeedCode = participantColorSeed(
             normalizedDestination = recipientSelectionNormalizedDestination(item = item),
         ),
@@ -40,9 +39,16 @@ internal fun recipientSelectionItemPrimaryText(
         is RecipientPickerListItem.SyntheticPhone -> {
             stringResource(
                 id = R.string.contact_list_send_to_text,
-                item.displayName,
+                item.displayName.asLtrText(),
             )
         }
+    }
+}
+
+private fun recipientSelectionAvatarName(item: RecipientPickerListItem): String {
+    return when (item) {
+        is RecipientPickerListItem.Contact -> item.contact.displayName
+        is RecipientPickerListItem.SyntheticPhone -> item.displayName
     }
 }
 

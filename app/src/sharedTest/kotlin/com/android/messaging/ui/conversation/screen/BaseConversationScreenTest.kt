@@ -50,6 +50,7 @@ internal abstract class BaseConversationScreenTest {
         conversationId: () -> ConversationId? = { CONVERSATION_ID },
         cancelIncomingNotification: Boolean = true,
         lifecycleOwner: LifecycleOwner? = null,
+        isScreenShown: () -> Boolean = { true },
         onAddPeopleClick: () -> Unit = {},
         pendingDraft: ConversationDraft? = null,
         pendingSelfParticipantId: String? = null,
@@ -61,7 +62,11 @@ internal abstract class BaseConversationScreenTest {
         onPendingScrollMessageIdConsumed: () -> Unit = {},
     ) {
         composeTestRule.setContent {
-            val content: @Composable () -> Unit = {
+            val content: @Composable () -> Unit = content@{
+                if (!isScreenShown()) {
+                    return@content
+                }
+
                 ConversationScreen(
                     conversationId = conversationId(),
                     cancelIncomingNotification = cancelIncomingNotification,

@@ -280,6 +280,35 @@ class RecipientPickerDelegateImplTest {
     }
 
     @Test
+    fun itemsQuery_lagsQueryUntilSearchResultArrives() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val alpha = contact(
+                id = 33L,
+                displayName = "Alpha",
+                destinations = listOf(destination(value = "+33333333", contactId = 33L)),
+            )
+            val delegate = createDelegate(
+                initialQuery = "Al",
+                pages = mapOf(
+                    searchKey(query = "Al", offset = 0) to pageOf(alpha),
+                    searchKey(query = "Alp", offset = 0) to pageOf(alpha),
+                ),
+            )
+
+            bindAndAwait(delegate = delegate)
+            delegate.onQueryChanged(query = "Alp")
+
+            assertEquals("Alp", delegate.state.value.query)
+            assertEquals("Al", delegate.state.value.itemsQuery)
+
+            testScheduler.advanceTimeBy(delayTimeMillis = 1_000L)
+            testScheduler.runCurrent()
+
+            assertEquals("Alp", delegate.state.value.itemsQuery)
+        }
+    }
+
+    @Test
     fun items_missingContactsPermission_emitsEmptyState() {
         runTest(
             context = mainDispatcherRule.testDispatcher

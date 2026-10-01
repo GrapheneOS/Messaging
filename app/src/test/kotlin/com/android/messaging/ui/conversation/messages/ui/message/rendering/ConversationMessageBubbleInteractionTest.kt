@@ -127,6 +127,32 @@ internal class ConversationMessageBubbleInteractionTest :
     }
 
     @Test
+    fun resendableAudioMessage_clickForwardsResendOnly() {
+        setConversationMessageContent(
+            message = message(
+                text = null,
+                parts = persistentListOf(
+                    audioPart(),
+                ),
+                status = ConversationMessageUiModel.Status.Outgoing.Failed,
+                canResendMessage = true,
+                protocol = ConversationMessageUiModel.Protocol.MMS,
+            ),
+        )
+
+        clickBubble()
+
+        composeTestRule.runOnIdle {
+            verify(exactly = 1) {
+                onResendClick.invoke()
+            }
+            verify(exactly = 0) {
+                onMessageClick.invoke()
+            }
+        }
+    }
+
+    @Test
     fun visualAttachmentClick_normalModeForwardsAttachmentOpen() {
         setConversationMessageContent(
             message = message(

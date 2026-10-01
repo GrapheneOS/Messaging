@@ -51,6 +51,7 @@ internal fun ConversationInlineAudioAttachmentRow(
     isIncoming: Boolean,
     isSelectionMode: Boolean,
     useStandaloneAudioAttachmentBackground: Boolean,
+    isPlaybackEnabled: Boolean,
     onLongClick: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -71,6 +72,19 @@ internal fun ConversationInlineAudioAttachmentRow(
         durationMillis = attachment.durationMillis,
     )
 
+    val onClick = when {
+        isPlaybackEnabled -> {
+            {
+                playbackState.togglePlayback(
+                    context = context,
+                    contentUri = contentUri,
+                )
+            }
+        }
+
+        else -> null
+    }
+
     ConversationInlineAudioAttachmentRowContent(
         colors = colors,
         isSelectionMode = isSelectionMode,
@@ -78,12 +92,7 @@ internal fun ConversationInlineAudioAttachmentRow(
         title = title,
         durationLabel = playbackState.durationLabel,
         progress = playbackState.progress,
-        onClick = {
-            playbackState.togglePlayback(
-                context = context,
-                contentUri = contentUri,
-            )
-        },
+        onClick = onClick,
         onLongClick = onLongClick,
     )
 }
@@ -96,11 +105,11 @@ internal fun ConversationInlineAudioAttachmentRowContent(
     title: String,
     durationLabel: String,
     progress: Float,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)?,
     onLongClick: () -> Unit,
 ) {
     val modifier = when {
-        isSelectionMode -> Modifier
+        isSelectionMode || onClick == null -> Modifier
 
         else -> {
             Modifier.combinedClickable(

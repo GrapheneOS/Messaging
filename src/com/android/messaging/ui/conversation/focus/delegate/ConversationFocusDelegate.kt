@@ -3,14 +3,11 @@ package com.android.messaging.ui.conversation.focus.delegate
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.datamodel.BugleNotifications
 import com.android.messaging.datamodel.DataModel
-import com.android.messaging.di.core.DefaultDispatcher
+import com.android.messaging.di.core.MainDispatcher
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 internal interface ConversationFocusDelegate {
@@ -26,61 +23,28 @@ internal interface ConversationFocusDelegate {
 }
 
 internal class ConversationFocusDelegateImpl @Inject constructor(
-    @param:DefaultDispatcher
-    private val defaultDispatcher: CoroutineDispatcher,
+    @param:MainDispatcher
+    private val mainDispatcher: CoroutineDispatcher,
 ) : ConversationFocusDelegate {
 
-    private val focusStateFlow = MutableStateFlow<FocusRequest>(value = FocusRequest.Unfocused)
-
-    private var boundScope: CoroutineScope? = null
+    private var conversationIdFlow: StateFlow<ConversationId?>? = null
+    private var focusRequest: FocusRequest = FocusRequest.Unfocused
+    private var focusedConversation: FocusedConversation? = null
 
     override fun bind(
         scope: CoroutineScope,
         conversationIdFlow: StateFlow<ConversationId?>,
     ) {
-        if (boundScope != null) {
+        if (this.conversationIdFlow != null) {
             return
         }
 
-        boundScope = scope
+        this.conversationIdFlow = conversationIdFlow
 
-        scope.launch(defaultDispatcher) {
-            combine(
-                focusStateFlow,
-                conversationIdFlow,
-            ) { focusRequest, conversationId ->
-                when (focusRequest) {
-                    is FocusRequest.Focused -> {
-                        conversationId
-                            ?.takeIf { it.isNotBlank() }
-                            ?.let { id ->
-                                FocusedConversation(
-                                    conversationId = id,
-                                    cancelNotification = focusRequest.cancelNotification,
-                                )
-                            }
-                    }
-
-                    FocusRequest.Unfocused -> null
-                }
+        scope.launch(mainDispatcher) {
+            conversationIdFlow.collect {
+                updateFocusedConversation()
             }
-                .distinctUntilChanged()
-                .collect { focused ->
-                    when {
-                        focused == null -> {
-                            DataModel.get().setFocusedConversation(null)
-                        }
-
-                        else -> {
-                            DataModel.get().setFocusedConversation(focused.conversationId.value)
-
-                            BugleNotifications.markMessagesAsRead(
-                                focused.conversationId.value,
-                                focused.cancelNotification,
-                            )
-                        }
-                    }
-                }
         }
     }
 
@@ -88,9 +52,50 @@ internal class ConversationFocusDelegateImpl @Inject constructor(
         focused: Boolean,
         cancelNotification: Boolean,
     ) {
-        focusStateFlow.value = when {
+        focusRequest = when {
             focused -> FocusRequest.Focused(cancelNotification = cancelNotification)
             else -> FocusRequest.Unfocused
+        }
+        updateFocusedConversation()
+    }
+
+    private fun updateFocusedConversation() {
+        val previous = focusedConversation
+        val target = targetFocusedConversation()
+        focusedConversation = target
+
+        when {
+            target == previous -> Unit
+
+            target != null -> {
+                DataModel.get().setFocusedConversation(target.conversationId.value)
+                BugleNotifications.markMessagesAsRead(
+                    target.conversationId.value,
+                    target.cancelNotification,
+                )
+            }
+
+            // Another conversation may have taken the focus since; it keeps it.
+            previous != null &&
+                DataModel.get().isFocusedConversation(previous.conversationId.value) -> {
+                DataModel.get().setFocusedConversation(null)
+            }
+        }
+    }
+
+    private fun targetFocusedConversation(): FocusedConversation? {
+        val request = focusRequest
+        val conversationId = conversationIdFlow?.value?.takeIf { it.isNotBlank() }
+
+        return when {
+            request is FocusRequest.Focused && conversationId != null -> {
+                FocusedConversation(
+                    conversationId = conversationId,
+                    cancelNotification = request.cancelNotification,
+                )
+            }
+
+            else -> null
         }
     }
 
