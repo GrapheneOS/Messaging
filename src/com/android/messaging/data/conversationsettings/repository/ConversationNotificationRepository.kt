@@ -99,8 +99,8 @@ internal class ConversationNotificationRepositoryImpl @Inject constructor(
         }
     }
 
-    private companion object {
+    companion object {
         const val SNOOZE_KEY_PREFIX = "conversation_snooze_until_"
-        const val SNOOZE_NOT_SET = 0L
+        private const val SNOOZE_NOT_SET = 0L
     }
 }

@@ -264,7 +264,6 @@ private fun Modifier.swipeActions(
             awaitEachGesture {
                 val down = awaitFirstDown(requireUnconsumed = false)
                 velocityTracker.resetTracking()
-                settleJob?.cancel()
 
                 var initialOverSlop = 0f
                 val slopChange = awaitTouchSlopOrCancellation(down.id) { change, overSlop ->
@@ -277,6 +276,8 @@ private fun Modifier.swipeActions(
                 if (slopChange == null) {
                     return@awaitEachGesture
                 }
+
+                settleJob?.cancel()
 
                 velocityTracker.addPosition(
                     timeMillis = slopChange.uptimeMillis,
@@ -400,13 +401,16 @@ private suspend fun settleSwipe(
         }
 
         else -> {
-            action.onTrigger()
-            animateOffset(
-                offsetX = offsetX,
-                targetValue = 0f,
-                initialVelocity = velocityX,
-                animationSpec = SwipeSettleSpec,
-            )
+            try {
+                animateOffset(
+                    offsetX = offsetX,
+                    targetValue = 0f,
+                    initialVelocity = velocityX,
+                    animationSpec = SwipeSettleSpec,
+                )
+            } finally {
+                action.onTrigger()
+            }
         }
     }
 }

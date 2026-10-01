@@ -7,6 +7,7 @@ import kotlinx.collections.immutable.persistentListOf
 @Immutable
 internal data class RecipientPickerUiState(
     val query: String = "",
+    val itemsQuery: String = "",
     val items: ImmutableList<RecipientPickerListItem> = persistentListOf(),
     val canLoadMore: Boolean = false,
     val hasContactsPermission: Boolean = true,

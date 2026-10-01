@@ -52,6 +52,7 @@ import com.android.messaging.ui.common.components.selection.animateSelectionCont
 import com.android.messaging.ui.common.components.selection.animateSelectionPrimaryTextColor
 import com.android.messaging.ui.common.components.selection.animateSelectionSecondaryTextColor
 import com.android.messaging.ui.common.components.selection.currentSelectionListItemColors
+import com.android.messaging.ui.common.text.asLtrText
 import com.android.messaging.ui.contact.model.ContactDestinationUiModel
 import com.android.messaging.ui.core.MessagingPreviewColumn
 import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
@@ -247,7 +248,7 @@ private fun RowScope.MultiDestinationMiniRowContent(
     Text(
         modifier = Modifier
             .weight(weight = 1f),
-        text = destination.displayValue,
+        text = destination.displayValue.asLtrText(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         style = MaterialTheme.typography.bodyMedium,

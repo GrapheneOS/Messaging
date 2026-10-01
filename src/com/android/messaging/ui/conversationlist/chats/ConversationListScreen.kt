@@ -48,8 +48,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
@@ -104,8 +103,9 @@ internal fun ConversationListScreen(
     var pendingBlockDestination by remember { mutableStateOf<String?>(null) }
     var pendingSnooze by remember { mutableStateOf(false) }
 
-    LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
+    LifecycleResumeEffect(screenModel) {
         screenModel.onAction(Action.ScreenResumed)
+        onPauseOrDispose { screenModel.onAction(Action.ScreenPaused) }
     }
 
     LaunchedEffect(openedConversationId) {
@@ -254,7 +254,7 @@ private fun ConversationListEffects(
                 }
 
                 Effect.ScrollToTop -> {
-                    listState.scrollToItem(index = 0)
+                    listState.animateScrollToItem(index = 0)
                 }
 
                 else -> currentEffectHandler.handle(effect)

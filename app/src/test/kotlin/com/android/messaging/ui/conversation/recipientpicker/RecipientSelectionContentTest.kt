@@ -10,10 +10,12 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performSemanticsAction
 import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
+import com.android.messaging.ui.conversation.RECIPIENT_SELECTION_QUERY_FIELD_TEST_TAG
 import com.android.messaging.ui.conversation.recipientpicker.component.RecipientSelectionContent
 import com.android.messaging.ui.core.AppTheme
 import com.android.messaging.ui.recipientselection.component.row.contactItem
@@ -179,6 +181,63 @@ class RecipientSelectionContentTest {
 
         composeTestRule.runOnIdle {
             assertEquals(1, loadMoreCount)
+        }
+    }
+
+    @Test
+    fun imeAction_withSoleSettledResult_picksItsDestination() {
+        val item = contactItem()
+        var clickedDestination: String? = null
+
+        setContent(
+            uiState = RecipientSelectionContentUiState(
+                picker = RecipientPickerUiState(
+                    query = item.contact.displayName,
+                    itemsQuery = item.contact.displayName,
+                    items = persistentListOf(item),
+                ),
+            ),
+            onRecipientDestinationClick = { _, destination ->
+                clickedDestination = destination
+            },
+        )
+
+        composeTestRule
+            .onNodeWithTag(testTag = RECIPIENT_SELECTION_QUERY_FIELD_TEST_TAG)
+            .performImeAction()
+
+        composeTestRule.runOnIdle {
+            assertEquals(
+                item.contact.destinations.first().normalizedValue,
+                clickedDestination,
+            )
+        }
+    }
+
+    @Test
+    fun imeAction_whileResultsLagTheQuery_doesNotPick() {
+        val item = contactItem()
+        var clickCount = 0
+
+        setContent(
+            uiState = RecipientSelectionContentUiState(
+                picker = RecipientPickerUiState(
+                    query = item.contact.displayName,
+                    itemsQuery = item.contact.displayName.dropLast(n = 1),
+                    items = persistentListOf(item),
+                ),
+            ),
+            onRecipientDestinationClick = { _, _ ->
+                clickCount += 1
+            },
+        )
+
+        composeTestRule
+            .onNodeWithTag(testTag = RECIPIENT_SELECTION_QUERY_FIELD_TEST_TAG)
+            .performImeAction()
+
+        composeTestRule.runOnIdle {
+            assertEquals(0, clickCount)
         }
     }
 

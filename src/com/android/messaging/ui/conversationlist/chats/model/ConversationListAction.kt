@@ -48,6 +48,7 @@ internal sealed interface ConversationListAction {
 
     // region LifecycleAction
     data object ScreenResumed : LifecycleAction
+    data object ScreenPaused : LifecycleAction
     // endregion
 
     // region ListAction

@@ -4,10 +4,17 @@ package com.android.messaging.ui.conversation.recipientpicker.component
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.input.KeyboardActionHandler
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -20,6 +27,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
@@ -33,11 +41,13 @@ import com.android.messaging.ui.recipientselection.component.previewRecipientSel
 import com.android.messaging.ui.recipientselection.component.previewRecipientSelectionContactsLoadingState
 import com.android.messaging.ui.recipientselection.component.previewRecipientSelectionContactsPrimaryActionLoadingState
 import com.android.messaging.ui.recipientselection.component.previewRecipientSelectionContactsTopContentState
+import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
 import com.android.messaging.ui.recipientselection.model.picker.SelectedRecipient
 import com.android.messaging.ui.recipientselection.model.selection.OnRecipientDestinationAction
 import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionContentUiState
 import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionRowDecorators
 import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionStrings
+import kotlinx.collections.immutable.ImmutableList
 
 @Composable
 internal fun RecipientSelectionContent(
@@ -46,6 +56,7 @@ internal fun RecipientSelectionContent(
     rowDecorators: RecipientSelectionRowDecorators,
     onRecipientDestinationClick: OnRecipientDestinationAction,
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(),
     autoFocusQuery: Boolean = false,
     onLoadMore: () -> Unit = {},
     onPrimaryActionClick: () -> Unit = {},
@@ -69,6 +80,7 @@ internal fun RecipientSelectionContent(
 
     RecipientSelectionContentLayout(
         modifier = modifier,
+        contentPadding = contentPadding,
         pinnedTopContent = pinnedTopContent,
         queryArea = {
             RecipientSelectionArmedQueryArea(
@@ -78,12 +90,19 @@ internal fun RecipientSelectionContent(
                 queryFocusRequester = queryFocusRequester,
                 simSelectorSlot = simSelectorSlot,
                 onQueryChanged = onQueryChanged,
+                onRecipientDestinationClick = onRecipientDestinationClick,
                 onSelectedRecipientClick = onSelectedRecipientClick,
             )
         },
         contactsArea = {
             RecipientSelectionArmedContactsArea(
                 modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    bottom = maxOf(
+                        contentPadding.calculateBottomPadding(),
+                        WindowInsets.ime.asPaddingValues().calculateBottomPadding(),
+                    ),
+                ),
                 uiState = uiState,
                 rowDecorators = rowDecorators,
                 armedDestination = armedDestination,
@@ -100,9 +119,12 @@ internal fun RecipientSelectionContent(
 private fun RecipientSelectionContentLayout(
     queryArea: @Composable () -> Unit,
     contactsArea: @Composable () -> Unit,
+    contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
     pinnedTopContent: (@Composable () -> Unit)? = null,
 ) {
+    val layoutDirection = LocalLayoutDirection.current
+
     Surface(
         modifier = modifier,
         color = MaterialTheme.colorScheme.surfaceContainer,
@@ -110,6 +132,11 @@ private fun RecipientSelectionContentLayout(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(
+                    start = contentPadding.calculateStartPadding(layoutDirection),
+                    top = contentPadding.calculateTopPadding(),
+                    end = contentPadding.calculateEndPadding(layoutDirection),
+                )
                 .padding(horizontal = 16.dp),
         ) {
             Spacer(modifier = Modifier.height(16.dp))
@@ -133,6 +160,7 @@ private fun RecipientSelectionArmedQueryArea(
     queryFocusRequester: FocusRequester,
     simSelectorSlot: (@Composable () -> Unit)?,
     onQueryChanged: (String) -> Unit,
+    onRecipientDestinationClick: OnRecipientDestinationAction,
     onSelectedRecipientClick: (SelectedRecipient) -> Unit,
 ) {
     val currentOnQueryChanged = rememberUpdatedState(onQueryChanged)
@@ -178,6 +206,11 @@ private fun RecipientSelectionArmedQueryArea(
             strings = strings,
             armedRecipientDestination = armedDestination.value,
         ),
+        onKeyboardAction = rememberRecipientSelectionKeyboardActionHandler(
+            uiState = uiState,
+            armedDestination = armedDestination,
+            onRecipientDestinationClick = onRecipientDestinationClick,
+        ),
         onQueryChanged = onQueryChangedWrapped,
         onQueryFocused = onQueryFocusedWrapped,
         onSelectedRecipientClick = onSelectedRecipientClickWrapped,
@@ -185,6 +218,67 @@ private fun RecipientSelectionArmedQueryArea(
         focusRequester = queryFocusRequester,
         simSelectorSlot = simSelectorSlot,
     )
+}
+
+@Composable
+private fun rememberRecipientSelectionKeyboardActionHandler(
+    uiState: RecipientSelectionContentUiState,
+    armedDestination: MutableState<String?>,
+    onRecipientDestinationClick: OnRecipientDestinationAction,
+): KeyboardActionHandler {
+    val currentUiState = rememberUpdatedState(uiState)
+    val currentOnRecipientDestinationClick = rememberUpdatedState(onRecipientDestinationClick)
+
+    return remember(armedDestination) {
+        KeyboardActionHandler { performDefaultAction ->
+            val currentState = currentUiState.value
+            val item = recipientSelectionSoleResultOrNull(uiState = currentState)
+            val destination = item?.let {
+                recipientSelectionUnselectedDestinationOrNull(
+                    item = item,
+                    selectedRecipients = currentState.selectedRecipients,
+                )
+            }
+
+            when {
+                item == null || destination == null -> performDefaultAction()
+
+                else -> {
+                    armedDestination.value = null
+                    currentOnRecipientDestinationClick.value(item, destination)
+                }
+            }
+        }
+    }
+}
+
+private fun recipientSelectionSoleResultOrNull(
+    uiState: RecipientSelectionContentUiState,
+): RecipientPickerListItem? {
+    val picker = uiState.picker
+    val isSettled = picker.query.isNotBlank() &&
+        picker.itemsQuery == picker.query &&
+        !picker.isLoading &&
+        !picker.canLoadMore &&
+        uiState.primaryAction?.isLoading != true
+
+    return picker.items
+        .singleOrNull()
+        .takeIf { isSettled }
+}
+
+private fun recipientSelectionUnselectedDestinationOrNull(
+    item: RecipientPickerListItem,
+    selectedRecipients: ImmutableList<SelectedRecipient>,
+): String? {
+    val destination = when (item) {
+        is RecipientPickerListItem.Contact -> item.destinations.singleOrNull()?.normalizedValue
+        is RecipientPickerListItem.SyntheticPhone -> item.normalizedDestination
+    }
+
+    return destination.takeIf {
+        selectedRecipients.none { recipient -> recipient.destination == destination }
+    }
 }
 
 @Composable
@@ -196,6 +290,7 @@ private fun RecipientSelectionArmedContactsArea(
     onRecipientDestinationLongClick: OnRecipientDestinationAction?,
     onLoadMore: () -> Unit,
     onPrimaryActionClick: () -> Unit,
+    contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
     val currentOnPrimaryActionClick = rememberUpdatedState(onPrimaryActionClick)
@@ -231,6 +326,7 @@ private fun RecipientSelectionArmedContactsArea(
 
     RecipientSelectionContactsContent(
         modifier = modifier,
+        contentPadding = contentPadding,
         uiState = uiState,
         rowDecorators = rowDecorators,
         onLoadMore = onLoadMore,

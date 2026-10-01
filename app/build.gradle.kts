@@ -54,8 +54,8 @@ android {
     namespace = "com.android.messaging"
 
     defaultConfig {
-        versionCode = 20000000 + 15
-        versionName = "15"
+        versionCode = 20000000 + 16
+        versionName = "16"
         minSdk = 36
         targetSdk = 37
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

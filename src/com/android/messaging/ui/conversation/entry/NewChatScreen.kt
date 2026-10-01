@@ -7,7 +7,6 @@ package com.android.messaging.ui.conversation.entry
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -220,9 +219,8 @@ private fun NewChatRecipientSelectionContent(
     simSelectorUiState: ConversationSimSelectorUiState,
 ) {
     RecipientSelectionContent(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues = contentPadding),
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = contentPadding,
         uiState = newChatRecipientSelectionContentUiState(
             pickerUiState = pickerUiState,
             isCreatingGroup = isCreatingGroup,
@@ -351,7 +349,7 @@ private fun newChatRecipientSelectionStrings(
     hasSelectedRecipients: Boolean,
 ): RecipientSelectionStrings {
     return RecipientSelectionStrings(
-        queryPrefixText = stringResource(id = R.string.new_chat_recipient_prefix),
+        queryPrefixText = stringResource(id = R.string.to_address_label),
         queryPlaceholderText = newChatQueryHint(
             hasSelectedRecipients = hasSelectedRecipients,
         ),
