@@ -602,6 +602,63 @@ class ConversationComposeBarTest {
     }
 
     @Test
+    fun longPressAndDragLeftDriftingUp_cancelsRecordingWithoutLocking() {
+        var audioRecording by mutableStateOf(ConversationAudioRecordingUiState())
+        var lockRequests = 0
+        var finishRequests = 0
+        var cancelRequests = 0
+        val cancelDragDistancePx = with(composeTestRule.density) {
+            (AUDIO_RECORD_CANCEL_THRESHOLD + 24.dp).toPx()
+        }
+        val lockDragDistancePx = with(composeTestRule.density) {
+            (AUDIO_RECORD_LOCK_THRESHOLD + 8.dp).toPx()
+        }
+
+        setContent(
+            audioRecording = { audioRecording },
+            messageText = { "" },
+            isSendActionEnabled = false,
+            shouldShowRecordAction = { true },
+            onAudioRecordingStartRequest = {
+                audioRecording = recordingAudioState()
+            },
+            onAudioRecordingFinish = {
+                finishRequests += 1
+                audioRecording = ConversationAudioRecordingUiState()
+            },
+            onAudioRecordingLock = {
+                lockRequests += 1
+                audioRecording = recordingAudioState(isLocked = true)
+                true
+            },
+            onAudioRecordingCancel = {
+                cancelRequests += 1
+                audioRecording = ConversationAudioRecordingUiState()
+            },
+        )
+
+        composeTestRule
+            .onNodeWithTag(CONVERSATION_SEND_BUTTON_TEST_TAG)
+            .performTouchInput {
+                down(center)
+                advanceEventTime(durationMillis = 700L)
+                moveBy(
+                    Offset(
+                        x = -cancelDragDistancePx,
+                        y = -lockDragDistancePx,
+                    ),
+                )
+                up()
+            }
+
+        composeTestRule.runOnIdle {
+            assertEquals(0, lockRequests)
+            assertEquals(0, finishRequests)
+            assertEquals(1, cancelRequests)
+        }
+    }
+
+    @Test
     fun lockGesture_emitsConfirmHapticAndKeepsRecordingActiveUntilStopTap() {
         var audioRecording by mutableStateOf(ConversationAudioRecordingUiState())
         var startRequests = 0
