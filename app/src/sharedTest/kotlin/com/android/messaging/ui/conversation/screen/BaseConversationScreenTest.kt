@@ -49,6 +49,7 @@ internal abstract class BaseConversationScreenTest {
         screenModel: ConversationScreenModel,
         conversationId: () -> ConversationId? = { CONVERSATION_ID },
         cancelIncomingNotification: Boolean = true,
+        offersArchiveUndo: Boolean = false,
         lifecycleOwner: LifecycleOwner? = null,
         isScreenShown: () -> Boolean = { true },
         onAddPeopleClick: () -> Unit = {},
@@ -60,6 +61,7 @@ internal abstract class BaseConversationScreenTest {
         onPendingStartupAttachmentConsumed: () -> Unit = {},
         pendingScrollMessageId: MessageId? = null,
         onPendingScrollMessageIdConsumed: () -> Unit = {},
+        onCloseConversation: () -> Unit = {},
     ) {
         composeTestRule.setContent {
             val content: @Composable () -> Unit = content@{
@@ -70,6 +72,7 @@ internal abstract class BaseConversationScreenTest {
                 ConversationScreen(
                     conversationId = conversationId(),
                     cancelIncomingNotification = cancelIncomingNotification,
+                    offersArchiveUndo = offersArchiveUndo,
                     onAddPeopleClick = onAddPeopleClick,
                     onConversationDetailsClick = {},
                     onNavigateToMessageDetails = {},
@@ -78,7 +81,7 @@ internal abstract class BaseConversationScreenTest {
                     onNavigateToAddContact = {},
                     onNavigateToForward = {},
                     onNavigateBack = {},
-                    onCloseConversation = {},
+                    onCloseConversation = onCloseConversation,
                     pendingLaunchPayload = ConversationPendingLaunchPayload(
                         draft = pendingDraft,
                         scrollMessageId = pendingScrollMessageId,

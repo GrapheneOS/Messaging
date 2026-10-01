@@ -6,13 +6,16 @@ import com.android.messaging.ui.conversation.metadata.model.ConversationMetadata
 import javax.inject.Inject
 
 internal interface ConversationMetadataUiStateMapper {
-    fun map(metadata: ConversationMetadata): ConversationMetadataUiState
+    fun map(metadata: ConversationMetadata, isSnoozed: Boolean): ConversationMetadataUiState
 }
 
 internal class ConversationMetadataUiStateMapperImpl @Inject constructor() :
     ConversationMetadataUiStateMapper {
 
-    override fun map(metadata: ConversationMetadata): ConversationMetadataUiState {
+    override fun map(
+        metadata: ConversationMetadata,
+        isSnoozed: Boolean,
+    ): ConversationMetadataUiState {
         val avatar = when {
             metadata.isGroupConversation -> ConversationMetadataUiState.Avatar.Group
 
@@ -37,6 +40,7 @@ internal class ConversationMetadataUiStateMapperImpl @Inject constructor() :
             isArchived = metadata.isArchived,
             isBlocked = metadata.isBlocked,
             composerAvailability = metadata.composerAvailability,
+            isSnoozed = isSnoozed,
         )
     }
 }

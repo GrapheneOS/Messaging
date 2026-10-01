@@ -344,6 +344,7 @@ private fun AutoScrollToLatestMessage(
         listState = listState,
         isListDraggedState = isListDraggedState,
         snackbarHostState = snackbarHostState,
+        newMessageText = newMessageText,
         onWasScrolledToLatestMessageChanged = { isScrolledToLatestMessage ->
             wasScrolledToLatestMessage = isScrolledToLatestMessage
         },
@@ -375,11 +376,13 @@ private fun TrackLatestMessageScrollState(
     listState: LazyListState,
     isListDraggedState: State<Boolean>,
     snackbarHostState: SnackbarHostState,
+    newMessageText: String,
     onWasScrolledToLatestMessageChanged: (Boolean) -> Unit,
 ) {
     LaunchedEffect(
         conversationId,
         listState,
+        newMessageText,
     ) {
         snapshotFlow {
             ConversationLatestScrollSnapshot(
@@ -390,7 +393,10 @@ private fun TrackLatestMessageScrollState(
             when {
                 scrollSnapshot.isScrolledToLatestMessage -> {
                     onWasScrolledToLatestMessageChanged(true)
-                    snackbarHostState.currentSnackbarData?.dismiss()
+                    // Only the new-message snackbar is about scrolling; others (archive Undo) stay.
+                    snackbarHostState.currentSnackbarData
+                        ?.takeIf { it.visuals.message == newMessageText }
+                        ?.dismiss()
                 }
 
                 scrollSnapshot.isListDragged -> {

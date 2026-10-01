@@ -40,6 +40,7 @@ internal sealed interface ConversationMetadataUiState {
         val isArchived: Boolean,
         val isBlocked: Boolean,
         override val composerAvailability: ConversationComposerAvailability,
+        val isSnoozed: Boolean = false,
     ) : ConversationMetadataUiState
 
     @Immutable

@@ -108,6 +108,7 @@ class ConversationScreenEffectsTest {
             CollectEvents(events = screenModel.navigationEvents) { event ->
                 when (event) {
                     is NavEvent.CloseConversation -> onNavigateBack()
+                    is NavEvent.CloseAfterArchive -> Unit
                     is NavEvent.NavigateToMessageDetails -> Unit
                     is NavEvent.ForwardMessage -> Unit
                 }

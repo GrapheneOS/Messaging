@@ -18,7 +18,7 @@ class ConversationMetadataUiStateMapperImplTest {
     private val mapper = ConversationMetadataUiStateMapperImpl()
 
     @Test
-    fun map_oneOnOneConversation_usesSingleAvatarAndDisplayDestination() {
+    fun map_snoozedOneOnOneConversation_usesSingleAvatarDisplayDestinationAndSnooze() {
         val result = mapper.map(
             metadata = ConversationMetadata(
                 conversationName = "Carol",
@@ -35,6 +35,7 @@ class ConversationMetadataUiStateMapperImplTest {
                 composerAvailability = ConversationComposerAvailability.Editable,
                 sortTimestamp = 0L,
             ),
+            isSnoozed = true,
         )
 
         assertThat(result).isEqualTo(
@@ -52,6 +53,7 @@ class ConversationMetadataUiStateMapperImplTest {
                 isArchived = false,
                 isBlocked = false,
                 composerAvailability = ConversationComposerAvailability.Editable,
+                isSnoozed = true,
             )
         )
     }
@@ -74,6 +76,7 @@ class ConversationMetadataUiStateMapperImplTest {
                 composerAvailability = ConversationComposerAvailability.Editable,
                 sortTimestamp = 0L,
             ),
+            isSnoozed = false,
         )
 
         val presentState = result as ConversationMetadataUiState.Present

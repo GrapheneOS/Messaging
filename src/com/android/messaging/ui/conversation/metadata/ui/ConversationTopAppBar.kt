@@ -6,10 +6,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.Subject
 import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.NotificationsPaused
 import androidx.compose.material.icons.rounded.Archive
 import androidx.compose.material.icons.rounded.Call
 import androidx.compose.material.icons.rounded.Delete
@@ -77,6 +79,8 @@ import com.android.messaging.util.AccessibilityUtil
 private val CONVERSATION_TOP_APP_BAR_TITLE_SPACING = 12.dp
 private val CONVERSATION_TOP_APP_BAR_AVATAR_SIZE = 36.dp
 private val CONVERSATION_TOP_APP_BAR_AVATAR_FALLBACK_SIZE = 20.dp
+private val CONVERSATION_TOP_APP_BAR_SNOOZE_ICON_SIZE = 16.dp
+private val CONVERSATION_TOP_APP_BAR_SNOOZE_ICON_SPACING = 4.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -175,6 +179,7 @@ private fun rememberConversationTopAppBarPresentation(
 
     val avatar = conversationAvatar(metadata)
     val isBlocked = metadata is ConversationMetadataUiState.Present && metadata.isBlocked
+    val isSnoozed = metadata is ConversationMetadataUiState.Present && metadata.isSnoozed
 
     return remember(
         metadata,
@@ -183,6 +188,7 @@ private fun rememberConversationTopAppBarPresentation(
         subtitleContentDescription,
         avatar,
         isBlocked,
+        isSnoozed,
     ) {
         ConversationTopAppBarPresentation(
             title = title,
@@ -190,6 +196,7 @@ private fun rememberConversationTopAppBarPresentation(
             subtitleContentDescription = subtitleContentDescription,
             avatar = avatar,
             isBlocked = isBlocked,
+            isSnoozed = isSnoozed,
         )
     }
 }
@@ -239,13 +246,30 @@ private fun ConversationTopAppBarText(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.Center,
     ) {
-        Text(
-            text = presentation.title,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(
+                space = CONVERSATION_TOP_APP_BAR_SNOOZE_ICON_SPACING,
+            ),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                modifier = Modifier.weight(weight = 1f, fill = false),
+                text = presentation.title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+
+            if (presentation.isSnoozed) {
+                Icon(
+                    modifier = Modifier.size(size = CONVERSATION_TOP_APP_BAR_SNOOZE_ICON_SIZE),
+                    imageVector = Icons.Default.NotificationsPaused,
+                    contentDescription = stringResource(R.string.conversation_list_status_snoozed),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
 
         if (presentation.subtitle != null) {
             Text(
@@ -616,6 +640,7 @@ private data class ConversationTopAppBarPresentation(
     val subtitleContentDescription: String?,
     val avatar: ConversationMetadataUiState.Avatar,
     val isBlocked: Boolean,
+    val isSnoozed: Boolean,
 )
 
 @Immutable
@@ -680,6 +705,22 @@ private fun ConversationTopAppBarBlockedPreview() {
             metadata = previewMetadata(isBlocked = true),
             isCallVisible = true,
             isDeleteConversationVisible = true,
+            onAddPeopleClick = {},
+            onTitleClick = {},
+            onNavigateBack = {},
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationTopAppBarSnoozedPreview() {
+    MessagingPreviewTheme {
+        ConversationTopAppBar(
+            metadata = previewMetadata(
+                title = "Ada Lovelace, Countess of Lovelace and Analytical Engine Fan",
+            ).copy(isSnoozed = true),
+            isCallVisible = true,
             onAddPeopleClick = {},
             onTitleClick = {},
             onNavigateBack = {},

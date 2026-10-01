@@ -64,6 +64,7 @@ private fun conversationScreenRouteContent(): @Composable (ConversationNavKey) -
             ConversationRoute(
                 conversationId = navKey.conversationId,
                 isLaunchedFromBubble = entryNavState.isLaunchedFromBubble,
+                hasConversationList = entryNavState.hasConversationList,
                 entryModel = entryNavState.model,
                 entryUiState = entryUiState,
             )
@@ -75,20 +76,18 @@ private fun conversationScreenRouteContent(): @Composable (ConversationNavKey) -
 private fun ConversationRoute(
     conversationId: ConversationId,
     isLaunchedFromBubble: Boolean,
+    hasConversationList: Boolean,
     entryModel: ConversationEntryScreenModel,
     entryUiState: ConversationEntryUiState,
 ) {
     val navigator = rememberConversationNavigator()
     val appNavigator = LocalNavigator.current
-    val pendingPayload = pendingLaunchPayloadForConversation(
-        entryUiState = entryUiState,
-        conversationId = conversationId,
-    )
 
     ConversationScreen(
         screenModel = hiltViewModel<ConversationViewModel>(),
         conversationId = conversationId,
         cancelIncomingNotification = !isLaunchedFromBubble,
+        offersArchiveUndo = !hasConversationList,
         onAddPeopleClick = {
             navigator.navigateToAddParticipants(conversationId = conversationId)
         },
@@ -123,7 +122,10 @@ private fun ConversationRoute(
         onCloseConversation = {
             appNavigator.closeConversation(conversationId = conversationId)
         },
-        pendingLaunchPayload = pendingPayload,
+        pendingLaunchPayload = pendingLaunchPayloadForConversation(
+            entryUiState = entryUiState,
+            conversationId = conversationId,
+        ),
         onPendingDraftConsumed = {
             entryModel.onDraftPayloadConsumed(conversationId = conversationId)
         },

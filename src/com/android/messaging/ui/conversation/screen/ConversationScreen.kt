@@ -26,11 +26,13 @@ import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaf
 import com.android.messaging.ui.photoviewer.model.PhotoViewerLaunchRequest
 
 @Composable
+@Suppress("LongMethod") // Long arguments list, not too much logic, so it's ok to suppress
 internal fun ConversationScreen(
     screenModel: ConversationScreenModel,
     modifier: Modifier = Modifier,
     conversationId: ConversationId? = null,
     cancelIncomingNotification: Boolean = true,
+    offersArchiveUndo: Boolean = false,
     onAddPeopleClick: () -> Unit,
     onConversationDetailsClick: () -> Unit,
     onNavigateToMessageDetails: (messageId: MessageId) -> Unit,
@@ -66,6 +68,7 @@ internal fun ConversationScreen(
     ConversationScreenRouteEffects(
         conversationId = conversationId,
         cancelIncomingNotification = cancelIncomingNotification,
+        offersArchiveUndo = offersArchiveUndo,
         pendingLaunchPayload = pendingLaunchPayload,
         scaffoldUiState = scaffoldUiState,
         snackbarHostState = snackbarHostState,

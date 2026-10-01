@@ -7,6 +7,8 @@ import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
 import com.android.messaging.data.conversation.repository.ConversationsRepository
+import com.android.messaging.data.conversation.store.ConversationArchiveEventsImpl
+import com.android.messaging.data.conversationsettings.repository.ConversationNotificationRepository
 import com.android.messaging.domain.conversation.usecase.action.ConversationActionRequirementsResult
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.testutil.TEST_CALL_ACTION_PHONE_NUMBER
@@ -35,16 +37,21 @@ class ConversationMetadataDelegateImplTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     @Test
-    fun onArchiveConversationClick_archivesViaRepositoryAndEmitsCloseConversation() {
+    fun onArchiveConversationClick_archivesViaRepositoryAndEmitsCloseAfterArchive() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val harness = createHarness(conversationId = ConversationId("conversation-42"))
 
             try {
-                harness.delegate.navigationEvents.test {
-                    harness.delegate.onArchiveConversationClick()
-                    advanceUntilIdle()
+                harness.delegate.archivedConversationIds.test {
+                    harness.delegate.navigationEvents.test {
+                        harness.delegate.onArchiveConversationClick()
+                        advanceUntilIdle()
 
-                    assertEquals(ConversationScreenNavEvent.CloseConversation, awaitItem())
+                        assertEquals(ConversationScreenNavEvent.CloseAfterArchive, awaitItem())
+                        cancelAndIgnoreRemainingEvents()
+                    }
+
+                    assertEquals(ConversationId("conversation-42"), awaitItem())
                     cancelAndIgnoreRemainingEvents()
                 }
 
@@ -83,6 +90,27 @@ class ConversationMetadataDelegateImplTest {
     }
 
     @Test
+    fun onUndoArchiveClick_unarchivesTheGivenConversation() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val harness = createHarness(conversationId = ConversationId("conversation-42"))
+
+            try {
+                harness.delegate.onUndoArchiveClick(
+                    conversationId = ConversationId("conversation-7"),
+                )
+                advanceUntilIdle()
+
+                coVerify(exactly = 1) {
+                    harness.conversationsRepository
+                        .unarchiveConversation(conversationId = ConversationId("conversation-7"))
+                }
+            } finally {
+                harness.cancel()
+            }
+        }
+    }
+
+    @Test
     fun archiveStatusClearedOutsideTheScreen_doesNotCloseConversation() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val harness = createHarness(conversationId = ConversationId("conversation-42"))
@@ -98,6 +126,27 @@ class ConversationMetadataDelegateImplTest {
                     expectNoEvents()
                     cancelAndIgnoreRemainingEvents()
                 }
+            } finally {
+                harness.cancel()
+            }
+        }
+    }
+
+    @Test
+    fun snoozeChanges_updateTheConversationState() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val harness = createHarness(conversationId = ConversationId("conversation-42"))
+
+            try {
+                harness.setMetadata(isArchived = false)
+                advanceUntilIdle()
+
+                assertEquals(false, harness.presentState().isSnoozed)
+
+                harness.isSnoozedFlow.value = true
+                advanceUntilIdle()
+
+                assertEquals(true, harness.presentState().isSnoozed)
             } finally {
                 harness.cancel()
             }
@@ -293,12 +342,16 @@ class ConversationMetadataDelegateImplTest {
         val mapper = mockk<ConversationMetadataUiStateMapper>()
         val conversationIdFlow = MutableStateFlow(conversationId)
         val metadataFlow = MutableStateFlow<ConversationMetadata?>(value = null)
+        val isSnoozedFlow = MutableStateFlow(value = false)
+        val notificationRepository = mockk<ConversationNotificationRepository> {
+            every { observeIsSnoozed(conversationId = any()) } returns isSnoozedFlow
+        }
 
         every {
             conversationsRepository.getConversationMetadata(any())
         } returns metadataFlow
         every {
-            mapper.map(metadata = any())
+            mapper.map(metadata = any(), isSnoozed = any())
         } answers {
             val metadata = firstArg<ConversationMetadata>()
             ConversationMetadataUiState.Present(
@@ -315,6 +368,7 @@ class ConversationMetadataDelegateImplTest {
                 isArchived = false,
                 isBlocked = false,
                 composerAvailability = ConversationComposerAvailability.Editable,
+                isSnoozed = secondArg(),
             )
         }
 
@@ -325,6 +379,8 @@ class ConversationMetadataDelegateImplTest {
             conversationsRepository = conversationsRepository,
             conversationMetadataUiStateMapper = mapper,
             blockedParticipantsRepository = mockk<BlockedParticipantsRepository>(relaxed = true),
+            conversationArchiveEvents = ConversationArchiveEventsImpl(),
+            notificationRepository = notificationRepository,
             defaultDispatcher = dispatcher,
         )
         delegate.bind(
@@ -336,6 +392,7 @@ class ConversationMetadataDelegateImplTest {
             delegate = delegate,
             conversationsRepository = conversationsRepository,
             metadataFlow = metadataFlow,
+            isSnoozedFlow = isSnoozedFlow,
             scope = scope,
         )
     }
@@ -344,6 +401,10 @@ class ConversationMetadataDelegateImplTest {
         metadataFlow.value = mockk<ConversationMetadata>(relaxed = true) {
             every { this@mockk.isArchived } returns isArchived
         }
+    }
+
+    private fun DelegateHarness.presentState(): ConversationMetadataUiState.Present {
+        return delegate.state.value as ConversationMetadataUiState.Present
     }
 
     private fun DelegateHarness.setPresentState(
@@ -358,6 +419,7 @@ class ConversationMetadataDelegateImplTest {
         val delegate: ConversationMetadataDelegateImpl,
         val conversationsRepository: ConversationsRepository,
         val metadataFlow: MutableStateFlow<ConversationMetadata?>,
+        val isSnoozedFlow: MutableStateFlow<Boolean>,
         val scope: TestScope,
     ) {
         fun cancel() {
