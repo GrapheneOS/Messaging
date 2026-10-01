@@ -14,6 +14,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
+import androidx.core.net.toUri
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.datamodel.data.ParticipantData
@@ -200,6 +201,19 @@ internal abstract class BaseConversationMessageRenderingTest {
         )
     }
 
+    protected fun audioPart(
+        contentType: String = AUDIO_CONTENT_TYPE,
+        contentUri: String = AUDIO_CONTENT_URI,
+    ): ConversationMessagePartUiModel.Attachment.Audio {
+        return ConversationMessagePartUiModel.Attachment.Audio(
+            text = null,
+            contentType = contentType,
+            contentUri = contentUri.toUri(),
+            width = 0,
+            height = 0,
+        )
+    }
+
     protected fun clickBubble(messageId: String = DEFAULT_MESSAGE_ID) {
         composeTestRule
             .onNodeWithTag(
@@ -252,6 +266,8 @@ internal abstract class BaseConversationMessageRenderingTest {
     }
 
     protected companion object {
+        protected const val AUDIO_CONTENT_TYPE = "audio/3gpp"
+        protected const val AUDIO_CONTENT_URI = "content://mms/part/audio-1"
         protected const val AVATAR_TAG = "conversation-message-avatar-under-test"
         protected const val DEFAULT_BODY_TEXT = "Message body"
         protected const val DEFAULT_MESSAGE_ID = "message-1"

@@ -55,6 +55,7 @@ internal class ConversationInlineAudioAttachmentRowDurationTest {
                     isIncoming = true,
                     isSelectionMode = false,
                     useStandaloneAudioAttachmentBackground = false,
+                    isPlaybackEnabled = true,
                     onLongClick = {},
                 )
             }
