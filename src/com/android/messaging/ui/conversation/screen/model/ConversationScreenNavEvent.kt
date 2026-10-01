@@ -6,6 +6,8 @@ internal sealed interface ConversationScreenNavEvent {
 
     data object CloseConversation : ConversationScreenNavEvent
 
+    data object CloseAfterArchive : ConversationScreenNavEvent
+
     data class NavigateToMessageDetails(
         val messageId: MessageId,
     ) : ConversationScreenNavEvent

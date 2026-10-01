@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversationlist.chats
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.messaging.data.conversation.event.ConversationArchiveEvents
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListMode
@@ -10,6 +11,7 @@ import com.android.messaging.data.conversationlist.repository.ConversationListRe
 import com.android.messaging.data.conversationsettings.model.SnoozeOption
 import com.android.messaging.data.debug.DebugFeaturesProvider
 import com.android.messaging.di.core.DefaultDispatcher
+import com.android.messaging.di.core.MainDispatcher
 import com.android.messaging.domain.conversation.usecase.participant.ResolveContactAction
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveContactActionResult
 import com.android.messaging.ui.contact.model.AddContactRequest
@@ -24,6 +26,7 @@ import com.android.messaging.ui.conversationlist.delegate.ConversationListSelect
 import com.android.messaging.ui.conversationlist.model.ConversationListAvatarUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
@@ -34,6 +37,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -55,8 +59,11 @@ internal class ConversationListViewModel @Inject constructor(
     private val optimisticSnapshotDelegate: ConversationListOptimisticSnapshotDelegate,
     private val resolveContactAction: ResolveContactAction,
     private val debugFeaturesProvider: DebugFeaturesProvider,
+    private val conversationArchiveEvents: ConversationArchiveEvents,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
+    @param:MainDispatcher
+    private val mainDispatcher: CoroutineDispatcher,
 ) : ViewModel(),
     ConversationListScreenModel {
 
@@ -107,6 +114,7 @@ internal class ConversationListViewModel @Inject constructor(
             scope = viewModelScope,
             snapshot = snapshot,
         )
+        offerUndoForArchivesOutsideList()
     }
 
     override fun onAction(action: Action) {
@@ -359,6 +367,24 @@ internal class ConversationListViewModel @Inject constructor(
                 isArchived = true,
             ),
         )
+    }
+
+    private fun offerUndoForArchivesOutsideList() {
+        viewModelScope.launch(mainDispatcher) {
+            conversationArchiveEvents
+                .archivedConversationIds
+                .map(::persistentListOf)
+                .collect { conversationIds ->
+                    optimisticSnapshotDelegate.remove(conversationIds)
+
+                    _effects.trySend(
+                        Effect.ArchiveStatusChanged(
+                            conversationIds = conversationIds,
+                            isArchived = true,
+                        ),
+                    )
+                }
+        }
     }
 
     private fun onConversationSwipedToToggleRead(conversationId: ConversationId) {
