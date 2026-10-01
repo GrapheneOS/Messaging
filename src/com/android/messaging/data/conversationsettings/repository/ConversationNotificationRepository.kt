@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package com.android.messaging.data.conversationsettings.repository
 
 import android.content.Context
@@ -11,13 +13,21 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.transformLatest
 
 internal interface ConversationNotificationRepository {
 
     fun observeSnoozeChanges(): Flow<Unit>
+
+    fun observeIsSnoozed(conversationId: ConversationId): Flow<Boolean>
 
     fun getSnoozeUntilMillis(conversationId: ConversationId): Long
 
@@ -57,6 +67,23 @@ internal class ConversationNotificationRepositoryImpl @Inject constructor(
                 prefs.unregisterOnSharedPreferenceChangeListener(listener)
             }
         }
+    }
+
+    override fun observeIsSnoozed(conversationId: ConversationId): Flow<Boolean> {
+        return observeSnoozeChanges()
+            .onStart { emit(Unit) }
+            .transformLatest {
+                val remainingMillis = getSnoozeUntilMillis(conversationId) -
+                    System.currentTimeMillis()
+
+                emit(remainingMillis > 0L)
+
+                if (remainingMillis > 0L) {
+                    delay(remainingMillis.milliseconds)
+                    emit(false)
+                }
+            }
+            .distinctUntilChanged()
     }
 
     override fun getSnoozeUntilMillis(conversationId: ConversationId): Long {

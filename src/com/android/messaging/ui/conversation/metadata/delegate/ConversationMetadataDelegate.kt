@@ -5,6 +5,7 @@ import com.android.messaging.data.blockedparticipants.repository.BlockedParticip
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
 import com.android.messaging.data.conversation.repository.ConversationsRepository
+import com.android.messaging.data.conversationsettings.repository.ConversationNotificationRepository
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.domain.conversation.usecase.action.CheckConversationActionRequirements
 import com.android.messaging.domain.conversation.usecase.action.ConversationActionRequirementsResult
@@ -23,8 +24,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
@@ -48,6 +49,7 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
     private val conversationsRepository: ConversationsRepository,
     private val conversationMetadataUiStateMapper: ConversationMetadataUiStateMapper,
     private val blockedParticipantsRepository: BlockedParticipantsRepository,
+    private val notificationRepository: ConversationNotificationRepository,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
 ) : ConversationMetadataDelegate {
@@ -101,10 +103,16 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
 
                         latestMetadata = metadata
                     }
-                    .map { metadata ->
+                    .combine(
+                        notificationRepository
+                            .observeIsSnoozed(conversationId = conversationId),
+                    ) { metadata, isSnoozed ->
                         when {
                             metadata != null -> {
-                                conversationMetadataUiStateMapper.map(metadata = metadata)
+                                conversationMetadataUiStateMapper.map(
+                                    metadata = metadata,
+                                    isSnoozed = isSnoozed,
+                                )
                             }
                             else -> ConversationMetadataUiState.Unavailable
                         }
