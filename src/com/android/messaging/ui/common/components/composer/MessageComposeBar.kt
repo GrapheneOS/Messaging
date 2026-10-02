@@ -1,5 +1,6 @@
 package com.android.messaging.ui.common.components.composer
 
+import android.view.inputmethod.EditorInfo
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Send
@@ -30,12 +32,15 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.InterceptPlatformTextInput
+import androidx.compose.ui.platform.PlatformTextInputInterceptor
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -48,6 +53,20 @@ import com.android.messaging.ui.core.MessagingPreviewColumn
 private val ComposeBarHorizontalPadding = 12.dp
 private val ComposeBarItemSpacing = 8.dp
 private val SendButtonSize = 56.dp
+
+// Compose drops IME_FLAG_NO_ENTER_ACTION from a multi-line field once it has an IME action, which
+// would turn Enter into Send. Put it back so Enter keeps inserting a new line while voice typing
+// and accessibility services can still send, like the legacy actionSend|flagNoEnterAction.
+private val EnterInsertsNewLineInterceptor = PlatformTextInputInterceptor { request, nextHandler ->
+    nextHandler.startInputMethod(
+        request = { outAttributes ->
+            request.createInputConnection(outAttributes).also {
+                outAttributes.imeOptions =
+                    outAttributes.imeOptions or EditorInfo.IME_FLAG_NO_ENTER_ACTION
+            }
+        },
+    )
+}
 
 @Composable
 internal fun MessageComposeBar(
@@ -65,6 +84,7 @@ internal fun MessageComposeBar(
     leadingContent: (@Composable () -> Unit)? = null,
     trailingContent: (@Composable () -> Unit)? = null,
     fieldOverlay: (@Composable BoxScope.() -> Unit)? = null,
+    onImeSend: (() -> Unit)? = null,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -94,6 +114,7 @@ internal fun MessageComposeBar(
                 leadingContent = leadingContent,
                 trailingContent = trailingContent,
                 overlay = fieldOverlay,
+                onImeSend = onImeSend,
             )
 
             sendAction()
@@ -114,6 +135,7 @@ private fun MessageComposeField(
     leadingContent: (@Composable () -> Unit)?,
     trailingContent: (@Composable () -> Unit)?,
     overlay: (@Composable BoxScope.() -> Unit)?,
+    onImeSend: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     val focusRequesterModifier = focusRequester
@@ -146,34 +168,62 @@ private fun MessageComposeField(
             topContent?.invoke(this)
 
             Box {
-                TextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .then(focusRequesterModifier)
-                        .testTag(testTag)
-                        .heightIn(min = ComposeBarControlHeight)
-                        .then(stateDescriptionModifier)
-                        .then(contentHiddenModifier),
-                    value = text,
-                    onValueChange = onTextChange,
-                    enabled = isEnabled,
-                    shape = MaterialTheme.shapes.large,
-                    colors = messageComposeFieldColors(),
-                    placeholder = ::MessageComposePlaceholder,
-                    leadingIcon = leadingContent,
-                    trailingIcon = trailingContent,
-                    minLines = 1,
-                    maxLines = 4,
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences,
-                        keyboardType = KeyboardType.ShortMessage,
-                    ),
-                )
+                InterceptPlatformTextInput(interceptor = EnterInsertsNewLineInterceptor) {
+                    MessageComposeTextField(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .then(focusRequesterModifier)
+                            .testTag(testTag)
+                            .heightIn(min = ComposeBarControlHeight)
+                            .then(stateDescriptionModifier)
+                            .then(contentHiddenModifier),
+                        text = text,
+                        onTextChange = onTextChange,
+                        isEnabled = isEnabled,
+                        leadingContent = leadingContent,
+                        trailingContent = trailingContent,
+                        onImeSend = onImeSend,
+                    )
+                }
 
                 overlay?.invoke(this)
             }
         }
     }
+}
+
+@Composable
+private fun MessageComposeTextField(
+    text: String,
+    onTextChange: (String) -> Unit,
+    isEnabled: Boolean,
+    leadingContent: (@Composable () -> Unit)?,
+    trailingContent: (@Composable () -> Unit)?,
+    onImeSend: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
+    TextField(
+        modifier = modifier,
+        value = text,
+        onValueChange = onTextChange,
+        enabled = isEnabled,
+        shape = MaterialTheme.shapes.large,
+        colors = messageComposeFieldColors(),
+        placeholder = ::MessageComposePlaceholder,
+        leadingIcon = leadingContent,
+        trailingIcon = trailingContent,
+        minLines = 1,
+        maxLines = 4,
+        keyboardOptions = KeyboardOptions(
+            capitalization = KeyboardCapitalization.Sentences,
+            keyboardType = KeyboardType.ShortMessage,
+            imeAction = when (onImeSend) {
+                null -> ImeAction.Default
+                else -> ImeAction.Send
+            },
+        ),
+        keyboardActions = KeyboardActions(onSend = { onImeSend?.invoke() }),
+    )
 }
 
 @Composable

@@ -12,6 +12,7 @@ import com.android.messaging.domain.media.usecase.ResolveAudioDurationMillis
 import com.android.messaging.ui.conversation.attachment.mapper.ConversationVCardAttachmentUiModelMapper
 import com.android.messaging.ui.conversation.common.ConversationScreenDelegate
 import com.android.messaging.ui.conversation.messages.mapper.ConversationMessageUiModelMapper
+import com.android.messaging.ui.conversation.messages.mapper.withAudioDurations
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagesUiState
@@ -21,9 +22,6 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -185,7 +183,12 @@ internal class ConversationMessagesDelegateImpl @Inject constructor(
                         .mapNotNull(conversationMessageUiModelMapper::map)
                         .toImmutableList()
                 }
-                .map(::withAudioDurations)
+                .map { messages ->
+                    withAudioDurations(
+                        messages = messages,
+                        resolveAudioDurationMillis = resolveAudioDurationMillis,
+                    )
+                }
                 .flatMapLatest { messages ->
                     observeMessagesWithVCardMetadata(
                         messages = messages,
@@ -206,54 +209,6 @@ internal class ConversationMessagesDelegateImpl @Inject constructor(
             .onStart { emit(Unit) }
             .map { appSettingsRepository.isYouTubeLinkPreviewsEnabled() }
             .distinctUntilChanged()
-    }
-
-    private suspend fun withAudioDurations(
-        messages: ImmutableList<ConversationMessageUiModel>,
-    ): ImmutableList<ConversationMessageUiModel> {
-        val audioContentUris = messages
-            .asSequence()
-            .flatMap(ConversationMessageUiModel::parts)
-            .filterIsInstance<ConversationMessagePartUiModel.Attachment.Audio>()
-            .mapNotNullTo(mutableSetOf()) { audioPart -> audioPart.contentUri?.toString() }
-
-        if (audioContentUris.isEmpty()) {
-            return messages
-        }
-
-        val durationsByContentUri = coroutineScope {
-            audioContentUris
-                .map { contentUri ->
-                    async { contentUri to resolveAudioDurationMillis(contentUri) }
-                }
-                .awaitAll()
-                .toMap()
-        }
-
-        return messages
-            .map { message ->
-                val parts = message.parts.map { part ->
-                    when (part) {
-                        is ConversationMessagePartUiModel.Attachment.Audio -> {
-                            part.copy(
-                                durationMillis = part
-                                    .contentUri
-                                    ?.toString()
-                                    ?.let(durationsByContentUri::get)
-                                    ?: part.durationMillis,
-                            )
-                        }
-
-                        else -> part
-                    }
-                }
-
-                when (parts) {
-                    message.parts -> message
-                    else -> message.copy(parts = parts.toImmutableList())
-                }
-            }
-            .toImmutableList()
     }
 
     private fun observeMessagesWithVCardMetadata(

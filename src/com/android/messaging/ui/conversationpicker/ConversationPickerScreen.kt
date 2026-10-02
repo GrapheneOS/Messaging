@@ -676,6 +676,7 @@ private fun PickerReviewComposeBar(
                 onClick = { onAction(Action.SendClicked) },
             )
         },
+        onImeSend = { if (uiState.isSendEnabled) onAction(Action.SendClicked) },
     )
 }
 

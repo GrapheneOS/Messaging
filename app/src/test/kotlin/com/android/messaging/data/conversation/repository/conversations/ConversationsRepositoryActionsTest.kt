@@ -36,6 +36,7 @@ internal class ConversationsRepositoryActionsTest : BaseConversationsRepositoryT
         every { UpdateConversationArchiveStatusAction.archiveConversation(any()) } just runs
         every { UpdateConversationArchiveStatusAction.unarchiveConversation(any()) } just runs
         every { DeleteConversationAction.deleteConversation(any(), any()) } just runs
+        every { DeleteConversationAction.deleteConversations(any()) } just runs
     }
 
     @After
@@ -135,6 +136,39 @@ internal class ConversationsRepositoryActionsTest : BaseConversationsRepositoryT
         }
         verify(exactly = 1) {
             DeleteConversationAction.deleteConversation("conversation-delete", 456L)
+        }
+    }
+
+    @Test
+    fun deleteConversations_skipsBlankIdsAndDelegatesTheRestInOneBatch() {
+        val repository = createRepository()
+
+        repository.deleteConversations(
+            cutoffTimestampsByConversationId = mapOf(
+                ConversationId("conversation-1") to 123L,
+                ConversationId(" ") to 456L,
+                ConversationId("conversation-2") to 789L,
+            ),
+        )
+
+        verify(exactly = 1) {
+            DeleteConversationAction.deleteConversations(
+                mapOf(
+                    "conversation-1" to 123L,
+                    "conversation-2" to 789L,
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun deleteConversations_skipsTheActionWhenEveryIdIsBlank() {
+        createRepository().deleteConversations(
+            cutoffTimestampsByConversationId = mapOf(ConversationId("") to 123L),
+        )
+
+        verify(exactly = 0) {
+            DeleteConversationAction.deleteConversations(any())
         }
     }
 }

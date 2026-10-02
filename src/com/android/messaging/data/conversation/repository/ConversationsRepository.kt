@@ -99,6 +99,8 @@ internal interface ConversationsRepository {
 
     fun deleteConversation(conversationId: ConversationId, cutoffTimestamp: Long)
 
+    fun deleteConversations(cutoffTimestampsByConversationId: Map<ConversationId, Long>)
+
     suspend fun setConversationSelfId(conversationId: ConversationId, selfId: ParticipantId)
 }
 
@@ -307,6 +309,14 @@ internal class ConversationsRepositoryImpl @Inject constructor(
             conversationId.value,
             cutoffTimestamp,
         )
+    }
+
+    override fun deleteConversations(cutoffTimestampsByConversationId: Map<ConversationId, Long>) {
+        cutoffTimestampsByConversationId
+            .filterKeys(ConversationId::isNotBlank)
+            .mapKeys { (conversationId, _) -> conversationId.value }
+            .takeIf { it.isNotEmpty() }
+            ?.let(DeleteConversationAction::deleteConversations)
     }
 
     override suspend fun setConversationSelfId(

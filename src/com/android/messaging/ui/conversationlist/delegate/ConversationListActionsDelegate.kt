@@ -88,12 +88,11 @@ internal class ConversationListActionsDelegateImpl @Inject constructor(
     }
 
     override fun delete(items: List<ConversationListItem>) {
-        items.forEach { item ->
-            conversationsRepository.deleteConversation(
-                conversationId = item.conversationId,
-                cutoffTimestamp = item.latestMessage.timestamp,
-            )
-        }
+        items
+            .associate { item ->
+                item.conversationId to item.latestMessage.timestamp
+            }
+            .let(conversationsRepository::deleteConversations)
     }
 
     override fun snooze(
