@@ -9,10 +9,13 @@ import com.android.messaging.data.appsettings.repository.AppSettingsRepository
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.repository.ConversationsRepository
+import com.android.messaging.domain.media.usecase.ResolveAudioDurationMillis
 import com.android.messaging.ui.conversation.messagedetails.mapper.MessageDetailsUiStateMapper
 import com.android.messaging.ui.conversation.messagedetails.model.MessageDetailsUiState as State
+import com.android.messaging.ui.conversation.messages.mapper.withAudioDurations
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,6 +35,7 @@ internal class MessageDetailsViewModel @Inject constructor(
     private val conversationsRepository: ConversationsRepository,
     private val appSettingsRepository: AppSettingsRepository,
     private val messageDetailsUiStateMapper: MessageDetailsUiStateMapper,
+    private val resolveAudioDurationMillis: ResolveAudioDurationMillis,
     private val clipboardManager: ClipboardManager,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(),
@@ -68,10 +72,27 @@ internal class MessageDetailsViewModel @Inject constructor(
             messageId = messageId,
         )
 
-        return messageDetailsUiStateMapper.map(
-            message = result?.message,
-            details = result?.details,
-            youTubeLinkPreviewsEnabled = appSettingsRepository.isYouTubeLinkPreviewsEnabled(),
-        )
+        return messageDetailsUiStateMapper
+            .map(
+                message = result?.message,
+                details = result?.details,
+                youTubeLinkPreviewsEnabled = appSettingsRepository.isYouTubeLinkPreviewsEnabled(),
+            )
+            .withResolvedAudioDurations()
+    }
+
+    private suspend fun State.withResolvedAudioDurations(): State {
+        return when (this) {
+            is State.Content -> {
+                copy(
+                    preview = withAudioDurations(
+                        messages = persistentListOf(preview),
+                        resolveAudioDurationMillis = resolveAudioDurationMillis,
+                    ).single(),
+                )
+            }
+
+            else -> this
+        }
     }
 }
