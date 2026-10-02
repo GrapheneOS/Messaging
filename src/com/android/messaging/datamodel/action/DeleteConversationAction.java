@@ -186,7 +186,9 @@ public class DeleteConversationAction extends Action implements Parcelable {
                 if (count > 0) {
                     LogUtil.i(TAG, "DeleteConversationAction: Deleted telephony thread "
                             + threadId + " (cutoffTimestamp = " + cutoffTimestamp + ")");
-                } else {
+                } else if (MmsUtils.hasThreadMessages(threadId, cutoffTimestamp)) {
+                    // Nothing deleted is only a failure if telephony kept the messages; a
+                    // conversation that only holds a draft has none to delete.
                     LogUtil.w(TAG, "DeleteConversationAction: Could not delete thread from "
                             + "telephony: conversationId = " + conversationId + ", thread id = "
                             + threadId);
