@@ -42,6 +42,7 @@ import com.android.messaging.widget.WidgetConversationProvider;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Action used to delete a conversation.
@@ -91,6 +92,16 @@ public class DeleteConversationAction extends Action implements Parcelable {
     public static void deleteConversation(final String conversationId, final long cutoffTimestamp) {
         final DeleteConversationAction action = new DeleteConversationAction(
                 new TargetConversation[]{new TargetConversation(conversationId, cutoffTimestamp)});
+        action.start();
+    }
+
+    public static void deleteConversations(
+            final Map<String, Long> cutoffTimestampsByConversationId) {
+        final TargetConversation[] conversations = cutoffTimestampsByConversationId.entrySet()
+                .stream()
+                .map(entry -> new TargetConversation(entry.getKey(), entry.getValue()))
+                .toArray(TargetConversation[]::new);
+        final DeleteConversationAction action = new DeleteConversationAction(conversations);
         action.start();
     }
 

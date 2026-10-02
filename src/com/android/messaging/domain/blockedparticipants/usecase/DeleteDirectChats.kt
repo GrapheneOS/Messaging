@@ -11,8 +11,8 @@ internal interface DeleteDirectChats {
 internal class DeleteDirectChatsImpl @Inject constructor() : DeleteDirectChats {
 
     override operator fun invoke(conversationIds: List<ConversationId>) {
-        conversationIds.forEach { conversationId ->
-            DeleteConversationAction.deleteConversation(conversationId.value, Long.MAX_VALUE)
-        }
+        conversationIds
+            .associate { conversationId -> conversationId.value to Long.MAX_VALUE }
+            .let(DeleteConversationAction::deleteConversations)
     }
 }
