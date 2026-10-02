@@ -11,6 +11,7 @@ import com.android.messaging.datamodel.MessageTextStats
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
 import com.android.messaging.sms.MmsConfig
+import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingPhase
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingUiState
 import com.android.messaging.ui.conversation.composer.model.ComposerAttachmentUiModel
 import com.android.messaging.ui.conversation.composer.model.ConversationDraftState
@@ -91,6 +92,27 @@ internal class ConversationComposerUiStateMapperImplTest {
             audioRecording = ConversationAudioRecordingUiState(),
             draftState = ConversationDraftState(
                 draft = ConversationDraft(),
+            ),
+            attachments = persistentListOf(),
+            composerAvailability = ConversationComposerAvailability.Editable,
+            subscriptions = persistentListOf(),
+            areSubscriptionsLoaded = true,
+            defaultSmsSubscriptionId = SubId(ParticipantData.DEFAULT_SELF_SUB_ID),
+        )
+
+        assertFalse(uiState.isSendEnabled)
+    }
+
+    @Test
+    fun map_disablesSendWhileAudioIsRecording() {
+        val uiState = mapper.map(
+            audioRecording = ConversationAudioRecordingUiState(
+                phase = ConversationAudioRecordingPhase.Recording,
+            ),
+            draftState = ConversationDraftState(
+                draft = ConversationDraft(
+                    messageText = "Hello",
+                ),
             ),
             attachments = persistentListOf(),
             composerAvailability = ConversationComposerAvailability.Editable,

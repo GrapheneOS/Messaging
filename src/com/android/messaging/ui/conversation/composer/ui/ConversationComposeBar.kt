@@ -296,6 +296,7 @@ internal fun ConversationComposeInputContent(
                 onAudioRecordingFinish = onAudioRecordingFinish,
             )
         },
+        onImeSend = { if (isSendActionEnabled) onSendClick() },
     )
 }
 

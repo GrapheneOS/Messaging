@@ -53,10 +53,10 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
         val isPrimaryActionAvailable = isComposerInteractionAvailable &&
             draftState.pendingAttachments.isEmpty()
 
-        val shouldShowRecordAction = !hasWorkingDraft &&
-            audioRecording.phase == ConversationAudioRecordingPhase.Idle
+        val isAudioRecordingIdle = audioRecording.phase == ConversationAudioRecordingPhase.Idle
+        val shouldShowRecordAction = !hasWorkingDraft && isAudioRecordingIdle
 
-        val isSendEnabled = hasWorkingDraft && isPrimaryActionAvailable
+        val isSendEnabled = hasWorkingDraft && isPrimaryActionAvailable && isAudioRecordingIdle
 
         val simSelector = buildSimSelectorUiState(
             subscriptions = subscriptions,

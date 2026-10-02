@@ -47,7 +47,19 @@ internal class MessageComposeBarInputTypeTest {
         assertTrue(inputType and InputType.TYPE_TEXT_FLAG_MULTI_LINE != 0)
     }
 
+    @Test
+    fun messageComposeField_withImeSend_offersSendWhileEnterStillAddsANewLine() {
+        val imeOptions = focusedFieldEditorInfo(onImeSend = {}).imeOptions
+
+        assertEquals(EditorInfo.IME_ACTION_SEND, imeOptions and EditorInfo.IME_MASK_ACTION)
+        assertTrue(imeOptions and EditorInfo.IME_FLAG_NO_ENTER_ACTION != 0)
+    }
+
     private fun focusedFieldInputType(): Int {
+        return focusedFieldEditorInfo().inputType
+    }
+
+    private fun focusedFieldEditorInfo(onImeSend: (() -> Unit)? = null): EditorInfo {
         var editorInfo: EditorInfo? = null
 
         composeTestRule.setContent {
@@ -62,6 +74,7 @@ internal class MessageComposeBarInputTypeTest {
                         fieldStateDescription = null,
                         fieldTestTag = MESSAGE_COMPOSE_FIELD_TEST_TAG,
                         sendAction = {},
+                        onImeSend = onImeSend,
                     )
                 }
             }
@@ -75,7 +88,7 @@ internal class MessageComposeBarInputTypeTest {
             editorInfo != null
         }
 
-        return requireNotNull(editorInfo).inputType
+        return requireNotNull(editorInfo)
     }
 }
 
