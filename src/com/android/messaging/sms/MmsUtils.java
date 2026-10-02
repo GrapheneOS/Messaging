@@ -2320,6 +2320,33 @@ public class MmsUtils {
     }
 
     /**
+     * Whether a thread still has SMS or MMS messages up to the cutoff, i.e. the messages
+     * {@link #deleteThread} would delete
+     */
+    public static boolean hasThreadMessages(
+            final long threadId,
+            final long cutOffTimestampInMillis
+    ) {
+        try (Cursor cursor = queryThreadMessageIds(threadId, cutOffTimestampInMillis)) {
+            return cursor == null || cursor.getCount() > 0;
+        }
+    }
+
+    private static Cursor queryThreadMessageIds(
+            final long threadId,
+            final long cutOffTimestampInMillis
+    ) {
+        final ContentResolver resolver = Factory.get().getApplicationContext().getContentResolver();
+        final Uri threadUri = ContentUris.withAppendedId(Telephony.Threads.CONTENT_URI, threadId);
+        final String[] projection = new String[] { Sms._ID };
+        // MmsSmsProvider drops selectionArgs for thread queries, so a "?" would compare to NULL
+        final String selection = Sms.DATE + "<=" + cutOffTimestampInMillis;
+
+        return resolver.query(threadUri, projection, selection, null /* selectionArgs */,
+                null /* sortOrder */);
+    }
+
+    /**
      * Delete single SMS and MMS message
      *
      * @return number of rows deleted (should be 1 or 0)
