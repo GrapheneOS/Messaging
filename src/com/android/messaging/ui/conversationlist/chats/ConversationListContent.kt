@@ -62,7 +62,7 @@ internal fun ConversationListContent(
                     actionButton = {
                         PrimaryActionButton(
                             text = stringResource(R.string.conversation_list_start_chat),
-                            onClick = { onAction(Action.StartChatClicked) },
+                            onClick = { onAction(StartChatClicked) },
                             leadingIcon = Icons.AutoMirrored.Rounded.Chat,
                         )
                     },
@@ -89,27 +89,27 @@ internal fun ConversationListContent(
 private fun ConversationListItemEvent.toChatAction(): Action {
     return when (this) {
         is ConversationListItemEvent.Clicked -> {
-            Action.ConversationClicked(conversationId)
+            ConversationClicked(conversationId)
         }
 
         is ConversationListItemEvent.LongClicked -> {
-            Action.ConversationLongClicked(conversationId)
+            ConversationLongClicked(conversationId)
         }
 
         is ConversationListItemEvent.AvatarMessageClicked -> {
-            Action.AvatarMessageClicked(conversationId)
+            AvatarMessageClicked(conversationId)
         }
 
         is ConversationListItemEvent.AvatarCallClicked -> {
-            Action.AvatarCallClicked(destination)
+            AvatarCallClicked(destination)
         }
 
         is ConversationListItemEvent.AvatarContactClicked -> {
-            Action.AvatarContactClicked(item.avatar)
+            AvatarContactClicked(item.avatar)
         }
 
         is ConversationListItemEvent.AvatarInfoClicked -> {
-            Action.AvatarInfoClicked(conversationId)
+            AvatarInfoClicked(conversationId)
         }
 
         is ConversationListItemEvent.Swiped -> when (kind) {
