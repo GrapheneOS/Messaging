@@ -6,6 +6,7 @@ internal data class AppSettings(
     val sendSoundEnabled: Boolean,
     val inConversationSoundEnabled: Boolean,
     val youTubeLinkPreviewsEnabled: Boolean,
+    val conversationSwipeSettings: ConversationSwipeSettings,
     val isDebugEnabled: Boolean,
     val dumpSmsEnabled: Boolean,
     val dumpMmsEnabled: Boolean,

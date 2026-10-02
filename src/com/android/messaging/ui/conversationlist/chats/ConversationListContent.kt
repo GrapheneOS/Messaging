@@ -27,14 +27,10 @@ import com.android.messaging.ui.conversationlist.common.list.unsupportedSwipeKin
 import com.android.messaging.ui.conversationlist.common.status.ConversationListLoadingIndicator
 import com.android.messaging.ui.conversationlist.common.status.ConversationListStatusMessage
 import com.android.messaging.ui.conversationlist.common.support.previewConversationListItems
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel as Model
 import com.android.messaging.ui.core.MessagingPreviewTheme
-
-private val ChatSwipeSpec = ConversationListSwipeSpec(
-    startToEnd = ConversationSwipeKind.ToggleRead,
-    endToStart = ConversationSwipeKind.Delete,
-)
 
 @Composable
 internal fun ConversationListContent(
@@ -45,6 +41,7 @@ internal fun ConversationListContent(
     isSelectionMode: Boolean,
     fabBottomReserve: Dp,
     pinAnimationController: OverlayReorderAnimationController<Model, ConversationId>?,
+    swipeSpec: ConversationListSwipeSpec,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -81,7 +78,7 @@ internal fun ConversationListContent(
                     scaffoldContentPadding = scaffoldContentPadding,
                     fabBottomReserve = fabBottomReserve,
                     pinAnimationController = pinAnimationController,
-                    swipeSpec = ChatSwipeSpec,
+                    swipeSpec = swipeSpec,
                     onItemEvent = { onAction(it.toChatAction()) },
                 )
             }
@@ -129,7 +126,6 @@ private fun ConversationListItemEvent.toChatAction(): Action {
             }
 
             ConversationSwipeKind.Unarchive -> unsupportedSwipeKind(kind)
-
         }
     }
 }
@@ -146,6 +142,7 @@ private fun ConversationListContentEmptyPreview() {
             isSelectionMode = false,
             fabBottomReserve = 0.dp,
             pinAnimationController = null,
+            swipeSpec = ConversationListUiState().swipeSpec,
         )
     }
 }
@@ -162,6 +159,7 @@ private fun ConversationListContentWaitingForSyncPreview() {
             isSelectionMode = false,
             fabBottomReserve = 0.dp,
             pinAnimationController = null,
+            swipeSpec = ConversationListUiState().swipeSpec,
         )
     }
 }
@@ -180,6 +178,7 @@ private fun ConversationListContentItemsPreview() {
             isSelectionMode = false,
             fabBottomReserve = 0.dp,
             pinAnimationController = null,
+            swipeSpec = ConversationListUiState().swipeSpec,
         )
     }
 }

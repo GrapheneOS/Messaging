@@ -1,11 +1,12 @@
 package com.android.messaging.ui.appsettings.general.delegate
 
 import com.android.messaging.data.appsettings.model.AppBooleanPref
+import com.android.messaging.data.appsettings.model.ConversationSwipeOption
+import com.android.messaging.data.appsettings.model.ConversationSwipePref
 import com.android.messaging.data.appsettings.repository.AppSettingsRepository
 import com.android.messaging.ui.appsettings.common.SettingsScreenDelegate
 import com.android.messaging.ui.appsettings.general.mapper.AppSettingsUiStateMapper
 import com.android.messaging.ui.appsettings.general.model.AppSettingsUiState
-import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,11 +16,14 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 internal interface AppSettingsDelegate : SettingsScreenDelegate<AppSettingsUiState> {
     fun onSendSoundChanged(enabled: Boolean)
     fun onInConversationSoundChanged(enabled: Boolean)
     fun onYouTubeLinkPreviewsChanged(enabled: Boolean)
+    fun onConversationSwipeStartToEndOptionChanged(option: ConversationSwipeOption)
+    fun onConversationSwipeEndToStartOptionChanged(option: ConversationSwipeOption)
     fun onDumpSmsChanged(enabled: Boolean)
     fun onDumpMmsChanged(enabled: Boolean)
 }
@@ -79,6 +83,20 @@ internal class AppSettingsDelegateImpl @Inject constructor(
         )
     }
 
+    override fun onConversationSwipeStartToEndOptionChanged(option: ConversationSwipeOption) {
+        setConversationSwipeOption(
+            pref = ConversationSwipePref.START_TO_END,
+            option = option,
+        )
+    }
+
+    override fun onConversationSwipeEndToStartOptionChanged(option: ConversationSwipeOption) {
+        setConversationSwipeOption(
+            pref = ConversationSwipePref.END_TO_START,
+            option = option,
+        )
+    }
+
     override fun onDumpSmsChanged(enabled: Boolean) {
         setBooleanPref(
             pref = AppBooleanPref.DUMP_SMS,
@@ -101,6 +119,19 @@ internal class AppSettingsDelegateImpl @Inject constructor(
             repository.setBooleanPref(
                 pref = pref,
                 enabled = enabled,
+            )
+            refresh()
+        }
+    }
+
+    private fun setConversationSwipeOption(
+        pref: ConversationSwipePref,
+        option: ConversationSwipeOption,
+    ) {
+        boundScope?.launch {
+            repository.setConversationSwipeOption(
+                pref = pref,
+                option = option,
             )
             refresh()
         }

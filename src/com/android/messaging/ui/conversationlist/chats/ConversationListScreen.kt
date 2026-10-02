@@ -450,6 +450,7 @@ private fun ConversationListScaffold(
                 isSelectionMode = isSelectionMode,
                 fabBottomReserve = FabBottomReserve,
                 pinAnimationController = pinAnimationController,
+                swipeSpec = uiState.swipeSpec,
             )
 
             ConversationListFabs(

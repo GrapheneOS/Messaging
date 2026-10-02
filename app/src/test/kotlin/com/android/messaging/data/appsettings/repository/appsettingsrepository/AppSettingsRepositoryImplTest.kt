@@ -5,6 +5,9 @@ import android.content.res.Resources
 import com.android.messaging.Factory
 import com.android.messaging.R
 import com.android.messaging.data.appsettings.model.AppBooleanPref
+import com.android.messaging.data.appsettings.model.ConversationSwipeOption
+import com.android.messaging.data.appsettings.model.ConversationSwipePref
+import com.android.messaging.data.appsettings.model.ConversationSwipeSettings
 import com.android.messaging.data.appsettings.repository.AppSettingsRepositoryImpl
 import com.android.messaging.data.debug.DebugFeaturesProvider
 import com.android.messaging.datamodel.data.ParticipantData
@@ -71,6 +74,12 @@ internal class AppSettingsRepositoryImplTest {
             context.getString(R.string.youtube_link_previews_pref_key)
         } returns YOUTUBE_LINK_PREVIEWS_PREF_KEY
         every {
+            context.getString(R.string.conversation_swipe_start_to_end_pref_key)
+        } returns SWIPE_START_TO_END_PREF_KEY
+        every {
+            context.getString(R.string.conversation_swipe_end_to_start_pref_key)
+        } returns SWIPE_END_TO_START_PREF_KEY
+        every {
             resources.getBoolean(R.bool.youtube_link_previews_pref_default)
         } returns YOUTUBE_LINK_PREVIEWS_DEFAULT
         every { resources.getBoolean(R.bool.send_sound_pref_default) } returns
@@ -108,6 +117,8 @@ internal class AppSettingsRepositoryImplTest {
                     YOUTUBE_LINK_PREVIEWS_DEFAULT,
                 )
             } returns true
+            every { appPrefs.getString(SWIPE_START_TO_END_PREF_KEY, null) } returns "Delete"
+            every { appPrefs.getString(SWIPE_END_TO_START_PREF_KEY, null) } returns null
 
             val result = createRepository(
                 ioDispatcher = UnconfinedTestDispatcher(testScheduler),
@@ -118,6 +129,13 @@ internal class AppSettingsRepositoryImplTest {
             assertFalse(result.sendSoundEnabled)
             assertTrue(result.inConversationSoundEnabled)
             assertTrue(result.youTubeLinkPreviewsEnabled)
+            assertEquals(
+                ConversationSwipeSettings(
+                    startToEnd = ConversationSwipeOption.Delete,
+                    endToStart = ConversationSwipeOption.Archive,
+                ),
+                result.conversationSwipeSettings,
+            )
             assertTrue(result.isDebugEnabled)
             assertTrue(result.dumpSmsEnabled)
             assertFalse(result.dumpMmsEnabled)
@@ -192,6 +210,64 @@ internal class AppSettingsRepositoryImplTest {
     }
 
     @Test
+    fun setConversationSwipeOption_writesOptionNameForEverySwipePreferenceKey() {
+        runTest {
+            every { appPrefs.putString(any(), any()) } just runs
+            val repository = createRepository(
+                ioDispatcher = UnconfinedTestDispatcher(testScheduler),
+            )
+
+            repository.setConversationSwipeOption(
+                pref = ConversationSwipePref.START_TO_END,
+                option = ConversationSwipeOption.Archive,
+            )
+            repository.setConversationSwipeOption(
+                pref = ConversationSwipePref.END_TO_START,
+                option = ConversationSwipeOption.ToggleRead,
+            )
+
+            verify(exactly = 1) {
+                appPrefs.putString(SWIPE_START_TO_END_PREF_KEY, "Archive")
+                appPrefs.putString(SWIPE_END_TO_START_PREF_KEY, "ToggleRead")
+            }
+        }
+    }
+
+    @Test
+    fun getConversationSwipeSettings_readsStoredOptions() {
+        runTest {
+            every { appPrefs.getString(SWIPE_START_TO_END_PREF_KEY, null) } returns "Archive"
+            every { appPrefs.getString(SWIPE_END_TO_START_PREF_KEY, null) } returns "Delete"
+
+            val result = createRepository(
+                ioDispatcher = UnconfinedTestDispatcher(testScheduler),
+            ).getConversationSwipeSettings()
+
+            assertEquals(
+                ConversationSwipeSettings(
+                    startToEnd = ConversationSwipeOption.Archive,
+                    endToStart = ConversationSwipeOption.Delete,
+                ),
+                result,
+            )
+        }
+    }
+
+    @Test
+    fun getConversationSwipeSettings_fallsBackToDefaultsWhenMissingOrUnknown() {
+        runTest {
+            every { appPrefs.getString(SWIPE_START_TO_END_PREF_KEY, null) } returns null
+            every { appPrefs.getString(SWIPE_END_TO_START_PREF_KEY, null) } returns "UnknownValue"
+
+            val result = createRepository(
+                ioDispatcher = UnconfinedTestDispatcher(testScheduler),
+            ).getConversationSwipeSettings()
+
+            assertEquals(ConversationSwipeSettings.Default, result)
+        }
+    }
+
+    @Test
     fun isYouTubeLinkPreviewsEnabled_readsPreferenceWithResourceDefault() {
         runTest {
             every {
@@ -242,6 +318,8 @@ internal class AppSettingsRepositoryImplTest {
         private const val IN_CONVERSATION_SOUND_PREF_KEY = "in_conversation_sound"
         private const val SEND_SOUND_DEFAULT = true
         private const val SEND_SOUND_PREF_KEY = "send_sound"
+        private const val SWIPE_END_TO_START_PREF_KEY = "conversation_swipe_end_to_start"
+        private const val SWIPE_START_TO_END_PREF_KEY = "conversation_swipe_start_to_end"
         private const val YOUTUBE_LINK_PREVIEWS_DEFAULT = false
         private const val YOUTUBE_LINK_PREVIEWS_PREF_KEY = "youtube_link_previews"
     }

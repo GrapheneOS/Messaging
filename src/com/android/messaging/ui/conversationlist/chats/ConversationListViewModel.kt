@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversationlist.chats
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.messaging.data.appsettings.repository.AppSettingsRepository
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListMode
@@ -18,6 +19,7 @@ import com.android.messaging.ui.conversationlist.chats.model.ConversationListAct
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListEffect as Effect
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListNavEvent as NavEvent
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState as State
+import com.android.messaging.ui.conversationlist.chats.mapper.toSwipeSpec
 import com.android.messaging.ui.conversationlist.delegate.ConversationListActionsDelegate
 import com.android.messaging.ui.conversationlist.delegate.ConversationListOptimisticSnapshotDelegate
 import com.android.messaging.ui.conversationlist.delegate.ConversationListSelectionDelegate
@@ -55,6 +57,7 @@ internal class ConversationListViewModel @Inject constructor(
     private val optimisticSnapshotDelegate: ConversationListOptimisticSnapshotDelegate,
     private val resolveContactAction: ResolveContactAction,
     private val debugFeaturesProvider: DebugFeaturesProvider,
+    private val appSettingsRepository: AppSettingsRepository,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
 ) : ViewModel(),
@@ -63,6 +66,7 @@ internal class ConversationListViewModel @Inject constructor(
     private val isScrollToTopVisible = MutableStateFlow(false)
     private val isDebugEnabled = MutableStateFlow(debugFeaturesProvider.isEnabled())
     private val openedConversationId = MutableStateFlow<ConversationId?>(value = null)
+    private val swipeSpec = MutableStateFlow(State().swipeSpec)
 
     private val snapshot: StateFlow<ConversationListSnapshot?> = optimisticSnapshotDelegate.snapshot
 
@@ -87,6 +91,9 @@ internal class ConversationListViewModel @Inject constructor(
             isDebugEnabled = isDebugEnabled,
         )
     }
+        .combine(swipeSpec) { state, swipeSpec ->
+            state.copy(swipeSpec = swipeSpec)
+        }
         .flowOn(defaultDispatcher)
         .stateIn(
             scope = viewModelScope,
@@ -213,8 +220,15 @@ internal class ConversationListViewModel @Inject constructor(
         when (action) {
             Action.ScreenResumed -> {
                 isDebugEnabled.value = debugFeaturesProvider.isEnabled()
+                refreshSwipeSpec()
                 repository.refresh()
             }
+        }
+    }
+
+    private fun refreshSwipeSpec() {
+        viewModelScope.launch {
+            swipeSpec.value = appSettingsRepository.getConversationSwipeSettings().toSwipeSpec()
         }
     }
 

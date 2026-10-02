@@ -366,6 +366,13 @@
     <string name="mms_messaging_category_pref_title">MMS</string>
     <!-- Preference category: Advanced -->
     <string name="advanced_category_pref_title">Advanced</string>
+    <string name="swipe_category_pref_title">Conversation Swipe Actions</string>
+    <!-- Title for the preference choosing what swiping a conversation towards the end edge does -->
+    <string name="swipe_start_to_end_pref_title">Swipe right</string>
+    <!-- Title for the preference choosing what swiping a conversation towards the start edge does -->
+    <string name="swipe_end_to_start_pref_title">Swipe left</string>
+    <!-- Swipe action option that marks a conversation read if unread, or unread if read -->
+    <string name="swipe_action_toggle_read">Mark as read/unread</string>
     <!-- Preference category: Debug -->
     <string name="debug_category_pref_title">Debug</string>
     <!-- Title for the preference for whether or not to request/show delivery reports for SMS -->

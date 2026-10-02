@@ -498,7 +498,7 @@ private fun ConversationListSwipeBackground(
     val contentColor = when (background) {
         ConversationSwipeKind.Archive -> MaterialTheme.colorScheme.onSecondaryContainer
         ConversationSwipeKind.Unarchive -> MaterialTheme.colorScheme.onSecondaryContainer
-        ConversationSwipeKind.Delete -> MaterialTheme.colorScheme.onSecondaryContainer
+        ConversationSwipeKind.Delete -> MaterialTheme.colorScheme.onErrorContainer
         ConversationSwipeKind.ToggleRead -> MaterialTheme.colorScheme.onTertiaryContainer
     }
 

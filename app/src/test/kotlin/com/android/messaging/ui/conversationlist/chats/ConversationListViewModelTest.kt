@@ -1,6 +1,8 @@
 package com.android.messaging.ui.conversationlist.chats
 
 import app.cash.turbine.test
+import com.android.messaging.data.appsettings.model.ConversationSwipeSettings
+import com.android.messaging.data.appsettings.repository.AppSettingsRepository
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
@@ -48,6 +50,7 @@ class ConversationListViewModelTest {
     private val optimisticSnapshotDelegate = mockk<ConversationListOptimisticSnapshotDelegate>()
     private val debugFeaturesProvider = mockk<DebugFeaturesProvider>()
     private val resolveContactAction = mockk<ResolveContactAction>()
+    private val appSettingsRepository = mockk<AppSettingsRepository>()
 
     private val snapshotFlow = MutableStateFlow<ConversationListSnapshot?>(null)
     private val selectedIdsFlow = MutableStateFlow<ImmutableList<ConversationId>>(
@@ -252,6 +255,8 @@ class ConversationListViewModelTest {
         every { debugFeaturesProvider.isEnabled() } returns false
         every { resolveContactAction(any(), any(), any()) } returns
             ResolveContactActionResult.Unavailable
+        coEvery { appSettingsRepository.getConversationSwipeSettings() } returns
+            ConversationSwipeSettings.Default
 
         return ConversationListViewModel(
             repository = repository,
@@ -261,6 +266,7 @@ class ConversationListViewModelTest {
             optimisticSnapshotDelegate = optimisticSnapshotDelegate,
             debugFeaturesProvider = debugFeaturesProvider,
             resolveContactAction = resolveContactAction,
+            appSettingsRepository = appSettingsRepository,
             defaultDispatcher = mainDispatcherRule.testDispatcher,
         )
     }
