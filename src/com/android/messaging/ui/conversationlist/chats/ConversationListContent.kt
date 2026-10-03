@@ -17,8 +17,18 @@ import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.common.components.PrimaryActionButton
 import com.android.messaging.ui.common.components.reorder.OverlayReorderAnimationController
-import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.*
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.AvatarCallClicked
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.AvatarContactClicked
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.AvatarInfoClicked
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.AvatarMessageClicked
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.ConversationClicked
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.ConversationLongClicked
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.ConversationSwipedToArchive
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.ConversationSwipedToDelete
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.ConversationSwipedToToggleRead
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.StartChatClicked
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState
 import com.android.messaging.ui.conversationlist.common.item.ConversationSwipeKind
 import com.android.messaging.ui.conversationlist.common.list.ConversationListItemEvent
 import com.android.messaging.ui.conversationlist.common.list.ConversationListItems
@@ -27,7 +37,6 @@ import com.android.messaging.ui.conversationlist.common.list.unsupportedSwipeKin
 import com.android.messaging.ui.conversationlist.common.status.ConversationListLoadingIndicator
 import com.android.messaging.ui.conversationlist.common.status.ConversationListStatusMessage
 import com.android.messaging.ui.conversationlist.common.support.previewConversationListItems
-import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel as Model
 import com.android.messaging.ui.core.MessagingPreviewTheme

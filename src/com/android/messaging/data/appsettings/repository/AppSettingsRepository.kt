@@ -12,9 +12,9 @@ import com.android.messaging.di.core.IoDispatcher
 import com.android.messaging.util.BuglePrefs
 import com.android.messaging.util.PhoneUtils
 import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 internal interface AppSettingsRepository {
     suspend fun getAppSettings(): AppSettings

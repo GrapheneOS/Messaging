@@ -15,11 +15,11 @@ import com.android.messaging.domain.conversation.usecase.participant.ResolveCont
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveContactActionResult
 import com.android.messaging.ui.contact.model.AddContactRequest
 import com.android.messaging.ui.conversationlist.chats.mapper.ConversationListUiStateMapper
+import com.android.messaging.ui.conversationlist.chats.mapper.toSwipeSpec
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListEffect as Effect
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListNavEvent as NavEvent
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState as State
-import com.android.messaging.ui.conversationlist.chats.mapper.toSwipeSpec
 import com.android.messaging.ui.conversationlist.delegate.ConversationListActionsDelegate
 import com.android.messaging.ui.conversationlist.delegate.ConversationListOptimisticSnapshotDelegate
 import com.android.messaging.ui.conversationlist.delegate.ConversationListSelectionDelegate
@@ -237,7 +237,7 @@ internal class ConversationListViewModel @Inject constructor(
 
     private fun refreshSwipeSpec() {
         viewModelScope.launch {
-            swipeSpec.value = this@ConversationListViewModel.appSettingsRepository.getConversationSwipeSettings().toSwipeSpec()
+            swipeSpec.value = appSettingsRepository.getConversationSwipeSettings().toSwipeSpec()
         }
     }
 
@@ -308,7 +308,9 @@ internal class ConversationListViewModel @Inject constructor(
     }
 
     private fun updateNewestConversationVisibility() {
-        conversationListRepository.setNewestConversationVisible(isScreenResumed && isListScrolledToTop)
+        conversationListRepository.setNewestConversationVisible(
+            isScreenResumed && isListScrolledToTop,
+        )
     }
 
     private fun onAvatarContactClick(avatar: ConversationListAvatarUiModel) {

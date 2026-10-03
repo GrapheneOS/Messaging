@@ -7,6 +7,7 @@ import com.android.messaging.data.appsettings.repository.AppSettingsRepository
 import com.android.messaging.ui.appsettings.common.SettingsScreenDelegate
 import com.android.messaging.ui.appsettings.general.mapper.AppSettingsUiStateMapper
 import com.android.messaging.ui.appsettings.general.model.AppSettingsUiState
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +17,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 internal interface AppSettingsDelegate : SettingsScreenDelegate<AppSettingsUiState> {
     fun onSendSoundChanged(enabled: Boolean)
