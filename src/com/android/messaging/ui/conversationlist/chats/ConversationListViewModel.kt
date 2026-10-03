@@ -50,14 +50,14 @@ internal interface ConversationListScreenModel {
 
 @HiltViewModel
 internal class ConversationListViewModel @Inject constructor(
-    private val repository: ConversationListRepository,
+    private val conversationListRepository: ConversationListRepository,
+    private val appSettingsRepository: AppSettingsRepository,
     uiStateMapper: ConversationListUiStateMapper,
     private val selectionDelegate: ConversationListSelectionDelegate,
     private val actionsDelegate: ConversationListActionsDelegate,
     private val optimisticSnapshotDelegate: ConversationListOptimisticSnapshotDelegate,
     private val resolveContactAction: ResolveContactAction,
     private val debugFeaturesProvider: DebugFeaturesProvider,
-    private val appSettingsRepository: AppSettingsRepository,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
 ) : ViewModel(),
@@ -221,14 +221,14 @@ internal class ConversationListViewModel @Inject constructor(
             Action.ScreenResumed -> {
                 isDebugEnabled.value = debugFeaturesProvider.isEnabled()
                 refreshSwipeSpec()
-                repository.refresh()
+                conversationListRepository.refresh()
             }
         }
     }
 
     private fun refreshSwipeSpec() {
         viewModelScope.launch {
-            swipeSpec.value = appSettingsRepository.getConversationSwipeSettings().toSwipeSpec()
+            swipeSpec.value = this@ConversationListViewModel.appSettingsRepository.getConversationSwipeSettings().toSwipeSpec()
         }
     }
 
@@ -300,7 +300,7 @@ internal class ConversationListViewModel @Inject constructor(
         }
 
         isScrollToTopVisible.value = shouldShowScrollToTop
-        repository.setNewestConversationVisible(isVisible)
+        conversationListRepository.setNewestConversationVisible(isVisible)
     }
 
     private fun onAvatarContactClick(avatar: ConversationListAvatarUiModel) {

@@ -210,7 +210,7 @@ internal class AppSettingsRepositoryImplTest {
     }
 
     @Test
-    fun setConversationSwipeOption_writesOptionNameForEverySwipePreferenceKey() {
+    fun setConversationSwipeOptions_writesExpectedStringToEachPreferenceKey() {
         runTest {
             every { appPrefs.putString(any(), any()) } just runs
             val repository = createRepository(

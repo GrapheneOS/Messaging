@@ -366,6 +366,7 @@
     <string name="mms_messaging_category_pref_title">MMS</string>
     <!-- Preference category: Advanced -->
     <string name="advanced_category_pref_title">Advanced</string>
+    <!-- Preference category: Conversation Swipe Options -->
     <string name="swipe_category_pref_title">Conversation Swipe Actions</string>
     <!-- Title for the preference choosing what swiping a conversation towards the end edge does -->
     <string name="swipe_start_to_end_pref_title">Swipe right</string>

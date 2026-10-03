@@ -43,14 +43,14 @@ class ConversationListViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val repository = mockk<ConversationListRepository>()
+    private val conversationListRepository = mockk<ConversationListRepository>()
+    private val appSettingsRepository = mockk<AppSettingsRepository>()
     private val uiStateMapper = mockk<ConversationListUiStateMapper>()
     private val selectionDelegate = mockk<ConversationListSelectionDelegate>()
     private val actionsDelegate = mockk<ConversationListActionsDelegate>()
     private val optimisticSnapshotDelegate = mockk<ConversationListOptimisticSnapshotDelegate>()
     private val debugFeaturesProvider = mockk<DebugFeaturesProvider>()
     private val resolveContactAction = mockk<ResolveContactAction>()
-    private val appSettingsRepository = mockk<AppSettingsRepository>()
 
     private val snapshotFlow = MutableStateFlow<ConversationListSnapshot?>(null)
     private val selectedIdsFlow = MutableStateFlow<ImmutableList<ConversationId>>(
@@ -227,8 +227,8 @@ class ConversationListViewModelTest {
     }
 
     private fun createViewModel(): ConversationListViewModel {
-        every { repository.refresh() } just runs
-        every { repository.setNewestConversationVisible(any()) } just runs
+        every { conversationListRepository.refresh() } just runs
+        every { conversationListRepository.setNewestConversationVisible(any()) } just runs
 
         every { optimisticSnapshotDelegate.snapshot } returns snapshotFlow
         every { optimisticSnapshotDelegate.bind(any(), any()) } just runs
@@ -259,14 +259,14 @@ class ConversationListViewModelTest {
             ConversationSwipeSettings.Default
 
         return ConversationListViewModel(
-            repository = repository,
+            conversationListRepository = conversationListRepository,
+            appSettingsRepository = appSettingsRepository,
             uiStateMapper = uiStateMapper,
             selectionDelegate = selectionDelegate,
             actionsDelegate = actionsDelegate,
             optimisticSnapshotDelegate = optimisticSnapshotDelegate,
             debugFeaturesProvider = debugFeaturesProvider,
             resolveContactAction = resolveContactAction,
-            appSettingsRepository = appSettingsRepository,
             defaultDispatcher = mainDispatcherRule.testDispatcher,
         )
     }
