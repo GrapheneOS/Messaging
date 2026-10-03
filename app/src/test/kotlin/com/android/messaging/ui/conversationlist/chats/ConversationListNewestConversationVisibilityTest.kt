@@ -11,6 +11,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.android.common.test.helpers.targetContext
 import com.android.messaging.FactoryTestAccess
+import com.android.messaging.data.appsettings.repository.AppSettingsRepository
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
 import com.android.messaging.testutil.TestLifecycleOwner
@@ -50,7 +51,8 @@ internal class ConversationListNewestConversationVisibilityTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private val repository = mockk<ConversationListRepository>(relaxed = true)
+    private val conversationListRepository = mockk<ConversationListRepository>(relaxed = true)
+    private val appSettingsRepository = mockk<AppSettingsRepository>(relaxed = true)
     private val visibilityUpdates = mutableListOf<Boolean>()
 
     private lateinit var lifecycleOwner: TestLifecycleOwner
@@ -59,7 +61,7 @@ internal class ConversationListNewestConversationVisibilityTest {
     @Before
     fun setUp() {
         installTestFactory(context = targetContext)
-        every { repository.setNewestConversationVisible(any()) } answers {
+        every { conversationListRepository.setNewestConversationVisible(any()) } answers {
             visibilityUpdates += firstArg<Boolean>()
         }
     }
@@ -179,7 +181,8 @@ internal class ConversationListNewestConversationVisibilityTest {
         every { selectionDelegate.selectedIds } returns MutableStateFlow(persistentListOf())
 
         return ConversationListViewModel(
-            repository = repository,
+            conversationListRepository = conversationListRepository,
+            appSettingsRepository = appSettingsRepository,
             uiStateMapper = uiStateMapper,
             selectionDelegate = selectionDelegate,
             actionsDelegate = mockk(relaxed = true),

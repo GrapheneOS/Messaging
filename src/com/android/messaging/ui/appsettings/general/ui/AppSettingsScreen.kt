@@ -14,8 +14,10 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.android.messaging.R
+import com.android.messaging.data.appsettings.model.ConversationSwipeOption
 import com.android.messaging.ui.appsettings.common.SettingsCategoryHeader
 import com.android.messaging.ui.appsettings.common.SettingsClickableItem
+import com.android.messaging.ui.appsettings.common.SettingsListItem
 import com.android.messaging.ui.appsettings.common.SettingsSwitchItem
 import com.android.messaging.ui.appsettings.common.SettingsTopAppBar
 import com.android.messaging.ui.appsettings.general.model.AppSettingsAction as Action
@@ -64,6 +66,11 @@ internal fun AppSettingsScreen(
             if (isTopLevel && hasAdvancedSettings) {
                 advancedSettingsItem(onAdvancedClick)
             }
+
+            swipeSettingsItems(
+                appSettings = appSettings,
+                onAction = onAction,
+            )
 
             debugSettingsItems(
                 appSettings = appSettings,
@@ -136,6 +143,45 @@ private fun LazyListScope.advancedSettingsItem(onAdvancedClick: () -> Unit) {
         )
     }
 }
+
+private fun LazyListScope.swipeSettingsItems(
+    appSettings: AppSettingsUiState,
+    onAction: (Action) -> Unit,
+) {
+    item(key = "swipe_divider") {
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+    }
+    item(key = "swipe_category_header") {
+        SettingsCategoryHeader(
+            title = stringResource(R.string.swipe_category_pref_title),
+        )
+    }
+    item(key = "swipe_start_to_end_action") {
+        SettingsListItem(
+            title = stringResource(R.string.swipe_start_to_end_pref_title),
+            options = ConversationSwipeOption.entries,
+            selectedOption = appSettings.conversationSwipeSettings.startToEnd,
+            optionLabel = { stringResource(it.labelRes) },
+            onOptionSelected = { onAction(Action.ConversationSwipeStartToEndOptionChanged(it)) },
+        )
+    }
+    item(key = "swipe_end_to_start_action") {
+        SettingsListItem(
+            title = stringResource(R.string.swipe_end_to_start_pref_title),
+            options = ConversationSwipeOption.entries,
+            selectedOption = appSettings.conversationSwipeSettings.endToStart,
+            optionLabel = { stringResource(it.labelRes) },
+            onOptionSelected = { onAction(Action.ConversationSwipeEndToStartOptionChanged(it)) },
+        )
+    }
+}
+
+private val ConversationSwipeOption.labelRes: Int
+    get() = when (this) {
+        ConversationSwipeOption.ToggleRead -> R.string.swipe_action_toggle_read
+        ConversationSwipeOption.Archive -> R.string.action_archive
+        ConversationSwipeOption.Delete -> R.string.action_delete
+    }
 
 private fun LazyListScope.debugSettingsItems(
     appSettings: AppSettingsUiState,

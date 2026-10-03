@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversationlist.chats
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.messaging.data.appsettings.repository.AppSettingsRepository
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListMode
@@ -14,6 +15,7 @@ import com.android.messaging.domain.conversation.usecase.participant.ResolveCont
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveContactActionResult
 import com.android.messaging.ui.contact.model.AddContactRequest
 import com.android.messaging.ui.conversationlist.chats.mapper.ConversationListUiStateMapper
+import com.android.messaging.ui.conversationlist.chats.mapper.toSwipeSpec
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListEffect as Effect
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListNavEvent as NavEvent
@@ -48,7 +50,8 @@ internal interface ConversationListScreenModel {
 
 @HiltViewModel
 internal class ConversationListViewModel @Inject constructor(
-    private val repository: ConversationListRepository,
+    private val conversationListRepository: ConversationListRepository,
+    private val appSettingsRepository: AppSettingsRepository,
     uiStateMapper: ConversationListUiStateMapper,
     private val selectionDelegate: ConversationListSelectionDelegate,
     private val actionsDelegate: ConversationListActionsDelegate,
@@ -63,6 +66,7 @@ internal class ConversationListViewModel @Inject constructor(
     private val isScrollToTopVisible = MutableStateFlow(false)
     private val isDebugEnabled = MutableStateFlow(debugFeaturesProvider.isEnabled())
     private val openedConversationId = MutableStateFlow<ConversationId?>(value = null)
+    private val swipeSpec = MutableStateFlow(State().swipeSpec)
     private var isScreenResumed = false
     private var isListScrolledToTop = false
 
@@ -89,6 +93,9 @@ internal class ConversationListViewModel @Inject constructor(
             isDebugEnabled = isDebugEnabled,
         )
     }
+        .combine(swipeSpec) { state, swipeSpec ->
+            state.copy(swipeSpec = swipeSpec)
+        }
         .flowOn(defaultDispatcher)
         .stateIn(
             scope = viewModelScope,
@@ -131,7 +138,7 @@ internal class ConversationListViewModel @Inject constructor(
             }
 
             is Action.DeleteConfirmed -> {
-                onDeleteConfirmed()
+                delete(action.conversationIds)
             }
         }
     }
@@ -194,17 +201,6 @@ internal class ConversationListViewModel @Inject constructor(
         selectionDelegate.clear()
     }
 
-    private fun onDeleteConfirmed() {
-        val selectedItems = currentSelectedItems()
-
-        if (selectedItems.isEmpty()) {
-            return
-        }
-
-        actionsDelegate.delete(selectedItems)
-        selectionDelegate.clear()
-    }
-
     private fun onArchiveUndoClicked(
         conversationIds: List<ConversationId>,
         isArchived: Boolean,
@@ -227,7 +223,8 @@ internal class ConversationListViewModel @Inject constructor(
             Action.ScreenResumed -> {
                 isScreenResumed = true
                 isDebugEnabled.value = debugFeaturesProvider.isEnabled()
-                repository.refresh()
+                refreshSwipeSpec()
+                conversationListRepository.refresh()
                 updateNewestConversationVisibility()
             }
 
@@ -235,6 +232,12 @@ internal class ConversationListViewModel @Inject constructor(
                 isScreenResumed = false
                 updateNewestConversationVisibility()
             }
+        }
+    }
+
+    private fun refreshSwipeSpec() {
+        viewModelScope.launch {
+            swipeSpec.value = appSettingsRepository.getConversationSwipeSettings().toSwipeSpec()
         }
     }
 
@@ -275,6 +278,10 @@ internal class ConversationListViewModel @Inject constructor(
             is Action.ConversationSwipedToToggleRead -> {
                 onConversationSwipedToToggleRead(action.conversationId)
             }
+
+            is Action.ConversationSwipedToDelete -> {
+                requestDelete(listOf(action.conversationId))
+            }
         }
     }
 
@@ -301,7 +308,9 @@ internal class ConversationListViewModel @Inject constructor(
     }
 
     private fun updateNewestConversationVisibility() {
-        repository.setNewestConversationVisible(isScreenResumed && isListScrolledToTop)
+        conversationListRepository.setNewestConversationVisible(
+            isScreenResumed && isListScrolledToTop,
+        )
     }
 
     private fun onAvatarContactClick(avatar: ConversationListAvatarUiModel) {
@@ -363,21 +372,40 @@ internal class ConversationListViewModel @Inject constructor(
 
     private fun onConversationSwipedToToggleRead(conversationId: ConversationId) {
         val item = itemById(conversationId) ?: return
+        setRead(listOf(conversationId), isRead = !item.latestMessage.isRead)
+    }
 
-        val shouldMarkRead = !item.latestMessage.isRead
-        val conversationIds = listOf(conversationId)
-
+    private fun setRead(conversationIds: List<ConversationId>, isRead: Boolean) {
         optimisticSnapshotDelegate.markRead(
             conversationIds = conversationIds,
-            isRead = shouldMarkRead,
+            isRead = isRead,
         )
 
         viewModelScope.launch {
             actionsDelegate.setRead(
                 conversationIds = conversationIds,
-                isRead = shouldMarkRead,
+                isRead = isRead,
             )
         }
+    }
+
+    private fun requestDelete(conversationIds: List<ConversationId>) {
+        _effects.trySend(Effect.ConfirmDelete(conversationIds.toImmutableList()))
+    }
+
+    private fun delete(conversationIds: List<ConversationId>) {
+        val items = conversationIds.mapNotNull(::itemById)
+
+        if (items.isEmpty()) {
+            return
+        }
+
+        actionsDelegate.delete(items)
+        conversationIds.forEach { conversationId ->
+            _navigationEvents.trySend(NavEvent.CloseConversation(conversationId))
+        }
+
+        selectionDelegate.clear()
     }
 
     private fun onNavigationAction(action: Action.NavigationAction) {
@@ -420,6 +448,10 @@ internal class ConversationListViewModel @Inject constructor(
 
             is Action.BlockClicked -> {
                 onBlockClick()
+            }
+
+            is Action.DeleteClicked -> {
+                withSelectedIds { requestDelete(it) }
             }
 
             is Action.MarkReadClicked -> {
@@ -495,18 +527,7 @@ internal class ConversationListViewModel @Inject constructor(
 
     private fun onMarkRead(isRead: Boolean) {
         withSelectedIds { conversationIds ->
-            optimisticSnapshotDelegate.markRead(
-                conversationIds = conversationIds,
-                isRead = isRead,
-            )
-
-            viewModelScope.launch {
-                actionsDelegate.setRead(
-                    conversationIds = conversationIds,
-                    isRead = isRead,
-                )
-            }
-
+            setRead(conversationIds, isRead)
             selectionDelegate.clear()
         }
     }
