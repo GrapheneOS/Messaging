@@ -28,6 +28,7 @@ internal fun ConversationInlineAttachmentRow(
                 isIncoming = isIncoming,
                 isSelectionMode = isSelectionMode,
                 useStandaloneAudioAttachmentBackground = useStandaloneAudioAttachmentBackground,
+                isPlaybackEnabled = onAttachmentClick != null,
                 onLongClick = onLongClick,
             )
         }

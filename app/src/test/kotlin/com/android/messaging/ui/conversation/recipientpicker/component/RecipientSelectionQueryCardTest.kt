@@ -4,6 +4,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -15,6 +17,7 @@ import com.android.messaging.ui.conversation.recipientpicker.model.selection.Rec
 import com.android.messaging.ui.conversation.recipientpicker.model.selection.RecipientSelectionQueryTextUiState
 import com.android.messaging.ui.core.AppTheme
 import com.android.messaging.ui.recipientselection.model.picker.SelectedRecipient
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -148,6 +151,106 @@ class RecipientSelectionQueryCardTest {
         composeTestRule
             .onNodeWithTag(testTag = RECIPIENT_SELECTION_QUERY_FIELD_TEST_TAG)
             .assertIsFocused()
+    }
+
+    @Test
+    fun lateQueryUpdateDoesNotOverwriteNewerTypedText() {
+        var query by mutableStateOf("")
+        val sentQueries = mutableListOf<String>()
+
+        composeTestRule.setContent {
+            AppTheme {
+                RecipientSelectionQueryCard(
+                    uiState = queryCardUiState(query = query),
+                    onQueryChanged = { sentQueries += it },
+                    onQueryFocused = {},
+                    onSelectedRecipientClick = {},
+                    onSelectedRecipientBackspace = {},
+                    focusRequester = FocusRequester(),
+                    simSelectorSlot = null,
+                )
+            }
+        }
+
+        val field = composeTestRule.onNodeWithTag(
+            testTag = RECIPIENT_SELECTION_QUERY_FIELD_TEST_TAG,
+        )
+        field.performTextReplacement(text = "a")
+        field.performTextReplacement(text = "ab")
+        composeTestRule.runOnIdle { query = "a" }
+
+        composeTestRule.runOnIdle {
+            assertEquals("ab", field.fieldText())
+            assertEquals(listOf("a", "ab"), sentQueries)
+        }
+    }
+
+    @Test
+    fun addingRecipientClearsQueryEvenIfStateSkippedEarlierSends() {
+        var query by mutableStateOf("")
+        var recipients by mutableStateOf(persistentListOf<SelectedRecipient>())
+
+        composeTestRule.setContent {
+            AppTheme {
+                RecipientSelectionQueryCard(
+                    uiState = queryCardUiState(query = query, recipients = recipients),
+                    onQueryChanged = {},
+                    onQueryFocused = {},
+                    onSelectedRecipientClick = {},
+                    onSelectedRecipientBackspace = {},
+                    focusRequester = FocusRequester(),
+                    simSelectorSlot = null,
+                )
+            }
+        }
+
+        val field = composeTestRule.onNodeWithTag(
+            testTag = RECIPIENT_SELECTION_QUERY_FIELD_TEST_TAG,
+        )
+        field.performTextReplacement(text = "a")
+        composeTestRule.runOnIdle { query = "a" }
+        // The state never reports these two, as it ends up where it was
+        field.performTextReplacement(text = "")
+        field.performTextReplacement(text = "a")
+        composeTestRule.runOnIdle {
+            recipients = persistentListOf(
+                SelectedRecipient(
+                    destination = "+3725400001",
+                    label = "Recipient 1",
+                    displayDestination = "+372 5400 0001",
+                    photoUri = null,
+                ),
+            )
+        }
+        // The screen state combines the recipients and the query, so the clear can come a frame later
+        composeTestRule.runOnIdle { query = "" }
+
+        composeTestRule.runOnIdle {
+            assertEquals("", recipientSelectionVisibleQueryText(fieldText = field.fieldText()))
+        }
+    }
+
+    private fun queryCardUiState(
+        query: String,
+        recipients: ImmutableList<SelectedRecipient> = persistentListOf(),
+    ): RecipientSelectionQueryCardUiState {
+        return RecipientSelectionQueryCardUiState(
+            text = RecipientSelectionQueryTextUiState(
+                query = query,
+                enabled = true,
+                prefixText = PREFIX_TEXT,
+                placeholderText = RECIPIENT_SELECTION_PLACEHOLDER_TEXT,
+            ),
+            chips = RecipientSelectionQueryChipsUiState(
+                recipients = recipients,
+                armedRecipientDestination = null,
+                enabled = true,
+            ),
+        )
+    }
+
+    private fun SemanticsNodeInteraction.fieldText(): String {
+        return fetchSemanticsNode().config[SemanticsProperties.EditableText].text
     }
 
     private companion object {

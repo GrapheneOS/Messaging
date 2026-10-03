@@ -1,5 +1,8 @@
 package com.android.messaging.ui.conversation.screen.route
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
@@ -183,6 +186,36 @@ internal class ConversationScreenRouteEffectsTest : BaseConversationScreenTest()
             verify(exactly = 1) {
                 screenModel.model.onScreenForegrounded(cancelNotification = false)
             }
+            verify(exactly = 1) {
+                screenModel.model.onScreenBackgrounded()
+            }
+        }
+    }
+
+    @Test
+    fun leavingCompositionWhileResumedForwardsBackgroundedToScreenModel() {
+        val screenModel = createScreenModel()
+        var isScreenShown by mutableStateOf(true)
+        lateinit var lifecycleOwner: TestLifecycleOwner
+
+        composeTestRule.runOnIdle {
+            lifecycleOwner = TestLifecycleOwner(
+                initialState = Lifecycle.State.RESUMED,
+            )
+        }
+
+        setContent(
+            screenModel = screenModel.model,
+            lifecycleOwner = lifecycleOwner,
+            isScreenShown = { isScreenShown },
+        )
+        composeTestRule.waitForIdle()
+        composeTestRule.runOnIdle {
+            isScreenShown = false
+        }
+        composeTestRule.waitForIdle()
+
+        composeTestRule.runOnIdle {
             verify(exactly = 1) {
                 screenModel.model.onScreenBackgrounded()
             }

@@ -67,6 +67,8 @@ internal class ConversationListViewModel @Inject constructor(
     private val isDebugEnabled = MutableStateFlow(debugFeaturesProvider.isEnabled())
     private val openedConversationId = MutableStateFlow<ConversationId?>(value = null)
     private val swipeSpec = MutableStateFlow(State().swipeSpec)
+    private var isScreenResumed = false
+    private var isListScrolledToTop = false
 
     private val snapshot: StateFlow<ConversationListSnapshot?> = optimisticSnapshotDelegate.snapshot
 
@@ -219,9 +221,16 @@ internal class ConversationListViewModel @Inject constructor(
     private fun onLifecycleAction(action: Action.LifecycleAction) {
         when (action) {
             Action.ScreenResumed -> {
+                isScreenResumed = true
                 isDebugEnabled.value = debugFeaturesProvider.isEnabled()
                 refreshSwipeSpec()
                 conversationListRepository.refresh()
+                updateNewestConversationVisibility()
+            }
+
+            Action.ScreenPaused -> {
+                isScreenResumed = false
+                updateNewestConversationVisibility()
             }
         }
     }
@@ -293,14 +302,13 @@ internal class ConversationListViewModel @Inject constructor(
     }
 
     private fun onNewestConversationVisibilityChanged(isVisible: Boolean) {
-        val shouldShowScrollToTop = !isVisible
+        isListScrolledToTop = isVisible
+        isScrollToTopVisible.value = !isVisible
+        updateNewestConversationVisibility()
+    }
 
-        if (isScrollToTopVisible.value == shouldShowScrollToTop) {
-            return
-        }
-
-        isScrollToTopVisible.value = shouldShowScrollToTop
-        conversationListRepository.setNewestConversationVisible(isVisible)
+    private fun updateNewestConversationVisibility() {
+        conversationListRepository.setNewestConversationVisible(isScreenResumed && isListScrolledToTop)
     }
 
     private fun onAvatarContactClick(avatar: ConversationListAvatarUiModel) {

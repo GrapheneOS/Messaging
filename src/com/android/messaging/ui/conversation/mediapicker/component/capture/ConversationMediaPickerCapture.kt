@@ -5,6 +5,7 @@ import androidx.camera.core.SurfaceRequest
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -29,6 +30,7 @@ import com.android.messaging.ui.core.MessagingPreviewTheme
 @Composable
 internal fun ConversationMediaCameraPreviewSurface(
     modifier: Modifier = Modifier,
+    aspectRatio: Float?,
     cameraPermissionGranted: Boolean,
     contentPadding: PaddingValues,
     surfaceRequest: SurfaceRequest?,
@@ -52,6 +54,8 @@ internal fun ConversationMediaCameraPreviewSurface(
 
             else -> {
                 ConversationMediaCameraViewfinder(
+                    aspectRatio = aspectRatio,
+                    contentPadding = contentPadding,
                     surfaceRequest = surfaceRequest,
                 )
             }
@@ -102,13 +106,25 @@ private fun ConversationMediaCameraLoadingState() {
 
 @Composable
 private fun ConversationMediaCameraViewfinder(
+    aspectRatio: Float?,
+    contentPadding: PaddingValues,
     surfaceRequest: SurfaceRequest,
 ) {
-    CameraXViewfinder(
+    Box(
         modifier = Modifier
-            .fillMaxSize(),
-        surfaceRequest = surfaceRequest,
-    )
+            .fillMaxSize()
+            .padding(paddingValues = contentPadding)
+            .statusBarsPadding(),
+        contentAlignment = Alignment.Center,
+    ) {
+        CameraXViewfinder(
+            modifier = when (aspectRatio) {
+                null -> Modifier.fillMaxSize()
+                else -> Modifier.aspectRatio(ratio = aspectRatio)
+            },
+            surfaceRequest = surfaceRequest,
+        )
+    }
 }
 
 @Composable
@@ -187,6 +203,7 @@ private fun ConversationMediaCameraPreviewSurfacePermissionPreview() {
     MessagingPreviewTheme {
         ConversationMediaCameraPreviewSurface(
             modifier = Modifier.fillMaxSize(),
+            aspectRatio = null,
             cameraPermissionGranted = false,
             contentPadding = PaddingValues(),
             surfaceRequest = null,

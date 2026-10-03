@@ -82,10 +82,6 @@ class SyncMessagesActionMmsReplacementRaceTest {
     @After
     fun tearDown() {
         ShadowContentResolver.reset()
-        if (::database.isInitialized) {
-            deleteSyntheticRows()
-        }
-
         FactoryTestAccess.reset()
     }
 

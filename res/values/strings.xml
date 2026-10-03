@@ -222,8 +222,6 @@
     <string name="audio_recording_start_failed">Can\'t record audio. Try again.</string>
     <!-- Failed to replay recorded audio -->
     <string name="audio_recording_replay_failed">Can\'t play audio. Try again.</string>
-    <!-- Prefix label shown before the new chat recipient search field. -->
-    <string name="new_chat_recipient_prefix">To:</string>
     <!-- Placeholder text shown in the new chat recipient search field. -->
     <string name="new_chat_query_hint">Type name or phone number</string>
     <!-- Placeholder text shown after at least one recipient has been selected. -->
