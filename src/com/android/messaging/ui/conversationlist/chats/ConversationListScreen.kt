@@ -82,6 +82,11 @@ import kotlinx.coroutines.launch
 private val FabSpacing = 16.dp
 private val FabBottomReserve = 72.dp
 
+private data class PendingBlock(
+    val conversationId: ConversationId,
+    val destination: String,
+)
+
 @Composable
 internal fun ConversationListScreen(
     screenModel: ConversationListScreenModel,
@@ -98,10 +103,8 @@ internal fun ConversationListScreen(
         key = Model::conversationId,
         isSettled = { item, anchorToTop -> item.isPinned == anchorToTop },
     )
-
     var pendingDeleteIds by remember { mutableStateOf<ImmutableList<ConversationId>?>(null) }
-    var pendingBlockConversationId by remember { mutableStateOf<ConversationId?>(null) }
-    var pendingBlockDestination by remember { mutableStateOf<String?>(null) }
+    var pendingBlock by remember { mutableStateOf<PendingBlock?>(null) }
     var pendingSnooze by remember { mutableStateOf(false) }
 
     LifecycleResumeEffect(screenModel) {
@@ -126,8 +129,7 @@ internal fun ConversationListScreen(
         pinAnimationController = pinAnimationController,
         onAction = screenModel::onAction,
         onConfirmBlock = { conversationId, destination ->
-            pendingBlockConversationId = conversationId
-            pendingBlockDestination = destination
+            pendingBlock = PendingBlock(conversationId, destination)
         },
         onConfirmDelete = { pendingDeleteIds = it },
     )
@@ -146,15 +148,12 @@ internal fun ConversationListScreen(
     ConversationListDialogs(
         selectedCount = uiState.selection.selectedCount,
         deleteConversationIds = pendingDeleteIds,
-        blockConversationId = pendingBlockConversationId,
-        blockDestination = pendingBlockDestination,
+        blockConversationId = pendingBlock?.conversationId,
+        blockDestination = pendingBlock?.destination,
         isSnoozeVisible = pendingSnooze,
         onAction = screenModel::onAction,
         onDismissDelete = { pendingDeleteIds = null },
-        onDismissBlock = {
-            pendingBlockConversationId = null
-            pendingBlockDestination = null
-        },
+        onDismissBlock = { pendingBlock = null },
         onDismissSnooze = { pendingSnooze = false },
     )
 }
