@@ -14,6 +14,7 @@ import com.android.messaging.domain.conversation.usecase.draft.model.Conversatio
 import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftDelegateImpl
 import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftEditorDelegateImpl
+import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftTransfersImpl
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -159,6 +160,9 @@ internal class ConversationDraftDelegateSimSelectionTest {
             checkConversationActionRequirements = checkConversationActionRequirements,
             conversationDraftsRepository = conversationDraftsRepository,
             conversationDraftEditorDelegate = conversationDraftEditorDelegate,
+            conversationDraftTransfers = ConversationDraftTransfersImpl(
+                conversationDraftsRepository = conversationDraftsRepository,
+            ),
             sendConversationDraft = sendConversationDraft,
             defaultDispatcher = StandardTestDispatcher(scheduler = testScheduler),
         )

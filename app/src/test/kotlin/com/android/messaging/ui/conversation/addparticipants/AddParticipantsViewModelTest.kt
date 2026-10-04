@@ -7,12 +7,14 @@ import com.android.messaging.data.contact.formatter.ContactDestinationFormatter
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.recipient.ConversationRecipient
+import com.android.messaging.data.conversation.repository.ConversationDraftsRepository
 import com.android.messaging.data.conversation.repository.ConversationParticipantsRepository
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.testutil.assertThat
 import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsEffect
 import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsNavEvent
+import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftTransfersImpl
 import com.android.messaging.ui.conversation.recipientpicker.delegate.ConversationResolutionDelegate
 import com.android.messaging.ui.conversation.recipientpicker.delegate.SelectedRecipientsDelegate
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.ConversationResolutionOutcome
@@ -21,19 +23,26 @@ import com.android.messaging.ui.conversation.recipientpicker.model.picker.Recipi
 import com.android.messaging.ui.recipientselection.delegate.RecipientPickerDelegate
 import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerUiState
 import com.android.messaging.ui.recipientselection.model.picker.SelectedRecipient
+import com.android.messaging.util.LogUtil
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.runs
+import io.mockk.unmockkAll
 import io.mockk.verify
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -45,6 +54,11 @@ class AddParticipantsViewModelTest {
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
+
+    @After
+    fun tearDown() {
+        unmockkAll()
+    }
 
     @Test
     fun init_bindsDelegates() {
@@ -209,7 +223,7 @@ class AddParticipantsViewModelTest {
                 assertThat(awaitItem()).isEqualTo(
                     AddParticipantsNavEvent.OpenConversation(
                         conversationId = ConversationId("conversation-2"),
-                    )
+                    ),
                 )
                 verify(exactly = 1) {
                     selectedRecipientsDelegate.clear()
@@ -219,8 +233,161 @@ class AddParticipantsViewModelTest {
         }
     }
 
+    @Test
+    fun resolvedOutcome_movesDraftToResolvedConversationBeforeNavigating() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val moveDraftGate = CompletableDeferred<Unit>()
+            val conversationDraftsRepository = createDraftsRepository()
+            coEvery {
+                conversationDraftsRepository.moveDraft(
+                    fromConversationId = any(),
+                    toConversationId = any(),
+                )
+            } coAnswers {
+                moveDraftGate.await()
+            }
+            val resolutionDelegate = createResolutionDelegate()
+            val viewModel = createViewModel(
+                conversationDraftsRepository = conversationDraftsRepository,
+                conversationResolutionDelegate = resolutionDelegate.mock,
+            )
+            viewModel.onConversationIdChanged(conversationId = CONVERSATION_ID)
+
+            viewModel.navigationEvents.test {
+                advanceUntilIdle()
+                resolutionDelegate.outcomesSource.emit(
+                    ConversationResolutionOutcome.Resolved(
+                        conversationId = RESOLVED_CONVERSATION_ID,
+                    ),
+                )
+                advanceUntilIdle()
+
+                coVerify(exactly = 1) {
+                    conversationDraftsRepository.moveDraft(
+                        fromConversationId = CONVERSATION_ID,
+                        toConversationId = RESOLVED_CONVERSATION_ID,
+                    )
+                }
+                expectNoEvents()
+
+                moveDraftGate.complete(Unit)
+
+                assertThat(awaitItem()).isEqualTo(
+                    AddParticipantsNavEvent.OpenConversation(
+                        conversationId = RESOLVED_CONVERSATION_ID,
+                    ),
+                )
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    @Test
+    fun resolvedOutcome_staysOnScreenWhenMovingDraftFails() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            mockkStatic(LogUtil::class)
+            every { LogUtil.e(any(), any(), any()) } just runs
+            val conversationDraftsRepository = createDraftsRepository()
+            coEvery {
+                conversationDraftsRepository.moveDraft(
+                    fromConversationId = any(),
+                    toConversationId = any(),
+                )
+            } throws IllegalStateException("Conversation conversation-2 no longer exists")
+            val selectedRecipientsDelegate = createSelectedRecipientsDelegate(
+                selectedRecipients = persistentListOf(
+                    selectedRecipient(destination = "+1 555 0101"),
+                ),
+            )
+            val resolutionDelegate = createResolutionDelegate()
+            val viewModel = createViewModel(
+                conversationDraftsRepository = conversationDraftsRepository,
+                selectedRecipientsDelegate = selectedRecipientsDelegate,
+                conversationResolutionDelegate = resolutionDelegate.mock,
+            )
+            viewModel.onConversationIdChanged(conversationId = CONVERSATION_ID)
+
+            viewModel.effects.test {
+                advanceUntilIdle()
+                viewModel.onConfirmClick()
+                resolutionDelegate.outcomesSource.emit(
+                    ConversationResolutionOutcome.Resolved(
+                        conversationId = RESOLVED_CONVERSATION_ID,
+                    ),
+                )
+
+                assertEquals(
+                    AddParticipantsEffect.ShowMessage(
+                        messageResId = R.string.conversation_creation_failure,
+                    ),
+                    awaitItem(),
+                )
+                cancelAndIgnoreRemainingEvents()
+            }
+            viewModel.navigationEvents.test {
+                expectNoEvents()
+            }
+            verify(exactly = 0) {
+                selectedRecipientsDelegate.clear()
+            }
+            viewModel.onConfirmClick()
+            assertEquals(2, resolutionDelegate.resolvedDestinations.size)
+        }
+    }
+
+    @Test
+    fun resolvedOutcome_ignoresClicksUntilDraftMoveFinishes() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val moveGate = CompletableDeferred<Unit>()
+            val conversationDraftsRepository = createDraftsRepository()
+            coEvery {
+                conversationDraftsRepository.moveDraft(
+                    fromConversationId = any(),
+                    toConversationId = any(),
+                )
+            } coAnswers {
+                moveGate.await()
+            }
+            val selectedRecipientsDelegate = createSelectedRecipientsDelegate(
+                selectedRecipients = persistentListOf(
+                    selectedRecipient(destination = "+1 555 0101"),
+                ),
+            )
+            val resolutionDelegate = createResolutionDelegate()
+            val viewModel = createViewModel(
+                conversationDraftsRepository = conversationDraftsRepository,
+                selectedRecipientsDelegate = selectedRecipientsDelegate,
+                conversationResolutionDelegate = resolutionDelegate.mock,
+            )
+            viewModel.onConversationIdChanged(conversationId = CONVERSATION_ID)
+            advanceUntilIdle()
+            viewModel.onConfirmClick()
+            // The resolution is already idle again while the draft is still moving
+            resolutionDelegate.outcomesSource.emit(
+                ConversationResolutionOutcome.Resolved(
+                    conversationId = RESOLVED_CONVERSATION_ID,
+                ),
+            )
+            advanceUntilIdle()
+
+            viewModel.onRecipientClicked(recipient = selectedRecipient(destination = "+1 555 0102"))
+            viewModel.onConfirmClick()
+            moveGate.complete(Unit)
+            advanceUntilIdle()
+
+            assertEquals(1, resolutionDelegate.resolvedDestinations.size)
+            verify(exactly = 0) {
+                selectedRecipientsDelegate.toggle(
+                    recipient = any(),
+                    canAdd = any(),
+                )
+            }
+        }
+    }
+
     private fun createViewModel(
         contactDestinationFormatter: ContactDestinationFormatter = createFormatter(),
+        conversationDraftsRepository: ConversationDraftsRepository = createDraftsRepository(),
         conversationParticipantsRepository: ConversationParticipantsRepository =
             createParticipantsRepository(),
         isRecipientLimitExceeded: Boolean = false,
@@ -231,6 +398,9 @@ class AddParticipantsViewModelTest {
     ): AddParticipantsViewModel {
         return AddParticipantsViewModel(
             contactDestinationFormatter = contactDestinationFormatter,
+            conversationDraftTransfers = ConversationDraftTransfersImpl(
+                conversationDraftsRepository = conversationDraftsRepository,
+            ),
             conversationParticipantsRepository = conversationParticipantsRepository,
             isConversationRecipientLimitExceeded = {
                 isRecipientLimitExceeded
@@ -249,6 +419,10 @@ class AddParticipantsViewModelTest {
             firstArg<String>().trim()
         }
         return formatter
+    }
+
+    private fun createDraftsRepository(): ConversationDraftsRepository {
+        return mockk<ConversationDraftsRepository>(relaxed = true)
     }
 
     private fun createParticipantsRepository(
@@ -340,4 +514,8 @@ class AddParticipantsViewModelTest {
         val outcomesSource: MutableSharedFlow<ConversationResolutionOutcome>,
         val resolvedDestinations: MutableList<List<String>>,
     )
+
+    private companion object {
+        private val RESOLVED_CONVERSATION_ID = ConversationId("conversation-2")
+    }
 }

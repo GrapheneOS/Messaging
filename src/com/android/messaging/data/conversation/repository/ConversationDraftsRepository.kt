@@ -10,7 +10,9 @@ import com.android.messaging.data.conversation.mapper.ConversationMessageDataDra
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
+import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.data.conversation.store.ConversationDraftStore
+import com.android.messaging.data.extension.runInTransaction
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.di.core.DefaultDispatcher
@@ -37,6 +39,11 @@ internal interface ConversationDraftsRepository {
     suspend fun saveDraft(
         conversationId: ConversationId,
         draft: ConversationDraft,
+    )
+
+    suspend fun moveDraft(
+        fromConversationId: ConversationId,
+        toConversationId: ConversationId,
     )
 }
 
@@ -101,6 +108,27 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun moveDraft(
+        fromConversationId: ConversationId,
+        toConversationId: ConversationId,
+    ) {
+        if (fromConversationId == toConversationId) {
+            return
+        }
+
+        withContext(context = messagingDbDispatcher) {
+            runInTransaction {
+                moveDraftInTransaction(
+                    fromConversationId = fromConversationId,
+                    toConversationId = toConversationId,
+                )
+            }
+
+            notifyConversationMetadataChanged(conversationId = fromConversationId)
+            notifyConversationMetadataChanged(conversationId = toConversationId)
+        }
+    }
+
     private fun observeDraftChanges(uri: Uri): Flow<Unit> {
         return callbackFlow {
             val observer = object : ContentObserver(null) {
@@ -136,6 +164,71 @@ internal class ConversationDraftsRepositoryImpl @Inject constructor(
             selfParticipantId = selfParticipantId,
             draftMessage = draftMessage,
         )
+    }
+
+    private fun moveDraftInTransaction(
+        fromConversationId: ConversationId,
+        toConversationId: ConversationId,
+    ) {
+        val movedDraft = loadConversationDraft(conversationId = fromConversationId)
+        if (!movedDraft.hasContent) {
+            return
+        }
+
+        val message = conversationDraftMessageDataMapper.map(
+            conversationId = toConversationId,
+            draft = mergeDrafts(
+                targetDraft = loadConversationDraft(conversationId = toConversationId),
+                movedDraft = movedDraft,
+            ),
+        )
+        val boundMessage = checkNotNull(
+            bindDraftParticipantsIfNeeded(
+                conversationId = toConversationId,
+                message = message,
+            ),
+        ) {
+            "Conversation ${toConversationId.value} no longer exists"
+        }
+
+        conversationDraftStore.moveDraftMessage(
+            fromConversationId = fromConversationId,
+            toConversationId = toConversationId,
+            message = boundMessage,
+        )
+    }
+
+    private fun mergeDrafts(
+        targetDraft: ConversationDraft,
+        movedDraft: ConversationDraft,
+    ): ConversationDraft {
+        val attachments = (targetDraft.attachments + movedDraft.attachments)
+            .distinctBy(ConversationDraftAttachment::contentUri)
+
+        return targetDraft.copy(
+            messageText = mergeDraftText(
+                targetText = targetDraft.messageText,
+                movedText = movedDraft.messageText,
+                separator = "\n",
+            ),
+            subjectText = mergeDraftText(
+                targetText = targetDraft.subjectText,
+                movedText = movedDraft.subjectText,
+                separator = " ",
+            ),
+            attachments = attachments.toImmutableList(),
+        )
+    }
+
+    private fun mergeDraftText(
+        targetText: String,
+        movedText: String,
+        separator: String,
+    ): String {
+        return listOf(targetText, movedText)
+            .filter { it.isNotBlank() }
+            .distinct()
+            .joinToString(separator = separator)
     }
 
     private fun createConversationDraft(

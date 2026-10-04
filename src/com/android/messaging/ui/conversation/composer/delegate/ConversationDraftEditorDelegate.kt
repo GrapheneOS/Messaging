@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.update
@@ -73,6 +74,9 @@ internal interface ConversationDraftEditorDelegate {
     fun matchesSaveRequest(saveRequest: DraftSaveRequest): Boolean
 
     fun applyPersistedSaveResult(saveRequest: DraftSaveRequest)
+
+    /** Returns once the stored draft of [conversationId] has loaded or the editor moved on. */
+    suspend fun awaitDraftLoaded(conversationId: ConversationId)
 
     fun applySendProtocol(sendProtocol: ConversationDraftSendProtocol)
 
@@ -288,6 +292,13 @@ internal class ConversationDraftEditorDelegateImpl @Inject constructor(
     override fun applyPersistedSaveResult(saveRequest: DraftSaveRequest) {
         updateDraftEditorState { currentDraftEditorState ->
             currentDraftEditorState.withPersistedSaveResult(saveRequest = saveRequest)
+        }
+    }
+
+    override suspend fun awaitDraftLoaded(conversationId: ConversationId) {
+        draftEditorState.first { currentDraftEditorState ->
+            currentDraftEditorState.conversationId != conversationId ||
+                currentDraftEditorState.isLoaded
         }
     }
 

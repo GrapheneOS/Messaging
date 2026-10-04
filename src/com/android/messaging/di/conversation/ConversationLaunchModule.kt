@@ -4,6 +4,8 @@ import com.android.messaging.data.conversation.event.ConversationArchiveEvents
 import com.android.messaging.data.conversation.event.ConversationArchiveEventsImpl
 import com.android.messaging.domain.conversation.usecase.action.ArchiveConversation
 import com.android.messaging.domain.conversation.usecase.action.ArchiveConversationImpl
+import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftTransfers
+import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftTransfersImpl
 import com.android.messaging.ui.conversation.entry.ConversationLaunchStore
 import com.android.messaging.ui.conversation.entry.ConversationLaunchStoreImpl
 import com.android.messaging.ui.conversation.navigation.ConversationDraftLauncher
@@ -39,4 +41,10 @@ internal abstract class ConversationLaunchModule {
     abstract fun bindConversationDraftLauncher(
         impl: ConversationLaunchStoreImpl,
     ): ConversationDraftLauncher
+
+    @Binds
+    @ActivityRetainedScoped
+    abstract fun bindConversationDraftTransfers(
+        impl: ConversationDraftTransfersImpl,
+    ): ConversationDraftTransfers
 }
