@@ -173,7 +173,7 @@ class SyncMessageBatch {
                 selfId,
                 conversationId,
                 bugleStatus,
-                sms.mSeen,
+                isSeen(sms.mSeen, sms.mRead, isOutgoing, conversationId),
                 sms.mRead,
                 sms.mTimestampSentInMillis,
                 sms.mTimestampInMillis,
@@ -195,6 +195,23 @@ class SyncMessageBatch {
 
         // Keep track of updated conversation for later updating the conversation snippet, etc.
         mConversationsToUpdate.add(conversationId);
+    }
+
+    /**
+     * Another default SMS app may mark messages read without ever setting seen, and imported
+     * history would then notify as new. If you have read it you have seen it; and like a
+     * received message, one synced while the user can observe it is seen too. Outgoing rows keep
+     * their flag: the provider marks every non-inbox row read, which says nothing about whether
+     * the user saw a send failure.
+     */
+    private static boolean isSeen(final boolean seen, final boolean read,
+            final boolean isOutgoing, final String conversationId) {
+        if (seen) {
+            return true;
+        }
+
+        final boolean isObservable = DataModel.get().isNewMessageObservable(conversationId);
+        return !isOutgoing && (read || isObservable);
     }
 
     public static int bugleStatusForSms(final boolean isOutgoing, final int type,
@@ -275,6 +292,7 @@ class SyncMessageBatch {
         // TODO: Need to set correct status on message
         final MessageData message = MmsUtils.createMmsMessage(mms, conversationId, participantId,
                 selfId, bugleStatus);
+        message.setMessageSeen(isSeen(mms.mSeen, mms.mRead, isOutgoing, conversationId));
 
         // Inserting mms content into messages table
         try {
