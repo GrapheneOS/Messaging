@@ -137,6 +137,14 @@ private fun SelectionOverflowMenu(
     onAction: (Action) -> Unit,
 ) {
     OverflowMenu { dismiss ->
+        OverflowMenuItem(
+            labelResId = android.R.string.selectAll,
+            onClick = {
+                onAction(Action.SelectAllClicked)
+                dismiss()
+            },
+        )
+
         actions.allSelectedAreRead?.let { areRead ->
             OverflowMenuItem(
                 labelResId = when {

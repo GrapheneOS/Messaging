@@ -105,6 +105,7 @@ internal sealed interface ConversationListAction {
     data object MarkReadClicked : SelectionAction
     data object MarkUnreadClicked : SelectionAction
     data object PinClicked : SelectionAction
+    data object SelectAllClicked : SelectionAction
     data object SelectionCleared : SelectionAction
     data object UnpinClicked : SelectionAction
     data object UnsnoozeClicked : SelectionAction

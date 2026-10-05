@@ -7,6 +7,7 @@ import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +21,7 @@ internal interface ConversationListSelectionDelegate {
     val selectedIds: StateFlow<ImmutableList<ConversationId>>
 
     fun bind(scope: CoroutineScope, snapshot: StateFlow<ConversationListSnapshot?>)
+    fun selectAll(conversationIds: List<ConversationId>)
     fun toggle(conversationId: ConversationId)
     fun clear()
 }
@@ -75,6 +77,13 @@ internal class ConversationListSelectionDelegateImpl @Inject constructor() :
                 }
             }
         }
+    }
+
+    override fun selectAll(conversationIds: List<ConversationId>) {
+        _selectedIds.value = conversationIds
+            .filterNot(ConversationId::isBlank)
+            .distinct()
+            .toPersistentList()
     }
 
     override fun clear() {

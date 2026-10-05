@@ -173,6 +173,23 @@ class ConversationListViewModelTest {
     }
 
     @Test
+    fun selectAllClicked_selectsEveryConversationInSnapshot() {
+        snapshotFlow.value = snapshotOf(
+            conversationItem(ConversationId("a")),
+            conversationItem(ConversationId("b")),
+        )
+
+        val viewModel = createViewModel()
+        viewModel.onAction(Action.SelectAllClicked)
+
+        verify {
+            selectionDelegate.selectAll(
+                listOf(ConversationId("a"), ConversationId("b")),
+            )
+        }
+    }
+
+    @Test
     fun pinAnimationPrepared_commitsPinChangeAndClearsSelection() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val viewModel = createViewModel()
@@ -284,6 +301,7 @@ class ConversationListViewModelTest {
 
         every { selectionDelegate.selectedIds } returns selectedIdsFlow
         every { selectionDelegate.bind(any(), any()) } just runs
+        every { selectionDelegate.selectAll(any()) } just runs
         every { selectionDelegate.toggle(any()) } just runs
         every { selectionDelegate.clear() } just runs
 

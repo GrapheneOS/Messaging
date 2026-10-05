@@ -460,6 +460,15 @@ internal class ConversationListViewModel @Inject constructor(
                 onPinClick(isPinned = true)
             }
 
+            is Action.SelectAllClicked -> {
+                selectionDelegate.selectAll(
+                    conversationIds = snapshot.value
+                        ?.items
+                        .orEmpty()
+                        .map(ConversationListItem::conversationId),
+                )
+            }
+
             is Action.UnpinClicked -> {
                 onPinClick(isPinned = false)
             }

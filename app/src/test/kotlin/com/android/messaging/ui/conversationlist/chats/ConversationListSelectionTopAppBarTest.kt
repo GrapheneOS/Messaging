@@ -47,7 +47,17 @@ internal class ConversationListSelectionTopAppBarTest {
         assertEquals(listOf(Action.MarkUnreadClicked), emittedActions)
     }
 
-    private fun setSelectionContent(allSelectedAreRead: Boolean) {
+    @Test
+    fun overflowOffersToSelectAll() {
+        setSelectionContent(allSelectedAreRead = null)
+
+        openOverflowMenu()
+        composeTestRule.onNodeWithText(string(android.R.string.selectAll)).performClick()
+
+        assertEquals(listOf(Action.SelectAllClicked), emittedActions)
+    }
+
+    private fun setSelectionContent(allSelectedAreRead: Boolean?) {
         composeTestRule.setContent {
             AppTheme {
                 ConversationListSelectionTopAppBar(
