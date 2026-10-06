@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.composer.delegate.draft
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.testutil.TEST_RESOLVED_CONVERSATION_ID as TARGET_CONVERSATION_ID
+import com.android.messaging.testutil.typeMessageText
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -28,7 +29,7 @@ internal class ConversationDraftDelegateTransferTest : BaseConversationDraftDele
             val harness = createBoundLoadedDelegateHarness()
 
             try {
-                harness.delegate.onMessageTextChanged(messageText = "latest link")
+                harness.delegate.typeMessageText(messageText = "latest link")
                 // Queued behind the transfer, so it must not save the moved edits again
                 harness.delegate.persistDraft()
 
@@ -113,7 +114,7 @@ internal class ConversationDraftDelegateTransferTest : BaseConversationDraftDele
             )
 
             try {
-                editingHarness.delegate.onMessageTextChanged(messageText = "latest link")
+                editingHarness.delegate.typeMessageText(messageText = "latest link")
 
                 editingHarness.conversationDraftTransfers.transferDraft(
                     fromConversationId = CONVERSATION_ID,
