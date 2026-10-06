@@ -69,6 +69,7 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
             audioRecording = audioRecording,
             attachments = attachments,
             messageText = draft.messageText,
+            messageTextRevision = draftState.messageTextRevision,
             subjectText = draft.subjectText,
             selfParticipantId = draft.selfParticipantId,
             simSelector = simSelector,

@@ -30,7 +30,7 @@ internal interface ConversationDraftEditorDelegate {
     val sendProtocolUpdates: Flow<ConversationDraftSendProtocol>
     val currentSaveRequest: DraftSaveRequest?
 
-    fun onMessageTextChanged(messageText: String)
+    fun onMessageTextChanged(messageText: String, messageTextRevision: Int)
 
     fun onSubjectTextChanged(subjectText: String)
 
@@ -124,9 +124,12 @@ internal class ConversationDraftEditorDelegateImpl @Inject constructor(
     private var pendingDraftSeed: PendingDraftSeed? = null
     private var pendingSelfParticipantId: PendingSelfParticipantId? = null
 
-    override fun onMessageTextChanged(messageText: String) {
-        updateDraftEditorState { currentDraftEditorState ->
-            currentDraftEditorState.withMessageText(messageText)
+    override fun onMessageTextChanged(messageText: String, messageTextRevision: Int) {
+        updateDraftEditorState(isMessageFieldEdit = true) { currentDraftEditorState ->
+            when (currentDraftEditorState.messageTextRevision) {
+                messageTextRevision -> currentDraftEditorState.withMessageText(messageText)
+                else -> currentDraftEditorState
+            }
         }
     }
 
@@ -399,9 +402,25 @@ internal class ConversationDraftEditorDelegateImpl @Inject constructor(
         )
     }
 
-    private fun updateDraftEditorState(transform: (DraftEditorState) -> DraftEditorState) {
+    /**
+     * The message field already shows the text it reports, so only other changes to the message
+     * text move its revision; see [ConversationDraftState.messageTextRevision].
+     */
+    private fun updateDraftEditorState(
+        isMessageFieldEdit: Boolean = false,
+        transform: (DraftEditorState) -> DraftEditorState,
+    ) {
         draftEditorState.update { currentDraftEditorState ->
-            val updatedDraftEditorState = transform(currentDraftEditorState)
+            val transformedDraftEditorState = transform(currentDraftEditorState)
+            val updatedDraftEditorState = when {
+                isMessageFieldEdit -> transformedDraftEditorState
+
+                else -> {
+                    transformedDraftEditorState.withMessageTextRevisionAfter(
+                        previousState = currentDraftEditorState,
+                    )
+                }
+            }
             val visibleState = updatedDraftEditorState.visibleState
             val visibleSendProtocol = resolveVisibleSendProtocol(
                 previousState = _state.value,

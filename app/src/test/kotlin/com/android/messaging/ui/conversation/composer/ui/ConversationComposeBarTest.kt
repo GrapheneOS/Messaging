@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.composer.ui
 
 import android.view.View
 import android.view.WindowManager
+import android.view.inputmethod.EditorInfo
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -21,7 +22,6 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
-import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -29,15 +29,15 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performImeAction
-import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
 import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
+import com.android.messaging.testutil.messageFieldView
 import com.android.messaging.testutil.performDisabledTouchClick
+import com.android.messaging.testutil.typeIntoMessageField
 import com.android.messaging.ui.conversation.CONVERSATION_ATTACHMENT_AUDIO_MENU_ITEM_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_ATTACHMENT_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_ATTACHMENT_CONTACT_MENU_ITEM_TEST_TAG
@@ -58,6 +58,7 @@ import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -106,14 +107,12 @@ class ConversationComposeBarTest {
             )
             .assertIsDisplayed()
 
-        composeTestRule
-            .onNodeWithTag(CONVERSATION_TEXT_FIELD_TEST_TAG)
-            .assert(
-                SemanticsMatcher.expectValue(
-                    SemanticsProperties.StateDescription,
-                    targetContext.getString(R.string.mms_text),
-                ),
-            )
+        assertEquals(
+            targetContext.getString(R.string.mms_text),
+            composeTestRule.messageFieldView(testTag = CONVERSATION_TEXT_FIELD_TEST_TAG)
+                .stateDescription
+                ?.toString(),
+        )
     }
 
     @Test
@@ -214,7 +213,7 @@ class ConversationComposeBarTest {
         setContent(
             messageText = { currentMessageText },
             isSendActionEnabled = true,
-            onMessageTextChange = { updatedText ->
+            onMessageTextChange = { updatedText, _ ->
                 currentMessageText = updatedText
                 messageText = updatedText
             },
@@ -223,9 +222,10 @@ class ConversationComposeBarTest {
             },
         )
 
-        composeTestRule
-            .onNodeWithTag(CONVERSATION_TEXT_FIELD_TEST_TAG)
-            .performTextInput("Hello")
+        composeTestRule.typeIntoMessageField(
+            testTag = CONVERSATION_TEXT_FIELD_TEST_TAG,
+            text = "Hello",
+        )
 
         composeTestRule
             .onNodeWithTag(CONVERSATION_SEND_BUTTON_TEST_TAG)
@@ -272,8 +272,8 @@ class ConversationComposeBarTest {
         )
 
         composeTestRule
-            .onNodeWithTag(CONVERSATION_TEXT_FIELD_TEST_TAG)
-            .performImeAction()
+            .messageFieldView(testTag = CONVERSATION_TEXT_FIELD_TEST_TAG)
+            .onEditorAction(EditorInfo.IME_ACTION_SEND)
 
         composeTestRule.runOnIdle {
             assertEquals(1, sendClicks)
@@ -293,8 +293,8 @@ class ConversationComposeBarTest {
         )
 
         composeTestRule
-            .onNodeWithTag(CONVERSATION_TEXT_FIELD_TEST_TAG)
-            .performImeAction()
+            .messageFieldView(testTag = CONVERSATION_TEXT_FIELD_TEST_TAG)
+            .onEditorAction(EditorInfo.IME_ACTION_SEND)
 
         composeTestRule.runOnIdle {
             assertEquals(0, sendClicks)
@@ -309,9 +309,9 @@ class ConversationComposeBarTest {
             isSendActionEnabled = false,
         )
 
-        composeTestRule
-            .onNodeWithTag(CONVERSATION_TEXT_FIELD_TEST_TAG)
-            .assertIsNotEnabled()
+        assertFalse(
+            composeTestRule.messageFieldView(testTag = CONVERSATION_TEXT_FIELD_TEST_TAG).isEnabled,
+        )
     }
 
     @Test
@@ -940,7 +940,7 @@ class ConversationComposeBarTest {
         onContactAttachClick: () -> Unit = {},
         onMediaPickerClick: () -> Unit = {},
         onLockedAudioRecordingStartRequest: () -> Unit = {},
-        onMessageTextChange: (String) -> Unit = {},
+        onMessageTextChange: (text: String, textRevision: Int) -> Unit = { _, _ -> },
         onAudioRecordingStartRequest: () -> Unit = {},
         onAudioRecordingFinish: () -> Unit = {},
         onAudioRecordingLock: () -> Boolean = { false },
@@ -993,7 +993,7 @@ class ConversationComposeBarTest {
         onContactAttachClick: () -> Unit = {},
         onMediaPickerClick: () -> Unit = {},
         onLockedAudioRecordingStartRequest: () -> Unit = {},
-        onMessageTextChange: (String) -> Unit = {},
+        onMessageTextChange: (text: String, textRevision: Int) -> Unit = { _, _ -> },
         onAudioRecordingStartRequest: () -> Unit = {},
         onAudioRecordingFinish: () -> Unit = {},
         onAudioRecordingLock: () -> Boolean = { false },
@@ -1012,6 +1012,7 @@ class ConversationComposeBarTest {
                     ConversationComposeBar(
                         audioRecording = audioRecording(),
                         messageText = messageText(),
+                        messageTextRevision = 0,
                         subjectText = subjectText,
                         sendProtocol = sendProtocol,
                         segmentCounter = segmentCounter,

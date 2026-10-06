@@ -63,7 +63,7 @@ internal class ConversationViewModelDelegationTest : BaseConversationViewModelTe
             viewModel.onMessageSelectionActionClick(
                 action = ConversationMessageAction.Delete,
             )
-            viewModel.onMessageTextChanged(text = "Hello")
+            viewModel.onMessageTextChanged(text = "Hello", textRevision = 3)
             viewModel.onAudioRecordingStart(isLocked = false)
             viewModel.onAudioRecordingStart(isLocked = true)
             viewModel.onAudioRecordingFinish()
@@ -82,7 +82,10 @@ internal class ConversationViewModelDelegationTest : BaseConversationViewModelTe
                 )
             }
             verify(exactly = 1) {
-                draftDelegate.mock.onMessageTextChanged(messageText = "Hello")
+                draftDelegate.mock.onMessageTextChanged(
+                    messageText = "Hello",
+                    messageTextRevision = 3,
+                )
             }
             verify(exactly = 1) {
                 audioRecordingDelegate.mock.startRecording(

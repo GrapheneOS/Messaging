@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.composer.delegate.draft
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
+import com.android.messaging.testutil.typeMessageText
 import com.android.messaging.ui.conversation.composer.model.ConversationDraftState
 import io.mockk.coVerify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -58,6 +59,7 @@ internal class ConversationDraftDelegateObservationTest : BaseConversationDraftD
                 assertEquals(
                     ConversationDraftState(
                         draft = ConversationDraft(),
+                        messageTextRevision = harness.delegate.state.value.messageTextRevision,
                     ),
                     harness.delegate.state.value,
                 )
@@ -80,7 +82,7 @@ internal class ConversationDraftDelegateObservationTest : BaseConversationDraftD
                 )
                 advanceUntilIdle()
 
-                harness.delegate.onMessageTextChanged(messageText = "Hello")
+                harness.delegate.typeMessageText(messageText = "Hello")
                 harness.conversationIdFlow.value = ConversationId("conversation-2")
                 advanceUntilIdle()
 

@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.composer.delegate.draft
 
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
+import com.android.messaging.testutil.typeMessageText
 import io.mockk.coVerify
 import io.mockk.slot
 import kotlin.time.Duration.Companion.milliseconds
@@ -30,14 +31,14 @@ internal class ConversationDraftDelegateSendTest : BaseConversationDraftDelegate
             val harness = createBoundLoadedDelegateHarness()
 
             try {
-                harness.delegate.onMessageTextChanged(messageText = "Hello")
+                harness.delegate.typeMessageText(messageText = "Hello")
                 harness.delegate.onSendClick()
                 advanceUntilIdle()
 
                 assertFalse(harness.delegate.state.value.draft.isSending)
                 assertEquals("", harness.delegate.state.value.draft.messageText)
 
-                harness.delegate.onMessageTextChanged(messageText = "Next")
+                harness.delegate.typeMessageText(messageText = "Next")
                 advanceTimeBy(300.milliseconds)
                 advanceUntilIdle()
 
@@ -68,7 +69,7 @@ internal class ConversationDraftDelegateSendTest : BaseConversationDraftDelegate
             )
 
             try {
-                harness.delegate.onMessageTextChanged(messageText = "Hello")
+                harness.delegate.typeMessageText(messageText = "Hello")
                 harness.delegate.onSendClick()
                 advanceUntilIdle()
 
@@ -93,7 +94,7 @@ internal class ConversationDraftDelegateSendTest : BaseConversationDraftDelegate
             )
 
             try {
-                harness.delegate.onMessageTextChanged(messageText = "Hello")
+                harness.delegate.typeMessageText(messageText = "Hello")
                 harness.delegate.onSendClick()
                 advanceUntilIdle()
 
@@ -120,12 +121,12 @@ internal class ConversationDraftDelegateSendTest : BaseConversationDraftDelegate
             )
 
             try {
-                harness.delegate.onMessageTextChanged(messageText = "Hello")
+                harness.delegate.typeMessageText(messageText = "Hello")
                 harness.delegate.onSendClick()
                 advanceUntilIdle()
                 assertTrue(harness.delegate.state.value.draft.isSending)
 
-                harness.delegate.onMessageTextChanged(messageText = "Next")
+                harness.delegate.typeMessageText(messageText = "Next")
                 sendGate.complete(Unit)
                 advanceUntilIdle()
 
@@ -160,7 +161,7 @@ internal class ConversationDraftDelegateSendTest : BaseConversationDraftDelegate
             )
 
             try {
-                harness.delegate.onMessageTextChanged(messageText = "Hello")
+                harness.delegate.typeMessageText(messageText = "Hello")
                 harness.delegate.onSendClick()
                 advanceUntilIdle()
 

@@ -87,6 +87,27 @@ internal class ConversationComposerUiStateMapperImplTest {
     }
 
     @Test
+    fun map_passesTheMessageTextWithItsRevision() {
+        val uiState = mapper.map(
+            audioRecording = ConversationAudioRecordingUiState(),
+            draftState = ConversationDraftState(
+                draft = ConversationDraft(
+                    messageText = "Hello",
+                ),
+                messageTextRevision = 3,
+            ),
+            attachments = persistentListOf(),
+            composerAvailability = ConversationComposerAvailability.Editable,
+            subscriptions = persistentListOf(),
+            areSubscriptionsLoaded = true,
+            defaultSmsSubscriptionId = SubId(ParticipantData.DEFAULT_SELF_SUB_ID),
+        )
+
+        assertEquals("Hello", uiState.messageText)
+        assertEquals(3, uiState.messageTextRevision)
+    }
+
+    @Test
     fun map_disablesSendWhenDraftIsEmpty() {
         val uiState = mapper.map(
             audioRecording = ConversationAudioRecordingUiState(),

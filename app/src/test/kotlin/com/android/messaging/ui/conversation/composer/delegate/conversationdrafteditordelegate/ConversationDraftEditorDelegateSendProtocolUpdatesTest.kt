@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.composer.delegate.conversationdraf
 import app.cash.turbine.test
 import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
+import com.android.messaging.testutil.typeMessageText
 import io.mockk.coEvery
 import io.mockk.coVerify
 import kotlin.time.Duration.Companion.milliseconds
@@ -21,7 +22,7 @@ internal class ConversationDraftEditorDelegateSendProtocolUpdatesTest :
     @Test
     fun applySendProtocol_whenDraftHasContent_appliesGivenProtocol() {
         val delegate = loadedDelegate()
-        delegate.onMessageTextChanged(messageText = "hi")
+        delegate.typeMessageText(messageText = "hi")
 
         delegate.applySendProtocol(sendProtocol = ConversationDraftSendProtocol.MMS)
 
@@ -44,7 +45,7 @@ internal class ConversationDraftEditorDelegateSendProtocolUpdatesTest :
             val delegate = loadedDelegate()
 
             delegate.sendProtocolUpdates.test {
-                delegate.onMessageTextChanged(messageText = "hi")
+                delegate.typeMessageText(messageText = "hi")
                 advanceTimeBy(249.milliseconds)
                 expectNoEvents()
                 coVerify(exactly = 0) {
@@ -72,7 +73,7 @@ internal class ConversationDraftEditorDelegateSendProtocolUpdatesTest :
             val delegate = loadedDelegate()
 
             delegate.sendProtocolUpdates.test {
-                delegate.onMessageTextChanged(messageText = "hi")
+                delegate.typeMessageText(messageText = "hi")
                 advanceUntilIdle()
                 assertEquals(ConversationDraftSendProtocol.MMS, awaitItem())
 
@@ -103,7 +104,7 @@ internal class ConversationDraftEditorDelegateSendProtocolUpdatesTest :
             val delegate = loadedDelegate()
 
             delegate.sendProtocolUpdates.test {
-                delegate.onMessageTextChanged(messageText = "hi")
+                delegate.typeMessageText(messageText = "hi")
                 advanceUntilIdle()
                 assertEquals(ConversationDraftSendProtocol.SMS, awaitItem())
 
@@ -131,11 +132,11 @@ internal class ConversationDraftEditorDelegateSendProtocolUpdatesTest :
             val delegate = loadedDelegate()
 
             delegate.sendProtocolUpdates.test {
-                delegate.onMessageTextChanged(messageText = "hi")
+                delegate.typeMessageText(messageText = "hi")
                 advanceUntilIdle()
                 assertEquals(ConversationDraftSendProtocol.SMS, awaitItem())
 
-                delegate.onMessageTextChanged(messageText = "hello")
+                delegate.typeMessageText(messageText = "hello")
                 advanceUntilIdle()
 
                 expectNoEvents()
@@ -168,9 +169,9 @@ internal class ConversationDraftEditorDelegateSendProtocolUpdatesTest :
             } returns ConversationDraftSendProtocol.SMS
 
             delegate.sendProtocolUpdates.test {
-                delegate.onMessageTextChanged(messageText = "slow")
+                delegate.typeMessageText(messageText = "slow")
                 advanceTimeBy(300.milliseconds)
-                delegate.onMessageTextChanged(messageText = "fast")
+                delegate.typeMessageText(messageText = "fast")
                 advanceUntilIdle()
 
                 assertEquals(ConversationDraftSendProtocol.SMS, awaitItem())

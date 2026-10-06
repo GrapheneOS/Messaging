@@ -94,6 +94,7 @@ internal fun ConversationComposeBar(
     modifier: Modifier = Modifier,
     audioRecording: ConversationAudioRecordingUiState,
     messageText: String,
+    messageTextRevision: Int,
     subjectText: String,
     sendProtocol: ConversationDraftSendProtocol,
     segmentCounter: ConversationSegmentCounterUiState?,
@@ -106,7 +107,7 @@ internal fun ConversationComposeBar(
     onContactAttachClick: () -> Unit,
     onMediaPickerClick: () -> Unit,
     onLockedAudioRecordingStartRequest: () -> Unit,
-    onMessageTextChange: (String) -> Unit,
+    onMessageTextChange: (text: String, textRevision: Int) -> Unit,
     onAudioRecordingStartRequest: () -> Unit,
     onAudioRecordingFinish: () -> Unit,
     onAudioRecordingLock: () -> Boolean,
@@ -133,6 +134,7 @@ internal fun ConversationComposeBar(
         ConversationComposeInputContent(
             audioRecording = audioRecording,
             messageText = messageText,
+            messageTextRevision = messageTextRevision,
             subjectText = subjectText,
             sendProtocol = sendProtocol,
             segmentCounter = segmentCounter,
@@ -216,6 +218,7 @@ private fun rememberConversationAudioRecordingGestureController(
 internal fun ConversationComposeInputContent(
     audioRecording: ConversationAudioRecordingUiState,
     messageText: String,
+    messageTextRevision: Int,
     subjectText: String,
     sendProtocol: ConversationDraftSendProtocol,
     segmentCounter: ConversationSegmentCounterUiState?,
@@ -229,7 +232,7 @@ internal fun ConversationComposeInputContent(
     onContactAttachClick: () -> Unit,
     onMediaPickerClick: () -> Unit,
     onLockedAudioRecordingStartRequest: () -> Unit,
-    onMessageTextChange: (String) -> Unit,
+    onMessageTextChange: (text: String, textRevision: Int) -> Unit,
     onAudioRecordingStartRequest: () -> Unit,
     onAudioRecordingDrag: (ConversationSendActionButtonGestureState) -> Unit,
     onAudioRecordingLock: () -> Boolean,
@@ -247,10 +250,10 @@ internal fun ConversationComposeInputContent(
         isSendActionEnabled = isSendActionEnabled,
     )
     val isInputActionEnabled = !inputState.isActiveRecording
-    val mmsText = stringResource(id = R.string.mms_text)
 
     MessageComposeBar(
         text = messageText,
+        textRevision = messageTextRevision,
         onTextChange = conversationMessageTextChangeHandler(
             isActiveRecording = inputState.isActiveRecording,
             onMessageTextChange = onMessageTextChange,
@@ -258,7 +261,7 @@ internal fun ConversationComposeInputContent(
         isFieldEnabled = isMessageFieldEnabled,
         isFieldContentHidden = inputState.isActiveRecording,
         fieldFocusRequester = messageFieldFocusRequester,
-        fieldStateDescription = conversationComposeFieldStateDescription(sendProtocol, mmsText),
+        fieldStateDescription = conversationComposeFieldStateDescription(sendProtocol),
         fieldTestTag = CONVERSATION_TEXT_FIELD_TEST_TAG,
         topContent = conversationComposeSubjectSlot(
             subjectText = subjectText,
@@ -393,20 +396,24 @@ private fun conversationComposeInputState(
     )
 }
 
+@Composable
 private fun conversationComposeFieldStateDescription(
     sendProtocol: ConversationDraftSendProtocol,
-    mmsText: String,
-): String? = when (sendProtocol) {
-    ConversationDraftSendProtocol.MMS -> mmsText
-    ConversationDraftSendProtocol.SMS -> null
+): String? {
+    return when (sendProtocol) {
+        ConversationDraftSendProtocol.MMS -> stringResource(id = R.string.mms_text)
+        ConversationDraftSendProtocol.SMS -> null
+    }
 }
 
 private fun conversationMessageTextChangeHandler(
     isActiveRecording: Boolean,
-    onMessageTextChange: (String) -> Unit,
-): (String) -> Unit = { updatedMessageText ->
-    if (!isActiveRecording) {
-        onMessageTextChange(updatedMessageText)
+    onMessageTextChange: (text: String, textRevision: Int) -> Unit,
+): (text: String, textRevision: Int) -> Unit {
+    return { updatedMessageText, textRevision ->
+        if (!isActiveRecording) {
+            onMessageTextChange(updatedMessageText, textRevision)
+        }
     }
 }
 
@@ -693,6 +700,7 @@ private fun PreviewConversationComposeBar(uiState: ConversationComposerUiState) 
     ConversationComposeBar(
         audioRecording = uiState.audioRecording,
         messageText = uiState.messageText,
+        messageTextRevision = uiState.messageTextRevision,
         subjectText = uiState.subjectText,
         sendProtocol = uiState.sendProtocol,
         segmentCounter = uiState.segmentCounter,
@@ -704,7 +712,7 @@ private fun PreviewConversationComposeBar(uiState: ConversationComposerUiState) 
         onContactAttachClick = {},
         onMediaPickerClick = {},
         onLockedAudioRecordingStartRequest = {},
-        onMessageTextChange = { _ -> },
+        onMessageTextChange = { _, _ -> },
         onAudioRecordingStartRequest = {},
         onAudioRecordingFinish = {},
         onAudioRecordingLock = { true },

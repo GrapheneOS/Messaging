@@ -5,6 +5,7 @@ import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.testutil.assertThat
+import com.android.messaging.testutil.typeMessageText
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -17,7 +18,7 @@ internal class ConversationDraftEditorDelegateStateProjectionTest :
     fun onMessageTextChanged_reflectsTextInVisibleStateAndKeepsSmsProtocol() {
         val delegate = loadedDelegate()
 
-        delegate.onMessageTextChanged(messageText = "hello")
+        delegate.typeMessageText(messageText = "hello")
 
         assertEquals("hello", delegate.state.value.draft.messageText)
         assertEquals(ConversationDraftSendProtocol.SMS, delegate.state.value.sendProtocol)
@@ -74,11 +75,11 @@ internal class ConversationDraftEditorDelegateStateProjectionTest :
     @Test
     fun textEditAfterAppliedSendProtocol_preservesResolvedProtocolForTextDraft() {
         val delegate = loadedDelegate()
-        delegate.onMessageTextChanged(messageText = "hi")
+        delegate.typeMessageText(messageText = "hi")
         delegate.applySendProtocol(sendProtocol = ConversationDraftSendProtocol.MMS)
         assertEquals(ConversationDraftSendProtocol.MMS, delegate.state.value.sendProtocol)
 
-        delegate.onMessageTextChanged(messageText = "hi there")
+        delegate.typeMessageText(messageText = "hi there")
 
         assertEquals(ConversationDraftSendProtocol.MMS, delegate.state.value.sendProtocol)
     }

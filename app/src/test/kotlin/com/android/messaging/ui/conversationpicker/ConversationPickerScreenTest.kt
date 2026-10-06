@@ -1,8 +1,8 @@
 package com.android.messaging.ui.conversationpicker
 
+import android.view.inputmethod.EditorInfo
 import androidx.compose.ui.test.junit4.v2.createComposeRule
-import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.performImeAction
+import com.android.messaging.testutil.messageFieldView
 import com.android.messaging.ui.common.components.composer.MESSAGE_COMPOSE_FIELD_TEST_TAG
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerAction as Action
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerEffect as Effect
@@ -30,7 +30,9 @@ class ConversationPickerScreenTest {
     fun keyboardSendAction_sendsTheReviewedDraft() {
         val screenModel = setReviewContent(isSendEnabled = true)
 
-        composeTestRule.onNodeWithTag(MESSAGE_COMPOSE_FIELD_TEST_TAG).performImeAction()
+        composeTestRule
+            .messageFieldView(testTag = MESSAGE_COMPOSE_FIELD_TEST_TAG)
+            .onEditorAction(EditorInfo.IME_ACTION_SEND)
 
         assertEquals(1, screenModel.actions.count { it == Action.SendClicked })
     }
@@ -39,7 +41,9 @@ class ConversationPickerScreenTest {
     fun keyboardSendAction_doesNothingWhileTheSendButtonIsDisabled() {
         val screenModel = setReviewContent(isSendEnabled = false)
 
-        composeTestRule.onNodeWithTag(MESSAGE_COMPOSE_FIELD_TEST_TAG).performImeAction()
+        composeTestRule
+            .messageFieldView(testTag = MESSAGE_COMPOSE_FIELD_TEST_TAG)
+            .onEditorAction(EditorInfo.IME_ACTION_SEND)
 
         assertEquals(0, screenModel.actions.count { it == Action.SendClicked })
     }

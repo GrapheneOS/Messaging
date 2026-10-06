@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.composer.delegate.conversationdraf
 import app.cash.turbine.test
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
+import com.android.messaging.testutil.typeMessageText
 import com.android.messaging.ui.conversation.composer.delegate.DraftSaveRequest
 import com.android.messaging.ui.conversation.composer.model.ConversationDraftState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -23,7 +24,7 @@ internal class ConversationDraftEditorDelegateSaveTest :
         val delegate = loadedDelegate()
         assertNull(delegate.currentSaveRequest)
 
-        delegate.onMessageTextChanged(messageText = "draft text")
+        delegate.typeMessageText(messageText = "draft text")
 
         assertEquals(
             DraftSaveRequest(
@@ -42,7 +43,7 @@ internal class ConversationDraftEditorDelegateSaveTest :
             delegate.saveRequests.test {
                 assertNull(awaitItem())
 
-                delegate.onMessageTextChanged(messageText = "hello")
+                delegate.typeMessageText(messageText = "hello")
                 runCurrent()
 
                 assertEquals(
@@ -60,7 +61,7 @@ internal class ConversationDraftEditorDelegateSaveTest :
     @Test
     fun reset_returnsPendingSaveRequestAndClearsDraft() {
         val delegate = loadedDelegate()
-        delegate.onMessageTextChanged(messageText = "unsaved")
+        delegate.typeMessageText(messageText = "unsaved")
 
         val saveRequest = delegate.reset(conversationId = null)
 
@@ -71,7 +72,10 @@ internal class ConversationDraftEditorDelegateSaveTest :
             ),
             saveRequest,
         )
-        assertEquals(ConversationDraftState(), delegate.state.value)
+        assertEquals(
+            ConversationDraftState(messageTextRevision = delegate.state.value.messageTextRevision),
+            delegate.state.value,
+        )
         assertNull(delegate.currentSaveRequest)
     }
 
@@ -116,7 +120,7 @@ internal class ConversationDraftEditorDelegateSaveTest :
     @Test
     fun matchesSaveRequest_reflectsWhetherRequestEqualsCurrentEffectiveDraft() {
         val delegate = loadedDelegate()
-        delegate.onMessageTextChanged(messageText = "hi")
+        delegate.typeMessageText(messageText = "hi")
 
         assertTrue(
             delegate.matchesSaveRequest(
@@ -139,7 +143,7 @@ internal class ConversationDraftEditorDelegateSaveTest :
     @Test
     fun applyPersistedSaveResult_clearsPendingEditsWhileKeepingVisibleDraft() {
         val delegate = loadedDelegate()
-        delegate.onMessageTextChanged(messageText = "hi")
+        delegate.typeMessageText(messageText = "hi")
         assertEquals(
             DraftSaveRequest(
                 conversationId = CONVERSATION_ID,

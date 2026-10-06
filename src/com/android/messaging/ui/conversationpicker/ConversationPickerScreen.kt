@@ -660,7 +660,8 @@ private fun PickerReviewComposeBar(
     MessageComposeBar(
         modifier = modifier,
         text = uiState.draft.text,
-        onTextChange = { onAction(Action.DraftTextChanged(it)) },
+        textRevision = 0,
+        onTextChange = { text, _ -> onAction(Action.DraftTextChanged(text)) },
         isFieldEnabled = true,
         isFieldContentHidden = false,
         fieldFocusRequester = null,

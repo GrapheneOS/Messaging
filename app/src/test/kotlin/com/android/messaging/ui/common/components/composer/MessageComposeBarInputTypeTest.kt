@@ -1,15 +1,12 @@
 package com.android.messaging.ui.common.components.composer
 
 import android.text.InputType
+import android.view.View
+import android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction
 import android.view.inputmethod.EditorInfo
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.InterceptPlatformTextInput
 import androidx.compose.ui.test.junit4.v2.createComposeRule
-import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.performClick
-import com.android.messaging.testutil.TEST_WAIT_TIMEOUT_MILLIS
+import com.android.messaging.testutil.focusMessageField
 import com.android.messaging.ui.core.AppTheme
-import kotlinx.coroutines.awaitCancellation
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -55,59 +52,45 @@ internal class MessageComposeBarInputTypeTest {
         assertTrue(imeOptions and EditorInfo.IME_FLAG_NO_ENTER_ACTION != 0)
     }
 
+    @Test
+    fun messageComposeField_withImeSend_letsAccessibilityServicesSend() {
+        var sendCount = 0
+        val field = focusedField(onImeSend = { sendCount++ })
+
+        field.performAccessibilityAction(AccessibilityAction.ACTION_IME_ENTER.id, null)
+
+        assertEquals(1, sendCount)
+    }
+
     private fun focusedFieldInputType(): Int {
         return focusedFieldEditorInfo().inputType
     }
 
     private fun focusedFieldEditorInfo(onImeSend: (() -> Unit)? = null): EditorInfo {
-        var editorInfo: EditorInfo? = null
+        val editorInfo = EditorInfo()
+        focusedField(onImeSend = onImeSend).onCreateInputConnection(editorInfo)
 
+        return editorInfo
+    }
+
+    private fun focusedField(onImeSend: (() -> Unit)? = null): View {
         composeTestRule.setContent {
-            RecordingEditorInfo(onEditorInfo = { editorInfo = it }) {
-                AppTheme {
-                    MessageComposeBar(
-                        text = "",
-                        onTextChange = {},
-                        isFieldEnabled = true,
-                        isFieldContentHidden = false,
-                        fieldFocusRequester = null,
-                        fieldStateDescription = null,
-                        fieldTestTag = MESSAGE_COMPOSE_FIELD_TEST_TAG,
-                        sendAction = {},
-                        onImeSend = onImeSend,
-                    )
-                }
+            AppTheme {
+                MessageComposeBar(
+                    text = "",
+                    textRevision = 0,
+                    onTextChange = { _, _ -> },
+                    isFieldEnabled = true,
+                    isFieldContentHidden = false,
+                    fieldFocusRequester = null,
+                    fieldStateDescription = null,
+                    fieldTestTag = MESSAGE_COMPOSE_FIELD_TEST_TAG,
+                    sendAction = {},
+                    onImeSend = onImeSend,
+                )
             }
         }
 
-        composeTestRule
-            .onNodeWithTag(testTag = MESSAGE_COMPOSE_FIELD_TEST_TAG)
-            .performClick()
-
-        composeTestRule.waitUntil(timeoutMillis = TEST_WAIT_TIMEOUT_MILLIS) {
-            editorInfo != null
-        }
-
-        return requireNotNull(editorInfo)
+        return composeTestRule.focusMessageField(testTag = MESSAGE_COMPOSE_FIELD_TEST_TAG)
     }
-}
-
-/**
- * Captures the [EditorInfo] the focused text field below would hand to the keyboard, instead of
- * letting the request reach the real input method.
- */
-@Composable
-private fun RecordingEditorInfo(
-    onEditorInfo: (EditorInfo) -> Unit,
-    content: @Composable () -> Unit,
-) {
-    InterceptPlatformTextInput(
-        interceptor = { request, _ ->
-            val editorInfo = EditorInfo()
-            request.createInputConnection(outAttributes = editorInfo)
-            onEditorInfo(editorInfo)
-            awaitCancellation()
-        },
-        content = content,
-    )
 }

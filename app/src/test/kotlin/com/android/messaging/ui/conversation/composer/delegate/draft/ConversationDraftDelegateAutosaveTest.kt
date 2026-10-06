@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.composer.delegate.draft
 
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
+import com.android.messaging.testutil.typeMessageText
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.just
@@ -27,7 +28,7 @@ internal class ConversationDraftDelegateAutosaveTest : BaseConversationDraftDele
             val harness = createBoundLoadedDelegateHarness()
 
             try {
-                harness.delegate.onMessageTextChanged(messageText = "Hello")
+                harness.delegate.typeMessageText(messageText = "Hello")
 
                 advanceTimeBy(299.milliseconds)
                 coVerify(exactly = 0) {
@@ -60,7 +61,7 @@ internal class ConversationDraftDelegateAutosaveTest : BaseConversationDraftDele
             val harness = createBoundLoadedDelegateHarness()
 
             try {
-                harness.delegate.onMessageTextChanged(messageText = "Hello")
+                harness.delegate.typeMessageText(messageText = "Hello")
                 coEvery {
                     harness.conversationDraftsRepository.saveDraft(
                         conversationId = any(),

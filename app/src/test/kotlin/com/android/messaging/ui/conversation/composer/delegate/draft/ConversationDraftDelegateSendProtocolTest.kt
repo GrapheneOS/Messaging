@@ -4,6 +4,7 @@ import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
+import com.android.messaging.testutil.typeMessageText
 import io.mockk.coVerify
 import io.mockk.verify
 import kotlin.time.Duration.Companion.milliseconds
@@ -33,7 +34,7 @@ internal class ConversationDraftDelegateSendProtocolTest : BaseConversationDraft
             )
 
             try {
-                harness.delegate.onMessageTextChanged(messageText = "Hello")
+                harness.delegate.typeMessageText(messageText = "Hello")
 
                 advanceTimeBy(249.milliseconds)
 
@@ -86,11 +87,11 @@ internal class ConversationDraftDelegateSendProtocolTest : BaseConversationDraft
             )
 
             try {
-                harness.delegate.onMessageTextChanged(messageText = "H")
+                harness.delegate.typeMessageText(messageText = "H")
                 advanceTimeBy(100.milliseconds)
-                harness.delegate.onMessageTextChanged(messageText = "He")
+                harness.delegate.typeMessageText(messageText = "He")
                 advanceTimeBy(100.milliseconds)
-                harness.delegate.onMessageTextChanged(messageText = "Hel")
+                harness.delegate.typeMessageText(messageText = "Hel")
                 advanceTimeBy(249.milliseconds)
 
                 coVerify(exactly = 0) {
@@ -141,7 +142,7 @@ internal class ConversationDraftDelegateSendProtocolTest : BaseConversationDraft
             )
 
             try {
-                harness.delegate.onMessageTextChanged(messageText = "Hello")
+                harness.delegate.typeMessageText(messageText = "Hello")
                 advanceTimeBy(250.milliseconds)
                 advanceUntilIdle()
 
@@ -150,7 +151,7 @@ internal class ConversationDraftDelegateSendProtocolTest : BaseConversationDraft
                     harness.delegate.state.value.sendProtocol,
                 )
 
-                harness.delegate.onMessageTextChanged(messageText = "")
+                harness.delegate.typeMessageText(messageText = "")
 
                 assertEquals(
                     ConversationDraftSendProtocol.SMS,

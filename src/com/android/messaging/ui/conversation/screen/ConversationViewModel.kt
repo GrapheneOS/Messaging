@@ -96,7 +96,7 @@ internal interface ConversationScreenModel :
 
     fun onExternalUriClicked(uri: String)
 
-    fun onMessageTextChanged(text: String)
+    fun onMessageTextChanged(text: String, textRevision: Int)
     fun tryStartAddingAttachment(): Boolean
     fun onAudioRecordingStart(isLocked: Boolean)
     fun onAudioRecordingLock(): Boolean
@@ -565,8 +565,11 @@ internal class ConversationViewModel @Inject constructor(
         )
     }
 
-    override fun onMessageTextChanged(text: String) {
-        conversationDraftDelegate.onMessageTextChanged(messageText = text)
+    override fun onMessageTextChanged(text: String, textRevision: Int) {
+        conversationDraftDelegate.onMessageTextChanged(
+            messageText = text,
+            messageTextRevision = textRevision,
+        )
     }
 
     override fun tryStartAddingAttachment(): Boolean {
