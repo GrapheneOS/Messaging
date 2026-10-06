@@ -223,7 +223,7 @@ internal class ConversationScreenRouteEffectsTest : BaseConversationScreenTest()
     }
 
     @Test
-    fun stoppingWithoutRecordingPersistsDraftWithoutCancellingRecording() {
+    fun stoppingForwardsScreenStoppedToScreenModel() {
         val screenModel = createScreenModel()
         lateinit var lifecycleOwner: TestLifecycleOwner
 
@@ -243,17 +243,14 @@ internal class ConversationScreenRouteEffectsTest : BaseConversationScreenTest()
         composeTestRule.waitForIdle()
 
         composeTestRule.runOnIdle {
-            verify(exactly = 0) {
-                screenModel.model.onAudioRecordingCancel()
-            }
             verify(exactly = 1) {
-                screenModel.model.persistDraft()
+                screenModel.model.onScreenStopped()
             }
         }
     }
 
     @Test
-    fun stoppingWhileRecordingCancelsRecordingAndPersistsDraft() {
+    fun stoppingWhileRecordingStopsScreenWithoutCancellingRecording() {
         val screenModel = createScreenModel()
         lateinit var lifecycleOwner: TestLifecycleOwner
         screenModel.scaffoldUiStateFlow.value = createPresentUiState(
@@ -267,6 +264,7 @@ internal class ConversationScreenRouteEffectsTest : BaseConversationScreenTest()
                 composer = uiState.composer.copy(
                     audioRecording = ConversationAudioRecordingUiState(
                         phase = ConversationAudioRecordingPhase.Recording,
+                        isLocked = true,
                     ),
                 ),
             )
@@ -288,11 +286,41 @@ internal class ConversationScreenRouteEffectsTest : BaseConversationScreenTest()
         composeTestRule.waitForIdle()
 
         composeTestRule.runOnIdle {
-            verify(exactly = 1) {
+            verify(exactly = 0) {
                 screenModel.model.onAudioRecordingCancel()
             }
             verify(exactly = 1) {
-                screenModel.model.persistDraft()
+                screenModel.model.onScreenStopped()
+            }
+        }
+    }
+
+    @Test
+    fun leavingCompositionWhileStartedForwardsScreenStoppedToScreenModel() {
+        val screenModel = createScreenModel()
+        var isScreenShown by mutableStateOf(true)
+        lateinit var lifecycleOwner: TestLifecycleOwner
+
+        composeTestRule.runOnIdle {
+            lifecycleOwner = TestLifecycleOwner(
+                initialState = Lifecycle.State.RESUMED,
+            )
+        }
+
+        setContent(
+            screenModel = screenModel.model,
+            lifecycleOwner = lifecycleOwner,
+            isScreenShown = { isScreenShown },
+        )
+        composeTestRule.waitForIdle()
+        composeTestRule.runOnIdle {
+            isScreenShown = false
+        }
+        composeTestRule.waitForIdle()
+
+        composeTestRule.runOnIdle {
+            verify(exactly = 1) {
+                screenModel.model.onScreenStopped()
             }
         }
     }

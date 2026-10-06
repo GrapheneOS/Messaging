@@ -333,16 +333,22 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
     }
 
     override fun flushDraft() {
-        val saveRequest = conversationDraftEditorDelegate.currentSaveRequest ?: return
+        val conversationId = conversationDraftEditorDelegate
+            .currentSaveRequest
+            ?.conversationId
+            ?: return
 
         launchDraftOperation(scope = applicationScope) {
-            createSaveDraftOperationFlow(
+            runDraftOperationBoundary(
                 operationName = "flush draft",
-                saveRequest = saveRequest,
-                shouldMarkCurrentDraftAsPersisted = false,
-                shouldSkipIfRequestIsStale = false,
-                shouldRunNonCancellable = true,
-            )
+                conversationId = conversationId,
+            ) {
+                unitFlow {
+                    withContext(context = NonCancellable) {
+                        saveCurrentDraft()
+                    }
+                }
+            }
         }
     }
 
@@ -371,6 +377,17 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
             }
 
             conversationDraftEditorDelegate.applyPersistedSaveResult(saveRequest = saveRequest)
+        }
+    }
+
+    private suspend fun saveCurrentDraft() {
+        draftSaveMutex.withLock {
+            conversationDraftEditorDelegate.currentSaveRequest?.let { saveRequest ->
+                conversationDraftsRepository.saveDraft(
+                    conversationId = saveRequest.conversationId,
+                    draft = saveRequest.draft,
+                )
+            }
         }
     }
 

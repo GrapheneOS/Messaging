@@ -113,7 +113,6 @@ internal interface ConversationScreenModel :
     fun onDefaultSmsRolePromptActionClick()
     fun onDefaultSmsRoleRequestResult(resultCode: Int)
     fun onDefaultSmsRoleRequestLaunchFailed()
-    fun persistDraft()
 
     fun onArchiveConversationClick()
     fun onUnarchiveConversationClick()
@@ -131,6 +130,7 @@ internal interface ConversationScreenModel :
 
     fun onScreenForegrounded(cancelNotification: Boolean)
     fun onScreenBackgrounded()
+    fun onScreenStopped()
 }
 
 @HiltViewModel
@@ -691,10 +691,6 @@ internal class ConversationViewModel @Inject constructor(
         )
     }
 
-    override fun persistDraft() {
-        conversationDraftDelegate.persistDraft()
-    }
-
     override fun onArchiveConversationClick() {
         conversationMetadataDelegate.onArchiveConversationClick()
     }
@@ -754,6 +750,11 @@ internal class ConversationViewModel @Inject constructor(
 
     override fun onScreenBackgrounded() {
         conversationFocusDelegate.setScreenFocused(focused = false)
+    }
+
+    override fun onScreenStopped() {
+        conversationAudioRecordingDelegate.onScreenStopped()
+        conversationDraftDelegate.persistDraft()
     }
 
     override fun onCleared() {

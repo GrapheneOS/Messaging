@@ -19,15 +19,13 @@ import androidx.compose.ui.geometry.Rect as ComposeRect
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalResources
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.compose.LifecycleStartEffect
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.common.components.snackbar.showActionSnackbar
 import com.android.messaging.ui.contact.model.AddContactRequest
-import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingPhase
 import com.android.messaging.ui.conversation.mediapicker.ConversationMediaPickerOverlay
 import com.android.messaging.ui.conversation.mediapicker.ConversationMediaPickerState
 import com.android.messaging.ui.conversation.mediapicker.RefreshConversationMediaPickerPermissionsEffect
@@ -127,7 +125,6 @@ internal fun ConversationScreenRouteEffects(
 
     ConversationScreenLifecycleEffects(
         cancelIncomingNotification = cancelIncomingNotification,
-        uiState = scaffoldUiState,
         screenModel = screenModel,
     )
 
@@ -258,7 +255,6 @@ private fun ConversationPendingLaunchEffects(
 @Composable
 private fun ConversationScreenLifecycleEffects(
     cancelIncomingNotification: Boolean,
-    uiState: ConversationScreenScaffoldUiState,
     screenModel: ConversationScreenModel,
 ) {
     LifecycleResumeEffect(screenModel, cancelIncomingNotification) {
@@ -266,14 +262,10 @@ private fun ConversationScreenLifecycleEffects(
         onPauseOrDispose { screenModel.onScreenBackgrounded() }
     }
 
-    LifecycleEventEffect(event = Lifecycle.Event.ON_STOP) {
-        val isRecording = uiState.composer.audioRecording.phase ==
-            ConversationAudioRecordingPhase.Recording
-
-        if (isRecording) {
-            screenModel.onAudioRecordingCancel()
-        }
-        screenModel.persistDraft()
+    // Also runs when the screen leaves composition while the activity stays started,
+    // such as when another screen is pushed on top of the conversation
+    LifecycleStartEffect(screenModel) {
+        onStopOrDispose { screenModel.onScreenStopped() }
     }
 }
 

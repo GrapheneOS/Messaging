@@ -24,6 +24,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
@@ -46,6 +47,7 @@ internal abstract class BaseConversationDraftDelegateTest {
         conversationsRepository: ConversationsRepository = createConversationsRepositoryMock(),
         getDraftSendProtocol: GetConversationDraftSendProtocol = createGetDraftSendProtocolMock(),
         conversationDraftTransfers: ConversationDraftTransfers? = null,
+        defaultDispatcher: CoroutineDispatcher = mainDispatcherRule.testDispatcher,
     ): DelegateHarness {
         val harness = createHarness(
             sendConversationDraft = sendConversationDraft,
@@ -53,6 +55,7 @@ internal abstract class BaseConversationDraftDelegateTest {
             conversationsRepository = conversationsRepository,
             getDraftSendProtocol = getDraftSendProtocol,
             conversationDraftTransfers = conversationDraftTransfers,
+            defaultDispatcher = defaultDispatcher,
         )
         harness.conversationIdFlow.value = CONVERSATION_ID
         harness.emitDraft(
@@ -71,6 +74,7 @@ internal abstract class BaseConversationDraftDelegateTest {
         getDraftSendProtocol: GetConversationDraftSendProtocol = createGetDraftSendProtocolMock(),
         observeFailure: Exception? = null,
         conversationDraftTransfers: ConversationDraftTransfers? = null,
+        defaultDispatcher: CoroutineDispatcher = mainDispatcherRule.testDispatcher,
     ): DelegateHarness {
         val dispatcher = mainDispatcherRule.testDispatcher
         val applicationScope = TestScope(dispatcher)
@@ -101,7 +105,7 @@ internal abstract class BaseConversationDraftDelegateTest {
             conversationDraftEditorDelegate = conversationDraftEditorDelegate,
             conversationDraftTransfers = draftTransfers,
             sendConversationDraft = sendConversationDraft,
-            defaultDispatcher = dispatcher,
+            defaultDispatcher = defaultDispatcher,
         )
         val conversationIdFlow = MutableStateFlow<ConversationId?>(null)
 

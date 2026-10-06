@@ -5,6 +5,7 @@ import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -74,7 +75,7 @@ internal class ConversationViewModelDelegationTest : BaseConversationViewModelTe
             viewModel.dismissDeleteMessageConfirmation()
             viewModel.dismissMessageSelection()
             viewModel.confirmDeleteSelectedMessages()
-            viewModel.persistDraft()
+            viewModel.onScreenStopped()
 
             verify(exactly = 1) {
                 messageSelectionDelegate.mock.onMessageSelectionActionClick(
@@ -125,7 +126,8 @@ internal class ConversationViewModelDelegationTest : BaseConversationViewModelTe
             verify(exactly = 1) {
                 messageSelectionDelegate.mock.confirmDeleteSelectedMessages()
             }
-            verify(exactly = 1) {
+            verifyOrder {
+                audioRecordingDelegate.mock.onScreenStopped()
                 draftDelegate.mock.persistDraft()
             }
         }
