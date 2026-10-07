@@ -27,7 +27,9 @@ internal sealed interface ConversationListAction {
         val destination: String,
     ) : ConfirmationAction
 
-    data object DeleteConfirmed : ConfirmationAction
+    data class DeleteConfirmed(
+        val conversationIds: ImmutableList<ConversationId>,
+    ) : ConfirmationAction
     // endregion
 
     // region SnackbarAction
@@ -87,6 +89,10 @@ internal sealed interface ConversationListAction {
     data class ConversationSwipedToToggleRead(
         val conversationId: ConversationId,
     ) : ListAction
+
+    data class ConversationSwipedToDelete(
+        val conversationId: ConversationId,
+    ) : ListAction
     // endregion
 
     // region NavigationAction
@@ -102,6 +108,7 @@ internal sealed interface ConversationListAction {
     data object AddContactClicked : SelectionAction
     data object ArchiveClicked : SelectionAction
     data object BlockClicked : SelectionAction
+    data object DeleteClicked : SelectionAction
     data object MarkReadClicked : SelectionAction
     data object MarkUnreadClicked : SelectionAction
     data object PinClicked : SelectionAction

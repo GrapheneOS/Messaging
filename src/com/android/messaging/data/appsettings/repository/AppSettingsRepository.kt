@@ -4,6 +4,9 @@ import android.content.Context
 import com.android.messaging.R
 import com.android.messaging.data.appsettings.model.AppBooleanPref
 import com.android.messaging.data.appsettings.model.AppSettings
+import com.android.messaging.data.appsettings.model.ConversationSwipeOption
+import com.android.messaging.data.appsettings.model.ConversationSwipePref
+import com.android.messaging.data.appsettings.model.ConversationSwipeSettings
 import com.android.messaging.data.debug.DebugFeaturesProvider
 import com.android.messaging.di.core.IoDispatcher
 import com.android.messaging.util.BuglePrefs
@@ -16,7 +19,12 @@ import kotlinx.coroutines.withContext
 internal interface AppSettingsRepository {
     suspend fun getAppSettings(): AppSettings
     suspend fun isYouTubeLinkPreviewsEnabled(): Boolean
+    suspend fun getConversationSwipeSettings(): ConversationSwipeSettings
     suspend fun setBooleanPref(pref: AppBooleanPref, enabled: Boolean)
+    suspend fun setConversationSwipeOption(
+        pref: ConversationSwipePref,
+        option: ConversationSwipeOption,
+    )
 }
 
 internal class AppSettingsRepositoryImpl @Inject constructor(
@@ -43,6 +51,7 @@ internal class AppSettingsRepositoryImpl @Inject constructor(
                     resources.getBoolean(R.bool.in_conversation_sound_pref_default),
                 ),
                 youTubeLinkPreviewsEnabled = readYouTubeLinkPreviewsEnabled(),
+                conversationSwipeSettings = readConversationSwipeSettings(),
                 isDebugEnabled = debugFeaturesProvider.isEnabled(),
                 dumpSmsEnabled = appPrefs.getBoolean(
                     context.getString(R.string.dump_sms_pref_key),
@@ -62,6 +71,12 @@ internal class AppSettingsRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getConversationSwipeSettings(): ConversationSwipeSettings {
+        return withContext(ioDispatcher) {
+            readConversationSwipeSettings()
+        }
+    }
+
     override suspend fun setBooleanPref(
         pref: AppBooleanPref,
         enabled: Boolean,
@@ -74,10 +89,41 @@ internal class AppSettingsRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun setConversationSwipeOption(
+        pref: ConversationSwipePref,
+        option: ConversationSwipeOption,
+    ) {
+        withContext(ioDispatcher) {
+            BuglePrefs.getApplicationPrefs().putString(
+                context.getString(pref.keyResId),
+                option.name,
+            )
+        }
+    }
+
     private fun readYouTubeLinkPreviewsEnabled(): Boolean {
         return BuglePrefs.getApplicationPrefs().getBoolean(
             context.getString(R.string.youtube_link_previews_pref_key),
             context.resources.getBoolean(R.bool.youtube_link_previews_pref_default),
         )
+    }
+
+    private fun readConversationSwipeSettings(): ConversationSwipeSettings {
+        val default = ConversationSwipeSettings.Default
+
+        return ConversationSwipeSettings(
+            startToEnd = readConversationSwipeOption(ConversationSwipePref.START_TO_END)
+                ?: default.startToEnd,
+            endToStart = readConversationSwipeOption(ConversationSwipePref.END_TO_START)
+                ?: default.endToStart,
+        )
+    }
+
+    private fun readConversationSwipeOption(pref: ConversationSwipePref): ConversationSwipeOption? {
+        val stored = BuglePrefs.getApplicationPrefs().getString(
+            context.getString(pref.keyResId),
+            null,
+        )
+        return ConversationSwipeOption.entries.firstOrNull { it.name == stored }
     }
 }
