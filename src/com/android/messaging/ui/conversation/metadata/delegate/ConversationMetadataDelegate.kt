@@ -2,10 +2,12 @@ package com.android.messaging.ui.conversation.metadata.delegate
 
 import com.android.messaging.R
 import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepository
+import com.android.messaging.data.conversation.event.ConversationArchiveEvents
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.di.core.DefaultDispatcher
+import com.android.messaging.domain.conversation.usecase.action.ArchiveConversation
 import com.android.messaging.domain.conversation.usecase.action.CheckConversationActionRequirements
 import com.android.messaging.domain.conversation.usecase.action.ConversationActionRequirementsResult
 import com.android.messaging.ui.conversation.common.ConversationScreenDelegate
@@ -32,10 +34,12 @@ internal interface ConversationMetadataDelegate :
     ConversationScreenDelegate<ConversationMetadataUiState> {
     val effects: Flow<ConversationScreenEffect>
     val navigationEvents: Flow<NavEvent>
+    val archivedConversationIds: Flow<ConversationId>
     val isDeleteConversationConfirmationVisible: StateFlow<Boolean>
 
     fun onArchiveConversationClick()
     fun onUnarchiveConversationClick()
+    fun onUndoArchiveClick(conversationId: ConversationId)
     fun onUnblockConversationClick()
     fun onAddContactClick()
     fun onDeleteConversationClick()
@@ -48,6 +52,8 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
     private val conversationsRepository: ConversationsRepository,
     private val conversationMetadataUiStateMapper: ConversationMetadataUiStateMapper,
     private val blockedParticipantsRepository: BlockedParticipantsRepository,
+    conversationArchiveEvents: ConversationArchiveEvents,
+    private val archiveConversation: ArchiveConversation,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
 ) : ConversationMetadataDelegate {
@@ -63,6 +69,7 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
 
     override val effects = _effects.asSharedFlow()
     override val navigationEvents = _navigationEvents.asSharedFlow()
+    override val archivedConversationIds = conversationArchiveEvents.archivedConversationIds
     override val state = _state.asStateFlow()
     override val isDeleteConversationConfirmationVisible =
         _isDeleteConversationConfirmationVisible.asStateFlow()
@@ -121,14 +128,18 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
         val conversationId = currentConversationId ?: return
 
         boundScope?.launch(defaultDispatcher) {
-            conversationsRepository.archiveConversation(conversationId = conversationId)
-            _navigationEvents.emit(NavEvent.CloseConversation)
+            archiveConversation(conversationId = conversationId)
+            _navigationEvents.emit(NavEvent.CloseAfterArchive)
         }
     }
 
     override fun onUnarchiveConversationClick() {
         val conversationId = currentConversationId ?: return
 
+        onUndoArchiveClick(conversationId = conversationId)
+    }
+
+    override fun onUndoArchiveClick(conversationId: ConversationId) {
         boundScope?.launch(defaultDispatcher) {
             conversationsRepository.unarchiveConversation(conversationId = conversationId)
         }

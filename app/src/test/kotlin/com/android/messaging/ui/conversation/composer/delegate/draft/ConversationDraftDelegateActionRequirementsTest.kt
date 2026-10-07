@@ -5,6 +5,7 @@ import app.cash.turbine.test
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.domain.conversation.usecase.action.ConversationActionRequirementsResult
+import com.android.messaging.testutil.typeMessageText
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
 import io.mockk.slot
 import io.mockk.verify
@@ -33,7 +34,7 @@ internal class ConversationDraftDelegateActionRequirementsTest :
             )
 
             try {
-                harness.delegate.onMessageTextChanged(messageText = "Hello")
+                harness.delegate.typeMessageText(messageText = "Hello")
 
                 harness.delegate.effects.test {
                     harness.delegate.onSendClick()
@@ -63,7 +64,7 @@ internal class ConversationDraftDelegateActionRequirementsTest :
             )
 
             try {
-                harness.delegate.onMessageTextChanged(messageText = "Hello")
+                harness.delegate.typeMessageText(messageText = "Hello")
 
                 harness.delegate.effects.test {
                     harness.delegate.onSendClick()
@@ -99,7 +100,7 @@ internal class ConversationDraftDelegateActionRequirementsTest :
             )
 
             try {
-                harness.delegate.onMessageTextChanged(messageText = "Hello")
+                harness.delegate.typeMessageText(messageText = "Hello")
 
                 harness.delegate.effects.test {
                     harness.delegate.onSendClick()
@@ -173,7 +174,7 @@ internal class ConversationDraftDelegateActionRequirementsTest :
             )
 
             try {
-                harness.delegate.onMessageTextChanged(messageText = "Hello")
+                harness.delegate.typeMessageText(messageText = "Hello")
 
                 harness.delegate.effects.test {
                     harness.delegate.onSendClick()

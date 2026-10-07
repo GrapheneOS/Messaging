@@ -12,6 +12,7 @@ import com.android.messaging.data.conversationsettings.repository.ConversationSe
 import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
+import com.android.messaging.domain.conversation.usecase.action.ArchiveConversation
 import com.android.messaging.domain.conversationsettings.usecase.SetConversationSelfParticipantId
 import com.android.messaging.ui.conversationsettings.screen.CONVERSATION_SETTINGS_CONVERSATION_ID_ARG
 import com.android.messaging.ui.conversationsettings.screen.mapper.ConversationSettingsUiStateMapperImpl
@@ -34,6 +35,8 @@ internal class ConversationSettingsDelegateImplTest {
     private val subscriptionsRepository = mockk<SubscriptionsRepository>()
     private val setConversationSelfParticipantId =
         mockk<SetConversationSelfParticipantId>(relaxed = true)
+    private val conversationsRepository = mockk<ConversationsRepository>(relaxed = true)
+    private val archiveConversation = mockk<ArchiveConversation>(relaxed = true)
 
     @Test
     fun bind_conversationBoundToDefaultSelf_showsDefaultSmsSubscription() {
@@ -96,6 +99,34 @@ internal class ConversationSettingsDelegateImplTest {
         }
     }
 
+    @Test
+    fun setArchived_archiving_archivesThroughUseCase() {
+        runTest {
+            val delegate = createDelegate(applicationScope = backgroundScope)
+
+            delegate.setArchived(archived = true)
+            runCurrent()
+
+            coVerify(exactly = 1) { archiveConversation(conversationId = CONVERSATION_ID) }
+            coVerify(exactly = 0) { conversationsRepository.unarchiveConversation(any()) }
+        }
+    }
+
+    @Test
+    fun setArchived_unarchiving_unarchivesViaRepository() {
+        runTest {
+            val delegate = createDelegate(applicationScope = backgroundScope)
+
+            delegate.setArchived(archived = false)
+            runCurrent()
+
+            coVerify(exactly = 1) {
+                conversationsRepository.unarchiveConversation(CONVERSATION_ID)
+            }
+            coVerify(exactly = 0) { archiveConversation(conversationId = any()) }
+        }
+    }
+
     private fun stubConversationSelfParticipantId(selfParticipantId: ParticipantId) {
         every { settingsRepository.getConversationSettings(CONVERSATION_ID) } returns flowOf(
             ConversationSettingsData(
@@ -121,8 +152,9 @@ internal class ConversationSettingsDelegateImplTest {
                 canShowOrAddContact = { _, _, _, _ -> false },
                 isContactSavedUseCase = { _, _ -> false },
             ),
-            conversationsRepository = mockk<ConversationsRepository>(relaxed = true),
+            conversationsRepository = conversationsRepository,
             blockedParticipantsRepository = mockk<BlockedParticipantsRepository>(relaxed = true),
+            archiveConversation = archiveConversation,
             setConversationSelfParticipantId = setConversationSelfParticipantId,
             applicationScope = applicationScope,
             savedStateHandle = SavedStateHandle(

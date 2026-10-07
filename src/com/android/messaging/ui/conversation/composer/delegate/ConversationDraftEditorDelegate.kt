@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.update
@@ -30,7 +31,7 @@ internal interface ConversationDraftEditorDelegate {
     val sendProtocolUpdates: Flow<ConversationDraftSendProtocol>
     val currentSaveRequest: DraftSaveRequest?
 
-    fun onMessageTextChanged(messageText: String)
+    fun onMessageTextChanged(messageText: String, messageTextRevision: Int)
 
     fun onSubjectTextChanged(subjectText: String)
 
@@ -73,6 +74,9 @@ internal interface ConversationDraftEditorDelegate {
     fun matchesSaveRequest(saveRequest: DraftSaveRequest): Boolean
 
     fun applyPersistedSaveResult(saveRequest: DraftSaveRequest)
+
+    /** Returns once the stored draft of [conversationId] has loaded or the editor moved on. */
+    suspend fun awaitDraftLoaded(conversationId: ConversationId)
 
     fun applySendProtocol(sendProtocol: ConversationDraftSendProtocol)
 
@@ -124,9 +128,12 @@ internal class ConversationDraftEditorDelegateImpl @Inject constructor(
     private var pendingDraftSeed: PendingDraftSeed? = null
     private var pendingSelfParticipantId: PendingSelfParticipantId? = null
 
-    override fun onMessageTextChanged(messageText: String) {
-        updateDraftEditorState { currentDraftEditorState ->
-            currentDraftEditorState.withMessageText(messageText)
+    override fun onMessageTextChanged(messageText: String, messageTextRevision: Int) {
+        updateDraftEditorState(isMessageFieldEdit = true) { currentDraftEditorState ->
+            when (currentDraftEditorState.messageTextRevision) {
+                messageTextRevision -> currentDraftEditorState.withMessageText(messageText)
+                else -> currentDraftEditorState
+            }
         }
     }
 
@@ -291,6 +298,13 @@ internal class ConversationDraftEditorDelegateImpl @Inject constructor(
         }
     }
 
+    override suspend fun awaitDraftLoaded(conversationId: ConversationId) {
+        draftEditorState.first { currentDraftEditorState ->
+            currentDraftEditorState.conversationId != conversationId ||
+                currentDraftEditorState.isLoaded
+        }
+    }
+
     override fun applySendProtocol(sendProtocol: ConversationDraftSendProtocol) {
         _state.update { currentState ->
             currentState.copy(
@@ -399,9 +413,25 @@ internal class ConversationDraftEditorDelegateImpl @Inject constructor(
         )
     }
 
-    private fun updateDraftEditorState(transform: (DraftEditorState) -> DraftEditorState) {
+    /**
+     * The message field already shows the text it reports, so only other changes to the message
+     * text move its revision; see [ConversationDraftState.messageTextRevision].
+     */
+    private fun updateDraftEditorState(
+        isMessageFieldEdit: Boolean = false,
+        transform: (DraftEditorState) -> DraftEditorState,
+    ) {
         draftEditorState.update { currentDraftEditorState ->
-            val updatedDraftEditorState = transform(currentDraftEditorState)
+            val transformedDraftEditorState = transform(currentDraftEditorState)
+            val updatedDraftEditorState = when {
+                isMessageFieldEdit -> transformedDraftEditorState
+
+                else -> {
+                    transformedDraftEditorState.withMessageTextRevisionAfter(
+                        previousState = currentDraftEditorState,
+                    )
+                }
+            }
             val visibleState = updatedDraftEditorState.visibleState
             val visibleSendProtocol = resolveVisibleSendProtocol(
                 previousState = _state.value,

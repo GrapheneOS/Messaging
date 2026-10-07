@@ -3,6 +3,7 @@ package com.android.messaging.data.conversation.repository.conversations
 import android.database.ContentObserver
 import android.database.Cursor
 import android.database.MatrixCursor
+import android.net.Uri
 import app.cash.turbine.test
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
@@ -16,6 +17,7 @@ import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.testutil.assertThat
 import com.android.messaging.testutil.createParticipantsCursor
 import com.android.messaging.testutil.participantRow
+import io.mockk.every
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -280,6 +282,64 @@ internal class ConversationsRepositoryMetadataTest : BaseConversationsRepository
             assertEquals(
                 ConversationListItemData.PROJECTION.toList(),
                 capturedProjections.single()?.toList(),
+            )
+        }
+    }
+
+    @Test
+    fun getConversationMetadata_reEmitsWithSnoozeStateWhenSnoozeChanges() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val repository = createRepository()
+            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(
+                CONVERSATION_ID.value
+            )
+
+            stubObserverRegistration(
+                registeredObservers = mutableListOf(),
+                expectedUri = expectedUri,
+            )
+            stubFreshMetadataCursorPerQuery(expectedUri = expectedUri)
+
+            repository.getConversationMetadata(conversationId = CONVERSATION_ID).test {
+                assertEquals(false, awaitItem()?.isSnoozed)
+
+                isSnoozedFlow.value = true
+
+                assertEquals(true, awaitItem()?.isSnoozed)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    @Test
+    fun getConversationMetadataSnapshot_includesSnoozeState() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val repository = createRepository()
+            val expectedUri = MessagingContentProvider.buildConversationMetadataUri(
+                CONVERSATION_ID.value
+            )
+
+            stubFreshMetadataCursorPerQuery(expectedUri = expectedUri)
+            isSnoozedFlow.value = true
+
+            val metadata = repository.getConversationMetadataSnapshot(
+                conversationId = CONVERSATION_ID,
+            )
+
+            assertEquals(true, metadata?.isSnoozed)
+        }
+    }
+
+    private fun stubFreshMetadataCursorPerQuery(expectedUri: Uri) {
+        every {
+            contentResolver.query(expectedUri, any(), null, null, null)
+        } answers {
+            createConversationMetadataCursor(
+                row = conversationMetadataRow(
+                    conversationName = "Carol, Dave",
+                    selfParticipantId = "self-2",
+                    participantCount = 2,
+                ),
             )
         }
     }

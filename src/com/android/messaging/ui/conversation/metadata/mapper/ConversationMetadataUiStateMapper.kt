@@ -37,6 +37,7 @@ internal class ConversationMetadataUiStateMapperImpl @Inject constructor() :
             isArchived = metadata.isArchived,
             isBlocked = metadata.isBlocked,
             composerAvailability = metadata.composerAvailability,
+            isSnoozed = metadata.isSnoozed,
         )
     }
 }

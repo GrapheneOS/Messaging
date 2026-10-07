@@ -13,6 +13,7 @@ internal data class ConversationComposerUiState(
     val audioRecording: ConversationAudioRecordingUiState = ConversationAudioRecordingUiState(),
     val attachments: ImmutableList<ComposerAttachmentUiModel> = persistentListOf(),
     val messageText: String = "",
+    val messageTextRevision: Int = 0,
     val subjectText: String = "",
     val selfParticipantId: ParticipantId? = null,
     val simSelector: ConversationSimSelectorUiState = ConversationSimSelectorUiState(),

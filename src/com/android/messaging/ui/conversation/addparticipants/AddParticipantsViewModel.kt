@@ -13,6 +13,7 @@ import com.android.messaging.domain.conversation.usecase.participant.IsConversat
 import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsEffect
 import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsNavEvent
 import com.android.messaging.ui.conversation.addparticipants.model.AddParticipantsUiState
+import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftTransfers
 import com.android.messaging.ui.conversation.recipientpicker.delegate.ConversationResolutionDelegate
 import com.android.messaging.ui.conversation.recipientpicker.delegate.SelectedRecipientsDelegate
 import com.android.messaging.ui.conversation.recipientpicker.model.picker.ConversationResolutionOutcome
@@ -22,6 +23,7 @@ import com.android.messaging.ui.recipientselection.delegate.RecipientPickerDeleg
 import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerUiState
 import com.android.messaging.ui.recipientselection.model.picker.SelectedRecipient
 import com.android.messaging.ui.recipientselection.model.picker.sanitizedOrNull
+import com.android.messaging.util.LogUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
@@ -30,6 +32,7 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableSet
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -57,6 +60,7 @@ internal interface AddParticipantsScreenModel {
 @HiltViewModel
 internal class AddParticipantsViewModel @Inject constructor(
     private val contactDestinationFormatter: ContactDestinationFormatter,
+    private val conversationDraftTransfers: ConversationDraftTransfers,
     private val conversationParticipantsRepository: ConversationParticipantsRepository,
     private val isConversationRecipientLimitExceeded: IsConversationRecipientLimitExceeded,
     private val recipientPickerDelegate: RecipientPickerDelegate,
@@ -127,6 +131,7 @@ internal class AddParticipantsViewModel @Inject constructor(
                     existingParticipants = persistentEmptyParticipants(),
                     existingParticipantCanonicalDestinations = persistentSetOf(),
                     isLoadingConversationParticipants = conversationId != null,
+                    isOpeningConversation = false,
                 )
                 recipientPickerDelegate.onExcludedDestinationsChanged(
                     destinations = emptySet(),
@@ -227,6 +232,8 @@ internal class AddParticipantsViewModel @Inject constructor(
             return
         }
 
+        // Busy from here until the conversation opens, so picks made meanwhile cannot be lost
+        setOpeningConversation(isOpeningConversation = true)
         conversationResolutionDelegate.resolve(destinations = allDestinations)
     }
 
@@ -239,7 +246,8 @@ internal class AddParticipantsViewModel @Inject constructor(
         return AddParticipantsUiState(
             existingParticipants = localState.existingParticipants,
             isLoadingConversationParticipants = localState.isLoadingConversationParticipants,
-            isResolvingConversation = resolutionState is ConversationResolutionState.Resolving,
+            isResolvingConversation = localState.isOpeningConversation ||
+                resolutionState is ConversationResolutionState.Resolving,
             recipientPickerUiState = recipientPickerUiState,
             selectedRecipients = selectedRecipients,
         )
@@ -252,15 +260,11 @@ internal class AddParticipantsViewModel @Inject constructor(
                 .collect { outcome ->
                     when (outcome) {
                         is ConversationResolutionOutcome.Resolved -> {
-                            selectedRecipientsDelegate.clear()
-                            navigationEventsChannel.trySend(
-                                AddParticipantsNavEvent.OpenConversation(
-                                    conversationId = outcome.conversationId,
-                                ),
-                            )
+                            openConversationWithDraft(conversationId = outcome.conversationId)
                         }
 
                         ConversationResolutionOutcome.Failed -> {
+                            setOpeningConversation(isOpeningConversation = false)
                             showMessage(messageResId = R.string.conversation_creation_failure)
                         }
                     }
@@ -268,8 +272,54 @@ internal class AddParticipantsViewModel @Inject constructor(
         }
     }
 
+    private suspend fun openConversationWithDraft(conversationId: ConversationId) {
+        when (transferDraftToConversation(conversationId = conversationId)) {
+            true -> {
+                selectedRecipientsDelegate.clear()
+                navigationEventsChannel.trySend(
+                    AddParticipantsNavEvent.OpenConversation(conversationId = conversationId),
+                )
+            }
+
+            // Stay here with the recipients still picked so confirming again retries the move
+            false -> {
+                setOpeningConversation(isOpeningConversation = false)
+                showMessage(messageResId = R.string.conversation_creation_failure)
+            }
+        }
+    }
+
+    @Suppress("TooGenericExceptionCaught")
+    private suspend fun transferDraftToConversation(conversationId: ConversationId): Boolean {
+        val currentConversationId = conversationIdFlow.value
+
+        return try {
+            currentConversationId?.let { fromConversationId ->
+                conversationDraftTransfers.transferDraft(
+                    fromConversationId = fromConversationId,
+                    toConversationId = conversationId,
+                )
+            }
+            true
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            LogUtil.e(
+                LOG_TAG,
+                "Failed to move draft to conversation ${conversationId.value}",
+                exception,
+            )
+            false
+        }
+    }
+
     private fun isResolvingConversation(): Boolean {
-        return conversationResolutionDelegate.state.value is ConversationResolutionState.Resolving
+        return localUiState.value.isOpeningConversation ||
+            conversationResolutionDelegate.state.value is ConversationResolutionState.Resolving
+    }
+
+    private fun setOpeningConversation(isOpeningConversation: Boolean) {
+        localUiState.value = localUiState.value.copy(isOpeningConversation = isOpeningConversation)
     }
 
     private fun showMessage(messageResId: Int) {
@@ -294,10 +344,12 @@ internal class AddParticipantsViewModel @Inject constructor(
         val existingParticipants: ImmutableList<ConversationRecipient> = persistentListOf(),
         val existingParticipantCanonicalDestinations: ImmutableSet<String> = persistentSetOf(),
         val isLoadingConversationParticipants: Boolean = true,
+        val isOpeningConversation: Boolean = false,
     )
 
     private companion object {
         private const val CONVERSATION_ID_KEY = "conversation_id"
+        private const val LOG_TAG = "AddParticipantsViewModel"
         private const val STATEFLOW_STOP_TIMEOUT_MILLIS = 5_000L
     }
 }

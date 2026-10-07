@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
@@ -59,7 +60,7 @@ internal interface ConversationDraftDelegate : ConversationScreenDelegate<Conver
     val attachmentLimitWarning: StateFlow<ConversationAttachmentLimitWarning?>
     val isSubjectDialogVisible: StateFlow<Boolean>
 
-    fun onMessageTextChanged(messageText: String)
+    fun onMessageTextChanged(messageText: String, messageTextRevision: Int)
 
     fun onSubjectTextChanged(subjectText: String)
 
@@ -121,6 +122,7 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
     private val checkConversationActionRequirements: CheckConversationActionRequirements,
     private val conversationDraftsRepository: ConversationDraftsRepository,
     private val conversationDraftEditorDelegate: ConversationDraftEditorDelegate,
+    private val conversationDraftTransfers: ConversationDraftTransfers,
     private val sendConversationDraft: SendConversationDraft,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
@@ -161,10 +163,17 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
         )
         bindDraftAutosave(scope = scope)
         bindDraftSendProtocol(scope = scope)
+        bindDraftTransfers(
+            scope = scope,
+            conversationIdFlow = conversationIdFlow,
+        )
     }
 
-    override fun onMessageTextChanged(messageText: String) {
-        conversationDraftEditorDelegate.onMessageTextChanged(messageText = messageText)
+    override fun onMessageTextChanged(messageText: String, messageTextRevision: Int) {
+        conversationDraftEditorDelegate.onMessageTextChanged(
+            messageText = messageText,
+            messageTextRevision = messageTextRevision,
+        )
     }
 
     override fun onSubjectTextChanged(subjectText: String) {
@@ -324,16 +333,22 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
     }
 
     override fun flushDraft() {
-        val saveRequest = conversationDraftEditorDelegate.currentSaveRequest ?: return
+        val conversationId = conversationDraftEditorDelegate
+            .currentSaveRequest
+            ?.conversationId
+            ?: return
 
         launchDraftOperation(scope = applicationScope) {
-            createSaveDraftOperationFlow(
+            runDraftOperationBoundary(
                 operationName = "flush draft",
-                saveRequest = saveRequest,
-                shouldMarkCurrentDraftAsPersisted = false,
-                shouldSkipIfRequestIsStale = false,
-                shouldRunNonCancellable = true,
-            )
+                conversationId = conversationId,
+            ) {
+                unitFlow {
+                    withContext(context = NonCancellable) {
+                        saveCurrentDraft()
+                    }
+                }
+            }
         }
     }
 
@@ -362,6 +377,33 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
             }
 
             conversationDraftEditorDelegate.applyPersistedSaveResult(saveRequest = saveRequest)
+        }
+    }
+
+    private suspend fun saveCurrentDraft() {
+        draftSaveMutex.withLock {
+            conversationDraftEditorDelegate.currentSaveRequest?.let { saveRequest ->
+                conversationDraftsRepository.saveDraft(
+                    conversationId = saveRequest.conversationId,
+                    draft = saveRequest.draft,
+                )
+            }
+        }
+    }
+
+    private suspend fun commitUnsavedDraft(conversationId: ConversationId) {
+        // Edits made before the stored draft loads are only saved once it has loaded.
+        // Under the save lock the commit follows any save already in progress, and marking the
+        // edits persisted stops a later save from writing them back after the draft moves away
+        conversationDraftEditorDelegate.awaitDraftLoaded(conversationId = conversationId)
+        draftSaveMutex.withLock {
+            conversationDraftEditorDelegate.currentSaveRequest?.let { saveRequest ->
+                conversationDraftsRepository.saveDraft(
+                    conversationId = saveRequest.conversationId,
+                    draft = saveRequest.draft,
+                )
+                conversationDraftEditorDelegate.applyPersistedSaveResult(saveRequest = saveRequest)
+            }
         }
     }
 
@@ -396,6 +438,21 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
         scope.launch(defaultDispatcher) {
             conversationDraftEditorDelegate.sendProtocolUpdates.collect { sendProtocol ->
                 conversationDraftEditorDelegate.applySendProtocol(sendProtocol = sendProtocol)
+            }
+        }
+    }
+
+    private fun bindDraftTransfers(
+        scope: CoroutineScope,
+        conversationIdFlow: StateFlow<ConversationId?>,
+    ) {
+        scope.launch(defaultDispatcher) {
+            conversationIdFlow.collectLatest { conversationId ->
+                conversationId?.let { boundConversationId ->
+                    conversationDraftTransfers.commitDraftWhileActive(boundConversationId) {
+                        commitUnsavedDraft(conversationId = boundConversationId)
+                    }
+                }
             }
         }
     }

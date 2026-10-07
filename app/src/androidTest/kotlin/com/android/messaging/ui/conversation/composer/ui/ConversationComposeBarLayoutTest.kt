@@ -46,6 +46,7 @@ class ConversationComposeBarLayoutTest {
                         ConversationComposeBar(
                             audioRecording = ConversationAudioRecordingUiState(),
                             messageText = "Hello",
+                            messageTextRevision = 0,
                             subjectText = "",
                             sendProtocol = ConversationDraftSendProtocol.SMS,
                             segmentCounter = null,
@@ -57,7 +58,7 @@ class ConversationComposeBarLayoutTest {
                             onContactAttachClick = {},
                             onMediaPickerClick = {},
                             onLockedAudioRecordingStartRequest = {},
-                            onMessageTextChange = {},
+                            onMessageTextChange = { _, _ -> },
                             onAudioRecordingStartRequest = {},
                             onAudioRecordingFinish = {},
                             onAudioRecordingLock = { false },

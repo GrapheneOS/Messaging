@@ -62,6 +62,7 @@ internal interface ConversationScreenModel :
     ConversationMessageSelectionActions {
     val effects: Flow<ConversationScreenEffect>
     val navigationEvents: Flow<NavEvent>
+    val archivedConversationIds: Flow<ConversationId>
     val mediaPickerOverlayUiState: StateFlow<ConversationMediaPickerOverlayUiState>
     val scaffoldUiState: StateFlow<ConversationScreenScaffoldUiState>
 
@@ -95,7 +96,7 @@ internal interface ConversationScreenModel :
 
     fun onExternalUriClicked(uri: String)
 
-    fun onMessageTextChanged(text: String)
+    fun onMessageTextChanged(text: String, textRevision: Int)
     fun tryStartAddingAttachment(): Boolean
     fun onAudioRecordingStart(isLocked: Boolean)
     fun onAudioRecordingLock(): Boolean
@@ -112,10 +113,10 @@ internal interface ConversationScreenModel :
     fun onDefaultSmsRolePromptActionClick()
     fun onDefaultSmsRoleRequestResult(resultCode: Int)
     fun onDefaultSmsRoleRequestLaunchFailed()
-    fun persistDraft()
 
     fun onArchiveConversationClick()
     fun onUnarchiveConversationClick()
+    fun onUndoArchiveClick(conversationId: ConversationId)
     fun onUnblockClick()
     fun onAddContactClick()
     fun onDeleteConversationClick()
@@ -129,6 +130,7 @@ internal interface ConversationScreenModel :
 
     fun onScreenForegrounded(cancelNotification: Boolean)
     fun onScreenBackgrounded()
+    fun onScreenStopped()
 }
 
 @HiltViewModel
@@ -168,6 +170,7 @@ internal class ConversationViewModel @Inject constructor(
 
     override val effects = _effects.asSharedFlow()
     override val navigationEvents = _navigationEvents.asSharedFlow()
+    override val archivedConversationIds = conversationMetadataDelegate.archivedConversationIds
 
     init {
         initializeDelegates()
@@ -562,8 +565,11 @@ internal class ConversationViewModel @Inject constructor(
         )
     }
 
-    override fun onMessageTextChanged(text: String) {
-        conversationDraftDelegate.onMessageTextChanged(messageText = text)
+    override fun onMessageTextChanged(text: String, textRevision: Int) {
+        conversationDraftDelegate.onMessageTextChanged(
+            messageText = text,
+            messageTextRevision = textRevision,
+        )
     }
 
     override fun tryStartAddingAttachment(): Boolean {
@@ -685,16 +691,16 @@ internal class ConversationViewModel @Inject constructor(
         )
     }
 
-    override fun persistDraft() {
-        conversationDraftDelegate.persistDraft()
-    }
-
     override fun onArchiveConversationClick() {
         conversationMetadataDelegate.onArchiveConversationClick()
     }
 
     override fun onUnarchiveConversationClick() {
         conversationMetadataDelegate.onUnarchiveConversationClick()
+    }
+
+    override fun onUndoArchiveClick(conversationId: ConversationId) {
+        conversationMetadataDelegate.onUndoArchiveClick(conversationId = conversationId)
     }
 
     override fun onUnblockClick() {
@@ -744,6 +750,11 @@ internal class ConversationViewModel @Inject constructor(
 
     override fun onScreenBackgrounded() {
         conversationFocusDelegate.setScreenFocused(focused = false)
+    }
+
+    override fun onScreenStopped() {
+        conversationAudioRecordingDelegate.onScreenStopped()
+        conversationDraftDelegate.persistDraft()
     }
 
     override fun onCleared() {

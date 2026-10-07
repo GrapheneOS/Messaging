@@ -20,6 +20,7 @@ internal fun createConversationMetadata(
         otherParticipantPhotoUri = null,
         isArchived = false,
         isBlocked = false,
+        isSnoozed = false,
         composerAvailability = ConversationComposerAvailability.Editable,
         sortTimestamp = 0L,
     )

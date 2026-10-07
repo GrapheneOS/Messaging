@@ -12,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.SnackbarVisuals
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -56,6 +57,15 @@ private data class ConversationLatestScrollSnapshot(
     val isScrolledToLatestMessage: Boolean,
     val isListDragged: Boolean,
 )
+
+// Its own type, so scrolling to the latest message dismisses this notice and leaves others alone.
+private class NewMessageSnackbarVisuals(
+    override val message: String,
+    override val actionLabel: String,
+) : SnackbarVisuals {
+    override val withDismissAction: Boolean = false
+    override val duration: SnackbarDuration = SnackbarDuration.Indefinite
+}
 
 @Composable
 internal fun ConversationScreenContent(
@@ -357,9 +367,10 @@ private fun AutoScrollToLatestMessage(
 
         if (autoScrollDecision.shouldShowNewMessageSnackbar) {
             val snackbarResult = snackbarHostState.showSnackbar(
-                message = newMessageText,
-                actionLabel = viewActionLabel,
-                duration = SnackbarDuration.Indefinite,
+                visuals = NewMessageSnackbarVisuals(
+                    message = newMessageText,
+                    actionLabel = viewActionLabel,
+                ),
             )
 
             if (snackbarResult == SnackbarResult.ActionPerformed) {
@@ -390,7 +401,9 @@ private fun TrackLatestMessageScrollState(
             when {
                 scrollSnapshot.isScrolledToLatestMessage -> {
                     onWasScrolledToLatestMessageChanged(true)
-                    snackbarHostState.currentSnackbarData?.dismiss()
+                    snackbarHostState.currentSnackbarData
+                        ?.takeIf { it.visuals is NewMessageSnackbarVisuals }
+                        ?.dismiss()
                 }
 
                 scrollSnapshot.isListDragged -> {

@@ -29,6 +29,7 @@ import com.android.messaging.datamodel.DatabaseWrapper;
 import com.android.messaging.datamodel.MessagingContentProvider;
 import com.android.messaging.util.LogUtil;
 import com.android.messaging.util.PendingIntentConstants;
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * Action used to mark all messages as seen
@@ -36,13 +37,20 @@ import com.android.messaging.util.PendingIntentConstants;
 public class MarkAsSeenAction extends Action implements Parcelable {
     private static final String TAG = LogUtil.BUGLE_DATAMODEL_TAG;
     private static final String KEY_CONVERSATION_ID = "conversation_id";
+    private static final String KEY_CANCEL_NOTIFICATIONS = "cancel_notifications";
 
     /**
      * Mark all messages as seen.
      */
     public static void markAllAsSeen() {
-        final MarkAsSeenAction action = new MarkAsSeenAction((String) null/*conversationId*/);
-        action.start();
+        markAllAsSeen(true);
+    }
+
+    /**
+     * Mark all messages as seen, optionally cancelling their notifications.
+     */
+    public static void markAllAsSeen(final boolean cancelNotifications) {
+        new MarkAsSeenAction((String) null, cancelNotifications).start();
     }
 
     /**
@@ -59,13 +67,21 @@ public class MarkAsSeenAction extends Action implements Parcelable {
      *        messages as seen
      */
     public MarkAsSeenAction(final String conversationId) {
+        this(conversationId, true);
+    }
+
+    @VisibleForTesting
+    MarkAsSeenAction(final String conversationId, final boolean cancelNotifications) {
         actionParameters.putString(KEY_CONVERSATION_ID, conversationId);
+        actionParameters.putBoolean(KEY_CANCEL_NOTIFICATIONS, cancelNotifications);
     }
 
     @Override
     protected Object executeAction() {
         final String conversationId =
                 actionParameters.getString(KEY_CONVERSATION_ID);
+        final boolean cancelNotifications =
+                actionParameters.getBoolean(KEY_CANCEL_NOTIFICATIONS, true);
         final boolean hasSpecificConversation = !TextUtils.isEmpty(conversationId);
 
         // Everything in telephony should already have the seen bit set.
@@ -75,13 +91,14 @@ public class MarkAsSeenAction extends Action implements Parcelable {
         // Now mark the messages as seen in the bugle db
         final DatabaseWrapper db = DataModel.get().getDatabase();
         db.beginTransaction();
+        final int count;
 
         try {
             final ContentValues values = new ContentValues();
             values.put(MessageColumns.SEEN, 1);
 
             if (hasSpecificConversation) {
-                final int count = db.update(DatabaseHelper.MESSAGES_TABLE, values,
+                count = db.update(DatabaseHelper.MESSAGES_TABLE, values,
                         MessageColumns.SEEN + " != 1 AND " +
                                 MessageColumns.CONVERSATION_ID + "=?",
                         new String[] { conversationId });
@@ -89,7 +106,7 @@ public class MarkAsSeenAction extends Action implements Parcelable {
                     MessagingContentProvider.notifyMessagesChanged(conversationId);
                 }
             } else {
-                db.update(DatabaseHelper.MESSAGES_TABLE, values,
+                count = db.update(DatabaseHelper.MESSAGES_TABLE, values,
                         MessageColumns.SEEN + " != 1", null/*selectionArgs*/);
             }
 
@@ -97,9 +114,14 @@ public class MarkAsSeenAction extends Action implements Parcelable {
         } finally {
             db.endTransaction();
         }
-        // After marking messages as seen, update the notifications. This will
-        // clear the now stale notifications.
-        BugleNotifications.cancel(PendingIntentConstants.SMS_NOTIFICATION_ID, conversationId);
+        if (cancelNotifications) {
+            // After marking messages as seen, update the notifications. This will
+            // clear the now stale notifications.
+            BugleNotifications.cancel(PendingIntentConstants.SMS_NOTIFICATION_ID, conversationId);
+        } else if (count > 0) {
+            // Keep posted notifications because bubbles live on them.
+            BugleNotifications.update(BugleNotifications.UPDATE_MESSAGES);
+        }
         return null;
     }
 

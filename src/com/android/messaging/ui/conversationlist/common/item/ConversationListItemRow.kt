@@ -254,7 +254,7 @@ private fun itemContainerColor(item: ConversationListItemUiModel): Color {
 
 private fun itemUnreadFontWeight(item: ConversationListItemUiModel): FontWeight {
     return when {
-        item.isUnread -> FontWeight.Medium
+        item.isUnread -> FontWeight.Bold
         else -> FontWeight.Normal
     }
 }

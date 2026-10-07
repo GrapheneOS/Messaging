@@ -10,17 +10,20 @@ import com.android.messaging.ui.conversation.entry.ConversationEntryViewModel
 internal data class ConversationEntryNavState(
     val model: ConversationEntryScreenModel,
     val isLaunchedFromBubble: Boolean,
+    val hasConversationList: Boolean,
 )
 
 @Composable
 internal fun ProvideConversationEntryNavState(
     isLaunchedFromBubble: Boolean,
+    hasConversationList: Boolean,
     content: @Composable () -> Unit,
 ) {
     val entryModel: ConversationEntryScreenModel = hiltViewModel<ConversationEntryViewModel>()
     val entryNavState = ConversationEntryNavState(
         model = entryModel,
         isLaunchedFromBubble = isLaunchedFromBubble,
+        hasConversationList = hasConversationList,
     )
 
     CompositionLocalProvider(

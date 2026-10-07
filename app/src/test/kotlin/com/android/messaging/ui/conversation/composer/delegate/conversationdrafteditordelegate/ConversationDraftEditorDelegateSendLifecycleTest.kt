@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.composer.delegate.conversationdraf
 
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
+import com.android.messaging.testutil.typeMessageText
 import com.android.messaging.ui.conversation.composer.delegate.DraftSendRequest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -29,7 +30,7 @@ internal class ConversationDraftEditorDelegateSendLifecycleTest :
     @Test
     fun createSendRequestOrNull_whenPendingAttachmentsRemain_returnsNull() {
         val delegate = loadedDelegate()
-        delegate.onMessageTextChanged(messageText = "hi")
+        delegate.typeMessageText(messageText = "hi")
         delegate.addPendingAttachment(
             pendingAttachment = pendingAttachment(pendingAttachmentId = "p1"),
         )
@@ -40,7 +41,7 @@ internal class ConversationDraftEditorDelegateSendLifecycleTest :
     @Test
     fun createSendRequestOrNull_whenSendable_returnsRequestWithEffectiveDraft() {
         val delegate = loadedDelegate()
-        delegate.onMessageTextChanged(messageText = "hi")
+        delegate.typeMessageText(messageText = "hi")
 
         assertEquals(
             DraftSendRequest(
@@ -54,7 +55,7 @@ internal class ConversationDraftEditorDelegateSendLifecycleTest :
     @Test
     fun markSendingForSendRequest_forMatchingConversation_marksSendingAndReturnsTrue() {
         val delegate = loadedDelegate()
-        delegate.onMessageTextChanged(messageText = "hi")
+        delegate.typeMessageText(messageText = "hi")
 
         val didMarkSending = delegate.markSendingForSendRequest(
             sendRequest = DraftSendRequest(
@@ -70,7 +71,7 @@ internal class ConversationDraftEditorDelegateSendLifecycleTest :
     @Test
     fun markSendingForSendRequest_forDifferentConversation_returnsFalseWithoutMarking() {
         val delegate = loadedDelegate()
-        delegate.onMessageTextChanged(messageText = "hi")
+        delegate.typeMessageText(messageText = "hi")
 
         val didMarkSending = delegate.markSendingForSendRequest(
             sendRequest = DraftSendRequest(
@@ -86,7 +87,7 @@ internal class ConversationDraftEditorDelegateSendLifecycleTest :
     @Test
     fun markSendingForSendRequest_whenAlreadySending_returnsFalse() {
         val delegate = loadedDelegate()
-        delegate.onMessageTextChanged(messageText = "hi")
+        delegate.typeMessageText(messageText = "hi")
         val sendRequest = DraftSendRequest(
             conversationId = CONVERSATION_ID,
             draft = draft(messageText = "hi"),
@@ -99,7 +100,7 @@ internal class ConversationDraftEditorDelegateSendLifecycleTest :
     @Test
     fun markConversationDraftAsIdle_forMatchingConversation_clearsSending() {
         val delegate = loadedDelegate()
-        delegate.onMessageTextChanged(messageText = "hi")
+        delegate.typeMessageText(messageText = "hi")
         delegate.markSendingForSendRequest(
             sendRequest = DraftSendRequest(
                 conversationId = CONVERSATION_ID,
@@ -116,7 +117,7 @@ internal class ConversationDraftEditorDelegateSendLifecycleTest :
     @Test
     fun markConversationDraftAsIdle_forDifferentConversation_isIgnored() {
         val delegate = loadedDelegate()
-        delegate.onMessageTextChanged(messageText = "hi")
+        delegate.typeMessageText(messageText = "hi")
         delegate.markSendingForSendRequest(
             sendRequest = DraftSendRequest(
                 conversationId = CONVERSATION_ID,
@@ -132,7 +133,7 @@ internal class ConversationDraftEditorDelegateSendLifecycleTest :
     @Test
     fun clearConversationDraftAfterSend_forMatchingConversation_clearsDraftContent() {
         val delegate = loadedDelegate()
-        delegate.onMessageTextChanged(messageText = "hi")
+        delegate.typeMessageText(messageText = "hi")
 
         delegate.clearConversationDraftAfterSend(
             sendRequest = DraftSendRequest(
@@ -147,7 +148,7 @@ internal class ConversationDraftEditorDelegateSendLifecycleTest :
     @Test
     fun clearConversationDraftAfterSend_forDifferentConversation_isIgnored() {
         val delegate = loadedDelegate()
-        delegate.onMessageTextChanged(messageText = "hi")
+        delegate.typeMessageText(messageText = "hi")
 
         delegate.clearConversationDraftAfterSend(
             sendRequest = DraftSendRequest(

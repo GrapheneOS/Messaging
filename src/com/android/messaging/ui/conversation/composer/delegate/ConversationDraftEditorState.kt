@@ -17,6 +17,7 @@ internal data class DraftEditorState(
     val isSending: Boolean = false,
     val pendingAttachments: List<ConversationDraftPendingAttachment> = emptyList(),
     val pendingSentDraft: ConversationDraft? = null,
+    val messageTextRevision: Int = 0,
 ) {
     val effectiveDraft: ConversationDraft
         get() = localEdits.applyTo(baseDraft = persistedDraft)
@@ -24,7 +25,9 @@ internal data class DraftEditorState(
     val visibleState: ConversationDraftState
         get() {
             return when {
-                conversationId == null -> ConversationDraftState()
+                conversationId == null -> {
+                    ConversationDraftState(messageTextRevision = messageTextRevision)
+                }
 
                 else -> {
                     ConversationDraftState(
@@ -33,6 +36,7 @@ internal data class DraftEditorState(
                             isSending = isSending,
                         ),
                         pendingAttachments = pendingAttachments,
+                        messageTextRevision = messageTextRevision,
                     )
                 }
             }
@@ -304,6 +308,25 @@ internal data class DraftEditorState(
             isSending = false,
             pendingSentDraft = sentDraft,
         )
+    }
+
+    /**
+     * Moves the message text revision past [previousState]'s when this state replaced its message
+     * text or conversation. Only meant for changes that don't come from the message field, which
+     * already shows the text it reports.
+     */
+    fun withMessageTextRevisionAfter(previousState: DraftEditorState): DraftEditorState {
+        val replacesMessageText = conversationId != previousState.conversationId ||
+            effectiveDraft.messageText != previousState.effectiveDraft.messageText
+        val revision = when {
+            replacesMessageText -> previousState.messageTextRevision + 1
+            else -> previousState.messageTextRevision
+        }
+
+        return when (revision) {
+            messageTextRevision -> this
+            else -> copy(messageTextRevision = revision)
+        }
     }
 
     private fun withPersistedDraftWhileAwaitingSentDraftClear(

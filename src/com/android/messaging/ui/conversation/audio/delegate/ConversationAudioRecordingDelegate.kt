@@ -9,6 +9,7 @@ import com.android.messaging.data.conversation.model.draft.ConversationDraftPend
 import com.android.messaging.data.conversation.model.draft.ConversationDraftPendingAttachmentKind
 import com.android.messaging.data.media.repository.ConversationAttachmentsRepository
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
+import com.android.messaging.di.core.ApplicationCoroutineScope
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingPhase
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingUiState
@@ -19,6 +20,7 @@ import com.android.messaging.util.ContentType
 import com.android.messaging.util.LogUtil
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -48,10 +50,14 @@ internal interface ConversationAudioRecordingDelegate :
 
     fun cancelRecording()
 
+    fun onScreenStopped()
+
     fun onScreenCleared()
 }
 
 internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
+    @param:ApplicationCoroutineScope
+    private val applicationScope: CoroutineScope,
     private val conversationAttachmentsRepository: ConversationAttachmentsRepository,
     private val subscriptionsRepository: SubscriptionsRepository,
     private val conversationDraftDelegate: ConversationDraftDelegate,
@@ -129,14 +135,20 @@ internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
     }
 
     override fun finishRecording() {
-        val scope = boundScope ?: return
+        finishRecording(isLeavingScreen = false)
+    }
+
+    private fun finishRecording(isLeavingScreen: Boolean) {
         val pendingAttachmentId = createPendingAudioAttachmentId()
 
-        val finishJob = scope.launch(
+        val finishJob = applicationScope.launch(
             context = defaultDispatcher,
             start = CoroutineStart.LAZY,
         ) {
-            finalizeRecording(pendingAttachmentId = pendingAttachmentId)
+            finalizeRecording(
+                pendingAttachmentId = pendingAttachmentId,
+                isLeavingScreen = isLeavingScreen,
+            )
         }
 
         val effect = withSessionStateLock {
@@ -150,26 +162,23 @@ internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
             finishJob.cancel()
         }
 
-        runAudioRecordingEffect(
-            scope = scope,
-            effect = effect,
-        )
+        runAudioRecordingEffect(effect = effect)
     }
 
     override fun cancelRecording() {
-        val scope = boundScope ?: return
         val effect = withSessionStateLock {
             cancelRecordingLocked()
         }
 
-        runAudioRecordingEffect(
-            scope = scope,
-            effect = effect,
-        )
+        runAudioRecordingEffect(effect = effect)
+    }
+
+    override fun onScreenStopped() {
+        finishRecording(isLeavingScreen = true)
     }
 
     override fun onScreenCleared() {
-        cancelRecording()
+        finishRecording(isLeavingScreen = true)
     }
 
     private fun <T> withSessionStateLock(block: () -> T): T {
@@ -327,10 +336,7 @@ internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
         }
     }
 
-    private fun runAudioRecordingEffect(
-        scope: CoroutineScope,
-        effect: AudioRecordingEffect,
-    ) {
+    private fun runAudioRecordingEffect(effect: AudioRecordingEffect) {
         when (effect) {
             AudioRecordingEffect.None -> Unit
 
@@ -342,7 +348,7 @@ internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
             is AudioRecordingEffect.StopAndDeleteRecording -> {
                 effect.durationJob?.cancel()
 
-                scope.launch(defaultDispatcher) {
+                applicationScope.launch(defaultDispatcher) {
                     val outputUri = stopRecording(mediaRecorder = effect.mediaRecorder)
                     deleteStoppedRecording(outputUri = outputUri)
                 }
@@ -351,7 +357,7 @@ internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
             is AudioRecordingEffect.RemovePendingAndDeleteRecording -> {
                 effect.finishJob.cancel()
 
-                scope.launch(defaultDispatcher) {
+                applicationScope.launch(defaultDispatcher) {
                     conversationDraftDelegate.removePendingAttachment(
                         pendingAttachmentId = effect.pendingAttachmentId,
                     )
@@ -404,10 +410,7 @@ internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
             )
         }
 
-        runAudioRecordingEffect(
-            scope = scope,
-            effect = effect,
-        )
+        runAudioRecordingEffect(effect = effect)
 
         if (effect == AudioRecordingEffect.None) {
             durationJob.start()
@@ -462,9 +465,17 @@ internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
         }
     }
 
-    private suspend fun finalizeRecording(pendingAttachmentId: String) {
+    private suspend fun finalizeRecording(
+        pendingAttachmentId: String,
+        isLeavingScreen: Boolean,
+    ) {
         addPendingAudioAttachment(pendingAttachmentId = pendingAttachmentId)
-        delay(audioRecordEndingBufferMillis)
+        delay(
+            when {
+                isLeavingScreen -> Duration.ZERO
+                else -> audioRecordEndingBufferMillis
+            },
+        )
 
         val mediaRecorder = withSessionStateLock {
             claimFinalizingRecorderLocked(pendingAttachmentId = pendingAttachmentId)
@@ -491,12 +502,22 @@ internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
             outputUri = outputUri,
         )
 
-        if (!didResolvePendingAttachment) {
-            deleteStoppedRecording(outputUri = outputUri)
+        when {
+            didResolvePendingAttachment -> {
+                flushDraftIfScreenIsGone(isLeavingScreen = isLeavingScreen)
+            }
+
+            else -> deleteStoppedRecording(outputUri = outputUri)
         }
 
         withSessionStateLock {
             clearFinalizingSessionLocked(pendingAttachmentId = pendingAttachmentId)
+        }
+    }
+
+    private fun flushDraftIfScreenIsGone(isLeavingScreen: Boolean) {
+        if (isLeavingScreen || boundScope?.isActive != true) {
+            conversationDraftDelegate.flushDraft()
         }
     }
 

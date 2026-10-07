@@ -17,11 +17,14 @@ import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftDelegateImpl
 import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftEditorDelegateImpl
+import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftTransfers
+import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftTransfersImpl
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
@@ -43,12 +46,16 @@ internal abstract class BaseConversationDraftDelegateTest {
         actionRequirements: CheckConversationActionRequirements = createActionRequirementsMock(),
         conversationsRepository: ConversationsRepository = createConversationsRepositoryMock(),
         getDraftSendProtocol: GetConversationDraftSendProtocol = createGetDraftSendProtocolMock(),
+        conversationDraftTransfers: ConversationDraftTransfers? = null,
+        defaultDispatcher: CoroutineDispatcher = mainDispatcherRule.testDispatcher,
     ): DelegateHarness {
         val harness = createHarness(
             sendConversationDraft = sendConversationDraft,
             actionRequirements = actionRequirements,
             conversationsRepository = conversationsRepository,
             getDraftSendProtocol = getDraftSendProtocol,
+            conversationDraftTransfers = conversationDraftTransfers,
+            defaultDispatcher = defaultDispatcher,
         )
         harness.conversationIdFlow.value = CONVERSATION_ID
         harness.emitDraft(
@@ -66,6 +73,8 @@ internal abstract class BaseConversationDraftDelegateTest {
         conversationsRepository: ConversationsRepository = createConversationsRepositoryMock(),
         getDraftSendProtocol: GetConversationDraftSendProtocol = createGetDraftSendProtocolMock(),
         observeFailure: Exception? = null,
+        conversationDraftTransfers: ConversationDraftTransfers? = null,
+        defaultDispatcher: CoroutineDispatcher = mainDispatcherRule.testDispatcher,
     ): DelegateHarness {
         val dispatcher = mainDispatcherRule.testDispatcher
         val applicationScope = TestScope(dispatcher)
@@ -74,6 +83,9 @@ internal abstract class BaseConversationDraftDelegateTest {
         val conversationDraftsRepository = createConversationDraftsRepositoryMock(
             draftFlows = draftFlows,
             observeFailure = observeFailure,
+        )
+        val draftTransfers = conversationDraftTransfers ?: ConversationDraftTransfersImpl(
+            conversationDraftsRepository = conversationDraftsRepository,
         )
         val subscriptionsRepository = createSubscriptionsRepositoryMock()
         val conversationDraftEditorDelegate = ConversationDraftEditorDelegateImpl(
@@ -91,8 +103,9 @@ internal abstract class BaseConversationDraftDelegateTest {
             checkConversationActionRequirements = actionRequirements,
             conversationDraftsRepository = conversationDraftsRepository,
             conversationDraftEditorDelegate = conversationDraftEditorDelegate,
+            conversationDraftTransfers = draftTransfers,
             sendConversationDraft = sendConversationDraft,
-            defaultDispatcher = dispatcher,
+            defaultDispatcher = defaultDispatcher,
         )
         val conversationIdFlow = MutableStateFlow<ConversationId?>(null)
 
@@ -104,6 +117,7 @@ internal abstract class BaseConversationDraftDelegateTest {
         return DelegateHarness(
             delegate = delegate,
             conversationDraftsRepository = conversationDraftsRepository,
+            conversationDraftTransfers = draftTransfers,
             draftFlows = draftFlows,
             conversationIdFlow = conversationIdFlow,
             delegateScope = delegateScope,
@@ -148,6 +162,12 @@ internal abstract class BaseConversationDraftDelegateTest {
             repository.saveDraft(
                 conversationId = any(),
                 draft = any(),
+            )
+        } just runs
+        coEvery {
+            repository.moveDraft(
+                fromConversationId = any(),
+                toConversationId = any(),
             )
         } just runs
         return repository
@@ -208,6 +228,7 @@ internal abstract class BaseConversationDraftDelegateTest {
     protected data class DelegateHarness(
         val delegate: ConversationDraftDelegateImpl,
         val conversationDraftsRepository: ConversationDraftsRepository,
+        val conversationDraftTransfers: ConversationDraftTransfers,
         val draftFlows: MutableMap<ConversationId, MutableSharedFlow<ConversationDraft>>,
         val conversationIdFlow: MutableStateFlow<ConversationId?>,
         val delegateScope: TestScope,

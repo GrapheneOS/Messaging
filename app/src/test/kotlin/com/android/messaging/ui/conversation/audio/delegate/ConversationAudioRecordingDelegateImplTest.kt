@@ -22,13 +22,18 @@ import io.mockk.runs
 import io.mockk.slot
 import io.mockk.unmockkConstructor
 import io.mockk.verify
+import io.mockk.verifyOrder
 import java.time.Duration
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.job
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -79,6 +84,9 @@ class ConversationAudioRecordingDelegateImplTest {
         every {
             conversationDraftDelegate.resolvePendingAttachment(any(), any())
         } returns true
+        every {
+            conversationDraftDelegate.flushDraft()
+        } just runs
     }
 
     @After
@@ -456,6 +464,133 @@ class ConversationAudioRecordingDelegateImplTest {
         }
     }
 
+    @Test
+    fun onScreenStopped_whileRecording_keepsRecordingAsDraftAttachment() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val outputUri = Uri.parse("content://scratch/audio/screen-stopped")
+            val pendingAttachment = slot<ConversationDraftPendingAttachment>()
+            mockSuccessfulRecorderStart(outputUri = outputUri)
+            every {
+                conversationDraftDelegate.addPendingAttachment(capture(pendingAttachment))
+            } just runs
+
+            val delegate = createBoundDelegate(scope = backgroundScope)
+
+            delegate.startLockedRecording(selfParticipantId = ParticipantId("self-1"))
+            runCurrent()
+            ShadowSystemClock.advanceBy(Duration.ofMillis(350))
+
+            delegate.onScreenStopped()
+            runCurrent()
+
+            verifyRecordingKeptAsDraftAttachment(
+                pendingAttachment = pendingAttachment,
+                outputUri = outputUri,
+            )
+            assertEquals(
+                ConversationAudioRecordingPhase.Idle,
+                delegate.state.value.phase,
+            )
+        }
+    }
+
+    @Test
+    fun onScreenStopped_beforeMinimumDuration_discardsRecording() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val outputUri = Uri.parse("content://scratch/audio/screen-stopped-short")
+            mockSuccessfulRecorderStart(outputUri = outputUri)
+
+            val delegate = createBoundDelegate(scope = backgroundScope)
+
+            delegate.startLockedRecording(selfParticipantId = ParticipantId("self-1"))
+            runCurrent()
+            ShadowSystemClock.advanceBy(Duration.ofMillis(250))
+
+            delegate.onScreenStopped()
+            runCurrent()
+
+            verify(exactly = 1) {
+                @Suppress("UnusedFlow")
+                conversationAttachmentsRepository.deleteTemporaryAttachment(
+                    contentUri = outputUri.toString(),
+                )
+            }
+            verify(exactly = 0) {
+                conversationDraftDelegate.addPendingAttachment(any())
+            }
+            verify(exactly = 0) {
+                conversationDraftDelegate.resolvePendingAttachment(any(), any())
+            }
+            assertEquals(
+                ConversationAudioRecordingPhase.Idle,
+                delegate.state.value.phase,
+            )
+        }
+    }
+
+    @Test
+    fun onScreenCleared_whileRecording_keepsRecordingAfterScreenScopeIsCancelled() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val outputUri = Uri.parse("content://scratch/audio/screen-cleared")
+            val pendingAttachment = slot<ConversationDraftPendingAttachment>()
+            mockSuccessfulRecorderStart(outputUri = outputUri)
+            every {
+                conversationDraftDelegate.addPendingAttachment(capture(pendingAttachment))
+            } just runs
+
+            val screenScope = createScreenScope()
+            val delegate = createBoundDelegate(scope = screenScope)
+
+            delegate.startLockedRecording(selfParticipantId = ParticipantId("self-1"))
+            runCurrent()
+            ShadowSystemClock.advanceBy(Duration.ofMillis(350))
+
+            screenScope.cancel()
+            delegate.onScreenCleared()
+            runCurrent()
+
+            verifyRecordingKeptAsDraftAttachment(
+                pendingAttachment = pendingAttachment,
+                outputUri = outputUri,
+            )
+        }
+    }
+
+    @Test
+    fun onScreenCleared_whileFinalizing_completesFinalization() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val outputUri = Uri.parse("content://scratch/audio/screen-cleared-finalizing")
+            val pendingAttachment = slot<ConversationDraftPendingAttachment>()
+            mockSuccessfulRecorderStart(outputUri = outputUri)
+            every {
+                conversationDraftDelegate.addPendingAttachment(capture(pendingAttachment))
+            } just runs
+
+            val screenScope = createScreenScope()
+            val delegate = createBoundDelegate(scope = screenScope)
+
+            delegate.startRecording(selfParticipantId = ParticipantId("self-1"))
+            runCurrent()
+            ShadowSystemClock.advanceBy(Duration.ofMillis(350))
+            delegate.finishRecording()
+            runCurrent()
+
+            screenScope.cancel()
+            delegate.onScreenCleared()
+            advanceTimeBy(delayTimeMillis = 500L)
+            runCurrent()
+
+            verifyRecordingKeptAsDraftAttachment(
+                pendingAttachment = pendingAttachment,
+                outputUri = outputUri,
+            )
+            assertEquals(
+                ConversationAudioRecordingPhase.Idle,
+                delegate.state.value.phase,
+            )
+        }
+    }
+
     private fun mockSuccessfulRecorderStart(
         outputUri: Uri = Uri.parse("content://scratch/audio/default"),
     ) {
@@ -488,8 +623,45 @@ class ConversationAudioRecordingDelegateImplTest {
         )
     }
 
-    private fun createBoundDelegate(scope: CoroutineScope): ConversationAudioRecordingDelegateImpl {
+    private fun verifyRecordingKeptAsDraftAttachment(
+        pendingAttachment: CapturingSlot<ConversationDraftPendingAttachment>,
+        outputUri: Uri,
+    ) {
+        verify(exactly = 1) {
+            anyConstructed<LevelTrackingMediaRecorder>().stopRecording()
+        }
+        verifyPendingAudioAttachmentAdded(pendingAttachment = pendingAttachment)
+        verifyOrder {
+            conversationDraftDelegate.resolvePendingAttachment(
+                pendingAttachmentId = pendingAttachment.captured.pendingAttachmentId,
+                attachment = ConversationDraftAttachment(
+                    contentType = ContentType.AUDIO_3GPP,
+                    contentUri = outputUri.toString(),
+                ),
+            )
+            conversationDraftDelegate.flushDraft()
+        }
+        verify(exactly = 0) {
+            conversationDraftDelegate.removePendingAttachment(any())
+        }
+        verify(exactly = 0) {
+            @Suppress("UnusedFlow")
+            conversationAttachmentsRepository.deleteTemporaryAttachment(any())
+        }
+    }
+
+    private fun TestScope.createScreenScope(): CoroutineScope {
+        return CoroutineScope(
+            context = backgroundScope.coroutineContext +
+                Job(parent = backgroundScope.coroutineContext.job),
+        )
+    }
+
+    private fun TestScope.createBoundDelegate(
+        scope: CoroutineScope,
+    ): ConversationAudioRecordingDelegateImpl {
         return ConversationAudioRecordingDelegateImpl(
+            applicationScope = backgroundScope,
             conversationAttachmentsRepository = conversationAttachmentsRepository,
             subscriptionsRepository = subscriptionsRepository,
             conversationDraftDelegate = conversationDraftDelegate,

@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationlist.chats
 
 import app.cash.turbine.test
+import com.android.messaging.data.conversation.event.ConversationArchiveEventsImpl
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
@@ -30,6 +31,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -48,6 +50,7 @@ class ConversationListViewModelTest {
     private val optimisticSnapshotDelegate = mockk<ConversationListOptimisticSnapshotDelegate>()
     private val debugFeaturesProvider = mockk<DebugFeaturesProvider>()
     private val resolveContactAction = mockk<ResolveContactAction>()
+    private val conversationArchiveEvents = ConversationArchiveEventsImpl()
 
     private val snapshotFlow = MutableStateFlow<ConversationListSnapshot?>(null)
     private val selectedIdsFlow = MutableStateFlow<ImmutableList<ConversationId>>(
@@ -89,6 +92,50 @@ class ConversationListViewModelTest {
     }
 
     @Test
+    fun conversationArchivedOutsideList_removesItAndOffersUndoWithoutPersistingAgain() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val viewModel = createViewModel()
+            runCurrent()
+
+            viewModel.effects.test {
+                conversationArchiveEvents.notifyArchived(conversationId = ConversationId("a"))
+
+                assertThat(awaitItem()).isEqualTo(
+                    Effect.ArchiveStatusChanged(
+                        conversationIds = persistentListOf(ConversationId("a")),
+                        isArchived = true,
+                    )
+                )
+                cancelAndIgnoreRemainingEvents()
+            }
+            advanceUntilIdle()
+
+            verify { optimisticSnapshotDelegate.remove(listOf(ConversationId("a"))) }
+            coVerify(exactly = 0) { actionsDelegate.setArchived(any(), any()) }
+        }
+    }
+
+    @Test
+    fun conversationArchivedBeforeListExists_offersUndoOnceListStarts() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            conversationArchiveEvents.notifyArchived(conversationId = ConversationId("a"))
+
+            val viewModel = createViewModel()
+            viewModel.effects.test {
+                assertThat(awaitItem()).isEqualTo(
+                    Effect.ArchiveStatusChanged(
+                        conversationIds = persistentListOf(ConversationId("a")),
+                        isArchived = true,
+                    )
+                )
+                expectNoEvents()
+            }
+
+            verify { optimisticSnapshotDelegate.remove(listOf(ConversationId("a"))) }
+        }
+    }
+
+    @Test
     fun swipeToggleRead_marksUnreadConversationReadOptimisticallyAndPersists() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             snapshotFlow.value = snapshotOf(conversationItem(ConversationId("a"), isRead = false))
@@ -122,6 +169,23 @@ class ConversationListViewModelTest {
                 )
                 cancelAndIgnoreRemainingEvents()
             }
+        }
+    }
+
+    @Test
+    fun selectAllClicked_selectsEveryConversationInSnapshot() {
+        snapshotFlow.value = snapshotOf(
+            conversationItem(ConversationId("a")),
+            conversationItem(ConversationId("b")),
+        )
+
+        val viewModel = createViewModel()
+        viewModel.onAction(Action.SelectAllClicked)
+
+        verify {
+            selectionDelegate.selectAll(
+                listOf(ConversationId("a"), ConversationId("b")),
+            )
         }
     }
 
@@ -237,6 +301,7 @@ class ConversationListViewModelTest {
 
         every { selectionDelegate.selectedIds } returns selectedIdsFlow
         every { selectionDelegate.bind(any(), any()) } just runs
+        every { selectionDelegate.selectAll(any()) } just runs
         every { selectionDelegate.toggle(any()) } just runs
         every { selectionDelegate.clear() } just runs
 
@@ -261,7 +326,9 @@ class ConversationListViewModelTest {
             optimisticSnapshotDelegate = optimisticSnapshotDelegate,
             debugFeaturesProvider = debugFeaturesProvider,
             resolveContactAction = resolveContactAction,
+            conversationArchiveEvents = conversationArchiveEvents,
             defaultDispatcher = mainDispatcherRule.testDispatcher,
+            mainDispatcher = mainDispatcherRule.testDispatcher,
         )
     }
 }

@@ -149,6 +149,28 @@ class ConversationTopAppBarTest {
     }
 
     @Test
+    fun snoozedConversation_showsSnoozeIndicator() {
+        setContent(metadata = presentMetadata.copy(isSnoozed = true))
+
+        composeTestRule
+            .onNodeWithContentDescription(
+                label = targetContext.getString(R.string.conversation_list_status_snoozed),
+            )
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun conversationNotSnoozed_hidesSnoozeIndicator() {
+        setContent(metadata = presentMetadata.copy(isSnoozed = false))
+
+        composeTestRule
+            .onNodeWithContentDescription(
+                label = targetContext.getString(R.string.conversation_list_status_snoozed),
+            )
+            .assertDoesNotExist()
+    }
+
+    @Test
     fun navigationIcon_forwardsBackClick() {
         var clicks = 0
         val backDescription = targetContext.getString(R.string.back)

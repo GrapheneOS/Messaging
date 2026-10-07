@@ -8,4 +8,5 @@ internal data class ConversationDraftState(
     val draft: ConversationDraft = ConversationDraft(),
     val pendingAttachments: List<ConversationDraftPendingAttachment> = emptyList(),
     val sendProtocol: ConversationDraftSendProtocol = ConversationDraftSendProtocol.SMS,
+    val messageTextRevision: Int = 0,
 )

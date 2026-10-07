@@ -125,6 +125,7 @@ internal class ConversationViewModelSimSelectionTest {
         } returns MutableStateFlow(false)
         every { conversationMetadataDelegate.effects } returns emptyFlow()
         every { conversationMetadataDelegate.navigationEvents } returns emptyFlow()
+        every { conversationMetadataDelegate.archivedConversationIds } returns emptyFlow()
         every { conversationMetadataDelegate.bind(any(), any()) } just runs
 
         every { conversationFocusDelegate.bind(any(), any()) } just runs

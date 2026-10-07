@@ -272,7 +272,7 @@ internal class ConversationListActionsDelegateImplTest {
     }
 
     @Test
-    fun delete_routesEachItemWithItsLatestMessageTimestamp() = runTest {
+    fun delete_routesAllItemsInOneBatchWithTheirLatestMessageTimestamps() = runTest {
         val harness = createHarness()
 
         harness.delegate.delete(
@@ -283,10 +283,15 @@ internal class ConversationListActionsDelegateImplTest {
         )
 
         verify(exactly = 1) {
-            harness.conversationsRepository.deleteConversation(ConversationId("a"), 5_000L)
+            harness.conversationsRepository.deleteConversations(
+                mapOf(
+                    ConversationId("a") to 5_000L,
+                    ConversationId("b") to 7_000L,
+                ),
+            )
         }
-        verify(exactly = 1) {
-            harness.conversationsRepository.deleteConversation(ConversationId("b"), 7_000L)
+        verify(exactly = 0) {
+            harness.conversationsRepository.deleteConversation(any(), any())
         }
     }
 

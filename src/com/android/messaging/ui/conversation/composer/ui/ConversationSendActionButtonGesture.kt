@@ -122,7 +122,7 @@ private suspend fun AwaitPointerEventScope.trackRecordGestureDrag(
 
     val releaseGestureState = awaitRecordGestureRelease(initialDown = initialDown) { gestureState ->
         isRecordingLocked = updateRecordGestureLockState(
-            gestureState = gestureState,
+            gestureState = keepDominantDragDirection(gestureState = gestureState),
             isRecordingLocked = isRecordingLocked,
             lockThresholdPx = lockThresholdPx,
             onRecordGestureMove = onRecordGestureMove,
@@ -136,7 +136,22 @@ private suspend fun AwaitPointerEventScope.trackRecordGestureDrag(
     )
 
     if (releaseGestureState != null && !isRecordingLocked) {
-        onRecordGestureFinish(releaseGestureState.cancelDragDistancePx >= cancelThresholdPx)
+        val cancelDragDistancePx = keepDominantDragDirection(gestureState = releaseGestureState)
+            .cancelDragDistancePx
+
+        onRecordGestureFinish(cancelDragDistancePx >= cancelThresholdPx)
+    }
+}
+
+private fun keepDominantDragDirection(
+    gestureState: ConversationSendActionButtonGestureState,
+): ConversationSendActionButtonGestureState {
+    return when {
+        gestureState.cancelDragDistancePx > gestureState.lockDragDistancePx -> {
+            gestureState.copy(lockDragDistancePx = 0f)
+        }
+
+        else -> gestureState.copy(cancelDragDistancePx = 0f)
     }
 }
 

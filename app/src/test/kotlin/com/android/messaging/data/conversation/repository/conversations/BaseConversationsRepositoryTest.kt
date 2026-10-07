@@ -11,12 +11,14 @@ import com.android.messaging.data.conversation.store.ConversationArchiveStore
 import com.android.messaging.data.conversation.store.ConversationPinStore
 import com.android.messaging.data.conversation.store.ConversationReadStore
 import com.android.messaging.data.conversation.store.ConversationSelfIdStore
+import com.android.messaging.data.conversationsettings.repository.ConversationNotificationRepository
 import com.android.messaging.testutil.MainDispatcherRule
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
 import org.junit.Rule
 
@@ -30,6 +32,8 @@ internal abstract class BaseConversationsRepositoryTest {
     protected lateinit var messageDetailsMapper: ConversationMessageDetailsMapper
     protected lateinit var messageDetailsPlatformSource: MessageDetailsPlatformSource
     protected lateinit var conversationArchiveStore: ConversationArchiveStore
+    protected lateinit var notificationRepository: ConversationNotificationRepository
+    protected val isSnoozedFlow = MutableStateFlow(value = false)
 
     @Before
     fun setUp() {
@@ -37,6 +41,10 @@ internal abstract class BaseConversationsRepositoryTest {
         messageDetailsMapper = mockk(relaxed = true)
         messageDetailsPlatformSource = mockk(relaxed = true)
         conversationArchiveStore = mockk(relaxed = true)
+        notificationRepository = mockk {
+            every { observeIsSnoozed(conversationId = any()) } returns isSnoozedFlow
+            every { isSnoozed(conversationId = any()) } answers { isSnoozedFlow.value }
+        }
     }
 
     protected fun createRepository(): ConversationsRepositoryImpl {
@@ -48,6 +56,7 @@ internal abstract class BaseConversationsRepositoryTest {
             conversationReadStore = mockk<ConversationReadStore>(relaxed = true),
             conversationPinStore = mockk<ConversationPinStore>(relaxed = true),
             conversationArchiveStore = conversationArchiveStore,
+            notificationRepository = notificationRepository,
             defaultDispatcher = mainDispatcherRule.testDispatcher,
             messagingDbDispatcher = mainDispatcherRule.testDispatcher,
         )

@@ -11,6 +11,7 @@ import com.android.messaging.domain.conversation.usecase.draft.exception.Missing
 import com.android.messaging.domain.conversation.usecase.draft.exception.TooManyVideoAttachmentsException
 import com.android.messaging.domain.conversation.usecase.draft.exception.UnknownConversationRecipientException
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
+import com.android.messaging.testutil.typeMessageText
 import com.android.messaging.ui.conversation.screen.model.ConversationAttachmentLimitWarning
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
 import io.mockk.every
@@ -87,7 +88,7 @@ internal class ConversationDraftDelegateSendValidationTest : BaseConversationDra
             )
 
             try {
-                harness.delegate.onMessageTextChanged(messageText = "Hello")
+                harness.delegate.typeMessageText(messageText = "Hello")
                 harness.delegate.onSendClick()
                 advanceUntilIdle()
 
@@ -130,7 +131,7 @@ internal class ConversationDraftDelegateSendValidationTest : BaseConversationDra
             )
 
             try {
-                harness.delegate.onMessageTextChanged(messageText = "Hello")
+                harness.delegate.typeMessageText(messageText = "Hello")
                 harness.delegate.onSendClick()
                 advanceUntilIdle()
 
@@ -196,7 +197,7 @@ internal class ConversationDraftDelegateSendValidationTest : BaseConversationDra
         )
 
         try {
-            harness.delegate.onMessageTextChanged(messageText = "Hello")
+            harness.delegate.typeMessageText(messageText = "Hello")
 
             harness.delegate.effects.test {
                 harness.delegate.onSendClick()

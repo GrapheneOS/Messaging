@@ -1,11 +1,13 @@
 package com.android.messaging.ui.conversation.mediapicker
 
+import android.view.WindowInsets
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -42,6 +44,8 @@ internal fun HandleConversationMediaPickerVisibilityEffect(
     keyboardController: SoftwareKeyboardController?,
     messageFieldFocusRequester: FocusRequester,
 ) {
+    val view = LocalView.current
+
     LaunchedEffect(state.isOpen) {
         if (state.isOpen) {
             state.shouldRestoreKeyboard = isImeVisible
@@ -55,7 +59,7 @@ internal fun HandleConversationMediaPickerVisibilityEffect(
         }
 
         messageFieldFocusRequester.requestFocus()
-        keyboardController?.show()
+        view.windowInsetsController?.show(WindowInsets.Type.ime())
         state.shouldRestoreKeyboard = false
     }
 }

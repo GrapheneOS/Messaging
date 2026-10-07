@@ -46,6 +46,22 @@ class ConversationListSelectionDelegateImplTest {
     }
 
     @Test
+    fun selectAll_replacesSelectionAndDropsBlankIdsAndDuplicates() {
+        delegate.toggle(ConversationId("old"))
+
+        delegate.selectAll(
+            conversationIds = listOf(
+                ConversationId("a"),
+                ConversationId(" "),
+                ConversationId("b"),
+                ConversationId("a"),
+            ),
+        )
+
+        assertEquals(listOf("a", "b"), delegate.selectedIds.value.map { it.value })
+    }
+
+    @Test
     fun bind_dropsSelectionForConversationsMissingFromSnapshot() = runTest {
         val snapshot = MutableStateFlow<ConversationListSnapshot?>(snapshotOfIds("a", "b"))
         delegate.bind(backgroundScope, snapshot)
