@@ -207,8 +207,7 @@ public class ParticipantRefresh {
      * @param refreshMode the refresh mode desired. See {@link #REFRESH_MODE_FULL},
      *        {@link #REFRESH_MODE_INCREMENTAL}, and {@link #REFRESH_MODE_SELF_ONLY}
      */
-     @VisibleForTesting
-     static void refreshParticipants(final int refreshMode) {
+     public static void refreshParticipants(final int refreshMode) {
         Assert.inRange(refreshMode, REFRESH_MODE_FULL, REFRESH_MODE_SELF_ONLY);
         if (LogUtil.isLoggable(TAG, LogUtil.VERBOSE)) {
             switch (refreshMode) {

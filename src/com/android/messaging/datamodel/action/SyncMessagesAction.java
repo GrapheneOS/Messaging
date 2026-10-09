@@ -33,6 +33,7 @@ import com.android.messaging.datamodel.MessagingContentProvider;
 import com.android.messaging.datamodel.SyncManager;
 import com.android.messaging.datamodel.SyncManager.ThreadInfoCache;
 import com.android.messaging.datamodel.data.ParticipantData;
+import com.android.messaging.domain.sync.usecase.RepairAfterMessageSync;
 import com.android.messaging.mmslib.SqliteWrapper;
 import com.android.messaging.sms.DatabaseMessages;
 import com.android.messaging.sms.DatabaseMessages.LocalDatabaseMessage;
@@ -47,6 +48,8 @@ import com.android.messaging.util.BuglePrefsKeys;
 import com.android.messaging.util.ContentType;
 import com.android.messaging.util.LogUtil;
 import com.android.messaging.util.OsUtil;
+
+import dagger.hilt.android.EntryPointAccessors;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -489,6 +492,13 @@ public class SyncMessagesAction extends Action implements Parcelable {
                         requestBackgroundWork(nextBatch);
                     } else {
                         LogUtil.i(TAG, "SyncMessagesAction: All messages now in sync");
+
+                        EntryPointAccessors
+                                .fromApplication(
+                                        Factory.get().getApplicationContext(),
+                                        RepairAfterMessageSync.Provider.class)
+                                .repairAfterMessageSync()
+                                .invoke();
 
                         // All done, in sync
                         syncManager.complete();

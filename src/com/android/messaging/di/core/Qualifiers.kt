@@ -21,3 +21,7 @@ annotation class MessagingDbDispatcher
 @Retention(AnnotationRetention.BINARY)
 @Qualifier
 annotation class ApplicationCoroutineScope
+
+@Retention(AnnotationRetention.BINARY)
+@Qualifier
+annotation class DatabaseVersion

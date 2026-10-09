@@ -20,6 +20,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.telephony.SubscriptionManager;
 
+import com.android.messaging.data.databaselifecycle.DatabaseLifecycle;
 import com.android.messaging.datamodel.action.ActionService;
 import com.android.messaging.datamodel.action.BackgroundWorker;
 import com.android.messaging.datamodel.action.FixupMessageStatusOnStartupAction;
@@ -115,6 +116,7 @@ public class DataModelImpl extends DataModel {
         // Clear other things that implicitly reference the DB
         SyncManager.resetLastSyncTimestamps();
         StaleConversationState.clearStaleConversationState(mContext);
+        DatabaseLifecycle.get(mContext).onDatabaseCreated();
     }
 
     @Override

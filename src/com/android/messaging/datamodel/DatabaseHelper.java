@@ -50,7 +50,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String DATABASE_NAME = "bugle_db";
 
-    private static final int getDatabaseVersion(final Context context) {
+    public static final int getDatabaseVersion(final Context context) {
         return Integer.parseInt(context.getResources().getString(R.string.database_version));
     }
 

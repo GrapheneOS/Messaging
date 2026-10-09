@@ -5,11 +5,16 @@ import android.database.sqlite.SQLiteDatabase
 import androidx.core.content.contentValuesOf
 import com.android.messaging.FactoryTestAccess
 import com.android.messaging.R
+import com.android.messaging.data.databaselifecycle.DatabaseLifecycle
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.DatabaseHelper.MessageColumns
 import com.android.messaging.datamodel.data.ConversationListItemData
 import com.android.messaging.testutil.installTestFactory
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.unmockkAll
+import io.mockk.verify
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -24,9 +29,16 @@ import org.robolectric.RuntimeEnvironment
 @RunWith(RobolectricTestRunner::class)
 class DatabaseUpgradeHelperTest {
 
+    private val databaseLifecycle = mockk<DatabaseLifecycle>(relaxed = true)
+    private val currentVersion = RuntimeEnvironment.getApplication()
+        .getString(R.string.database_version)
+        .toInt()
+
     @Before
     fun setUp() {
         installTestFactory(context = RuntimeEnvironment.getApplication().applicationContext)
+        mockkObject(DatabaseLifecycle.Companion)
+        every { DatabaseLifecycle.get(any()) } returns databaseLifecycle
     }
 
     @After
@@ -43,9 +55,6 @@ class DatabaseUpgradeHelperTest {
      */
     @Test
     fun upgradeFromVersion3_keepsExistingDataAndRebuildsViews() {
-        val context = RuntimeEnvironment.getApplication().applicationContext
-        val currentVersion = context.getString(R.string.database_version).toInt()
-
         SQLiteDatabase.create(null).use { db ->
             DatabaseHelper.rebuildTables(db)
             db.insert(
@@ -69,6 +78,17 @@ class DatabaseUpgradeHelperTest {
                 ),
             )
         }
+    }
+
+    @Test
+    fun anUpgrade_tellsTheDatabaseLifecycleTheVersionItUpgradesFrom() {
+        SQLiteDatabase.create(null).use { db ->
+            DatabaseHelper.rebuildTables(db)
+
+            DatabaseUpgradeHelper().doOnUpgrade(db, 3, currentVersion)
+        }
+
+        verify(exactly = 1) { databaseLifecycle.onDatabaseUpgraded(oldVersion = 3) }
     }
 
     /**
