@@ -11,6 +11,7 @@ import com.android.messaging.data.conversation.model.message.ConversationMessage
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetailsResult
 import com.android.messaging.data.conversation.model.message.ConversationMessagesWindow
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
+import com.android.messaging.data.conversation.model.metadata.ConversationComposerDisabledReason
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
 import com.android.messaging.data.conversation.model.send.ConversationSendData
 import com.android.messaging.data.conversation.platform.MessageDetailsPlatformSource
@@ -32,6 +33,7 @@ import com.android.messaging.datamodel.data.ConversationParticipantsData
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.di.core.MessagingDbDispatcher
+import com.android.messaging.sms.canReplyToDestination
 import com.android.messaging.util.db.ReversedCursor
 import com.android.messaging.util.db.ext.getInt
 import com.android.messaging.util.db.ext.getLong
@@ -406,6 +408,9 @@ internal class ConversationsRepositoryImpl @Inject constructor(
                     ?: cursor
                         .getStringOrEmpty(ConversationColumns.PARTICIPANT_LOOKUP_KEY)
                         .takeIf { it.isNotBlank() }
+                val otherParticipantNormalizedDestination = cursor
+                    .getStringOrEmpty(ConversationColumns.OTHER_PARTICIPANT_NORMALIZED_DESTINATION)
+                    .takeIf { it.isNotBlank() }
 
                 ConversationMetadata(
                     conversationName = cursor.getStringOrEmpty(ConversationColumns.NAME),
@@ -420,11 +425,7 @@ internal class ConversationsRepositoryImpl @Inject constructor(
                     otherParticipantDisplayDestination = otherParticipant
                         ?.displayDestination
                         ?.takeIf { it.isNotBlank() },
-                    otherParticipantNormalizedDestination = cursor
-                        .getStringOrEmpty(
-                            ConversationColumns.OTHER_PARTICIPANT_NORMALIZED_DESTINATION,
-                        )
-                        .takeIf { it.isNotBlank() },
+                    otherParticipantNormalizedDestination = otherParticipantNormalizedDestination,
                     otherParticipantContactLookupKey = otherParticipantContactLookupKey,
                     otherParticipantPhotoUri = otherParticipant
                         ?.profilePhotoUri
@@ -432,10 +433,29 @@ internal class ConversationsRepositoryImpl @Inject constructor(
                     isArchived = cursor.getInt(ConversationColumns.ARCHIVE_STATUS) == 1,
                     isBlocked = otherParticipant?.isBlocked == true,
                     isSnoozed = isSnoozed,
-                    composerAvailability = ConversationComposerAvailability.Editable,
+                    composerAvailability = composerAvailability(
+                        participantCount = participantCount,
+                        otherParticipantDestination = otherParticipantNormalizedDestination,
+                    ),
                     sortTimestamp = cursor.getLong(ConversationColumns.SORT_TIMESTAMP),
                 )
             }
+    }
+
+    private fun composerAvailability(
+        participantCount: Int,
+        otherParticipantDestination: String?,
+    ): ConversationComposerAvailability {
+        val canReply = when {
+            participantCount != 1 || otherParticipantDestination == null -> true
+            else -> canReplyToDestination(destination = otherParticipantDestination)
+        }
+        return when {
+            canReply -> ConversationComposerAvailability.Editable
+            else -> ConversationComposerAvailability.Unavailable(
+                reason = ConversationComposerDisabledReason.READ_ONLY_CONVERSATION,
+            )
+        }
     }
 
     private suspend fun loadMessageDetailsData(

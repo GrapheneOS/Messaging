@@ -6,6 +6,8 @@ import android.database.MatrixCursor
 import android.net.Uri
 import app.cash.turbine.test
 import com.android.messaging.data.conversation.model.ParticipantId
+import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
+import com.android.messaging.data.conversation.model.metadata.ConversationComposerDisabledReason
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.DatabaseHelper.MessageColumns
 import com.android.messaging.datamodel.MessagingContentProvider
@@ -328,6 +330,78 @@ internal class ConversationsRepositoryMetadataTest : BaseConversationsRepository
 
             assertEquals(true, metadata?.isSnoozed)
         }
+    }
+
+    @Test
+    fun getConversationMetadataSnapshot_senderThatCannotReceiveMessages_isReadOnly() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val repository = createRepository()
+            stubOneOnOneConversation(otherParticipantDestination = "AMAZON")
+
+            val metadata = repository.getConversationMetadataSnapshot(
+                conversationId = CONVERSATION_ID,
+            )
+
+            assertEquals(
+                ConversationComposerAvailability.Unavailable(
+                    reason = ConversationComposerDisabledReason.READ_ONLY_CONVERSATION,
+                ),
+                metadata?.composerAvailability,
+            )
+        }
+    }
+
+    @Test
+    fun getConversationMetadataSnapshot_senderWithAPhoneNumber_isEditable() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val repository = createRepository()
+            stubOneOnOneConversation(otherParticipantDestination = TEST_CALL_ACTION_PHONE_NUMBER)
+
+            val metadata = repository.getConversationMetadataSnapshot(
+                conversationId = CONVERSATION_ID,
+            )
+
+            assertEquals(
+                ConversationComposerAvailability.Editable,
+                metadata?.composerAvailability,
+            )
+        }
+    }
+
+    private fun stubOneOnOneConversation(otherParticipantDestination: String) {
+        stubQuery(
+            expectedUri = MessagingContentProvider.buildConversationMetadataUri(
+                CONVERSATION_ID.value
+            ),
+            capturedProjections = mutableListOf(),
+            result = createConversationMetadataCursor(
+                row = conversationMetadataRow(
+                    conversationName = otherParticipantDestination,
+                    selfParticipantId = "self-2",
+                    participantCount = 1,
+                    otherParticipantNormalizedDestination = otherParticipantDestination,
+                ),
+            ),
+        )
+        stubQuery(
+            expectedUri = MessagingContentProvider.buildConversationParticipantsUri(
+                CONVERSATION_ID.value
+            ),
+            capturedProjections = mutableListOf(),
+            result = createParticipantsCursor(
+                participantRow(
+                    participantId = "participant-1",
+                    subId = ParticipantData.OTHER_THAN_SELF_SUB_ID,
+                    displayDestination = otherParticipantDestination,
+                    normalizedDestination = otherParticipantDestination,
+                    profilePhotoUri = "",
+                    lookupKey = "",
+                    contactId = -1L,
+                    fullName = "",
+                    firstName = "",
+                ),
+            ),
+        )
     }
 
     private fun stubFreshMetadataCursorPerQuery(expectedUri: Uri) {
