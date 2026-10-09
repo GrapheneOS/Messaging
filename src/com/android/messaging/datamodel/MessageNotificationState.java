@@ -254,6 +254,8 @@ public class MessageNotificationState {
 
         final String mIconUri;
 
+        final String mOtherParticipantDestination;
+
         protected Conversation(final String conversationId,
                 final boolean isGroup,
                 final String groupConversationName,
@@ -265,7 +267,8 @@ public class MessageNotificationState {
                 final boolean notificationVibrate,
                 final int subId,
                 final int participantCount,
-                final String iconUri) {
+                final String iconUri,
+                final String otherParticipantDestination) {
             mConversationId = conversationId;
             mIsGroup = isGroup;
             mGroupConversationName = groupConversationName;
@@ -280,6 +283,7 @@ public class MessageNotificationState {
             mSubId = subId;
             mParticipantCount = participantCount;
             mIconUri = iconUri;
+            mOtherParticipantDestination = otherParticipantDestination;
         }
 
         public String getLatestMessageId() {
@@ -499,7 +503,9 @@ public class MessageNotificationState {
                                 convData.getNotifiationVibrate(),
                                 subId,
                                 convData.getParticipantCount(),
-                                convMessageData.getIconUri());
+                                convMessageData.getIconUri(),
+                                convData.getIsGroup() ? null
+                                        : convData.getOtherParticipantNormalizedDestination());
                         conversations.put(convId, conversation);
                     }
                     // Prepare the message line

@@ -9,6 +9,7 @@ internal fun createNotificationConversation(
     receivedTimestamp: Long = 0L,
     isGroup: Boolean = false,
     participantCount: Int = 2,
+    otherParticipantDestination: String? = null,
 ): MessageNotificationState.Conversation {
     return MessageNotificationState.Conversation(
         conversationId,
@@ -23,5 +24,6 @@ internal fun createNotificationConversation(
         ParticipantData.DEFAULT_SELF_SUB_ID,
         participantCount,
         null,
+        otherParticipantDestination,
     )
 }

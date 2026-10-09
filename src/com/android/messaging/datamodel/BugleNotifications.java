@@ -55,6 +55,7 @@ import com.android.messaging.datamodel.media.MediaResourceManager;
 import com.android.messaging.datamodel.media.UriImageRequestDescriptor;
 import com.android.messaging.sms.MmsSmsUtils;
 import com.android.messaging.sms.MmsUtils;
+import com.android.messaging.sms.SmsDestinations;
 import com.android.messaging.ui.UIIntents;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.AvatarUriUtil;
@@ -442,6 +443,13 @@ public class BugleNotifications {
     }
 
     @VisibleForTesting
+    static boolean canReplyFromNotification(final Conversation conversation) {
+        final String destination = conversation.mOtherParticipantDestination;
+        return conversation.mIsGroup || destination == null
+                || SmsDestinations.canReplyToDestination(destination);
+    }
+
+    @VisibleForTesting
     static void processAndSend(final MessageNotificationState state, final Conversation conversation) {
         final Context context = Factory.get().getApplicationContext();
         final String conversationId = conversation.mConversationId;
@@ -540,26 +548,29 @@ public class BugleNotifications {
                         context.getString(R.string.mark_as_read), markAsReadPendingIntent).build();
         notifBuilder.addAction(markAsReadActionBuilder);
 
-        final String selfId = conversation.mSelfParticipantId;
+        if (canReplyFromNotification(conversation)) {
+            final String selfId = conversation.mSelfParticipantId;
 
-        final boolean requiresMms =
-                MmsSmsUtils.getRequireMmsForEmailAddress(
-                        conversation.mIncludeEmailAddress, conversation.mSubId) ||
-                        (conversation.mIsGroup && MmsUtils.groupMmsEnabled(conversation.mSubId));
+            final boolean requiresMms =
+                    MmsSmsUtils.getRequireMmsForEmailAddress(
+                            conversation.mIncludeEmailAddress, conversation.mSubId) ||
+                            (conversation.mIsGroup && MmsUtils.groupMmsEnabled(conversation.mSubId));
 
-        final int requestCode = state.getReplyIntentRequestCode();
-        final PendingIntent replyPendingIntent = UIIntents.get()
-                .getPendingIntentForSendingMessageToConversation(context,
-                        conversationId, selfId, requiresMms, requestCode);
+            final int requestCode = state.getReplyIntentRequestCode();
+            final PendingIntent replyPendingIntent = UIIntents.get()
+                    .getPendingIntentForSendingMessageToConversation(context,
+                            conversationId, selfId, requiresMms, requestCode);
 
-        final NotificationCompat.Action.Builder replyActionBuilder =
-                new NotificationCompat.Action.Builder(0,
-                        context.getString(R.string.notification_reply_prompt), replyPendingIntent);
-        final RemoteInput remoteInput = new RemoteInput.Builder(Intent.EXTRA_TEXT).setLabel(
-                        context.getString(R.string.notification_reply_prompt))
-                .build();
-        replyActionBuilder.addRemoteInput(remoteInput);
-        notifBuilder.addAction(replyActionBuilder.build());
+            final NotificationCompat.Action.Builder replyActionBuilder =
+                    new NotificationCompat.Action.Builder(0,
+                            context.getString(R.string.notification_reply_prompt),
+                            replyPendingIntent);
+            final RemoteInput remoteInput = new RemoteInput.Builder(Intent.EXTRA_TEXT).setLabel(
+                            context.getString(R.string.notification_reply_prompt))
+                    .build();
+            replyActionBuilder.addRemoteInput(remoteInput);
+            notifBuilder.addAction(replyActionBuilder.build());
+        }
 
         final String messageId = conversation.getLatestMessageId();
         if (conversation.getDoesLatestMessageNeedDownload() && messageId != null
