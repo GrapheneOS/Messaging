@@ -22,6 +22,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.database.Cursor;
+import android.os.SystemClock;
 import android.provider.Settings;
 import android.provider.Telephony;
 import android.telephony.PhoneNumberUtils;
@@ -39,6 +40,7 @@ import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+import com.google.i18n.phonenumbers.ShortNumberInfo;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -73,10 +75,17 @@ public class PhoneUtils {
     private static final ArrayMap<String, ArrayMap<String, String>> sCanonicalPhoneNumberCache =
             new ArrayMap<>();
 
+    // Cached for a sync's burst of senders only: they change with the network, SIMs and locale
+    private static final long COUNTRY_CANDIDATES_MAX_AGE_MILLIS = 1000;
+
     protected final Context mContext;
     protected final TelephonyManager mTelephonyManager;
     private final SubscriptionManager mSubscriptionManager;
     protected final int mSubId;
+
+    @Nullable
+    private List<String> mRecentCountryCandidates;
+    private long mRecentCountryCandidatesTime;
 
     public PhoneUtils(int subId) {
         mSubId = subId;
@@ -668,13 +677,52 @@ public class PhoneUtils {
 
     /**
      * Canonicalize phone number using SIM's country, may fall back to system locale country
-     * if SIM country can not be obtained
+     * if SIM country can not be obtained. A number it can't read is tried with the countries
+     * {@link #getCanonicalForEnteredPhoneNumber(String)} tries.
      *
      * @param phoneText The phone number to canonicalize
      * @return the canonicalized number
      */
     public String getCanonicalBySimLocale(final String phoneText) {
-        return getCanonicalByCountry(phoneText, getSimOrDefaultLocaleCountry());
+        final String simCountry = getSimOrDefaultLocaleCountry();
+        final String canonicalNumber = getCanonicalByCountry(phoneText, simCountry);
+        if (!TextUtils.equals(canonicalNumber, phoneText) || !canTryOtherCountries(phoneText)
+                || isPossibleShortNumber(phoneText, simCountry)) {
+            return canonicalNumber;
+        }
+        return getCanonicalByCountryCandidates(phoneText, getRecentCountryCandidates());
+    }
+
+    private static boolean canTryOtherCountries(@NonNull final String phoneText) {
+        return !phoneText.isEmpty() && phoneText.charAt(0) != '+'
+                && phoneText.codePoints().noneMatch(Character::isLetter);
+    }
+
+    private static boolean isPossibleShortNumber(
+            @NonNull final String phoneText,
+            @Nullable final String country
+    ) {
+        final String region = normalizeCountryCode(country);
+        if (region == null) {
+            return false;
+        }
+        try {
+            final PhoneNumber phoneNumber = PhoneNumberUtil.getInstance().parse(phoneText, region);
+            return ShortNumberInfo.getInstance().isPossibleShortNumberForRegion(phoneNumber, region);
+        } catch (final NumberParseException e) {
+            return false;
+        }
+    }
+
+    @NonNull
+    private synchronized List<String> getRecentCountryCandidates() {
+        final long now = SystemClock.elapsedRealtime();
+        if (mRecentCountryCandidates == null
+                || now - mRecentCountryCandidatesTime >= COUNTRY_CANDIDATES_MAX_AGE_MILLIS) {
+            mRecentCountryCandidates = getCountryCandidatesForEnteredPhoneNumber();
+            mRecentCountryCandidatesTime = now;
+        }
+        return mRecentCountryCandidates;
     }
 
     public List<String> getCountryCandidatesForEnteredPhoneNumber() {
