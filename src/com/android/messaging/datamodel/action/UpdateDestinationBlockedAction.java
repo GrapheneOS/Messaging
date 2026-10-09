@@ -19,6 +19,8 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
 
+import com.android.messaging.Factory;
+import com.android.messaging.data.conversationstate.ConversationStateMirror;
 import com.android.messaging.datamodel.BugleDatabaseOperations;
 import com.android.messaging.datamodel.DataModel;
 import com.android.messaging.datamodel.DatabaseWrapper;
@@ -109,6 +111,7 @@ public class UpdateDestinationBlockedAction extends Action {
         String conversationId = actionParameters.getString(KEY_CONVERSATION_ID);
         final DatabaseWrapper db = DataModel.get().getDatabase();
         BugleDatabaseOperations.updateDestination(db, destination, isBlocked);
+        ConversationStateMirror.get(Factory.get().getApplicationContext()).update();
         if (conversationId == null) {
             conversationId = BugleDatabaseOperations
                     .getConversationFromOtherParticipantDestination(db, destination);

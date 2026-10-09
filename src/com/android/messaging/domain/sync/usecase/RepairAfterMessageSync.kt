@@ -1,5 +1,6 @@
 package com.android.messaging.domain.sync.usecase
 
+import com.android.messaging.data.conversationstate.ConversationStateMirror
 import com.android.messaging.data.participantdestination.ParticipantDestinationNormalizer
 import com.android.messaging.datamodel.BugleDatabaseOperations
 import com.android.messaging.datamodel.MessagingContentProvider
@@ -21,15 +22,22 @@ internal interface RepairAfterMessageSync {
 }
 
 internal class RepairAfterMessageSyncImpl @Inject constructor(
+    private val conversationStateMirror: ConversationStateMirror,
     private val participantDestinationNormalizer: ParticipantDestinationNormalizer,
 ) : RepairAfterMessageSync {
 
     override fun invoke() {
-        val isRenormalized = bestEffort(step = "participant destinations", fallback = false) {
-            participantDestinationNormalizer.renormalizeIfPending()
+        val isRestored = bestEffort(step = "conversation state restore", fallback = false) {
+            conversationStateMirror.restoreIfDue()
         }
+        // Only after the restore, which looks blocks up by the numbers the older version stored
+        val isRenormalized = !conversationStateMirror.isRestorePending() &&
+            bestEffort(step = "participant destinations", fallback = false) {
+                participantDestinationNormalizer.renormalizeIfPending()
+            }
 
-        if (isRenormalized) {
+        conversationStateMirror.update()
+        if (isRenormalized || isRestored) {
             BugleDatabaseOperations.clearParticipantIdCache()
             bestEffort(step = "participant contacts", fallback = Unit) {
                 ParticipantRefresh.refreshParticipants(ParticipantRefresh.REFRESH_MODE_INCREMENTAL)

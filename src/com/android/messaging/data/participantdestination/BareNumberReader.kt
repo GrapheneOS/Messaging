@@ -14,6 +14,12 @@ internal interface BareNumberReader {
 
     fun readBareNumbers(activeSubIds: Set<Int>, history: SimHistory): List<BareNumberReading>
 
+    fun readBareNumbersAmong(
+        destinations: Set<String>,
+        activeSubIds: Set<Int>,
+        history: SimHistory,
+    ): List<BareNumberReading>
+
     fun canonicalDestinationOf(reading: BareNumberReading, activeSubIds: Set<Int>): String?
 }
 
@@ -33,6 +39,20 @@ internal class BareNumberReaderImpl @Inject constructor(
     ): List<BareNumberReading> {
         return readingsOf(
             participants = databaseStore.readBareNumberParticipants(),
+            activeSubIds = activeSubIds,
+            history = history,
+        )
+    }
+
+    override fun readBareNumbersAmong(
+        destinations: Set<String>,
+        activeSubIds: Set<Int>,
+        history: SimHistory,
+    ): List<BareNumberReading> {
+        return readingsOf(
+            participants = databaseStore.readBareNumberParticipants().filter { participant ->
+                participant.destination in destinations
+            },
             activeSubIds = activeSubIds,
             history = history,
         )

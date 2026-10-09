@@ -1,16 +1,19 @@
 package com.android.messaging.data.databaselifecycle
 
+import com.android.messaging.data.conversationstate.ConversationStateMirror
 import com.android.messaging.data.participantdestination.ParticipantDestinationNormalizer
 import io.mockk.mockk
-import io.mockk.verify
+import io.mockk.verifyOrder
 import org.junit.Test
 
 class DatabaseLifecycleImplTest {
 
+    private val conversationStateMirror = mockk<ConversationStateMirror>(relaxed = true)
     private val participantDestinationNormalizer =
         mockk<ParticipantDestinationNormalizer>(relaxed = true)
 
     private val databaseLifecycle = DatabaseLifecycleImpl(
+        conversationStateMirror = conversationStateMirror,
         participantDestinationNormalizer = participantDestinationNormalizer,
     )
 
@@ -18,14 +21,18 @@ class DatabaseLifecycleImplTest {
     fun aCreatedDatabase_reachesEveryListener() {
         databaseLifecycle.onDatabaseCreated()
 
-        verify(exactly = 1) { participantDestinationNormalizer.onDatabaseCreated() }
+        verifyOrder {
+            conversationStateMirror.onDatabaseCreated()
+            participantDestinationNormalizer.onDatabaseCreated()
+        }
     }
 
     @Test
     fun anUpgradedDatabase_reachesEveryListener() {
         databaseLifecycle.onDatabaseUpgraded(oldVersion = OLD_VERSION)
 
-        verify(exactly = 1) {
+        verifyOrder {
+            conversationStateMirror.onDatabaseUpgraded(oldVersion = OLD_VERSION)
             participantDestinationNormalizer.onDatabaseUpgraded(oldVersion = OLD_VERSION)
         }
     }
