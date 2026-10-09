@@ -5,6 +5,7 @@ import androidx.core.content.contentValuesOf
 import com.android.messaging.FactoryTestAccess
 import com.android.messaging.R
 import com.android.messaging.data.conversationstate.ConversationStateMirror
+import com.android.messaging.data.databasecompatibility.DatabaseCompatibility
 import com.android.messaging.data.participantdestination.ParticipantDestinationNormalizer
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.DatabaseHelper.ConversationParticipantsColumns
@@ -40,6 +41,8 @@ class DatabaseHelperForeignKeysTest {
         every { ConversationStateMirror.get(any()) } returns mockk(relaxed = true)
         mockkObject(ParticipantDestinationNormalizer.Companion)
         every { ParticipantDestinationNormalizer.get(any()) } returns mockk(relaxed = true)
+        mockkObject(DatabaseCompatibility.Companion)
+        every { DatabaseCompatibility.get(any()) } returns mockk(relaxed = true)
     }
 
     @After

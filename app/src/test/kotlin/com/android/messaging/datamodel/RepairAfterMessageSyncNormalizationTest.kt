@@ -12,6 +12,7 @@ import com.android.messaging.data.conversationstate.ConversationStateMirror
 import com.android.messaging.data.conversationstate.ConversationStateMirrorImpl
 import com.android.messaging.data.conversationstate.store.ConversationStateDatabaseStoreImpl
 import com.android.messaging.data.conversationstate.store.ConversationStatePreferencesStoreImpl
+import com.android.messaging.data.databasecompatibility.DatabaseCompatibility
 import com.android.messaging.data.participantdestination.BareNumberReaderImpl
 import com.android.messaging.data.participantdestination.ParticipantDestinationNormalizer
 import com.android.messaging.data.participantdestination.ParticipantDestinationNormalizerImpl
@@ -29,6 +30,7 @@ import com.android.messaging.util.BuglePrefsKeys
 import com.android.messaging.util.PhoneUtils
 import io.mockk.every
 import io.mockk.just
+import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.runs
@@ -109,6 +111,8 @@ class RepairAfterMessageSyncNormalizationTest {
         every { ParticipantDestinationNormalizer.get(any()) } answers {
             participantDestinationNormalizer
         }
+        mockkObject(DatabaseCompatibility.Companion)
+        every { DatabaseCompatibility.get(any()) } returns mockk(relaxed = true)
     }
 
     @After

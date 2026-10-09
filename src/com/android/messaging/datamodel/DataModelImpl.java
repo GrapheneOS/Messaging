@@ -21,6 +21,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.telephony.SubscriptionManager;
 
 import com.android.messaging.data.conversationstate.ConversationStateMirror;
+import com.android.messaging.data.databasecompatibility.DatabaseCompatibility;
 import com.android.messaging.data.participantdestination.ParticipantDestinationNormalizer;
 import com.android.messaging.datamodel.action.ActionService;
 import com.android.messaging.datamodel.action.BackgroundWorker;
@@ -119,6 +120,7 @@ public class DataModelImpl extends DataModel {
         StaleConversationState.clearStaleConversationState(mContext);
         ConversationStateMirror.get(mContext).onDatabaseCreated();
         ParticipantDestinationNormalizer.get(mContext).onDatabaseCreated();
+        DatabaseCompatibility.get(mContext).recordDatabaseVersion();
     }
 
     @Override

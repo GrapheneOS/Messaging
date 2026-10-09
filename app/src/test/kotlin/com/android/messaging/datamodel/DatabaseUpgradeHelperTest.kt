@@ -6,10 +6,15 @@ import androidx.core.content.contentValuesOf
 import com.android.messaging.FactoryTestAccess
 import com.android.messaging.R
 import com.android.messaging.data.conversationstate.ConversationStateMirror
+import com.android.messaging.data.databasecompatibility.DatabaseCompatibility
+import com.android.messaging.data.databasecompatibility.DatabaseCompatibilityImpl
 import com.android.messaging.data.participantdestination.ParticipantDestinationNormalizer
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
+import com.android.messaging.datamodel.DatabaseHelper.ConversationParticipantsColumns
 import com.android.messaging.datamodel.DatabaseHelper.MessageColumns
+import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
 import com.android.messaging.datamodel.data.ConversationListItemData
+import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.testutil.installTestFactory
 import io.mockk.every
 import io.mockk.mockk
@@ -33,6 +38,7 @@ class DatabaseUpgradeHelperTest {
     private val conversationStateMirror = mockk<ConversationStateMirror>(relaxed = true)
     private val participantDestinationNormalizer =
         mockk<ParticipantDestinationNormalizer>(relaxed = true)
+    private val databaseCompatibility = mockk<DatabaseCompatibility>(relaxed = true)
     private val currentVersion = RuntimeEnvironment.getApplication()
         .getString(R.string.database_version)
         .toInt()
@@ -45,6 +51,8 @@ class DatabaseUpgradeHelperTest {
         mockkObject(ParticipantDestinationNormalizer.Companion)
         every { ParticipantDestinationNormalizer.get(any()) } returns
             participantDestinationNormalizer
+        mockkObject(DatabaseCompatibility.Companion)
+        every { DatabaseCompatibility.get(any()) } returns databaseCompatibility
     }
 
     @After
@@ -106,6 +114,17 @@ class DatabaseUpgradeHelperTest {
         }
 
         verify(exactly = 1) { participantDestinationNormalizer.onDatabaseUpgraded(oldVersion = 3) }
+    }
+
+    @Test
+    fun anUpgrade_recordsTheDatabaseVersion() {
+        SQLiteDatabase.create(null).use { db ->
+            DatabaseHelper.rebuildTables(db)
+
+            DatabaseUpgradeHelper().doOnUpgrade(db, 3, currentVersion)
+        }
+
+        verify(exactly = 1) { databaseCompatibility.recordDatabaseVersion() }
     }
 
     /**
@@ -228,6 +247,113 @@ class DatabaseUpgradeHelperTest {
         }
     }
 
+    @Test
+    fun onDowngrade_fromACompatibleVersion_keepsTheRowsAndRecreatesThisVersionsSchemaObjects() {
+        every {
+            databaseCompatibility.canKeepRowsOnDowngradeFrom(newerVersion = currentVersion + 1)
+        } returns true
+
+        SQLiteDatabase.create(null).use { db ->
+            DatabaseHelper.rebuildTables(db)
+            val expectedTriggers = db.namesOf(type = "trigger")
+            val expectedIndexes = db.namesOf(type = "index")
+            db.insertBlockedAndArchivedConversation()
+            db.execSQL(ADD_FUTURE_COLUMN_SQL)
+            db.execSQL("CREATE TABLE future_labels (_id INTEGER PRIMARY KEY, name TEXT)")
+            db.execSQL("INSERT INTO future_labels (_id, name) VALUES (1, 'Bills')")
+            db.execSQL(
+                "CREATE INDEX future_index ON " +
+                    "${DatabaseHelper.CONVERSATIONS_TABLE}($FUTURE_COLUMN)",
+            )
+            db.execSQL("DROP VIEW ${DatabaseHelper.DRAFT_PARTS_VIEW}")
+            db.execSQL("CREATE VIEW ${DatabaseHelper.DRAFT_PARTS_VIEW} AS SELECT 1 AS future")
+            db.execSQL(
+                "CREATE TRIGGER future_trigger AFTER INSERT ON " +
+                    "${DatabaseHelper.CONVERSATIONS_TABLE} BEGIN SELECT 1; END",
+            )
+
+            db.downgradeFromNewerVersion()
+
+            assertEquals(
+                1,
+                db.countRows(
+                    DatabaseHelper.PARTICIPANTS_TABLE,
+                    where = "${ParticipantColumns.BLOCKED}=1",
+                ),
+            )
+            assertEquals(
+                1,
+                db.countRows(
+                    DatabaseHelper.CONVERSATIONS_TABLE,
+                    where = "${ConversationColumns.ARCHIVE_STATUS}=1",
+                ),
+            )
+            assertEquals(1, db.countRows(DatabaseHelper.MESSAGES_TABLE))
+            assertTrue(db.hasColumn(DatabaseHelper.CONVERSATIONS_TABLE, FUTURE_COLUMN))
+            assertEquals(1, db.countRows("future_labels"))
+            assertEquals(expectedIndexes, db.namesOf(type = "index"))
+            assertEquals(expectedTriggers, db.namesOf(type = "trigger"))
+            assertTrue(
+                db.hasColumn(DatabaseHelper.DRAFT_PARTS_VIEW, MessageColumns.CONVERSATION_ID),
+            )
+        }
+    }
+
+    @Test
+    fun upgradingAgainAfterADowngradeThatKeptTheRows_keepsThem() {
+        val oldestCompatibleVersion =
+            DatabaseCompatibilityImpl.OLDEST_COMPATIBLE_VERSIONS[currentVersion] ?: currentVersion
+
+        SQLiteDatabase.create(null).use { db ->
+            DatabaseHelper.rebuildTables(db)
+            db.insertBlockedAndArchivedConversation()
+
+            DatabaseUpgradeHelper().doUpgradeWithExceptions(
+                db,
+                oldestCompatibleVersion,
+                currentVersion,
+            )
+
+            assertEquals(1, db.countRows(DatabaseHelper.CONVERSATIONS_TABLE))
+            assertEquals(1, db.countRows(DatabaseHelper.MESSAGES_TABLE))
+        }
+    }
+
+    @Test
+    fun onDowngrade_fromAnIncompatibleVersion_rebuildsTheTables() {
+        SQLiteDatabase.create(null).use { db ->
+            DatabaseHelper.rebuildTables(db)
+            db.insertBlockedAndArchivedConversation()
+            db.execSQL(ADD_FUTURE_COLUMN_SQL)
+
+            db.downgradeFromNewerVersion()
+
+            assertEquals(0, db.countRows(DatabaseHelper.CONVERSATIONS_TABLE))
+            assertFalse(db.hasColumn(DatabaseHelper.CONVERSATIONS_TABLE, FUTURE_COLUMN))
+        }
+    }
+
+    @Test
+    fun onDowngrade_whenThisVersionsViewsCannotBeCreated_rebuildsTheTables() {
+        every {
+            databaseCompatibility.canKeepRowsOnDowngradeFrom(newerVersion = currentVersion + 1)
+        } returns true
+
+        SQLiteDatabase.create(null).use { db ->
+            DatabaseHelper.rebuildTables(db)
+            db.insertBlockedAndArchivedConversation()
+            db.execSQL("DROP VIEW ${DatabaseHelper.DRAFT_PARTS_VIEW}")
+            db.execSQL("CREATE TABLE ${DatabaseHelper.DRAFT_PARTS_VIEW} (future INT)")
+
+            db.downgradeFromNewerVersion()
+
+            assertEquals(0, db.countRows(DatabaseHelper.CONVERSATIONS_TABLE))
+            assertTrue(
+                db.hasColumn(DatabaseHelper.DRAFT_PARTS_VIEW, MessageColumns.CONVERSATION_ID),
+            )
+        }
+    }
+
     private fun SQLiteDatabase.insertConversation(): Long {
         return insert(
             DatabaseHelper.CONVERSATIONS_TABLE,
@@ -236,14 +362,78 @@ class DatabaseUpgradeHelperTest {
         )
     }
 
+    private fun SQLiteDatabase.insertBlockedAndArchivedConversation(): Long {
+        val participantId = insert(
+            DatabaseHelper.PARTICIPANTS_TABLE,
+            null,
+            contentValuesOf(
+                ParticipantColumns.SUB_ID to ParticipantData.OTHER_THAN_SELF_SUB_ID,
+                ParticipantColumns.NORMALIZED_DESTINATION to BLOCKED_DESTINATION,
+                ParticipantColumns.SEND_DESTINATION to BLOCKED_DESTINATION,
+                ParticipantColumns.BLOCKED to 1,
+            ),
+        )
+        val conversationId = insert(
+            DatabaseHelper.CONVERSATIONS_TABLE,
+            null,
+            contentValuesOf(
+                ConversationColumns.NAME to "Spam",
+                ConversationColumns.ARCHIVE_STATUS to 1,
+                ConversationColumns.OTHER_PARTICIPANT_NORMALIZED_DESTINATION to
+                    BLOCKED_DESTINATION,
+            ),
+        )
+        insert(
+            DatabaseHelper.CONVERSATION_PARTICIPANTS_TABLE,
+            null,
+            contentValuesOf(
+                ConversationParticipantsColumns.CONVERSATION_ID to conversationId,
+                ConversationParticipantsColumns.PARTICIPANT_ID to participantId,
+            ),
+        )
+        insert(
+            DatabaseHelper.MESSAGES_TABLE,
+            null,
+            contentValuesOf(
+                MessageColumns.CONVERSATION_ID to conversationId,
+                MessageColumns.SENDER_PARTICIPANT_ID to participantId,
+            ),
+        )
+        return conversationId
+    }
+
+    private fun SQLiteDatabase.downgradeFromNewerVersion() {
+        setForeignKeyConstraintsEnabled(true)
+        beginTransaction()
+        try {
+            DatabaseUpgradeHelper().onDowngrade(this, currentVersion + 1, currentVersion)
+            setTransactionSuccessful()
+        } finally {
+            endTransaction()
+        }
+    }
+
+    private fun SQLiteDatabase.namesOf(type: String): Set<String> {
+        return rawQuery(
+            "SELECT name FROM sqlite_master WHERE type=? AND name NOT LIKE 'sqlite_%'",
+            arrayOf(type),
+        ).use { cursor ->
+            buildSet {
+                while (cursor.moveToNext()) {
+                    add(cursor.getString(0))
+                }
+            }
+        }
+    }
+
     private fun SQLiteDatabase.hasColumn(table: String, column: String): Boolean {
         return rawQuery("SELECT * FROM $table LIMIT 0", null).use { cursor ->
             cursor.getColumnIndex(column) != -1
         }
     }
 
-    private fun SQLiteDatabase.countRows(table: String): Int {
-        return rawQuery("SELECT COUNT(*) FROM $table", null).use { cursor ->
+    private fun SQLiteDatabase.countRows(table: String, where: String = "1"): Int {
+        return rawQuery("SELECT COUNT(*) FROM $table WHERE $where", null).use { cursor ->
             cursor.moveToFirst()
             cursor.getInt(0)
         }
@@ -254,5 +444,12 @@ class DatabaseUpgradeHelperTest {
             "SELECT name FROM sqlite_master WHERE type='index' AND name=?",
             arrayOf(name),
         ).use(Cursor::moveToFirst)
+    }
+
+    private companion object {
+        const val BLOCKED_DESTINATION = "+15550100"
+        const val FUTURE_COLUMN = "future_flag"
+        const val ADD_FUTURE_COLUMN_SQL = "ALTER TABLE ${DatabaseHelper.CONVERSATIONS_TABLE} " +
+            "ADD COLUMN $FUTURE_COLUMN INT DEFAULT(0)"
     }
 }
