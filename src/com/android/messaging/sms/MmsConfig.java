@@ -154,6 +154,7 @@ public class MmsConfig {
                 PhoneUtils.getDefault().getActiveSubscriptionInfoList();
         if (subInfoRecords == null) {
             LogUtil.w(TAG, "Loading mms config failed: no active SIM");
+            MmsConfigLoads.onMmsConfigLoaded();
             return;
         }
         for (SubscriptionInfo subInfoRecord : subInfoRecords) {
@@ -161,6 +162,7 @@ public class MmsConfig {
             final Bundle values = loader.get(subId);
             addMmsConfig(new MmsConfig(subId, values));
         }
+        MmsConfigLoads.onMmsConfigLoaded();
     }
 
     private static void addMmsConfig(MmsConfig mmsConfig) {

@@ -6,22 +6,33 @@ import android.database.MatrixCursor
 import android.net.Uri
 import app.cash.turbine.test
 import com.android.messaging.data.conversation.model.ParticipantId
+import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
+import com.android.messaging.data.conversation.model.metadata.ConversationComposerDisabledReason
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.DatabaseHelper.MessageColumns
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.data.ConversationListItemData
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.datamodel.data.ParticipantData
+import com.android.messaging.sms.MmsConfig
 import com.android.messaging.testutil.TEST_CALL_ACTION_PHONE_NUMBER
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.testutil.assertThat
 import com.android.messaging.testutil.createParticipantsCursor
 import com.android.messaging.testutil.participantRow
+import com.android.messaging.testutil.stubActiveSubscriptions
+import com.android.messaging.testutil.stubMmsConfig
+import com.android.messaging.util.PhoneUtils
 import io.mockk.every
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -29,6 +40,18 @@ import org.robolectric.RobolectricTestRunner
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 internal class ConversationsRepositoryMetadataTest : BaseConversationsRepositoryTest() {
+
+    @Before
+    fun setUpSubscriptions() {
+        mockkStatic(MmsConfig::class, PhoneUtils::class)
+        stubActiveSubscriptions(subIds = listOf(SUB_ID))
+        stubMmsConfig(subId = SUB_ID, aliasEnabled = false)
+    }
+
+    @After
+    fun tearDownSubscriptions() {
+        unmockkStatic(MmsConfig::class, PhoneUtils::class)
+    }
 
     @Test
     fun getConversationMetadata_registersAndUnregistersObserverForCollection() {
@@ -312,6 +335,38 @@ internal class ConversationsRepositoryMetadataTest : BaseConversationsRepository
     }
 
     @Test
+    fun getConversationMetadata_carrierAlias_becomesEditableOnceCarrierConfigLoads() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val repository = createRepository()
+            stubObserverRegistration(
+                registeredObservers = mutableListOf(),
+                expectedUri = MessagingContentProvider.buildConversationMetadataUri(
+                    CONVERSATION_ID.value
+                ),
+            )
+            stubOneOnOneConversation(otherParticipantDestination = "john.doe")
+
+            repository.getConversationMetadata(conversationId = CONVERSATION_ID).test {
+                assertEquals(
+                    ConversationComposerAvailability.Unavailable(
+                        reason = ConversationComposerDisabledReason.READ_ONLY_CONVERSATION,
+                    ),
+                    awaitItem()?.composerAvailability,
+                )
+
+                stubMmsConfig(subId = SUB_ID, aliasEnabled = true)
+                mmsConfigLoadCount.update { count -> count + 1 }
+
+                assertEquals(
+                    ConversationComposerAvailability.Editable,
+                    awaitItem()?.composerAvailability,
+                )
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    @Test
     fun getConversationMetadataSnapshot_includesSnoozeState() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val repository = createRepository()
@@ -327,6 +382,104 @@ internal class ConversationsRepositoryMetadataTest : BaseConversationsRepository
             )
 
             assertEquals(true, metadata?.isSnoozed)
+        }
+    }
+
+    @Test
+    fun getConversationMetadataSnapshot_senderThatCannotReceiveMessages_isReadOnly() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val repository = createRepository()
+            stubOneOnOneConversation(otherParticipantDestination = "AMAZON")
+
+            val metadata = repository.getConversationMetadataSnapshot(
+                conversationId = CONVERSATION_ID,
+            )
+
+            assertEquals(
+                ConversationComposerAvailability.Unavailable(
+                    reason = ConversationComposerDisabledReason.READ_ONLY_CONVERSATION,
+                ),
+                metadata?.composerAvailability,
+            )
+        }
+    }
+
+    @Test
+    fun getConversationMetadataSnapshot_senderWithAPhoneNumber_isEditable() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val repository = createRepository()
+            stubOneOnOneConversation(otherParticipantDestination = TEST_CALL_ACTION_PHONE_NUMBER)
+
+            val metadata = repository.getConversationMetadataSnapshot(
+                conversationId = CONVERSATION_ID,
+            )
+
+            assertEquals(
+                ConversationComposerAvailability.Editable,
+                metadata?.composerAvailability,
+            )
+        }
+    }
+
+    @Test
+    fun getConversationMetadataSnapshot_carrierAliasOnASimThatSupportsAliases_isEditable() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            stubMmsConfig(subId = SUB_ID, aliasEnabled = true)
+            val repository = createRepository()
+            stubOneOnOneConversation(otherParticipantDestination = "john.doe")
+
+            val metadata = repository.getConversationMetadataSnapshot(
+                conversationId = CONVERSATION_ID,
+            )
+
+            assertEquals(
+                ConversationComposerAvailability.Editable,
+                metadata?.composerAvailability,
+            )
+        }
+    }
+
+    private fun stubOneOnOneConversation(otherParticipantDestination: String) {
+        every {
+            contentResolver.query(
+                MessagingContentProvider.buildConversationMetadataUri(CONVERSATION_ID.value),
+                any(),
+                null,
+                null,
+                null,
+            )
+        } answers {
+            createConversationMetadataCursor(
+                row = conversationMetadataRow(
+                    conversationName = otherParticipantDestination,
+                    selfParticipantId = "self-2",
+                    participantCount = 1,
+                    otherParticipantNormalizedDestination = otherParticipantDestination,
+                ),
+            )
+        }
+        every {
+            contentResolver.query(
+                MessagingContentProvider.buildConversationParticipantsUri(CONVERSATION_ID.value),
+                any(),
+                null,
+                null,
+                null,
+            )
+        } answers {
+            createParticipantsCursor(
+                participantRow(
+                    participantId = "participant-1",
+                    subId = ParticipantData.OTHER_THAN_SELF_SUB_ID,
+                    displayDestination = otherParticipantDestination,
+                    normalizedDestination = otherParticipantDestination,
+                    profilePhotoUri = "",
+                    lookupKey = "",
+                    contactId = -1L,
+                    fullName = "",
+                    firstName = "",
+                ),
+            )
         }
     }
 
@@ -419,5 +572,9 @@ internal class ConversationsRepositoryMetadataTest : BaseConversationsRepository
                 ConversationColumns.IS_ENTERPRISE to 0,
             )
         }
+    }
+
+    private companion object {
+        const val SUB_ID = 1
     }
 }

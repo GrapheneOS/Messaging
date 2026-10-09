@@ -12,6 +12,7 @@ import com.android.messaging.data.conversation.store.ConversationPinStore
 import com.android.messaging.data.conversation.store.ConversationReadStore
 import com.android.messaging.data.conversation.store.ConversationSelfIdStore
 import com.android.messaging.data.conversationsettings.repository.ConversationNotificationRepository
+import com.android.messaging.data.sms.MmsConfigLoadSource
 import com.android.messaging.testutil.MainDispatcherRule
 import io.mockk.every
 import io.mockk.just
@@ -19,6 +20,7 @@ import io.mockk.mockk
 import io.mockk.runs
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 import org.junit.Before
 import org.junit.Rule
 
@@ -34,6 +36,7 @@ internal abstract class BaseConversationsRepositoryTest {
     protected lateinit var conversationArchiveStore: ConversationArchiveStore
     protected lateinit var notificationRepository: ConversationNotificationRepository
     protected val isSnoozedFlow = MutableStateFlow(value = false)
+    protected val mmsConfigLoadCount = MutableStateFlow(value = 0)
 
     @Before
     fun setUp() {
@@ -57,6 +60,9 @@ internal abstract class BaseConversationsRepositoryTest {
             conversationPinStore = mockk<ConversationPinStore>(relaxed = true),
             conversationArchiveStore = conversationArchiveStore,
             notificationRepository = notificationRepository,
+            mmsConfigLoadSource = mockk<MmsConfigLoadSource> {
+                every { observeLoads() } returns mmsConfigLoadCount.map {}
+            },
             defaultDispatcher = mainDispatcherRule.testDispatcher,
             messagingDbDispatcher = mainDispatcherRule.testDispatcher,
         )

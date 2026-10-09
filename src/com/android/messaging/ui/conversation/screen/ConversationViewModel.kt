@@ -9,6 +9,7 @@ import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
+import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.di.core.DefaultDispatcher
@@ -278,7 +279,8 @@ internal class ConversationViewModel @Inject constructor(
             canUnarchive = isPresent && presentMetadata?.isArchived == true,
             canAddContact = isAddContactAvailable(metadataState = metadataState),
             canDeleteConversation = isPresent,
-            canEditSubject = isPresent,
+            canEditSubject = metadataState.composerAvailability is
+                ConversationComposerAvailability.Editable,
             isBlocked = presentMetadata?.isBlocked == true,
             attachmentLimitWarning = attachmentLimitWarning,
             isDeleteConversationConfirmationVisible = isDeleteConversationConfirmationVisible,
@@ -388,6 +390,9 @@ internal class ConversationViewModel @Inject constructor(
     ): Boolean {
         return when {
             metadataState !is ConversationMetadataUiState.Present -> false
+            metadataState.composerAvailability is ConversationComposerAvailability.Unavailable -> {
+                false
+            }
             canAddMoreConversationParticipants(metadataState.participantCount) -> true
             else -> false
         }

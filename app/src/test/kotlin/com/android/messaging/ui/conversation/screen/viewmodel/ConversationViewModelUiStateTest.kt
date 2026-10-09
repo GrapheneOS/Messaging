@@ -5,6 +5,7 @@ import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
+import com.android.messaging.data.conversation.model.metadata.ConversationComposerDisabledReason
 import com.android.messaging.domain.conversation.usecase.participant.CanAddMoreConversationParticipants
 import com.android.messaging.ui.conversation.composer.model.ConversationComposerUiState
 import com.android.messaging.ui.conversation.composer.model.ConversationDraftState
@@ -224,6 +225,55 @@ internal class ConversationViewModelUiStateTest : BaseConversationViewModelTest(
                 assertEquals(false, awaitItem().canAddPeople)
                 advanceUntilIdle()
                 assertEquals(false, awaitItem().canAddPeople)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    @Test
+    fun scaffoldUiState_disablesAddPeopleAndSubjectWhenConversationIsReadOnly() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val metadataDelegate = createMetadataDelegateMock()
+            val canAddMoreConversationParticipants = mockk<CanAddMoreConversationParticipants>()
+            every {
+                canAddMoreConversationParticipants.invoke(participantCount = 1)
+            } returns true
+            val viewModel = createViewModel(
+                metadataDelegate = metadataDelegate.mock,
+                canAddMoreConversationParticipants = canAddMoreConversationParticipants,
+            )
+
+            metadataDelegate.stateFlow.value = ConversationMetadataUiState.Present(
+                title = "AMAZON",
+                avatar = ConversationMetadataUiState.Avatar.Single(
+                    photoUri = null,
+                    normalizedDestination = "AMAZON",
+                    displayName = null,
+                ),
+                participantCount = 1,
+                otherParticipantDisplayDestination = "AMAZON",
+                otherParticipantPhoneNumber = "AMAZON",
+                otherParticipantContactLookupKey = null,
+                isArchived = false,
+                isBlocked = false,
+                composerAvailability = ConversationComposerAvailability.Unavailable(
+                    reason = ConversationComposerDisabledReason.READ_ONLY_CONVERSATION,
+                ),
+            )
+            viewModel.scaffoldUiState.test {
+                assertEquals(false, awaitItem().canAddPeople)
+                advanceUntilIdle()
+                val uiState = awaitItem()
+                assertEquals(
+                    "a conversation that can't be replied to can't gain recipients either",
+                    false,
+                    uiState.canAddPeople,
+                )
+                assertEquals(
+                    "a conversation that can't be replied to offers no subject to edit",
+                    false,
+                    uiState.canEditSubject,
+                )
                 cancelAndIgnoreRemainingEvents()
             }
         }

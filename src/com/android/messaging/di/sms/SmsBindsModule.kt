@@ -4,6 +4,8 @@ import com.android.messaging.data.sms.IncomingSmsDeliverer
 import com.android.messaging.data.sms.IncomingSmsDelivererImpl
 import com.android.messaging.data.sms.IncomingSmsParser
 import com.android.messaging.data.sms.IncomingSmsParserImpl
+import com.android.messaging.data.sms.MmsConfigLoadSource
+import com.android.messaging.data.sms.MmsConfigLoadSourceImpl
 import com.android.messaging.data.sms.SmsReceiverToggle
 import com.android.messaging.data.sms.SmsReceiverToggleImpl
 import dagger.Binds
@@ -27,6 +29,12 @@ internal abstract class SmsBindsModule {
     abstract fun bindIncomingSmsDeliverer(
         impl: IncomingSmsDelivererImpl,
     ): IncomingSmsDeliverer
+
+    @Binds
+    @Reusable
+    abstract fun bindMmsConfigLoadSource(
+        impl: MmsConfigLoadSourceImpl,
+    ): MmsConfigLoadSource
 
     @Binds
     @Reusable

@@ -479,6 +479,8 @@
     <string name="action_send_message">Send message</string>
     <!-- The hint text shown in the message compose input box prompting the user to send a message -->
     <string name="compose_message_view_hint_text">Send message</string>
+    <!-- Shown instead of the message compose box when the sender can't receive messages -->
+    <string name="conversation_cannot_reply">You can\'t reply to this sender</string>
     <!-- The hint text shown in the message compose input box when photo(s) is attached -->
     <string name="conversation_audio_recording_slide_to_cancel">Slide to cancel</string>
 

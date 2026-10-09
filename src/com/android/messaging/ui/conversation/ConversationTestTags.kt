@@ -6,6 +6,7 @@ import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
 
 internal const val CONVERSATION_COMPOSE_BAR_TEST_TAG = "conversation_compose_bar"
+internal const val CONVERSATION_READ_ONLY_NOTICE_TEST_TAG = "conversation_read_only_notice"
 internal const val CONVERSATION_ATTACHMENT_BUTTON_TEST_TAG = "conversation_attachment_button"
 internal const val CONVERSATION_ATTACHMENT_CONTACT_MENU_ITEM_TEST_TAG =
     "conversation_attachment_contact_menu_item"

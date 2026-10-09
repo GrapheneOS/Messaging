@@ -3,12 +3,16 @@ package com.android.messaging.ui.conversation.screen
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.onNodeWithTag
+import com.android.messaging.R
+import com.android.messaging.data.conversation.model.metadata.ConversationComposerDisabledReason
 import com.android.messaging.testutil.TEST_CONVERSATION_ID
 import com.android.messaging.ui.common.components.LOADING_INDICATOR_DELAY
 import com.android.messaging.ui.conversation.CONVERSATION_COMPOSE_BAR_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_LOADING_INDICATOR_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_MESSAGES_LIST_TEST_TAG
+import com.android.messaging.ui.conversation.CONVERSATION_READ_ONLY_NOTICE_TEST_TAG
 import com.android.messaging.ui.conversation.composer.model.ConversationSimSelectorUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationPendingLaunchPayload
 import com.android.messaging.ui.core.AppTheme
@@ -123,6 +127,56 @@ internal class ConversationScreenRenderingTest : BaseConversationScreenTest() {
             .assertIsDisplayed()
         composeTestRule
             .onNodeWithTag(CONVERSATION_MESSAGES_LIST_TEST_TAG)
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun readOnlyConversation_showsNoticeInsteadOfComposer() {
+        val screenModel = createScreenModel()
+        val uiState = createPresentUiState(
+            messages = createMessages(
+                count = 2,
+                latestMessageId = "message-2",
+                latestMessageIncoming = true,
+            ),
+        )
+        screenModel.scaffoldUiStateFlow.value = uiState.copy(
+            composer = uiState.composer.copy(
+                disabledReason = ConversationComposerDisabledReason.READ_ONLY_CONVERSATION,
+            ),
+        )
+
+        setContent(screenModel = screenModel.model)
+
+        composeTestRule
+            .onNodeWithTag(CONVERSATION_READ_ONLY_NOTICE_TEST_TAG)
+            .assertIsDisplayed()
+            .assertTextEquals(
+                composeTestRule.activity.getString(R.string.conversation_cannot_reply),
+            )
+        composeTestRule
+            .onNodeWithTag(CONVERSATION_COMPOSE_BAR_TEST_TAG)
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun editableConversation_showsComposerWithoutNotice() {
+        val screenModel = createScreenModel()
+        screenModel.scaffoldUiStateFlow.value = createPresentUiState(
+            messages = createMessages(
+                count = 2,
+                latestMessageId = "message-2",
+                latestMessageIncoming = true,
+            ),
+        )
+
+        setContent(screenModel = screenModel.model)
+
+        composeTestRule
+            .onNodeWithTag(CONVERSATION_COMPOSE_BAR_TEST_TAG)
+            .assertIsDisplayed()
+        composeTestRule
+            .onNodeWithTag(CONVERSATION_READ_ONLY_NOTICE_TEST_TAG)
             .assertDoesNotExist()
     }
 
