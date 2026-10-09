@@ -190,8 +190,28 @@ public class DatabaseUpgradeHelper {
     }
 
     public void onDowngrade(final SQLiteDatabase db, final int oldVersion, final int newVersion) {
+        if (downgradeKeepingRows(db, oldVersion)) {
+            LogUtil.i(TAG, "Database downgraded from version " + oldVersion + " to version "
+                    + newVersion + ", keeping its rows");
+            return;
+        }
         DatabaseHelper.rebuildTables(db);
         LogUtil.e(TAG, "Database downgrade requested for version " +
                 oldVersion + " version " + newVersion + ", forcing db rebuild!");
+    }
+
+    private static boolean downgradeKeepingRows(final SQLiteDatabase db, final int oldVersion) {
+        final Context context = Factory.get().getApplicationContext();
+        if (!DatabaseLifecycle.get(context).canKeepRowsOnDowngradeFrom(oldVersion)) {
+            return false;
+        }
+        try {
+            DatabaseHelper.dropIndexesViewsAndTriggers(db);
+            DatabaseHelper.createIndexesViewsAndTriggers(db);
+            return true;
+        } catch (final SQLiteException ex) {
+            LogUtil.w(TAG, "Couldn't recreate the indexes, views and triggers", ex);
+            return false;
+        }
     }
 }

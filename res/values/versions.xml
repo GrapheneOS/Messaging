@@ -15,7 +15,8 @@
     limitations under the License.
 -->
 <resources>
-    <!-- DB version -->
+    <!-- DB version. Older versions wipe a database of this version unless
+         DatabaseCompatibilityImpl.OLDEST_COMPATIBLE_VERSIONS lists it -->
     <string name="database_version" translatable="false">5</string>
 
     <!-- Version for shared preferences. This is used for handling prefs migration when old pref

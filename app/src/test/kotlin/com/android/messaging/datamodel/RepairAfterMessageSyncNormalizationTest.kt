@@ -31,6 +31,7 @@ import com.android.messaging.util.BuglePrefsKeys
 import com.android.messaging.util.PhoneUtils
 import io.mockk.every
 import io.mockk.just
+import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.runs
@@ -112,6 +113,7 @@ class RepairAfterMessageSyncNormalizationTest {
             DatabaseLifecycleImpl(
                 conversationStateMirror = conversationStateMirror,
                 participantDestinationNormalizer = participantDestinationNormalizer,
+                databaseCompatibility = mockk(relaxed = true),
             )
         }
     }

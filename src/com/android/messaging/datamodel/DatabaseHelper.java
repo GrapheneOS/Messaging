@@ -669,9 +669,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static void rebuildTables(final SQLiteDatabase db) {
         // Drop tables first, then views, and indices.
         dropAllTables(db);
-        dropAllViews(db);
-        dropAllIndexes(db);
-        dropAllTriggers(db);
+        dropIndexesViewsAndTriggers(db);
 
         // Recreate the whole database.
         createDatabase(db);
@@ -842,6 +840,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         seedConversationIds(db);
 
+        createIndexesViewsAndTriggers(db);
+
+        // Add the default self participant. The default self will be assigned a proper slot id
+        // during participant refresh.
+        db.execSQL(getCreateSelfParticipantSql(ParticipantData.DEFAULT_SELF_SUB_ID));
+
+        DataModel.get().onCreateTables(db);
+    }
+
+    static void dropIndexesViewsAndTriggers(final SQLiteDatabase db) {
+        dropAllViews(db);
+        dropAllIndexes(db);
+        dropAllTriggers(db);
+    }
+
+    static void createIndexesViewsAndTriggers(final SQLiteDatabase db) {
         for (final String sql : CREATE_INDEX_SQLS) {
             db.execSQL(sql);
         }
@@ -853,12 +867,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         for (final String sql : CREATE_TRIGGER_SQLS) {
             db.execSQL(sql);
         }
-
-        // Add the default self participant. The default self will be assigned a proper slot id
-        // during participant refresh.
-        db.execSQL(getCreateSelfParticipantSql(ParticipantData.DEFAULT_SELF_SUB_ID));
-
-        DataModel.get().onCreateTables(db);
     }
 
     /**
