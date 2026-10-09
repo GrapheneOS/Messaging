@@ -4,6 +4,9 @@ import android.database.sqlite.SQLiteDatabase
 import androidx.core.content.contentValuesOf
 import com.android.messaging.FactoryTestAccess
 import com.android.messaging.R
+import com.android.messaging.data.conversationstate.ConversationStateMirror
+import com.android.messaging.data.databasecompatibility.DatabaseCompatibility
+import com.android.messaging.data.participantdestination.ParticipantDestinationNormalizer
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.DatabaseHelper.ConversationParticipantsColumns
 import com.android.messaging.datamodel.DatabaseHelper.MESSAGES_TABLE
@@ -11,6 +14,9 @@ import com.android.messaging.datamodel.DatabaseHelper.MessageColumns
 import com.android.messaging.datamodel.DatabaseHelper.PartColumns
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
 import com.android.messaging.testutil.installTestFactory
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -31,6 +37,12 @@ class DatabaseHelperForeignKeysTest {
     @Before
     fun setUp() {
         installTestFactory(context = RuntimeEnvironment.getApplication().applicationContext)
+        mockkObject(ConversationStateMirror.Companion)
+        every { ConversationStateMirror.get(any()) } returns mockk(relaxed = true)
+        mockkObject(ParticipantDestinationNormalizer.Companion)
+        every { ParticipantDestinationNormalizer.get(any()) } returns mockk(relaxed = true)
+        mockkObject(DatabaseCompatibility.Companion)
+        every { DatabaseCompatibility.get(any()) } returns mockk(relaxed = true)
     }
 
     @After

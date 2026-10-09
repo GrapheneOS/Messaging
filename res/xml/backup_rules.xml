@@ -7,6 +7,15 @@
         <exclude
             domain="sharedpref"
             path="bugle_widgets.xml" />
+        <exclude
+            domain="sharedpref"
+            path="bugle_conversation_state.xml" />
+        <exclude
+            domain="sharedpref"
+            path="bugle_participant_destinations.xml" />
+        <exclude
+            domain="sharedpref"
+            path="bugle_database_compatibility.xml" />
     </cloud-backup>
     <device-transfer>
         <exclude
@@ -15,5 +24,14 @@
         <exclude
             domain="sharedpref"
             path="bugle_widgets.xml" />
+        <exclude
+            domain="sharedpref"
+            path="bugle_conversation_state.xml" />
+        <exclude
+            domain="sharedpref"
+            path="bugle_participant_destinations.xml" />
+        <exclude
+            domain="sharedpref"
+            path="bugle_database_compatibility.xml" />
     </device-transfer>
 </data-extraction-rules>

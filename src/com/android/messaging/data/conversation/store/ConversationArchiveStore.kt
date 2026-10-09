@@ -1,6 +1,7 @@
 package com.android.messaging.data.conversation.store
 
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversationstate.ConversationStateMirror
 import com.android.messaging.datamodel.BugleDatabaseOperations
 import com.android.messaging.datamodel.DataModel
 import com.android.messaging.datamodel.MessagingContentProvider
@@ -11,7 +12,9 @@ internal interface ConversationArchiveStore {
     fun unarchiveConversation(conversationId: ConversationId)
 }
 
-internal class ConversationArchiveStoreImpl @Inject constructor() : ConversationArchiveStore {
+internal class ConversationArchiveStoreImpl @Inject constructor(
+    private val conversationStateMirror: ConversationStateMirror,
+) : ConversationArchiveStore {
 
     override fun archiveConversation(conversationId: ConversationId) {
         setArchived(
@@ -45,6 +48,7 @@ internal class ConversationArchiveStoreImpl @Inject constructor() : Conversation
             database.endTransaction()
         }
 
+        conversationStateMirror.update()
         MessagingContentProvider.notifyConversationListChanged()
         MessagingContentProvider.notifyConversationMetadataChanged(conversationId.value)
     }
