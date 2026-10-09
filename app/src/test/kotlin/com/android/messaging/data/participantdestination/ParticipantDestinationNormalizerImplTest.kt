@@ -457,6 +457,14 @@ class ParticipantDestinationNormalizerImplTest {
             return readings
         }
 
+        override fun readBareNumbersAmong(
+            destinations: Set<String>,
+            activeSubIds: Set<Int>,
+            history: SimHistory,
+        ): List<BareNumberReading> {
+            error("Only blocking reads the numbers among some")
+        }
+
         override fun canonicalDestinationOf(
             reading: BareNumberReading,
             activeSubIds: Set<Int>,

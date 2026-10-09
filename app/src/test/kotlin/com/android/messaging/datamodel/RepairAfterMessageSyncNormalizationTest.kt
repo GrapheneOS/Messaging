@@ -1,11 +1,17 @@
 package com.android.messaging.datamodel
 
 import android.content.Context
+import android.database.sqlite.SQLiteFullException
 import android.telephony.SubscriptionManager
 import androidx.core.content.contentValuesOf
 import com.android.messaging.Factory
 import com.android.messaging.FactoryTestAccess
 import com.android.messaging.R
+import com.android.messaging.data.conversationstate.BlockedNumberRecorderImpl
+import com.android.messaging.data.conversationstate.ConversationStateMirror
+import com.android.messaging.data.conversationstate.ConversationStateMirrorImpl
+import com.android.messaging.data.conversationstate.store.ConversationStateDatabaseStoreImpl
+import com.android.messaging.data.conversationstate.store.ConversationStatePreferencesStoreImpl
 import com.android.messaging.data.participantdestination.BareNumberReaderImpl
 import com.android.messaging.data.participantdestination.ParticipantDestinationNormalizer
 import com.android.messaging.data.participantdestination.ParticipantDestinationNormalizerImpl
@@ -17,13 +23,16 @@ import com.android.messaging.datamodel.DatabaseHelper.MessageColumns
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.domain.sync.usecase.RepairAfterMessageSyncImpl
+import com.android.messaging.testutil.FakeBuglePrefs
 import com.android.messaging.testutil.installTestFactory
+import com.android.messaging.util.BuglePrefsKeys
 import com.android.messaging.util.PhoneUtils
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.runs
+import io.mockk.spyk
 import io.mockk.unmockkAll
 import java.util.Locale
 import java.util.concurrent.Callable
@@ -47,10 +56,12 @@ import org.robolectric.shadows.ShadowSubscriptionManager
 class RepairAfterMessageSyncNormalizationTest {
 
     private val context: Context = RuntimeEnvironment.getApplication().applicationContext
+    private val prefs = FakeBuglePrefs()
     private val databaseVersion = context.getString(R.string.database_version).toInt()
     private val participantDestinationPreferencesStore =
         ParticipantDestinationPreferencesStoreImpl(context = context)
     private lateinit var db: DatabaseWrapper
+    private lateinit var conversationStateMirror: ConversationStateMirror
     private lateinit var participantDestinationNormalizer: ParticipantDestinationNormalizer
     private lateinit var savedLocale: Locale
 
@@ -60,7 +71,7 @@ class RepairAfterMessageSyncNormalizationTest {
         Locale.setDefault(ESTONIAN_LOCALE)
         ShadowSubscriptionManager.reset()
         givenSubscriptions(US_SUB_ID to "us", FAROESE_SUB_ID to "fo")
-        installTestFactory(context = context)
+        installTestFactory(context = context, prefs = prefs)
         every { Factory.get().getPhoneUtils(any()) } answers {
             when (val subId = firstArg<Int>()) {
                 ParticipantData.DEFAULT_SELF_SUB_ID -> PhoneUtils(DEFAULT_SUB_ID)
@@ -83,6 +94,17 @@ class RepairAfterMessageSyncNormalizationTest {
             bareNumberReader = bareNumberReader,
             databaseVersion = databaseVersion,
         )
+        conversationStateMirror = ConversationStateMirrorImpl(
+            preferencesStore = ConversationStatePreferencesStoreImpl(context = context),
+            databaseStore = ConversationStateDatabaseStoreImpl(),
+            blockedNumberRecorder = BlockedNumberRecorderImpl(
+                preferencesStore = participantDestinationPreferencesStore,
+                bareNumberReader = bareNumberReader,
+            ),
+            databaseVersion = databaseVersion,
+        )
+        mockkObject(ConversationStateMirror.Companion)
+        every { ConversationStateMirror.get(any()) } answers { conversationStateMirror }
         mockkObject(ParticipantDestinationNormalizer.Companion)
         every { ParticipantDestinationNormalizer.get(any()) } answers {
             participantDestinationNormalizer
@@ -249,6 +271,31 @@ class RepairAfterMessageSyncNormalizationTest {
     }
 
     @Test
+    fun aBlockDeletedBeforeASync_staysLeftAloneWhenASimIsReplaced() {
+        repairAfterMessageSync()
+        blockAndDeleteShortCode()
+
+        givenSubscriptions(FAROESE_SUB_ID to "fo", NEW_FAROESE_SUB_ID to "fo")
+        val faroeseId = db.insertParticipant(destination = FAROESE_NUMBER)
+        val conversationId = db.insertConversation(participantId = faroeseId)
+        repairAfterMessageSync()
+
+        assertShortCodeKeepsItsBlock(conversationId = conversationId)
+    }
+
+    @Test
+    fun aBlockDeletedBeforeASync_staysLeftAloneWhenRebuiltWithAnotherSim() {
+        repairAfterMessageSync()
+        blockAndDeleteShortCode()
+
+        givenSubscriptions(FAROESE_SUB_ID to "fo", NEW_FAROESE_SUB_ID to "fo")
+        val conversationId = rebuildAndResync(destination = FAROESE_NUMBER)
+        repairAfterMessageSync()
+
+        assertShortCodeKeepsItsBlock(conversationId = conversationId)
+    }
+
+    @Test
     fun aNumberReceivedOnAnUnknownSimBeforeASync_staysLeftAloneWhenASimIsReplaced() {
         repairAfterMessageSync()
         val messageId = resyncFromAnUnknownSim(destination = SHORT_CODE)
@@ -260,6 +307,102 @@ class RepairAfterMessageSyncNormalizationTest {
         val shortCodeIds = db.participantIdsOf(destination = SHORT_CODE)
         assertEquals(1, shortCodeIds.size)
         assertEquals(shortCodeIds.single(), db.senderOf(messageId = messageId))
+    }
+
+    @Test
+    fun aBlockDeletedWhileItsSimWasIn_staysLeftAloneWhenASimIsAdded() {
+        givenSubscriptions(FAROESE_SUB_ID to "fo")
+        repairAfterMessageSync()
+        givenSubscriptions(US_SUB_ID to "us", FAROESE_SUB_ID to "fo")
+        blockAndDeleteShortCode()
+        givenSubscriptions(FAROESE_SUB_ID to "fo")
+        repairAfterMessageSync()
+
+        givenSubscriptions(FAROESE_SUB_ID to "fo", NEW_FAROESE_SUB_ID to "fo")
+        val faroeseId = db.insertParticipant(destination = FAROESE_NUMBER)
+        val conversationId = db.insertConversation(participantId = faroeseId)
+        repairAfterMessageSync()
+
+        assertShortCodeKeepsItsBlock(conversationId = conversationId)
+    }
+
+    @Test
+    fun aBlockDeletedWhileItsSimWasIn_staysLeftAloneWhenRebuilt() {
+        givenSubscriptions(FAROESE_SUB_ID to "fo")
+        repairAfterMessageSync()
+        givenSubscriptions(US_SUB_ID to "us", FAROESE_SUB_ID to "fo")
+        blockAndDeleteShortCode()
+
+        givenSubscriptions(FAROESE_SUB_ID to "fo")
+        val conversationId = rebuildAndResync(destination = FAROESE_NUMBER)
+        repairAfterMessageSync()
+
+        assertShortCodeKeepsItsBlock(conversationId = conversationId)
+    }
+
+    @Test
+    fun aBlockDeletedWhileItsSimWasIn_staysLeftAloneWhenRebuiltByAnOlderVersionAfterASync() {
+        givenSubscriptions(FAROESE_SUB_ID to "fo")
+        repairAfterMessageSync()
+        givenSubscriptions(US_SUB_ID to "us", FAROESE_SUB_ID to "fo")
+        blockAndDeleteShortCode()
+        givenSubscriptions(FAROESE_SUB_ID to "fo")
+        repairAfterMessageSync()
+
+        val conversationId = rebuildByAnOlderVersionAndUpgrade(destination = FAROESE_NUMBER)
+        repairAfterMessageSync()
+
+        assertShortCodeKeepsItsBlock(conversationId = conversationId)
+    }
+
+    @Test
+    fun aBlockDeletedWhileARestoreIsPending_staysLeftAloneOnceTheSyncCompletes() {
+        givenSubscriptions(FAROESE_SUB_ID to "fo")
+        db.insertParticipant(destination = CANONICAL_NUMBER, isBlocked = true)
+        repairAfterMessageSync()
+        rebuildTables()
+        assertTrue(
+            "no restore is pending",
+            conversationStateMirror.isRestorePending(),
+        )
+
+        givenSubscriptions(US_SUB_ID to "us", FAROESE_SUB_ID to "fo")
+        blockAndDeleteShortCode()
+        givenSubscriptions(FAROESE_SUB_ID to "fo")
+        val conversationId = resyncSender(destination = FAROESE_NUMBER)
+        repairAfterMessageSync()
+
+        assertShortCodeKeepsItsBlock(conversationId = conversationId)
+    }
+
+    @Test
+    fun aBlockReceivedOnBothSims_staysLeftAloneWhenRebuiltAfterItsUsMessageWasDeleted() {
+        repairAfterMessageSync()
+        val shortCodeId = db.insertParticipant(destination = SHORT_CODE)
+        val shortCodeConversationId = db.insertConversation(participantId = shortCodeId)
+        val usMessageId = db.insertMessage(
+            conversationId = shortCodeConversationId,
+            senderId = shortCodeId,
+            selfSubId = US_SUB_ID,
+        )
+        db.insertMessage(
+            conversationId = shortCodeConversationId,
+            senderId = shortCodeId,
+            selfSubId = FAROESE_SUB_ID,
+        )
+        repairAfterMessageSync()
+        offMainThread {
+            BugleDatabaseOperations.updateDestination(db, SHORT_CODE, true)
+            conversationStateMirror.update()
+            BugleDatabaseOperations.deleteMessage(db, usMessageId.toString())
+        }
+
+        givenSubscriptions(FAROESE_SUB_ID to "fo", NEW_FAROESE_SUB_ID to "fo")
+        repairAfterMessageSync()
+        val conversationId = rebuildAndResync(destination = FAROESE_NUMBER)
+        repairAfterMessageSync()
+
+        assertShortCodeKeepsItsBlock(conversationId = conversationId)
     }
 
     @Test
@@ -283,6 +426,47 @@ class RepairAfterMessageSyncNormalizationTest {
     }
 
     @Test
+    fun aBlockedNumberWithoutMessages_staysLeftAloneWhenRebuiltWithAnotherSim() {
+        db.insertParticipant(destination = SHORT_CODE, isBlocked = true)
+        repairAfterMessageSync()
+
+        givenSubscriptions(FAROESE_SUB_ID to "fo", NEW_FAROESE_SUB_ID to "fo")
+        val conversationId = rebuildAndResync(destination = FAROESE_NUMBER)
+        repairAfterMessageSync()
+
+        assertShortCodeKeepsItsBlock(conversationId = conversationId)
+    }
+
+    @Test
+    fun aBlockedNumberReceivedOnAKnownSim_staysLeftAloneWhenRebuiltWithAnotherSim() {
+        val shortCodeId = db.insertParticipant(destination = SHORT_CODE, isBlocked = true)
+        db.insertMessage(
+            conversationId = db.insertConversation(participantId = shortCodeId),
+            senderId = shortCodeId,
+            selfSubId = US_SUB_ID,
+        )
+        repairAfterMessageSync()
+
+        givenSubscriptions(FAROESE_SUB_ID to "fo", NEW_FAROESE_SUB_ID to "fo")
+        val conversationId = rebuildAndResync(destination = FAROESE_NUMBER)
+        repairAfterMessageSync()
+
+        assertShortCodeKeepsItsBlock(conversationId = conversationId)
+    }
+
+    @Test
+    fun aBlockedNumberWithoutMessages_staysLeftAloneWhenAnOlderVersionRebuiltWithAnotherSim() {
+        db.insertParticipant(destination = SHORT_CODE, isBlocked = true)
+        repairAfterMessageSync()
+
+        givenSubscriptions(FAROESE_SUB_ID to "fo", NEW_FAROESE_SUB_ID to "fo")
+        val conversationId = rebuildByAnOlderVersionAndUpgrade(destination = FAROESE_NUMBER)
+        repairAfterMessageSync()
+
+        assertShortCodeKeepsItsBlock(conversationId = conversationId)
+    }
+
+    @Test
     fun aNumberReceivedOnAnUnknownSim_staysLeftAloneWhenAnOlderVersionRebuiltWithAnotherSim() {
         val shortCodeId = db.insertParticipant(destination = SHORT_CODE)
         db.insertMessage(
@@ -301,6 +485,19 @@ class RepairAfterMessageSyncNormalizationTest {
             db.participantIdsOf(destination = SHORT_CODE),
             listOf(db.senderOf(messageId = messageId)),
         )
+    }
+
+    @Test
+    fun aBlockedNumberAddedAfterARepair_staysLeftAloneWhenRebuiltWithAnotherSim() {
+        repairAfterMessageSync()
+        db.insertParticipant(destination = SHORT_CODE, isBlocked = true)
+        repairAfterMessageSync()
+
+        givenSubscriptions(FAROESE_SUB_ID to "fo", NEW_FAROESE_SUB_ID to "fo")
+        val conversationId = rebuildAndResync(destination = FAROESE_NUMBER)
+        repairAfterMessageSync()
+
+        assertShortCodeKeepsItsBlock(conversationId = conversationId)
     }
 
     @Test
@@ -338,6 +535,33 @@ class RepairAfterMessageSyncNormalizationTest {
 
         givenSubscriptions(FAROESE_SUB_ID to "fo")
         rebuildAndResync(destination = FAROESE_NUMBER)
+        val messageId = resyncFromAnUnknownSim(destination = SHORT_CODE)
+        repairAfterMessageSync()
+
+        assertEquals(
+            db.participantIdsOf(destination = SHORT_CODE),
+            listOf(db.senderOf(messageId = messageId)),
+        )
+    }
+
+    @Test
+    fun aNumberReceivedOnAnUnknownSim_staysLeftAloneWhenAnotherIsBlockedBeforeItsResync() {
+        givenSubscriptions(US_SUB_ID to "us")
+        val shortCodeId = db.insertParticipant(destination = SHORT_CODE)
+        db.insertMessage(
+            conversationId = db.insertConversation(participantId = shortCodeId),
+            senderId = shortCodeId,
+            selfSubId = ParticipantData.DEFAULT_SELF_SUB_ID,
+        )
+        repairAfterMessageSync()
+        givenSubscriptions(FAROESE_SUB_ID to "fo")
+        repairAfterMessageSync()
+
+        rebuildAndResync(destination = BARE_NUMBER)
+        offMainThread {
+            BugleDatabaseOperations.updateDestination(db, BARE_NUMBER, true)
+            conversationStateMirror.update()
+        }
         val messageId = resyncFromAnUnknownSim(destination = SHORT_CODE)
         repairAfterMessageSync()
 
@@ -440,9 +664,122 @@ class RepairAfterMessageSyncNormalizationTest {
         assertEquals(listOf(bareId), db.participantIdsOf(destination = CANONICAL_NUMBER))
     }
 
+    @Test
+    fun aMirroredBareBlock_followsTheSenderToItsNormalizedNumber() {
+        givenSubscriptions(US_SUB_ID to "us")
+        Locale.setDefault(Locale.ENGLISH)
+        val blockedId = db.insertParticipant(destination = BLOCKED_BARE_NUMBER, isBlocked = true)
+        db.insertConversation(participantId = blockedId, isArchived = true)
+        repairAfterMessageSync()
+        assertEquals(listOf(blockedId), db.participantIdsOf(destination = BLOCKED_BARE_NUMBER))
+
+        val conversationId = rebuildByAnOlderVersionAndUpgrade(destination = BLOCKED_BARE_NUMBER)
+        Locale.setDefault(ESTONIAN_LOCALE)
+        repairAfterMessageSync()
+
+        assertBlockedAndArchived(conversationId = conversationId)
+        repairAfterMessageSync()
+        assertBlockedAndArchived(conversationId = conversationId)
+    }
+
+    @Test
+    fun aMirroredBareBlock_archivesTheConversationOfTheNormalizedNumber() {
+        givenSubscriptions(US_SUB_ID to "us")
+        Locale.setDefault(Locale.ENGLISH)
+        val blockedId = db.insertParticipant(destination = BLOCKED_BARE_NUMBER, isBlocked = true)
+        db.insertConversation(participantId = blockedId, isArchived = true)
+        repairAfterMessageSync()
+
+        val conversationId = rebuildByAnOlderVersionAndUpgrade(
+            destination = BLOCKED_CANONICAL_NUMBER,
+        )
+        Locale.setDefault(ESTONIAN_LOCALE)
+        repairAfterMessageSync()
+
+        assertBlockedAndArchived(conversationId = conversationId)
+    }
+
+    @Test
+    fun aMirroredBareBlock_followsTheSenderAgainOnceTheTablesAreRebuilt() {
+        givenSubscriptions(US_SUB_ID to "us")
+        Locale.setDefault(Locale.ENGLISH)
+        val blockedId = db.insertParticipant(destination = BLOCKED_BARE_NUMBER, isBlocked = true)
+        db.insertConversation(participantId = blockedId, isArchived = true)
+        repairAfterMessageSync()
+
+        Locale.setDefault(ESTONIAN_LOCALE)
+        val conversationId = rebuildAndResync(destination = BLOCKED_CANONICAL_NUMBER)
+        repairAfterMessageSync()
+
+        assertBlockedAndArchived(conversationId = conversationId)
+    }
+
+    @Test
+    fun aRestoredBlock_followsTheSenderOnceItsSimIsBack() {
+        givenSubscriptions(FAROESE_SUB_ID to "fo")
+        val blockedId = db.insertParticipant(destination = BLOCKED_BARE_NUMBER, isBlocked = true)
+        db.insertMessage(
+            conversationId = db.insertConversation(participantId = blockedId, isArchived = true),
+            senderId = blockedId,
+            selfSubId = US_SUB_ID,
+        )
+        repairAfterMessageSync()
+        val conversationId = rebuildAndResync(destination = BLOCKED_CANONICAL_NUMBER)
+        repairAfterMessageSync()
+        assertFalse(
+            "the block was carried without the US SIM",
+            offMainThread {
+                BugleDatabaseOperations.isBlockedDestination(db, BLOCKED_CANONICAL_NUMBER)
+            },
+        )
+
+        givenSubscriptions(US_SUB_ID to "us", FAROESE_SUB_ID to "fo")
+        repairAfterMessageSync()
+
+        assertBlockedAndArchived(conversationId = conversationId)
+    }
+
+    @Test
+    fun aRestoreThatFailed_isRetriedBeforeTheSenderIsRenormalized() {
+        givenSubscriptions(US_SUB_ID to "us")
+        Locale.setDefault(Locale.ENGLISH)
+        val blockedId = db.insertParticipant(destination = BLOCKED_BARE_NUMBER, isBlocked = true)
+        db.insertConversation(participantId = blockedId, isArchived = true)
+        repairAfterMessageSync()
+        val conversationId = rebuildByAnOlderVersionAndUpgrade(destination = BLOCKED_BARE_NUMBER)
+        Locale.setDefault(ESTONIAN_LOCALE)
+        conversationStateMirror = spyk(conversationStateMirror)
+        every { conversationStateMirror.restoreIfDue() } throws
+            SQLiteFullException("database or disk is full") andThenAnswer { callOriginal() }
+
+        repairAfterMessageSync()
+        repairAfterMessageSync()
+
+        assertBlockedAndArchived(conversationId = conversationId)
+    }
+
+    @Test
+    fun aMirroredNormalizedBlock_blocksTheBareNumberAnOlderVersionBroughtBack() {
+        givenSubscriptions(US_SUB_ID to "us")
+        val blockedId = db.insertParticipant(
+            destination = BLOCKED_CANONICAL_NUMBER,
+            isBlocked = true,
+        )
+        db.insertConversation(participantId = blockedId, isArchived = true)
+        repairAfterMessageSync()
+
+        val conversationId = rebuildByAnOlderVersionAndUpgrade(destination = BLOCKED_BARE_NUMBER)
+        repairAfterMessageSync()
+
+        assertBlockedAndArchived(conversationId = conversationId)
+        repairAfterMessageSync()
+        assertBlockedAndArchived(conversationId = conversationId)
+    }
+
     private fun rebuildByAnOlderVersionAndUpgrade(destination: String): Long {
         DatabaseHelper.rebuildTables(db.database)
         val conversationId = resyncSender(destination = destination)
+        conversationStateMirror.onDatabaseUpgraded(oldVersion = OLDEST_RELEASED_VERSION)
         participantDestinationNormalizer.onDatabaseUpgraded(oldVersion = OLDEST_RELEASED_VERSION)
         return conversationId
     }
@@ -470,7 +807,27 @@ class RepairAfterMessageSyncNormalizationTest {
             senderId = senderId,
             selfSubId = US_SUB_ID,
         )
+        prefs.putLong(BuglePrefsKeys.LAST_FULL_SYNC_TIME, System.currentTimeMillis())
         return conversationId
+    }
+
+    private fun blockAndDeleteShortCode() {
+        val shortCodeId = db.insertParticipant(destination = SHORT_CODE)
+        val conversationId = db.insertConversation(participantId = shortCodeId)
+        db.insertMessage(
+            conversationId = conversationId,
+            senderId = shortCodeId,
+            selfSubId = US_SUB_ID,
+        )
+        offMainThread {
+            BugleDatabaseOperations.updateDestination(db, SHORT_CODE, true)
+            conversationStateMirror.update()
+            BugleDatabaseOperations.deleteConversation(
+                db,
+                conversationId.toString(),
+                Long.MAX_VALUE,
+            )
+        }
     }
 
     private fun resyncFromAnUnknownSim(destination: String): Long {
@@ -482,6 +839,35 @@ class RepairAfterMessageSyncNormalizationTest {
         )
     }
 
+    private fun assertShortCodeKeepsItsBlock(conversationId: Long) {
+        assertTrue(
+            "the short code isn't blocked",
+            offMainThread { BugleDatabaseOperations.isBlockedDestination(db, SHORT_CODE) },
+        )
+        assertFalse(
+            "the Faroese number is blocked",
+            offMainThread { BugleDatabaseOperations.isBlockedDestination(db, FAROESE_NUMBER) },
+        )
+        assertFalse(
+            "the Faroese number's conversation is archived",
+            db.isArchived(conversationId = conversationId),
+        )
+    }
+
+    private fun assertBlockedAndArchived(conversationId: Long) {
+        assertTrue(
+            "an incoming message from the sender isn't blocked",
+            offMainThread {
+                BugleDatabaseOperations.isBlockedDestination(db, BLOCKED_CANONICAL_NUMBER)
+            },
+        )
+        assertEquals(emptyList<Long>(), db.participantIdsOf(destination = BLOCKED_BARE_NUMBER))
+        assertTrue(
+            "the conversation is in the inbox",
+            db.isArchived(conversationId = conversationId),
+        )
+    }
+
     private fun recordedReadingDestinations(): Set<String> {
         return participantDestinationPreferencesStore.readSimHistory().recordedReadings.keys
     }
@@ -489,6 +875,7 @@ class RepairAfterMessageSyncNormalizationTest {
     private fun repairAfterMessageSync() {
         offMainThread {
             RepairAfterMessageSyncImpl(
+                conversationStateMirror = conversationStateMirror,
                 participantDestinationNormalizer = participantDestinationNormalizer,
             ).invoke()
         }
@@ -535,6 +922,7 @@ class RepairAfterMessageSyncNormalizationTest {
 
     private fun DatabaseWrapper.insertConversation(
         participantId: Long,
+        isArchived: Boolean = false,
         sortTimestamp: Long = SORT_TIMESTAMP,
     ): Long {
         val conversationId = insert(
@@ -542,6 +930,7 @@ class RepairAfterMessageSyncNormalizationTest {
             null,
             contentValuesOf(
                 ConversationColumns.SMS_THREAD_ID to THREAD_ID,
+                ConversationColumns.ARCHIVE_STATUS to if (isArchived) 1 else 0,
                 ConversationColumns.SORT_TIMESTAMP to sortTimestamp,
                 ConversationColumns.PARTICIPANT_COUNT to 1,
                 ConversationColumns.OTHER_PARTICIPANT_NORMALIZED_DESTINATION to
@@ -647,6 +1036,8 @@ class RepairAfterMessageSyncNormalizationTest {
         private const val FAROESE_NUMBER = "+298211234"
         private const val BARE_NUMBER = "54810027"
         private const val CANONICAL_NUMBER = "+37254810027"
+        private const val BLOCKED_BARE_NUMBER = "54810028"
+        private const val BLOCKED_CANONICAL_NUMBER = "+37254810028"
 
         private const val THREAD_ID = 42L
         private const val SORT_TIMESTAMP = 1_000L

@@ -114,6 +114,28 @@ class BareNumberReaderImplTest {
     }
 
     @Test
+    fun theBareNumbersAmongTheDestinations_areReadAlone() {
+        databaseStore.participants = listOf(
+            BARE_PARTICIPANT,
+            BARE_PARTICIPANT.copy(participantId = "4", destination = "5550100"),
+        )
+        databaseStore.subIdsByParticipant = mapOf(PARTICIPANT_ID to setOf(US_SUB_ID))
+
+        val readings = bareNumberReader.readBareNumbersAmong(
+            destinations = setOf(BARE_DESTINATION, "+15550199"),
+            activeSubIds = setOf(FO_SUB_ID),
+            history = HISTORY,
+        )
+
+        assertEquals(
+            listOf(
+                BareNumberReading(participant = BARE_PARTICIPANT, readingSubIds = setOf(US_SUB_ID)),
+            ),
+            readings,
+        )
+    }
+
+    @Test
     fun aNumberEverySimReadsAlike_isReadAsThatNumber() {
         canonicalDestinationsBySubId[US_SUB_ID] = CANONICAL_DESTINATION
         canonicalDestinationsBySubId[FO_SUB_ID] = CANONICAL_DESTINATION

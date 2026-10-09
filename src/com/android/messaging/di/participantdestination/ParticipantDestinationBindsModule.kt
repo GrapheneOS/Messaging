@@ -37,7 +37,7 @@ internal abstract class ParticipantDestinationBindsModule {
         impl: ParticipantDestinationDatabaseStoreImpl,
     ): ParticipantDestinationDatabaseStore
 
-    // Singleton: it owns the normalizer's lock
+    // Singleton: it owns the lock the normalizer and the recorder share
     @Binds
     @Singleton
     abstract fun bindParticipantDestinationPreferencesStore(

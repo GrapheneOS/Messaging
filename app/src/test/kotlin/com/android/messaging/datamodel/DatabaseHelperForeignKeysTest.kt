@@ -4,6 +4,7 @@ import android.database.sqlite.SQLiteDatabase
 import androidx.core.content.contentValuesOf
 import com.android.messaging.FactoryTestAccess
 import com.android.messaging.R
+import com.android.messaging.data.conversationstate.ConversationStateMirror
 import com.android.messaging.data.participantdestination.ParticipantDestinationNormalizer
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.DatabaseHelper.ConversationParticipantsColumns
@@ -35,6 +36,8 @@ class DatabaseHelperForeignKeysTest {
     @Before
     fun setUp() {
         installTestFactory(context = RuntimeEnvironment.getApplication().applicationContext)
+        mockkObject(ConversationStateMirror.Companion)
+        every { ConversationStateMirror.get(any()) } returns mockk(relaxed = true)
         mockkObject(ParticipantDestinationNormalizer.Companion)
         every { ParticipantDestinationNormalizer.get(any()) } returns mockk(relaxed = true)
     }

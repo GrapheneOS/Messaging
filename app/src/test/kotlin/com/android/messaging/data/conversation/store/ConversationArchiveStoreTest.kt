@@ -1,6 +1,7 @@
 package com.android.messaging.data.conversation.store
 
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversationstate.ConversationStateMirror
 import com.android.messaging.datamodel.BugleDatabaseOperations
 import com.android.messaging.datamodel.DataModel
 import com.android.messaging.datamodel.DatabaseWrapper
@@ -27,7 +28,11 @@ internal class ConversationArchiveStoreTest {
     private val databaseWrapper = mockk<DatabaseWrapper>(relaxed = true)
     private val dataModel = mockk<DataModel>()
 
-    private val store = ConversationArchiveStoreImpl()
+    private val conversationStateMirror = mockk<ConversationStateMirror>(relaxed = true)
+
+    private val store = ConversationArchiveStoreImpl(
+        conversationStateMirror = conversationStateMirror,
+    )
 
     @Before
     fun setUp() {
@@ -66,6 +71,8 @@ internal class ConversationArchiveStoreTest {
             )
             databaseWrapper.setTransactionSuccessful()
             databaseWrapper.endTransaction()
+            conversationStateMirror.update()
+            MessagingContentProvider.notifyConversationListChanged()
         }
         verify(exactly = 1) {
             MessagingContentProvider.notifyConversationListChanged()
@@ -106,6 +113,7 @@ internal class ConversationArchiveStoreTest {
         assertSame(failure, thrown)
         verify(exactly = 1) { databaseWrapper.endTransaction() }
         verify(exactly = 0) { databaseWrapper.setTransactionSuccessful() }
+        verify(exactly = 0) { conversationStateMirror.update() }
         verify(exactly = 0) { MessagingContentProvider.notifyConversationListChanged() }
         verify(exactly = 0) {
             MessagingContentProvider.notifyConversationMetadataChanged(any())

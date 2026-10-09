@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteDatabase
 import androidx.core.content.contentValuesOf
 import com.android.messaging.FactoryTestAccess
 import com.android.messaging.R
+import com.android.messaging.data.conversationstate.ConversationStateMirror
 import com.android.messaging.data.participantdestination.ParticipantDestinationNormalizer
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.DatabaseHelper.MessageColumns
@@ -29,6 +30,7 @@ import org.robolectric.RuntimeEnvironment
 @RunWith(RobolectricTestRunner::class)
 class DatabaseUpgradeHelperTest {
 
+    private val conversationStateMirror = mockk<ConversationStateMirror>(relaxed = true)
     private val participantDestinationNormalizer =
         mockk<ParticipantDestinationNormalizer>(relaxed = true)
     private val currentVersion = RuntimeEnvironment.getApplication()
@@ -38,6 +40,8 @@ class DatabaseUpgradeHelperTest {
     @Before
     fun setUp() {
         installTestFactory(context = RuntimeEnvironment.getApplication().applicationContext)
+        mockkObject(ConversationStateMirror.Companion)
+        every { ConversationStateMirror.get(any()) } returns conversationStateMirror
         mockkObject(ParticipantDestinationNormalizer.Companion)
         every { ParticipantDestinationNormalizer.get(any()) } returns
             participantDestinationNormalizer
@@ -80,6 +84,17 @@ class DatabaseUpgradeHelperTest {
                 ),
             )
         }
+    }
+
+    @Test
+    fun anUpgrade_tellsTheConversationStateMirrorTheVersionItUpgradesFrom() {
+        SQLiteDatabase.create(null).use { db ->
+            DatabaseHelper.rebuildTables(db)
+
+            DatabaseUpgradeHelper().doOnUpgrade(db, 3, currentVersion)
+        }
+
+        verify(exactly = 1) { conversationStateMirror.onDatabaseUpgraded(oldVersion = 3) }
     }
 
     @Test
