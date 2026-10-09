@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.os.SystemClock
 import android.telephony.SubscriptionManager
 import android.telephony.TelephonyManager
+import com.android.messaging.R
 import com.android.messaging.util.PhoneUtils
 import com.android.messaging.util.core.ElapsedRealtimeProvider
 import dagger.Module
@@ -139,6 +140,15 @@ internal class CoreProvidesModule {
     @Reusable
     fun provideElapsedRealtimeProvider(): ElapsedRealtimeProvider {
         return ElapsedRealtimeProvider { SystemClock.elapsedRealtime() }
+    }
+
+    @Provides
+    @DatabaseVersion
+    fun provideDatabaseVersion(
+        @ApplicationContext
+        context: Context,
+    ): Int {
+        return context.getString(R.string.database_version).toInt()
     }
 
     @Provides

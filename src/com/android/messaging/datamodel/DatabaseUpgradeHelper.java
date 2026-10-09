@@ -20,6 +20,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 
 import com.android.messaging.Factory;
+import com.android.messaging.data.participantdestination.ParticipantDestinationNormalizer;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.LogUtil;
 import com.google.common.annotations.VisibleForTesting;
@@ -32,6 +33,9 @@ public class DatabaseUpgradeHelper {
         if (oldVersion == newVersion) {
             return;
         }
+
+        final Context context = Factory.get().getApplicationContext();
+        ParticipantDestinationNormalizer.get(context).onDatabaseUpgraded(oldVersion);
 
         LogUtil.i(TAG, "Database upgrade started from version " + oldVersion + " to " + newVersion);
         try {
