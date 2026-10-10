@@ -3,6 +3,9 @@ package com.android.messaging.ui.conversationlist.chats
 import app.cash.turbine.test
 import com.android.messaging.data.conversation.event.ConversationArchiveEventsImpl
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ParticipantId
+import com.android.messaging.data.conversation.model.recipient.ConversationRecipient
+import com.android.messaging.data.conversation.repository.ConversationParticipantsRepository
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
 import com.android.messaging.data.debug.DebugFeaturesProvider
@@ -14,6 +17,7 @@ import com.android.messaging.ui.conversationlist.chats.mapper.ConversationListUi
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListEffect as Effect
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListNavEvent as NavEvent
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState as State
 import com.android.messaging.ui.conversationlist.conversationItem
 import com.android.messaging.ui.conversationlist.delegate.ConversationListActionsDelegate
 import com.android.messaging.ui.conversationlist.delegate.ConversationListOptimisticSnapshotDelegate
@@ -30,6 +34,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -51,6 +56,7 @@ class ConversationListViewModelTest {
     private val debugFeaturesProvider = mockk<DebugFeaturesProvider>()
     private val resolveContactAction = mockk<ResolveContactAction>()
     private val conversationArchiveEvents = ConversationArchiveEventsImpl()
+    private val conversationParticipantsRepository = mockk<ConversationParticipantsRepository>()
 
     private val snapshotFlow = MutableStateFlow<ConversationListSnapshot?>(null)
     private val selectedIdsFlow = MutableStateFlow<ImmutableList<ConversationId>>(
@@ -236,6 +242,44 @@ class ConversationListViewModelTest {
     }
 
     @Test
+    fun avatarQuickActionsOpened_loadsCopyablePhoneNumbers() = runTest(
+        context = mainDispatcherRule.testDispatcher,
+    ) {
+        snapshotFlow.value = snapshotOf(conversationItem(ConversationId("a")))
+        every {
+            uiStateMapper.map(any(), any(), any(), any(), any())
+        } returns State()
+        every {
+            conversationParticipantsRepository.getParticipants(ConversationId("a"))
+        } returns flowOf(
+            persistentListOf(
+                ConversationRecipient(
+                    id = ParticipantId("1"),
+                    displayName = "Ada",
+                    destination = "+1 555 0001",
+                ),
+                ConversationRecipient(
+                    id = ParticipantId("2"),
+                    displayName = "Email only",
+                    destination = "ada@example.com",
+                ),
+            ),
+        )
+
+        val viewModel = createViewModel()
+        viewModel.uiState.test {
+            awaitItem()
+            viewModel.onAction(Action.AvatarQuickActionsOpened(ConversationId("a")))
+
+            val targets = awaitItem().phoneNumberCopyTargets.getValue(ConversationId("a"))
+            assertEquals(1, targets.size)
+            assertEquals("Ada", targets.single().displayName)
+            assertEquals("+1 555 0001", targets.single().phoneNumber)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun archiveSnackbarDismissed_discardsArchivedItems() {
         val viewModel = createViewModel()
         viewModel.onAction(
@@ -329,6 +373,7 @@ class ConversationListViewModelTest {
             conversationArchiveEvents = conversationArchiveEvents,
             defaultDispatcher = mainDispatcherRule.testDispatcher,
             mainDispatcher = mainDispatcherRule.testDispatcher,
+            conversationParticipantsRepository = conversationParticipantsRepository,
         )
     }
 }

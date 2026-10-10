@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.common.components.PrimaryActionButton
+import com.android.messaging.ui.common.components.participant.PhoneNumberCopyTarget
 import com.android.messaging.ui.common.components.reorder.OverlayReorderAnimationController
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.common.item.ConversationSwipeKind
@@ -29,6 +30,9 @@ import com.android.messaging.ui.conversationlist.common.support.previewConversat
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel as Model
 import com.android.messaging.ui.core.MessagingPreviewTheme
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.persistentMapOf
 
 private val ChatSwipeSpec = ConversationListSwipeSpec(
     startToEnd = ConversationSwipeKind.ToggleRead,
@@ -44,6 +48,8 @@ internal fun ConversationListContent(
     isSelectionMode: Boolean,
     fabBottomReserve: Dp,
     pinAnimationController: OverlayReorderAnimationController<Model, ConversationId>?,
+    phoneNumberCopyTargets: ImmutableMap<ConversationId, ImmutableList<PhoneNumberCopyTarget>> =
+        persistentMapOf(),
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -80,6 +86,10 @@ internal fun ConversationListContent(
                     scaffoldContentPadding = scaffoldContentPadding,
                     fabBottomReserve = fabBottomReserve,
                     pinAnimationController = pinAnimationController,
+                    phoneNumberCopyTargets = phoneNumberCopyTargets,
+                    onAvatarQuickActionsOpen = { conversationId ->
+                        onAction(Action.AvatarQuickActionsOpened(conversationId))
+                    },
                     swipeSpec = ChatSwipeSpec,
                     onItemEvent = { onAction(it.toChatAction()) },
                 )

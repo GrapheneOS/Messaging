@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.messages.ui.message
 
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -11,11 +12,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.android.messaging.R
 import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.sms.MmsSmsUtils
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageContent
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel.Status
@@ -48,6 +54,7 @@ internal fun ConversationMessageBubble(
     onAttachmentClick: OnConversationAttachmentClick?,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
+    onPhoneNumberCopy: (String) -> Unit = {},
 ) {
     val bubbleModifier = Modifier
         .widthIn(max = maxBubbleWidth)
@@ -64,6 +71,7 @@ internal fun ConversationMessageBubble(
                 onAttachmentClick = onAttachmentClick,
                 onExternalUriClick = onExternalUriClick,
                 onMessageLongClick = onMessageLongClick,
+                onPhoneNumberCopy = onPhoneNumberCopy,
             )
         }
 
@@ -77,6 +85,7 @@ internal fun ConversationMessageBubble(
                 onAttachmentClick = onAttachmentClick,
                 onExternalUriClick = onExternalUriClick,
                 onMessageLongClick = onMessageLongClick,
+                onPhoneNumberCopy = onPhoneNumberCopy,
             )
         }
 
@@ -91,6 +100,7 @@ internal fun ConversationMessageBubble(
                 onAttachmentClick = onAttachmentClick,
                 onExternalUriClick = onExternalUriClick,
                 onMessageLongClick = onMessageLongClick,
+                onPhoneNumberCopy = onPhoneNumberCopy,
             )
         }
     }
@@ -107,6 +117,7 @@ private fun ConversationMessageTextSurfaceBubble(
     onAttachmentClick: OnConversationAttachmentClick?,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
+    onPhoneNumberCopy: (String) -> Unit,
 ) {
     ConversationMessageBubbleSurface(
         modifier = modifier,
@@ -123,6 +134,7 @@ private fun ConversationMessageTextSurfaceBubble(
             onAttachmentClick = onAttachmentClick,
             onExternalUriClick = onExternalUriClick,
             onMessageLongClick = onMessageLongClick,
+            onPhoneNumberCopy = onPhoneNumberCopy,
         )
     }
 }
@@ -167,6 +179,7 @@ private fun ConversationMessageTextBubbleContent(
     onAttachmentClick: OnConversationAttachmentClick?,
     onExternalUriClick: (String) -> Unit,
     onMessageLongClick: () -> Unit,
+    onPhoneNumberCopy: (String) -> Unit,
 ) {
     Column(
         modifier = Modifier.padding(
@@ -182,6 +195,10 @@ private fun ConversationMessageTextBubbleContent(
             ),
             senderDisplayName = message.senderDisplayName,
             showSender = layout.showSender,
+            phoneNumber = message.senderNormalizedDestination
+                ?.takeUnless { isSelectionMode }
+                ?.takeIf(MmsSmsUtils::isPhoneNumber),
+            onPhoneNumberCopy = onPhoneNumberCopy,
         )
 
         when {
@@ -269,13 +286,29 @@ internal fun ConversationMessageSender(
     color: Color,
     senderDisplayName: String?,
     showSender: Boolean,
+    phoneNumber: String? = null,
+    onPhoneNumberCopy: (String) -> Unit = {},
 ) {
     if (!showSender || senderDisplayName == null) {
         return
     }
 
+    val hapticFeedback = LocalHapticFeedback.current
+    val copyLabel = stringResource(id = R.string.copy_to_clipboard)
+    val copyModifier = when (phoneNumber) {
+        null -> Modifier
+        else -> Modifier.combinedClickable(
+            onClick = {},
+            onLongClickLabel = copyLabel,
+            onLongClick = {
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                onPhoneNumberCopy(phoneNumber)
+            },
+        )
+    }
+
     Text(
-        modifier = modifier,
+        modifier = modifier.then(copyModifier),
         text = senderDisplayName,
         style = MaterialTheme.typography.labelMedium,
         color = color,

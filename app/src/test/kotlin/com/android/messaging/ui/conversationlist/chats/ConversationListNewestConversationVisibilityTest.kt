@@ -190,6 +190,7 @@ internal class ConversationListNewestConversationVisibilityTest {
             conversationArchiveEvents = ConversationArchiveEventsImpl(),
             defaultDispatcher = Dispatchers.Main,
             mainDispatcher = Dispatchers.Main,
+            conversationParticipantsRepository = mockk(relaxed = true),
         )
     }
 

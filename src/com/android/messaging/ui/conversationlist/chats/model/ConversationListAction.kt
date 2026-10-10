@@ -68,6 +68,10 @@ internal sealed interface ConversationListAction {
         val conversationId: ConversationId,
     ) : ListAction
 
+    data class AvatarQuickActionsOpened(
+        val conversationId: ConversationId,
+    ) : ListAction
+
     data class AvatarCallClicked(
         val destination: String,
     ) : ListAction

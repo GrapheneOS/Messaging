@@ -85,6 +85,7 @@ internal fun ConversationScreenContent(
     onMessageActionClick: (MessageId, ConversationMessageAction) -> Unit,
     onMessageLongClick: (MessageId) -> Unit,
     onMessageResendClick: (MessageId) -> Unit,
+    onPhoneNumberCopy: (String) -> Unit = {},
     onSimSelectorClick: () -> Unit,
     onUnblockClick: () -> Unit,
 ) {
@@ -136,6 +137,7 @@ internal fun ConversationScreenContent(
                     onMessageActionClick = onMessageActionClick,
                     onMessageLongClick = onMessageLongClick,
                     onMessageResendClick = onMessageResendClick,
+                    onPhoneNumberCopy = onPhoneNumberCopy,
                     onSimSelectorClick = onSimSelectorClick,
                     additionalTopContentPadding = messagesTopReservation,
                 )
@@ -202,6 +204,7 @@ private fun ConversationScreenPresentContent(
     onMessageActionClick: (MessageId, ConversationMessageAction) -> Unit,
     onMessageLongClick: (MessageId) -> Unit,
     onMessageResendClick: (MessageId) -> Unit,
+    onPhoneNumberCopy: (String) -> Unit,
     onSimSelectorClick: () -> Unit,
     additionalTopContentPadding: Dp,
 ) {
@@ -264,6 +267,7 @@ private fun ConversationScreenPresentContent(
         onMessageActionClick = onMessageActionClick,
         onMessageLongClick = onMessageLongClick,
         onMessageResendClick = onMessageResendClick,
+        onPhoneNumberCopy = onPhoneNumberCopy,
         onSimSelectorClick = onSimSelectorClick,
     )
 }

@@ -50,6 +50,7 @@ internal abstract class BaseConversationMessageRenderingTest {
         mockk<(ConversationMessageAction) -> Unit>(relaxed = true)
     protected val onMessageClick = mockk<() -> Unit>(relaxed = true)
     protected val onMessageLongClick = mockk<() -> Unit>(relaxed = true)
+    protected val onPhoneNumberCopy = mockk<(String) -> Unit>(relaxed = true)
     protected val onResendClick = mockk<() -> Unit>(relaxed = true)
     protected val onSimSelectorClick = mockk<() -> Unit>(relaxed = true)
 
@@ -80,6 +81,7 @@ internal abstract class BaseConversationMessageRenderingTest {
                     onMessageDownloadClick = onDownloadClick,
                     onMessageActionClick = onMessageActionClick,
                     onMessageLongClick = onMessageLongClick,
+                    onPhoneNumberCopy = onPhoneNumberCopy,
                     onMessageResendClick = onResendClick,
                     onSimSelectorClick = onSimSelectorClick,
                 )
