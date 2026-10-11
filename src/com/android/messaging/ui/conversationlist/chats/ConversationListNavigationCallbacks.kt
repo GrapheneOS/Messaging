@@ -15,6 +15,7 @@ internal class ConversationListNavigationCallbacks(
     val onCloseConversation: (ConversationId) -> Unit,
     val onNavigateToArchivedConversations: () -> Unit,
     val onNavigateToBlockedParticipants: () -> Unit,
+    val onNavigateToSearch: () -> Unit,
     val onNavigateToSettings: () -> Unit,
 )
 
@@ -29,6 +30,7 @@ internal fun ConversationListNavEvents(
                 NavEvent.OpenNewChat -> onNavigateToNewChat()
                 NavEvent.OpenArchivedConversations -> onNavigateToArchivedConversations()
                 NavEvent.OpenBlockedParticipants -> onNavigateToBlockedParticipants()
+                NavEvent.OpenSearch -> onNavigateToSearch()
                 NavEvent.OpenSettings -> onNavigateToSettings()
 
                 is NavEvent.OpenConversation -> {

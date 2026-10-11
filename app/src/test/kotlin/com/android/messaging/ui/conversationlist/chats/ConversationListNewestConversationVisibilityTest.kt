@@ -118,6 +118,7 @@ internal class ConversationListNewestConversationVisibilityTest {
             onCloseConversation = {},
             onNavigateToArchivedConversations = {},
             onNavigateToBlockedParticipants = {},
+            onNavigateToSearch = {},
             onNavigateToSettings = {},
         )
         val effectHandler = object : ConversationListEffectHandler {

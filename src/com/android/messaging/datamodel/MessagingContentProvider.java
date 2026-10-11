@@ -21,6 +21,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.MatrixCursor;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
@@ -46,6 +47,9 @@ import com.google.common.annotations.VisibleForTesting;
 import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * A centralized provider for Uris exposed by Bugle.
@@ -97,6 +101,12 @@ public class MessagingContentProvider extends ContentProvider {
 
     public static final Uri DRAFT_IMAGES_URI = Uri.parse(CONTENT_AUTHORITY +
             DRAFT_IMAGES_QUERY);
+
+    // Message text search query
+    private static final String SEARCH_QUERY = "search";
+    private static final String SEARCH_QUERY_PARAMETER = "q";
+
+    public static final Uri SEARCH_URI = Uri.parse(CONTENT_AUTHORITY + SEARCH_QUERY);
 
     /**
      * Notifies that <i>all</i> data exposed by the provider needs to be refreshed.
@@ -155,6 +165,7 @@ public class MessagingContentProvider extends ContentProvider {
     private static final int CONVERSATION_IMAGES_QUERY_CODE = 50;
     private static final int DRAFT_IMAGES_QUERY_CODE = 60;
     private static final int PARTICIPANTS_QUERY_CODE = 70;
+    private static final int SEARCH_QUERY_CODE = 80;
 
     // TODO: Move to a better structured URI namespace.
     private static final UriMatcher sURIMatcher = new UriMatcher(UriMatcher.NO_MATCH);
@@ -170,6 +181,15 @@ public class MessagingContentProvider extends ContentProvider {
                 CONVERSATION_IMAGES_QUERY_CODE);
         sURIMatcher.addURI(AUTHORITY, DRAFT_IMAGES_QUERY + "/*",
                 DRAFT_IMAGES_QUERY_CODE);
+        sURIMatcher.addURI(AUTHORITY, SEARCH_QUERY, SEARCH_QUERY_CODE);
+    }
+
+    /**
+     * Build a URI used to search message text. Matches are returned as rows containing the
+     * matching message, its conversation, and its sender.
+     */
+    public static Uri buildSearchUri(final String query) {
+        return SEARCH_URI.buildUpon().appendQueryParameter(SEARCH_QUERY_PARAMETER, query).build();
     }
 
     /**
@@ -399,6 +419,8 @@ public class MessagingContentProvider extends ContentProvider {
                     throw new IllegalArgumentException("Malformed URI " + uri);
                 }
                 break;
+            case SEARCH_QUERY_CODE:
+                return querySearchMessages(uri);
             default: {
                 throw new IllegalArgumentException("Unknown URI " + uri);
             }
@@ -435,6 +457,53 @@ public class MessagingContentProvider extends ContentProvider {
         );
 
         return cursor;
+    }
+
+    private Cursor querySearchMessages(final Uri uri) {
+        final String rawQuery = uri.getQueryParameter(SEARCH_QUERY_PARAMETER);
+        if (rawQuery == null || rawQuery.isEmpty()) {
+            return null;
+        }
+
+        // SQLite's LIKE only folds ASCII case, so match in Java where case folding is Unicode
+        // aware. LITERAL keeps every character of the query, including regex metacharacters,
+        // as plain text.
+        final Pattern pattern = Pattern.compile(rawQuery,
+                Pattern.LITERAL | Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+        final MatrixCursor results = new MatrixCursor(MessageSearchQuery.COLUMNS);
+        final Set<String> matchedMessageIds = new HashSet<>();
+
+        try (Cursor parts = getDatabaseWrapper().rawQuery(MessageSearchQuery.SQL, null)) {
+            final int columnCount = MessageSearchQuery.COLUMNS.length;
+            final int[] columnIndexes = new int[columnCount];
+            for (int i = 0; i < columnCount; i++) {
+                columnIndexes[i] = parts.getColumnIndexOrThrow(MessageSearchQuery.COLUMNS[i]);
+            }
+            final int messageIdIndex = parts.getColumnIndexOrThrow(MessageSearchQuery.MESSAGE_ID);
+            final int snippetIndex = parts.getColumnIndexOrThrow(MessageSearchQuery.SNIPPET);
+
+            while (results.getCount() < MessageSearchQuery.MAX_RESULTS && parts.moveToNext()) {
+                final String text = parts.getString(snippetIndex);
+                if (text == null || !pattern.matcher(text).find()) {
+                    continue;
+                }
+                // A message can have several text parts; list it once, by its newest match.
+                if (!matchedMessageIds.add(parts.getString(messageIdIndex))) {
+                    continue;
+                }
+
+                final Object[] row = new Object[columnCount];
+                for (int i = 0; i < columnCount; i++) {
+                    final int index = columnIndexes[i];
+                    row[i] = parts.getType(index) == Cursor.FIELD_TYPE_INTEGER
+                            ? parts.getLong(index)
+                            : parts.getString(index);
+                }
+                results.addRow(row);
+            }
+        }
+
+        return results;
     }
 
     private static int parseLimit(final String limit) {

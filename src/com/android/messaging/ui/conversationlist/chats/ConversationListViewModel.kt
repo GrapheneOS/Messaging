@@ -424,6 +424,10 @@ internal class ConversationListViewModel @Inject constructor(
                 _effects.trySend(Effect.ScrollToTop)
             }
 
+            Action.SearchClicked -> {
+                _navigationEvents.trySend(NavEvent.OpenSearch)
+            }
+
             Action.SettingsClicked -> {
                 _navigationEvents.trySend(NavEvent.OpenSettings)
             }
