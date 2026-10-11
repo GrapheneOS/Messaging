@@ -227,7 +227,7 @@ internal class ConversationMessageAccessibilityActionsTest :
         )
 
         val config = composeTestRule
-            .onNodeWithText(text = FILE_CONTENT_TYPE)
+            .onNodeWithText(text = targetContext.getString(R.string.pdf_attachment))
             .fetchSemanticsNode()
             .config
 
