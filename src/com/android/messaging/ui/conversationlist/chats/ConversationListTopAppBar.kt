@@ -2,7 +2,11 @@ package com.android.messaging.ui.conversationlist.chats
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -44,6 +48,13 @@ internal fun ConversationListTopAppBar(
             )
         },
         actions = {
+            IconButton(onClick = { onAction(Action.SearchClicked) }) {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = stringResource(R.string.search),
+                )
+            }
+
             ConversationListOverflowMenu(
                 hasBlockedParticipants = hasBlockedParticipants,
                 isDebugEnabled = isDebugEnabled,

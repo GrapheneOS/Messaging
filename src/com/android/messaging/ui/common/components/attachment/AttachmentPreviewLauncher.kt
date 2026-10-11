@@ -43,7 +43,7 @@ internal suspend fun openAttachmentPreview(
         else -> {
             openGenericAttachmentPreview(
                 context = context,
-                attachmentUri = normalizeAttachmentUriForIntent(attachmentUri = attachmentUri),
+                attachmentUri = normalizeFileUriForExternalViewer(attachmentUri = attachmentUri),
                 contentType = contentType,
             )
         }
@@ -81,5 +81,28 @@ private suspend fun normalizeAttachmentUriForIntent(
                 UriUtil.persistContentToScratchSpace(attachmentUri) ?: attachmentUri
             }
         }
+    }
+}
+
+/**
+ * File attachments (e.g. PDFs) are untrusted input, so they are never decoded or rendered in
+ * this process. They are only handed to an external viewer after the user explicitly taps the
+ * attachment, and only as a one-off read-granted copy in our scratch space. On GrapheneOS the
+ * default handler for PDFs is the sandboxed PdfViewer; we deliberately do not register this app
+ * as a generic handler for file content types. The telephony MMS provider's content URIs cannot
+ * be read by that viewer, so copy the bytes first.
+ */
+private suspend fun normalizeFileUriForExternalViewer(
+    attachmentUri: Uri,
+): Uri {
+    return when {
+        attachmentUri.scheme == ContentResolver.SCHEME_FILE ||
+            attachmentUri.authority == "mms" -> {
+            withContext(context = Dispatchers.IO) {
+                UriUtil.persistContentToScratchSpace(attachmentUri) ?: attachmentUri
+            }
+        }
+
+        else -> attachmentUri
     }
 }

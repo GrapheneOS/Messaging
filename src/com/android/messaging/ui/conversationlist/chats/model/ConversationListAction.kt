@@ -94,6 +94,7 @@ internal sealed interface ConversationListAction {
     data object BlockedParticipantsClicked : NavigationAction
     data object DebugOptionsClicked : NavigationAction
     data object ScrollToTopClicked : NavigationAction
+    data object SearchClicked : NavigationAction
     data object SettingsClicked : NavigationAction
     data object StartChatClicked : NavigationAction
     // endregion
