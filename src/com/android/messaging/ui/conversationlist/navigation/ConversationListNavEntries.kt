@@ -27,6 +27,7 @@ import com.android.messaging.ui.conversationlist.chats.rememberConversationListE
 import com.android.messaging.ui.navigation.LocalNavigator
 import com.android.messaging.ui.navigation.Navigator
 import com.android.messaging.ui.navigation.paneTitleMetadata
+import com.android.messaging.ui.search.navigation.SearchNavKey
 
 internal fun EntryProviderScope<NavKey>.conversationListEntries() {
     entry<ConversationListNavKey>(
@@ -67,6 +68,9 @@ private fun conversationListRouteContent(): @Composable (ConversationListNavKey)
                 },
                 onNavigateToBlockedParticipants = {
                     appNavigator.push(destination = BlockedParticipantsNavKey)
+                },
+                onNavigateToSearch = {
+                    appNavigator.push(destination = SearchNavKey)
                 },
                 onNavigateToSettings = {
                     appNavigator.push(destination = SettingsNavKey)

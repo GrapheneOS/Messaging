@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.lifecycle.SavedStateHandle
 import com.android.messaging.data.appsettings.repository.AppSettingsRepository
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentMetadata
 import com.android.messaging.data.conversation.repository.ConversationVCardMetadataRepository
 import com.android.messaging.data.conversation.repository.ConversationsRepository
@@ -44,6 +45,12 @@ internal interface ConversationMessagesDelegate :
     fun refresh()
 
     fun loadOlderMessages()
+
+    /**
+     * Grows the window through [messageId] when it is older than the loaded messages. Returns
+     * false when there is nothing to load, such as for a deleted message.
+     */
+    suspend fun loadMessagesThrough(messageId: MessageId): Boolean
 }
 
 internal class ConversationMessagesDelegateImpl @Inject constructor(
@@ -132,6 +139,32 @@ internal class ConversationMessagesDelegateImpl @Inject constructor(
         if (hasOlderMessages.value) {
             growWindow()
         }
+    }
+
+    override suspend fun loadMessagesThrough(messageId: MessageId): Boolean {
+        val windowState = windowStates.value
+        val conversationId = windowState.conversationId ?: return false
+
+        val position = conversationsRepository.getConversationMessagePosition(
+            conversationId = ConversationId(conversationId),
+            messageId = messageId,
+        )
+
+        val isOlderThanWindow = position > windowState.size
+
+        if (isOlderThanWindow) {
+            windowStates.update { currentWindowState ->
+                when (currentWindowState.conversationId) {
+                    conversationId -> currentWindowState.copy(
+                        size = maxOf(currentWindowState.size, position),
+                    )
+
+                    else -> currentWindowState
+                }
+            }
+        }
+
+        return isOlderThanWindow
     }
 
     private fun growWindow() {

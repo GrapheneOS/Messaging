@@ -19,6 +19,7 @@ import com.android.messaging.data.conversation.store.ConversationPinStore
 import com.android.messaging.data.conversation.store.ConversationReadStore
 import com.android.messaging.data.conversation.store.ConversationSelfIdStore
 import com.android.messaging.data.conversationsettings.repository.ConversationNotificationRepository
+import com.android.messaging.datamodel.DataModel
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
 import com.android.messaging.datamodel.MessagingContentProvider
@@ -74,6 +75,15 @@ internal interface ConversationsRepository {
         conversationId: ConversationId,
         messageId: MessageId,
     ): ConversationMessageData?
+
+    /**
+     * Size of the [getConversationMessages] window that reaches [messageId], or 0 when the
+     * message is not in the conversation.
+     */
+    suspend fun getConversationMessagePosition(
+        conversationId: ConversationId,
+        messageId: MessageId,
+    ): Int
 
     fun deleteMessages(messageIds: Collection<MessageId>)
 
@@ -219,6 +229,25 @@ internal class ConversationsRepositoryImpl @Inject constructor(
                 conversationId = conversationId,
                 messageId = messageId,
             )
+        }
+    }
+
+    override suspend fun getConversationMessagePosition(
+        conversationId: ConversationId,
+        messageId: MessageId,
+    ): Int {
+        return withContext(context = messagingDbDispatcher) {
+            DataModel.get().database
+                .rawQuery(
+                    ConversationMessageData.getConversationMessagePositionQuerySql(),
+                    arrayOf(conversationId.value, messageId.value, conversationId.value),
+                )
+                .use { cursor ->
+                    when {
+                        cursor.moveToFirst() -> cursor.getInt(0)
+                        else -> 0
+                    }
+                }
         }
     }
 

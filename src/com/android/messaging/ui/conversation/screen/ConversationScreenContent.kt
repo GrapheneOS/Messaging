@@ -68,6 +68,7 @@ private class NewMessageSnackbarVisuals(
 }
 
 @Composable
+@Suppress("LongMethod") // Long arguments list, not too much logic, so it's ok to suppress
 internal fun ConversationScreenContent(
     modifier: Modifier = Modifier,
     conversationId: ConversationId?,
@@ -79,6 +80,7 @@ internal fun ConversationScreenContent(
     onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onLoadOlderMessages: () -> Unit,
+    onLoadMessagesThrough: suspend (MessageId) -> Boolean,
     onMessageClick: (MessageId) -> Unit,
     onMessageAvatarClick: (MessageId) -> Unit,
     onMessageDownloadClick: (MessageId) -> Unit,
@@ -130,6 +132,7 @@ internal fun ConversationScreenContent(
                     onAttachmentClick = onAttachmentClick,
                     onExternalUriClick = onExternalUriClick,
                     onLoadOlderMessages = onLoadOlderMessages,
+                    onLoadMessagesThrough = onLoadMessagesThrough,
                     onMessageClick = onMessageClick,
                     onMessageAvatarClick = onMessageAvatarClick,
                     onMessageDownloadClick = onMessageDownloadClick,
@@ -196,6 +199,7 @@ private fun ConversationScreenPresentContent(
     onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onLoadOlderMessages: () -> Unit,
+    onLoadMessagesThrough: suspend (MessageId) -> Boolean,
     onMessageClick: (MessageId) -> Unit,
     onMessageAvatarClick: (MessageId) -> Unit,
     onMessageDownloadClick: (MessageId) -> Unit,
@@ -234,6 +238,7 @@ private fun ConversationScreenPresentContent(
         pendingScrollMessageId = pendingScrollMessageId,
         messages = messagesState.messages,
         listState = messagesListState,
+        onLoadMessagesThrough = onLoadMessagesThrough,
         onConsumed = onPendingScrollMessageIdConsumed,
     )
 
@@ -453,6 +458,7 @@ private fun ScrollToTargetMessage(
     pendingScrollMessageId: MessageId?,
     messages: ImmutableList<ConversationMessageUiModel>,
     listState: LazyListState,
+    onLoadMessagesThrough: suspend (MessageId) -> Boolean,
     onConsumed: () -> Unit,
 ) {
     LaunchedEffect(
@@ -469,11 +475,13 @@ private fun ScrollToTargetMessage(
         }
 
         if (messageIndex < 0) {
-            // The message is gone from the window: deleted, or pushed past the newest ones by
-            // messages that arrived while the widget was stale. Consume without scrolling rather
-            // than growing the window until it turns up - a deleted id would grow it over the
-            // whole conversation, which is the load this screen exists to avoid.
-            onConsumed()
+            // The message is older than the window, e.g. an old search result: grow the window
+            // just far enough to reach it, and scroll once it loads. A deleted id has nothing to
+            // load, so consume it without scrolling instead of growing the window over the whole
+            // conversation, which is the load this screen exists to avoid.
+            if (!onLoadMessagesThrough(pendingScrollMessageId)) {
+                onConsumed()
+            }
             return@LaunchedEffect
         }
 

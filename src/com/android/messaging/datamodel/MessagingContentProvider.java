@@ -23,6 +23,7 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.os.CancellationSignal;
 import android.os.ParcelFileDescriptor;
 import android.text.TextUtils;
 
@@ -98,6 +99,12 @@ public class MessagingContentProvider extends ContentProvider {
     public static final Uri DRAFT_IMAGES_URI = Uri.parse(CONTENT_AUTHORITY +
             DRAFT_IMAGES_QUERY);
 
+    // Message text search query
+    private static final String SEARCH_QUERY = "search";
+    private static final String SEARCH_QUERY_PARAMETER = "q";
+
+    public static final Uri SEARCH_URI = Uri.parse(CONTENT_AUTHORITY + SEARCH_QUERY);
+
     /**
      * Notifies that <i>all</i> data exposed by the provider needs to be refreshed.
      * <p>
@@ -155,6 +162,7 @@ public class MessagingContentProvider extends ContentProvider {
     private static final int CONVERSATION_IMAGES_QUERY_CODE = 50;
     private static final int DRAFT_IMAGES_QUERY_CODE = 60;
     private static final int PARTICIPANTS_QUERY_CODE = 70;
+    private static final int SEARCH_QUERY_CODE = 80;
 
     // TODO: Move to a better structured URI namespace.
     private static final UriMatcher sURIMatcher = new UriMatcher(UriMatcher.NO_MATCH);
@@ -170,6 +178,15 @@ public class MessagingContentProvider extends ContentProvider {
                 CONVERSATION_IMAGES_QUERY_CODE);
         sURIMatcher.addURI(AUTHORITY, DRAFT_IMAGES_QUERY + "/*",
                 DRAFT_IMAGES_QUERY_CODE);
+        sURIMatcher.addURI(AUTHORITY, SEARCH_QUERY, SEARCH_QUERY_CODE);
+    }
+
+    /**
+     * Build a URI used to search message text. Matches are returned as rows containing the
+     * matching message, its conversation, and its sender.
+     */
+    public static Uri buildSearchUri(final String query) {
+        return SEARCH_URI.buildUpon().appendQueryParameter(SEARCH_QUERY_PARAMETER, query).build();
     }
 
     /**
@@ -293,6 +310,16 @@ public class MessagingContentProvider extends ContentProvider {
     }
 
     @Override
+    public Cursor query(final Uri uri, final String[] projection, final String selection,
+            final String[] selectionArgs, final String sortOrder,
+            final CancellationSignal cancellationSignal) {
+        if (sURIMatcher.match(uri) == SEARCH_QUERY_CODE) {
+            return querySearchMessages(uri, cancellationSignal);
+        }
+        return query(uri, projection, selection, selectionArgs, sortOrder);
+    }
+
+    @Override
     public Cursor query(final Uri uri, final String[] projection, String selection,
             final String[] selectionArgs, String sortOrder) {
 
@@ -399,6 +426,8 @@ public class MessagingContentProvider extends ContentProvider {
                     throw new IllegalArgumentException("Malformed URI " + uri);
                 }
                 break;
+            case SEARCH_QUERY_CODE:
+                return querySearchMessages(uri, null);
             default: {
                 throw new IllegalArgumentException("Unknown URI " + uri);
             }
@@ -435,6 +464,17 @@ public class MessagingContentProvider extends ContentProvider {
         );
 
         return cursor;
+    }
+
+    private Cursor querySearchMessages(final Uri uri,
+            final CancellationSignal cancellationSignal) {
+        final String query = uri.getQueryParameter(SEARCH_QUERY_PARAMETER);
+        if (TextUtils.isEmpty(query)) {
+            return null;
+        }
+
+        return getDatabaseWrapper().rawQuery(MessageSearchQuery.SQL,
+                new String[] { MessageSearchQuery.likePattern(query) }, cancellationSignal);
     }
 
     private static int parseLimit(final String limit) {

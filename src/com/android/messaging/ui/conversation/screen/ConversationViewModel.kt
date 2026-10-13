@@ -88,6 +88,7 @@ internal interface ConversationScreenModel :
     )
 
     fun onLoadOlderMessages()
+    suspend fun loadMessagesThrough(messageId: MessageId): Boolean
     fun onMessageAvatarClick(messageId: MessageId)
 
     fun onCallClick()
@@ -478,6 +479,10 @@ internal class ConversationViewModel @Inject constructor(
 
     override fun onLoadOlderMessages() {
         conversationMessagesDelegate.loadOlderMessages()
+    }
+
+    override suspend fun loadMessagesThrough(messageId: MessageId): Boolean {
+        return conversationMessagesDelegate.loadMessagesThrough(messageId = messageId)
     }
 
     override fun onMessageAvatarClick(messageId: MessageId) {

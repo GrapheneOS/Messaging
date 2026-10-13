@@ -177,6 +177,14 @@
 
     <!-- Content description text for Back button on the action bar -->
     <string name="back">Back</string>
+    <!-- Title of the message search screen. [CHAR LIMIT=25] -->
+    <string name="search">Search</string>
+    <!-- Hint shown in the search field when empty. [CHAR LIMIT=40] -->
+    <string name="search_messages_hint">Search messages</string>
+    <!-- Shown when a search has no matches. [CHAR LIMIT=40] -->
+    <string name="search_no_results">No results</string>
+    <!-- Content description for the clear-search button. [CHAR LIMIT=25] -->
+    <string name="search_clear">Clear search</string>
     <string name="close_selection">Close selection</string>
     <string name="more_options">More options</string>
     <!-- Action menu title for showing archived conversations -->

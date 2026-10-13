@@ -178,6 +178,7 @@ internal fun ConversationScreenScaffold(
             onAttachmentClick = screenModel::onMessageAttachmentClicked,
             onExternalUriClick = screenModel::onExternalUriClicked,
             onLoadOlderMessages = screenModel::onLoadOlderMessages,
+            onLoadMessagesThrough = screenModel::loadMessagesThrough,
             onMessageClick = screenModel::onMessageClick,
             onMessageAvatarClick = screenModel::onMessageAvatarClick,
             onMessageDownloadClick = screenModel::onMessageDownloadClick,
