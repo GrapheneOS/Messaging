@@ -24,6 +24,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteFullException;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.database.sqlite.SQLiteStatement;
+import android.os.CancellationSignal;
 import android.util.SparseArray;
 
 import com.android.messaging.Factory;
@@ -320,6 +321,11 @@ public class DatabaseWrapper {
     }
 
     public Cursor rawQuery(final String sql, final String[] args) {
+        return rawQuery(sql, args, null);
+    }
+
+    public Cursor rawQuery(final String sql, final String[] args,
+            final CancellationSignal cancellationSignal) {
         if (mExplainQueryPlanRegexp != null) {
             explainQueryPlan(mDatabase, sql, args);
         }
@@ -328,7 +334,7 @@ public class DatabaseWrapper {
             t1 = System.currentTimeMillis();
         }
         maybePlayDebugNoise();
-        final Cursor cursor = mDatabase.rawQuery(sql, args);
+        final Cursor cursor = mDatabase.rawQuery(sql, args, cancellationSignal);
         if (mLog) {
             printTiming(
                     t1,

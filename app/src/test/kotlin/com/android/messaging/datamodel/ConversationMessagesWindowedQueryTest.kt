@@ -10,6 +10,7 @@ import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.DatabaseHelper.MessageColumns
 import com.android.messaging.datamodel.DatabaseHelper.PartColumns
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
+import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.testutil.installTestFactory
 import io.mockk.unmockkAll
@@ -27,6 +28,8 @@ import org.robolectric.util.ReflectionHelpers
 class ConversationMessagesWindowedQueryTest {
 
     private val context get() = RuntimeEnvironment.getApplication().applicationContext
+
+    private lateinit var database: SQLiteDatabase
 
     @Before
     fun setUp() {
@@ -151,6 +154,27 @@ class ConversationMessagesWindowedQueryTest {
         }
     }
 
+    /**
+     * Opening an old message grows the window to its position, so a window of exactly that size
+     * has to be the first one that holds the message.
+     */
+    @Test
+    fun messagePositionQuery_isTheSmallestWindowHoldingTheMessage() {
+        withPopulatedDatabase { conversationId, messageIds ->
+            val position = messagePosition(conversationId, messageIds[7])
+
+            assertEquals(MESSAGE_COUNT - 7, position)
+            assertEquals(messageIds[7], windowedMessageIds(position, conversationId).last())
+        }
+    }
+
+    @Test
+    fun messagePositionQuery_withAMissingMessage_countsNothing() {
+        withPopulatedDatabase { conversationId, _ ->
+            assertEquals(0, messagePosition(conversationId, MISSING_MESSAGE_ID))
+        }
+    }
+
     private fun withPopulatedDatabase(
         messagesWithoutParts: Int = 0,
         multipartTexts: List<String> = emptyList(),
@@ -158,6 +182,7 @@ class ConversationMessagesWindowedQueryTest {
     ) {
         SQLiteDatabase.create(null).use { db ->
             DatabaseHelper.rebuildTables(db)
+            database = db
             val senderId = db.insertParticipant()
             val conversationId = db.insertConversation()
             val otherConversationId = db.insertConversation()
@@ -226,6 +251,18 @@ class ConversationMessagesWindowedQueryTest {
         // the field it writes is written here instead. Nothing else in the provider is replaced.
         ReflectionHelpers.setField(provider, "mDatabaseWrapper", DatabaseWrapper(context, db))
         ShadowContentResolver.registerProviderInternal(MessagingContentProvider.AUTHORITY, provider)
+    }
+
+    private fun messagePosition(conversationId: String, messageId: String): Int {
+        return database
+            .rawQuery(
+                ConversationMessageData.getConversationMessagePositionQuerySql(),
+                arrayOf(conversationId, messageId, conversationId),
+            )
+            .use { cursor ->
+                cursor.moveToFirst()
+                cursor.getInt(0)
+            }
     }
 
     private fun windowedMessageTexts(limit: Int, conversationId: String): List<String> {
@@ -358,5 +395,6 @@ class ConversationMessagesWindowedQueryTest {
 
         private val MULTIPART_TEXTS = listOf("first part", "second part")
         private const val PARTS_DIVIDER = '|'
+        private const val MISSING_MESSAGE_ID = "999999"
     }
 }

@@ -66,6 +66,7 @@ internal fun ConversationScreenContentPreview(
             pendingScrollMessageId = null,
             onPendingScrollMessageIdConsumed = {},
             onLoadOlderMessages = {},
+            onLoadMessagesThrough = { false },
             onAttachmentClick = { _, _, _ -> },
             onExternalUriClick = {},
             onMessageClick = {},

@@ -23,22 +23,13 @@ object MessageSearchQuery {
 
     const val MAX_RESULTS = 100
 
-    @JvmField
-    val COLUMNS: Array<String> = arrayOf(
-        MESSAGE_ID,
-        CONVERSATION_ID,
-        SNIPPET,
-        SORT_TIMESTAMP,
-        CONVERSATION_NAME,
-        SENDER_FULL_NAME,
-        SENDER_FIRST_NAME,
-        SENDER_DESTINATION,
-    )
+    private const val LIKE_ESCAPE = '\\'
 
     /**
-     * Every plain-text part, newest first, with its conversation and sender. The text is matched
-     * by the provider rather than with LIKE because SQLite's LIKE only folds case for ASCII, which
-     * would make search case-sensitive for most non-Latin scripts.
+     * Messages with a plain-text part matching the LIKE pattern bound as the only argument, newest
+     * first, with their conversation and sender. Matching stays in SQLite so a search never pulls
+     * message text into the app, and SQLite stops sorting at [MAX_RESULTS]. LIKE folds case for
+     * ASCII only.
      *
      * Drafts are real rows in the messages table, so they must be excluded here just like every
      * other message query does.
@@ -50,8 +41,8 @@ object MessageSearchQuery {
         append("p.").append(PartColumns.CONVERSATION_ID).append(" AS ").append(CONVERSATION_ID)
             .append(", ")
         append("p.").append(PartColumns.TEXT).append(" AS ").append(SNIPPET).append(", ")
-        append("p.").append(PartColumns.TIMESTAMP).append(" AS ").append(SORT_TIMESTAMP)
-            .append(", ")
+        append("m.").append(MessageColumns.RECEIVED_TIMESTAMP).append(" AS ")
+            .append(SORT_TIMESTAMP).append(", ")
         append("c.").append(ConversationColumns.NAME).append(" AS ").append(CONVERSATION_NAME)
             .append(", ")
         append("pr.").append(ParticipantColumns.FULL_NAME).append(" AS ")
@@ -72,10 +63,25 @@ object MessageSearchQuery {
             .append(ParticipantColumns._ID).append(" ")
         append("WHERE p.").append(PartColumns.CONTENT_TYPE).append(" = '")
             .append(ContentType.TEXT_PLAIN).append("' ")
-        append("AND p.").append(PartColumns.TEXT).append(" IS NOT NULL ")
+        append("AND p.").append(PartColumns.TEXT).append(" LIKE ? ESCAPE '")
+            .append(LIKE_ESCAPE).append("' ")
         append("AND m.").append(MessageColumns.STATUS).append(" <> ")
             .append(MessageData.BUGLE_STATUS_OUTGOING_DRAFT).append(" ")
-        append("ORDER BY p.").append(PartColumns.TIMESTAMP).append(" DESC, p.")
-            .append(PartColumns._ID).append(" DESC")
+        // A message can have several text parts; list it once.
+        append("GROUP BY p.").append(PartColumns.MESSAGE_ID).append(" ")
+        append("ORDER BY m.").append(MessageColumns.RECEIVED_TIMESTAMP).append(" DESC, p.")
+            .append(PartColumns.MESSAGE_ID).append(" DESC ")
+        append("LIMIT ").append(MAX_RESULTS)
+    }
+
+    /** Matches [query] anywhere in the text, with `%`, `_` and the escape character literal. */
+    @JvmStatic
+    fun likePattern(query: String): String {
+        val escaped = query
+            .replace("$LIKE_ESCAPE", "$LIKE_ESCAPE$LIKE_ESCAPE")
+            .replace("%", "$LIKE_ESCAPE%")
+            .replace("_", "${LIKE_ESCAPE}_")
+
+        return "%$escaped%"
     }
 }

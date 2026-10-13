@@ -21,9 +21,9 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
-import android.database.MatrixCursor;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.os.CancellationSignal;
 import android.os.ParcelFileDescriptor;
 import android.text.TextUtils;
 
@@ -47,9 +47,6 @@ import com.google.common.annotations.VisibleForTesting;
 import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.regex.Pattern;
 
 /**
  * A centralized provider for Uris exposed by Bugle.
@@ -313,6 +310,16 @@ public class MessagingContentProvider extends ContentProvider {
     }
 
     @Override
+    public Cursor query(final Uri uri, final String[] projection, final String selection,
+            final String[] selectionArgs, final String sortOrder,
+            final CancellationSignal cancellationSignal) {
+        if (sURIMatcher.match(uri) == SEARCH_QUERY_CODE) {
+            return querySearchMessages(uri, cancellationSignal);
+        }
+        return query(uri, projection, selection, selectionArgs, sortOrder);
+    }
+
+    @Override
     public Cursor query(final Uri uri, final String[] projection, String selection,
             final String[] selectionArgs, String sortOrder) {
 
@@ -420,7 +427,7 @@ public class MessagingContentProvider extends ContentProvider {
                 }
                 break;
             case SEARCH_QUERY_CODE:
-                return querySearchMessages(uri);
+                return querySearchMessages(uri, null);
             default: {
                 throw new IllegalArgumentException("Unknown URI " + uri);
             }
@@ -459,51 +466,15 @@ public class MessagingContentProvider extends ContentProvider {
         return cursor;
     }
 
-    private Cursor querySearchMessages(final Uri uri) {
-        final String rawQuery = uri.getQueryParameter(SEARCH_QUERY_PARAMETER);
-        if (rawQuery == null || rawQuery.isEmpty()) {
+    private Cursor querySearchMessages(final Uri uri,
+            final CancellationSignal cancellationSignal) {
+        final String query = uri.getQueryParameter(SEARCH_QUERY_PARAMETER);
+        if (TextUtils.isEmpty(query)) {
             return null;
         }
 
-        // SQLite's LIKE only folds ASCII case, so match in Java where case folding is Unicode
-        // aware. LITERAL keeps every character of the query, including regex metacharacters,
-        // as plain text.
-        final Pattern pattern = Pattern.compile(rawQuery,
-                Pattern.LITERAL | Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-        final MatrixCursor results = new MatrixCursor(MessageSearchQuery.COLUMNS);
-        final Set<String> matchedMessageIds = new HashSet<>();
-
-        try (Cursor parts = getDatabaseWrapper().rawQuery(MessageSearchQuery.SQL, null)) {
-            final int columnCount = MessageSearchQuery.COLUMNS.length;
-            final int[] columnIndexes = new int[columnCount];
-            for (int i = 0; i < columnCount; i++) {
-                columnIndexes[i] = parts.getColumnIndexOrThrow(MessageSearchQuery.COLUMNS[i]);
-            }
-            final int messageIdIndex = parts.getColumnIndexOrThrow(MessageSearchQuery.MESSAGE_ID);
-            final int snippetIndex = parts.getColumnIndexOrThrow(MessageSearchQuery.SNIPPET);
-
-            while (results.getCount() < MessageSearchQuery.MAX_RESULTS && parts.moveToNext()) {
-                final String text = parts.getString(snippetIndex);
-                if (text == null || !pattern.matcher(text).find()) {
-                    continue;
-                }
-                // A message can have several text parts; list it once, by its newest match.
-                if (!matchedMessageIds.add(parts.getString(messageIdIndex))) {
-                    continue;
-                }
-
-                final Object[] row = new Object[columnCount];
-                for (int i = 0; i < columnCount; i++) {
-                    final int index = columnIndexes[i];
-                    row[i] = parts.getType(index) == Cursor.FIELD_TYPE_INTEGER
-                            ? parts.getLong(index)
-                            : parts.getString(index);
-                }
-                results.addRow(row);
-            }
-        }
-
-        return results;
+        return getDatabaseWrapper().rawQuery(MessageSearchQuery.SQL,
+                new String[] { MessageSearchQuery.likePattern(query) }, cancellationSignal);
     }
 
     private static int parseLimit(final String limit) {

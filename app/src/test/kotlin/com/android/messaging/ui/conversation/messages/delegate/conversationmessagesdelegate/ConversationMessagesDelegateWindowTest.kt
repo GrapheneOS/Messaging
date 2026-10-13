@@ -6,6 +6,7 @@ import com.android.messaging.data.conversation.model.message.ConversationMessage
 import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagesUiState
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -19,6 +20,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -89,6 +92,48 @@ internal class ConversationMessagesDelegateWindowTest : BaseConversationMessages
             delegate.loadOlderMessages()
             runCurrent()
 
+            assertEquals(DEFAULT_WINDOW, windowSizes().first())
+        }
+    }
+
+    @Test
+    fun loadMessagesThrough_withAMessageOlderThanTheWindow_growsTheWindowToReachIt() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val windowSizes = givenWindowedConversationMessages(
+                loadedMessageCount = DEFAULT_WINDOW,
+                hasMore = true,
+            )
+            givenMessagePosition(position = DEFAULT_WINDOW + 1)
+            val delegate = createBoundDelegate(
+                conversationIdFlow = MutableStateFlow(CONVERSATION_ID),
+            )
+            runCurrent()
+
+            val isLoading = delegate.loadMessagesThrough(messageId = OLD_MESSAGE_ID)
+            runCurrent()
+
+            assertTrue(isLoading)
+            assertEquals(DEFAULT_WINDOW + 1, windowSizes().first())
+        }
+    }
+
+    @Test
+    fun loadMessagesThrough_withAMissingMessage_doesNotGrowTheWindow() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val windowSizes = givenWindowedConversationMessages(
+                loadedMessageCount = DEFAULT_WINDOW,
+                hasMore = true,
+            )
+            givenMessagePosition(position = 0)
+            val delegate = createBoundDelegate(
+                conversationIdFlow = MutableStateFlow(CONVERSATION_ID),
+            )
+            runCurrent()
+
+            val isLoading = delegate.loadMessagesThrough(messageId = OLD_MESSAGE_ID)
+            runCurrent()
+
+            assertFalse(isLoading)
             assertEquals(DEFAULT_WINDOW, windowSizes().first())
         }
     }
@@ -202,6 +247,15 @@ internal class ConversationMessagesDelegateWindowTest : BaseConversationMessages
         return { capturedWindowSizes.captured }
     }
 
+    private fun givenMessagePosition(position: Int) {
+        coEvery {
+            conversationsRepository.getConversationMessagePosition(
+                conversationId = CONVERSATION_ID,
+                messageId = OLD_MESSAGE_ID,
+            )
+        } returns position
+    }
+
     /** Answers every conversation with the same fixed window. */
     private fun givenWindowedConversationMessages(
         loadedMessageCount: Int,
@@ -262,6 +316,7 @@ internal class ConversationMessagesDelegateWindowTest : BaseConversationMessages
         private const val DEFAULT_WINDOW = 500
         private const val LARGE_WINDOW = DEFAULT_WINDOW * 16
         private const val OLDEST_MESSAGE_ID = "message-oldest"
+        private val OLD_MESSAGE_ID = MessageId("message-old")
         private val OTHER_CONVERSATION_ID = ConversationId("conversation-other")
     }
 }

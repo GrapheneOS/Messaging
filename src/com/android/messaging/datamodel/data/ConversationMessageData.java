@@ -675,6 +675,27 @@ public class ConversationMessageData {
     }
 
     /**
+     * Query for how many messages of one conversation are at least as new as one of its messages:
+     * the limit {@link #getConversationMessagesWindowedQuerySql()} needs to include that message.
+     * Counts nothing when the message is not in the conversation. Relies on
+     * index_messages_conversation_timestamp.
+     *
+     * <p>Binds the conversation id, the message id and the conversation id again.
+     */
+    public static String getConversationMessagePositionQuerySql() {
+        return "SELECT COUNT(*) FROM " + DatabaseHelper.MESSAGES_TABLE
+                + " WHERE " + MessageColumns.STATUS
+                + " <> " + MessageData.BUGLE_STATUS_OUTGOING_DRAFT
+                + " AND " + MessageColumns.CONVERSATION_ID + "=?"
+                + " AND " + MessageColumns.RECEIVED_TIMESTAMP + ">=(SELECT "
+                + MessageColumns.RECEIVED_TIMESTAMP + " FROM " + DatabaseHelper.MESSAGES_TABLE
+                + " WHERE " + MessageColumns._ID + "=?"
+                + " AND " + MessageColumns.CONVERSATION_ID + "=?"
+                + " AND " + MessageColumns.STATUS
+                + " <> " + MessageData.BUGLE_STATUS_OUTGOING_DRAFT + ")";
+    }
+
+    /**
      * Query for a single message of a conversation, by message id. Callers that want one message
      * must not walk the whole conversation to find it.
      */

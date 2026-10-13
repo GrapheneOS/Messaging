@@ -87,7 +87,7 @@ class MessageSearchRepositoryImplTest {
     private fun repository(scheduler: TestCoroutineScheduler): MessageSearchRepositoryImpl {
         return MessageSearchRepositoryImpl(
             contentResolver = context.contentResolver,
-            messagingDbDispatcher = UnconfinedTestDispatcher(scheduler),
+            ioDispatcher = UnconfinedTestDispatcher(scheduler),
         )
     }
 

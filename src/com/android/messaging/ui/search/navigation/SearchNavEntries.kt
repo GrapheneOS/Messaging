@@ -7,6 +7,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.android.messaging.R
+import com.android.messaging.ui.common.components.consumeOppositePaneInsets
+import com.android.messaging.ui.conversation.navigation.conversationListPaneMetadata
 import com.android.messaging.ui.conversation.navigation.rememberConversationNavigator
 import com.android.messaging.ui.navigation.LocalNavigator
 import com.android.messaging.ui.navigation.paneTitleMetadata
@@ -14,8 +16,9 @@ import com.android.messaging.ui.search.SearchScreen
 import com.android.messaging.ui.search.SearchViewModel
 
 internal fun EntryProviderScope<NavKey>.searchEntries() {
+    // A list pane like the archived list, so a result opens beside it in two-pane mode.
     entry<SearchNavKey>(
-        metadata = paneTitleMetadata(R.string.search),
+        metadata = conversationListPaneMetadata() + paneTitleMetadata(R.string.search),
         content = searchRouteContent(),
     )
 }
@@ -32,7 +35,9 @@ private fun searchRouteContent(): @Composable (SearchNavKey) -> Unit {
             onNavigateToConversation = { conversationId ->
                 conversationNavigator.navigateToConversation(conversationId = conversationId)
             },
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .consumeOppositePaneInsets(),
         )
     }
 }

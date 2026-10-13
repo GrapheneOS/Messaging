@@ -2,6 +2,8 @@ package com.android.messaging.datamodel
 
 import android.content.pm.ProviderInfo
 import android.database.sqlite.SQLiteDatabase
+import android.os.CancellationSignal
+import android.os.OperationCanceledException
 import androidx.core.content.contentValuesOf
 import com.android.messaging.FactoryTestAccess
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
@@ -98,18 +100,71 @@ class MessageSearchQueryTest {
     }
 
     @Test
-    fun search_ignoresCaseOutsideAscii() {
+    fun search_matchesTextOutsideAscii() {
         withDatabase { db ->
             installProvider(db)
             val senderId = db.insertParticipant()
             val conversationId = db.insertConversation()
             db.insertMessageWithPart(conversationId, senderId, 1_000L, "Встреча в кафе")
             db.insertMessageWithPart(conversationId, senderId, 2_000L, "Καλημέρα ΣΟΦΙΑ")
-            db.insertMessageWithPart(conversationId, senderId, 3_000L, "Café ÉCLAIR")
 
-            assertEquals(listOf("Встреча в кафе"), search("ВСТРЕЧА").map { it.snippet })
-            assertEquals(listOf("Καλημέρα ΣΟΦΙΑ"), search("σοφια").map { it.snippet })
-            assertEquals(listOf("Café ÉCLAIR"), search("éclair").map { it.snippet })
+            assertEquals(listOf("Встреча в кафе"), search("кафе").map { it.snippet })
+            assertEquals(listOf("Καλημέρα ΣΟΦΙΑ"), search("ΣΟΦΙΑ").map { it.snippet })
+        }
+    }
+
+    @Test
+    fun search_listsMessageWithSeveralMatchingPartsOnce() {
+        withDatabase { db ->
+            installProvider(db)
+            val senderId = db.insertParticipant()
+            val conversationId = db.insertConversation()
+            val messageId = db.insertMessageWithPart(
+                conversationId = conversationId,
+                senderId = senderId,
+                receivedTimestamp = 1_000L,
+                text = "needle one",
+            )
+            db.insertPart(
+                messageId = messageId,
+                conversationId = conversationId,
+                text = "needle two",
+            )
+
+            assertEquals(1, search("needle").size)
+        }
+    }
+
+    @Test
+    fun search_returnsAtMostMaxResults() {
+        withDatabase { db ->
+            installProvider(db)
+            val senderId = db.insertParticipant()
+            val conversationId = db.insertConversation()
+            repeat(MessageSearchQuery.MAX_RESULTS + 1) { index ->
+                db.insertMessageWithPart(conversationId, senderId, index.toLong(), "needle $index")
+            }
+
+            val rows = search("needle")
+
+            assertEquals(MessageSearchQuery.MAX_RESULTS, rows.size)
+            assertEquals("needle ${MessageSearchQuery.MAX_RESULTS}", rows.first().snippet)
+        }
+    }
+
+    @Test(expected = OperationCanceledException::class)
+    fun search_stopsWhenCancelled() {
+        withDatabase { db ->
+            installProvider(db)
+
+            context.contentResolver.query(
+                MessagingContentProvider.buildSearchUri("needle"),
+                null,
+                null,
+                null,
+                null,
+                CancellationSignal().apply { cancel() },
+            )
         }
     }
 
@@ -237,7 +292,7 @@ class MessageSearchQueryTest {
         receivedTimestamp: Long,
         text: String,
         status: Int = MessageData.BUGLE_STATUS_INCOMING_COMPLETE,
-    ) {
+    ): Long {
         val messageId = insertOrThrow(
             DatabaseHelper.MESSAGES_TABLE,
             null,
@@ -248,6 +303,15 @@ class MessageSearchQueryTest {
                 MessageColumns.STATUS to status,
             ),
         )
+        insertPart(messageId = messageId, conversationId = conversationId, text = text)
+        return messageId
+    }
+
+    private fun SQLiteDatabase.insertPart(
+        messageId: Long,
+        conversationId: String,
+        text: String,
+    ) {
         insertOrThrow(
             DatabaseHelper.PARTS_TABLE,
             null,
