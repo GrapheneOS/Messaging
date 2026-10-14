@@ -11,6 +11,7 @@ import com.android.messaging.data.participantdestination.store.ParticipantDestin
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -253,6 +254,18 @@ class ParticipantDestinationNormalizerImplTest {
     }
 
     @Test
+    fun aFailedRenormalization_staysPending() {
+        databaseStore.lastParticipantId = 7L
+        bareNumberReader.readings = listOf(BARE_READING)
+        databaseStore.applyFailure = IllegalStateException(DATABASE_FULL)
+
+        assertThrows(IllegalStateException::class.java) { normalizer.renormalizeIfPending() }
+
+        assertNull(preferencesStore.savedNormalization)
+        assertEquals(emptySet<Int>(), preferencesStore.normalizedSubIds)
+    }
+
+    @Test
     fun aRun_readsAndSavesHoldingTheLock() {
         databaseStore.lastParticipantId = 7L
         databaseStore.senderDestinations = setOf(CANONICAL_DESTINATION)
@@ -413,6 +426,7 @@ class ParticipantDestinationNormalizerImplTest {
         var senderDestinations = emptySet<String>()
         var senderDestinationReadCount = 0
         var appliedRenormalizations: List<Renormalization>? = null
+        var applyFailure: RuntimeException? = null
 
         override fun readBareNumberParticipants(): List<BareNumberParticipant> {
             error("The normalizer reads the participants through the reader")
@@ -435,6 +449,7 @@ class ParticipantDestinationNormalizerImplTest {
 
         override fun applyRenormalizations(renormalizations: List<Renormalization>) {
             recordCall(name = "applyRenormalizations")
+            applyFailure?.let { failure -> throw failure }
             appliedRenormalizations = renormalizations
         }
     }
@@ -477,6 +492,7 @@ class ParticipantDestinationNormalizerImplTest {
 
     private companion object {
         private const val DATABASE_VERSION = 5
+        private const val DATABASE_FULL = "database or disk is full"
         private const val US_SUB_ID = 1
         private const val FO_SUB_ID = 2
         private const val BARE_DESTINATION = "211234"

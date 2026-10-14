@@ -1,6 +1,7 @@
 package com.android.messaging.data.participantdestination.store
 
 import android.content.Context
+import android.database.sqlite.SQLiteFullException
 import androidx.core.content.contentValuesOf
 import com.android.messaging.FactoryTestAccess
 import com.android.messaging.data.conversation.model.ParticipantId
@@ -15,15 +16,18 @@ import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
 import com.android.messaging.datamodel.DatabaseWrapper
 import com.android.messaging.datamodel.createInMemoryActionSyncTestDatabase
 import com.android.messaging.datamodel.data.ParticipantData
+import com.android.messaging.datamodel.simulateFullDisk
 import com.android.messaging.testutil.installTestFactory
 import io.mockk.every
 import io.mockk.unmockkAll
 import java.util.concurrent.Callable
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -148,6 +152,44 @@ class ParticipantDestinationDatabaseStoreImplTest {
     }
 
     @Test
+    fun aFullDisk_failsTheRenormalizationsAndAppliesNone() {
+        val bareId = db.insertParticipant(destination = BARE_NUMBER)
+        val twinId = db.insertParticipant(destination = CANONICAL_NUMBER)
+        val loneBareId = db.insertParticipant(destination = LONE_BARE_NUMBER)
+        val directId = db.insertConversation(participantIds = listOf(bareId))
+        val participants = databaseStore.readBareNumberParticipants()
+            .associateBy { participant -> participant.destination }
+        db.database.simulateFullDisk()
+
+        val failure = assertThrows(ExecutionException::class.java) {
+            applyRenormalizations(
+                renormalizations = listOf(
+                    Renormalization(
+                        participant = participants.getValue(LONE_BARE_NUMBER),
+                        canonicalDestination = OVERSIZED_DESTINATION,
+                    ),
+                    Renormalization(
+                        participant = participants.getValue(BARE_NUMBER),
+                        canonicalDestination = CANONICAL_NUMBER,
+                    ),
+                ),
+            )
+        }
+
+        assertTrue("not a full disk: ${failure.cause}", failure.cause is SQLiteFullException)
+        assertTrue("the bare row was merged", db.participantExists(id = bareId))
+        assertEquals(listOf(bareId), db.participantsOf(conversationId = directId))
+        assertTrue(db.participantExists(id = twinId))
+        assertEquals(
+            LONE_BARE_NUMBER,
+            db.participantColumn(
+                id = loneBareId,
+                column = ParticipantColumns.NORMALIZED_DESTINATION,
+            ),
+        )
+    }
+
+    @Test
     fun rowsThatAreNotBareNumbers_areNotReadAsBareNumbers() {
         val bareId = db.insertParticipant(destination = BARE_NUMBER, isBlocked = true)
         listOf(CANONICAL_NUMBER, "AMAZON", "someone@example.com", "").forEach { destination ->
@@ -242,6 +284,10 @@ class ParticipantDestinationDatabaseStoreImplTest {
                 canonicalDestination = CANONICAL_DESTINATIONS.getValue(participant.destination),
             )
         }
+        applyRenormalizations(renormalizations = renormalizations)
+    }
+
+    private fun applyRenormalizations(renormalizations: List<Renormalization>) {
         val executor = Executors.newSingleThreadExecutor()
         try {
             executor.submit(
@@ -424,6 +470,8 @@ class ParticipantDestinationDatabaseStoreImplTest {
         const val OTHER_NUMBER = "+15550100"
         const val CONTACT_NAME = "Repro Estonia"
         const val TIMEOUT_SECONDS = 10L
+
+        val OVERSIZED_DESTINATION = "+372${"5".repeat(50_000)}"
 
         val CANONICAL_DESTINATIONS = mapOf(
             BARE_NUMBER to CANONICAL_NUMBER,

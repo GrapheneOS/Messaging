@@ -1,6 +1,7 @@
 package com.android.messaging.data.conversationstate.store
 
 import android.content.Context
+import android.database.sqlite.SQLiteFullException
 import androidx.core.content.contentValuesOf
 import com.android.messaging.FactoryTestAccess
 import com.android.messaging.data.conversationstate.model.MirroredConversationState
@@ -12,6 +13,7 @@ import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
 import com.android.messaging.datamodel.DatabaseWrapper
 import com.android.messaging.datamodel.createInMemoryActionSyncTestDatabase
 import com.android.messaging.datamodel.data.ParticipantData
+import com.android.messaging.datamodel.simulateFullDisk
 import com.android.messaging.testutil.installTestFactory
 import io.mockk.every
 import io.mockk.mockk
@@ -19,6 +21,7 @@ import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -125,6 +128,25 @@ class ConversationStateDatabaseStoreImplTest {
         assertFalse(db.isArchived(threadId = ARCHIVED_THREAD_ID))
     }
 
+    @Test
+    fun restore_onAFullDisk_failsAndRestoresNothing() {
+        insertResyncedConversations(sortTimestamp = SYNCED_SORT_TIMESTAMP)
+        db.database.simulateFullDisk()
+
+        assertThrows(SQLiteFullException::class.java) {
+            store.restore(
+                mirroredState = MIRRORED_STATE.copy(
+                    blockedDestinations = MIRRORED_STATE.blockedDestinations +
+                        OVERSIZED_DESTINATION,
+                ),
+            )
+        }
+
+        assertFalse(db.isBlocked(destination = BLOCKED_DESTINATION))
+        assertFalse(db.isArchived(threadId = BLOCKED_THREAD_ID))
+        assertFalse(db.isArchived(threadId = ARCHIVED_THREAD_ID))
+    }
+
     private fun insertResyncedConversations(sortTimestamp: Long) {
         db.insertSyncedConversation(
             destination = BLOCKED_DESTINATION,
@@ -220,6 +242,8 @@ class ConversationStateDatabaseStoreImplTest {
         private const val MIRRORED_AT_MILLIS = 2_000L
 
         private const val SYNCED_SORT_TIMESTAMP = 1_000L
+
+        private val OVERSIZED_DESTINATION = "+1${"5".repeat(50_000)}"
 
         private val MIRRORED_STATE = MirroredConversationState(
             blockedDestinations = setOf(BLOCKED_DESTINATION),

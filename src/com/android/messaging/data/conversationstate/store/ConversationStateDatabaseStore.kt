@@ -1,5 +1,6 @@
 package com.android.messaging.data.conversationstate.store
 
+import android.database.sqlite.SQLiteDatabase
 import androidx.core.content.contentValuesOf
 import com.android.messaging.data.conversationstate.model.MirroredConversationState
 import com.android.messaging.data.extension.archiveDirectConversations
@@ -7,7 +8,6 @@ import com.android.messaging.datamodel.DataModel
 import com.android.messaging.datamodel.DatabaseHelper
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
-import com.android.messaging.datamodel.DatabaseWrapper
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.util.PhoneUtils
 import com.android.messaging.util.db.ext.withTransaction
@@ -34,18 +34,18 @@ internal class ConversationStateDatabaseStoreImpl @Inject constructor() :
     }
 
     override fun restore(mirroredState: MirroredConversationState) {
-        val db = DataModel.get().database
-        db.withTransaction {
+        // DatabaseWrapper swallows a full disk, which would mark a partial restore as done
+        DataModel.get().database.database.withTransaction {
             mirroredState.blockedDestinations.forEach { destination ->
-                blockDestination(db = db, destination = destination)
+                blockDestination(db = this, destination = destination)
             }
             mirroredState.archivedThreadIds.forEach { threadId ->
-                archiveThread(db = db, threadId = threadId, mirroredAt = mirroredState.mirroredAt)
+                archiveThread(db = this, threadId = threadId, mirroredAt = mirroredState.mirroredAt)
             }
         }
     }
 
-    private fun blockDestination(db: DatabaseWrapper, destination: String) {
+    private fun blockDestination(db: SQLiteDatabase, destination: String) {
         val blockedCount = db.update(
             DatabaseHelper.PARTICIPANTS_TABLE,
             contentValuesOf(ParticipantColumns.BLOCKED to 1),
@@ -53,7 +53,7 @@ internal class ConversationStateDatabaseStoreImpl @Inject constructor() :
             arrayOf(destination, ParticipantData.OTHER_THAN_SELF_SUB_ID.toString()),
         )
         if (blockedCount == 0) {
-            db.insert(
+            db.insertOrThrow(
                 DatabaseHelper.PARTICIPANTS_TABLE,
                 null,
                 contentValuesOf(
@@ -69,7 +69,7 @@ internal class ConversationStateDatabaseStoreImpl @Inject constructor() :
         db.archiveDirectConversations(destination = destination)
     }
 
-    private fun archiveThread(db: DatabaseWrapper, threadId: String, mirroredAt: Long) {
+    private fun archiveThread(db: SQLiteDatabase, threadId: String, mirroredAt: Long) {
         db.update(
             DatabaseHelper.CONVERSATIONS_TABLE,
             contentValuesOf(ConversationColumns.ARCHIVE_STATUS to 1),

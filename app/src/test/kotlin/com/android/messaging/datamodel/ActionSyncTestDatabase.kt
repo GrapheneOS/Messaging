@@ -11,3 +11,13 @@ internal fun createInMemoryActionSyncTestDatabase(context: Context): DatabaseWra
 
     return DatabaseWrapper(context, sqliteDatabase)
 }
+
+internal fun SQLiteDatabase.simulateFullDisk() {
+    val pageCount = rawQuery("PRAGMA page_count", null).use { cursor ->
+        cursor.moveToFirst()
+        cursor.getLong(0)
+    }
+    rawQuery("PRAGMA max_page_count = $pageCount", null).use { cursor ->
+        cursor.moveToFirst()
+    }
+}

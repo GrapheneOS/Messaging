@@ -1,5 +1,6 @@
 package com.android.messaging.data.participantdestination.store
 
+import android.database.sqlite.SQLiteDatabase
 import androidx.core.content.contentValuesOf
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.extension.archiveDirectConversations
@@ -102,10 +103,11 @@ internal class ParticipantDestinationDatabaseStoreImpl @Inject constructor() :
     override fun applyRenormalizations(renormalizations: List<Renormalization>) {
         if (renormalizations.isNotEmpty()) {
             val db = DataModel.get().database
-            db.withTransaction {
+            // DatabaseWrapper swallows a full disk, which would mark a partial merge as done
+            db.database.withTransaction {
                 renormalizations
                     .flatMapTo(mutableSetOf()) { renormalization ->
-                        applyRenormalization(db = db, renormalization = renormalization)
+                        applyRenormalization(db = this, renormalization = renormalization)
                     }
                     .forEach { conversationId ->
                         refreshConversation(db = db, conversationId = conversationId)
@@ -116,7 +118,7 @@ internal class ParticipantDestinationDatabaseStoreImpl @Inject constructor() :
     }
 
     private fun applyRenormalization(
-        db: DatabaseWrapper,
+        db: SQLiteDatabase,
         renormalization: Renormalization,
     ): List<String> {
         val conversationIds = conversationIdsOf(
@@ -131,7 +133,7 @@ internal class ParticipantDestinationDatabaseStoreImpl @Inject constructor() :
         return conversationIds
     }
 
-    private fun normalizeInPlace(db: DatabaseWrapper, renormalization: Renormalization) {
+    private fun normalizeInPlace(db: SQLiteDatabase, renormalization: Renormalization) {
         val canonicalDestination = renormalization.canonicalDestination
         db.update(
             DatabaseHelper.PARTICIPANTS_TABLE,
@@ -148,7 +150,7 @@ internal class ParticipantDestinationDatabaseStoreImpl @Inject constructor() :
     }
 
     private fun mergeInto(
-        db: DatabaseWrapper,
+        db: SQLiteDatabase,
         renormalization: Renormalization,
         twin: ParticipantTwin,
     ) {
@@ -178,7 +180,7 @@ internal class ParticipantDestinationDatabaseStoreImpl @Inject constructor() :
     }
 
     private fun carryBlock(
-        db: DatabaseWrapper,
+        db: SQLiteDatabase,
         renormalization: Renormalization,
         twin: ParticipantTwin,
     ) {
@@ -200,11 +202,11 @@ internal class ParticipantDestinationDatabaseStoreImpl @Inject constructor() :
     }
 
     private fun refreshConversation(db: DatabaseWrapper, conversationId: String) {
-        db.execSQL(UPDATE_PARTICIPANT_COUNT_SQL, arrayOf(conversationId, conversationId))
+        db.database.execSQL(UPDATE_PARTICIPANT_COUNT_SQL, arrayOf(conversationId, conversationId))
         BugleDatabaseOperations.updateConversationNameAndAvatarInTransaction(db, conversationId)
     }
 
-    private fun conversationIdsOf(db: DatabaseWrapper, participantId: ParticipantId): List<String> {
+    private fun conversationIdsOf(db: SQLiteDatabase, participantId: ParticipantId): List<String> {
         return db.query(
             DatabaseHelper.CONVERSATION_PARTICIPANTS_TABLE,
             arrayOf(ConversationParticipantsColumns.CONVERSATION_ID),
@@ -222,7 +224,7 @@ internal class ParticipantDestinationDatabaseStoreImpl @Inject constructor() :
         }
     }
 
-    private fun twinOf(db: DatabaseWrapper, normalizedDestination: String): ParticipantTwin? {
+    private fun twinOf(db: SQLiteDatabase, normalizedDestination: String): ParticipantTwin? {
         return db.query(
             DatabaseHelper.PARTICIPANTS_TABLE,
             arrayOf(ParticipantColumns._ID, ParticipantColumns.BLOCKED),
