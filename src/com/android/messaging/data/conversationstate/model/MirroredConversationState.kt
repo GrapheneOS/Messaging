@@ -3,6 +3,7 @@ package com.android.messaging.data.conversationstate.model
 internal data class MirroredConversationState(
     val blockedDestinations: Set<String>,
     val archivedThreadIds: Set<String>,
+    val unarchivedBlockedThreadIds: Set<String>,
     val mirroredAt: Long,
     val databaseVersion: Int,
 ) {

@@ -1,6 +1,7 @@
 package com.android.messaging.data.conversationstate.store
 
 import android.content.Context
+import androidx.core.content.edit
 import com.android.messaging.data.conversationstate.model.MirroredConversationState
 import com.android.messaging.testutil.backupRulesExcluding
 import org.junit.Assert.assertEquals
@@ -38,6 +39,20 @@ class ConversationStatePreferencesStoreImplTest {
     }
 
     @Test
+    fun aMirrorSavedBeforeUnarchivedBlockedThreadsWereKept_readsNone() {
+        context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE).edit(commit = true) {
+            putStringSet("blocked_destinations", MIRRORED_STATE.blockedDestinations)
+            putStringSet("archived_thread_ids", MIRRORED_STATE.archivedThreadIds)
+        }
+
+        val mirroredState = ConversationStatePreferencesStoreImpl(context = context)
+            .readMirroredState()
+
+        assertEquals(MIRRORED_STATE.blockedDestinations, mirroredState.blockedDestinations)
+        assertEquals(emptySet<String>(), mirroredState.unarchivedBlockedThreadIds)
+    }
+
+    @Test
     fun aPendingRestore_staysPendingUntilCleared() {
         ConversationStatePreferencesStoreImpl(context = context).markRestorePending()
 
@@ -60,6 +75,7 @@ class ConversationStatePreferencesStoreImplTest {
             setOf(
                 "blocked_destinations",
                 "archived_thread_ids",
+                "unarchived_blocked_thread_ids",
                 "mirrored_at",
                 "database_version",
                 "restore_pending",
@@ -78,6 +94,7 @@ class ConversationStatePreferencesStoreImplTest {
         private val MIRRORED_STATE = MirroredConversationState(
             blockedDestinations = setOf("+15550100", "+15550101"),
             archivedThreadIds = setOf("12"),
+            unarchivedBlockedThreadIds = setOf("13"),
             mirroredAt = 1_700_000_000_000L,
             databaseVersion = 5,
         )

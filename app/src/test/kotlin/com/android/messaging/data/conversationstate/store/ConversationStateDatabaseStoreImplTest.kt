@@ -99,6 +99,29 @@ class ConversationStateDatabaseStoreImplTest {
     }
 
     @Test
+    fun readUnarchivedBlockedThreadIds_readsTheBlockedSendersSyncedThreadsInTheInbox() {
+        db.insertSyncedConversation(
+            destination = BLOCKED_DESTINATION,
+            threadId = BLOCKED_THREAD_ID,
+            isBlocked = true,
+        )
+        db.insertSyncedConversation(
+            destination = ARCHIVED_DESTINATION,
+            threadId = ARCHIVED_THREAD_ID,
+            isBlocked = true,
+            isArchived = true,
+        )
+        db.insertSyncedConversation(destination = OTHER_DESTINATION, threadId = OTHER_THREAD_ID)
+        db.insertSyncedConversation(
+            destination = UNARCHIVED_BLOCKED_DESTINATION,
+            threadId = NO_THREAD_ID,
+            isBlocked = true,
+        )
+
+        assertEquals(setOf(BLOCKED_THREAD_ID.toString()), store.readUnarchivedBlockedThreadIds())
+    }
+
+    @Test
     fun restore_blocksAndArchivesTheResyncedConversations() {
         insertResyncedConversations(sortTimestamp = SYNCED_SORT_TIMESTAMP)
 
@@ -126,6 +149,16 @@ class ConversationStateDatabaseStoreImplTest {
 
         assertTrue(db.isArchived(threadId = BLOCKED_THREAD_ID))
         assertFalse(db.isArchived(threadId = ARCHIVED_THREAD_ID))
+    }
+
+    @Test
+    fun restore_leavesTheBlockedSendersConversationsThatWereInTheInboxThere() {
+        insertResyncedConversations(sortTimestamp = SYNCED_SORT_TIMESTAMP)
+
+        store.restore(mirroredState = MIRRORED_STATE)
+
+        assertTrue(db.isBlocked(destination = UNARCHIVED_BLOCKED_DESTINATION))
+        assertFalse(db.isArchived(threadId = UNARCHIVED_BLOCKED_THREAD_ID))
     }
 
     @Test
@@ -161,6 +194,11 @@ class ConversationStateDatabaseStoreImplTest {
         db.insertSyncedConversation(
             destination = OTHER_DESTINATION,
             threadId = OTHER_THREAD_ID,
+            sortTimestamp = sortTimestamp,
+        )
+        db.insertSyncedConversation(
+            destination = UNARCHIVED_BLOCKED_DESTINATION,
+            threadId = UNARCHIVED_BLOCKED_THREAD_ID,
             sortTimestamp = sortTimestamp,
         )
     }
@@ -233,11 +271,13 @@ class ConversationStateDatabaseStoreImplTest {
         private const val BLOCKED_DESTINATION = "+15550100"
         private const val ARCHIVED_DESTINATION = "+15550101"
         private const val OTHER_DESTINATION = "+15550102"
+        private const val UNARCHIVED_BLOCKED_DESTINATION = "+15550103"
         private const val SELF_DESTINATION = "+15550199"
         private const val SELF_SUB_ID = 1
         private const val BLOCKED_THREAD_ID = 11L
         private const val ARCHIVED_THREAD_ID = 12L
         private const val OTHER_THREAD_ID = 13L
+        private const val UNARCHIVED_BLOCKED_THREAD_ID = 14L
         private const val NO_THREAD_ID = 0L
         private const val MIRRORED_AT_MILLIS = 2_000L
 
@@ -246,8 +286,9 @@ class ConversationStateDatabaseStoreImplTest {
         private val OVERSIZED_DESTINATION = "+1${"5".repeat(50_000)}"
 
         private val MIRRORED_STATE = MirroredConversationState(
-            blockedDestinations = setOf(BLOCKED_DESTINATION),
+            blockedDestinations = setOf(BLOCKED_DESTINATION, UNARCHIVED_BLOCKED_DESTINATION),
             archivedThreadIds = setOf(BLOCKED_THREAD_ID.toString(), ARCHIVED_THREAD_ID.toString()),
+            unarchivedBlockedThreadIds = setOf(UNARCHIVED_BLOCKED_THREAD_ID.toString()),
             mirroredAt = MIRRORED_AT_MILLIS,
             databaseVersion = 1,
         )

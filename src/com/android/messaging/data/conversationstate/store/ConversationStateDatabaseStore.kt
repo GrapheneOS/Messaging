@@ -19,6 +19,8 @@ internal interface ConversationStateDatabaseStore {
 
     fun readArchivedThreadIds(): Set<String>
 
+    fun readUnarchivedBlockedThreadIds(): Set<String>
+
     fun restore(mirroredState: MirroredConversationState)
 }
 
@@ -33,11 +35,19 @@ internal class ConversationStateDatabaseStoreImpl @Inject constructor() :
         return readStrings(sql = ARCHIVED_THREAD_IDS_SQL)
     }
 
+    override fun readUnarchivedBlockedThreadIds(): Set<String> {
+        return readStrings(sql = UNARCHIVED_BLOCKED_THREAD_IDS_SQL)
+    }
+
     override fun restore(mirroredState: MirroredConversationState) {
         // DatabaseWrapper swallows a full disk, which would mark a partial restore as done
         DataModel.get().database.database.withTransaction {
             mirroredState.blockedDestinations.forEach { destination ->
-                blockDestination(db = this, destination = destination)
+                blockDestination(
+                    db = this,
+                    destination = destination,
+                    unarchivedThreadIds = mirroredState.unarchivedBlockedThreadIds,
+                )
             }
             mirroredState.archivedThreadIds.forEach { threadId ->
                 archiveThread(db = this, threadId = threadId, mirroredAt = mirroredState.mirroredAt)
@@ -45,7 +55,11 @@ internal class ConversationStateDatabaseStoreImpl @Inject constructor() :
         }
     }
 
-    private fun blockDestination(db: SQLiteDatabase, destination: String) {
+    private fun blockDestination(
+        db: SQLiteDatabase,
+        destination: String,
+        unarchivedThreadIds: Set<String>,
+    ) {
         val blockedCount = db.update(
             DatabaseHelper.PARTICIPANTS_TABLE,
             contentValuesOf(ParticipantColumns.BLOCKED to 1),
@@ -66,7 +80,10 @@ internal class ConversationStateDatabaseStoreImpl @Inject constructor() :
                 ),
             )
         }
-        db.archiveDirectConversations(destination = destination)
+        db.archiveDirectConversations(
+            destination = destination,
+            exceptThreadIds = unarchivedThreadIds,
+        )
     }
 
     private fun archiveThread(db: SQLiteDatabase, threadId: String, mirroredAt: Long) {
@@ -100,6 +117,18 @@ internal class ConversationStateDatabaseStoreImpl @Inject constructor() :
             SELECT ${ConversationColumns.SMS_THREAD_ID} FROM ${DatabaseHelper.CONVERSATIONS_TABLE}
             WHERE ${ConversationColumns.ARCHIVE_STATUS} = 1
                 AND ${ConversationColumns.SMS_THREAD_ID} > 0
+        """.trimIndent()
+
+        private val UNARCHIVED_BLOCKED_THREAD_IDS_SQL = """
+            SELECT conversation.${ConversationColumns.SMS_THREAD_ID}
+            FROM ${DatabaseHelper.CONVERSATIONS_TABLE} AS conversation
+            JOIN ${DatabaseHelper.PARTICIPANTS_TABLE} AS sender
+                ON sender.${ParticipantColumns.NORMALIZED_DESTINATION} =
+                    conversation.${ConversationColumns.OTHER_PARTICIPANT_NORMALIZED_DESTINATION}
+            WHERE sender.${ParticipantColumns.SUB_ID} = ${ParticipantData.OTHER_THAN_SELF_SUB_ID}
+                AND sender.${ParticipantColumns.BLOCKED} = 1
+                AND conversation.${ConversationColumns.ARCHIVE_STATUS} = 0
+                AND conversation.${ConversationColumns.SMS_THREAD_ID} > 0
         """.trimIndent()
     }
 }

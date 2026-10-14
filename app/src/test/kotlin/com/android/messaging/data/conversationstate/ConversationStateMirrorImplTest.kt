@@ -99,6 +99,7 @@ class ConversationStateMirrorImplTest {
     fun anUpdate_savesTheDatabaseStateWithTheTimeAndVersion() {
         databaseStore.blockedDestinations = setOf(BLOCKED_DESTINATION)
         databaseStore.archivedThreadIds = setOf(ARCHIVED_THREAD_ID)
+        databaseStore.unarchivedBlockedThreadIds = setOf(UNARCHIVED_BLOCKED_THREAD_ID)
 
         val updateStartedAt = System.currentTimeMillis()
         mirror.update()
@@ -107,6 +108,10 @@ class ConversationStateMirrorImplTest {
         val mirroredState = preferencesStore.mirroredState
         assertEquals(setOf(BLOCKED_DESTINATION), mirroredState.blockedDestinations)
         assertEquals(setOf(ARCHIVED_THREAD_ID), mirroredState.archivedThreadIds)
+        assertEquals(
+            setOf(UNARCHIVED_BLOCKED_THREAD_ID),
+            mirroredState.unarchivedBlockedThreadIds,
+        )
         assertEquals(DATABASE_VERSION, mirroredState.databaseVersion)
         assertTrue(mirroredState.mirroredAt in updateStartedAt..updateEndedAt)
     }
@@ -259,6 +264,7 @@ class ConversationStateMirrorImplTest {
         var mirroredState = MirroredConversationState(
             blockedDestinations = emptySet(),
             archivedThreadIds = emptySet(),
+            unarchivedBlockedThreadIds = emptySet(),
             mirroredAt = 0L,
             databaseVersion = 0,
         )
@@ -296,6 +302,9 @@ class ConversationStateMirrorImplTest {
         var archivedThreadIds = emptySet<String>()
 
         @Volatile
+        var unarchivedBlockedThreadIds = emptySet<String>()
+
+        @Volatile
         var onReadArchivedThreadIds: () -> Unit = {}
 
         var restoreFailure: RuntimeException? = null
@@ -311,6 +320,10 @@ class ConversationStateMirrorImplTest {
             return archivedThreadIds
         }
 
+        override fun readUnarchivedBlockedThreadIds(): Set<String> {
+            return unarchivedBlockedThreadIds
+        }
+
         override fun restore(mirroredState: MirroredConversationState) {
             restoreFailure?.let { failure -> throw failure }
             restoredStates += mirroredState
@@ -322,6 +335,7 @@ class ConversationStateMirrorImplTest {
         private const val BLOCKED_DESTINATION = "+15550100"
         private const val NEWLY_BLOCKED_DESTINATION = "+15550101"
         private const val ARCHIVED_THREAD_ID = "12"
+        private const val UNARCHIVED_BLOCKED_THREAD_ID = "13"
         private const val DATABASE_VERSION = 5
         private const val FULL_SYNC_TIME = 2_000L
         private const val TIMEOUT_MILLIS = 10_000L
@@ -330,6 +344,7 @@ class ConversationStateMirrorImplTest {
         private val MIRRORED_STATE = MirroredConversationState(
             blockedDestinations = setOf(BLOCKED_DESTINATION),
             archivedThreadIds = setOf(ARCHIVED_THREAD_ID),
+            unarchivedBlockedThreadIds = setOf(UNARCHIVED_BLOCKED_THREAD_ID),
             mirroredAt = 1_000L,
             databaseVersion = DATABASE_VERSION,
         )

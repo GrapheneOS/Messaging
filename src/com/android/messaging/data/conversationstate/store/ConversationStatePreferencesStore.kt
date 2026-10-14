@@ -37,6 +37,9 @@ internal class ConversationStatePreferencesStoreImpl @Inject constructor(
             archivedThreadIds = preferences
                 .getStringSet(ARCHIVED_THREAD_IDS_KEY, null)
                 .orEmpty(),
+            unarchivedBlockedThreadIds = preferences
+                .getStringSet(UNARCHIVED_BLOCKED_THREAD_IDS_KEY, null)
+                .orEmpty(),
             mirroredAt = preferences.getLong(MIRRORED_AT_KEY, 0L),
             databaseVersion = preferences.getInt(DATABASE_VERSION_KEY, 0),
         )
@@ -46,6 +49,10 @@ internal class ConversationStatePreferencesStoreImpl @Inject constructor(
         preferences.edit(commit = true) {
             putStringSet(BLOCKED_DESTINATIONS_KEY, mirroredState.blockedDestinations)
             putStringSet(ARCHIVED_THREAD_IDS_KEY, mirroredState.archivedThreadIds)
+            putStringSet(
+                UNARCHIVED_BLOCKED_THREAD_IDS_KEY,
+                mirroredState.unarchivedBlockedThreadIds,
+            )
             putLong(MIRRORED_AT_KEY, mirroredState.mirroredAt)
             putInt(DATABASE_VERSION_KEY, mirroredState.databaseVersion)
         }
@@ -68,6 +75,7 @@ internal class ConversationStatePreferencesStoreImpl @Inject constructor(
 
         private const val BLOCKED_DESTINATIONS_KEY = "blocked_destinations"
         private const val ARCHIVED_THREAD_IDS_KEY = "archived_thread_ids"
+        private const val UNARCHIVED_BLOCKED_THREAD_IDS_KEY = "unarchived_blocked_thread_ids"
         private const val MIRRORED_AT_KEY = "mirrored_at"
         private const val DATABASE_VERSION_KEY = "database_version"
         private const val RESTORE_PENDING_KEY = "restore_pending"

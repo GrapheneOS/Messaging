@@ -110,6 +110,7 @@ internal class ConversationStateMirrorImpl @Inject constructor(
                 mirroredState = MirroredConversationState(
                     blockedDestinations = blockedDestinations,
                     archivedThreadIds = databaseStore.readArchivedThreadIds(),
+                    unarchivedBlockedThreadIds = databaseStore.readUnarchivedBlockedThreadIds(),
                     mirroredAt = System.currentTimeMillis(),
                     databaseVersion = databaseVersion,
                 ),
