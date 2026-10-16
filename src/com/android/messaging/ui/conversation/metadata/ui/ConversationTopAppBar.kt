@@ -1,7 +1,8 @@
 package com.android.messaging.ui.conversation.metadata.ui
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -40,6 +41,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
@@ -75,6 +78,8 @@ import com.android.messaging.ui.core.MessagingPreviewColumn
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import com.android.messaging.ui.subscription.mapper.resolveDisplayName
 import com.android.messaging.util.AccessibilityUtil
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 private val CONVERSATION_TOP_APP_BAR_TITLE_SPACING = 12.dp
 private val CONVERSATION_TOP_APP_BAR_AVATAR_SIZE = 36.dp
@@ -105,6 +110,7 @@ internal fun ConversationTopAppBar(
     onSimSelectorClick: () -> Unit = {},
     onTitleClick: () -> Unit,
     onNavigateBack: () -> Unit,
+    onPhoneNumberCopy: (String) -> Unit = {},
 ) {
     val presentation = rememberConversationTopAppBarPresentation(
         metadata = metadata,
@@ -134,17 +140,14 @@ internal fun ConversationTopAppBar(
                 isLoading = metadata is ConversationMetadataUiState.Loading,
                 onClick = onTitleClick,
                 presentation = presentation,
+                phoneNumberCopyTargets = (metadata as? ConversationMetadataUiState.Present)
+                    ?.phoneNumberCopyTargets
+                    ?: persistentListOf(),
+                onPhoneNumberCopy = onPhoneNumberCopy,
             )
         },
         navigationIcon = {
-            IconButton(
-                onClick = onNavigateBack,
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                    contentDescription = stringResource(id = R.string.back),
-                )
-            }
+            ConversationNavigateBackButton(onClick = onNavigateBack)
         },
         actions = {
             ConversationTopAppBarActions(
@@ -165,6 +168,16 @@ internal fun ConversationTopAppBar(
             )
         },
     )
+}
+
+@Composable
+private fun ConversationNavigateBackButton(onClick: () -> Unit) {
+    IconButton(onClick = onClick) {
+        Icon(
+            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+            contentDescription = stringResource(id = R.string.back),
+        )
+    }
 }
 
 @Composable
@@ -207,6 +220,8 @@ private fun ConversationTopAppBarTitle(
     isLoading: Boolean,
     onClick: () -> Unit,
     presentation: ConversationTopAppBarPresentation,
+    phoneNumberCopyTargets: ImmutableList<ConversationMetadataUiState.PhoneNumberCopyTarget>,
+    onPhoneNumberCopy: (String) -> Unit,
 ) {
     val isLoadingTitleVisible = rememberIsLoadingIndicatorVisible(isLoading = isLoading)
 
@@ -214,26 +229,55 @@ private fun ConversationTopAppBarTitle(
         return
     }
 
-    Row(
-        modifier = Modifier
-            .heightIn(min = TopAppBarDefaults.TopAppBarExpandedHeight)
-            .testTag(tag = CONVERSATION_TOP_APP_BAR_TITLE_TEST_TAG)
-            .clickable(
-                enabled = isClickable,
-                onClick = onClick,
-            ),
-        horizontalArrangement = Arrangement.spacedBy(
-            space = CONVERSATION_TOP_APP_BAR_TITLE_SPACING,
-        ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        ConversationAvatar(
-            avatar = presentation.avatar,
-            isBlocked = presentation.isBlocked,
-        )
+    var isPhoneNumberMenuExpanded by remember { mutableStateOf(value = false) }
+    val hapticFeedback = LocalHapticFeedback.current
+    val copyLabel = stringResource(id = R.string.copy_to_clipboard)
+    val onPhoneNumberAction = phoneNumberCopyAction(
+        targets = phoneNumberCopyTargets,
+        onPhoneNumberCopy = onPhoneNumberCopy,
+        onShowMenu = { isPhoneNumberMenuExpanded = true },
+    )
+    val onLongClick = onPhoneNumberAction?.let { action ->
+        {
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+            action()
+        }
+    }
 
-        ConversationTopAppBarText(
-            presentation = presentation,
+    Box {
+        Row(
+            modifier = Modifier
+                .heightIn(min = TopAppBarDefaults.TopAppBarExpandedHeight)
+                .testTag(tag = CONVERSATION_TOP_APP_BAR_TITLE_TEST_TAG)
+                .combinedClickable(
+                    enabled = isClickable,
+                    onClick = onClick,
+                    onLongClickLabel = copyLabel.takeIf { onLongClick != null },
+                    onLongClick = onLongClick,
+                ),
+            horizontalArrangement = Arrangement.spacedBy(
+                space = CONVERSATION_TOP_APP_BAR_TITLE_SPACING,
+            ),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            ConversationAvatar(
+                avatar = presentation.avatar,
+                isBlocked = presentation.isBlocked,
+            )
+
+            ConversationTopAppBarText(
+                presentation = presentation,
+            )
+        }
+
+        ConversationPhoneNumberCopyMenu(
+            expanded = isPhoneNumberMenuExpanded,
+            targets = phoneNumberCopyTargets,
+            onDismissRequest = { isPhoneNumberMenuExpanded = false },
+            onPhoneNumberCopy = { phoneNumber ->
+                isPhoneNumberMenuExpanded = false
+                onPhoneNumberCopy(phoneNumber)
+            },
         )
     }
 }

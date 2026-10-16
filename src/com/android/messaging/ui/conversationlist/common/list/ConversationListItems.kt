@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.common.components.horizontalSafeDrawingInsets
+import com.android.messaging.ui.common.components.participant.PhoneNumberCopyTarget
 import com.android.messaging.ui.common.components.reorder.OverlayReorderAnimationController
 import com.android.messaging.ui.conversationlist.common.item.ConversationListItemRow
 import com.android.messaging.ui.conversationlist.common.item.ConversationSwipeAction
@@ -36,7 +37,10 @@ import com.android.messaging.ui.conversationlist.common.support.CONVERSATION_LIS
 import com.android.messaging.ui.conversationlist.common.support.rememberAppearanceAnimationTokens
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel as Model
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
 
 private const val CONVERSATION_ROW_CONTENT_TYPE = "conversation_row"
 
@@ -59,6 +63,9 @@ internal fun ConversationListItems(
     scaffoldContentPadding: PaddingValues,
     fabBottomReserve: Dp,
     pinAnimationController: OverlayReorderAnimationController<Model, ConversationId>?,
+    phoneNumberCopyTargets: ImmutableMap<ConversationId, ImmutableList<PhoneNumberCopyTarget>> =
+        persistentMapOf(),
+    onAvatarQuickActionsOpen: (ConversationId) -> Unit = {},
     swipeSpec: ConversationListSwipeSpec,
     onItemEvent: (ConversationListItemEvent) -> Unit,
 ) {
@@ -116,6 +123,8 @@ internal fun ConversationListItems(
                     }
                 },
                 swipeSpec = swipeSpec,
+                phoneNumberCopyTargets = phoneNumberCopyTargets,
+                onAvatarQuickActionsOpen = onAvatarQuickActionsOpen,
                 onItemEvent = onItemEvent,
             )
         }
@@ -132,6 +141,8 @@ private fun LazyItemScope.ConversationListRow(
     pinAnimationController: OverlayReorderAnimationController<Model, ConversationId>?,
     onAppearanceAnimationFinished: () -> Unit,
     swipeSpec: ConversationListSwipeSpec,
+    phoneNumberCopyTargets: ImmutableMap<ConversationId, ImmutableList<PhoneNumberCopyTarget>>,
+    onAvatarQuickActionsOpen: (ConversationId) -> Unit,
     onItemEvent: (ConversationListItemEvent) -> Unit,
 ) {
     val isHiddenByPinAnimation = pinAnimationController?.isItemHidden(item.conversationId) == true
@@ -183,6 +194,9 @@ private fun LazyItemScope.ConversationListRow(
             item = item,
             isSelectionMode = isSelectionMode,
             horizontalInsets = horizontalInsets,
+            phoneNumberCopyTargets = phoneNumberCopyTargets[item.conversationId]
+                ?: persistentListOf(),
+            onAvatarQuickActionsOpen = onAvatarQuickActionsOpen,
             onItemEvent = onItemEvent,
         )
     }
@@ -193,6 +207,8 @@ private fun ConversationListItemContent(
     item: Model,
     isSelectionMode: Boolean,
     horizontalInsets: PaddingValues,
+    phoneNumberCopyTargets: ImmutableList<PhoneNumberCopyTarget>,
+    onAvatarQuickActionsOpen: (ConversationId) -> Unit,
     onItemEvent: (ConversationListItemEvent) -> Unit,
 ) {
     val destination = item.avatar.normalizedDestination
@@ -207,6 +223,10 @@ private fun ConversationListItemContent(
             onItemEvent(ConversationListItemEvent.LongClicked(item.conversationId))
         },
         isSelectionMode = isSelectionMode,
+        phoneNumberCopyTargets = phoneNumberCopyTargets,
+        onAvatarQuickActionsOpen = {
+            onAvatarQuickActionsOpen(item.conversationId)
+        },
         onAvatarMessageClick = {
             onItemEvent(ConversationListItemEvent.AvatarMessageClicked(item.conversationId))
         },
