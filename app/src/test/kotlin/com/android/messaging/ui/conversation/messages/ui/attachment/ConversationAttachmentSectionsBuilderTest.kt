@@ -66,7 +66,9 @@ class ConversationAttachmentSectionsBuilderTest {
         val fileAttachment = (sections.trailingItems[1] as ConversationAttachmentItem.Inline)
             .attachment as ConversationInlineAttachment.File
         assertEquals("unsupported", fileAttachment.key)
-        assertEquals("application/pdf", fileAttachment.titleText)
+        assertNull(fileAttachment.titleText)
+        assertEquals(R.string.pdf_attachment, fileAttachment.titleTextResId)
+        assertEquals(R.string.notification_file, fileAttachment.subtitleTextResId)
     }
 
     @Test
@@ -204,12 +206,37 @@ class ConversationAttachmentSectionsBuilderTest {
                 .attachment as ConversationInlineAttachment.File
 
         assertEquals("file", inlineAttachment.key)
-        assertEquals("application/pdf", inlineAttachment.titleText)
+        assertNull(inlineAttachment.titleText)
+        assertEquals(R.string.pdf_attachment, inlineAttachment.titleTextResId)
+        assertEquals(R.string.notification_file, inlineAttachment.subtitleTextResId)
         assertEquals(
             "content://mms/part/file-1",
             (inlineAttachment.openAction as ConversationAttachmentOpenAction.OpenContent)
                 .contentUri,
         )
+    }
+
+    @Test
+    fun nonPdfFileAttachment_usesContentTypeAsTitle() {
+        val sections = buildConversationAttachmentSections(
+            attachments = listOf(
+                ConversationMessageAttachment.Unsupported(
+                    key = "archive",
+                    part = filePart(
+                        contentUri = Uri.parse("content://mms/part/archive-1"),
+                        contentType = "application/zip",
+                    ),
+                ),
+            ).toImmutableList(),
+        )
+
+        val inlineAttachment =
+            (sections.trailingItems.single() as ConversationAttachmentItem.Inline)
+                .attachment as ConversationInlineAttachment.File
+
+        assertEquals("application/zip", inlineAttachment.titleText)
+        assertEquals(R.string.notification_file, inlineAttachment.titleTextResId)
+        assertNull(inlineAttachment.subtitleTextResId)
     }
 
     private fun imagePart(): ConversationMessagePartUiModel.Attachment.Image {
