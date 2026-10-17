@@ -130,10 +130,7 @@ class ShareIntentActivity : BugleComponentActivity() {
     }
 
     private fun redirectToSendToIfNeeded(): Boolean {
-        val hasNoDestination = intent.getStringExtra(EXTRA_ADDRESS).isNullOrEmpty() &&
-            intent.getStringExtra(Intent.EXTRA_EMAIL).isNullOrEmpty()
-
-        if (Intent.ACTION_SEND != intent.action || hasNoDestination) {
+        if (!shouldRedirectToSendTo(intent)) {
             return false
         }
 
@@ -161,6 +158,29 @@ class ShareIntentActivity : BugleComponentActivity() {
     )
 
     companion object {
+        /**
+         * LaunchConversationActivity only understands a destination plus a text body, so
+         * redirecting an intent that carries an EXTRA_STREAM attachment would silently drop the
+         * attachment. Keep such intents in the conversation picker instead.
+         */
+        internal fun shouldRedirectToSendTo(intent: Intent): Boolean =
+            Intent.ACTION_SEND == intent.action &&
+                !intent.hasExtra(Intent.EXTRA_STREAM) &&
+                (
+                    !intent.getStringExtra(EXTRA_ADDRESS).isNullOrEmpty() ||
+                        hasEmailDestination(intent)
+                    )
+
+        /**
+         * EXTRA_EMAIL is documented as a String[] but senders also put a single String there.
+         * Accept both, and ignore null or empty entries since they come from another app.
+         */
+        internal fun hasEmailDestination(intent: Intent): Boolean {
+            val emails = intent.getStringArrayExtra(Intent.EXTRA_EMAIL)
+            return emails?.any { !it.isNullOrEmpty() }
+                ?: !intent.getStringExtra(Intent.EXTRA_EMAIL).isNullOrEmpty()
+        }
+
         internal fun createForwardIntent(
             context: Context,
             uri: Uri,
