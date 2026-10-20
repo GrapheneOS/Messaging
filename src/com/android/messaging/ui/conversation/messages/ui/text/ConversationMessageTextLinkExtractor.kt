@@ -5,7 +5,6 @@ import android.net.Uri
 import android.view.textclassifier.TextClassificationManager
 import android.view.textclassifier.TextClassifier
 import android.view.textclassifier.TextLinks
-import android.webkit.URLUtil
 import com.android.messaging.ui.conversation.messages.model.text.ConversationTextLink
 
 private data class ConversationLinkText(
@@ -92,10 +91,30 @@ private fun resolveConversationTextLinkUrl(
         TextClassifier.TYPE_ADDRESS -> "geo:0,0?q=${Uri.encode(rawLinkText)}"
         TextClassifier.TYPE_EMAIL -> "mailto:${Uri.encode(rawLinkText)}"
         TextClassifier.TYPE_PHONE -> "tel:${Uri.encode(rawLinkText)}"
-        TextClassifier.TYPE_URL -> URLUtil.guessUrl(rawLinkText)
+        TextClassifier.TYPE_URL -> resolveConversationWebUrl(rawLinkText = rawLinkText)
         else -> null
     }
 }
+
+private fun resolveConversationWebUrl(rawLinkText: String): String {
+    val matchingScheme = WEB_URL_SCHEMES.firstOrNull { scheme ->
+        rawLinkText.startsWith(prefix = scheme, ignoreCase = true)
+    }
+
+    return when (matchingScheme) {
+        null -> "$DEFAULT_WEB_URL_SCHEME$rawLinkText"
+        else -> "$matchingScheme${rawLinkText.substring(startIndex = matchingScheme.length)}"
+    }
+}
+
+private const val DEFAULT_WEB_URL_SCHEME = "http://"
+
+private val WEB_URL_SCHEMES = setOf(
+    DEFAULT_WEB_URL_SCHEME,
+    "https://",
+    "rtsp://",
+    "ftp://",
+)
 
 private val CONVERSATION_TEXT_LINK_ENTITY_CONFIG = TextClassifier.EntityConfig.Builder()
     .setIncludedTypes(

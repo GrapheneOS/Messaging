@@ -90,6 +90,65 @@ internal class ConversationMessageTextLinkExtractorTest {
     }
 
     @Test
+    fun extractConversationTextLinks_keepsUrlQueryAndFragment() {
+        val url = "https://drive.proton.me/urls/ABC123?share=1#Secret-Key_42"
+        val text = "Shared folder: $url"
+        val urlRange = text.rangeOf(url)
+        val context = createContextWithClassifier(
+            textLinks = buildTextLinks(
+                text = text,
+                LinkSpec(range = urlRange, entityType = TextClassifier.TYPE_URL),
+            ),
+        )
+
+        val result = extractConversationTextLinks(
+            context = context,
+            text = text,
+        )
+
+        assertEquals(
+            listOf(
+                ConversationTextLink(
+                    start = urlRange.first,
+                    end = urlRange.last + 1,
+                    url = url,
+                ),
+            ),
+            result,
+        )
+    }
+
+    @Test
+    fun extractConversationTextLinks_normalizesWebUrlSchemes() {
+        val text = "See example.com/a#b, HTTPS://Example.com/B#C or ftp://files.example.com/d"
+        val schemelessRange = text.rangeOf("example.com/a#b")
+        val uppercaseRange = text.rangeOf("HTTPS://Example.com/B#C")
+        val ftpRange = text.rangeOf("ftp://files.example.com/d")
+        val context = createContextWithClassifier(
+            textLinks = buildTextLinks(
+                text = text,
+                LinkSpec(range = schemelessRange, entityType = TextClassifier.TYPE_URL),
+                LinkSpec(range = uppercaseRange, entityType = TextClassifier.TYPE_URL),
+                LinkSpec(range = ftpRange, entityType = TextClassifier.TYPE_URL),
+            ),
+        )
+
+        val result = extractConversationTextLinks(
+            context = context,
+            text = text,
+        )
+
+        assertEquals(
+            listOf(
+                "http://example.com/a#b",
+                "https://Example.com/B#C",
+                "ftp://files.example.com/d",
+            ),
+            result.map { it.url },
+        )
+    }
+
+    @Test
     fun extractConversationTextLinks_skipsBlankAndUnsupportedLinks() {
         val text = "bad   ok unsupported"
         val blankRange = text.rangeOf("   ")
