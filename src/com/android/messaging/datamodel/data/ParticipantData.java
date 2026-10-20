@@ -28,7 +28,6 @@ import android.text.TextUtils;
 import androidx.appcompat.mms.MmsManager;
 import androidx.collection.ArrayMap;
 
-import com.android.ex.chips.RecipientEntry;
 import com.android.messaging.Factory;
 import com.android.messaging.R;
 import com.android.messaging.datamodel.DatabaseHelper;
@@ -168,38 +167,6 @@ public class ParticipantData implements Parcelable {
                 cursor.close();
             }
         }
-    }
-
-    public static ParticipantData getFromRecipientEntry(final RecipientEntry recipientEntry) {
-        final ParticipantData pd = new ParticipantData();
-        pd.mParticipantId = null;
-        pd.mSubId = OTHER_THAN_SELF_SUB_ID;
-        pd.mSlotId = INVALID_SLOT_ID;
-        pd.mSendDestination = TextUtil.replaceUnicodeDigits(recipientEntry.getDestination());
-        pd.mIsEmailAddress = MmsSmsUtils.isEmailAddress(pd.mSendDestination);
-        pd.mNormalizedDestination = pd.mIsEmailAddress ?
-                pd.mSendDestination :
-                PhoneUtils.getDefault().getCanonicalForEnteredPhoneNumber(pd.mSendDestination);
-        pd.mDisplayDestination = pd.mIsEmailAddress ?
-                pd.mNormalizedDestination :
-                PhoneUtils.getDefault().formatForDisplay(pd.mNormalizedDestination);
-        pd.mFullName = recipientEntry.getDisplayName();
-        pd.mFirstName = null;
-        pd.mProfilePhotoUri = (recipientEntry.getPhotoThumbnailUri() == null) ? null :
-                recipientEntry.getPhotoThumbnailUri().toString();
-        pd.mContactId = recipientEntry.getContactId();
-        if (pd.mContactId < 0) {
-            // ParticipantData only supports real contact ids (>=0) based on faith that the contacts
-            // provider will continue to only use non-negative ids.  The UI uses contactId < 0 for
-            // special handling. We convert those to 'not resolved'
-            pd.mContactId = PARTICIPANT_CONTACT_ID_NOT_RESOLVED;
-        }
-        pd.mLookupKey = recipientEntry.getLookupKey();
-        pd.mBlocked = false;
-        pd.mSubscriptionColor = Color.TRANSPARENT;
-        pd.mSubscriptionName = null;
-        pd.maybeSetupUnknownSender();
-        return pd;
     }
 
     // Shared code for getFromRawPhoneBySystemLocale and getFromRawPhoneBySimLocale

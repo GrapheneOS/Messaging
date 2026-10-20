@@ -86,10 +86,6 @@
       <item name="android:dividerHeight">0dp</item>
     </style>
 
-    <style name="ChipDeleteIconStyle">
-        <item name="android:paddingLeft">8dp</item>
-    </style>
-
     <style name="WidgetTitle" parent="@android:style/TextAppearance.Holo.Widget.ActionBar.Title">
         <item name="android:textColor">@color/action_bar_title_text_color</item>
         <item name="android:singleLine">true</item>

@@ -11,7 +11,6 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/lib/platform_external_giflib" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/lib/platform_frameworks_opt_chips" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/lib/platform_frameworks_opt_vcard" vcs="Git" />
   </component>
 </project>
