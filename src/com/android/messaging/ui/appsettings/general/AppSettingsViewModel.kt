@@ -49,6 +49,10 @@ internal class AppSettingsViewModel @Inject constructor(
                 appSettingsDelegate.onYouTubeLinkPreviewsChanged(action.enabled)
             }
 
+            is Action.SendOnEnterChanged -> {
+                appSettingsDelegate.onSendOnEnterChanged(action.enabled)
+            }
+
             is Action.NotificationsClicked -> _effects.trySend(Effect.OpenNotificationSettings)
 
             is Action.DefaultSmsAppClicked -> {

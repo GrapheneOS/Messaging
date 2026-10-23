@@ -322,4 +322,6 @@
     <string name="video_attachment_limit_exceeded_when_sending" msgid="8545536951461996462">"Puoi inviare un solo video per messaggio. Rimuovi i video aggiuntivi e riprova."</string>
     <string name="attachment_limit_reached_send_anyway" msgid="2348790618093735551">"Invia comunque"</string>
     <string name="conversation_creation_failure" msgid="8597624563218724441">"Impossibile avviare la conversazione"</string>
+    <string name="send_on_enter_pref_title">Invia con Invio su tastiera fisica</string>
+    <string name="send_on_enter_pref_summary">Invia un messaggio premendo Invio su una tastiera fisica. Usa Maiusc + Invio per una nuova riga. Ctrl + Invio invia sempre il messaggio</string>
 </resources>

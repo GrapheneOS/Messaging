@@ -322,4 +322,6 @@
     <string name="video_attachment_limit_exceeded_when_sending" msgid="8545536951461996462">"Vous ne pouvez envoyer qu\'une vidéo par message. Veuillez supprimer les vidéos supplémentaires, puis réessayer."</string>
     <string name="attachment_limit_reached_send_anyway" msgid="2348790618093735551">"Envoyer quand même"</string>
     <string name="conversation_creation_failure" msgid="8597624563218724441">"Impossible de lancer la conversation."</string>
+    <string name="send_on_enter_pref_title">Envoyer avec Entrée sur clavier physique</string>
+    <string name="send_on_enter_pref_summary">Envoyer un message en appuyant sur Entrée sur un clavier physique. Utilisez Maj + Entrée pour une nouvelle ligne. Ctrl + Entrée envoie toujours le message</string>
 </resources>

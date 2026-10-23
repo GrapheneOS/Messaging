@@ -30,6 +30,7 @@ internal class AppSettingsUiStateMapperImplTest {
                 sendSoundEnabled = false,
                 inConversationSoundEnabled = true,
                 youTubeLinkPreviewsEnabled = true,
+                sendOnEnterEnabled = false,
                 isDebugEnabled = true,
                 dumpSmsEnabled = true,
                 dumpMmsEnabled = false,

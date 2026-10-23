@@ -7,6 +7,8 @@ import android.text.InputType
 import android.util.TypedValue
 import android.view.ContentInfo
 import android.view.Gravity
+import android.view.InputDevice
+import android.view.KeyEvent
 import android.view.View
 import android.view.WindowInsets
 import android.view.inputmethod.EditorInfo
@@ -29,6 +31,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.widget.doAfterTextChanged
 import com.android.messaging.R
 import com.android.messaging.ui.common.components.ComposeBarControlHeight
+import com.android.messaging.util.BuglePrefs
 
 private val TextFieldPadding = 16.dp
 private val TextFieldPaddingBesideIcon = 4.dp
@@ -180,6 +183,27 @@ private fun createMessageEditText(
                 onSend()
             }
             isSendAction
+        }
+
+        setOnKeyListener { view, keyCode, event ->
+            val isPhysicalKeyboard = event.device == null || event.device?.keyboardType == InputDevice.KEYBOARD_TYPE_ALPHABETIC
+            val isEnterKey = keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER
+            if (isPhysicalKeyboard && isEnterKey && event.action == KeyEvent.ACTION_DOWN) {
+                val ctx = view.context
+                val prefs = ctx.getSharedPreferences(BuglePrefs.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
+                val isSendOnEnter = prefs.getBoolean(
+                    ctx.getString(R.string.send_on_enter_pref_key),
+                    ctx.resources.getBoolean(R.bool.send_on_enter_pref_default),
+                )
+                if ((isSendOnEnter && !event.isShiftPressed) || event.isCtrlPressed) {
+                    onImeSend.value?.invoke()
+                    true
+                } else {
+                    false
+                }
+            } else {
+                false
+            }
         }
     }
 }
