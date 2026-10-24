@@ -1,5 +1,7 @@
 package com.android.messaging.ui.conversationlist.common.item
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -15,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -22,17 +25,23 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import com.android.messaging.R
+import com.android.messaging.sms.MmsSmsUtils
 import com.android.messaging.ui.common.components.participant.ParticipantQuickActionsPopup
+import com.android.messaging.ui.common.components.participant.PhoneNumberCopyTarget
 import com.android.messaging.ui.common.components.participant.participantAvatarLabel
 import com.android.messaging.ui.common.components.participant.participantColorSeed
 import com.android.messaging.ui.common.components.selection.SelectionListAvatar
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun ConversationListItemAvatar(
     item: ConversationListItemUiModel,
     isSelectionMode: Boolean,
     onToggleSelection: () -> Unit,
+    phoneNumberCopyTargets: ImmutableList<PhoneNumberCopyTarget>,
+    onQuickActionsOpen: () -> Unit,
     onMessageClick: () -> Unit,
     onCallClick: (() -> Unit)?,
     onContactClick: (() -> Unit)?,
@@ -56,7 +65,10 @@ internal fun ConversationListItemAvatar(
     val onAvatarClick = {
         when {
             isSelectionMode -> onToggleSelection()
-            else -> showQuickActions = true
+            else -> {
+                onQuickActionsOpen()
+                showQuickActions = true
+            }
         }
     }
     val avatarContentDescription = stringResource(
@@ -66,7 +78,6 @@ internal fun ConversationListItemAvatar(
         },
         item.title.orEmpty(),
     )
-
     Box(modifier = Modifier.size(ItemAvatarSize)) {
         SelectionListAvatar(
             avatarUri = item.avatar.uri,
@@ -89,12 +100,45 @@ internal fun ConversationListItemAvatar(
             fallbackIcon = fallbackIcon,
             fallbackLabel = fallbackLabel,
             colorSeedCode = colorSeedCode,
+            phoneNumberCopyTargets = resolvePhoneNumberCopyTargets(item, phoneNumberCopyTargets),
+            onPhoneNumberCopy = rememberPhoneNumberCopyCallback(),
             onDismiss = { showQuickActions = false },
             onMessageClick = onMessageClick,
             onCallClick = onCallClick,
             onContactClick = onContactClick,
             onInfoClick = onInfoClick,
         )
+    }
+}
+
+private fun resolvePhoneNumberCopyTargets(
+    item: ConversationListItemUiModel,
+    targets: ImmutableList<PhoneNumberCopyTarget>,
+): ImmutableList<PhoneNumberCopyTarget> {
+    val fallbackTarget = item.avatar.normalizedDestination
+        ?.takeIf(String::isNotBlank)
+        ?.takeIf(MmsSmsUtils::isPhoneNumber)
+        ?.let { phoneNumber ->
+            PhoneNumberCopyTarget(
+                displayName = item.title?.takeIf(String::isNotBlank) ?: phoneNumber,
+                phoneNumber = phoneNumber,
+            )
+        }
+    return targets.takeIf { it.isNotEmpty() }
+        ?: fallbackTarget?.let { persistentListOf(it) }
+        ?: persistentListOf()
+}
+
+@Composable
+private fun rememberPhoneNumberCopyCallback(): (String) -> Unit {
+    val context = LocalContext.current
+    val clipboardManager = remember(context) {
+        context.getSystemService(ClipboardManager::class.java)
+    }
+    return remember(clipboardManager) {
+        { phoneNumber ->
+            clipboardManager?.setPrimaryClip(ClipData.newPlainText(null, phoneNumber))
+        }
     }
 }
 
@@ -120,6 +164,8 @@ private fun ConversationListAvatarQuickActions(
     fallbackIcon: ImageVector,
     fallbackLabel: String?,
     colorSeedCode: String?,
+    phoneNumberCopyTargets: ImmutableList<PhoneNumberCopyTarget>,
+    onPhoneNumberCopy: (String) -> Unit,
     onDismiss: () -> Unit,
     onMessageClick: () -> Unit,
     onCallClick: (() -> Unit)?,
@@ -152,5 +198,10 @@ private fun ConversationListAvatarQuickActions(
             onDismiss()
         },
         isContactSaved = item.avatar.isContactSaved,
+        phoneNumberCopyTargets = phoneNumberCopyTargets,
+        onPhoneNumberCopy = { phoneNumber ->
+            onPhoneNumberCopy(phoneNumber)
+            onDismiss()
+        },
     )
 }

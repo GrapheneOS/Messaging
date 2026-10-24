@@ -5,17 +5,23 @@ import com.android.messaging.data.blockedparticipants.repository.BlockedParticip
 import com.android.messaging.data.conversation.event.ConversationArchiveEvents
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
+import com.android.messaging.data.conversation.model.recipient.ConversationRecipient
+import com.android.messaging.data.conversation.repository.ConversationParticipantsRepository
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.domain.conversation.usecase.action.ArchiveConversation
 import com.android.messaging.domain.conversation.usecase.action.CheckConversationActionRequirements
 import com.android.messaging.domain.conversation.usecase.action.ConversationActionRequirementsResult
+import com.android.messaging.sms.MmsSmsUtils
 import com.android.messaging.ui.conversation.common.ConversationScreenDelegate
 import com.android.messaging.ui.conversation.metadata.mapper.ConversationMetadataUiStateMapper
 import com.android.messaging.ui.conversation.metadata.model.ConversationMetadataUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenNavEvent as NavEvent
 import javax.inject.Inject
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -25,8 +31,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
@@ -50,6 +56,7 @@ internal interface ConversationMetadataDelegate :
 internal class ConversationMetadataDelegateImpl @Inject constructor(
     private val checkConversationActionRequirements: CheckConversationActionRequirements,
     private val conversationsRepository: ConversationsRepository,
+    private val conversationParticipantsRepository: ConversationParticipantsRepository,
     private val conversationMetadataUiStateMapper: ConversationMetadataUiStateMapper,
     private val blockedParticipantsRepository: BlockedParticipantsRepository,
     conversationArchiveEvents: ConversationArchiveEvents,
@@ -99,23 +106,29 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
                     return@collectLatest
                 }
 
-                conversationsRepository
-                    .getConversationMetadata(conversationId = conversationId)
-                    .onEach { metadata ->
+                combine(
+                    conversationsRepository.getConversationMetadata(
+                        conversationId = conversationId,
+                    ).onEach { metadata ->
                         if (latestMetadata != null && metadata == null) {
                             _navigationEvents.emit(NavEvent.CloseConversation)
                         }
 
                         latestMetadata = metadata
-                    }
-                    .map { metadata ->
-                        when {
-                            metadata != null -> {
-                                conversationMetadataUiStateMapper.map(metadata = metadata)
-                            }
-                            else -> ConversationMetadataUiState.Unavailable
+                    },
+                    conversationParticipantsRepository.getParticipants(
+                        conversationId = conversationId,
+                    ),
+                ) { metadata, participants ->
+                    when {
+                        metadata != null -> {
+                            conversationMetadataUiStateMapper
+                                .map(metadata = metadata)
+                                .withPhoneNumberCopyTargets(participants = participants)
                         }
+                        else -> ConversationMetadataUiState.Unavailable
                     }
+                }
                     .flowOn(defaultDispatcher)
                     .collect { currentMetadataState ->
                         _state.value = currentMetadataState
@@ -241,4 +254,45 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
                 ?.value
                 ?.takeIf { it.isNotBlank() }
         }
+}
+
+private fun ConversationMetadataUiState.withPhoneNumberCopyTargets(
+    participants: ImmutableList<ConversationRecipient>,
+): ConversationMetadataUiState {
+    if (this !is ConversationMetadataUiState.Present) {
+        return this
+    }
+
+    val participantTargets = participants
+        .mapNotNull { participant ->
+            val phoneNumber = participant.destination
+                .trim()
+                .takeIf { it.isNotBlank() }
+                ?.takeIf(MmsSmsUtils::isPhoneNumber)
+                ?: return@mapNotNull null
+
+            ConversationMetadataUiState.PhoneNumberCopyTarget(
+                displayName = participant.displayName
+                    .takeIf { it.isNotBlank() }
+                    ?: phoneNumber,
+                phoneNumber = phoneNumber,
+            )
+        }
+        .toImmutableList()
+
+    val targets = when {
+        participantTargets.isNotEmpty() -> participantTargets
+        otherParticipantPhoneNumber != null -> {
+            persistentListOf(
+                ConversationMetadataUiState.PhoneNumberCopyTarget(
+                    displayName = title.takeIf { it.isNotBlank() }
+                        ?: otherParticipantPhoneNumber,
+                    phoneNumber = otherParticipantPhoneNumber,
+                ),
+            )
+        }
+        else -> participantTargets
+    }
+
+    return copy(phoneNumberCopyTargets = targets)
 }
