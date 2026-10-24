@@ -9,6 +9,7 @@ internal enum class AppBooleanPref(
     SEND_SOUND(R.string.send_sound_pref_key),
     IN_CONVERSATION_SOUND(R.string.in_conversation_sound_pref_key),
     YOUTUBE_LINK_PREVIEWS(R.string.youtube_link_previews_pref_key),
+    SEND_ON_ENTER(R.string.send_on_enter_pref_key),
     DUMP_SMS(R.string.dump_sms_pref_key),
     DUMP_MMS(R.string.dump_mms_pref_key),
 }
