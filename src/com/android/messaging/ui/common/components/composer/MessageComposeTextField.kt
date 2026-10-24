@@ -185,31 +185,35 @@ private fun createMessageEditText(
             isSendAction
         }
 
-        setOnKeyListener { view, keyCode, event ->
-            val isPhysicalKeyboard =
-                event.device == null ||
-                    event.device?.keyboardType == InputDevice.KEYBOARD_TYPE_ALPHABETIC
-            val isEnterKey =
-                keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER
-            if (isPhysicalKeyboard && isEnterKey && event.action == KeyEvent.ACTION_DOWN) {
-                val ctx = view.context
-                val prefs = ctx.getSharedPreferences(
-                    BuglePrefs.SHARED_PREFERENCES_NAME,
-                    Context.MODE_PRIVATE
-                )
-                val isSendOnEnter = prefs.getBoolean(
-                    ctx.getString(R.string.send_on_enter_pref_key),
-                    ctx.resources.getBoolean(R.bool.send_on_enter_pref_default),
-                )
-                if ((isSendOnEnter && !event.isShiftPressed) || event.isCtrlPressed) {
-                    onImeSend.value?.invoke()
-                    true
-                } else {
-                    false
-                }
+        setupKeyboardSendHandler(onImeSend = onImeSend)
+    }
+}
+
+private fun EditText.setupKeyboardSendHandler(onImeSend: State<(() -> Unit)?>) {
+    setOnKeyListener { view, keyCode, event ->
+        val isPhysicalKeyboard =
+            event.device == null ||
+                event.device?.keyboardType == InputDevice.KEYBOARD_TYPE_ALPHABETIC
+        val isEnterKey =
+            keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER
+        if (isPhysicalKeyboard && isEnterKey && event.action == KeyEvent.ACTION_DOWN) {
+            val ctx = view.context
+            val prefs = ctx.getSharedPreferences(
+                BuglePrefs.SHARED_PREFERENCES_NAME,
+                Context.MODE_PRIVATE,
+            )
+            val isSendOnEnter = prefs.getBoolean(
+                ctx.getString(R.string.send_on_enter_pref_key),
+                ctx.resources.getBoolean(R.bool.send_on_enter_pref_default),
+            )
+            if ((isSendOnEnter && !event.isShiftPressed) || event.isCtrlPressed) {
+                onImeSend.value?.invoke()
+                true
             } else {
                 false
             }
+        } else {
+            false
         }
     }
 }
@@ -305,7 +309,7 @@ private fun EditText.applyImeSend(isImeSendEnabled: Boolean, imeSendLabel: Strin
         else -> EditorInfo.IME_ACTION_UNSPECIFIED
     }
 
-    // Enter keeps inserting a new line; voice typing and accessibility services can still send.
+    // Enter keeps inserting a new line; voice typing and accessibility services can still sent.
     imeOptions = imeAction or
         EditorInfo.IME_FLAG_NO_ENTER_ACTION or
         EditorInfo.IME_FLAG_NO_FULLSCREEN
