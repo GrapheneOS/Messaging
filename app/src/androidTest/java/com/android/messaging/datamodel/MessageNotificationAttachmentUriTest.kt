@@ -306,8 +306,10 @@ class MessageNotificationAttachmentUriTest {
             uri,
             ContentType.IMAGE_JPEG,
             partId,
-            // isManualDownloadNeeded, avatarUri, messageId, timestamp, contactUriString
+            // isManualDownloadNeeded, avatarUri, normalizedDestination, messageId, timestamp,
+            // contactUriString
             false,
+            null,
             null,
             "1",
             1L,

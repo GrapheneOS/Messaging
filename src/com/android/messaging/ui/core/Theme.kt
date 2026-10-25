@@ -1,7 +1,9 @@
 package com.android.messaging.ui.core
 
+import android.content.Context
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -22,15 +24,21 @@ private val AppShapes = Shapes(
 fun AppTheme(
     content: @Composable () -> Unit,
 ) {
-    val context = LocalContext.current
-    val colorScheme = when {
-        isSystemInDarkTheme() -> dynamicDarkColorScheme(context = context)
-        else -> dynamicLightColorScheme(context = context)
-    }
+    val colorScheme = appColorScheme(
+        context = LocalContext.current,
+        isDarkTheme = isSystemInDarkTheme(),
+    )
 
     MaterialTheme(
         colorScheme = colorScheme,
         shapes = AppShapes,
         content = content,
     )
+}
+
+internal fun appColorScheme(context: Context, isDarkTheme: Boolean): ColorScheme {
+    return when {
+        isDarkTheme -> dynamicDarkColorScheme(context = context)
+        else -> dynamicLightColorScheme(context = context)
+    }
 }

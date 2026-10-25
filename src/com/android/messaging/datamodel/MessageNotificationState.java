@@ -48,6 +48,7 @@ import com.android.messaging.datamodel.data.MessagePartData;
 import com.android.messaging.datamodel.data.ParticipantData;
 import com.android.messaging.sms.MmsUtils;
 import com.android.messaging.ui.UIIntents;
+import com.android.messaging.ui.common.components.participant.ParticipantAvatarBitmaps;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.AvatarUriUtil;
 import com.android.messaging.util.ContentType;
@@ -120,6 +121,7 @@ public class MessageNotificationState {
         final CharSequence mText;
         final long mTimestamp;
         final Uri mAvatarUri;
+        final String mNormalizedDestination;
         final Uri mAttachmentUri;
         final String mAttachmentType;
         final String mAttachmentPartId;
@@ -128,7 +130,8 @@ public class MessageNotificationState {
         MessageLineInfo(final String authorId, final String authorFullName,
                 final String authorFirstName, final CharSequence text, final Uri attachmentUri,
                 final String attachmentType, final String attachmentPartId,
-                final boolean isManualDownloadNeeded, final Uri avatarUri, final String messageId,
+                final boolean isManualDownloadNeeded, final Uri avatarUri,
+                final String normalizedDestination, final String messageId,
                 final long timestamp, final String contactUriString) {
             mAuthorId = authorId;
             mMessageId = messageId;
@@ -149,6 +152,7 @@ public class MessageNotificationState {
 
             mIsManualDownloadNeeded = isManualDownloadNeeded;
             mAvatarUri = avatarUri;
+            mNormalizedDestination = normalizedDestination;
             mAttachmentUri = attachmentUri;
             mAttachmentType = attachmentType;
             mAttachmentPartId = attachmentPartId;
@@ -184,10 +188,9 @@ public class MessageNotificationState {
                     .setUri(mContactUriString);
 
             Context context = Factory.get().getApplicationContext();
-            Bitmap avatarBitmap = BugleNotifications.getAvatarBitmap(context, mAvatarUri);
-            if (avatarBitmap != null) {
-                builder.setIcon(IconCompat.createWithBitmap(avatarBitmap));
-            }
+            Bitmap avatarBitmap = ParticipantAvatarBitmaps.createParticipantAvatarBitmap(
+                    context, mAvatarUri, mName, mNormalizedDestination);
+            builder.setIcon(IconCompat.createWithBitmap(avatarBitmap));
 
             return builder.build();
         }
@@ -578,8 +581,9 @@ public class MessageNotificationState {
                     conversation.mLineInfos.add(new MessageLineInfo(authorId,
                             authorFullName, authorFirstName, text,
                             attachmentUri, attachmentType, attachmentPartId,
-                            isManualDownloadNeeded, avatarUri, messageId, timestamp,
-                            contactUriString));
+                            isManualDownloadNeeded, avatarUri,
+                            convMessageData.getSenderNormalizedDestination(), messageId,
+                            timestamp, contactUriString));
                     messageCount++;
                     conversation.mTotalMessageCount++;
                 } while (convMessageCursor.moveToNext());
