@@ -123,7 +123,7 @@ internal abstract class BaseConversationMediaPickerTest {
                 modifier = Modifier.fillMaxSize(),
                 cameraController = cameraController,
                 scaffoldState = scaffoldState,
-                photoPickerSheetContent = {
+                photoPickerContent = {
                     Box(
                         modifier = Modifier.size(1.dp),
                     )
