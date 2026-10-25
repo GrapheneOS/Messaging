@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationsettings.common
 
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,15 +26,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.onLongClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -52,6 +58,7 @@ import com.android.messaging.ui.core.MessagingPreviewColumn
 internal fun ConversationHeader(
     title: String,
     participant: ParticipantUiState?,
+    onCopyDestination: (String) -> Unit,
     modifier: Modifier = Modifier,
     collapseProgress: () -> Float = { 0f },
 ) {
@@ -91,6 +98,9 @@ internal fun ConversationHeader(
 
             ExpandedTitle(
                 title = title,
+                details = participant?.details?.asLtrText(),
+                destination = participant?.normalizedDestination,
+                onCopyDestination = onCopyDestination,
                 collapseProgress = collapseProgress,
             )
         }
@@ -178,17 +188,71 @@ internal fun ParticipantItem(
 @Composable
 private fun ExpandedTitle(
     title: String,
+    details: String?,
+    destination: String?,
+    onCopyDestination: (String) -> Unit,
     collapseProgress: () -> Float,
 ) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.headlineSmall,
-        color = MaterialTheme.colorScheme.onSurface,
-        textAlign = TextAlign.Center,
-        maxLines = 3,
-        overflow = TextOverflow.Ellipsis,
-        modifier = Modifier.alpha(alpha = 1f - collapseProgress()),
-    )
+    Column(
+        modifier = Modifier
+            .copyDestinationOnLongPress(
+                destination = destination,
+                onCopyDestination = onCopyDestination,
+            )
+            .graphicsLayer { alpha = 1f - collapseProgress() },
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
+        )
+
+        if (!details.isNullOrEmpty()) {
+            Text(
+                text = details,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun Modifier.copyDestinationOnLongPress(
+    destination: String?,
+    onCopyDestination: (String) -> Unit,
+): Modifier {
+    if (destination.isNullOrEmpty()) {
+        return this
+    }
+
+    val hapticFeedback = LocalHapticFeedback.current
+    val currentOnCopyDestination by rememberUpdatedState(onCopyDestination)
+    val copyLabel = stringResource(R.string.copy_to_clipboard)
+
+    return this
+        .pointerInput(destination) {
+            detectTapGestures(
+                onLongPress = {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    currentOnCopyDestination(destination)
+                },
+            )
+        }
+        .semantics(mergeDescendants = true) {
+            onLongClick(label = copyLabel) {
+                currentOnCopyDestination(destination)
+                true
+            }
+        }
 }
 
 @Composable
@@ -399,6 +463,7 @@ private fun ConversationHeaderPreview() {
                 canCall = true,
                 isContactSaved = true,
             ),
+            onCopyDestination = {},
         )
     }
 }
