@@ -7,6 +7,7 @@ package com.android.messaging.ui.conversation.recipientpicker.component
 import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.animateBounds
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -34,11 +36,21 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.addOutline
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.res.stringResource
@@ -49,8 +61,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.android.messaging.R
 import com.android.messaging.ui.common.components.participant.ParticipantAvatar
 import com.android.messaging.ui.common.components.participant.participantAvatarLabel
@@ -69,6 +84,7 @@ private val selectedRecipientChipStartPadding = 4.dp
 private val selectedRecipientTrailingContentKey = Any()
 
 private const val SELECTED_RECIPIENT_CHIP_REMOVE_ICON_HIDDEN_SCALE = 0.8f
+private const val SELECTED_RECIPIENT_TRAILING_CONTENT_Z_INDEX = -1f
 
 @Composable
 internal fun RecipientSelectionSelectedRecipientChips(
@@ -81,23 +97,22 @@ internal fun RecipientSelectionSelectedRecipientChips(
     trailingContent: (@Composable (Modifier) -> Unit)? = null,
 ) {
     val chipBoundsTransform = remember {
-        BoundsTransform { _, _ ->
-            spring(
-                dampingRatio = Spring.DampingRatioNoBouncy,
-                stiffness = Spring.StiffnessMediumLow,
-            )
-        }
+        BoundsTransform { _, _ -> selectedRecipientChipAnimationSpec() }
+    }
+    val entranceGate = remember { SelectedRecipientChipEntranceGate() }
+
+    SideEffect {
+        entranceGate.animatesEntrances = true
     }
 
     CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
         LookaheadScope {
             FlowRow(
-                modifier = modifier.animateContentSize(
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioNoBouncy,
-                        stiffness = Spring.StiffnessMediumLow,
-                    ),
-                ),
+                // A fixed width keeps the size animation from clipping a new chip and, in RTL,
+                // from moving the lookahead frame that new chips are placed in
+                modifier = modifier
+                    .fillMaxWidth()
+                    .animateContentSize(animationSpec = selectedRecipientChipAnimationSpec()),
                 horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(space = 8.dp),
             ) {
@@ -106,6 +121,9 @@ internal fun RecipientSelectionSelectedRecipientChips(
                 recipients.forEach { recipient ->
                     key(recipient.destination) {
                         val isArmed = recipient.destination == armedRecipientDestination
+                        val revealProgress = rememberSelectedRecipientChipRevealProgress(
+                            startsHidden = entranceGate.animatesEntrances,
+                        )
 
                         RecipientSelectionSelectedRecipientChip(
                             modifier = Modifier.animateBounds(
@@ -115,6 +133,7 @@ internal fun RecipientSelectionSelectedRecipientChips(
                             recipient = recipient,
                             isArmed = isArmed,
                             enabled = enabled,
+                            revealProgress = { revealProgress.value },
                             onClick = { onRecipientClick(recipient) },
                         )
                     }
@@ -123,10 +142,12 @@ internal fun RecipientSelectionSelectedRecipientChips(
                 trailingContent?.let { content ->
                     key(selectedRecipientTrailingContentKey) {
                         content(
-                            Modifier.animateBounds(
-                                lookaheadScope = this@LookaheadScope,
-                                boundsTransform = chipBoundsTransform,
-                            ),
+                            Modifier
+                                .zIndex(zIndex = SELECTED_RECIPIENT_TRAILING_CONTENT_Z_INDEX)
+                                .animateBounds(
+                                    lookaheadScope = this@LookaheadScope,
+                                    boundsTransform = chipBoundsTransform,
+                                ),
                         )
                     }
                 }
@@ -135,11 +156,37 @@ internal fun RecipientSelectionSelectedRecipientChips(
     }
 }
 
+private class SelectedRecipientChipEntranceGate {
+    var animatesEntrances: Boolean = false
+}
+
+@Composable
+private fun rememberSelectedRecipientChipRevealProgress(startsHidden: Boolean): State<Float> {
+    val progress = remember {
+        Animatable(
+            initialValue = when {
+                startsHidden -> 0f
+                else -> 1f
+            },
+        )
+    }
+
+    LaunchedEffect(progress) {
+        progress.animateTo(
+            targetValue = 1f,
+            animationSpec = selectedRecipientChipAnimationSpec(),
+        )
+    }
+
+    return progress.asState()
+}
+
 @Composable
 private fun RecipientSelectionSelectedRecipientChip(
     recipient: SelectedRecipient,
     isArmed: Boolean,
     enabled: Boolean,
+    revealProgress: () -> Float,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -149,16 +196,22 @@ private fun RecipientSelectionSelectedRecipientChip(
     )
     val chipContainerColor = MaterialTheme.colorScheme.surfaceVariant
     val chipContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val chipShape = InputChipDefaults.shape
 
     Surface(
         selected = isArmed,
         onClick = onClick,
-        modifier = modifier.semantics {
-            contentDescription = chipContentDescription
-            role = Role.Checkbox
-        },
+        modifier = modifier
+            .revealFromStart(
+                progress = revealProgress,
+                shape = chipShape,
+            )
+            .semantics {
+                contentDescription = chipContentDescription
+                role = Role.Checkbox
+            },
         enabled = enabled,
-        shape = InputChipDefaults.shape,
+        shape = chipShape,
         color = chipContainerColor,
         contentColor = chipContentColor,
         border = null,
@@ -167,6 +220,49 @@ private fun RecipientSelectionSelectedRecipientChip(
             recipient = recipient,
             isArmed = isArmed,
         )
+    }
+}
+
+// A layer clip also limits hit testing, so taps on the hint over a revealing chip reach the field
+private fun Modifier.revealFromStart(progress: () -> Float, shape: Shape): Modifier {
+    return graphicsLayer {
+        val revealedFraction = progress()
+        val isRevealing = revealedFraction < 1f
+
+        clip = isRevealing
+        this.shape = when {
+            isRevealing -> RevealedFromStartShape(fraction = revealedFraction, shape = shape)
+            else -> RectangleShape
+        }
+    }
+}
+
+private class RevealedFromStartShape(
+    private val fraction: Float,
+    private val shape: Shape,
+) : Shape {
+
+    override fun createOutline(
+        size: Size,
+        layoutDirection: LayoutDirection,
+        density: Density,
+    ): Outline {
+        val revealedSize = size.copy(width = size.width * fraction)
+        val revealedLeft = when (layoutDirection) {
+            LayoutDirection.Ltr -> 0f
+            LayoutDirection.Rtl -> size.width - revealedSize.width
+        }
+        val revealedOutline = shape.createOutline(
+            size = revealedSize,
+            layoutDirection = layoutDirection,
+            density = density,
+        )
+        val revealedPath = Path().apply {
+            addOutline(outline = revealedOutline)
+            translate(offset = Offset(x = revealedLeft, y = 0f))
+        }
+
+        return Outline.Generic(path = revealedPath)
     }
 }
 
@@ -236,19 +332,19 @@ private fun SelectedRecipientChipRemoveArea(
 
     val width by animateDpAsState(
         targetValue = targetWidth,
-        animationSpec = selectedRecipientChipRemoveAnimationSpec(),
+        animationSpec = selectedRecipientChipAnimationSpec(),
         label = "SelectedRecipientChipRemoveAreaWidth",
     )
 
     val alpha by animateFloatAsState(
         targetValue = targetAlpha,
-        animationSpec = selectedRecipientChipRemoveAnimationSpec(),
+        animationSpec = selectedRecipientChipAnimationSpec(),
         label = "SelectedRecipientChipRemoveIconAlpha",
     )
 
     val scale by animateFloatAsState(
         targetValue = targetScale,
-        animationSpec = selectedRecipientChipRemoveAnimationSpec(),
+        animationSpec = selectedRecipientChipAnimationSpec(),
         label = "SelectedRecipientChipRemoveIconScale",
     )
 
@@ -270,7 +366,7 @@ private fun SelectedRecipientChipRemoveArea(
     }
 }
 
-private fun <T> selectedRecipientChipRemoveAnimationSpec(): FiniteAnimationSpec<T> {
+private fun <T> selectedRecipientChipAnimationSpec(): FiniteAnimationSpec<T> {
     return spring(
         dampingRatio = Spring.DampingRatioNoBouncy,
         stiffness = Spring.StiffnessMediumLow,
