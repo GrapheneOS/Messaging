@@ -16,12 +16,18 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 private const val LOAD_MORE_THRESHOLD = 10
@@ -64,6 +70,10 @@ internal fun SelectionListContent(
         isLoadingMore = isLoadingMore,
         loadMoreItemCount = loadMoreItemCount,
         onLoadMore = onLoadMore,
+    )
+    SelectionListEndAnchorEffect(
+        listState = listState,
+        bottomPadding = contentPadding.calculateBottomPadding(),
     )
 
     Box(modifier = modifier) {
@@ -129,6 +139,33 @@ private fun SelectionListLoadMoreEffect(
                 currentOnLoadMore()
             }
         }
+    }
+}
+
+@Composable
+private fun SelectionListEndAnchorEffect(
+    listState: LazyListState,
+    bottomPadding: Dp,
+) {
+    val bottomPaddingPx = with(LocalDensity.current) { bottomPadding.roundToPx() }
+    val previousBottomPaddingPx = remember { mutableIntStateOf(value = bottomPaddingPx) }
+    val isAnchoredToEndState = remember { mutableStateOf(value = false) }
+
+    SideEffect {
+        val isAtEnd = !listState.canScrollForward
+        val isAnchoredToEnd = isAtEnd &&
+            (listState.canScrollBackward || isAnchoredToEndState.value)
+        val bottomPaddingIncrease = bottomPaddingPx - previousBottomPaddingPx.intValue
+
+        if (isAnchoredToEnd && bottomPaddingIncrease > 0) {
+            listState.requestScrollToItem(
+                index = listState.firstVisibleItemIndex,
+                scrollOffset = listState.firstVisibleItemScrollOffset + bottomPaddingIncrease,
+            )
+        }
+
+        isAnchoredToEndState.value = isAnchoredToEnd
+        previousBottomPaddingPx.intValue = bottomPaddingPx
     }
 }
 
