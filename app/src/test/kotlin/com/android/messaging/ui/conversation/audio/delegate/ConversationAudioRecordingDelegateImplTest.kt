@@ -7,6 +7,7 @@ import com.android.messaging.data.conversation.model.draft.ConversationDraftPend
 import com.android.messaging.data.conversation.model.draft.ConversationDraftPendingAttachmentKind
 import com.android.messaging.data.media.repository.ConversationAttachmentsRepository
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
+import com.android.messaging.domain.media.usecase.ResolveAudioDurationMillis
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingPhase
@@ -14,6 +15,7 @@ import com.android.messaging.ui.conversation.composer.delegate.ConversationDraft
 import com.android.messaging.ui.mediapicker.LevelTrackingMediaRecorder
 import com.android.messaging.util.ContentType
 import io.mockk.CapturingSlot
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -57,12 +59,14 @@ class ConversationAudioRecordingDelegateImplTest {
     private lateinit var conversationAttachmentsRepository: ConversationAttachmentsRepository
     private lateinit var subscriptionsRepository: SubscriptionsRepository
     private lateinit var conversationDraftDelegate: ConversationDraftDelegate
+    private lateinit var resolveAudioDurationMillis: ResolveAudioDurationMillis
 
     @Before
     fun setUp() {
         conversationAttachmentsRepository = mockk()
         subscriptionsRepository = mockk()
         conversationDraftDelegate = mockk()
+        resolveAudioDurationMillis = mockk()
 
         every {
             subscriptionsRepository.resolveMaxMessageSize(any())
@@ -265,7 +269,7 @@ class ConversationAudioRecordingDelegateImplTest {
     }
 
     @Test
-    fun finishRecording_afterMinimumDuration_resolvesPendingAudioAttachment() {
+    fun finishRecording_afterMinimumDuration_resolvesPendingAudioAttachmentWithItsDuration() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val outputUri = Uri.parse("content://scratch/audio/1")
             val pendingAttachment = slot<ConversationDraftPendingAttachment>()
@@ -298,6 +302,7 @@ class ConversationAudioRecordingDelegateImplTest {
                     attachment = ConversationDraftAttachment(
                         contentType = ContentType.AUDIO_3GPP,
                         contentUri = outputUri.toString(),
+                        durationMillis = RECORDED_DURATION_MILLIS,
                     ),
                 )
             }
@@ -601,6 +606,9 @@ class ConversationAudioRecordingDelegateImplTest {
         every {
             anyConstructed<LevelTrackingMediaRecorder>().stopRecording()
         } returns outputUri
+        coEvery {
+            resolveAudioDurationMillis(contentUri = outputUri.toString())
+        } returns RECORDED_DURATION_MILLIS
     }
 
     private fun verifyPendingAudioAttachmentAdded(
@@ -637,6 +645,7 @@ class ConversationAudioRecordingDelegateImplTest {
                 attachment = ConversationDraftAttachment(
                     contentType = ContentType.AUDIO_3GPP,
                     contentUri = outputUri.toString(),
+                    durationMillis = RECORDED_DURATION_MILLIS,
                 ),
             )
             conversationDraftDelegate.flushDraft()
@@ -665,6 +674,7 @@ class ConversationAudioRecordingDelegateImplTest {
             conversationAttachmentsRepository = conversationAttachmentsRepository,
             subscriptionsRepository = subscriptionsRepository,
             conversationDraftDelegate = conversationDraftDelegate,
+            resolveAudioDurationMillis = resolveAudioDurationMillis,
             defaultDispatcher = mainDispatcherRule.testDispatcher,
         ).also { delegate ->
             delegate.bind(
@@ -672,5 +682,9 @@ class ConversationAudioRecordingDelegateImplTest {
                 conversationIdFlow = MutableStateFlow(value = CONVERSATION_ID),
             )
         }
+    }
+
+    private companion object {
+        private const val RECORDED_DURATION_MILLIS = 4_200L
     }
 }

@@ -5,6 +5,7 @@ import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.media.repository.ConversationAttachmentsRepository
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
+import com.android.messaging.domain.media.usecase.ResolveAudioDurationMillis
 import com.android.messaging.testutil.PausableTestDispatcher
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.testutil.typeMessageText
@@ -126,6 +127,7 @@ internal class ConversationAudioRecordingDraftLifecycleTest : BaseConversationDr
             conversationAttachmentsRepository = conversationAttachmentsRepository,
             subscriptionsRepository = subscriptionsRepository,
             conversationDraftDelegate = harness.delegate,
+            resolveAudioDurationMillis = mockk<ResolveAudioDurationMillis>(relaxed = true),
             defaultDispatcher = defaultDispatcher,
         ).also { delegate ->
             delegate.bind(
