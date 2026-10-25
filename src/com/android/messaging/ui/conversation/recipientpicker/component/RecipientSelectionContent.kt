@@ -89,6 +89,7 @@ internal fun RecipientSelectionContent(
                 armedDestination = armedDestination,
                 queryFocusRequester = queryFocusRequester,
                 simSelectorSlot = simSelectorSlot,
+                onPrimaryActionClick = onPrimaryActionClick,
                 onQueryChanged = onQueryChanged,
                 onRecipientDestinationClick = onRecipientDestinationClick,
                 onSelectedRecipientClick = onSelectedRecipientClick,
@@ -159,6 +160,7 @@ private fun RecipientSelectionArmedQueryArea(
     armedDestination: MutableState<String?>,
     queryFocusRequester: FocusRequester,
     simSelectorSlot: (@Composable () -> Unit)?,
+    onPrimaryActionClick: () -> Unit,
     onQueryChanged: (String) -> Unit,
     onRecipientDestinationClick: OnRecipientDestinationAction,
     onSelectedRecipientClick: (SelectedRecipient) -> Unit,
@@ -209,6 +211,7 @@ private fun RecipientSelectionArmedQueryArea(
         onKeyboardAction = rememberRecipientSelectionKeyboardActionHandler(
             uiState = uiState,
             armedDestination = armedDestination,
+            onPrimaryActionClick = onPrimaryActionClick,
             onRecipientDestinationClick = onRecipientDestinationClick,
         ),
         onQueryChanged = onQueryChangedWrapped,
@@ -224,9 +227,11 @@ private fun RecipientSelectionArmedQueryArea(
 private fun rememberRecipientSelectionKeyboardActionHandler(
     uiState: RecipientSelectionContentUiState,
     armedDestination: MutableState<String?>,
+    onPrimaryActionClick: () -> Unit,
     onRecipientDestinationClick: OnRecipientDestinationAction,
 ): KeyboardActionHandler {
     val currentUiState = rememberUpdatedState(uiState)
+    val currentOnPrimaryActionClick = rememberUpdatedState(onPrimaryActionClick)
     val currentOnRecipientDestinationClick = rememberUpdatedState(onRecipientDestinationClick)
 
     return remember(armedDestination) {
@@ -241,15 +246,31 @@ private fun rememberRecipientSelectionKeyboardActionHandler(
             }
 
             when {
-                item == null || destination == null -> performDefaultAction()
-
-                else -> {
+                item != null && destination != null -> {
                     armedDestination.value = null
                     currentOnRecipientDestinationClick.value(item, destination)
                 }
+
+                recipientSelectionCanConfirmFromKeyboard(uiState = currentState) -> {
+                    armedDestination.value = null
+                    currentOnPrimaryActionClick.value()
+                }
+
+                else -> performDefaultAction()
             }
         }
     }
+}
+
+private fun recipientSelectionCanConfirmFromKeyboard(
+    uiState: RecipientSelectionContentUiState,
+): Boolean {
+    val primaryAction = uiState.primaryAction
+
+    return uiState.picker.query.isBlank() &&
+        primaryAction != null &&
+        primaryAction.isEnabled &&
+        !primaryAction.isLoading
 }
 
 private fun recipientSelectionSoleResultOrNull(
