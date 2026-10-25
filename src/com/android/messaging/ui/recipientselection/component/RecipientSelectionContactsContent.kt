@@ -70,7 +70,7 @@ internal fun RecipientSelectionContactsContent(
             .toImmutableSet()
     }
 
-    val showSectionHeaders = pickerUiState.query.isBlank()
+    val showSectionHeaders = pickerUiState.itemsQuery.isBlank()
     val contactEntries = remember(pickerUiState.items, showSectionHeaders) {
         recipientContactListEntries(
             items = pickerUiState.items,
@@ -143,7 +143,7 @@ private fun LazyListScope.recipientSelectionContactItems(
             item {
                 RecipientSelectionEmptyState(
                     text = when {
-                        pickerUiState.query.isBlank() -> emptyStateText
+                        pickerUiState.itemsQuery.isBlank() -> emptyStateText
                         else -> R.string.recipient_picker_no_results_text
                     },
                 )

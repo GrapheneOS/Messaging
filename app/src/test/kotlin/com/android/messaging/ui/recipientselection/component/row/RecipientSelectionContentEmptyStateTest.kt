@@ -1,5 +1,6 @@
 package com.android.messaging.ui.recipientselection.component.row
 
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithText
@@ -71,6 +72,7 @@ internal class RecipientSelectionContentEmptyStateTest :
             uiState = RecipientSelectionContentUiState(
                 picker = RecipientPickerUiState(
                     query = "ada",
+                    itemsQuery = "ada",
                     items = persistentListOf(singleDestinationContactItem()),
                 ),
             ),
@@ -82,9 +84,47 @@ internal class RecipientSelectionContentEmptyStateTest :
     }
 
     @Test
-    fun emptyContent_whenQueryIsTyped_swapsThePromptForNoResults() {
+    fun emptyContent_whenQueryIsTyped_keepsThePromptUntilTheSearchSettles() {
         val uiState = mutableStateOf(emptyContentUiState(query = ""))
+        setStatefulSelectionContent(uiState = uiState)
 
+        composeTestRule.onNodeWithText(hostPrompt).assertIsDisplayed()
+
+        uiState.value = emptyContentUiState(query = "zzqqxx", itemsQuery = "")
+
+        composeTestRule.onNodeWithText(hostPrompt).assertIsDisplayed()
+        composeTestRule.onNodeWithText(noResultsText).assertDoesNotExist()
+
+        uiState.value = emptyContentUiState(query = "zzqqxx")
+
+        composeTestRule.onNodeWithText(noResultsText).assertIsDisplayed()
+        composeTestRule.onNodeWithText(hostPrompt).assertDoesNotExist()
+    }
+
+    @Test
+    fun emptyContent_whenQueryIsCleared_keepsNoResultsUntilTheContactsLoad() {
+        val uiState = mutableStateOf(emptyContentUiState(query = "zzqqxx"))
+        setStatefulSelectionContent(uiState = uiState)
+
+        composeTestRule.onNodeWithText(noResultsText).assertIsDisplayed()
+
+        uiState.value = emptyContentUiState(query = "", itemsQuery = "zzqqxx")
+
+        composeTestRule.onNodeWithText(noResultsText).assertIsDisplayed()
+        composeTestRule.onNodeWithText(hostPrompt).assertDoesNotExist()
+
+        uiState.value = RecipientSelectionContentUiState(
+            picker = RecipientPickerUiState(
+                items = persistentListOf(singleDestinationContactItem()),
+            ),
+        )
+
+        composeTestRule.onNodeWithText(CONTACT_DISPLAY_NAME).assertIsDisplayed()
+        composeTestRule.onNodeWithText(noResultsText).assertDoesNotExist()
+        composeTestRule.onNodeWithText(hostPrompt).assertDoesNotExist()
+    }
+
+    private fun setStatefulSelectionContent(uiState: State<RecipientSelectionContentUiState>) {
         composeTestRule.setContent {
             AppTheme {
                 RecipientSelectionContactsContent(
@@ -98,22 +138,17 @@ internal class RecipientSelectionContentEmptyStateTest :
                 )
             }
         }
-
-        composeTestRule.onNodeWithText(hostPrompt).assertIsDisplayed()
-
-        uiState.value = emptyContentUiState(query = "zzqqxx")
-
-        composeTestRule.onNodeWithText(noResultsText).assertIsDisplayed()
-        composeTestRule.onNodeWithText(hostPrompt).assertDoesNotExist()
     }
 
     private fun emptyContentUiState(
         query: String,
+        itemsQuery: String = query,
         isLoading: Boolean = false,
     ): RecipientSelectionContentUiState {
         return RecipientSelectionContentUiState(
             picker = RecipientPickerUiState(
                 query = query,
+                itemsQuery = itemsQuery,
                 isLoading = isLoading,
             ),
         )
