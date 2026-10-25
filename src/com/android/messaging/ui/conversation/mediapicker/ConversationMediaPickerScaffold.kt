@@ -34,7 +34,7 @@ internal fun ConversationMediaPickerScaffold(
     modifier: Modifier = Modifier,
     cameraController: ConversationCameraController,
     scaffoldState: BottomSheetScaffoldState,
-    photoPickerSheetContent: @Composable () -> Unit,
+    photoPickerContent: @Composable (isBesideContent: Boolean) -> Unit,
     visualAttachments: ImmutableList<ComposerAttachmentUiModel.Resolved.VisualMedia>,
     conversationTitle: String?,
     captureMode: ConversationCaptureMode,
@@ -61,7 +61,7 @@ internal fun ConversationMediaPickerScaffold(
     ConversationMediaPickerSheetScaffold(
         modifier = modifier,
         scaffoldState = scaffoldState,
-        photoPickerSheetContent = photoPickerSheetContent,
+        photoPickerContent = photoPickerContent,
     ) { innerPadding ->
         ConversationMediaPickerOverlayHost(
             modifier = Modifier.fillMaxSize(),

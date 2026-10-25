@@ -153,6 +153,7 @@ private fun rememberConversationEmbeddedPhotoPickerState(
     onAttachmentStartRequest: () -> Boolean,
     onPhotoPickerMediaSelected: (List<String>) -> Unit,
     onPhotoPickerMediaDeselected: (List<String>) -> Unit,
+    onClose: () -> Unit,
 ): EmbeddedPhotoPickerState {
     return rememberEmbeddedPhotoPickerState(
         initialExpandedValue = false,
@@ -171,11 +172,23 @@ private fun rememberConversationEmbeddedPhotoPickerState(
             onPhotoPickerMediaDeselected(uris.map(Uri::toString))
         },
         onSelectionComplete = {
-            coroutineScope.launch(Dispatchers.Main.immediate) {
-                sheetState.partialExpand()
+            when {
+                sheetState.isExpandedOrExpanding() -> {
+                    coroutineScope.launch(Dispatchers.Main.immediate) {
+                        sheetState.partialExpand()
+                    }
+                }
+
+                // Beside the content there is no sheet to collapse.
+                else -> onClose()
             }
         },
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+private fun SheetState.isExpandedOrExpanding(): Boolean {
+    return currentValue == SheetValue.Expanded || targetValue == SheetValue.Expanded
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPhotoPickerComposeApi::class)
@@ -183,12 +196,10 @@ private fun rememberConversationEmbeddedPhotoPickerState(
 private fun SyncEmbeddedPhotoPickerExpansionEffect(
     sheetState: SheetState,
     embeddedPhotoPickerState: EmbeddedPhotoPickerState,
+    isBesideContent: Boolean,
 ) {
-    LaunchedEffect(sheetState, embeddedPhotoPickerState) {
-        snapshotFlow {
-            sheetState.currentValue == SheetValue.Expanded ||
-                sheetState.targetValue == SheetValue.Expanded
-        }
+    LaunchedEffect(sheetState, embeddedPhotoPickerState, isBesideContent) {
+        snapshotFlow { isBesideContent || sheetState.isExpandedOrExpanding() }
             .distinctUntilChanged()
             .collect { isExpanded ->
                 embeddedPhotoPickerState.isExpanded = isExpanded
@@ -266,10 +277,7 @@ private fun ConversationMediaPickerContent(
         onAttachmentStartRequest = onAttachmentStartRequest,
         onPhotoPickerMediaSelected = onPhotoPickerMediaSelected,
         onPhotoPickerMediaDeselected = onPhotoPickerMediaDeselected,
-    )
-    SyncEmbeddedPhotoPickerExpansionEffect(
-        sheetState = sheetState,
-        embeddedPhotoPickerState = embeddedPhotoPickerState,
+        onClose = onClose,
     )
 
     ConversationMediaPickerScaffoldContent(
@@ -336,10 +344,12 @@ private fun ConversationMediaPickerScaffoldContent(
         modifier = modifier,
         cameraController = cameraController,
         scaffoldState = scaffoldState,
-        photoPickerSheetContent = {
+        photoPickerContent = { isBesideContent ->
             ConversationEmbeddedPhotoPickerContent(
+                sheetState = scaffoldState.bottomSheetState,
                 state = embeddedPhotoPickerState,
                 embeddedPhotoPickerFeatureInfo = embeddedPhotoPickerFeatureInfo,
+                isBesideContent = isBesideContent,
             )
         },
         visualAttachments = visualAttachments,
@@ -369,12 +379,21 @@ private fun ConversationMediaPickerScaffoldContent(
 }
 
 @SuppressLint("NewApi")
-@OptIn(ExperimentalPhotoPickerComposeApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPhotoPickerComposeApi::class)
 @Composable
 private fun ConversationEmbeddedPhotoPickerContent(
+    sheetState: SheetState,
     state: EmbeddedPhotoPickerState,
     embeddedPhotoPickerFeatureInfo: EmbeddedPhotoPickerFeatureInfo,
+    isBesideContent: Boolean,
 ) {
+    // Beside the content there is no sheet to expand, so the picker opens its tabs right away.
+    SyncEmbeddedPhotoPickerExpansionEffect(
+        sheetState = sheetState,
+        embeddedPhotoPickerState = state,
+        isBesideContent = isBesideContent,
+    )
+
     EmbeddedPhotoPicker(
         modifier = Modifier
             .background(color = MaterialTheme.colorScheme.surface)

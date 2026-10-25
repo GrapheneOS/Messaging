@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ime
@@ -36,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -104,12 +107,18 @@ internal fun ConversationMediaReviewScene(
         contentPadding.calculateBottomPadding(),
         imeBottomPadding,
     ) + 12.dp
+    val layoutDirection = LocalLayoutDirection.current
 
     ConversationMediaReviewSceneContent(
         modifier = modifier,
         attachments = attachments,
         conversationTitle = conversationTitle,
-        reviewBottomPadding = reviewBottomPadding,
+        reviewPadding = PaddingValues(
+            start = contentPadding.calculateStartPadding(layoutDirection),
+            top = 12.dp,
+            end = contentPadding.calculateEndPadding(layoutDirection),
+            bottom = reviewBottomPadding,
+        ),
         reviewPagerState = reviewPagerState,
         isSendActionEnabled = isSendActionEnabled,
         onAttachmentPreviewClick = onAttachmentPreviewClick,
@@ -127,7 +136,7 @@ private fun ConversationMediaReviewSceneContent(
     modifier: Modifier = Modifier,
     attachments: ImmutableList<ComposerAttachmentUiModel.Resolved.VisualMedia>,
     conversationTitle: String?,
-    reviewBottomPadding: Dp,
+    reviewPadding: PaddingValues,
     reviewPagerState: ConversationMediaReviewPagerState,
     isSendActionEnabled: Boolean,
     onAttachmentPreviewClick: (ComposerAttachmentUiModel.Resolved.VisualMedia) -> Unit,
@@ -156,10 +165,7 @@ private fun ConversationMediaReviewSceneContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(
-                    top = 12.dp,
-                    bottom = reviewBottomPadding,
-                ),
+                .padding(paddingValues = reviewPadding),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             ConversationMediaReviewTopBar(
