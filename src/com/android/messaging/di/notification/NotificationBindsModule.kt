@@ -1,5 +1,7 @@
 package com.android.messaging.di.notification
 
+import com.android.messaging.domain.notification.usecase.DeleteUnlistedConversationChannels
+import com.android.messaging.domain.notification.usecase.DeleteUnlistedConversationChannelsImpl
 import com.android.messaging.domain.notification.usecase.GenerateNotificationId
 import com.android.messaging.domain.notification.usecase.GenerateNotificationIdImpl
 import com.android.messaging.domain.notification.usecase.MigrateConversationNotificationChannels
@@ -14,6 +16,12 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal abstract class NotificationBindsModule {
+
+    @Binds
+    @Reusable
+    abstract fun bindDeleteUnlistedConversationChannels(
+        impl: DeleteUnlistedConversationChannelsImpl,
+    ): DeleteUnlistedConversationChannels
 
     @Binds
     @Singleton
