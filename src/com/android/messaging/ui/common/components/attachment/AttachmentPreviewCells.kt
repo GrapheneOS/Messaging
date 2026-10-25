@@ -29,9 +29,8 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.android.messaging.ui.common.components.participant.ParticipantAvatarImage
 
-private val AttachmentPreviewCardHeight = 88.dp
+internal val AttachmentPreviewCardHeight = 88.dp
 private val AttachmentPreviewCardWidth = 220.dp
-private val MediaAttachmentCardSize = 90.dp
 private val AudioRemoveButtonMargin = 4.dp
 private val AudioRemoveButtonSize = 24.dp
 private val ThumbnailRemoveButtonSize = 28.dp
@@ -49,7 +48,7 @@ internal fun MediaAttachmentCell(
     modifier: Modifier = Modifier,
 ) {
     AttachmentPreviewCard(
-        modifier = modifier.size(size = MediaAttachmentCardSize),
+        modifier = modifier.size(size = AttachmentPreviewCardHeight),
         onClick = onClick,
     ) {
         MediaThumbnail(

@@ -1,13 +1,22 @@
 package com.android.messaging.ui.conversation.composer.ui
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.height
 import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentType
@@ -21,6 +30,7 @@ import com.android.messaging.ui.core.AppTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -147,6 +157,107 @@ class ConversationAttachmentPreviewTest {
         }
     }
 
+    @Test
+    fun removingTheLastAttachment_shrinksTheStripWithItsItemStillShown() {
+        val attachments = setResizableContent(
+            initialAttachments = persistentListOf(resolvedAttachment),
+        )
+        val expandedHeight = stripHostHeight()
+
+        composeTestRule.mainClock.autoAdvance = false
+        attachments.value = persistentListOf()
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.advanceTimeBy(milliseconds = MID_ANIMATION_MILLIS)
+
+        composeTestRule
+            .onNodeWithTag(conversationAttachmentPreviewItemTestTag(RESOLVED_KEY))
+            .assertExists()
+        assertMidAnimationHeight(height = stripHostHeight(), expandedHeight = expandedHeight)
+    }
+
+    @Test
+    fun removingTheLastAttachment_dropsTheListOnceCollapsed() {
+        val attachments = setResizableContent(
+            initialAttachments = persistentListOf(resolvedAttachment),
+        )
+
+        attachments.value = persistentListOf()
+
+        composeTestRule
+            .onAllNodesWithTag(CONVERSATION_ATTACHMENT_PREVIEW_LIST_TEST_TAG)
+            .assertCountEquals(expectedSize = 0)
+        assertEquals(0.dp, stripHostHeight())
+    }
+
+    @Test
+    fun addingTheFirstAttachment_growsTheStripGradually() {
+        val attachments = setResizableContent(initialAttachments = persistentListOf())
+
+        composeTestRule.mainClock.autoAdvance = false
+        attachments.value = persistentListOf(resolvedAttachment)
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.advanceTimeBy(milliseconds = MID_ANIMATION_MILLIS)
+        val midAnimationHeight = stripHostHeight()
+        composeTestRule.mainClock.autoAdvance = true
+        composeTestRule.waitForIdle()
+
+        assertMidAnimationHeight(height = midAnimationHeight, expandedHeight = stripHostHeight())
+    }
+
+    @Test
+    fun switchingAttachmentKinds_keepsTheStripHeight() {
+        val attachments = setResizableContent(initialAttachments = persistentListOf())
+
+        val stripHeights = listOf(
+            pendingAttachment,
+            pendingAudioFinalizingAttachment,
+            resolvedAttachment,
+            vCardAttachment,
+            audioAttachment,
+        ).associate { attachment ->
+            attachments.value = persistentListOf(attachment)
+            composeTestRule.waitForIdle()
+            attachment::class.simpleName to stripHostHeight()
+        }
+
+        assertEquals("Strip heights: $stripHeights", 1, stripHeights.values.distinct().size)
+    }
+
+    private fun assertMidAnimationHeight(height: Dp, expandedHeight: Dp) {
+        assertTrue(
+            "Expected a height between 0 and $expandedHeight, was $height",
+            height > 0.dp && height < expandedHeight,
+        )
+    }
+
+    private fun stripHostHeight(): Dp {
+        return composeTestRule
+            .onNodeWithTag(STRIP_HOST_TEST_TAG)
+            .getBoundsInRoot()
+            .height
+    }
+
+    private fun setResizableContent(
+        initialAttachments: ImmutableList<ComposerAttachmentUiModel>,
+    ): MutableState<ImmutableList<ComposerAttachmentUiModel>> {
+        val attachments = mutableStateOf(value = initialAttachments)
+
+        composeTestRule.setContent {
+            AppTheme {
+                Box(modifier = Modifier.testTag(STRIP_HOST_TEST_TAG)) {
+                    ConversationAttachmentPreview(
+                        attachments = attachments.value,
+                        onPendingAttachmentRemove = {},
+                        onResolvedAttachmentClick = {},
+                        onResolvedAttachmentRemove = {},
+                    )
+                }
+            }
+        }
+
+        return attachments
+    }
+
     private fun setContent(
         attachments: ImmutableList<ComposerAttachmentUiModel> =
             persistentListOf(pendingAttachment, resolvedAttachment),
@@ -167,6 +278,8 @@ class ConversationAttachmentPreviewTest {
     }
 
     private companion object {
+        private const val MID_ANIMATION_MILLIS = 100L
+        private const val STRIP_HOST_TEST_TAG = "attachment_strip_host"
         private const val PENDING_KEY = "pending-1"
         private const val PENDING_AUDIO_KEY = "pending-audio-1"
         private const val RESOLVED_KEY = "resolved-1"
