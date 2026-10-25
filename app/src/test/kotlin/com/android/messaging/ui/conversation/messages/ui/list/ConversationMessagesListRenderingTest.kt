@@ -7,7 +7,6 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.v2.createComposeRule
-import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -23,7 +22,6 @@ import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.CONVERSATION_MESSAGES_LIST_TEST_TAG
-import com.android.messaging.ui.conversation.conversationMessageBubbleTestTag
 import com.android.messaging.ui.conversation.conversationMessageItemTestTag
 import com.android.messaging.ui.conversation.conversationMessageSelectionRowTestTag
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
@@ -101,7 +99,7 @@ internal class ConversationMessagesListRenderingTest {
             .onNodeWithText(text = SECOND_MESSAGE_TEXT)
             .assertIsDisplayed()
 
-        longClickBubble(messageId = SECOND_MESSAGE_ID)
+        longClickMessage(messageId = SECOND_MESSAGE_ID)
 
         composeTestRule.runOnIdle {
             verify(exactly = 1) {
@@ -243,13 +241,13 @@ internal class ConversationMessagesListRenderingTest {
     }
 
     @Suppress("SameParameterValue")
-    private fun longClickBubble(messageId: String) {
+    private fun longClickMessage(messageId: String) {
         composeTestRule
             .onNodeWithTag(
-                testTag = conversationMessageBubbleTestTag(messageId = MessageId(messageId)),
+                testTag = conversationMessageSelectionRowTestTag(messageId = MessageId(messageId)),
                 useUnmergedTree = true,
             )
-            .performTouchInput { longClick() }
+            .performSemanticsAction(SemanticsActions.OnLongClick)
     }
 
     private fun sendSubscription(): Subscription {

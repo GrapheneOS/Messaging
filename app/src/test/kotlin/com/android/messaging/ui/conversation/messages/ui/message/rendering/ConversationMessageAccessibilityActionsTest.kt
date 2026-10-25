@@ -40,6 +40,9 @@ internal class ConversationMessageAccessibilityActionsTest :
                 ConversationMessageAction.Share,
                 ConversationMessageAction.Forward,
                 ConversationMessageAction.Details,
+            ) + listOf(
+                targetContext.getString(R.string.conversation_message_select_text),
+                targetContext.getString(R.string.conversation_message_select_message),
             ),
             customActionLabels(config = bodyTextNodeConfig()),
         )
@@ -135,9 +138,9 @@ internal class ConversationMessageAccessibilityActionsTest :
         assertTrue(
             config[SemanticsProperties.Text].contains(AnnotatedString(text = DEFAULT_BODY_TEXT)),
         )
-        assertEquals(
-            targetContext.getString(R.string.message_context_menu_view_details),
-            customActionLabels(config = config).last(),
+        assertTrue(
+            targetContext.getString(R.string.message_context_menu_view_details) in
+                customActionLabels(config = config),
         )
     }
 

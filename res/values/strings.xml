@@ -53,6 +53,16 @@
     <string name="mediapicker_gallery_title">Choose media</string>
     <string name="conversation_message_selection_title">%d</string>
     <string name="conversation_message_select">Select</string>
+    <string name="conversation_message_select_message">Select message</string>
+    <string name="conversation_message_select_text">Select text</string>
+    <string name="conversation_copy_link">Copy link</string>
+    <string name="conversation_copy_phone_number">Copy phone number</string>
+    <string name="conversation_copy_email_address">Copy email address</string>
+    <string name="conversation_copy_address">Copy address</string>
+    <string name="conversation_copy_link_target">Copy link <xliff:g id="link" example="https://example.com">%1$s</xliff:g></string>
+    <string name="conversation_copy_phone_number_target">Copy phone number <xliff:g id="phone_number" example="+1 555-0100">%1$s</xliff:g></string>
+    <string name="conversation_copy_email_address_target">Copy email address <xliff:g id="email_address" example="name@example.com">%1$s</xliff:g></string>
+    <string name="conversation_copy_address_target">Copy address <xliff:g id="address" example="1600 Amphitheatre Parkway">%1$s</xliff:g></string>
     <string name="conversation_attachment_open">Open</string>
     <string name="mediapicker_audio_title">Record audio</string>
     <string name="mediapicker_contact_title">Choose a contact</string>

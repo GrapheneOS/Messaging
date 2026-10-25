@@ -29,6 +29,7 @@ import com.android.messaging.ui.conversation.messages.model.message.Conversation
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel.Status
 import com.android.messaging.ui.conversation.messages.ui.attachment.OnConversationAttachmentClick
+import com.android.messaging.ui.conversation.messages.ui.text.ConversationMessageSelectionScope
 import com.android.messaging.ui.conversation.preview.previewAudioPart
 import com.android.messaging.ui.conversation.preview.previewFilePart
 import com.android.messaging.ui.conversation.preview.previewImagePart
@@ -80,41 +81,51 @@ internal fun ConversationMessage(
                 .coerceAtMost(MESSAGE_BUBBLE_MAX_WIDTH_DP.dp)
         }
 
-        val maxAdjustedBubbleWidth = remember(
-            maxBubbleWidth,
-            layout.showAvatarGutter,
-        ) {
+        val maxAdjustedBubbleWidth = remember(maxBubbleWidth, layout.showAvatarGutter) {
             conversationMessageMaxBubbleWidth(
                 maxBubbleWidth = maxBubbleWidth,
                 showAvatarGutter = layout.showAvatarGutter,
             )
         }
 
-        Row(
-            // Scopes the traversal index that conversationMessageInteractionModifier gives the
-            // message to this message
-            modifier = Modifier
-                .fillMaxWidth()
-                .semantics { isTraversalGroup = true },
-            horizontalArrangement = messageHorizontalArrangement(message = message),
+        val isTouchExplorationEnabled = rememberIsTouchExplorationEnabled()
+
+        ConversationMessageSelectionScope(
+            conversationId = message.conversationId,
+            messageId = message.messageId,
+            subject = layout.content.subjectText,
+            body = layout.content.bodyText,
+            isSelectionMode = isSelectionMode,
+            isTouchExplorationEnabled = isTouchExplorationEnabled,
+            onSelectMessage = onMessageLongClick,
         ) {
-            ConversationMessageContent(
-                message = message,
-                isSelected = isSelected,
-                isSelectionMode = isSelectionMode,
-                layout = layout,
-                maxBubbleWidth = maxAdjustedBubbleWidth,
-                simDisplayName = simDisplayName,
-                onAttachmentClick = onAttachmentClick,
-                onExternalUriClick = onExternalUriClick,
-                onMessageClick = onMessageClick,
-                onMessageAvatarClick = onMessageAvatarClick,
-                onMessageDownloadClick = onMessageDownloadClick,
-                onMessageActionClick = onMessageActionClick,
-                onMessageLongClick = onMessageLongClick,
-                onMessageResendClick = onMessageResendClick,
-                onSimSelectorClick = onSimSelectorClick,
-            )
+            Row(
+                // Scopes the traversal index that conversationMessageInteractionModifier gives the
+                // message to this message
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics { isTraversalGroup = true },
+                horizontalArrangement = messageHorizontalArrangement(message = message),
+            ) {
+                ConversationMessageContent(
+                    message = message,
+                    isSelected = isSelected,
+                    isSelectionMode = isSelectionMode,
+                    isTouchExplorationEnabled = isTouchExplorationEnabled,
+                    layout = layout,
+                    maxBubbleWidth = maxAdjustedBubbleWidth,
+                    simDisplayName = simDisplayName,
+                    onAttachmentClick = onAttachmentClick,
+                    onExternalUriClick = onExternalUriClick,
+                    onMessageClick = onMessageClick,
+                    onMessageAvatarClick = onMessageAvatarClick,
+                    onMessageDownloadClick = onMessageDownloadClick,
+                    onMessageActionClick = onMessageActionClick,
+                    onMessageLongClick = onMessageLongClick,
+                    onMessageResendClick = onMessageResendClick,
+                    onSimSelectorClick = onSimSelectorClick,
+                )
+            }
         }
     }
 }
@@ -289,6 +300,7 @@ private fun ConversationMessageContent(
     message: ConversationMessageUiModel,
     isSelected: Boolean,
     isSelectionMode: Boolean,
+    isTouchExplorationEnabled: Boolean,
     layout: ConversationMessageLayout,
     maxBubbleWidth: Dp,
     simDisplayName: String?,
@@ -309,6 +321,7 @@ private fun ConversationMessageContent(
             message = message,
             isSelected = isSelected,
             isSelectionMode = isSelectionMode,
+            isTouchExplorationEnabled = isTouchExplorationEnabled,
             bubbleRipple = bubbleRipple,
             onMessageClick = onMessageClick,
             onMessageDownloadClick = onMessageDownloadClick,

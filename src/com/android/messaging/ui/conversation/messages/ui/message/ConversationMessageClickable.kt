@@ -30,6 +30,8 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalInputModeManager
 import androidx.compose.ui.platform.LocalViewConfiguration
@@ -39,6 +41,9 @@ import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.semantics
 import com.android.messaging.R
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
+import com.android.messaging.ui.conversation.messages.ui.text.LocalConversationTextSelection
+import com.android.messaging.ui.conversation.messages.ui.text.awaitConversationLongPress
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -47,8 +52,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 /**
  * Tap and long press of a message. The tap toggles the selection in selection mode, otherwise it
  * downloads or resends the message, or does nothing, in which case no tap is offered at all. Touch
- * is taken on the whole message when [isWholeMessageTouchable], otherwise it's left to
- * [conversationMessageBubbleClickable].
+ * is taken on the whole message when [isWholeMessageTouchable], otherwise the tap is left to
+ * [conversationMessageBubbleClickable] and only the long press is taken beside the bubble.
  */
 @Composable
 internal fun Modifier.conversationMessageClickable(
@@ -119,7 +124,7 @@ internal fun Modifier.conversationMessageClickable(
                         )
                 }
 
-                else -> Modifier
+                else -> Modifier.conversationMessageLongClickable(onLongClick = onMessageLongClick)
             },
         )
 }
@@ -221,22 +226,71 @@ internal fun Modifier.conversationMessageBubbleClickable(
     onClick: (() -> Unit)?,
     onLongClick: () -> Unit,
 ): Modifier {
-    val hapticFeedback = LocalHapticFeedback.current
     val currentOnClick by rememberUpdatedState(onClick)
-    val currentOnLongClick by rememberUpdatedState(onLongClick)
+    val pressGesture = remember { ConversationMessagePressGesture() }
 
     return pointerInput(interactionSource) {
+        // Only the long-press detector below owns message long presses. A competing long-press
+        // detector here would consume the native text selection's release and hide its menu.
         detectTapGestures(
             onPress = { position ->
-                emitPress(position = position, interactionSource = interactionSource)
+                emitPress(
+                    position = position,
+                    interactionSource = interactionSource,
+                    pressGesture = pressGesture,
+                )
             },
             onTap = { currentOnClick?.invoke() },
-            onLongPress = {
-                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                currentOnLongClick()
-            },
         )
-    }
+    }.conversationMessageLongClickable(
+        pressGesture = pressGesture,
+        onLongClick = onLongClick,
+    )
+}
+
+/**
+ * Long press of a message outside its text, which selects text instead. [pressGesture] is told
+ * when the long press is released, so that the press emitted by the tap detector lasts until then.
+ */
+@Composable
+private fun Modifier.conversationMessageLongClickable(
+    pressGesture: ConversationMessagePressGesture? = null,
+    onLongClick: () -> Unit,
+): Modifier {
+    val hapticFeedback = LocalHapticFeedback.current
+    val currentOnLongClick by rememberUpdatedState(onLongClick)
+    val textSelection = LocalConversationTextSelection.current
+    var coordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
+
+    return onGloballyPositioned { coordinates = it }
+        .pointerInput(pressGesture, textSelection) {
+            awaitEachGesture {
+                // Main reaches the content first, so a down taken by an attachment, which long
+                // presses on its own, or by the tap detector of the bubble, when this is beside
+                // the bubble, is skipped here.
+                val down = awaitFirstDown(pass = PointerEventPass.Main)
+                pressGesture?.longPressRelease = null
+                val positionInRoot = coordinates?.localToRoot(relativeToLocal = down.position)
+                val selectsText = positionInRoot != null &&
+                    textSelection?.containsText(positionInRoot = positionInRoot) == true
+                if (!selectsText && awaitConversationLongPress(down = down)) {
+                    val longPressRelease = CompletableDeferred<Boolean>()
+                    pressGesture?.longPressRelease = longPressRelease
+                    try {
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                        textSelection?.selection?.clear()
+                        currentOnLongClick()
+                        do {
+                            val event = awaitPointerEvent(pass = PointerEventPass.Initial)
+                            event.changes.forEach { it.consume() }
+                        } while (event.changes.any { it.pressed })
+                        longPressRelease.complete(true)
+                    } finally {
+                        longPressRelease.complete(false)
+                    }
+                }
+            }
+        }
 }
 
 /**
@@ -262,6 +316,7 @@ private fun Modifier.consumeTapsBeforeContent(): Modifier {
 private suspend fun PressGestureScope.emitPress(
     position: Offset,
     interactionSource: MutableInteractionSource,
+    pressGesture: ConversationMessagePressGesture,
 ) {
     val releasedBeforeTimeout = withTimeoutOrNull(
         timeMillis = ViewConfiguration.getTapTimeout().toLong(),
@@ -280,6 +335,9 @@ private suspend fun PressGestureScope.emitPress(
     try {
         if (releasedBeforeTimeout == null) {
             released = tryAwaitRelease()
+            if (!released) {
+                released = pressGesture.longPressRelease?.await() ?: false
+            }
         }
     } finally {
         interactionSource.tryEmit(
@@ -289,6 +347,10 @@ private suspend fun PressGestureScope.emitPress(
             },
         )
     }
+}
+
+private class ConversationMessagePressGesture {
+    var longPressRelease: CompletableDeferred<Boolean>? = null
 }
 
 private val CONVERSATION_MESSAGE_ENTER_KEYS = setOf(

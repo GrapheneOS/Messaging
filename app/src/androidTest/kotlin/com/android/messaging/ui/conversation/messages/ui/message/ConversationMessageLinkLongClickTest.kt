@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -39,7 +40,7 @@ class ConversationMessageLinkLongClickTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun longClickOutgoingLinkOnlyMessageSelectsMessage() {
+    fun longClickOutgoingLinkBubblePaddingSelectsMessage() {
         var externalUriClickCount = 0
         var messageLongClickCount = 0
 
@@ -68,9 +69,12 @@ class ConversationMessageLinkLongClickTest {
         }
 
         composeTestRule
-            .onNodeWithText(text = LINK_ONLY_TEXT, useUnmergedTree = true)
+            .onNodeWithTag(
+                testTag = conversationMessageBubbleTestTag(messageId = MESSAGE_ID),
+                useUnmergedTree = true,
+            )
             .performTouchInput {
-                longClick(position = center)
+                longClick(position = Offset(x = 1f, y = centerY))
             }
 
         composeTestRule.runOnIdle {
@@ -80,7 +84,7 @@ class ConversationMessageLinkLongClickTest {
     }
 
     @Test
-    fun longClickOutgoingLinkOnlyMessageStaysSelectedAfterRelease() {
+    fun longClickOutgoingLinkBubblePaddingStaysSelectedAfterRelease() {
         var externalUriClickCount = 0
         var messageClickCount = 0
         var messageLongClickCount = 0
@@ -112,9 +116,12 @@ class ConversationMessageLinkLongClickTest {
         awaitLinkAnnotated(text = LINK_ONLY_TEXT)
 
         composeTestRule
-            .onNodeWithText(text = LINK_ONLY_TEXT, useUnmergedTree = true)
+            .onNodeWithTag(
+                testTag = conversationMessageBubbleTestTag(messageId = MESSAGE_ID),
+                useUnmergedTree = true,
+            )
             .performTouchInput {
-                longClick(position = center)
+                longClick(position = Offset(x = 1f, y = centerY))
             }
 
         composeTestRule.runOnIdle {
@@ -127,8 +134,9 @@ class ConversationMessageLinkLongClickTest {
     }
 
     @Test
-    fun longClickOutgoingPlainTextMessageSelectsMessageOnce() {
+    fun longClickOutgoingPlainTextBubblePaddingSelectsMessageOnce() {
         var messageLongClickCount = 0
+        var otherActionCount = 0
 
         composeTestRule.setContent {
             AppTheme {
@@ -137,6 +145,9 @@ class ConversationMessageLinkLongClickTest {
                     onMessageLongClick = {
                         messageLongClickCount += 1
                     },
+                    onMessageClick = { otherActionCount += 1 },
+                    onMessageDownloadClick = { otherActionCount += 1 },
+                    onMessageResendClick = { otherActionCount += 1 },
                 )
             }
         }
@@ -151,11 +162,12 @@ class ConversationMessageLinkLongClickTest {
                 useUnmergedTree = true,
             )
             .performTouchInput {
-                longClick(position = center)
+                longClick(position = Offset(x = 1f, y = centerY))
             }
 
         composeTestRule.runOnIdle {
             assertEquals(1, messageLongClickCount)
+            assertEquals(0, otherActionCount)
         }
     }
 

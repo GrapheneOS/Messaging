@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -11,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
@@ -22,7 +24,11 @@ import com.android.messaging.ui.conversation.messages.model.message.Conversation
 import com.android.messaging.ui.conversation.messages.ui.attachment.ConversationMessageAttachments
 import com.android.messaging.ui.conversation.messages.ui.attachment.OnConversationAttachmentClick
 import com.android.messaging.ui.conversation.messages.ui.text.ConversationMessageText
+import com.android.messaging.ui.conversation.messages.ui.text.ConversationSelectableTextTouchGuard
+import com.android.messaging.ui.conversation.messages.ui.text.ConversationTextSelectionContainer
 import com.android.messaging.ui.conversation.messages.ui.text.LocalConversationMessageLinkColor
+import com.android.messaging.ui.conversation.messages.ui.text.LocalConversationTextSelection
+import com.android.messaging.ui.conversation.messages.ui.text.conversationSelectableTextBounds
 import com.android.messaging.ui.conversation.preview.previewAudioPart
 import com.android.messaging.ui.conversation.preview.previewFilePart
 import com.android.messaging.ui.conversation.preview.previewImagePart
@@ -53,45 +59,47 @@ internal fun ConversationMessageBubble(
         .widthIn(max = maxBubbleWidth)
         .then(other = modifier)
 
-    when (layout.bubbleLayoutMode) {
-        ConversationMessageBubbleLayoutMode.AttachmentOnlyWithoutSurface -> {
-            ConversationMessageAttachmentOnlyBubble(
-                modifier = bubbleModifier,
-                layout = layout,
-                message = message,
-                isSelected = isSelected,
-                isSelectionMode = isSelectionMode,
-                onAttachmentClick = onAttachmentClick,
-                onExternalUriClick = onExternalUriClick,
-                onMessageLongClick = onMessageLongClick,
-            )
-        }
+    ConversationTextSelectionContainer(enabled = !isSelectionMode) {
+        when (layout.bubbleLayoutMode) {
+            ConversationMessageBubbleLayoutMode.AttachmentOnlyWithoutSurface -> {
+                ConversationMessageAttachmentOnlyBubble(
+                    modifier = bubbleModifier,
+                    layout = layout,
+                    message = message,
+                    isSelected = isSelected,
+                    isSelectionMode = isSelectionMode,
+                    onAttachmentClick = onAttachmentClick,
+                    onExternalUriClick = onExternalUriClick,
+                    onMessageLongClick = onMessageLongClick,
+                )
+            }
 
-        ConversationMessageBubbleLayoutMode.AttachmentsInSurface -> {
-            ConversationMessageAttachmentSurfaceBubble(
-                modifier = bubbleModifier,
-                layout = layout,
-                isSelected = isSelected,
-                message = message,
-                isSelectionMode = isSelectionMode,
-                onAttachmentClick = onAttachmentClick,
-                onExternalUriClick = onExternalUriClick,
-                onMessageLongClick = onMessageLongClick,
-            )
-        }
+            ConversationMessageBubbleLayoutMode.AttachmentsInSurface -> {
+                ConversationMessageAttachmentSurfaceBubble(
+                    modifier = bubbleModifier,
+                    layout = layout,
+                    isSelected = isSelected,
+                    message = message,
+                    isSelectionMode = isSelectionMode,
+                    onAttachmentClick = onAttachmentClick,
+                    onExternalUriClick = onExternalUriClick,
+                    onMessageLongClick = onMessageLongClick,
+                )
+            }
 
-        ConversationMessageBubbleLayoutMode.TextInSurface -> {
-            ConversationMessageTextSurfaceBubble(
-                modifier = bubbleModifier,
-                layout = layout,
-                isSelected = isSelected,
-                message = message,
-                isSelectionMode = isSelectionMode,
-                simDisplayName = simDisplayName,
-                onAttachmentClick = onAttachmentClick,
-                onExternalUriClick = onExternalUriClick,
-                onMessageLongClick = onMessageLongClick,
-            )
+            ConversationMessageBubbleLayoutMode.TextInSurface -> {
+                ConversationMessageTextSurfaceBubble(
+                    modifier = bubbleModifier,
+                    layout = layout,
+                    isSelected = isSelected,
+                    message = message,
+                    isSelectionMode = isSelectionMode,
+                    simDisplayName = simDisplayName,
+                    onAttachmentClick = onAttachmentClick,
+                    onExternalUriClick = onExternalUriClick,
+                    onMessageLongClick = onMessageLongClick,
+                )
+            }
         }
     }
 }
@@ -188,16 +196,18 @@ private fun ConversationMessageTextBubbleContent(
             message.mmsDownload != null -> {
                 ConversationMessageSubject(subjectText = layout.content.subjectText)
 
-                ConversationMmsDownloadBody(
-                    download = message.mmsDownload,
-                    canDownloadMessage = message.canDownloadMessage,
-                    isSelected = isSelected,
-                    contentColor = messageBubbleContentColor(
-                        message = message,
+                DisableSelection {
+                    ConversationMmsDownloadBody(
+                        download = message.mmsDownload,
+                        canDownloadMessage = message.canDownloadMessage,
                         isSelected = isSelected,
-                    ),
-                    simDisplayName = simDisplayName,
-                )
+                        contentColor = messageBubbleContentColor(
+                            message = message,
+                            isSelected = isSelected,
+                        ),
+                        simDisplayName = simDisplayName,
+                    )
+                }
             }
 
             else -> {
@@ -242,7 +252,6 @@ private fun ConversationMessageBody(
             text = bodyText,
             style = MaterialTheme.typography.bodyLarge,
             onExternalUriClick = onExternalUriClick,
-            onMessageLongClick = onMessageLongClick,
         )
     }
 }
@@ -256,11 +265,16 @@ internal fun ConversationMessageSubject(
         return
     }
 
-    Text(
-        modifier = modifier,
-        text = subjectText,
-        style = MaterialTheme.typography.titleSmall,
-    )
+    val selection = LocalConversationTextSelection.current
+    ConversationSelectableTextTouchGuard(modifier = modifier) {
+        Text(
+            modifier = Modifier.conversationSelectableTextBounds()
+                .onGloballyPositioned { selection?.subjectCoordinates = it },
+            text = subjectText,
+            style = MaterialTheme.typography.titleSmall,
+            onTextLayout = { selection?.subjectTextLayout = it },
+        )
+    }
 }
 
 @Composable
@@ -274,14 +288,16 @@ internal fun ConversationMessageSender(
         return
     }
 
-    Text(
-        modifier = modifier,
-        text = senderDisplayName,
-        style = MaterialTheme.typography.labelMedium,
-        color = color,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-    )
+    DisableSelection {
+        Text(
+            modifier = modifier,
+            text = senderDisplayName,
+            style = MaterialTheme.typography.labelMedium,
+            color = color,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
 }
 
 @Composable

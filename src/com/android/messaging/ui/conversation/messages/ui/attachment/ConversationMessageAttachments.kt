@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.messages.ui.attachment
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -31,44 +32,46 @@ internal fun ConversationMessageAttachments(
         return
     }
 
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(space = 2.dp),
-    ) {
-        if (hasGalleryVisualAttachments) {
-            ConversationGalleryVisualAttachments(
-                attachments = attachmentSections.galleryVisualAttachments,
-                hasTextAboveVisualAttachments = hasTextAboveVisualAttachments,
-                hasTextBelowVisualAttachments = hasTextBelowVisualAttachments,
-                onAttachmentClick = onAttachmentClick,
-                onExternalUriClick = onExternalUriClick,
-                onMessageLongClick = onMessageLongClick,
-            )
-        }
+    DisableSelection {
+        Column(
+            modifier = modifier,
+            verticalArrangement = Arrangement.spacedBy(space = 2.dp),
+        ) {
+            if (hasGalleryVisualAttachments) {
+                ConversationGalleryVisualAttachments(
+                    attachments = attachmentSections.galleryVisualAttachments,
+                    hasTextAboveVisualAttachments = hasTextAboveVisualAttachments,
+                    hasTextBelowVisualAttachments = hasTextBelowVisualAttachments,
+                    onAttachmentClick = onAttachmentClick,
+                    onExternalUriClick = onExternalUriClick,
+                    onMessageLongClick = onMessageLongClick,
+                )
+            }
 
-        attachmentSections.trailingItems.forEach { trailingItem ->
-            when (trailingItem) {
-                is ConversationAttachmentItem.Inline -> {
-                    ConversationInlineAttachmentRow(
-                        attachment = trailingItem.attachment,
-                        isIncoming = isIncoming,
-                        isSelectionMode = isSelectionMode,
-                        useStandaloneAudioAttachmentBackground = useStandaloneAudioAttachmentBg,
-                        onAttachmentClick = onAttachmentClick,
-                        onExternalUriClick = onExternalUriClick,
-                        onLongClick = onMessageLongClick,
-                    )
-                }
+            attachmentSections.trailingItems.forEach { trailingItem ->
+                when (trailingItem) {
+                    is ConversationAttachmentItem.Inline -> {
+                        ConversationInlineAttachmentRow(
+                            attachment = trailingItem.attachment,
+                            isIncoming = isIncoming,
+                            isSelectionMode = isSelectionMode,
+                            useStandaloneAudioAttachmentBackground = useStandaloneAudioAttachmentBg,
+                            onAttachmentClick = onAttachmentClick,
+                            onExternalUriClick = onExternalUriClick,
+                            onLongClick = onMessageLongClick,
+                        )
+                    }
 
-                is ConversationAttachmentItem.StandaloneVisual -> {
-                    ConversationStandaloneVisualAttachment(
-                        attachment = trailingItem.attachment,
-                        hasTextAboveVisualAttachments = hasTextAboveVisualAttachments,
-                        hasTextBelowVisualAttachments = hasTextBelowVisualAttachments,
-                        onAttachmentClick = onAttachmentClick,
-                        onExternalUriClick = onExternalUriClick,
-                        onMessageLongClick = onMessageLongClick,
-                    )
+                    is ConversationAttachmentItem.StandaloneVisual -> {
+                        ConversationStandaloneVisualAttachment(
+                            attachment = trailingItem.attachment,
+                            hasTextAboveVisualAttachments = hasTextAboveVisualAttachments,
+                            hasTextBelowVisualAttachments = hasTextBelowVisualAttachments,
+                            onAttachmentClick = onAttachmentClick,
+                            onExternalUriClick = onExternalUriClick,
+                            onMessageLongClick = onMessageLongClick,
+                        )
+                    }
                 }
             }
         }

@@ -6,6 +6,7 @@ import android.view.textclassifier.TextClassificationManager
 import android.view.textclassifier.TextClassifier
 import android.view.textclassifier.TextLinks
 import com.android.messaging.ui.conversation.messages.model.text.ConversationTextLink
+import com.android.messaging.ui.conversation.messages.model.text.ConversationTextLinkKind
 
 private data class ConversationLinkText(
     val start: Int,
@@ -54,9 +55,20 @@ private fun TextLinks.TextLink.toConversationTextLink(
                     start = linkText.start,
                     end = linkText.end,
                     url = url,
+                    kind = conversationTextLinkKind(entityType = linkText.entityType),
+                    originalText = linkText.rawLinkText,
                 )
             }
         }
+}
+
+private fun conversationTextLinkKind(entityType: String): ConversationTextLinkKind {
+    return when (entityType) {
+        TextClassifier.TYPE_PHONE -> ConversationTextLinkKind.Phone
+        TextClassifier.TYPE_EMAIL -> ConversationTextLinkKind.Email
+        TextClassifier.TYPE_ADDRESS -> ConversationTextLinkKind.Address
+        else -> ConversationTextLinkKind.Web
+    }
 }
 
 private fun TextLinks.TextLink.toValidatedConversationLinkText(

@@ -189,7 +189,6 @@ private fun ConversationMessageAttachmentBubbleContent(
                 text = bodyText,
                 style = MaterialTheme.typography.bodyLarge,
                 onExternalUriClick = onExternalUriClick,
-                onMessageLongClick = onMessageLongClick,
             )
         }
     }

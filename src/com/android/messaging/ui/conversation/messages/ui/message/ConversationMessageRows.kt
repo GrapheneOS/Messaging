@@ -52,6 +52,7 @@ import com.android.messaging.ui.conversation.conversationMessageSelectionRowTest
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel.Status
 import com.android.messaging.ui.conversation.messages.ui.attachment.OnConversationAttachmentClick
+import com.android.messaging.ui.conversation.messages.ui.text.conversationTextAccessibilityActions
 import com.android.messaging.ui.conversation.preview.previewAudioPart
 import com.android.messaging.ui.conversation.preview.previewFilePart
 import com.android.messaging.ui.conversation.preview.previewImagePart
@@ -218,6 +219,7 @@ internal fun Modifier.conversationMessageInteractionModifier(
     message: ConversationMessageUiModel,
     isSelected: Boolean,
     isSelectionMode: Boolean,
+    isTouchExplorationEnabled: Boolean,
     bubbleRipple: ConversationMessageBubbleRipple,
     onMessageClick: () -> Unit,
     onMessageDownloadClick: () -> Unit,
@@ -233,8 +235,11 @@ internal fun Modifier.conversationMessageInteractionModifier(
             true
         }
     }
+    val textActions = conversationTextAccessibilityActions(
+        hasText = !message.text.isNullOrBlank() || !message.mmsSubject.isNullOrBlank(),
+    )
     // A screen reader presses the middle of the message, which can be beside the bubble
-    val isWholeMessageTouchable = rememberIsTouchExplorationEnabled() || isSelectionMode
+    val isWholeMessageTouchable = isTouchExplorationEnabled || isSelectionMode
 
     return this
         .testTag(
@@ -257,7 +262,7 @@ internal fun Modifier.conversationMessageInteractionModifier(
                     selected = isSelected
                 }
 
-                else -> customActions = messageActions
+                else -> customActions = messageActions + textActions
             }
         }
         .conversationMessageClickable(
@@ -273,7 +278,7 @@ internal fun Modifier.conversationMessageInteractionModifier(
 }
 
 @Composable
-private fun rememberIsTouchExplorationEnabled(): Boolean {
+internal fun rememberIsTouchExplorationEnabled(): Boolean {
     val accessibilityManager = LocalContext.current
         .getSystemService(AccessibilityManager::class.java)
     var isTouchExplorationEnabled by remember(accessibilityManager) {

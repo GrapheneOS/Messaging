@@ -62,6 +62,28 @@ internal class ConversationMessageSelectionDelegateMessageActionClickTest :
     }
 
     @Test
+    fun copyTextClick_copiesTheGivenText() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val harness = createHarness()
+            val copiedClipData = slot<ClipData>()
+            every {
+                harness.clipboardManager.setPrimaryClip(capture(copiedClipData))
+            } just runs
+
+            try {
+                harness.delegate.onCopyTextClick(text = "+31 (6) 2222 3333")
+
+                assertEquals(
+                    "+31 (6) 2222 3333",
+                    copiedClipData.captured.getItemAt(0).text.toString(),
+                )
+            } finally {
+                harness.cancel()
+            }
+        }
+    }
+
+    @Test
     fun detailsAction_opensDetailsOfThatMessage() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val harness = createHarness()

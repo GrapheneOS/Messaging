@@ -54,6 +54,8 @@ internal interface ConversationMessageSelectionActions {
 
     fun onMessageSelectionActionClick(action: ConversationMessageAction)
 
+    fun onCopyTextClick(text: String)
+
     fun dismissDeleteMessageConfirmation()
 
     fun dismissMessageSelection()
@@ -154,6 +156,15 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
         }
     }
 
+    override fun onCopyTextClick(text: String) {
+        clipboardManager.setPrimaryClip(
+            ClipData.newPlainText(
+                null,
+                text,
+            ),
+        )
+    }
+
     override fun dismissDeleteMessageConfirmation() {
         messageSelectionState.update { currentState ->
             currentState.copy(
@@ -241,13 +252,7 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
     private fun copyMessageText(message: ConversationMessageUiModel) {
         val text = message.text?.takeIf(String::isNotBlank) ?: return
 
-        clipboardManager.setPrimaryClip(
-            ClipData.newPlainText(
-                null,
-                text,
-            ),
-        )
-
+        onCopyTextClick(text = text)
         clearMessageSelection()
     }
 

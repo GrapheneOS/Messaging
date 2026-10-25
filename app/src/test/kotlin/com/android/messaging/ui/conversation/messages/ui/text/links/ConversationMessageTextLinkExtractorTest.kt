@@ -6,6 +6,7 @@ import android.view.textclassifier.TextClassificationManager
 import android.view.textclassifier.TextClassifier
 import android.view.textclassifier.TextLinks
 import com.android.messaging.ui.conversation.messages.model.text.ConversationTextLink
+import com.android.messaging.ui.conversation.messages.model.text.ConversationTextLinkKind
 import com.android.messaging.ui.conversation.messages.ui.text.extractConversationTextLinks
 import io.mockk.CapturingSlot
 import io.mockk.every
@@ -68,21 +69,29 @@ internal class ConversationMessageTextLinkExtractorTest {
                     start = emailRange.first,
                     end = emailRange.last + 1,
                     url = "mailto:${Uri.encode("a@b.com")}",
+                    kind = ConversationTextLinkKind.Email,
+                    originalText = text.substring(emailRange),
                 ),
                 ConversationTextLink(
                     start = phoneRange.first,
                     end = phoneRange.last + 1,
                     url = "tel:${Uri.encode("+15551212")}",
+                    kind = ConversationTextLinkKind.Phone,
+                    originalText = text.substring(phoneRange),
                 ),
                 ConversationTextLink(
                     start = urlRange.first,
                     end = urlRange.last + 1,
                     url = "https://example.com/a",
+                    kind = ConversationTextLinkKind.Web,
+                    originalText = text.substring(urlRange),
                 ),
                 ConversationTextLink(
                     start = addressRange.first,
                     end = addressRange.last + 1,
                     url = "geo:0,0?q=${Uri.encode("1 Main St")}",
+                    kind = ConversationTextLinkKind.Address,
+                    originalText = text.substring(addressRange),
                 ),
             ),
             result,
@@ -112,6 +121,8 @@ internal class ConversationMessageTextLinkExtractorTest {
                     start = urlRange.first,
                     end = urlRange.last + 1,
                     url = url,
+                    kind = ConversationTextLinkKind.Web,
+                    originalText = text.substring(urlRange),
                 ),
             ),
             result,
@@ -173,6 +184,8 @@ internal class ConversationMessageTextLinkExtractorTest {
                     start = validRange.first,
                     end = validRange.last + 1,
                     url = "tel:${Uri.encode("ok")}",
+                    kind = ConversationTextLinkKind.Phone,
+                    originalText = text.substring(validRange),
                 ),
             ),
             result,

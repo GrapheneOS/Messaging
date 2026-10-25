@@ -22,6 +22,7 @@ import com.android.messaging.ui.conversation.composer.ui.ConversationReadOnlyNot
 import com.android.messaging.ui.conversation.composer.ui.ConversationSimSelectorSheet
 import com.android.messaging.ui.conversation.mediapicker.rememberConversationMediaPickerPermissionState
 import com.android.messaging.ui.conversation.mediapicker.rememberConversationMediaPickerState
+import com.android.messaging.ui.conversation.messages.ui.text.ConversationTextSelectionHost
 import com.android.messaging.ui.conversation.metadata.ui.ConversationTopAppBar
 import com.android.messaging.ui.conversation.screen.model.ConversationPendingLaunchPayload
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaffoldUiState
@@ -67,52 +68,57 @@ internal fun ConversationScreen(
         permissionState = permissionState,
     )
 
-    ConversationScreenRouteEffects(
+    ConversationTextSelectionHost(
         conversationId = conversationId,
-        cancelIncomingNotification = cancelIncomingNotification,
-        offersArchiveUndo = offersArchiveUndo,
-        pendingLaunchPayload = pendingLaunchPayload,
-        scaffoldUiState = scaffoldUiState,
-        snackbarHostState = snackbarHostState,
-        hostBoundsState = hostBoundsState,
-        permissionState = permissionState,
-        screenModel = screenModel,
-        onNavigateToMessageDetails = onNavigateToMessageDetails,
-        onNavigateToVCardDetail = onNavigateToVCardDetail,
-        onNavigateToPhotoViewer = onNavigateToPhotoViewer,
-        onNavigateToAddContact = onNavigateToAddContact,
-        onNavigateToForward = onNavigateToForward,
-        onCloseConversation = onCloseConversation,
-        onPendingDraftConsumed = onPendingDraftConsumed,
-        onPendingSelfParticipantIdConsumed = onPendingSelfParticipantIdConsumed,
-        onPendingStartupAttachmentConsumed = onPendingStartupAttachmentConsumed,
-    )
+        onCopyText = screenModel::onCopyTextClick,
+    ) {
+        ConversationScreenRouteEffects(
+            conversationId = conversationId,
+            cancelIncomingNotification = cancelIncomingNotification,
+            offersArchiveUndo = offersArchiveUndo,
+            pendingLaunchPayload = pendingLaunchPayload,
+            scaffoldUiState = scaffoldUiState,
+            snackbarHostState = snackbarHostState,
+            hostBoundsState = hostBoundsState,
+            permissionState = permissionState,
+            screenModel = screenModel,
+            onNavigateToMessageDetails = onNavigateToMessageDetails,
+            onNavigateToVCardDetail = onNavigateToVCardDetail,
+            onNavigateToPhotoViewer = onNavigateToPhotoViewer,
+            onNavigateToAddContact = onNavigateToAddContact,
+            onNavigateToForward = onNavigateToForward,
+            onCloseConversation = onCloseConversation,
+            onPendingDraftConsumed = onPendingDraftConsumed,
+            onPendingSelfParticipantIdConsumed = onPendingSelfParticipantIdConsumed,
+            onPendingStartupAttachmentConsumed = onPendingStartupAttachmentConsumed,
+        )
 
-    ConversationScreenSurface(
-        modifier = modifier,
-        conversationId = conversationId,
-        scaffoldUiState = scaffoldUiState,
-        mediaPickerOverlayUiState = mediaPickerOverlayUiState,
-        mediaPickerState = mediaPickerState,
-        snackbarHostState = snackbarHostState,
-        messageFieldFocusRequester = messageFieldFocusRequester,
-        pendingScrollMessageId = pendingLaunchPayload.scrollMessageId,
-        onPendingScrollMessageIdConsumed = onPendingScrollMessageIdConsumed,
-        onAddPeopleClick = onAddPeopleClick,
-        onConversationDetailsClick = onConversationDetailsClick,
-        onNavigateBack = onNavigateBack,
-        onHostBoundsChanged = { hostBounds ->
-            hostBoundsState.value = hostBounds
-        },
-        onOpenContactPicker = onOpenContactPicker,
-        onAudioRecordingStartRequest = {
-            requestAudioRecordingStart(AudioRecordingStartMode.Unlocked)
-        },
-        onLockedAudioRecordingStartRequest = {
-            requestAudioRecordingStart(AudioRecordingStartMode.Locked)
-        },
-        screenModel = screenModel,
-    )
+        ConversationScreenSurface(
+            modifier = modifier,
+            conversationId = conversationId,
+            scaffoldUiState = scaffoldUiState,
+            mediaPickerOverlayUiState = mediaPickerOverlayUiState,
+            mediaPickerState = mediaPickerState,
+            snackbarHostState = snackbarHostState,
+            messageFieldFocusRequester = messageFieldFocusRequester,
+            pendingScrollMessageId = pendingLaunchPayload.scrollMessageId,
+            onPendingScrollMessageIdConsumed = onPendingScrollMessageIdConsumed,
+            onAddPeopleClick = onAddPeopleClick,
+            onConversationDetailsClick = onConversationDetailsClick,
+            onNavigateBack = onNavigateBack,
+            onHostBoundsChanged = { hostBounds ->
+                hostBoundsState.value = hostBounds
+            },
+            onOpenContactPicker = onOpenContactPicker,
+            onAudioRecordingStartRequest = {
+                requestAudioRecordingStart(AudioRecordingStartMode.Unlocked)
+            },
+            onLockedAudioRecordingStartRequest = {
+                requestAudioRecordingStart(AudioRecordingStartMode.Locked)
+            },
+            screenModel = screenModel,
+        )
+    }
 }
 
 @Composable

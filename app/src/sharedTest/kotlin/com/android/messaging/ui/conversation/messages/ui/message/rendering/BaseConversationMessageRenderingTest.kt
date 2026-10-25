@@ -1,6 +1,9 @@
 package com.android.messaging.ui.conversation.messages.ui.message.rendering
 
 import android.net.Uri
+import androidx.compose.foundation.text.contextmenu.provider.LocalTextContextMenuToolbarProvider
+import androidx.compose.foundation.text.contextmenu.provider.TextContextMenuProvider
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -28,6 +31,7 @@ import com.android.messaging.ui.conversation.messages.model.message.MmsDownloadU
 import com.android.messaging.ui.conversation.messages.ui.message.ConversationMessage
 import com.android.messaging.ui.conversation.messages.ui.message.ConversationMessageAvatar
 import com.android.messaging.ui.conversation.messages.ui.message.ConversationMmsDownloadBody
+import com.android.messaging.ui.conversation.messages.ui.text.ConversationTextSelectionHost
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
 import com.android.messaging.ui.core.AppTheme
 import io.mockk.clearAllMocks
@@ -44,6 +48,7 @@ internal abstract class BaseConversationMessageRenderingTest {
 
     protected val onAttachmentClick = mockk<(String, String, String) -> Unit>(relaxed = true)
     protected val onAvatarClick = mockk<() -> Unit>(relaxed = true)
+    protected val onCopyText = mockk<(String) -> Unit>(relaxed = true)
     protected val onDownloadClick = mockk<() -> Unit>(relaxed = true)
     protected val onExternalUriClick = mockk<(String) -> Unit>(relaxed = true)
     protected val onMessageActionClick =
@@ -64,25 +69,36 @@ internal abstract class BaseConversationMessageRenderingTest {
         isSelectionMode: Boolean = false,
         showIncomingParticipantIdentity: Boolean = true,
         simDisplayName: String? = null,
+        textContextMenuToolbar: TextContextMenuProvider? = null,
     ) {
         composeTestRule.setContent {
             AppTheme {
-                ConversationMessage(
-                    message = message,
-                    isSelected = isSelected,
-                    isSelectionMode = isSelectionMode,
-                    showIncomingParticipantIdentity = showIncomingParticipantIdentity,
-                    simDisplayName = simDisplayName,
-                    onAttachmentClick = onAttachmentClick,
-                    onExternalUriClick = onExternalUriClick,
-                    onMessageClick = onMessageClick,
-                    onMessageAvatarClick = onAvatarClick,
-                    onMessageDownloadClick = onDownloadClick,
-                    onMessageActionClick = onMessageActionClick,
-                    onMessageLongClick = onMessageLongClick,
-                    onMessageResendClick = onResendClick,
-                    onSimSelectorClick = onSimSelectorClick,
-                )
+                CompositionLocalProvider(
+                    LocalTextContextMenuToolbarProvider provides
+                        (textContextMenuToolbar ?: LocalTextContextMenuToolbarProvider.current),
+                ) {
+                    ConversationTextSelectionHost(
+                        conversationId = message.conversationId,
+                        onCopyText = onCopyText,
+                    ) {
+                        ConversationMessage(
+                            message = message,
+                            isSelected = isSelected,
+                            isSelectionMode = isSelectionMode,
+                            showIncomingParticipantIdentity = showIncomingParticipantIdentity,
+                            simDisplayName = simDisplayName,
+                            onAttachmentClick = onAttachmentClick,
+                            onExternalUriClick = onExternalUriClick,
+                            onMessageClick = onMessageClick,
+                            onMessageAvatarClick = onAvatarClick,
+                            onMessageDownloadClick = onDownloadClick,
+                            onMessageActionClick = onMessageActionClick,
+                            onMessageLongClick = onMessageLongClick,
+                            onMessageResendClick = onResendClick,
+                            onSimSelectorClick = onSimSelectorClick,
+                        )
+                    }
+                }
             }
         }
     }
@@ -221,15 +237,6 @@ internal abstract class BaseConversationMessageRenderingTest {
                 useUnmergedTree = true,
             )
             .performClick()
-    }
-
-    protected fun longClickBubble(messageId: String = DEFAULT_MESSAGE_ID) {
-        composeTestRule
-            .onNodeWithTag(
-                testTag = conversationMessageBubbleTestTag(messageId = MessageId(messageId)),
-                useUnmergedTree = true,
-            )
-            .performTouchInput { longClick() }
     }
 
     protected fun clickSelectionRow(messageId: String = DEFAULT_MESSAGE_ID) {
