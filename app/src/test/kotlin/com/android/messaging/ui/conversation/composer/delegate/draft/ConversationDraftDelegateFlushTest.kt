@@ -8,6 +8,8 @@ import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.testutil.typeMessageText
 import com.android.messaging.util.ContentType
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
+import io.mockk.verify
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
@@ -40,6 +42,57 @@ internal class ConversationDraftDelegateFlushTest : BaseConversationDraftDelegat
                         conversationId = CONVERSATION_ID,
                         draft = ConversationDraft(messageText = "Keep this text"),
                     )
+                }
+            } finally {
+                harness.cancel()
+            }
+        }
+    }
+
+    @Test
+    fun flushDraft_afterSavingTheDraft_deletesUnlistedConversationChannels() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val harness = createBoundLoadedDelegateHarness()
+
+            try {
+                harness.delegate.typeMessageText(messageText = "Keep this text")
+                harness.delegateScope.cancel()
+
+                harness.delegate.flushDraft()
+                advanceUntilIdle()
+
+                coVerifyOrder {
+                    harness.conversationDraftsRepository.saveDraft(
+                        conversationId = CONVERSATION_ID,
+                        draft = ConversationDraft(messageText = "Keep this text"),
+                    )
+                    harness.deleteUnlistedConversationChannels()
+                }
+            } finally {
+                harness.cancel()
+            }
+        }
+    }
+
+    @Test
+    fun flushDraft_withoutDraftEdits_deletesUnlistedConversationChannels() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val harness = createBoundLoadedDelegateHarness()
+
+            try {
+                harness.delegateScope.cancel()
+
+                harness.delegate.flushDraft()
+                advanceUntilIdle()
+
+                coVerify(exactly = 0) {
+                    harness.conversationDraftsRepository.saveDraft(
+                        conversationId = any(),
+                        draft = any(),
+                    )
+                }
+                verify(exactly = 1) {
+                    harness.deleteUnlistedConversationChannels()
                 }
             } finally {
                 harness.cancel()

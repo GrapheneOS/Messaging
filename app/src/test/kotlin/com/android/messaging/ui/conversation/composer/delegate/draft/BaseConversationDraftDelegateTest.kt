@@ -13,6 +13,7 @@ import com.android.messaging.domain.conversation.usecase.draft.ResolveConversati
 import com.android.messaging.domain.conversation.usecase.draft.ResolveDraftAttachmentsWithinLimitImpl
 import com.android.messaging.domain.conversation.usecase.draft.SendConversationDraft
 import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
+import com.android.messaging.domain.notification.usecase.DeleteUnlistedConversationChannels
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftDelegateImpl
@@ -31,6 +32,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import org.junit.Rule
@@ -88,6 +90,7 @@ internal abstract class BaseConversationDraftDelegateTest {
             conversationDraftsRepository = conversationDraftsRepository,
         )
         val subscriptionsRepository = createSubscriptionsRepositoryMock()
+        val deleteUnlistedConversationChannels = createDeleteUnlistedChannelsMock()
         val conversationDraftEditorDelegate = ConversationDraftEditorDelegateImpl(
             subscriptionsRepository = subscriptionsRepository,
             resolveConversationDraftSendProtocol = ResolveConversationDraftSendProtocolImpl(
@@ -104,6 +107,7 @@ internal abstract class BaseConversationDraftDelegateTest {
             conversationDraftsRepository = conversationDraftsRepository,
             conversationDraftEditorDelegate = conversationDraftEditorDelegate,
             conversationDraftTransfers = draftTransfers,
+            deleteUnlistedConversationChannels = deleteUnlistedConversationChannels,
             sendConversationDraft = sendConversationDraft,
             defaultDispatcher = defaultDispatcher,
         )
@@ -118,6 +122,7 @@ internal abstract class BaseConversationDraftDelegateTest {
             delegate = delegate,
             conversationDraftsRepository = conversationDraftsRepository,
             conversationDraftTransfers = draftTransfers,
+            deleteUnlistedConversationChannels = deleteUnlistedConversationChannels,
             draftFlows = draftFlows,
             conversationIdFlow = conversationIdFlow,
             delegateScope = delegateScope,
@@ -171,6 +176,12 @@ internal abstract class BaseConversationDraftDelegateTest {
             )
         } just runs
         return repository
+    }
+
+    protected fun createDeleteUnlistedChannelsMock(): DeleteUnlistedConversationChannels {
+        val mock = mockk<DeleteUnlistedConversationChannels>()
+        every { mock.invoke() } returns flowOf(Unit)
+        return mock
     }
 
     protected fun createConversationsRepositoryMock(
@@ -229,6 +240,7 @@ internal abstract class BaseConversationDraftDelegateTest {
         val delegate: ConversationDraftDelegateImpl,
         val conversationDraftsRepository: ConversationDraftsRepository,
         val conversationDraftTransfers: ConversationDraftTransfers,
+        val deleteUnlistedConversationChannels: DeleteUnlistedConversationChannels,
         val draftFlows: MutableMap<ConversationId, MutableSharedFlow<ConversationDraft>>,
         val conversationIdFlow: MutableStateFlow<ConversationId?>,
         val delegateScope: TestScope,

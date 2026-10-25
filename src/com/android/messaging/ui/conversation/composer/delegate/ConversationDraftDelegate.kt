@@ -19,6 +19,7 @@ import com.android.messaging.domain.conversation.usecase.draft.exception.Missing
 import com.android.messaging.domain.conversation.usecase.draft.exception.SendConversationDraftException
 import com.android.messaging.domain.conversation.usecase.draft.exception.TooManyVideoAttachmentsException
 import com.android.messaging.domain.conversation.usecase.draft.exception.UnknownConversationRecipientException
+import com.android.messaging.domain.notification.usecase.DeleteUnlistedConversationChannels
 import com.android.messaging.ui.conversation.common.ConversationScreenDelegate
 import com.android.messaging.ui.conversation.composer.model.ConversationDraftState
 import com.android.messaging.ui.conversation.screen.model.ConversationAttachmentLimitWarning
@@ -123,6 +124,7 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
     private val conversationDraftsRepository: ConversationDraftsRepository,
     private val conversationDraftEditorDelegate: ConversationDraftEditorDelegate,
     private val conversationDraftTransfers: ConversationDraftTransfers,
+    private val deleteUnlistedConversationChannels: DeleteUnlistedConversationChannels,
     private val sendConversationDraft: SendConversationDraft,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
@@ -336,7 +338,6 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
         val conversationId = conversationDraftEditorDelegate
             .currentSaveRequest
             ?.conversationId
-            ?: return
 
         launchDraftOperation(scope = applicationScope) {
             runDraftOperationBoundary(
@@ -348,6 +349,9 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
                         saveCurrentDraft()
                     }
                 }
+            }.onCompletion {
+                // Whether an empty conversation stays listed is only final once its draft is saved
+                emitAll(deleteUnlistedConversationChannels())
             }
         }
     }

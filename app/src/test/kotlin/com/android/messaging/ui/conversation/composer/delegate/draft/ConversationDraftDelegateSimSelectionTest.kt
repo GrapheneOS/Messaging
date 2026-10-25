@@ -11,6 +11,7 @@ import com.android.messaging.domain.conversation.usecase.draft.ResolveConversati
 import com.android.messaging.domain.conversation.usecase.draft.ResolveDraftAttachmentsWithinLimit
 import com.android.messaging.domain.conversation.usecase.draft.SendConversationDraft
 import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
+import com.android.messaging.domain.notification.usecase.DeleteUnlistedConversationChannels
 import com.android.messaging.testutil.assertThat
 import com.android.messaging.testutil.typeMessageText
 import com.android.messaging.ui.conversation.composer.delegate.ConversationDraftDelegateImpl
@@ -36,6 +37,7 @@ internal class ConversationDraftDelegateSimSelectionTest {
 
     private val checkConversationActionRequirements = mockk<CheckConversationActionRequirements>()
     private val conversationDraftsRepository = mockk<ConversationDraftsRepository>()
+    private val deleteUnlistedConversationChannels = mockk<DeleteUnlistedConversationChannels>()
     private val sendConversationDraft = mockk<SendConversationDraft>()
     private val subscriptionsRepository = mockk<SubscriptionsRepository>()
     private val resolveConversationDraftSendProtocol = mockk<ResolveConversationDraftSendProtocol>()
@@ -52,6 +54,8 @@ internal class ConversationDraftDelegateSimSelectionTest {
         every {
             conversationDraftsRepository.observeConversationDraft(conversationId = any())
         } returns flowOf(ConversationDraft())
+
+        every { deleteUnlistedConversationChannels() } returns flowOf(Unit)
 
         coEvery {
             resolveConversationDraftSendProtocol(conversationId = any(), draft = any())
@@ -164,6 +168,7 @@ internal class ConversationDraftDelegateSimSelectionTest {
             conversationDraftTransfers = ConversationDraftTransfersImpl(
                 conversationDraftsRepository = conversationDraftsRepository,
             ),
+            deleteUnlistedConversationChannels = deleteUnlistedConversationChannels,
             sendConversationDraft = sendConversationDraft,
             defaultDispatcher = StandardTestDispatcher(scheduler = testScheduler),
         )

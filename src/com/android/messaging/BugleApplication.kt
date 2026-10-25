@@ -29,6 +29,7 @@ import android.util.Log
 import androidx.appcompat.mms.CarrierConfigValuesLoader
 import androidx.appcompat.mms.MmsManager
 import com.android.messaging.di.receiver.IncomingSmsEntryPoint
+import com.android.messaging.domain.notification.usecase.DeleteUnlistedConversationChannels
 import com.android.messaging.domain.notification.usecase.MigrateConversationNotificationChannels
 import com.android.messaging.sms.BugleUserAgentInfoLoader
 import com.android.messaging.sms.MmsConfig
@@ -43,11 +44,16 @@ import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.android.HiltAndroidApp
 import java.io.File
 import javax.inject.Inject
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.runBlocking
 
 @HiltAndroidApp
 open class BugleApplication :
     Application(),
     Thread.UncaughtExceptionHandler {
+
+    @Inject
+    internal lateinit var deleteUnlistedConversationChannels: DeleteUnlistedConversationChannels
 
     @Inject
     internal lateinit var migrateConversationNotificationChannels:
@@ -108,6 +114,9 @@ open class BugleApplication :
         traceSection(sectionName = "app.initializeAsync") {
             maybeHandleSharedPrefsUpgrade(factory = factory)
             MmsConfig.load()
+            runBlocking {
+                deleteUnlistedConversationChannels().collect()
+            }
         }
     }
 
