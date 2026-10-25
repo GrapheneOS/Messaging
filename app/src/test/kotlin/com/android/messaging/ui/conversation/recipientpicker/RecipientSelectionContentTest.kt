@@ -241,6 +241,67 @@ class RecipientSelectionContentTest {
         }
     }
 
+    @Test
+    fun imeAction_withBlankQuery_runsTheEnabledPrimaryAction() {
+        val primaryActionClicks = primaryActionClicksAfterImeAction(
+            query = "",
+            isPrimaryActionEnabled = true,
+        )
+
+        assertEquals(1, primaryActionClicks)
+    }
+
+    @Test
+    fun imeAction_withBlankQuery_skipsTheDisabledPrimaryAction() {
+        val primaryActionClicks = primaryActionClicksAfterImeAction(
+            query = "",
+            isPrimaryActionEnabled = false,
+        )
+
+        assertEquals(0, primaryActionClicks)
+    }
+
+    @Test
+    fun imeAction_withTypedQueryAndNoSoleResult_doesNotRunThePrimaryAction() {
+        val primaryActionClicks = primaryActionClicksAfterImeAction(
+            query = "Ann",
+            isPrimaryActionEnabled = true,
+        )
+
+        assertEquals(0, primaryActionClicks)
+    }
+
+    private fun primaryActionClicksAfterImeAction(
+        query: String,
+        isPrimaryActionEnabled: Boolean,
+    ): Int {
+        var primaryActionClicks = 0
+
+        setContent(
+            uiState = RecipientSelectionContentUiState(
+                picker = RecipientPickerUiState(
+                    query = query,
+                    itemsQuery = query,
+                ),
+                primaryAction = RecipientSelectionPrimaryActionUiState(
+                    text = "Next",
+                    isEnabled = isPrimaryActionEnabled,
+                ),
+            ),
+            onPrimaryActionClick = {
+                primaryActionClicks += 1
+            },
+        )
+
+        composeTestRule
+            .onNodeWithTag(testTag = RECIPIENT_SELECTION_QUERY_FIELD_TEST_TAG)
+            .performImeAction()
+
+        return composeTestRule.runOnIdle {
+            primaryActionClicks
+        }
+    }
+
     private fun setContent(
         uiState: RecipientSelectionContentUiState,
         rowDecorators: RecipientSelectionRowDecorators = RecipientSelectionRowDecorators(
