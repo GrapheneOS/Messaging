@@ -11,6 +11,7 @@ import com.android.messaging.data.media.repository.ConversationAttachmentsReposi
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
 import com.android.messaging.di.core.ApplicationCoroutineScope
 import com.android.messaging.di.core.DefaultDispatcher
+import com.android.messaging.domain.media.usecase.ResolveAudioDurationMillis
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingPhase
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingUiState
 import com.android.messaging.ui.conversation.common.ConversationScreenDelegate
@@ -61,6 +62,7 @@ internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
     private val conversationAttachmentsRepository: ConversationAttachmentsRepository,
     private val subscriptionsRepository: SubscriptionsRepository,
     private val conversationDraftDelegate: ConversationDraftDelegate,
+    private val resolveAudioDurationMillis: ResolveAudioDurationMillis,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
 ) : ConversationAudioRecordingDelegate {
@@ -572,14 +574,15 @@ internal class ConversationAudioRecordingDelegateImpl @Inject constructor(
         )
     }
 
-    private fun resolvePendingAudioAttachment(
+    private suspend fun resolvePendingAudioAttachment(
         pendingAttachmentId: String,
         outputUri: Uri?,
     ): Boolean {
-        val recordedAttachment = outputUri?.let { resolvedOutputUri ->
+        val recordedAttachment = outputUri?.toString()?.let { contentUri ->
             ConversationDraftAttachment(
                 contentType = ContentType.AUDIO_3GPP,
-                contentUri = resolvedOutputUri.toString(),
+                contentUri = contentUri,
+                durationMillis = resolveAudioDurationMillis(contentUri = contentUri),
             )
         }
 
