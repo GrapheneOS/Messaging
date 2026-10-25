@@ -31,6 +31,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
@@ -65,6 +66,29 @@ private class NewMessageSnackbarVisuals(
 ) : SnackbarVisuals {
     override val withDismissAction: Boolean = false
     override val duration: SnackbarDuration = SnackbarDuration.Indefinite
+}
+
+// Scaffold updates its padding during measure, so padding() must read it there too; a read in
+// composition lands a frame late and lets the list overlap a growing bottom bar.
+private class VerticalContentPadding(
+    private val contentPadding: PaddingValues,
+) : PaddingValues {
+
+    override fun calculateLeftPadding(layoutDirection: LayoutDirection): Dp {
+        return 0.dp
+    }
+
+    override fun calculateTopPadding(): Dp {
+        return contentPadding.calculateTopPadding()
+    }
+
+    override fun calculateRightPadding(layoutDirection: LayoutDirection): Dp {
+        return 0.dp
+    }
+
+    override fun calculateBottomPadding(): Dp {
+        return contentPadding.calculateBottomPadding()
+    }
 }
 
 @Composable
@@ -273,11 +297,12 @@ private fun Modifier.conversationScreenContentModifier(
     contentPadding: PaddingValues,
     backdropColor: Color,
 ): Modifier {
+    val verticalContentPadding = remember(contentPadding) {
+        VerticalContentPadding(contentPadding = contentPadding)
+    }
+
     return this
-        .padding(
-            top = contentPadding.calculateTopPadding(),
-            bottom = contentPadding.calculateBottomPadding(),
-        )
+        .padding(paddingValues = verticalContentPadding)
         .background(color = backdropColor)
         .clip(shape = MaterialTheme.contentSurfaceShape)
         .background(color = MaterialTheme.colorScheme.background)

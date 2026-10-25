@@ -1,5 +1,10 @@
 package com.android.messaging.ui.common.components.attachment
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
@@ -12,6 +17,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.unit.Dp
@@ -30,25 +37,40 @@ internal fun <T> AttachmentPreviewRow(
     modifier: Modifier = Modifier,
     itemContent: @Composable (T) -> Unit,
 ) {
-    if (attachments.isEmpty()) {
-        return
-    }
+    val shownAttachments = rememberLastNonEmptyAttachments(attachments = attachments)
 
-    LazyRow(
-        modifier = modifier,
-        contentPadding = PaddingValues(
-            horizontal = AttachmentPreviewListHorizontalPadding,
-            vertical = AttachmentPreviewListVerticalPadding,
-        ),
-        horizontalArrangement = Arrangement.spacedBy(space = AttachmentPreviewItemSpacing),
+    AnimatedVisibility(
+        visible = attachments.isNotEmpty(),
+        enter = fadeIn() + expandVertically(),
+        exit = fadeOut() + shrinkVertically(),
     ) {
-        items(
-            items = attachments,
-            key = { item -> key(item) },
-        ) { item ->
-            itemContent(item)
+        LazyRow(
+            modifier = modifier,
+            contentPadding = PaddingValues(
+                horizontal = AttachmentPreviewListHorizontalPadding,
+                vertical = AttachmentPreviewListVerticalPadding,
+            ),
+            horizontalArrangement = Arrangement.spacedBy(space = AttachmentPreviewItemSpacing),
+        ) {
+            items(
+                items = shownAttachments,
+                key = { item -> key(item) },
+            ) { item ->
+                itemContent(item)
+            }
         }
     }
+}
+
+@Composable
+private fun <T> rememberLastNonEmptyAttachments(attachments: ImmutableList<T>): ImmutableList<T> {
+    val lastNonEmptyAttachments = remember { mutableStateOf(value = attachments) }
+
+    if (attachments.isNotEmpty()) {
+        lastNonEmptyAttachments.value = attachments
+    }
+
+    return lastNonEmptyAttachments.value
 }
 
 @Composable

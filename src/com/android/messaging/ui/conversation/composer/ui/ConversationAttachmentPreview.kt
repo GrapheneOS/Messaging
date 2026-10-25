@@ -26,6 +26,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.common.components.attachment.AttachmentPreviewCard
+import com.android.messaging.ui.common.components.attachment.AttachmentPreviewCardHeight
 import com.android.messaging.ui.common.components.attachment.AttachmentPreviewRemoveButton
 import com.android.messaging.ui.common.components.attachment.AttachmentPreviewRow
 import com.android.messaging.ui.common.components.attachment.AudioAttachmentCell
@@ -49,8 +50,6 @@ import com.android.messaging.ui.vcard.rememberVCardAvatarImage
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
-private val PENDING_ATTACHMENT_CARD_SIZE = 88.dp
-private val PENDING_AUDIO_CARD_HEIGHT = 88.dp
 private val PENDING_REMOVE_BUTTON_SIZE = 28.dp
 private val PENDING_REMOVE_BUTTON_PADDING = 6.dp
 
@@ -169,7 +168,7 @@ private fun PendingAttachmentPreviewItem(
 ) {
     AttachmentPreviewCard(
         modifier = Modifier
-            .size(size = PENDING_ATTACHMENT_CARD_SIZE)
+            .size(size = AttachmentPreviewCardHeight)
             .testTag(conversationAttachmentPreviewItemTestTag(attachmentKey = attachmentKey)),
         onClick = {},
     ) {
@@ -210,7 +209,7 @@ private fun PendingAttachmentPreviewItem(
 private fun PendingAudioAttachmentPreviewItem(attachmentKey: String) {
     AttachmentPreviewCard(
         modifier = Modifier
-            .height(height = PENDING_AUDIO_CARD_HEIGHT)
+            .height(height = AttachmentPreviewCardHeight)
             .wrapContentWidth()
             .testTag(conversationAttachmentPreviewItemTestTag(attachmentKey = attachmentKey)),
         onClick = {},
@@ -218,7 +217,7 @@ private fun PendingAudioAttachmentPreviewItem(attachmentKey: String) {
         Row(
             modifier = Modifier
                 .wrapContentWidth()
-                .height(height = PENDING_AUDIO_CARD_HEIGHT)
+                .height(height = AttachmentPreviewCardHeight)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(space = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
