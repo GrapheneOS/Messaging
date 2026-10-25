@@ -24,6 +24,7 @@ import com.android.messaging.ui.conversationsettings.screen.support.FATHER_PARTI
 import com.android.messaging.ui.conversationsettings.screen.support.MOTHER_DESTINATION
 import com.android.messaging.ui.conversationsettings.screen.support.MOTHER_NAME
 import com.android.messaging.ui.conversationsettings.screen.support.MOTHER_PARTICIPANT_ID
+import com.android.messaging.ui.conversationsettings.screen.support.TEST_DESTINATION
 import com.android.messaging.ui.conversationsettings.screen.support.TEST_PARTICIPANT_ID
 import com.android.messaging.ui.conversationsettings.screen.support.groupState
 import com.android.messaging.ui.conversationsettings.screen.support.oneToOneState
@@ -56,12 +57,37 @@ internal class ParticipantsListTest : ConversationSettingsTestBase() {
     }
 
     @Test
-    fun click_opensQuickActionsPopup_inOneToOne() {
+    fun participantsSection_hidden_inOneToOne() {
         renderScreen(oneToOneState())
 
-        clickParticipantRow(participantId = TEST_PARTICIPANT_ID)
+        composeTestRule
+            .onNodeWithText(string(R.string.participant_list_title))
+            .assertDoesNotExist()
+        composeTestRule
+            .onNodeWithTag(testTag = conversationSettingsParticipantRowTestTag(TEST_PARTICIPANT_ID))
+            .assertDoesNotExist()
+    }
 
-        waitForQuickAction(actionResId = R.string.action_send_message)
+    @Test
+    fun header_showsDestination_inOneToOne() {
+        renderScreen(oneToOneState())
+
+        composeTestRule.onNodeWithText(TEST_DESTINATION).assertIsDisplayed()
+    }
+
+    @Test
+    fun headerLongPress_dispatchesParticipantLongPressed_inOneToOne() {
+        renderScreen(oneToOneState())
+
+        composeTestRule
+            .onNodeWithText(TEST_DESTINATION)
+            .performTouchInput { longClick() }
+
+        verify(exactly = 1) {
+            screenModel.onAction(
+                ParticipantAction.ParticipantLongPressed(TEST_DESTINATION),
+            )
+        }
     }
 
     @Test
@@ -105,15 +131,6 @@ internal class ParticipantsListTest : ConversationSettingsTestBase() {
         composeTestRule
             .onAllNodesWithContentDescription(string(R.string.action_contact_info))
             .assertCountEquals(2)
-    }
-
-    @Test
-    fun trailingInfoButton_hidden_inOneToOne() {
-        renderScreen(oneToOneState(canShowContact = false))
-
-        composeTestRule
-            .onAllNodesWithContentDescription(string(R.string.action_contact_info))
-            .assertCountEquals(0)
     }
 
     @Test

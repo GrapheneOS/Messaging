@@ -360,6 +360,9 @@ private fun ConversationSettingsList(
             ConversationHeader(
                 title = uiState.conversationTitle,
                 participant = uiState.otherParticipant,
+                onCopyDestination = { destination ->
+                    onAction(ParticipantAction.ParticipantLongPressed(destination))
+                },
                 collapseProgress = collapseProgress,
             )
         }
@@ -573,14 +576,11 @@ private fun LazyListScope.participantsItems(
     onAction: (Action) -> Unit,
 ) {
     val participants = uiState.participants
-    if (participants.isEmpty()) return
-
-    val isGroup = participants.size > 1
+    if (participants.size < 2) return
 
     item(key = "participants_group") {
         ParticipantsCard(
             participants = participants,
-            isGroup = isGroup,
             onAction = onAction,
         )
     }
@@ -589,7 +589,6 @@ private fun LazyListScope.participantsItems(
 @Composable
 private fun ParticipantsCard(
     participants: ImmutableList<ParticipantUiState>,
-    isGroup: Boolean,
     onAction: (Action) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -632,7 +631,7 @@ private fun ParticipantsCard(
                         }.takeIf { hasDestination },
                         onAction = {
                             onAction(ParticipantAction.ParticipantActionPressed(destination))
-                        }.takeIf { hasDestination && isGroup },
+                        }.takeIf { hasDestination },
                         modifier = Modifier
                             .testTag(
                                 tag = conversationSettingsParticipantRowTestTag(
