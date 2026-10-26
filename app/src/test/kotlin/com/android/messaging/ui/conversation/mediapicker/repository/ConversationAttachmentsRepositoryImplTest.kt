@@ -130,27 +130,29 @@ class ConversationAttachmentsRepositoryImplTest {
     }
 
     @Test
-    fun createDraftAttachmentFromContact_returnsVCardAttachmentForResolvedLookupKey() {
+    fun createDraftAttachmentsFromContacts_returnsVCardAttachmentPerResolvedContact() {
         runTest(
             context = mainDispatcherRule.testDispatcher,
         ) {
+            val contentResolver = mockk<ContentResolver>()
+            every {
+                contentResolver.query(Uri.parse(TEST_CONTACT_URI), any(), any(), any(), any())
+            } returns createContactsCursor(arrayOf<Any?>("lookup-key-1"))
+            every {
+                contentResolver.query(Uri.parse(SECOND_CONTACT_URI), any(), any(), any(), any())
+            } returns createContactsCursor(arrayOf<Any?>("lookup-key-2"))
             val repository = ConversationAttachmentsRepositoryImpl(
-                contentResolver = createContentResolver(
-                    contactCursor = createContactsCursor(
-                        arrayOf<Any?>("lookup-key-1"),
-                    ),
-                ),
+                contentResolver = contentResolver,
                 ioDispatcher = mainDispatcherRule.testDispatcher,
             )
 
-            repository.createDraftAttachmentFromContact(contactUri = TEST_CONTACT_URI).test {
+            repository.createDraftAttachmentsFromContacts(
+                contactUris = listOf(TEST_CONTACT_URI, SECOND_CONTACT_URI),
+            ).test {
                 assertEquals(
-                    ConversationDraftAttachment(
-                        contentType = ContentType.TEXT_VCARD,
-                        contentUri = Uri.withAppendedPath(
-                            Contacts.CONTENT_VCARD_URI,
-                            "lookup-key-1",
-                        ).toString(),
+                    listOf(
+                        createVCardAttachment(lookupKey = "lookup-key-1"),
+                        createVCardAttachment(lookupKey = "lookup-key-2"),
                     ),
                     awaitItem(),
                 )
@@ -160,42 +162,58 @@ class ConversationAttachmentsRepositoryImplTest {
     }
 
     @Test
-    fun createDraftAttachmentFromContact_returnsNullWhenLookupKeyIsMissing() {
+    fun createDraftAttachmentsFromContacts_skipsContactsWithoutLookupKey() {
         runTest(
             context = mainDispatcherRule.testDispatcher,
         ) {
+            val contentResolver = mockk<ContentResolver>()
+            every {
+                contentResolver.query(Uri.parse(TEST_CONTACT_URI), any(), any(), any(), any())
+            } returns createContactsCursor(arrayOf<Any?>(""))
+            every {
+                contentResolver.query(Uri.parse(SECOND_CONTACT_URI), any(), any(), any(), any())
+            } returns createContactsCursor(arrayOf<Any?>("lookup-key-2"))
             val repository = ConversationAttachmentsRepositoryImpl(
-                contentResolver = createContentResolver(
-                    contactCursor = createContactsCursor(
-                        arrayOf<Any?>(""),
-                    ),
-                ),
+                contentResolver = contentResolver,
                 ioDispatcher = mainDispatcherRule.testDispatcher,
             )
 
-            repository.createDraftAttachmentFromContact(contactUri = TEST_CONTACT_URI).test {
-                assertEquals(null, awaitItem())
+            repository.createDraftAttachmentsFromContacts(
+                contactUris = listOf(TEST_CONTACT_URI, SECOND_CONTACT_URI),
+            ).test {
+                assertEquals(
+                    listOf(createVCardAttachment(lookupKey = "lookup-key-2")),
+                    awaitItem(),
+                )
                 awaitComplete()
             }
         }
     }
 
     @Test
-    fun createDraftAttachmentFromContact_swallowsNonCancellationFailures() {
+    fun createDraftAttachmentsFromContacts_skipsContactsThatFailToResolve() {
         runTest(
             context = mainDispatcherRule.testDispatcher,
         ) {
             val contentResolver = mockk<ContentResolver>()
             every {
-                contentResolver.query(any(), any(), any(), any(), any())
+                contentResolver.query(Uri.parse(TEST_CONTACT_URI), any(), any(), any(), any())
             } throws IllegalStateException("boom")
+            every {
+                contentResolver.query(Uri.parse(SECOND_CONTACT_URI), any(), any(), any(), any())
+            } returns createContactsCursor(arrayOf<Any?>("lookup-key-2"))
             val repository = ConversationAttachmentsRepositoryImpl(
                 contentResolver = contentResolver,
                 ioDispatcher = mainDispatcherRule.testDispatcher,
             )
 
-            repository.createDraftAttachmentFromContact(contactUri = TEST_CONTACT_URI).test {
-                assertEquals(null, awaitItem())
+            repository.createDraftAttachmentsFromContacts(
+                contactUris = listOf(TEST_CONTACT_URI, SECOND_CONTACT_URI),
+            ).test {
+                assertEquals(
+                    listOf(createVCardAttachment(lookupKey = "lookup-key-2")),
+                    awaitItem(),
+                )
                 awaitComplete()
             }
         }
@@ -593,6 +611,13 @@ class ConversationAttachmentsRepositoryImplTest {
         return contentResolver
     }
 
+    private fun createVCardAttachment(lookupKey: String): ConversationDraftAttachment {
+        return ConversationDraftAttachment(
+            contentType = ContentType.TEXT_VCARD,
+            contentUri = Uri.withAppendedPath(Contacts.CONTENT_VCARD_URI, lookupKey).toString(),
+        )
+    }
+
     private fun createContactsCursor(
         vararg rows: Array<Any?>,
     ): MatrixCursor {
@@ -604,6 +629,7 @@ class ConversationAttachmentsRepositoryImplTest {
     }
 
     private companion object {
+        private const val SECOND_CONTACT_URI = "content://contacts/lookup/2"
         private val onePixelPngBytes = byteArrayOf(
             0x89.toByte(),
             0x50,

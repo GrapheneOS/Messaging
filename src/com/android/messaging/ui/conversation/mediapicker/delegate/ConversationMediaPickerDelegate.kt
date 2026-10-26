@@ -28,8 +28,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 
 internal interface ConversationMediaPickerAttachmentActions {
@@ -39,7 +38,7 @@ internal interface ConversationMediaPickerAttachmentActions {
 
     fun onCapturedMediaReady(capturedMedia: ConversationCapturedMedia)
 
-    fun onContactCardPicked(contactUri: String?)
+    fun onContactCardsPicked(contactUris: List<String>)
 
     fun onRemovePendingAttachment(pendingAttachmentId: String)
 
@@ -298,14 +297,16 @@ internal class ConversationMediaPickerDelegateImpl @Inject constructor(
         }
     }
 
-    override fun onContactCardPicked(contactUri: String?) {
-        val resolvedContactUri = contactUri?.takeIf { it.isNotBlank() } ?: return
+    override fun onContactCardsPicked(contactUris: List<String>) {
+        val resolvedContactUris = contactUris
+            .filter { it.isNotBlank() }
+            .takeIf { it.isNotEmpty() }
+            ?: return
 
         boundScope?.launch(defaultDispatcher) {
             conversationAttachmentsRepository
-                .createDraftAttachmentFromContact(contactUri = resolvedContactUri)
-                .filterNotNull()
-                .map(::listOf)
+                .createDraftAttachmentsFromContacts(contactUris = resolvedContactUris)
+                .filter { it.isNotEmpty() }
                 .collect(conversationDraftDelegate::addAttachments)
         }
     }

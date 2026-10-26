@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.screen
 
 import android.Manifest
+import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -42,15 +43,15 @@ internal fun rememberOpenContactPickerCallback(
     screenModel: ConversationScreenModel,
 ): () -> Unit {
     val contactPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickContact(),
-    ) { contactUri ->
-        screenModel.onContactCardPicked(contactUri = contactUri?.toString())
+        contract = PickContactsContract(),
+    ) { contactUris ->
+        screenModel.onContactCardsPicked(contactUris = contactUris.map(Uri::toString))
     }
 
     return remember(screenModel, contactPickerLauncher) {
         {
             if (screenModel.tryStartAddingAttachment()) {
-                contactPickerLauncher.launch(input = null)
+                contactPickerLauncher.launch(input = Unit)
             }
         }
     }

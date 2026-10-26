@@ -145,14 +145,14 @@ internal class ConversationScreenRouteCallbackTest : BaseConversationScreenTest(
     @Test
     fun contactPicker_whenAttachmentCannotStartDoesNotLaunchPicker() {
         val screenModel = createScreenModel().model
-        val contactLauncher = mockk<ActivityResultLauncher<Void?>>(relaxed = true)
-        val contactCallbackSlot = slot<ActivityResultCallback<Uri?>>()
+        val contactLauncher = mockk<ActivityResultLauncher<Unit>>(relaxed = true)
+        val contactCallbackSlot = slot<ActivityResultCallback<List<Uri>>>()
         val registry = mockk<ActivityResultRegistry>()
         every { screenModel.tryStartAddingAttachment() } returns false
         every {
             registry.register(
                 any<String>(),
-                any<ActivityResultContract<Void?, Uri?>>(),
+                any<ActivityResultContract<Unit, List<Uri>>>(),
                 capture(contactCallbackSlot),
             )
         } returns contactLauncher
@@ -172,25 +172,25 @@ internal class ConversationScreenRouteCallbackTest : BaseConversationScreenTest(
                 screenModel.tryStartAddingAttachment()
             }
             verify(exactly = 0) {
-                contactLauncher.launch(any(), any())
+                contactLauncher.launch(Unit, any())
             }
             verify(exactly = 0) {
-                screenModel.onContactCardPicked(any())
+                screenModel.onContactCardsPicked(any())
             }
         }
     }
 
     @Test
-    fun contactPicker_whenContactSelectedLaunchesPickerAndForwardsUri() {
+    fun contactPicker_whenContactsSelectedLaunchesPickerAndForwardsUris() {
         val screenModel = createScreenModel().model
-        val contactLauncher = mockk<ActivityResultLauncher<Void?>>(relaxed = true)
-        val contactCallbackSlot = slot<ActivityResultCallback<Uri?>>()
+        val contactLauncher = mockk<ActivityResultLauncher<Unit>>(relaxed = true)
+        val contactCallbackSlot = slot<ActivityResultCallback<List<Uri>>>()
         val registry = mockk<ActivityResultRegistry>()
         every { screenModel.tryStartAddingAttachment() } returns true
         every {
             registry.register(
                 any<String>(),
-                any<ActivityResultContract<Void?, Uri?>>(),
+                any<ActivityResultContract<Unit, List<Uri>>>(),
                 capture(contactCallbackSlot),
             )
         } returns contactLauncher
@@ -205,30 +205,34 @@ internal class ConversationScreenRouteCallbackTest : BaseConversationScreenTest(
             .onNodeWithTag(OPEN_CONTACT_PICKER_BUTTON_TAG)
             .performClick()
         composeTestRule.runOnIdle {
-            contactCallbackSlot.captured.onActivityResult(Uri.parse(CONTACT_URI))
+            contactCallbackSlot.captured.onActivityResult(
+                listOf(Uri.parse(CONTACT_URI), Uri.parse(SECOND_CONTACT_URI)),
+            )
         }
 
         composeTestRule.runOnIdle {
             verify(exactly = 1) {
-                contactLauncher.launch(null, null)
+                contactLauncher.launch(Unit, null)
             }
             verify(exactly = 1) {
-                screenModel.onContactCardPicked(contactUri = CONTACT_URI)
+                screenModel.onContactCardsPicked(
+                    contactUris = listOf(CONTACT_URI, SECOND_CONTACT_URI),
+                )
             }
         }
     }
 
     @Test
-    fun contactPicker_whenPickerCanceledForwardsNullUri() {
+    fun contactPicker_whenPickerCanceledForwardsNoUris() {
         val screenModel = createScreenModel().model
-        val contactLauncher = mockk<ActivityResultLauncher<Void?>>(relaxed = true)
-        val contactCallbackSlot = slot<ActivityResultCallback<Uri?>>()
+        val contactLauncher = mockk<ActivityResultLauncher<Unit>>(relaxed = true)
+        val contactCallbackSlot = slot<ActivityResultCallback<List<Uri>>>()
         val registry = mockk<ActivityResultRegistry>()
         every { screenModel.tryStartAddingAttachment() } returns true
         every {
             registry.register(
                 any<String>(),
-                any<ActivityResultContract<Void?, Uri?>>(),
+                any<ActivityResultContract<Unit, List<Uri>>>(),
                 capture(contactCallbackSlot),
             )
         } returns contactLauncher
@@ -243,15 +247,15 @@ internal class ConversationScreenRouteCallbackTest : BaseConversationScreenTest(
             .onNodeWithTag(OPEN_CONTACT_PICKER_BUTTON_TAG)
             .performClick()
         composeTestRule.runOnIdle {
-            contactCallbackSlot.captured.onActivityResult(null)
+            contactCallbackSlot.captured.onActivityResult(emptyList())
         }
 
         composeTestRule.runOnIdle {
             verify(exactly = 1) {
-                contactLauncher.launch(null, null)
+                contactLauncher.launch(Unit, null)
             }
             verify(exactly = 1) {
-                screenModel.onContactCardPicked(contactUri = null)
+                screenModel.onContactCardsPicked(contactUris = emptyList())
             }
         }
     }
@@ -344,5 +348,6 @@ internal class ConversationScreenRouteCallbackTest : BaseConversationScreenTest(
         private const val START_AUDIO_LOCKED_BUTTON_TAG = "start_audio_locked"
         private const val OPEN_CONTACT_PICKER_BUTTON_TAG = "open_contact_picker"
         private const val CONTACT_URI = "content://contacts/people/11"
+        private const val SECOND_CONTACT_URI = "content://contacts/people/12"
     }
 }
