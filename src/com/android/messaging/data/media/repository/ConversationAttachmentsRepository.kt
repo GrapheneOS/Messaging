@@ -36,9 +36,9 @@ internal interface ConversationAttachmentsRepository {
         contentUris: List<String>,
     ): Flow<PhotoPickerDraftAttachmentResult>
 
-    fun createDraftAttachmentFromContact(
-        contactUri: String,
-    ): Flow<ConversationDraftAttachment?>
+    fun createDraftAttachmentsFromContacts(
+        contactUris: List<String>,
+    ): Flow<List<ConversationDraftAttachment>>
 
     fun deleteTemporaryAttachment(
         contentUri: String,
@@ -89,22 +89,21 @@ internal class ConversationAttachmentsRepositoryImpl @Inject constructor(
         }.flowOn(ioDispatcher)
     }
 
-    override fun createDraftAttachmentFromContact(
-        contactUri: String,
-    ): Flow<ConversationDraftAttachment?> {
+    @Suppress("TooGenericExceptionCaught")
+    override fun createDraftAttachmentsFromContacts(
+        contactUris: List<String>,
+    ): Flow<List<ConversationDraftAttachment>> {
         return typedFlow {
-            queryDraftAttachmentFromContact(contactUri = contactUri)
-        }.catch { throwable ->
-            if (throwable is CancellationException) {
-                throw throwable
+            contactUris.mapNotNull { contactUri ->
+                try {
+                    queryDraftAttachmentFromContact(contactUri = contactUri)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    LogUtil.w(TAG, "Failed to resolve contact draft attachment for $contactUri", e)
+                    null
+                }
             }
-
-            LogUtil.w(
-                TAG,
-                "Failed to resolve contact draft attachment for $contactUri",
-                throwable,
-            )
-            emit(null)
         }.flowOn(ioDispatcher)
     }
 

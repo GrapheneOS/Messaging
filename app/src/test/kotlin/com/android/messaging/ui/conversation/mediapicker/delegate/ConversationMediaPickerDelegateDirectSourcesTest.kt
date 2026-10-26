@@ -64,18 +64,24 @@ internal class ConversationMediaPickerDelegateDirectSourcesTest :
     }
 
     @Test
-    fun onContactCardPicked_addsResolvedContactAttachment() {
+    fun onContactCardsPicked_addsResolvedContactAttachmentsTogether() {
         runTest(
             context = mainDispatcherRule.testDispatcher
         ) {
             val dispatcher = mainDispatcherRule.testDispatcher
             val draftDelegate = createMediaPickerDraftDelegateMock()
-            val attachment = ConversationDraftAttachment(
-                contentType = "text/x-vCard",
-                contentUri = "content://contacts/as_vcard/1",
+            val attachments = listOf(
+                ConversationDraftAttachment(
+                    contentType = "text/x-vCard",
+                    contentUri = "content://contacts/as_vcard/1",
+                ),
+                ConversationDraftAttachment(
+                    contentType = "text/x-vCard",
+                    contentUri = "content://contacts/as_vcard/2",
+                ),
             )
             val attachmentRepository = createAttachmentRepositoryMock(
-                createDraftAttachmentFromContactFlow = flowOf(attachment),
+                createDraftAttachmentsFromContactsFlow = flowOf(attachments),
             )
             val delegate = createDelegate(
                 draftDelegate = draftDelegate,
@@ -91,17 +97,19 @@ internal class ConversationMediaPickerDelegateDirectSourcesTest :
                     conversationIdFlow = MutableStateFlow(value = null),
                 )
 
-                delegate.onContactCardPicked(contactUri = TEST_CONTACT_URI)
+                delegate.onContactCardsPicked(
+                    contactUris = listOf(TEST_CONTACT_URI, "   ", SECOND_CONTACT_URI),
+                )
                 advanceUntilIdle()
 
                 verify(exactly = 1) {
                     @Suppress("UnusedFlow")
-                    attachmentRepository.createDraftAttachmentFromContact(
-                        contactUri = TEST_CONTACT_URI,
+                    attachmentRepository.createDraftAttachmentsFromContacts(
+                        contactUris = listOf(TEST_CONTACT_URI, SECOND_CONTACT_URI),
                     )
                 }
                 verify(exactly = 1) {
-                    draftDelegate.addAttachments(attachments = listOf(attachment))
+                    draftDelegate.addAttachments(attachments = attachments)
                 }
             } finally {
                 boundScope.cancel()
@@ -110,7 +118,40 @@ internal class ConversationMediaPickerDelegateDirectSourcesTest :
     }
 
     @Test
-    fun onContactCardPicked_ignoresBlankUris() {
+    fun onContactCardsPicked_ignoresUnresolvedContacts() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher
+        ) {
+            val dispatcher = mainDispatcherRule.testDispatcher
+            val draftDelegate = createMediaPickerDraftDelegateMock()
+            val delegate = createDelegate(
+                draftDelegate = draftDelegate,
+                attachmentMapper = createDraftAttachmentMapperMock(),
+                attachmentRepository = createAttachmentRepositoryMock(),
+                defaultDispatcher = dispatcher,
+            )
+            val boundScope = CoroutineScope(dispatcher + SupervisorJob())
+
+            try {
+                delegate.bind(
+                    scope = boundScope,
+                    conversationIdFlow = MutableStateFlow(value = null),
+                )
+
+                delegate.onContactCardsPicked(contactUris = listOf(TEST_CONTACT_URI))
+                advanceUntilIdle()
+
+                verify(exactly = 0) {
+                    draftDelegate.addAttachments(attachments = any())
+                }
+            } finally {
+                boundScope.cancel()
+            }
+        }
+    }
+
+    @Test
+    fun onContactCardsPicked_ignoresBlankUris() {
         runTest(
             context = mainDispatcherRule.testDispatcher
         ) {
@@ -130,16 +171,21 @@ internal class ConversationMediaPickerDelegateDirectSourcesTest :
                     conversationIdFlow = MutableStateFlow(value = null),
                 )
 
-                delegate.onContactCardPicked(contactUri = "   ")
+                delegate.onContactCardsPicked(contactUris = listOf("   "))
+                delegate.onContactCardsPicked(contactUris = emptyList())
                 advanceUntilIdle()
 
                 verify(exactly = 0) {
                     @Suppress("UnusedFlow")
-                    attachmentRepository.createDraftAttachmentFromContact(any())
+                    attachmentRepository.createDraftAttachmentsFromContacts(any())
                 }
             } finally {
                 boundScope.cancel()
             }
         }
+    }
+
+    private companion object {
+        private const val SECOND_CONTACT_URI = "content://contacts/lookup/2"
     }
 }

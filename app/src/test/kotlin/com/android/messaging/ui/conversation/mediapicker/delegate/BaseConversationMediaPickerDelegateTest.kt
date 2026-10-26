@@ -56,7 +56,8 @@ internal abstract class BaseConversationMediaPickerDelegateTest {
     protected fun createAttachmentRepositoryMock(
         createDraftAttachmentsFromPhotoPickerFlow:
         Flow<PhotoPickerDraftAttachmentResult> = flowOf(),
-        createDraftAttachmentFromContactFlow: Flow<ConversationDraftAttachment?> = flowOf(null),
+        createDraftAttachmentsFromContactsFlow: Flow<List<ConversationDraftAttachment>> =
+            flowOf(emptyList()),
         deleteTemporaryAttachmentFlow: Flow<Unit> = flowOf(Unit),
     ): ConversationAttachmentsRepository {
         val attachmentRepository = mockk<ConversationAttachmentsRepository>()
@@ -64,8 +65,8 @@ internal abstract class BaseConversationMediaPickerDelegateTest {
             attachmentRepository.createDraftAttachmentsFromPhotoPicker(any())
         } returns createDraftAttachmentsFromPhotoPickerFlow
         every {
-            attachmentRepository.createDraftAttachmentFromContact(any())
-        } returns createDraftAttachmentFromContactFlow
+            attachmentRepository.createDraftAttachmentsFromContacts(any())
+        } returns createDraftAttachmentsFromContactsFlow
         every {
             attachmentRepository.deleteTemporaryAttachment(any())
         } returns deleteTemporaryAttachmentFlow
