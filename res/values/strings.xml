@@ -595,6 +595,20 @@
     <string name="conversation_list_status_snoozed">Snoozed</string>
     <!-- Accessibility status for a work conversation in the conversation list. -->
     <string name="conversation_list_status_work_profile">Work profile</string>
+    <!-- Accessibility status for an archived conversation found by the conversation list search. -->
+    <string name="conversation_list_status_archived">Archived</string>
+    <!-- Accessibility label for the button that opens search on the conversation list. -->
+    <string name="conversation_list_search">Search</string>
+    <!-- Hint shown in the empty search field on the conversation list. -->
+    <string name="conversation_list_search_hint">Search</string>
+    <!-- Accessibility label for the button that closes search on the conversation list. -->
+    <string name="conversation_list_search_close">Close search</string>
+    <!-- Accessibility label for the button that clears the conversation list search field. -->
+    <string name="conversation_list_search_clear">Clear search</string>
+    <!-- Heading above the conversations found by the conversation list search. -->
+    <string name="conversation_list_search_conversations_header">Conversations</string>
+    <!-- Shown when the conversation list search finds nothing. -->
+    <string name="conversation_list_search_no_results">No results</string>
     <!-- Accessibility label for the conversation list avatar action that opens conversation quick actions. -->
     <string name="conversation_list_show_conversation_actions">Show conversation actions for <xliff:g id="conversation">%1$s</xliff:g></string>
     <!-- Accessibility label for the conversation list avatar action that toggles selection. -->

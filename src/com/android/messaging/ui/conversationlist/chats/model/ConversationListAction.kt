@@ -21,6 +21,8 @@ internal sealed interface ConversationListAction {
 
     sealed interface PaneStateAction : ConversationListAction
 
+    sealed interface SearchAction : ConversationListAction
+
     // region ConfirmationAction
     data class BlockConfirmed(
         val conversationId: ConversationId,
@@ -124,5 +126,18 @@ internal sealed interface ConversationListAction {
     data class OpenedConversationChanged(
         val conversationId: ConversationId?,
     ) : PaneStateAction
+    // endregion
+
+    // region SearchAction
+    data object SearchClicked : SearchAction
+    data object SearchClosed : SearchAction
+
+    data class SearchQueryChanged(
+        val query: String,
+    ) : SearchAction
+
+    data class SearchConversationClicked(
+        val conversationId: ConversationId,
+    ) : SearchAction
     // endregion
 }
