@@ -17,12 +17,15 @@ import com.android.messaging.data.conversationlist.repository.ConversationListRe
 import com.android.messaging.testutil.TestLifecycleOwner
 import com.android.messaging.testutil.installTestFactory
 import com.android.messaging.ui.conversationlist.chats.mapper.ConversationListUiStateMapper
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListEffect as Effect
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState as State
 import com.android.messaging.ui.conversationlist.common.support.previewConversationListItem
 import com.android.messaging.ui.conversationlist.delegate.ConversationListOptimisticSnapshotDelegate
+import com.android.messaging.ui.conversationlist.delegate.ConversationListSearchDelegate
 import com.android.messaging.ui.conversationlist.delegate.ConversationListSelectionDelegate
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
+import com.android.messaging.ui.conversationlist.model.ConversationListSearchUiState
 import com.android.messaging.ui.conversationlist.snapshotOfIds
 import com.android.messaging.ui.core.AppTheme
 import io.mockk.every
@@ -53,8 +56,10 @@ internal class ConversationListNewestConversationVisibilityTest {
 
     private val repository = mockk<ConversationListRepository>(relaxed = true)
     private val visibilityUpdates = mutableListOf<Boolean>()
+    private val searchState = MutableStateFlow(ConversationListSearchUiState())
 
     private lateinit var lifecycleOwner: TestLifecycleOwner
+    private lateinit var viewModel: ConversationListViewModel
     private var isScreenShown by mutableStateOf(true)
 
     @Before
@@ -105,12 +110,53 @@ internal class ConversationListNewestConversationVisibilityTest {
         assertFalse(isNewestConversationVisible())
     }
 
+    @Test
+    fun searchOpenedAtTop_newestConversationIsNotVisible() {
+        setContent()
+        assertTrue(isNewestConversationVisible())
+
+        onAction(action = Action.SearchClicked)
+
+        assertFalse(isNewestConversationVisible())
+    }
+
+    @Test
+    fun searchClosedAtTop_newestConversationIsVisibleAgain() {
+        setContent()
+        onAction(action = Action.SearchClicked)
+
+        onAction(action = Action.SearchClosed)
+
+        assertTrue(isNewestConversationVisible())
+    }
+
+    @Test
+    fun searchClosedWhileScrolledDown_newestConversationIsNotVisible() {
+        setContent()
+        composeTestRule.onNode(hasScrollToIndexAction()).performScrollToIndex(index = 1)
+        composeTestRule.waitForIdle()
+        onAction(action = Action.SearchClicked)
+
+        onAction(action = Action.SearchClosed)
+
+        assertFalse(isNewestConversationVisible())
+    }
+
+    @Test
+    fun resumedWithSearchRestoredAtTop_newestConversationIsNotVisible() {
+        searchState.value = ConversationListSearchUiState(isActive = true)
+
+        setContent()
+
+        assertFalse(isNewestConversationVisible())
+    }
+
     private fun setContent() {
         composeTestRule.runOnIdle {
             lifecycleOwner = TestLifecycleOwner(initialState = Lifecycle.State.RESUMED)
         }
 
-        val viewModel = createViewModel()
+        viewModel = createViewModel()
         val navigation = ConversationListNavigationCallbacks(
             onNavigateToConversation = {},
             onNavigateToNewChat = {},
@@ -137,6 +183,13 @@ internal class ConversationListNewestConversationVisibilityTest {
                     }
                 }
             }
+        }
+        composeTestRule.waitForIdle()
+    }
+
+    private fun onAction(action: Action) {
+        composeTestRule.runOnIdle {
+            viewModel.onAction(action)
         }
         composeTestRule.waitForIdle()
     }
@@ -179,12 +232,22 @@ internal class ConversationListNewestConversationVisibilityTest {
         val selectionDelegate = mockk<ConversationListSelectionDelegate>(relaxed = true)
         every { selectionDelegate.selectedIds } returns MutableStateFlow(persistentListOf())
 
+        val searchDelegate = mockk<ConversationListSearchDelegate>(relaxed = true)
+        every { searchDelegate.state } returns searchState
+        every { searchDelegate.open() } answers {
+            searchState.value = ConversationListSearchUiState(isActive = true)
+        }
+        every { searchDelegate.close() } answers {
+            searchState.value = ConversationListSearchUiState()
+        }
+
         return ConversationListViewModel(
             repository = repository,
             uiStateMapper = uiStateMapper,
             selectionDelegate = selectionDelegate,
             actionsDelegate = mockk(relaxed = true),
             optimisticSnapshotDelegate = optimisticSnapshotDelegate,
+            searchDelegate = searchDelegate,
             resolveContactAction = mockk(relaxed = true),
             debugFeaturesProvider = mockk(relaxed = true),
             conversationArchiveEvents = ConversationArchiveEventsImpl(),

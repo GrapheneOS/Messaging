@@ -76,7 +76,9 @@ internal class ConversationListRepositoryImpl @Inject constructor(
             .flatMapLatest(::observeSnoozeState)
 
         val blockedDestinationsFlow = when (mode) {
-            ConversationListMode.Inbox -> {
+            ConversationListMode.Inbox,
+            ConversationListMode.All,
+            -> {
                 observeUri(MessagingContentProvider.PARTICIPANTS_URI)
                     .conflate()
                     .map { queryBlockedParticipantDestinations() }
@@ -198,6 +200,7 @@ internal class ConversationListRepositoryImpl @Inject constructor(
         val selection = when (mode) {
             ConversationListMode.Inbox -> ConversationListData.WHERE_NOT_ARCHIVED
             ConversationListMode.Archived -> ConversationListData.WHERE_ARCHIVED
+            ConversationListMode.All -> null
         }
 
         val cursor = contentResolver.query(
