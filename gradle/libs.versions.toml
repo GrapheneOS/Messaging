@@ -71,6 +71,8 @@ androidx-photo-picker = { module = "androidx.photopicker:photopicker-compose", v
 
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
+# Do not remove - used for YT thumbnails
+coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
