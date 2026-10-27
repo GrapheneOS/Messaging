@@ -2,6 +2,7 @@
 common/components/attachment/MediaThumbnail.kt
 common/components/mediapreview/MediaPreviewBackground.kt
 common/components/PrimaryActionButton.kt
+common/components/SearchTopAppBarField.kt
 conversation/addparticipants/AddParticipantsScreen.kt
 conversation/attachment/ui/ConversationVCardAttachmentCardContent.kt
 conversation/composer/ui/ConversationAttachmentPreview.kt

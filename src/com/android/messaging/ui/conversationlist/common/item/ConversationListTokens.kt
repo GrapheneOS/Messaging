@@ -15,3 +15,11 @@ internal val ItemStatusDotSize = 12.dp
 internal val ItemPreviewThumbnailSize = 20.dp
 
 internal val ItemPreviewThumbnailCornerRadius = 4.dp
+
+internal val SearchResultsContentPadding = 8.dp
+
+internal val SearchResultsItemSpacing = 2.dp
+
+internal val SearchSectionHeaderHorizontalPadding = 16.dp
+
+internal val SearchSectionHeaderVerticalPadding = 8.dp
