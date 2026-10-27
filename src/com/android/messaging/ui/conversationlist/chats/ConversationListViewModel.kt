@@ -22,6 +22,7 @@ import com.android.messaging.ui.conversationlist.chats.model.ConversationListNav
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState as State
 import com.android.messaging.ui.conversationlist.delegate.ConversationListActionsDelegate
 import com.android.messaging.ui.conversationlist.delegate.ConversationListOptimisticSnapshotDelegate
+import com.android.messaging.ui.conversationlist.delegate.ConversationListSearchDelegate
 import com.android.messaging.ui.conversationlist.delegate.ConversationListSelectionDelegate
 import com.android.messaging.ui.conversationlist.model.ConversationListAvatarUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -57,6 +58,7 @@ internal class ConversationListViewModel @Inject constructor(
     private val selectionDelegate: ConversationListSelectionDelegate,
     private val actionsDelegate: ConversationListActionsDelegate,
     private val optimisticSnapshotDelegate: ConversationListOptimisticSnapshotDelegate,
+    private val searchDelegate: ConversationListSearchDelegate,
     private val resolveContactAction: ResolveContactAction,
     private val debugFeaturesProvider: DebugFeaturesProvider,
     private val conversationArchiveEvents: ConversationArchiveEvents,
@@ -82,19 +84,24 @@ internal class ConversationListViewModel @Inject constructor(
     override val navigationEvents: Flow<NavEvent> = _navigationEvents.receiveAsFlow()
 
     override val uiState: StateFlow<State> = combine(
-        snapshot.filterNotNull(),
-        selectionDelegate.selectedIds,
-        openedConversationId,
-        isScrollToTopVisible,
-        isDebugEnabled,
-    ) { snapshot, selectedIds, openedId, isScrollToTopVisible, isDebugEnabled ->
-        uiStateMapper.map(
-            snapshot = snapshot,
-            selectedConversationIds = selectedIds,
-            openedConversationId = openedId,
-            isScrollToTopVisible = isScrollToTopVisible,
-            isDebugEnabled = isDebugEnabled,
-        )
+        combine(
+            snapshot.filterNotNull(),
+            selectionDelegate.selectedIds,
+            openedConversationId,
+            isScrollToTopVisible,
+            isDebugEnabled,
+        ) { snapshot, selectedIds, openedId, isScrollToTopVisible, isDebugEnabled ->
+            uiStateMapper.map(
+                snapshot = snapshot,
+                selectedConversationIds = selectedIds,
+                openedConversationId = openedId,
+                isScrollToTopVisible = isScrollToTopVisible,
+                isDebugEnabled = isDebugEnabled,
+            )
+        },
+        searchDelegate.state,
+    ) { state, search ->
+        state.copy(search = search)
     }
         .flowOn(defaultDispatcher)
         .stateIn(
@@ -114,6 +121,7 @@ internal class ConversationListViewModel @Inject constructor(
             scope = viewModelScope,
             snapshot = snapshot,
         )
+        searchDelegate.bind(scope = viewModelScope)
         offerUndoForArchivesOutsideList()
     }
 
@@ -126,6 +134,7 @@ internal class ConversationListViewModel @Inject constructor(
             is Action.SelectionAction -> onSelectionAction(action)
             is Action.SnackbarAction -> onSnackbarAction(action)
             is Action.PaneStateAction -> onPaneStateAction(action)
+            is Action.SearchAction -> onSearchAction(action)
         }
     }
 
@@ -172,6 +181,26 @@ internal class ConversationListViewModel @Inject constructor(
         when (action) {
             is Action.OpenedConversationChanged -> {
                 openedConversationId.value = action.conversationId
+            }
+        }
+    }
+
+    private fun onSearchAction(action: Action.SearchAction) {
+        when (action) {
+            Action.SearchClicked -> {
+                searchDelegate.open()
+            }
+
+            Action.SearchClosed -> {
+                searchDelegate.close()
+            }
+
+            is Action.SearchQueryChanged -> {
+                searchDelegate.setQuery(action.query)
+            }
+
+            is Action.SearchConversationClicked -> {
+                _navigationEvents.trySend(NavEvent.OpenConversation(action.conversationId))
             }
         }
     }
