@@ -52,6 +52,7 @@ internal fun ConversationMessage(
     message: ConversationMessageUiModel,
     isSelected: Boolean = false,
     isSelectionMode: Boolean = false,
+    isHighlighted: Boolean = false,
     showIncomingParticipantIdentity: Boolean = true,
     youTubeLinkPreviewsEnabled: Boolean = false,
     simDisplayName: String? = null,
@@ -111,6 +112,7 @@ internal fun ConversationMessage(
                     message = message,
                     isSelected = isSelected,
                     isSelectionMode = isSelectionMode,
+                    isHighlighted = isHighlighted,
                     isTouchExplorationEnabled = isTouchExplorationEnabled,
                     layout = layout,
                     maxBubbleWidth = maxAdjustedBubbleWidth,
@@ -300,6 +302,7 @@ private fun ConversationMessageContent(
     message: ConversationMessageUiModel,
     isSelected: Boolean,
     isSelectionMode: Boolean,
+    isHighlighted: Boolean,
     isTouchExplorationEnabled: Boolean,
     layout: ConversationMessageLayout,
     maxBubbleWidth: Dp,
@@ -335,6 +338,7 @@ private fun ConversationMessageContent(
             message = message,
             isSelected = isSelected,
             isSelectionMode = isSelectionMode,
+            isHighlighted = isHighlighted,
             layout = layout,
             maxBubbleWidth = maxBubbleWidth,
             simDisplayName = simDisplayName,
@@ -616,6 +620,48 @@ private fun ConversationMessageAttachmentContentPreview() {
                 text = "Watch this: https://www.youtube.com/watch?v=dQw4w9WgXcQ",
                 status = Status.Outgoing.Delivered,
             ),
+            simDisplayName = "Personal",
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationMessageHighlightPreview() {
+    ConversationMessagePreviewColumn {
+        ConversationMessagePreviewItem(
+            message = previewIncomingMessage(
+                messageId = MessageId("incoming-before-highlight"),
+                text = "Did anyone book the cabin yet?",
+            ),
+            simDisplayName = "Personal",
+        )
+        ConversationMessagePreviewItem(
+            message = previewIncomingMessage(
+                messageId = MessageId("incoming-highlighted"),
+                text = "The cabin is booked for the weekend of the 14th.",
+            ),
+            isHighlighted = true,
+            simDisplayName = "Personal",
+        )
+        ConversationMessagePreviewItem(
+            message = previewOutgoingMessage(
+                messageId = MessageId("outgoing-highlighted"),
+                text = "Perfect, I'll bring the board games.",
+                status = Status.Outgoing.Delivered,
+            ),
+            isHighlighted = true,
+            simDisplayName = "Work",
+        )
+        ConversationMessagePreviewItem(
+            message = previewIncomingMessage(
+                messageId = MessageId("incoming-image-highlighted"),
+                text = null,
+                parts = persistentListOf(previewImagePart(text = null)),
+                protocol = ConversationMessageUiModel.Protocol.MMS,
+                canSaveAttachments = true,
+            ),
+            isHighlighted = true,
             simDisplayName = "Personal",
         )
     }

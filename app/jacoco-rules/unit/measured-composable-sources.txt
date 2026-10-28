@@ -2,6 +2,7 @@
 common/components/attachment/MediaThumbnail.kt
 common/components/mediapreview/MediaPreviewBackground.kt
 common/components/PrimaryActionButton.kt
+common/components/SearchTopAppBarField.kt
 conversation/addparticipants/AddParticipantsScreen.kt
 conversation/attachment/ui/ConversationVCardAttachmentCardContent.kt
 conversation/composer/ui/ConversationAttachmentPreview.kt
@@ -40,6 +41,7 @@ conversation/messages/ui/attachment/ConversationVisualAttachments.kt
 conversation/messages/ui/message/ConversationMessage.kt
 conversation/messages/ui/message/ConversationMessageAvatar.kt
 conversation/messages/ui/message/ConversationMessageBubble.kt
+conversation/messages/ui/message/ConversationMessageHighlight.kt
 conversation/messages/ui/message/ConversationMessageMetadata.kt
 conversation/messages/ui/message/ConversationMessageRows.kt
 conversation/messages/ui/message/ConversationMessageSelectionIndicator.kt
@@ -59,6 +61,7 @@ conversation/screen/ConversationScreenEffects.kt
 conversation/screen/ConversationScreenRoute.kt
 conversation/screen/ConversationSelectionTopAppBar.kt
 conversation/screen/ConversationSimSheetState.kt
+conversation/screen/ConversationTargetMessageEffects.kt
 recipientselection/component/MultiDestinationContactRow.kt
 recipientselection/component/RecipientSelectionContactAvatar.kt
 recipientselection/component/RecipientSelectionContactRow.kt

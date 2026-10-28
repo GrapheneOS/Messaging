@@ -71,6 +71,7 @@ internal fun ConversationMessageBubbleRow(
     message: ConversationMessageUiModel,
     isSelected: Boolean,
     isSelectionMode: Boolean,
+    isHighlighted: Boolean,
     layout: ConversationMessageLayout,
     maxBubbleWidth: Dp,
     simDisplayName: String?,
@@ -96,6 +97,7 @@ internal fun ConversationMessageBubbleRow(
             modifier = Modifier.conversationMessageBubbleModifier(
                 message = message,
                 isSelectionMode = isSelectionMode,
+                isHighlighted = isHighlighted,
                 layout = layout,
                 bubbleRipple = bubbleRipple,
                 onMessageDownloadClick = onMessageDownloadClick,
@@ -304,6 +306,7 @@ internal fun rememberIsTouchExplorationEnabled(): Boolean {
 private fun Modifier.conversationMessageBubbleModifier(
     message: ConversationMessageUiModel,
     isSelectionMode: Boolean,
+    isHighlighted: Boolean,
     layout: ConversationMessageLayout,
     bubbleRipple: ConversationMessageBubbleRipple,
     onMessageDownloadClick: () -> Unit,
@@ -322,6 +325,7 @@ private fun Modifier.conversationMessageBubbleModifier(
         )
         .conversationMessageSenderSemantics(announcement = senderAnnouncement)
         .clip(shape = layout.bubbleShape)
+        .conversationMessageHighlight(isHighlighted = isHighlighted)
         .onPlaced { coordinates ->
             bubbleRipple.bubbleCoordinates = coordinates
         }
@@ -857,6 +861,7 @@ private fun ConversationMessageRowsPreviewItem(
             message = message,
             isSelected = isSelected,
             isSelectionMode = isSelectionMode,
+            isHighlighted = false,
             layout = layout,
             maxBubbleWidth = 320.dp,
             simDisplayName = simDisplayName,

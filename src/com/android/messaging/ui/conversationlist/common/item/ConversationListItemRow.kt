@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.NotificationsPaused
 import androidx.compose.material.icons.filled.PushPin
@@ -33,6 +34,7 @@ import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
 import com.android.messaging.ui.common.components.TwoLineListItem
+import com.android.messaging.ui.common.text.highlightedText
 import com.android.messaging.ui.conversationlist.common.support.conversationListItemTestTag
 import com.android.messaging.ui.conversationlist.common.support.previewConversationListItem
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
@@ -97,7 +99,10 @@ private fun ConversationListItemHeader(item: ConversationListItemUiModel) {
                     weight = 1f,
                     fill = false,
                 ),
-                text = item.title.orEmpty(),
+                text = highlightedText(
+                    text = item.title.orEmpty(),
+                    matchRanges = item.titleMatchRanges,
+                ),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = itemUnreadFontWeight(item),
                 color = MaterialTheme.colorScheme.onSurface,
@@ -138,6 +143,10 @@ private fun ConversationListItemBadges(item: ConversationListItemUiModel) {
 
         if (item.isPinned) {
             ConversationListItemBadgeIcon(Icons.Default.PushPin)
+        }
+
+        if (item.isArchivedBadgeVisible) {
+            ConversationListItemBadgeIcon(Icons.Default.Archive)
         }
     }
 }
