@@ -33,6 +33,7 @@ import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
 import com.android.messaging.ui.common.components.TwoLineListItem
+import com.android.messaging.ui.conversationlist.common.pane.listPaneHighlightedItemColor
 import com.android.messaging.ui.conversationlist.common.support.conversationListItemTestTag
 import com.android.messaging.ui.conversationlist.common.support.previewConversationListItem
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
@@ -247,7 +248,7 @@ private fun itemContainerColor(item: ConversationListItemUiModel): Color {
     val isHighlighted = item.isSelected || item.isOpened
 
     return when {
-        isHighlighted -> MaterialTheme.colorScheme.surfaceContainerLow
+        isHighlighted -> listPaneHighlightedItemColor()
         else -> MaterialTheme.colorScheme.background
     }
 }

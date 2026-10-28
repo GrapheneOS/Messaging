@@ -15,6 +15,8 @@ internal sealed interface ArchivedConversationListAction {
 
     sealed interface SnackbarAction : ArchivedConversationListAction
 
+    sealed interface PaneStateAction : ArchivedConversationListAction
+
     // region ConfirmationAction
     data object DeleteSelectedConfirmed : ConfirmationAction
     // endregion
@@ -66,5 +68,11 @@ internal sealed interface ArchivedConversationListAction {
     data class UnarchiveSnackbarDismissed(
         val conversationIds: List<ConversationId>,
     ) : SnackbarAction
+    // endregion
+
+    // region PaneStateAction
+    data class OpenedConversationChanged(
+        val conversationId: ConversationId?,
+    ) : PaneStateAction
     // endregion
 }

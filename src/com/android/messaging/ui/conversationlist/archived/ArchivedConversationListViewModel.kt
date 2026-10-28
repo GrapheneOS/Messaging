@@ -26,6 +26,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -64,6 +65,8 @@ internal class ArchivedConversationListViewModel @Inject constructor(
 
     private val isDebugEnabled = debugFeaturesProvider.isEnabled()
 
+    private val openedConversationId = MutableStateFlow<ConversationId?>(value = null)
+
     private val _effects = Channel<Effect>(Channel.BUFFERED)
     override val effects: Flow<Effect> = _effects.receiveAsFlow()
 
@@ -73,10 +76,12 @@ internal class ArchivedConversationListViewModel @Inject constructor(
     override val uiState: StateFlow<State> = combine(
         snapshot.filterNotNull(),
         selectionDelegate.selectedIds,
-    ) { snapshot, selectedIds ->
+        openedConversationId,
+    ) { snapshot, selectedIds, openedId ->
         uiStateMapper.map(
             snapshot = snapshot,
             selectedConversationIds = selectedIds,
+            openedConversationId = openedId,
             isDebugEnabled = isDebugEnabled,
         )
     }
@@ -125,6 +130,7 @@ internal class ArchivedConversationListViewModel @Inject constructor(
             is Action.NavigationAction -> onNavigationAction(action)
             is Action.SelectionAction -> onSelectionAction(action)
             is Action.SnackbarAction -> onSnackbarAction(action)
+            is Action.PaneStateAction -> onPaneStateAction(action)
         }
     }
 
@@ -194,6 +200,14 @@ internal class ArchivedConversationListViewModel @Inject constructor(
 
             is Action.UnarchiveSnackbarDismissed -> {
                 optimisticSnapshotDelegate.discardRemoval(action.conversationIds)
+            }
+        }
+    }
+
+    private fun onPaneStateAction(action: Action.PaneStateAction) {
+        when (action) {
+            is Action.OpenedConversationChanged -> {
+                openedConversationId.value = action.conversationId
             }
         }
     }

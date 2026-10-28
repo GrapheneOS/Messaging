@@ -11,6 +11,7 @@ internal interface ArchivedConversationListUiStateMapper {
     fun map(
         snapshot: ConversationListSnapshot,
         selectedConversationIds: ImmutableList<ConversationId>,
+        openedConversationId: ConversationId?,
         isDebugEnabled: Boolean,
     ): State
 }
@@ -22,12 +23,13 @@ internal class ArchivedConversationListUiStateMapperImpl @Inject constructor(
     override fun map(
         snapshot: ConversationListSnapshot,
         selectedConversationIds: ImmutableList<ConversationId>,
+        openedConversationId: ConversationId?,
         isDebugEnabled: Boolean,
     ): State {
         val content = contentMapper.map(
             snapshot = snapshot,
             selectedConversationIds = selectedConversationIds,
-            openedConversationId = null,
+            openedConversationId = openedConversationId,
         )
 
         return State(
