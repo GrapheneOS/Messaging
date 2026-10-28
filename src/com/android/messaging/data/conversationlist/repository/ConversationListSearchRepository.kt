@@ -7,6 +7,7 @@ import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListMode
 import com.android.messaging.data.conversationlist.model.SearchableConversation
+import com.android.messaging.data.conversationlist.model.SearchableMessage
 import com.android.messaging.data.conversationlist.model.SearchableParticipant
 import com.android.messaging.data.conversationlist.store.ConversationListSearchDatabaseStore
 import com.android.messaging.datamodel.MessagingContentProvider
@@ -32,6 +33,11 @@ internal interface ConversationListSearchRepository {
      * with the participants whose names and numbers it can be found by.
      */
     fun observeSearchableConversations(): Flow<ImmutableList<SearchableConversation>>
+
+    /**
+     * The newest messages whose text matches the query, found again whenever messages change.
+     */
+    fun observeMessages(query: String): Flow<ImmutableList<SearchableMessage>>
 }
 
 internal class ConversationListSearchRepositoryImpl @Inject constructor(
@@ -62,6 +68,13 @@ internal class ConversationListSearchRepositoryImpl @Inject constructor(
                 }
                 .toImmutableList()
         }
+    }
+
+    override fun observeMessages(query: String): Flow<ImmutableList<SearchableMessage>> {
+        return observeUris(uris = listOf(MessagingContentProvider.CONVERSATION_MESSAGES_URI))
+            .conflate()
+            .map { databaseStore.findMessages(query = query) }
+            .flowOn(messagingDbDispatcher)
     }
 
     private fun observeParticipants():

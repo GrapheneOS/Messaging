@@ -2,9 +2,11 @@ package com.android.messaging.ui.conversationlist.delegate
 
 import androidx.lifecycle.SavedStateHandle
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversationlist.matcher.ConversationSearchMatcherImpl
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.SearchableConversation
+import com.android.messaging.data.conversationlist.model.SearchableMessage
 import com.android.messaging.data.conversationlist.repository.ConversationListSearchRepository
 import com.android.messaging.ui.conversationlist.common.support.previewConversationListItem
 import com.android.messaging.ui.conversationlist.conversationItem
@@ -38,8 +40,10 @@ internal class ConversationListSearchDelegateImplTest {
             searchable(conversationId = BOB_ID, title = "Bob"),
         ),
     )
+    private val messages = MutableStateFlow<ImmutableList<SearchableMessage>>(persistentListOf())
     private val repository = mockk<ConversationListSearchRepository> {
         every { observeSearchableConversations() } returns conversations
+        every { observeMessages(any()) } returns messages
     }
     private val itemUiMapper = mockk<ConversationListItemUiMapper> {
         every { map(any(), any(), any()) } answers {
@@ -111,6 +115,44 @@ internal class ConversationListSearchDelegateImplTest {
             runCurrent()
 
             assertEquals(ConversationListSearchContentUiState.Idle, delegate.state.value.content)
+            verify(exactly = 0) { repository.observeMessages(query = "") }
+        }
+    }
+
+    @Test
+    fun setQuery_findsMessagesForTheQueryBelowTheConversations() {
+        runTest {
+            val delegate = createBoundOpenDelegate()
+            messages.value = persistentListOf(message(conversationId = BOB_ID, text = "Ann's car"))
+
+            delegate.setQuery(query = "ann")
+            advanceTimeBy(delayTimeMillis = DEBOUNCE_MILLIS)
+            runCurrent()
+
+            assertEquals(listOf(ANNA_ID), resultIds(delegate))
+            assertEquals(listOf(MESSAGE_ID), resultMessageIds(delegate))
+            verify(exactly = 1) { repository.observeMessages(query = "ann") }
+        }
+    }
+
+    @Test
+    fun messagesChange_whileSearching_updatesResults() {
+        runTest {
+            val delegate = createBoundOpenDelegate()
+            delegate.setQuery(query = "car")
+            advanceTimeBy(delayTimeMillis = DEBOUNCE_MILLIS)
+            runCurrent()
+
+            assertEquals(
+                ConversationListSearchContentUiState.NoResults,
+                delegate.state.value.content,
+            )
+
+            messages.value = persistentListOf(message(conversationId = BOB_ID, text = "New car"))
+            runCurrent()
+
+            assertEquals(emptyList<ConversationId>(), resultIds(delegate))
+            assertEquals(listOf(MESSAGE_ID), resultMessageIds(delegate))
         }
     }
 
@@ -240,6 +282,26 @@ internal class ConversationListSearchDelegateImplTest {
         return content.conversations.map { item -> item.conversationId }
     }
 
+    private fun resultMessageIds(delegate: ConversationListSearchDelegate): List<MessageId> {
+        val content = delegate.state.value.content as ConversationListSearchContentUiState.Results
+
+        return content.messages.map { message -> message.messageId }
+    }
+
+    private fun message(
+        conversationId: ConversationId,
+        text: String,
+    ): SearchableMessage {
+        return SearchableMessage(
+            messageId = MESSAGE_ID,
+            conversationId = conversationId,
+            text = text,
+            receivedTimestamp = 0L,
+            isIncoming = true,
+            senderName = null,
+        )
+    }
+
     private fun searchable(
         conversationId: ConversationId,
         title: String,
@@ -258,5 +320,6 @@ internal class ConversationListSearchDelegateImplTest {
         private val ANNA_ID = ConversationId("1")
         private val BOB_ID = ConversationId("2")
         private val BEA_ID = ConversationId("3")
+        private val MESSAGE_ID = MessageId("10")
     }
 }

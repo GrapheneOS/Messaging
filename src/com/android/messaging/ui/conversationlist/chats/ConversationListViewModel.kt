@@ -202,6 +202,15 @@ internal class ConversationListViewModel @Inject constructor(
             is Action.SearchConversationClicked -> {
                 _navigationEvents.trySend(NavEvent.OpenConversation(action.conversationId))
             }
+
+            is Action.SearchMessageClicked -> {
+                _navigationEvents.trySend(
+                    NavEvent.OpenMessage(
+                        conversationId = action.conversationId,
+                        messageId = action.messageId,
+                    ),
+                )
+            }
         }
     }
 

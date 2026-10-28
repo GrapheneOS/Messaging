@@ -607,6 +607,8 @@
     <string name="conversation_list_search_clear">Clear search</string>
     <!-- Heading above the conversations found by the conversation list search. -->
     <string name="conversation_list_search_conversations_header">Conversations</string>
+    <!-- Heading above the messages found by their text in the conversation list search. -->
+    <string name="conversation_list_search_messages_header">Messages</string>
     <!-- Shown when the conversation list search finds nothing. -->
     <string name="conversation_list_search_no_results">No results</string>
     <!-- Accessibility label for the conversation list avatar action that opens conversation quick actions. -->

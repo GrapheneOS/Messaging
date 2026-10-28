@@ -4,10 +4,12 @@ import android.content.ContentResolver
 import android.database.ContentObserver
 import app.cash.turbine.test
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListMode
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.data.conversationlist.model.SearchableConversation
+import com.android.messaging.data.conversationlist.model.SearchableMessage
 import com.android.messaging.data.conversationlist.model.SearchableParticipant
 import com.android.messaging.data.conversationlist.store.ConversationListSearchDatabaseStore
 import com.android.messaging.datamodel.MessagingContentProvider
@@ -151,6 +153,34 @@ internal class ConversationListSearchRepositoryImplTest {
         }
     }
 
+    @Test
+    fun observeMessages_messagesChange_findsThemAgain() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            every { databaseStore.findMessages(query = "lunch") } returns persistentListOf()
+
+            createRepository().observeMessages(query = "lunch").test {
+                assertEquals(emptyList<SearchableMessage>(), awaitItem())
+
+                every { databaseStore.findMessages(query = "lunch") } returns persistentListOf(
+                    LUNCH_MESSAGE,
+                )
+                registeredObserver.captured.onChange(false)
+
+                assertEquals(listOf(LUNCH_MESSAGE), awaitItem())
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            verify {
+                contentResolver.registerContentObserver(
+                    MessagingContentProvider.CONVERSATION_MESSAGES_URI,
+                    true,
+                    any(),
+                )
+            }
+            verify { contentResolver.unregisterContentObserver(registeredObserver.captured) }
+        }
+    }
+
     private fun stubSnapshots(
         inbox: ConversationListSnapshot,
         archived: ConversationListSnapshot,
@@ -188,6 +218,15 @@ internal class ConversationListSearchRepositoryImplTest {
         private val ARCHIVED_ID = ConversationId("2")
         private val BLOCKED_ID = ConversationId("3")
         private val GROUP_ID = ConversationId("4")
+
+        private val LUNCH_MESSAGE = SearchableMessage(
+            messageId = MessageId("10"),
+            conversationId = INBOX_ID,
+            text = "Lunch?",
+            receivedTimestamp = 1L,
+            isIncoming = true,
+            senderName = "Anna",
+        )
 
         private val ANNA = SearchableParticipant(
             fullName = "Anna Smith",

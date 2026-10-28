@@ -43,6 +43,10 @@ internal class DatabaseCompatibilityImpl @Inject constructor(
         // oldest such version. A downgrade keeps their tables and columns, so the upgrade to
         // them has to run again cleanly over its own result
         @VisibleForTesting
-        internal val OLDEST_COMPATIBLE_VERSIONS = emptyMap<Int, Int>()
+        internal val OLDEST_COMPATIBLE_VERSIONS = mapOf(
+            // Version 6 only adds the full-text index of the parts. Version 5 drops its triggers
+            // on the downgrade and never reads the index; the upgrade rebuilds it
+            6 to 5,
+        )
     }
 }

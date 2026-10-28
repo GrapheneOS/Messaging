@@ -10,6 +10,7 @@ import com.android.messaging.data.databaselifecycle.DatabaseLifecycle
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.DatabaseHelper.ConversationParticipantsColumns
 import com.android.messaging.datamodel.DatabaseHelper.MessageColumns
+import com.android.messaging.datamodel.DatabaseHelper.PartColumns
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
 import com.android.messaging.datamodel.data.ConversationListItemData
 import com.android.messaging.datamodel.data.ParticipantData
@@ -216,6 +217,100 @@ class DatabaseUpgradeHelperTest {
     }
 
     @Test
+    fun upgradeToVersion6_indexesTheTextOfTheExistingParts() {
+        SQLiteDatabase.create(null).use { db ->
+            DatabaseHelper.rebuildTables(db)
+            db.dropPartsTextIndex()
+            db.insertTextMessage(text = "See you at the café")
+
+            assertEquals(6, DatabaseUpgradeHelper().upgradeToVersion6(db))
+
+            assertEquals(listOf("See you at the café"), db.findPartTexts(query = "CAFE*"))
+        }
+    }
+
+    @Test
+    fun partsTextIndex_followsTheTextOfInsertedUpdatedAndDeletedParts() {
+        SQLiteDatabase.create(null).use { db ->
+            db.setForeignKeyConstraintsEnabled(true)
+            DatabaseHelper.rebuildTables(db)
+            db.insertTextMessage(text = "Привет, как дела?")
+            val edited = db.insertTextMessage(text = "Draft wording")
+            val deleted = db.insertTextMessage(text = "Delete this one")
+
+            db.execSQL(
+                "UPDATE ${DatabaseHelper.PARTS_TABLE} SET ${PartColumns.TEXT} = 'Final wording' " +
+                    "WHERE ${PartColumns.MESSAGE_ID} = $edited",
+            )
+            db.delete(
+                DatabaseHelper.CONVERSATIONS_TABLE,
+                "${ConversationColumns._ID} = ?",
+                arrayOf(db.conversationIdOf(messageId = deleted).toString()),
+            )
+
+            assertEquals(listOf("Привет, как дела?"), db.findPartTexts(query = "привет*"))
+            assertEquals(listOf("Final wording"), db.findPartTexts(query = "wording*"))
+            assertEquals(emptyList<String?>(), db.findPartTexts(query = "draft*"))
+            assertEquals(emptyList<String?>(), db.findPartTexts(query = "delete*"))
+        }
+    }
+
+    @Test
+    fun upgradeToVersion6_afterADowngradeThatDroppedTheTriggers_catchesUpWithTheParts() {
+        SQLiteDatabase.create(null).use { db ->
+            db.setForeignKeyConstraintsEnabled(true)
+            DatabaseHelper.rebuildTables(db)
+            val deletedMeanwhile = db.insertTextMessage(text = "Old news")
+            // What version 5 leaves behind: the index without the triggers that keep it current
+            db.execSQL("DROP TRIGGER ${DatabaseHelper.PARTS_TEXT_INDEX_INSERT_TRIGGER}")
+            db.execSQL("DROP TRIGGER ${DatabaseHelper.PARTS_TEXT_INDEX_TABLE}_before_delete")
+            db.insertTextMessage(text = "Fresh news")
+            db.delete(
+                DatabaseHelper.MESSAGES_TABLE,
+                "${MessageColumns._ID} = ?",
+                arrayOf(deletedMeanwhile.toString()),
+            )
+
+            DatabaseUpgradeHelper().upgradeToVersion6(db)
+
+            assertEquals(listOf("Fresh news"), db.findPartTexts(query = "news*"))
+        }
+    }
+
+    @Test
+    fun upgradeToVersion6_whenTheIndexCannotBeBuilt_stillReachesVersion6WithoutHalfAnIndex() {
+        SQLiteDatabase.create(null).use { db ->
+            // No parts table: filling the index throws exactly as it would with no room left
+            assertEquals(6, DatabaseUpgradeHelper().upgradeToVersion6(db))
+            assertTrue(
+                db.namesOf(type = "table")
+                    .none { name -> name.startsWith(DatabaseHelper.PARTS_TEXT_INDEX_TABLE) },
+            )
+            assertEquals(emptySet<String>(), db.namesOf(type = "trigger"))
+        }
+    }
+
+    @Test
+    fun onDowngrade_fromACompatibleVersion_rebuildsTheTextIndex() {
+        every {
+            databaseLifecycle.canKeepRowsOnDowngradeFrom(newerVersion = currentVersion + 1)
+        } returns true
+
+        SQLiteDatabase.create(null).use { db ->
+            DatabaseHelper.rebuildTables(db)
+            db.dropPartsTextIndex()
+            db.insertTextMessage(text = "Kept through the downgrade")
+
+            db.downgradeFromNewerVersion()
+
+            assertEquals(
+                listOf("Kept through the downgrade"),
+                db.findPartTexts(query = "downgrade*"),
+            )
+        }
+    }
+
+    @Test
     fun onDowngrade_fromACompatibleVersion_keepsTheRowsAndRecreatesThisVersionsSchemaObjects() {
         every {
             databaseLifecycle.canKeepRowsOnDowngradeFrom(newerVersion = currentVersion + 1)
@@ -368,6 +463,62 @@ class DatabaseUpgradeHelperTest {
             ),
         )
         return conversationId
+    }
+
+    private fun SQLiteDatabase.insertTextMessage(text: String): Long {
+        val conversationId = insertConversation()
+        val messageId = insert(
+            DatabaseHelper.MESSAGES_TABLE,
+            null,
+            contentValuesOf(MessageColumns.CONVERSATION_ID to conversationId),
+        )
+        insert(
+            DatabaseHelper.PARTS_TABLE,
+            null,
+            contentValuesOf(
+                PartColumns.MESSAGE_ID to messageId,
+                PartColumns.CONVERSATION_ID to conversationId,
+                PartColumns.TEXT to text,
+            ),
+        )
+        return messageId
+    }
+
+    private fun SQLiteDatabase.conversationIdOf(messageId: Long): Long {
+        return rawQuery(
+            "SELECT ${MessageColumns.CONVERSATION_ID} FROM ${DatabaseHelper.MESSAGES_TABLE} " +
+                "WHERE ${MessageColumns._ID} = ?",
+            arrayOf(messageId.toString()),
+        ).use { cursor ->
+            cursor.moveToFirst()
+            cursor.getLong(0)
+        }
+    }
+
+    private fun SQLiteDatabase.dropPartsTextIndex() {
+        namesOf(type = "trigger")
+            .filter { name -> name.startsWith(DatabaseHelper.PARTS_TEXT_INDEX_TABLE) }
+            .forEach { name -> execSQL("DROP TRIGGER $name") }
+        execSQL("DROP TABLE ${DatabaseHelper.PARTS_TEXT_INDEX_TABLE}")
+    }
+
+    /** A stale entry, one whose part is gone, comes back as null. */
+    private fun SQLiteDatabase.findPartTexts(query: String): List<String?> {
+        val parts = DatabaseHelper.PARTS_TABLE
+        val index = DatabaseHelper.PARTS_TEXT_INDEX_TABLE
+
+        return rawQuery(
+            "SELECT $parts.${PartColumns.TEXT} FROM $index " +
+                "LEFT JOIN $parts ON $parts.${PartColumns._ID} = $index.docid " +
+                "WHERE $index MATCH ? ORDER BY $parts.${PartColumns._ID}",
+            arrayOf(query),
+        ).use { cursor ->
+            buildList {
+                while (cursor.moveToNext()) {
+                    add(cursor.getString(0))
+                }
+            }
+        }
     }
 
     private fun SQLiteDatabase.downgradeFromNewerVersion() {

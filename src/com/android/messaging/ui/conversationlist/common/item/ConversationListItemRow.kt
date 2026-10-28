@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -230,24 +231,27 @@ private fun ConversationListItemStatusLabel(item: ConversationListItemUiModel) {
 }
 
 @Composable
-private fun itemSnippetText(item: ConversationListItemUiModel): String? {
+private fun itemSnippetText(item: ConversationListItemUiModel): AnnotatedString? {
     val snippetText = item.mmsDownloadTitleResId?.let { stringResource(it) }
         ?: item.snippet.text?.takeIf(String::isNotBlank)
 
     if (snippetText != null) {
         val senderName = item.snippet.senderName?.takeIf(String::isNotBlank)
-
-        return when {
-            item.avatar.isGroup && !item.isOutgoing && senderName != null -> {
-                "$senderName: $snippetText"
-            }
-
-            else -> snippetText
+        val senderPrefix = when {
+            item.avatar.isGroup && !item.isOutgoing && senderName != null -> "$senderName: "
+            else -> ""
         }
+
+        return highlightedText(
+            text = senderPrefix + snippetText,
+            matchRanges = item.snippetMatchRanges.map { range ->
+                (range.first + senderPrefix.length)..(range.last + senderPrefix.length)
+            },
+        )
     }
 
     return item.snippet.preview?.let { preview ->
-        stringResource(preview.snippetLabelResId())
+        AnnotatedString(stringResource(preview.snippetLabelResId()))
     }
 }
 

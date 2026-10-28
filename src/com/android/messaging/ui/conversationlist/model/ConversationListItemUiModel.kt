@@ -27,6 +27,7 @@ internal data class ConversationListItemUiModel(
     val isSelected: Boolean,
     val isOpened: Boolean,
     val titleMatchRanges: ImmutableList<IntRange> = persistentListOf(),
+    val snippetMatchRanges: ImmutableList<IntRange> = persistentListOf(),
     val isArchivedBadgeVisible: Boolean = false,
 )
 
