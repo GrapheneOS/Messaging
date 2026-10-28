@@ -18,8 +18,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -43,20 +45,20 @@ import com.android.messaging.ui.conversation.messages.model.message.Conversation
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagesUiState
 import com.android.messaging.ui.conversation.messages.ui.ConversationMessages
 import com.android.messaging.ui.conversation.messages.ui.attachment.OnConversationAttachmentClick
+import com.android.messaging.ui.conversation.messages.ui.conversationMessagesLeadingItemCount
 import com.android.messaging.ui.conversation.metadata.model.ConversationMetadataUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaffoldUiState
 import com.android.messaging.ui.subscription.mapper.resolveDisplayName
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.filter
-
-private const val SMOOTH_SCROLL_JUMP_THRESHOLD = 15
 
 private const val LOAD_OLDER_MESSAGES_THRESHOLD = 100
 
+private const val LOAD_NEWER_MESSAGES_THRESHOLD = 100
+
 private data class ConversationLatestScrollSnapshot(
     val isScrolledToLatestMessage: Boolean,
-    val isListDragged: Boolean,
+    val isAwayFromLatestMessage: Boolean,
 )
 
 // Its own type, so scrolling to the latest message dismisses this notice and leaves others alone.
@@ -92,6 +94,7 @@ private class VerticalContentPadding(
 }
 
 @Composable
+@Suppress("LongMethod") // Long arguments list, not too much logic, so it's ok to suppress
 internal fun ConversationScreenContent(
     modifier: Modifier = Modifier,
     conversationId: ConversationId?,
@@ -103,6 +106,11 @@ internal fun ConversationScreenContent(
     onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onLoadOlderMessages: () -> Unit,
+    onLoadNewerMessages: () -> Unit,
+    onLoadNewestMessages: () -> Unit,
+    onLoadMessage: (MessageId) -> Unit,
+    onTargetMessageShown: (MessageId) -> Unit,
+    onMessageHighlightFinished: (MessageId) -> Unit,
     onMessageClick: (MessageId) -> Unit,
     onMessageAvatarClick: (MessageId) -> Unit,
     onMessageDownloadClick: (MessageId) -> Unit,
@@ -117,6 +125,13 @@ internal fun ConversationScreenContent(
     val messagesState = uiState.messages
     val isContentLoaded = !shouldShowConversationScreenLoadingContent(uiState = uiState)
     val isLoadingIndicatorVisible = rememberIsLoadingIndicatorVisible(isLoading = !isContentLoaded)
+    // Kept once the messages are in, for a list that is still placing its target to go on showing.
+    val wasLoadingIndicatorVisible = remember(conversationId) { mutableStateOf(value = false) }
+    SideEffect {
+        if (!isContentLoaded) {
+            wasLoadingIndicatorVisible.value = isLoadingIndicatorVisible
+        }
+    }
     val isBannerRevealed = rememberBlockedBannerRevealState(
         conversationId = conversationId,
         isBlocked = uiState.isBlocked,
@@ -154,6 +169,11 @@ internal fun ConversationScreenContent(
                     onAttachmentClick = onAttachmentClick,
                     onExternalUriClick = onExternalUriClick,
                     onLoadOlderMessages = onLoadOlderMessages,
+                    onLoadNewerMessages = onLoadNewerMessages,
+                    onLoadNewestMessages = onLoadNewestMessages,
+                    onLoadMessage = onLoadMessage,
+                    onTargetMessageShown = onTargetMessageShown,
+                    onMessageHighlightFinished = onMessageHighlightFinished,
                     onMessageClick = onMessageClick,
                     onMessageAvatarClick = onMessageAvatarClick,
                     onMessageDownloadClick = onMessageDownloadClick,
@@ -162,6 +182,7 @@ internal fun ConversationScreenContent(
                     onMessageResendClick = onMessageResendClick,
                     onSimSelectorClick = onSimSelectorClick,
                     additionalTopContentPadding = messagesTopReservation,
+                    isLoadingIndicatorVisible = wasLoadingIndicatorVisible.value,
                 )
             }
         }
@@ -207,6 +228,7 @@ private fun ConversationScreenLoadingContent(
 }
 
 @Composable
+@Suppress("LongMethod") // Long arguments list, not too much logic, so it's ok to suppress
 private fun ConversationScreenPresentContent(
     modifier: Modifier,
     conversationId: ConversationId?,
@@ -220,6 +242,11 @@ private fun ConversationScreenPresentContent(
     onAttachmentClick: OnConversationAttachmentClick,
     onExternalUriClick: (String) -> Unit,
     onLoadOlderMessages: () -> Unit,
+    onLoadNewerMessages: () -> Unit,
+    onLoadNewestMessages: () -> Unit,
+    onLoadMessage: (MessageId) -> Unit,
+    onTargetMessageShown: (MessageId) -> Unit,
+    onMessageHighlightFinished: (MessageId) -> Unit,
     onMessageClick: (MessageId) -> Unit,
     onMessageAvatarClick: (MessageId) -> Unit,
     onMessageDownloadClick: (MessageId) -> Unit,
@@ -228,8 +255,8 @@ private fun ConversationScreenPresentContent(
     onMessageResendClick: (MessageId) -> Unit,
     onSimSelectorClick: () -> Unit,
     additionalTopContentPadding: Dp,
+    isLoadingIndicatorVisible: Boolean,
 ) {
-    val messagesListState = rememberMessagesListState(conversationId = conversationId)
     val showIncomingParticipantIdentity = shouldShowIncomingParticipantIdentity(
         metadata = uiState.metadata,
     )
@@ -237,7 +264,8 @@ private fun ConversationScreenPresentContent(
         uiState.composer.simSelector.isAvailable
 
     val currentSendSimDisplayName = when {
-        shouldShowSendSimIndicator -> {
+        // It sits below the newest message, so not below a window that stops short of it.
+        shouldShowSendSimIndicator && !messagesState.hasNewerMessages -> {
             uiState.composer.simSelector.selectedSubscription
                 ?.label
                 ?.resolveDisplayName()
@@ -245,20 +273,49 @@ private fun ConversationScreenPresentContent(
 
         else -> null
     }
+    val leadingItemCount = conversationMessagesLeadingItemCount(
+        currentSendSimDisplayName = currentSendSimDisplayName,
+    )
+    val targetListIndex = targetMessageListIndex(
+        messages = messagesState.messages,
+        messageId = pendingScrollMessageId,
+        leadingItemCount = leadingItemCount,
+    )
+    // A list that opens at the target, such as one moved to the window around it, stays behind the
+    // loading content until the target is centered, so that it shows up with the target in place.
+    val messagesListState = rememberMessagesListState(
+        conversationId = conversationId,
+        windowId = messagesState.windowId,
+        initialFirstVisibleItemIndex = { targetListIndex ?: 0 },
+    )
+    val isPlacingTarget = remember(messagesListState) {
+        mutableStateOf(value = targetListIndex != null)
+    }
 
     AutoScrollToLatestMessage(
         conversationId = conversationId,
-        messages = messagesState.messages,
+        messagesState = messagesState,
         listState = messagesListState,
         snackbarHostState = snackbarHostState,
+        onLoadNewestMessages = onLoadNewestMessages,
     )
 
     ScrollToTargetMessage(
         conversationId = conversationId,
         pendingScrollMessageId = pendingScrollMessageId,
-        messages = messagesState.messages,
+        messagesState = messagesState,
         listState = messagesListState,
+        leadingItemCount = leadingItemCount,
+        isListUnseen = isPlacingTarget.value,
+        onLoadMessage = onLoadMessage,
+        onTargetPlaced = { isPlacingTarget.value = false },
+        onTargetMessageShown = onTargetMessageShown,
         onConsumed = onPendingScrollMessageIdConsumed,
+    )
+
+    EndMessageHighlight(
+        highlightedMessageId = messagesState.highlightedMessageId,
+        onMessageHighlightFinished = onMessageHighlightFinished,
     )
 
     LoadOlderMessagesOnScrollBack(
@@ -267,29 +324,52 @@ private fun ConversationScreenPresentContent(
         onLoadOlderMessages = onLoadOlderMessages,
     )
 
-    ConversationMessages(
-        modifier = modifier.conversationScreenContentModifier(
-            contentPadding = contentPadding,
-            backdropColor = contentBackdropColor,
-        ),
-        messages = messagesState.messages,
+    LoadNewerMessagesOnScrollForward(
+        conversationId = conversationId,
         listState = messagesListState,
-        selectedMessageIds = uiState.selection.selectedMessageIds,
-        showIncomingParticipantIdentity = showIncomingParticipantIdentity,
-        youTubeLinkPreviewsEnabled = messagesState.youTubeLinkPreviewsEnabled,
-        subscriptions = uiState.composer.simSelector.subscriptions,
-        currentSendSimDisplayName = currentSendSimDisplayName,
-        additionalTopContentPadding = additionalTopContentPadding,
-        onAttachmentClick = onAttachmentClick,
-        onExternalUriClick = onExternalUriClick,
-        onMessageClick = onMessageClick,
-        onMessageAvatarClick = onMessageAvatarClick,
-        onMessageDownloadClick = onMessageDownloadClick,
-        onMessageActionClick = onMessageActionClick,
-        onMessageLongClick = onMessageLongClick,
-        onMessageResendClick = onMessageResendClick,
-        onSimSelectorClick = onSimSelectorClick,
+        hasNewerMessages = messagesState.hasNewerMessages,
+        // The window was just moved around the target, and the scroll to it starts from its end.
+        isEnabled = pendingScrollMessageId == null,
+        onLoadNewerMessages = onLoadNewerMessages,
     )
+
+    // A window moved elsewhere shares no messages with the one before, so every message leaving
+    // and arriving at once would be animated: a fresh list shows it at once.
+    key(messagesState.windowId) {
+        ConversationMessages(
+            modifier = modifier.conversationScreenContentModifier(
+                contentPadding = contentPadding,
+                backdropColor = contentBackdropColor,
+            ),
+            messages = messagesState.messages,
+            listState = messagesListState,
+            selectedMessageIds = uiState.selection.selectedMessageIds,
+            highlightedMessageId = messagesState.highlightedMessageId,
+            showIncomingParticipantIdentity = showIncomingParticipantIdentity,
+            youTubeLinkPreviewsEnabled = messagesState.youTubeLinkPreviewsEnabled,
+            subscriptions = uiState.composer.simSelector.subscriptions,
+            currentSendSimDisplayName = currentSendSimDisplayName,
+            additionalTopContentPadding = additionalTopContentPadding,
+            onAttachmentClick = onAttachmentClick,
+            onExternalUriClick = onExternalUriClick,
+            onMessageClick = onMessageClick,
+            onMessageAvatarClick = onMessageAvatarClick,
+            onMessageDownloadClick = onMessageDownloadClick,
+            onMessageActionClick = onMessageActionClick,
+            onMessageLongClick = onMessageLongClick,
+            onMessageResendClick = onMessageResendClick,
+            onSimSelectorClick = onSimSelectorClick,
+        )
+    }
+
+    if (isPlacingTarget.value && pendingScrollMessageId != null) {
+        ConversationScreenLoadingContent(
+            modifier = modifier,
+            contentPadding = contentPadding,
+            contentBackdropColor = contentBackdropColor,
+            isIndicatorVisible = isLoadingIndicatorVisible,
+        )
+    }
 }
 
 @Composable
@@ -330,14 +410,21 @@ private fun shouldShowIncomingParticipantIdentity(
     }
 }
 
+/**
+ * While the window stops short of the newest message, that message is not in the list to scroll
+ * to: the newest messages replace the window instead.
+ */
 @Composable
 private fun AutoScrollToLatestMessage(
     conversationId: ConversationId?,
-    messages: ImmutableList<ConversationMessageUiModel>,
+    messagesState: ConversationMessagesUiState.Present,
     listState: LazyListState,
     snackbarHostState: SnackbarHostState,
+    onLoadNewestMessages: () -> Unit,
 ) {
-    val latestMessage = messages.lastOrNull()
+    val hasNewerMessages = messagesState.hasNewerMessages
+    val currentHasNewerMessages = rememberUpdatedState(newValue = hasNewerMessages)
+    val latestMessage = messagesState.latestMessage()
     val latestMessageId = latestMessage?.messageId
     val newMessageText = stringResource(id = R.string.in_conversation_notify_new_message_text)
     val viewActionLabel = stringResource(id = R.string.in_conversation_notify_new_message_action)
@@ -346,17 +433,21 @@ private fun AutoScrollToLatestMessage(
         mutableStateOf(value = latestMessageId)
     }
 
-    var wasScrolledToLatestMessage by remember(
-        conversationId,
-        listState,
-    ) {
-        mutableStateOf(
-            value = isScrolledToLatestMessage(listState = listState),
-        )
-    }
+    val showLatestMessage = rememberShowLatestMessage(
+        hasNewerMessages = hasNewerMessages,
+        listState = listState,
+        onLoadNewestMessages = onLoadNewestMessages,
+    )
 
     val isListDraggedState = listState.interactionSource.collectIsDraggedAsState()
     val isListDragged = isListDraggedState.value
+    val wasScrolledToLatestMessage = rememberWasScrolledToLatestMessage(
+        conversationId = conversationId,
+        listState = listState,
+        isListDraggedState = isListDraggedState,
+        hasNewerMessagesState = currentHasNewerMessages,
+        snackbarHostState = snackbarHostState,
+    )
 
     val autoScrollDecision = evaluateConversationAutoScroll(
         input = ConversationAutoScrollInput(
@@ -369,26 +460,20 @@ private fun AutoScrollToLatestMessage(
     )
 
     SideEffect {
-        if (autoScrollDecision.shouldScrollToLatestMessage && !isListDragged) {
+        if (autoScrollDecision.shouldScrollToLatestMessage && !hasNewerMessages && !isListDragged) {
             listState.requestScrollToItem(index = 0)
         }
     }
-
-    TrackLatestMessageScrollState(
-        conversationId = conversationId,
-        listState = listState,
-        isListDraggedState = isListDraggedState,
-        snackbarHostState = snackbarHostState,
-        onWasScrolledToLatestMessageChanged = { isScrolledToLatestMessage ->
-            wasScrolledToLatestMessage = isScrolledToLatestMessage
-        },
-    )
 
     LaunchedEffect(
         conversationId,
         latestMessageId,
     ) {
         previousLatestMessageId = autoScrollDecision.updatedLatestMessageId
+
+        if (autoScrollDecision.shouldScrollToLatestMessage && hasNewerMessages) {
+            showLatestMessage()
+        }
 
         if (autoScrollDecision.shouldShowNewMessageSnackbar) {
             val snackbarResult = snackbarHostState.showSnackbar(
@@ -399,44 +484,95 @@ private fun AutoScrollToLatestMessage(
             )
 
             if (snackbarResult == SnackbarResult.ActionPerformed) {
-                listState.animateScrollToItem(index = 0)
+                showLatestMessage()
             }
         }
     }
 }
 
+/** Past a window that stops short of it, the latest message is not one of those loaded. */
+private fun ConversationMessagesUiState.Present.latestMessage(): ConversationMessageUiModel? {
+    return when {
+        hasNewerMessages -> latestUnloadedMessage
+        else -> messages.lastOrNull()
+    }
+}
+
+/**
+ * Scrolls to the latest message, or past a window that stops short of it asks for the newest
+ * messages in its place, which a fresh list shows from their end.
+ */
 @Composable
-private fun TrackLatestMessageScrollState(
+private fun rememberShowLatestMessage(
+    hasNewerMessages: Boolean,
+    listState: LazyListState,
+    onLoadNewestMessages: () -> Unit,
+): suspend () -> Unit {
+    val currentHasNewerMessages = rememberUpdatedState(newValue = hasNewerMessages)
+    val currentOnLoadNewestMessages = rememberUpdatedState(newValue = onLoadNewestMessages)
+
+    return remember(listState) {
+        suspend {
+            when {
+                currentHasNewerMessages.value -> currentOnLoadNewestMessages.value()
+                else -> listState.animateScrollToItem(index = 0)
+            }
+        }
+    }
+}
+
+/** Whether the list was last at the latest message, or moved away from it since. */
+@Composable
+private fun rememberWasScrolledToLatestMessage(
     conversationId: ConversationId?,
     listState: LazyListState,
     isListDraggedState: State<Boolean>,
+    hasNewerMessagesState: State<Boolean>,
     snackbarHostState: SnackbarHostState,
-    onWasScrolledToLatestMessageChanged: (Boolean) -> Unit,
-) {
+): Boolean {
+    var wasScrolledToLatestMessage by remember(
+        conversationId,
+        listState,
+    ) {
+        mutableStateOf(
+            value = !hasNewerMessagesState.value &&
+                isScrolledToLatestMessage(listState = listState),
+        )
+    }
+
     LaunchedEffect(
         conversationId,
         listState,
     ) {
         snapshotFlow {
+            val hasNewerMessages = hasNewerMessagesState.value
+
             ConversationLatestScrollSnapshot(
-                isScrolledToLatestMessage = isScrolledToLatestMessage(listState = listState),
-                isListDragged = isListDraggedState.value,
+                isScrolledToLatestMessage = !hasNewerMessages &&
+                    isScrolledToLatestMessage(listState = listState),
+                // The list keeping up with a new message moves it without a scroll, which is why
+                // being off the latest message on its own does not count.
+                isAwayFromLatestMessage = hasNewerMessages ||
+                    isListDraggedState.value ||
+                    listState.isScrollInProgress,
             )
         }.collect { scrollSnapshot ->
             when {
                 scrollSnapshot.isScrolledToLatestMessage -> {
-                    onWasScrolledToLatestMessageChanged(true)
+                    wasScrolledToLatestMessage = true
                     snackbarHostState.currentSnackbarData
                         ?.takeIf { it.visuals is NewMessageSnackbarVisuals }
                         ?.dismiss()
                 }
 
-                scrollSnapshot.isListDragged -> {
-                    onWasScrolledToLatestMessageChanged(false)
+                scrollSnapshot.isAwayFromLatestMessage -> {
+                    wasScrolledToLatestMessage = false
                 }
             }
         }
     }
+
+    return wasScrolledToLatestMessage
 }
 
 private fun isScrolledToLatestMessage(listState: LazyListState): Boolean {
@@ -472,67 +608,52 @@ private fun LoadOlderMessagesOnScrollBack(
     }
 }
 
+/**
+ * The first visible item is the newest loaded message. While the window stops short of the newest
+ * message of the conversation, getting close to it asks for the messages after it.
+ */
 @Composable
-private fun ScrollToTargetMessage(
+private fun LoadNewerMessagesOnScrollForward(
     conversationId: ConversationId?,
-    pendingScrollMessageId: MessageId?,
-    messages: ImmutableList<ConversationMessageUiModel>,
     listState: LazyListState,
-    onConsumed: () -> Unit,
+    hasNewerMessages: Boolean,
+    isEnabled: Boolean,
+    onLoadNewerMessages: () -> Unit,
 ) {
     LaunchedEffect(
         conversationId,
-        pendingScrollMessageId,
-        messages.size,
+        listState,
+        hasNewerMessages,
+        isEnabled,
     ) {
-        if (pendingScrollMessageId == null || messages.isEmpty()) {
+        if (!hasNewerMessages || !isEnabled) {
             return@LaunchedEffect
         }
 
-        val messageIndex = messages.indexOfFirst { message ->
-            message.messageId == pendingScrollMessageId
+        snapshotFlow {
+            val firstVisibleItemIndex = listState.layoutInfo.visibleItemsInfo.firstOrNull()?.index
+
+            firstVisibleItemIndex != null &&
+                firstVisibleItemIndex < LOAD_NEWER_MESSAGES_THRESHOLD
         }
-
-        if (messageIndex < 0) {
-            // The message is gone from the window: deleted, or pushed past the newest ones by
-            // messages that arrived while the widget was stale. Consume without scrolling rather
-            // than growing the window until it turns up - a deleted id would grow it over the
-            // whole conversation, which is the load this screen exists to avoid.
-            onConsumed()
-            return@LaunchedEffect
-        }
-
-        // The list renders the messages reversed, so the newest one is at index 0.
-        val displayIndex = messages.lastIndex - messageIndex
-
-        val firstVisible = listState.firstVisibleItemIndex
-        val delta = displayIndex - firstVisible
-
-        val intermediateIndex = when {
-            delta > SMOOTH_SCROLL_JUMP_THRESHOLD -> displayIndex - SMOOTH_SCROLL_JUMP_THRESHOLD
-            delta < -SMOOTH_SCROLL_JUMP_THRESHOLD -> displayIndex + SMOOTH_SCROLL_JUMP_THRESHOLD
-            else -> -1
-        }
-
-        if (intermediateIndex != -1) {
-            listState.scrollToItem(index = intermediateIndex.coerceIn(0, messages.size - 1))
-        }
-
-        listState.animateScrollToItem(index = displayIndex)
-        onConsumed()
+            .filter { isNearNewestLoadedMessage -> isNearNewestLoadedMessage }
+            .collect { onLoadNewerMessages() }
     }
 }
 
 @Composable
 private fun rememberMessagesListState(
     conversationId: ConversationId?,
+    windowId: Int,
+    initialFirstVisibleItemIndex: () -> Int,
 ): LazyListState {
     return rememberSaveable(
         conversationId,
+        windowId,
         saver = LazyListState.Saver,
     ) {
         LazyListState(
-            firstVisibleItemIndex = 0,
+            firstVisibleItemIndex = initialFirstVisibleItemIndex(),
             firstVisibleItemScrollOffset = 0,
         )
     }

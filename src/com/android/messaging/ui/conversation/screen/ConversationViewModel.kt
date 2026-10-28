@@ -67,7 +67,11 @@ internal interface ConversationScreenModel :
     val mediaPickerOverlayUiState: StateFlow<ConversationMediaPickerOverlayUiState>
     val scaffoldUiState: StateFlow<ConversationScreenScaffoldUiState>
 
-    fun onConversationIdChanged(conversationId: ConversationId?)
+    /** [targetMessageId] is a message the conversation opens scrolled to. */
+    fun onConversationIdChanged(
+        conversationId: ConversationId?,
+        targetMessageId: MessageId? = null,
+    )
     fun onOpenStartupAttachment(
         conversationId: ConversationId,
         startupAttachment: ConversationEntryStartupAttachment,
@@ -89,6 +93,11 @@ internal interface ConversationScreenModel :
     )
 
     fun onLoadOlderMessages()
+    fun onLoadNewerMessages()
+    fun onLoadNewestMessages()
+    fun onLoadMessage(messageId: MessageId)
+    fun onTargetMessageShown(messageId: MessageId)
+    fun onMessageHighlightFinished(messageId: MessageId)
     fun onMessageAvatarClick(messageId: MessageId)
 
     fun onCallClick()
@@ -377,9 +386,20 @@ internal class ConversationViewModel @Inject constructor(
         }
     }
 
-    override fun onConversationIdChanged(conversationId: ConversationId?) {
+    override fun onConversationIdChanged(
+        conversationId: ConversationId?,
+        targetMessageId: MessageId?,
+    ) {
         if (conversationId != conversationIdFlow.value) {
             conversationMessageSelectionDelegate.dismissMessageSelection()
+
+            if (conversationId != null && targetMessageId != null) {
+                conversationMessagesDelegate.startAtMessage(
+                    conversationId = conversationId,
+                    messageId = targetMessageId,
+                )
+            }
+
             conversationIdFlow.value = conversationId
             savedStateHandle[CONVERSATION_ID_KEY] = conversationId?.value
         }
@@ -483,6 +503,26 @@ internal class ConversationViewModel @Inject constructor(
 
     override fun onLoadOlderMessages() {
         conversationMessagesDelegate.loadOlderMessages()
+    }
+
+    override fun onLoadNewerMessages() {
+        conversationMessagesDelegate.loadNewerMessages()
+    }
+
+    override fun onLoadNewestMessages() {
+        conversationMessagesDelegate.loadNewestMessages()
+    }
+
+    override fun onLoadMessage(messageId: MessageId) {
+        conversationMessagesDelegate.loadMessage(messageId = messageId)
+    }
+
+    override fun onTargetMessageShown(messageId: MessageId) {
+        conversationMessagesDelegate.highlightMessage(messageId = messageId)
+    }
+
+    override fun onMessageHighlightFinished(messageId: MessageId) {
+        conversationMessagesDelegate.clearMessageHighlight(messageId = messageId)
     }
 
     override fun onMessageAvatarClick(messageId: MessageId) {

@@ -7,6 +7,7 @@ import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetails
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetailsData
+import com.android.messaging.data.conversation.model.message.ConversationMessagePosition
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.DatabaseHelper.MessageColumns
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
@@ -33,6 +34,98 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 internal class ConversationsRepositoryDirectLookupTest : BaseConversationsRepositoryTest() {
+
+    @Test
+    fun getMessagePosition_existingMessage_returnsItsIdAndReceivedTimestamp() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher,
+        ) {
+            every {
+                contentResolver.query(
+                    MessagingContentProvider.buildConversationMessageUri(
+                        CONVERSATION_ID.value,
+                        "7",
+                    ),
+                    ConversationMessageData.getProjection(),
+                    null,
+                    null,
+                    null,
+                )
+            } returns createConversationMessagesCursor(
+                messageRow(
+                    messageId = "7",
+                    participantId = "other",
+                    selfParticipantId = "self-1",
+                    text = "Hello",
+                ),
+            )
+
+            val position = createRepository().getMessagePosition(
+                conversationId = CONVERSATION_ID,
+                messageId = MessageId("7"),
+            )
+
+            assertEquals(
+                ConversationMessagePosition(
+                    messageId = MessageId("7"),
+                    receivedTimestamp = MESSAGE_RECEIVED_TIMESTAMP,
+                ),
+                position,
+            )
+        }
+    }
+
+    @Test
+    fun getMessagePosition_withADeletedMessage_returnsNull() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher,
+        ) {
+            every {
+                contentResolver.query(
+                    MessagingContentProvider.buildConversationMessageUri(
+                        CONVERSATION_ID.value,
+                        "deleted",
+                    ),
+                    ConversationMessageData.getProjection(),
+                    null,
+                    null,
+                    null,
+                )
+            } returns createConversationMessagesCursor()
+
+            assertNull(
+                createRepository().getMessagePosition(
+                    conversationId = CONVERSATION_ID,
+                    messageId = MessageId("deleted"),
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun getMessagePosition_withBlankIds_returnsNullWithoutQuerying() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher,
+        ) {
+            val repository = createRepository()
+
+            assertNull(
+                repository.getMessagePosition(
+                    conversationId = ConversationId(" "),
+                    messageId = MessageId("message-7"),
+                ),
+            )
+            assertNull(
+                repository.getMessagePosition(
+                    conversationId = CONVERSATION_ID,
+                    messageId = MessageId(""),
+                ),
+            )
+            verify(exactly = 0) {
+                contentResolver.query(any(), any(), any(), any(), any())
+            }
+        }
+    }
 
     @Test
     fun getConversationSendData_returnsNullForBlankConversationIdWithoutQuerying() {
@@ -389,7 +482,7 @@ internal class ConversationsRepositoryDirectLookupTest : BaseConversationsReposi
                 "parts_texts" to text,
                 "parts_count" to 1,
                 MessageColumns.SENT_TIMESTAMP to 1_000L,
-                MessageColumns.RECEIVED_TIMESTAMP to 1_000L,
+                MessageColumns.RECEIVED_TIMESTAMP to MESSAGE_RECEIVED_TIMESTAMP,
                 MessageColumns.SEEN to 1,
                 MessageColumns.READ to 1,
                 MessageColumns.PROTOCOL to MessageData.PROTOCOL_SMS,
@@ -410,5 +503,9 @@ internal class ConversationsRepositoryDirectLookupTest : BaseConversationsReposi
                 ParticipantColumns.LOOKUP_KEY to "",
             )
         }
+    }
+
+    private companion object {
+        private const val MESSAGE_RECEIVED_TIMESTAMP = 1_000L
     }
 }

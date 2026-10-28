@@ -10,6 +10,7 @@ import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.DatabaseHelper.MessageColumns
 import com.android.messaging.datamodel.DatabaseHelper.PartColumns
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
+import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.testutil.installTestFactory
 import io.mockk.unmockkAll
@@ -131,6 +132,107 @@ class ConversationMessagesWindowedQueryTest {
         }
     }
 
+    @Test
+    fun aroundQuery_returnsTheRowsAroundThePositionInTheUnboundedQuery() {
+        withPopulatedDatabase { conversationId, messageIds ->
+            val unbounded = unboundedMessageTexts(conversationId)
+            val positionIndex = unbounded.indexOf("message $AROUND_POSITION")
+
+            assertEquals(
+                unbounded.subList(
+                    positionIndex - AROUND_NEWER_LIMIT,
+                    positionIndex + AROUND_OLDER_LIMIT,
+                ),
+                aroundMessageTexts(
+                    conversationId = conversationId,
+                    messageId = messageIds[AROUND_POSITION],
+                    receivedTimestamp = FIRST_TIMESTAMP + AROUND_POSITION,
+                ),
+            )
+        }
+    }
+
+    /**
+     * The draft and the other conversation's message are newer than the newest message, so a
+     * newer side that let either through would show them past the end of the conversation.
+     */
+    @Test
+    fun aroundQuery_excludesDraftsAndOtherConversations() {
+        withPopulatedDatabase { conversationId, messageIds ->
+            assertEquals(
+                listOf("message 24", "message 23", "message 22"),
+                aroundMessageTexts(
+                    conversationId = conversationId,
+                    messageId = messageIds.last(),
+                    receivedTimestamp = FIRST_TIMESTAMP + MESSAGE_COUNT - 1,
+                ),
+            )
+        }
+    }
+
+    /**
+     * Messages received in the same millisecond still have one order, by id, so the position
+     * splits them into older and newer ones and the rows come back in that order.
+     */
+    @Test
+    fun aroundQuery_withMessagesSharingTheTimestampOfThePosition_splitsThemByTheirIds() {
+        SQLiteDatabase.create(null).use { db ->
+            DatabaseHelper.rebuildTables(db)
+            val senderId = db.insertParticipant()
+            val conversationId = db.insertConversation()
+            val messageIds = List(SHARED_TIMESTAMP_MESSAGE_COUNT) { index ->
+                db.insertMessageWithPart(
+                    conversationId = conversationId,
+                    senderId = senderId,
+                    receivedTimestamp = FIRST_TIMESTAMP,
+                    text = "message $index",
+                )
+            }
+            installProvider(db = db)
+
+            assertEquals(
+                listOf("message 4", "message 3", "message 2", "message 1"),
+                messageTexts(
+                    MessagingContentProvider.buildConversationMessagesUri(
+                        conversationId,
+                        messageIds[2],
+                        FIRST_TIMESTAMP,
+                        2,
+                        2,
+                    ),
+                    conversationId,
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun aroundQuery_readsTheTimestampIndexOnBothSides() {
+        withPopulatedDatabase { conversationId, messageIds ->
+            val timestamp = (FIRST_TIMESTAMP + AROUND_POSITION).toString()
+            val messageId = messageIds[AROUND_POSITION]
+            val side = arrayOf(conversationId, timestamp, timestamp, messageId, "3")
+
+            val queryPlan = rawQuery(
+                "EXPLAIN QUERY PLAN " +
+                    ConversationMessageData.getConversationMessagesAroundQuerySql(),
+                side + side,
+            ).use { cursor ->
+                generateSequence { cursor.takeIf(Cursor::moveToNext) }
+                    .map { it.getString(it.getColumnIndexOrThrow("detail")) }
+                    .toList()
+            }
+
+            assertEquals(
+                "each side does not search $CONVERSATION_TIMESTAMP_INDEX: $queryPlan",
+                2,
+                queryPlan.count { detail ->
+                    detail.startsWith("SEARCH messages USING INDEX $CONVERSATION_TIMESTAMP_INDEX")
+                },
+            )
+        }
+    }
+
     /**
      * The single message uri is the other half of not walking the conversation: the repository
      * uses it to refresh one message, and it has to come back alone.
@@ -154,7 +256,7 @@ class ConversationMessagesWindowedQueryTest {
     private fun withPopulatedDatabase(
         messagesWithoutParts: Int = 0,
         multipartTexts: List<String> = emptyList(),
-        block: (String, List<String>) -> Unit,
+        block: SQLiteDatabase.(String, List<String>) -> Unit,
     ) {
         SQLiteDatabase.create(null).use { db ->
             DatabaseHelper.rebuildTables(db)
@@ -211,7 +313,7 @@ class ConversationMessagesWindowedQueryTest {
 
             installProvider(db = db)
 
-            block(conversationId, messageIds)
+            db.block(conversationId, messageIds)
         }
     }
 
@@ -231,6 +333,23 @@ class ConversationMessagesWindowedQueryTest {
     private fun windowedMessageTexts(limit: Int, conversationId: String): List<String> {
         return messageTexts(
             MessagingContentProvider.buildConversationMessagesUri(conversationId, limit),
+            conversationId,
+        )
+    }
+
+    private fun aroundMessageTexts(
+        conversationId: String,
+        messageId: String,
+        receivedTimestamp: Long,
+    ): List<String> {
+        return messageTexts(
+            MessagingContentProvider.buildConversationMessagesUri(
+                conversationId,
+                messageId,
+                receivedTimestamp,
+                AROUND_OLDER_LIMIT,
+                AROUND_NEWER_LIMIT,
+            ),
             conversationId,
         )
     }
@@ -355,6 +474,12 @@ class ConversationMessagesWindowedQueryTest {
 
         /** Both of the messages without parts, and enough messages around them to tell. */
         private const val WINDOW_OVER_THE_MESSAGES_WITHOUT_PARTS = 5
+
+        private const val AROUND_POSITION = 12
+        private const val AROUND_OLDER_LIMIT = 3
+        private const val AROUND_NEWER_LIMIT = 4
+        private const val SHARED_TIMESTAMP_MESSAGE_COUNT = 5
+        private const val CONVERSATION_TIMESTAMP_INDEX = "index_messages_conversation_timestamp"
 
         private val MULTIPART_TEXTS = listOf("first part", "second part")
         private const val PARTS_DIVIDER = '|'

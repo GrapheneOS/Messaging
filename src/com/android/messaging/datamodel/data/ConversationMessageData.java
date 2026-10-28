@@ -675,6 +675,51 @@ public class ConversationMessageData {
     }
 
     /**
+     * Query for the messages of one conversation around a position, newest first: up to the first
+     * limit of them at or before it and up to the second limit after it.
+     *
+     * <p>Each side is limited on the messages table before the joins, for the same reason as
+     * {@link #getConversationMessagesWindowedQuerySql()}, and reads
+     * index_messages_conversation_timestamp outwards from the position, so a window deep in a long
+     * conversation costs what a window at its newest end does. Messages sort by received timestamp
+     * and then by id, which every index entry carries, so a message sharing the timestamp of the
+     * position lands on exactly one side. The {@code <=} and {@code >=} bounds keep each side a
+     * range scan of the index; the {@code OR} only breaks timestamp ties.
+     *
+     * <p>The rows come back in that order too, ties included, so that the caller can trim the
+     * extra row off each side by its place.
+     *
+     * <p>Each side binds the conversation id, the received timestamp of the position twice, the
+     * message id of the position and its limit: the older side first, then the newer one.
+     */
+    public static String getConversationMessagesAroundQuerySql() {
+        return "SELECT "
+                + CONVERSATION_MESSAGES_QUERY_PROJECTION_SQL
+                + " FROM (SELECT * FROM (" + getConversationMessagesAroundSideSql(false) + ")"
+                + " UNION ALL"
+                + " SELECT * FROM (" + getConversationMessagesAroundSideSql(true) + "))"
+                + " AS " + DatabaseHelper.MESSAGES_TABLE
+                + CONVERSATION_MESSAGES_QUERY_JOINS_SQL
+                + CONVERSATION_MESSAGES_QUERY_SQL_GROUP_BY
+                + ", " + DatabaseHelper.MESSAGES_TABLE + '.' + MessageColumns._ID + " DESC";
+    }
+
+    private static String getConversationMessagesAroundSideSql(final boolean newer) {
+        final String order = newer ? " ASC" : " DESC";
+
+        return "SELECT * FROM " + DatabaseHelper.MESSAGES_TABLE
+                + " WHERE " + MessageColumns.STATUS
+                + " <> " + MessageData.BUGLE_STATUS_OUTGOING_DRAFT
+                + " AND " + MessageColumns.CONVERSATION_ID + "=?"
+                + " AND " + MessageColumns.RECEIVED_TIMESTAMP + (newer ? " >= ?" : " <= ?")
+                + " AND (" + MessageColumns.RECEIVED_TIMESTAMP + (newer ? " > ?" : " < ?")
+                + " OR " + MessageColumns._ID + (newer ? " > ?" : " <= ?") + ")"
+                + " ORDER BY " + MessageColumns.RECEIVED_TIMESTAMP + order
+                + ", " + MessageColumns._ID + order
+                + " LIMIT ?";
+    }
+
+    /**
      * Query for a single message of a conversation, by message id. Callers that want one message
      * must not walk the whole conversation to find it.
      */

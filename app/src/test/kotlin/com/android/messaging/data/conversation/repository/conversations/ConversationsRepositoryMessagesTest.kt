@@ -3,6 +3,9 @@ package com.android.messaging.data.conversation.repository.conversations
 import android.database.ContentObserver
 import android.database.Cursor
 import app.cash.turbine.test
+import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.data.conversation.model.message.ConversationMessagePosition
+import com.android.messaging.data.conversation.model.message.ConversationMessagesWindowRequest
 import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.DatabaseHelper.MessageColumns
 import com.android.messaging.datamodel.DatabaseHelper.ParticipantColumns
@@ -23,6 +26,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -60,7 +65,7 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
 
             repository.getConversationMessages(
                 conversationId = CONVERSATION_ID,
-                windowSizes = flowOf(TEST_WINDOW_SIZE),
+                windows = flowOf(newestWindow(size = TEST_WINDOW_SIZE)),
             ).test {
                 assertTrue(awaitItem().messages.isEmpty())
                 cancelAndIgnoreRemainingEvents()
@@ -169,7 +174,7 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
 
             repository.getConversationMessages(
                 conversationId = CONVERSATION_ID,
-                windowSizes = flowOf(TEST_WINDOW_SIZE),
+                windows = flowOf(newestWindow(size = TEST_WINDOW_SIZE)),
             ).test {
                 val messages = awaitItem().messages
 
@@ -286,7 +291,7 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
 
             repository.getConversationMessages(
                 conversationId = CONVERSATION_ID,
-                windowSizes = flowOf(TEST_WINDOW_SIZE),
+                windows = flowOf(newestWindow(size = TEST_WINDOW_SIZE)),
             ).test {
                 assertEquals(listOf("first"), awaitItem().messages.map { it.messageId })
 
@@ -355,7 +360,7 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
 
             repository.getConversationMessages(
                 conversationId = CONVERSATION_ID,
-                windowSizes = flowOf(TEST_WINDOW_SIZE),
+                windows = flowOf(newestWindow(size = TEST_WINDOW_SIZE)),
             ).test {
                 val messages = awaitItem().messages
 
@@ -426,7 +431,7 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
 
             repository.getConversationMessages(
                 conversationId = CONVERSATION_ID,
-                windowSizes = flowOf(TEST_WINDOW_SIZE),
+                windows = flowOf(newestWindow(size = TEST_WINDOW_SIZE)),
             ).test {
                 val messages = awaitItem().messages
 
@@ -515,7 +520,7 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
 
             repository.getConversationMessages(
                 conversationId = CONVERSATION_ID,
-                windowSizes = flowOf(TEST_WINDOW_SIZE),
+                windows = flowOf(newestWindow(size = TEST_WINDOW_SIZE)),
             ).test {
                 val messages = awaitItem().messages
 
@@ -607,7 +612,7 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
 
             repository.getConversationMessages(
                 conversationId = CONVERSATION_ID,
-                windowSizes = flowOf(TEST_WINDOW_SIZE),
+                windows = flowOf(newestWindow(size = TEST_WINDOW_SIZE)),
             ).test {
                 val messages = awaitItem().messages
 
@@ -682,7 +687,7 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
 
             repository.getConversationMessages(
                 conversationId = CONVERSATION_ID,
-                windowSizes = flowOf(TEST_WINDOW_SIZE),
+                windows = flowOf(newestWindow(size = TEST_WINDOW_SIZE)),
             ).test {
                 val messages = awaitItem().messages
 
@@ -741,7 +746,7 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
 
             repository.getConversationMessages(
                 conversationId = CONVERSATION_ID,
-                windowSizes = flowOf(TEST_WINDOW_SIZE),
+                windows = flowOf(newestWindow(size = TEST_WINDOW_SIZE)),
             ).test {
                 assertTrue(awaitItem().messages.isEmpty())
                 cancelAndIgnoreRemainingEvents()
@@ -809,11 +814,11 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
 
             repository.getConversationMessages(
                 conversationId = CONVERSATION_ID,
-                windowSizes = flowOf(WINDOW_SIZE_OF_TWO),
+                windows = flowOf(newestWindow(size = WINDOW_SIZE_OF_TWO)),
             ).test {
                 val window = awaitItem()
 
-                assertTrue(window.hasMore)
+                assertTrue(window.hasOlder)
                 assertEquals(
                     listOf("older", "newest"),
                     window.messages.map { it.messageId },
@@ -870,9 +875,9 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
 
             repository.getConversationMessages(
                 conversationId = CONVERSATION_ID,
-                windowSizes = flowOf(WINDOW_SIZE_OF_TWO),
+                windows = flowOf(newestWindow(size = WINDOW_SIZE_OF_TWO)),
             ).test {
-                assertEquals(false, awaitItem().hasMore)
+                assertEquals(false, awaitItem().hasOlder)
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -905,7 +910,7 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
                 status = MessageData.BUGLE_STATUS_INCOMING_COMPLETE,
                 text = "Older",
             )
-            val windowSizes = MutableStateFlow(value = 1)
+            val windows = MutableStateFlow(value = newestWindow(size = 1))
 
             stubObserverRegistration(
                 registeredObservers = registeredObservers,
@@ -932,11 +937,11 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
 
             repository.getConversationMessages(
                 conversationId = CONVERSATION_ID,
-                windowSizes = windowSizes,
+                windows = windows,
             ).test {
                 assertEquals(listOf("newest"), awaitItem().messages.map { it.messageId })
 
-                windowSizes.value = WINDOW_SIZE_OF_TWO
+                windows.value = newestWindow(size = WINDOW_SIZE_OF_TWO)
 
                 // The query is newest first and the repository walks the cursor backwards, so the
                 // window reaches the ui oldest first.
@@ -994,7 +999,7 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
             collection = backgroundScope.launch {
                 repository.getConversationMessages(
                     conversationId = CONVERSATION_ID,
-                    windowSizes = flowOf(TEST_WINDOW_SIZE),
+                    windows = flowOf(newestWindow(size = TEST_WINDOW_SIZE)),
                 ).collect { }
             }
             runCurrent()
@@ -1004,6 +1009,143 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
                 cursorMoves < ROW_COUNT,
             )
         }
+    }
+
+    @Test
+    fun getConversationMessages_aroundAMessage_trimsEachSideOfItsPosition() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher,
+        ) {
+            val repository = createRepository()
+
+            stubObserverRegistration(
+                registeredObservers = mutableListOf(),
+                expectedUri = MessagingContentProvider.buildConversationMessagesUri(
+                    CONVERSATION_ID.value,
+                ),
+            )
+            stubQuery(
+                expectedUri = MessagingContentProvider.buildConversationMessagesUri(
+                    CONVERSATION_ID.value,
+                    AROUND_POSITION.messageId.value,
+                    AROUND_POSITION.receivedTimestamp,
+                    AROUND_SIDE + 1,
+                    AROUND_SIDE + 1,
+                ),
+                capturedProjections = mutableListOf(),
+                // Newest first, the way the query sorts them. Messages 4 and 6 share the
+                // timestamp of message 5, and fall on either side of it by their ids.
+                result = createConversationMessagesCursor(
+                    rows = listOf(
+                        aroundRow(messageId = "8", receivedTimestamp = 1_200L),
+                        aroundRow(messageId = "7", receivedTimestamp = 1_100L),
+                        aroundRow(messageId = "6", receivedTimestamp = 1_000L),
+                        aroundRow(messageId = "5", receivedTimestamp = 1_000L),
+                        aroundRow(messageId = "4", receivedTimestamp = 1_000L),
+                        aroundRow(messageId = "3", receivedTimestamp = 900L),
+                    ),
+                ),
+            )
+            stubQuery(
+                expectedUri = MessagingContentProvider.buildConversationMessagesUri(
+                    CONVERSATION_ID.value,
+                    1,
+                ),
+                capturedProjections = mutableListOf(),
+                result = createConversationMessagesCursor(
+                    rows = listOf(aroundRow(messageId = "9", receivedTimestamp = 1_500L)),
+                ),
+            )
+
+            repository.getConversationMessages(
+                conversationId = CONVERSATION_ID,
+                windows = flowOf(windowAroundThePosition()),
+            ).test {
+                val window = awaitItem()
+
+                assertEquals(windowAroundThePosition(), window.request)
+                assertEquals(listOf("4", "5", "6", "7"), window.messages.map { it.messageId })
+                assertTrue(window.hasOlder)
+                assertTrue(window.hasNewer)
+                assertEquals("9", window.latestMessage?.messageId)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    @Test
+    fun getConversationMessages_aroundAMessageNearTheNewest_reportsNothingPastIt() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher,
+        ) {
+            val repository = createRepository()
+            val latestMessageUri = MessagingContentProvider.buildConversationMessagesUri(
+                CONVERSATION_ID.value,
+                1,
+            )
+
+            stubObserverRegistration(
+                registeredObservers = mutableListOf(),
+                expectedUri = MessagingContentProvider.buildConversationMessagesUri(
+                    CONVERSATION_ID.value,
+                ),
+            )
+            stubQuery(
+                expectedUri = MessagingContentProvider.buildConversationMessagesUri(
+                    CONVERSATION_ID.value,
+                    AROUND_POSITION.messageId.value,
+                    AROUND_POSITION.receivedTimestamp,
+                    AROUND_SIDE + 1,
+                    AROUND_SIDE + 1,
+                ),
+                capturedProjections = mutableListOf(),
+                result = createConversationMessagesCursor(
+                    rows = listOf(
+                        aroundRow(messageId = "6", receivedTimestamp = 1_100L),
+                        aroundRow(messageId = "5", receivedTimestamp = 1_000L),
+                    ),
+                ),
+            )
+
+            repository.getConversationMessages(
+                conversationId = CONVERSATION_ID,
+                windows = flowOf(windowAroundThePosition()),
+            ).test {
+                val window = awaitItem()
+
+                assertEquals(listOf("5", "6"), window.messages.map { it.messageId })
+                assertFalse(window.hasOlder)
+                assertFalse(window.hasNewer)
+                assertNull(window.latestMessage)
+                cancelAndIgnoreRemainingEvents()
+            }
+            verify(exactly = 0) {
+                contentResolver.query(latestMessageUri, any(), any(), any(), any())
+            }
+        }
+    }
+
+    private fun newestWindow(size: Int): ConversationMessagesWindowRequest {
+        return ConversationMessagesWindowRequest.Newest(size = size)
+    }
+
+    private fun windowAroundThePosition(): ConversationMessagesWindowRequest {
+        return ConversationMessagesWindowRequest.Around(
+            position = AROUND_POSITION,
+            olderSize = AROUND_SIDE,
+            newerSize = AROUND_SIDE,
+        )
+    }
+
+    private fun aroundRow(messageId: String, receivedTimestamp: Long): TestMessageRow {
+        return messageRow(
+            messageId = messageId,
+            participantId = "participant-a",
+            selfParticipantId = "self-1",
+            receivedTimestamp = receivedTimestamp,
+            status = MessageData.BUGLE_STATUS_INCOMING_COMPLETE,
+            text = "message $messageId",
+        )
     }
 
     private fun createConversationMessagesCursor(
@@ -1197,6 +1339,11 @@ internal class ConversationsRepositoryMessagesTest : BaseConversationsRepository
         private const val TEXT_CONTENT_TYPE = "text/plain"
         private const val TEST_WINDOW_SIZE = 500
         private const val WINDOW_SIZE_OF_TWO = 2
+        private const val AROUND_SIDE = 2
+        private val AROUND_POSITION = ConversationMessagePosition(
+            messageId = MessageId("5"),
+            receivedTimestamp = 1_000L,
+        )
         private const val ROW_COUNT = 10
         private const val CANCEL_AFTER_CURSOR_MOVES = 2
     }
