@@ -2,8 +2,10 @@
 
 package com.android.messaging.debug
 
+import android.Manifest
 import android.content.ContentValues
 import android.content.Context
+import android.content.pm.PackageManager
 import android.database.sqlite.SQLiteDatabase
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -12,6 +14,7 @@ import android.graphics.Paint
 import android.net.Uri
 import androidx.core.graphics.createBitmap
 import androidx.core.net.toUri
+import com.android.messaging.Factory
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
 import com.android.messaging.datamodel.DataModel
 import com.android.messaging.datamodel.DatabaseHelper
@@ -25,6 +28,7 @@ import com.android.messaging.datamodel.MediaScratchFileProvider
 import com.android.messaging.datamodel.MessagingContentProvider
 import com.android.messaging.datamodel.data.MessageData
 import com.android.messaging.datamodel.data.ParticipantData
+import com.android.messaging.sms.MmsUtils
 import com.android.messaging.util.ContentType
 import com.android.messaging.util.LogUtil
 import com.android.messaging.util.db.ext.withTransaction
@@ -135,7 +139,7 @@ fun seedTestData(context: Context) {
             vCards = testVCards,
             now = now,
         )
-        seedScenarioI(db, selfId, carol, dave, eve, now)
+        seedScenarioI(db, selfId, carol, dave, frank, now)
         seedScenarioJ(db, selfId, kim, testImages, now)
         seedScenarioK(db, selfId, liam, mia, noah, testImages, now)
         if (simAId != null && simBId != null) {
@@ -633,11 +637,13 @@ private fun createConversation(
     previewUri: String? = null,
     previewContentType: String? = null,
 ): Long {
+    val smsThreadId = getOrCreateSmsThreadId(db = db, participantIds = participantIds)
     val conversationId = db.insert(
         DatabaseHelper.CONVERSATIONS_TABLE,
         null,
         ContentValues().apply {
             put(ConversationColumns.NAME, name)
+            if (smsThreadId != null) put(ConversationColumns.SMS_THREAD_ID, smsThreadId)
             put(ConversationColumns.CURRENT_SELF_ID, selfId)
             put(ConversationColumns.PARTICIPANT_COUNT, participantIds.size)
             put(ConversationColumns.SORT_TIMESTAMP, sortTimestamp)
@@ -663,6 +669,44 @@ private fun createConversation(
         )
     }
     return conversationId
+}
+
+private fun getOrCreateSmsThreadId(
+    db: DatabaseWrapper,
+    participantIds: List<String>,
+): Long? {
+    val context = Factory.get().applicationContext
+    if (context.checkSelfPermission(Manifest.permission.READ_SMS) !=
+        PackageManager.PERMISSION_GRANTED
+    ) {
+        return null
+    }
+
+    val sendDestinations = db.query(
+        DatabaseHelper.PARTICIPANTS_TABLE,
+        arrayOf(ParticipantColumns.SEND_DESTINATION),
+        "${ParticipantColumns._ID} IN (${participantIds.joinToString(",") { "?" }})",
+        participantIds.toTypedArray(),
+        null,
+        null,
+        null,
+    )?.use { cursor ->
+        buildList {
+            while (cursor.moveToNext()) add(cursor.getString(0))
+        }
+    }.orEmpty()
+
+    val threadId = MmsUtils.getOrCreateThreadId(context, sendDestinations)
+    if (threadId < 0) {
+        return null
+    }
+
+    db.delete(
+        DatabaseHelper.CONVERSATIONS_TABLE,
+        "${ConversationColumns.SMS_THREAD_ID} = ?",
+        arrayOf(threadId.toString()),
+    )
+    return threadId
 }
 
 private fun insertTextMessage(
@@ -1582,7 +1626,7 @@ private fun seedScenarioI(
     selfId: String,
     carolId: String,
     daveId: String,
-    eveId: String,
+    frankId: String,
     now: Long,
 ) {
     val baseTime = now - 20 * MINUTES
@@ -1590,7 +1634,7 @@ private fun seedScenarioI(
         db = db,
         name = "Clustering Test Cases",
         selfId = selfId,
-        participantIds = listOf(carolId, daveId, eveId),
+        participantIds = listOf(carolId, daveId, frankId),
         sortTimestamp = baseTime,
     )
 
@@ -1633,22 +1677,22 @@ private fun seedScenarioI(
         ),
         ClusterTestMessage(
             text = "Quartet top",
-            senderId = eveId,
+            senderId = frankId,
             offsetMillis = 8 * MINUTES,
         ),
         ClusterTestMessage(
             text = "Quartet middle 1",
-            senderId = eveId,
+            senderId = frankId,
             offsetMillis = 8 * MINUTES + 20_000L,
         ),
         ClusterTestMessage(
             text = "Quartet middle 2",
-            senderId = eveId,
+            senderId = frankId,
             offsetMillis = 8 * MINUTES + 40_000L,
         ),
         ClusterTestMessage(
             text = "Quartet bottom",
-            senderId = eveId,
+            senderId = frankId,
             offsetMillis = 9 * MINUTES,
         ),
         ClusterTestMessage(
