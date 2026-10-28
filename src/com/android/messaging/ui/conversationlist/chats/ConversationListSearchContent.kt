@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -22,6 +23,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.common.components.horizontalSafeDrawingInsets
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.common.item.ConversationListItemRow
@@ -35,12 +37,15 @@ import com.android.messaging.ui.conversationlist.common.support.CONVERSATION_LIS
 import com.android.messaging.ui.conversationlist.common.support.previewConversationListItems
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel as Model
 import com.android.messaging.ui.conversationlist.model.ConversationListSearchContentUiState
+import com.android.messaging.ui.conversationlist.model.ConversationListSearchMessageUiModel
 import com.android.messaging.ui.core.MessagingPreviewTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 private const val CONVERSATIONS_HEADER_KEY = "conversations_header"
+private const val MESSAGES_HEADER_KEY = "messages_header"
+private const val MESSAGE_KEY_PREFIX = "message:"
 private const val SECTION_HEADER_CONTENT_TYPE = "section_header"
 private const val CONVERSATION_ROW_CONTENT_TYPE = "conversation_row"
 
@@ -69,7 +74,7 @@ internal fun ConversationListSearchContent(
 
             is ConversationListSearchContentUiState.Results -> {
                 ConversationListSearchResults(
-                    conversations = content.conversations,
+                    results = content,
                     bottomPadding = bottomPadding,
                     onAction = onAction,
                 )
@@ -80,7 +85,7 @@ internal fun ConversationListSearchContent(
 
 @Composable
 private fun ConversationListSearchResults(
-    conversations: ImmutableList<Model>,
+    results: ConversationListSearchContentUiState.Results,
     bottomPadding: Dp,
     onAction: (Action) -> Unit,
 ) {
@@ -96,27 +101,88 @@ private fun ConversationListSearchResults(
         ),
         verticalArrangement = Arrangement.spacedBy(SearchResultsItemSpacing),
     ) {
-        item(
-            key = CONVERSATIONS_HEADER_KEY,
-            contentType = SECTION_HEADER_CONTENT_TYPE,
-        ) {
-            ConversationListSearchSectionHeader(
-                text = stringResource(R.string.conversation_list_search_conversations_header),
-                horizontalInsets = horizontalInsets,
-            )
-        }
-
-        items(
-            items = conversations,
-            key = { item -> item.conversationId.value },
-            contentType = { CONVERSATION_ROW_CONTENT_TYPE },
-        ) { item ->
-            ConversationListSearchConversationRow(
-                item = item,
+        if (results.conversations.isNotEmpty()) {
+            conversationsSection(
+                conversations = results.conversations,
                 horizontalInsets = horizontalInsets,
                 onAction = onAction,
             )
         }
+
+        if (results.messages.isNotEmpty()) {
+            messagesSection(
+                messages = results.messages,
+                horizontalInsets = horizontalInsets,
+                onAction = onAction,
+            )
+        }
+    }
+}
+
+private fun LazyListScope.conversationsSection(
+    conversations: ImmutableList<Model>,
+    horizontalInsets: PaddingValues,
+    onAction: (Action) -> Unit,
+) {
+    item(
+        key = CONVERSATIONS_HEADER_KEY,
+        contentType = SECTION_HEADER_CONTENT_TYPE,
+    ) {
+        ConversationListSearchSectionHeader(
+            text = stringResource(R.string.conversation_list_search_conversations_header),
+            horizontalInsets = horizontalInsets,
+        )
+    }
+
+    items(
+        items = conversations,
+        key = { item -> item.conversationId.value },
+        contentType = { CONVERSATION_ROW_CONTENT_TYPE },
+    ) { item ->
+        ConversationListSearchResultRow(
+            item = item,
+            horizontalInsets = horizontalInsets,
+            onOpen = {
+                onAction(Action.SearchConversationClicked(item.conversationId))
+            },
+            onAction = onAction,
+        )
+    }
+}
+
+private fun LazyListScope.messagesSection(
+    messages: ImmutableList<ConversationListSearchMessageUiModel>,
+    horizontalInsets: PaddingValues,
+    onAction: (Action) -> Unit,
+) {
+    item(
+        key = MESSAGES_HEADER_KEY,
+        contentType = SECTION_HEADER_CONTENT_TYPE,
+    ) {
+        ConversationListSearchSectionHeader(
+            text = stringResource(R.string.conversation_list_search_messages_header),
+            horizontalInsets = horizontalInsets,
+        )
+    }
+
+    items(
+        items = messages,
+        key = { message -> MESSAGE_KEY_PREFIX + message.messageId.value },
+        contentType = { CONVERSATION_ROW_CONTENT_TYPE },
+    ) { message ->
+        ConversationListSearchResultRow(
+            item = message.item,
+            horizontalInsets = horizontalInsets,
+            onOpen = {
+                onAction(
+                    Action.SearchMessageClicked(
+                        conversationId = message.item.conversationId,
+                        messageId = message.messageId,
+                    ),
+                )
+            },
+            onAction = onAction,
+        )
     }
 }
 
@@ -141,24 +207,25 @@ private fun ConversationListSearchSectionHeader(
 }
 
 @Composable
-private fun ConversationListSearchConversationRow(
+private fun ConversationListSearchResultRow(
     item: Model,
     horizontalInsets: PaddingValues,
+    onOpen: () -> Unit,
     onAction: (Action) -> Unit,
 ) {
     val destination = item.avatar.normalizedDestination
     val keyboardController = LocalSoftwareKeyboardController.current
-    val openConversation = {
+    val openResult = {
         keyboardController?.hide()
-        onAction(Action.SearchConversationClicked(item.conversationId))
+        onOpen()
     }
 
     ConversationListItemRow(
         item = item,
         modifier = Modifier.conversationRowHorizontalPadding(horizontalInsets),
-        onClick = openConversation,
+        onClick = openResult,
         onLongClick = {},
-        onAvatarMessageClick = openConversation,
+        onAvatarMessageClick = openResult,
         onAvatarCallClick = {
             if (destination != null) {
                 onAction(Action.AvatarCallClicked(destination))
@@ -184,6 +251,18 @@ private fun ConversationListSearchContentResultsPreview() {
                         item.copy(
                             titleMatchRanges = persistentListOf(0..1),
                             isArchivedBadgeVisible = item.isPinned,
+                        )
+                    }
+                    .toImmutableList(),
+                messages = previewConversationListItems()
+                    .take(2)
+                    .mapIndexed { index, item ->
+                        ConversationListSearchMessageUiModel(
+                            messageId = MessageId(index.toString()),
+                            item = item.copy(
+                                snippet = item.snippet.copy(text = "Are we still on for lunch?"),
+                                snippetMatchRanges = persistentListOf(20..24),
+                            ),
                         )
                     }
                     .toImmutableList(),
