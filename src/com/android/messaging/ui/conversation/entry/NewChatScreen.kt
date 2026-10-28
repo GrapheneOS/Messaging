@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -28,6 +29,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.ParticipantId
+import com.android.messaging.ui.common.components.LocalIsListDetailPane
+import com.android.messaging.ui.common.components.contentSurfaceShape
 import com.android.messaging.ui.conversation.NEW_CHAT_CONTACT_RESOLVING_INDICATOR_TEST_TAG
 import com.android.messaging.ui.conversation.NEW_CHAT_CREATE_GROUP_NEXT_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.NEW_CHAT_NAVIGATE_BACK_BUTTON_TEST_TAG
@@ -65,6 +68,7 @@ internal fun NewChatScreen(
     effectHandler: NewChatEffectHandler,
     onNavigateBack: () -> Unit,
     onNavigateToConversation: NewChatNavigateToConversation,
+    autoFocusQueryKey: Any = Unit,
     modifier: Modifier = Modifier,
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
@@ -93,6 +97,7 @@ internal fun NewChatScreen(
 
     NewChatScreenContent(
         modifier = modifier,
+        autoFocusQueryKey = autoFocusQueryKey,
         isCreatingGroup = uiState.isCreatingGroup,
         isResolvingConversation = uiState.isResolvingConversation,
         isResolvingConversationIndicatorVisible = uiState
@@ -116,6 +121,7 @@ internal fun NewChatScreen(
 @Composable
 private fun NewChatScreenContent(
     modifier: Modifier = Modifier,
+    autoFocusQueryKey: Any = Unit,
     isCreatingGroup: Boolean = false,
     isResolvingConversation: Boolean = false,
     isResolvingConversationIndicatorVisible: Boolean = false,
@@ -148,6 +154,7 @@ private fun NewChatScreenContent(
     ) { contentPadding ->
         NewChatRecipientSelectionContent(
             contentPadding = contentPadding,
+            autoFocusQueryKey = autoFocusQueryKey,
             isCreatingGroup = isCreatingGroup,
             isResolvingConversation = isResolvingConversation,
             isResolvingConversationIndicatorVisible = isResolvingConversationIndicatorVisible,
@@ -202,6 +209,7 @@ private fun NewChatTopAppBar(
 @Composable
 private fun NewChatRecipientSelectionContent(
     contentPadding: PaddingValues,
+    autoFocusQueryKey: Any,
     isCreatingGroup: Boolean,
     isResolvingConversation: Boolean,
     isResolvingConversationIndicatorVisible: Boolean,
@@ -218,9 +226,19 @@ private fun NewChatRecipientSelectionContent(
     selectedGroupRecipients: ImmutableList<SelectedRecipient>,
     simSelectorUiState: ConversationSimSelectorUiState,
 ) {
+    val isListDetailPane = LocalIsListDetailPane.current
+
     RecipientSelectionContent(
         modifier = Modifier.fillMaxSize(),
         contentPadding = contentPadding,
+        containerColor = when {
+            isListDetailPane -> MaterialTheme.colorScheme.surfaceContainerLow
+            else -> MaterialTheme.colorScheme.surfaceContainer
+        },
+        containerShape = when {
+            isListDetailPane -> MaterialTheme.contentSurfaceShape
+            else -> RectangleShape
+        },
         uiState = newChatRecipientSelectionContentUiState(
             pickerUiState = pickerUiState,
             isCreatingGroup = isCreatingGroup,
@@ -244,6 +262,7 @@ private fun NewChatRecipientSelectionContent(
             },
         ),
         autoFocusQuery = true,
+        autoFocusQueryKey = autoFocusQueryKey,
         onLoadMore = onLoadMore,
         onPrimaryActionClick = onCreateGroupConfirmed,
         onQueryChanged = onQueryChanged,

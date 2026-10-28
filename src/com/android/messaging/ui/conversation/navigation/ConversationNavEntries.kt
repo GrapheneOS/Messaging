@@ -10,6 +10,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.common.components.consumeOppositePaneInsets
@@ -38,7 +39,8 @@ internal fun EntryProviderScope<NavKey>.conversationEntries() {
         content = conversationScreenRouteContent(),
     )
     entry<NewChatNavKey>(
-        metadata = paneTitleMetadata(R.string.start_new_conversation),
+        metadata = conversationDetailPaneMetadata() +
+            paneTitleMetadata(R.string.start_new_conversation),
         content = newChatRouteContent(),
     )
     entry<AddParticipantsNavKey>(
@@ -159,6 +161,10 @@ private fun newChatRouteContent(): @Composable (NewChatNavKey) -> Unit {
                 )
                 navigator.navigateToConversation(conversationId = conversationId)
             },
+            autoFocusQueryKey = LocalNavAnimatedContentScope.current,
+            modifier = Modifier
+                .fillMaxSize()
+                .consumeOppositePaneInsets(),
         )
     }
 }
