@@ -59,7 +59,6 @@ abstract class BaseWidgetFactory implements RemoteViewsService.RemoteViewsFactor
     protected Cursor mCursor;
     protected final AppWidgetManager mAppWidgetManager;
     protected int mIconSize;
-    protected ImageResource mAvatarResource;
 
     public BaseWidgetFactory(Context context, Intent intent) {
         mContext = context;
@@ -177,14 +176,24 @@ abstract class BaseWidgetFactory implements RemoteViewsService.RemoteViewsFactor
 
         final MediaRequest<ImageResource> imageRequest =
                 descriptor.buildSyncMediaRequest(mContext);
-        final ImageResource imageResource =
-                MediaResourceManager.get().requestMediaResourceSync(imageRequest);
-        if (imageResource != null) {
-            setAvatarResource(imageResource);
-            return mAvatarResource.getBitmap();
-        } else {
-            releaseAvatarResource();
+        return copyBitmapAndRelease(
+                MediaResourceManager.get().requestMediaResourceSync(imageRequest));
+    }
+
+    /**
+     * Returns a copy of the resource's bitmap and releases the resource. The host asks for every
+     * list item before it shares their bitmaps, and by then the media cache may have recycled or
+     * reused a bitmap it still owns.
+     */
+    protected static Bitmap copyBitmapAndRelease(final ImageResource imageResource) {
+        if (imageResource == null) {
             return null;
+        }
+        try {
+            final Bitmap bitmap = imageResource.getBitmap();
+            return bitmap == null ? null : bitmap.copy(bitmap.getConfig(), false /* isMutable */);
+        } finally {
+            imageResource.release();
         }
     }
 
@@ -214,19 +223,4 @@ abstract class BaseWidgetFactory implements RemoteViewsService.RemoteViewsFactor
     }
 
     protected abstract int getMainLayoutId();
-
-    private void setAvatarResource(final ImageResource resource) {
-        if (mAvatarResource != resource) {
-            // Clear out any information for what is currently used
-            releaseAvatarResource();
-            mAvatarResource = resource;
-        }
-    }
-
-    private void releaseAvatarResource() {
-        if (mAvatarResource != null) {
-            mAvatarResource.release();
-        }
-        mAvatarResource = null;
-    }
 }

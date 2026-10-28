@@ -71,7 +71,6 @@ public class WidgetConversationService extends RemoteViewsService {
      * Remote Views Factory for the conversation widget.
      */
     private static class WidgetConversationFactory extends BaseWidgetFactory {
-        private ImageResource mImageResource;
         private String mConversationId;
 
         public WidgetConversationFactory(Context context, Intent intent) {
@@ -441,15 +440,8 @@ public class WidgetConversationService extends RemoteViewsService {
 
             final MediaRequest<ImageResource> imageRequest =
                     descriptor.buildSyncMediaRequest(mContext);
-            final ImageResource imageResource =
-                    MediaResourceManager.get().requestMediaResourceSync(imageRequest);
-            if (imageResource != null && imageResource.getBitmap() != null) {
-                setImageResource(imageResource);
-                return Bitmap.createBitmap(imageResource.getBitmap());
-            } else {
-                releaseImageResource();
-                return null;
-            }
+            return copyBitmapAndRelease(
+                    MediaResourceManager.get().requestMediaResourceSync(imageRequest));
         }
 
         /**
@@ -493,21 +485,6 @@ public class WidgetConversationService extends RemoteViewsService {
         @Override
         protected int getMainLayoutId() {
             return R.layout.widget_conversation;
-        }
-
-        private void setImageResource(final ImageResource resource) {
-            if (mImageResource != resource) {
-                // Clear out any information for what is currently used
-                releaseImageResource();
-                mImageResource = resource;
-            }
-        }
-
-        private void releaseImageResource() {
-            if (mImageResource != null) {
-                mImageResource.release();
-            }
-            mImageResource = null;
         }
     }
 
