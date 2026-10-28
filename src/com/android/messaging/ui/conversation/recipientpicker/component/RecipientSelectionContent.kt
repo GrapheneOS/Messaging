@@ -25,8 +25,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -57,6 +61,8 @@ internal fun RecipientSelectionContent(
     onRecipientDestinationClick: OnRecipientDestinationAction,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
+    containerShape: Shape = RectangleShape,
     autoFocusQuery: Boolean = false,
     onLoadMore: () -> Unit = {},
     onPrimaryActionClick: () -> Unit = {},
@@ -81,6 +87,8 @@ internal fun RecipientSelectionContent(
     RecipientSelectionContentLayout(
         modifier = modifier,
         contentPadding = contentPadding,
+        containerColor = containerColor,
+        containerShape = containerShape,
         pinnedTopContent = pinnedTopContent,
         queryArea = {
             RecipientSelectionArmedQueryArea(
@@ -121,21 +129,23 @@ private fun RecipientSelectionContentLayout(
     queryArea: @Composable () -> Unit,
     contactsArea: @Composable () -> Unit,
     contentPadding: PaddingValues,
+    containerColor: Color,
+    containerShape: Shape,
     modifier: Modifier = Modifier,
     pinnedTopContent: (@Composable () -> Unit)? = null,
 ) {
     val layoutDirection = LocalLayoutDirection.current
 
     Surface(
-        modifier = modifier,
-        color = MaterialTheme.colorScheme.surfaceContainer,
+        modifier = modifier.padding(top = contentPadding.calculateTopPadding()),
+        shape = containerShape,
+        color = containerColor,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(
                     start = contentPadding.calculateStartPadding(layoutDirection),
-                    top = contentPadding.calculateTopPadding(),
                     end = contentPadding.calculateEndPadding(layoutDirection),
                 )
                 .padding(horizontal = 16.dp),
@@ -366,6 +376,9 @@ private fun RecipientSelectionAutoFocusEffect(
 ) {
     if (autoFocusQuery) {
         LaunchedEffect(Unit) {
+            // Focusing before the first layout crashes Compose's lookahead measure when the
+            // window turns two-pane and the list-detail scaffold is built around this screen
+            withFrameNanos {}
             focusRequester.requestFocus()
         }
     }

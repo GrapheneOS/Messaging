@@ -4,6 +4,8 @@ package com.android.messaging.ui.conversation.navigation
 
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
+import androidx.navigation3.runtime.NavKey
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.common.components.ListDetailPaneSide
 import com.android.messaging.ui.conversation.screen.ConversationDetailPlaceholder
 import com.android.messaging.ui.navigation.listDetailPaneMetadata
@@ -21,4 +23,12 @@ internal fun conversationDetailPaneMetadata(): Map<String, Any> {
     return ListDetailSceneStrategy.detailPane(
         sceneKey = CONVERSATION_LIST_DETAIL_SCENE_KEY,
     ) + listDetailPaneMetadata(side = ListDetailPaneSide.End)
+}
+
+internal fun detailPaneConversationId(backStack: List<NavKey>): ConversationId? {
+    val detailPaneDestination = backStack.lastOrNull { navKey ->
+        navKey is ConversationNavKey || navKey is NewChatNavKey
+    }
+
+    return (detailPaneDestination as? ConversationNavKey)?.conversationId
 }

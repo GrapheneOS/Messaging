@@ -14,8 +14,8 @@ import com.android.messaging.ui.blockedparticipants.navigation.BlockedParticipan
 import com.android.messaging.ui.common.components.LocalIsListDetailPane
 import com.android.messaging.ui.common.components.consumeOppositePaneInsets
 import com.android.messaging.ui.contact.navigation.navigateToAddContact
-import com.android.messaging.ui.conversation.navigation.ConversationNavKey
 import com.android.messaging.ui.conversation.navigation.conversationListPaneMetadata
+import com.android.messaging.ui.conversation.navigation.detailPaneConversationId
 import com.android.messaging.ui.conversation.navigation.rememberConversationNavigator
 import com.android.messaging.ui.conversationlist.archived.ArchivedConversationListScreen
 import com.android.messaging.ui.conversationlist.archived.ArchivedConversationListViewModel
@@ -92,10 +92,7 @@ private fun openedConversationId(navigator: Navigator): ConversationId? {
         return null
     }
 
-    return navigator.backStack
-        .filterIsInstance<ConversationNavKey>()
-        .lastOrNull()
-        ?.conversationId
+    return detailPaneConversationId(backStack = navigator.backStack)
 }
 
 private fun archivedConversationListRouteContent():
