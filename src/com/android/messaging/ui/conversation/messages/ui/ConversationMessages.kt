@@ -76,6 +76,7 @@ internal fun ConversationMessages(
     messages: ImmutableList<ConversationMessageUiModel>,
     listState: LazyListState,
     selectedMessageIds: ImmutableSet<MessageId> = persistentSetOf(),
+    highlightedMessageId: MessageId? = null,
     showIncomingParticipantIdentity: Boolean = true,
     youTubeLinkPreviewsEnabled: Boolean = false,
     subscriptions: ImmutableList<Subscription> = persistentListOf(),
@@ -102,7 +103,9 @@ internal fun ConversationMessages(
         subscriptions = subscriptions,
     )
     val isSelectionMode = selectedMessageIds.isNotEmpty()
-    val shouldShowSendSimIndicator = !currentSendSimDisplayName.isNullOrBlank()
+    val shouldShowSendSimIndicator = conversationMessagesLeadingItemCount(
+        currentSendSimDisplayName = currentSendSimDisplayName,
+    ) > 0
 
     LazyColumn(
         state = listState,
@@ -127,6 +130,7 @@ internal fun ConversationMessages(
             displayMessages = displayMessages,
             timeZone = timeZone,
             selectedMessageIds = selectedMessageIds,
+            highlightedMessageId = highlightedMessageId,
             isSelectionMode = isSelectionMode,
             showIncomingParticipantIdentity = showIncomingParticipantIdentity,
             youTubeLinkPreviewsEnabled = youTubeLinkPreviewsEnabled,
@@ -144,10 +148,22 @@ internal fun ConversationMessages(
     }
 }
 
+/**
+ * How many list items come before the newest message, which a scroll to a message has to skip:
+ * the line naming the SIM a reply goes out on, when there is one.
+ */
+internal fun conversationMessagesLeadingItemCount(currentSendSimDisplayName: String?): Int {
+    return when {
+        currentSendSimDisplayName.isNullOrBlank() -> 0
+        else -> 1
+    }
+}
+
 private fun LazyListScope.conversationMessageItems(
     displayMessages: List<ConversationMessageUiModel>,
     timeZone: TimeZone,
     selectedMessageIds: ImmutableSet<MessageId>,
+    highlightedMessageId: MessageId?,
     isSelectionMode: Boolean,
     showIncomingParticipantIdentity: Boolean,
     youTubeLinkPreviewsEnabled: Boolean,
@@ -181,6 +197,7 @@ private fun LazyListScope.conversationMessageItems(
             messageBelow = messageBelowCurrent(messages = displayMessages, index = index),
             isSelectionMode = isSelectionMode,
             isSelected = selectedMessageIds.contains(message.messageId),
+            isHighlighted = message.messageId == highlightedMessageId,
             showIncomingParticipantIdentity = showIncomingParticipantIdentity,
             youTubeLinkPreviewsEnabled = youTubeLinkPreviewsEnabled,
             simDisplayNameByParticipantId = simDisplayNameByParticipantId,
@@ -303,6 +320,7 @@ private fun ConversationMessagesItem(
     messageBelow: ConversationMessageUiModel?,
     isSelectionMode: Boolean,
     isSelected: Boolean,
+    isHighlighted: Boolean,
     showIncomingParticipantIdentity: Boolean,
     youTubeLinkPreviewsEnabled: Boolean,
     simDisplayNameByParticipantId: ImmutableMap<ParticipantId, String>,
@@ -340,6 +358,7 @@ private fun ConversationMessagesItem(
                 .padding(top = presentation.topPadding),
             isSelected = isSelected,
             isSelectionMode = isSelectionMode,
+            isHighlighted = isHighlighted,
             message = message,
             showIncomingParticipantIdentity = showIncomingParticipantIdentity,
             youTubeLinkPreviewsEnabled = youTubeLinkPreviewsEnabled,

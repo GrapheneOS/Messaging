@@ -74,6 +74,9 @@ public class MessagingContentProvider extends ContentProvider {
 
     private static final String QUERY_PARAMETER_LIMIT = "limit";
     private static final String QUERY_PARAMETER_MESSAGE_ID = "message_id";
+    private static final String QUERY_PARAMETER_AROUND_MESSAGE_ID = "around_message_id";
+    private static final String QUERY_PARAMETER_AROUND_TIMESTAMP = "around_timestamp";
+    private static final String QUERY_PARAMETER_NEWER_LIMIT = "newer_limit";
 
     // Conversation participants query
     private static final String PARTICIPANTS_QUERY = "participants";
@@ -196,6 +199,34 @@ public class MessagingContentProvider extends ContentProvider {
         return buildConversationMessagesUri(conversationId)
                 .buildUpon()
                 .appendQueryParameter(QUERY_PARAMETER_LIMIT, Integer.toString(limit))
+                .build();
+    }
+
+    /**
+     * Build a messages uri restricted to up to {@code olderLimit} messages of the conversation up
+     * to and including the position of {@code messageId}, which received {@code receivedTimestamp},
+     * and up to {@code newerLimit} messages after it. The position holds even once that message is
+     * gone.
+     */
+    public static Uri buildConversationMessagesUri(
+            final String conversationId,
+            final String messageId,
+            final long receivedTimestamp,
+            final int olderLimit,
+            final int newerLimit
+    ) {
+        Assert.isTrue(olderLimit > 0);
+        Assert.isTrue(newerLimit > 0);
+
+        return buildConversationMessagesUri(conversationId)
+                .buildUpon()
+                .appendQueryParameter(QUERY_PARAMETER_AROUND_MESSAGE_ID, messageId)
+                .appendQueryParameter(
+                        QUERY_PARAMETER_AROUND_TIMESTAMP,
+                        Long.toString(receivedTimestamp)
+                )
+                .appendQueryParameter(QUERY_PARAMETER_LIMIT, Integer.toString(olderLimit))
+                .appendQueryParameter(QUERY_PARAMETER_NEWER_LIMIT, Integer.toString(newerLimit))
                 .build();
     }
 
@@ -412,6 +443,7 @@ public class MessagingContentProvider extends ContentProvider {
 
     private Cursor queryConversationMessages(final String conversationId, final Uri uri) {
         final String messageId = uri.getQueryParameter(QUERY_PARAMETER_MESSAGE_ID);
+        final String aroundMessageId = uri.getQueryParameter(QUERY_PARAMETER_AROUND_MESSAGE_ID);
         final String limit = uri.getQueryParameter(QUERY_PARAMETER_LIMIT);
 
         final String sql;
@@ -419,6 +451,20 @@ public class MessagingContentProvider extends ContentProvider {
         if (messageId != null) {
             sql = ConversationMessageData.getConversationMessageQuerySql();
             queryArgs = new String[] { conversationId, messageId };
+        } else if (aroundMessageId != null) {
+            final String timestamp = Long.toString(
+                    parseTimestamp(uri.getQueryParameter(QUERY_PARAMETER_AROUND_TIMESTAMP))
+            );
+            final String olderLimit = Integer.toString(parseLimit(limit));
+            final String newerLimit = Integer.toString(
+                    parseLimit(uri.getQueryParameter(QUERY_PARAMETER_NEWER_LIMIT))
+            );
+
+            sql = ConversationMessageData.getConversationMessagesAroundQuerySql();
+            queryArgs = new String[] {
+                    conversationId, timestamp, timestamp, aroundMessageId, olderLimit,
+                    conversationId, timestamp, timestamp, aroundMessageId, newerLimit,
+            };
         } else if (limit != null) {
             sql = ConversationMessageData.getConversationMessagesWindowedQuerySql();
             queryArgs = new String[] { conversationId, Integer.toString(parseLimit(limit)) };
@@ -450,6 +496,14 @@ public class MessagingContentProvider extends ContentProvider {
         }
 
         return parsed;
+    }
+
+    private static long parseTimestamp(final String timestamp) {
+        try {
+            return Long.parseLong(timestamp);
+        } catch (final NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid timestamp " + timestamp, e);
+        }
     }
 
     @Override

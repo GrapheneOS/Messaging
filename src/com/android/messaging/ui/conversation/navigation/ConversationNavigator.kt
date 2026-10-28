@@ -6,6 +6,7 @@ import androidx.compose.runtime.remember
 import androidx.navigation3.runtime.NavKey
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
+import com.android.messaging.ui.conversation.entry.ConversationEntryScreenModel
 import com.android.messaging.ui.conversationpicker.navigation.ForwardMessageNavKey
 import com.android.messaging.ui.conversationsettings.navigation.ConversationSettingsNavKey
 import com.android.messaging.ui.navigation.LocalNavigator
@@ -19,7 +20,10 @@ internal interface ConversationNavigator {
 
     fun navigateToAddParticipants(conversationId: ConversationId)
 
-    fun navigateToConversation(conversationId: ConversationId)
+    fun navigateToConversation(
+        conversationId: ConversationId,
+        targetMessageId: MessageId? = null,
+    )
 
     fun navigateToNewChat()
 
@@ -49,6 +53,7 @@ internal interface ConversationNavigator {
 
 internal class ConversationNavigatorImpl(
     private val navigator: Navigator,
+    private val entryModel: ConversationEntryScreenModel,
 ) : ConversationNavigator {
 
     private val backStack: MutableList<NavKey>
@@ -58,7 +63,18 @@ internal class ConversationNavigatorImpl(
         navigator.push(destination = AddParticipantsNavKey(conversationId = conversationId))
     }
 
-    override fun navigateToConversation(conversationId: ConversationId) {
+    override fun navigateToConversation(
+        conversationId: ConversationId,
+        targetMessageId: MessageId?,
+    ) {
+        if (targetMessageId != null) {
+            entryModel.onConversationNavigationRequested(
+                conversationId = conversationId,
+                pendingSelfParticipantId = null,
+                targetMessageId = targetMessageId,
+            )
+        }
+
         removeTrailingConversationEntryDestinations()
 
         val destination = ConversationNavKey(conversationId = conversationId)
@@ -166,8 +182,12 @@ internal class ConversationNavigatorImpl(
 @Composable
 internal fun rememberConversationNavigator(): ConversationNavigator {
     val navigator = LocalNavigator.current
+    val entryModel = LocalConversationEntryNavState.current.model
 
-    return remember(navigator) {
-        ConversationNavigatorImpl(navigator = navigator)
+    return remember(navigator, entryModel) {
+        ConversationNavigatorImpl(
+            navigator = navigator,
+            entryModel = entryModel,
+        )
     }
 }

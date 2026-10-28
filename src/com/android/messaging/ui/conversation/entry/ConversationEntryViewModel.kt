@@ -24,6 +24,7 @@ internal interface ConversationEntryScreenModel {
     fun onConversationNavigationRequested(
         conversationId: ConversationId,
         pendingSelfParticipantId: ParticipantId?,
+        targetMessageId: MessageId? = null,
     )
 
     fun onDraftPayloadConsumed(conversationId: ConversationId)
@@ -55,10 +56,14 @@ internal class ConversationEntryViewModel @Inject constructor(
     override fun onConversationNavigationRequested(
         conversationId: ConversationId,
         pendingSelfParticipantId: ParticipantId?,
+        targetMessageId: MessageId?,
     ) {
+        val currentUiState = _uiState.value
+
         updateUiState(
-            _uiState.value.copy(
+            currentUiState.copy(
                 conversationId = conversationId,
+                pendingScrollMessageId = targetMessageId ?: currentUiState.pendingScrollMessageId,
                 pendingSelfParticipantId = pendingSelfParticipantId,
             ),
         )
@@ -79,7 +84,6 @@ internal class ConversationEntryViewModel @Inject constructor(
             ),
         )
         savedStateHandle[PENDING_DRAFT_DATA_KEY] = launchRequest.draftData
-        savedStateHandle[PENDING_SCROLL_MESSAGE_ID_KEY] = launchRequest.messageId?.value
     }
 
     override fun onDraftPayloadConsumed(conversationId: ConversationId) {
@@ -110,8 +114,6 @@ internal class ConversationEntryViewModel @Inject constructor(
                     pendingScrollMessageId = null,
                 ),
             )
-
-            savedStateHandle[PENDING_SCROLL_MESSAGE_ID_KEY] = null
         }
     }
 
@@ -185,6 +187,10 @@ internal class ConversationEntryViewModel @Inject constructor(
     ) {
         if (previousUiState.conversationId != uiState.conversationId) {
             savedStateHandle[CONVERSATION_ID_KEY] = uiState.conversationId?.value
+        }
+
+        if (previousUiState.pendingScrollMessageId != uiState.pendingScrollMessageId) {
+            savedStateHandle[PENDING_SCROLL_MESSAGE_ID_KEY] = uiState.pendingScrollMessageId?.value
         }
 
         if (previousUiState.pendingSelfParticipantId != uiState.pendingSelfParticipantId) {

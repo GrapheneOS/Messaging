@@ -58,7 +58,7 @@ internal class ConversationMessagesDelegateBindingTest : BaseConversationMessage
                 @Suppress("UnusedFlow")
                 conversationsRepository.getConversationMessages(
                     conversationId = any(),
-                    windowSizes = any(),
+                    windows = any(),
                 )
             }
         }
@@ -92,7 +92,7 @@ internal class ConversationMessagesDelegateBindingTest : BaseConversationMessage
                 @Suppress("UnusedFlow")
                 conversationsRepository.getConversationMessages(
                     conversationId = ConversationId("conversation-rebound"),
-                    windowSizes = any(),
+                    windows = any(),
                 )
             }
         }
@@ -139,14 +139,14 @@ internal class ConversationMessagesDelegateBindingTest : BaseConversationMessage
                 @Suppress("UnusedFlow")
                 conversationsRepository.getConversationMessages(
                     conversationId = CONVERSATION_ID,
-                    windowSizes = any(),
+                    windows = any(),
                 )
             }
             verify(exactly = 1) {
                 @Suppress("UnusedFlow")
                 conversationsRepository.getConversationMessages(
                     conversationId = ConversationId("conversation-2"),
-                    windowSizes = any(),
+                    windows = any(),
                 )
             }
         }
