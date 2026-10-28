@@ -1,9 +1,11 @@
 package com.android.messaging.ui.conversation.entry
 
 import androidx.activity.ComponentActivity
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasSetTextAction
@@ -14,6 +16,9 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
+import com.android.messaging.ui.common.components.ListDetailPaneSide
+import com.android.messaging.ui.common.components.LocalIsListDetailPane
+import com.android.messaging.ui.common.components.LocalListDetailPaneSide
 import com.android.messaging.ui.conversation.NEW_CHAT_CONTACT_RESOLVING_INDICATOR_TEST_TAG
 import com.android.messaging.ui.conversation.NEW_CHAT_CREATE_GROUP_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.NEW_CHAT_CREATE_GROUP_NEXT_BUTTON_TEST_TAG
@@ -253,15 +258,44 @@ class NewChatScreenTest {
             .assertIsDisplayed()
     }
 
-    private fun setContent(screenModel: NewChatScreenModel) {
+    @Test
+    fun opening_inSinglePane_focusesTheRecipientField() {
+        setContent(screenModel = createScreenModel(initialUiState = NewChatUiState()))
+
+        composeTestRule
+            .onNode(matcher = hasSetTextAction())
+            .assertIsFocused()
+    }
+
+    @Test
+    fun opening_inListDetailPane_focusesTheRecipientField() {
+        setContent(
+            screenModel = createScreenModel(initialUiState = NewChatUiState()),
+            isListDetailPane = true,
+        )
+
+        composeTestRule
+            .onNode(matcher = hasSetTextAction())
+            .assertIsFocused()
+    }
+
+    private fun setContent(
+        screenModel: NewChatScreenModel,
+        isListDetailPane: Boolean = false,
+    ) {
         composeTestRule.setContent {
             AppTheme {
-                NewChatScreen(
-                    screenModel = screenModel,
-                    effectHandler = mockk(relaxed = true),
-                    onNavigateBack = {},
-                    onNavigateToConversation = { _, _ -> },
-                )
+                CompositionLocalProvider(
+                    LocalIsListDetailPane provides isListDetailPane,
+                    LocalListDetailPaneSide provides ListDetailPaneSide.End,
+                ) {
+                    NewChatScreen(
+                        screenModel = screenModel,
+                        effectHandler = mockk(relaxed = true),
+                        onNavigateBack = {},
+                        onNavigateToConversation = { _, _ -> },
+                    )
+                }
             }
         }
     }

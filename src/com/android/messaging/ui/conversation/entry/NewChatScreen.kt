@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -28,6 +29,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.ParticipantId
+import com.android.messaging.ui.common.components.LocalIsListDetailPane
+import com.android.messaging.ui.common.components.contentSurfaceShape
 import com.android.messaging.ui.conversation.NEW_CHAT_CONTACT_RESOLVING_INDICATOR_TEST_TAG
 import com.android.messaging.ui.conversation.NEW_CHAT_CREATE_GROUP_NEXT_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.NEW_CHAT_NAVIGATE_BACK_BUTTON_TEST_TAG
@@ -218,9 +221,19 @@ private fun NewChatRecipientSelectionContent(
     selectedGroupRecipients: ImmutableList<SelectedRecipient>,
     simSelectorUiState: ConversationSimSelectorUiState,
 ) {
+    val isListDetailPane = LocalIsListDetailPane.current
+
     RecipientSelectionContent(
         modifier = Modifier.fillMaxSize(),
         contentPadding = contentPadding,
+        containerColor = when {
+            isListDetailPane -> MaterialTheme.colorScheme.surfaceContainerLow
+            else -> MaterialTheme.colorScheme.surfaceContainer
+        },
+        containerShape = when {
+            isListDetailPane -> MaterialTheme.contentSurfaceShape
+            else -> RectangleShape
+        },
         uiState = newChatRecipientSelectionContentUiState(
             pickerUiState = pickerUiState,
             isCreatingGroup = isCreatingGroup,

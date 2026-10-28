@@ -38,7 +38,8 @@ internal fun EntryProviderScope<NavKey>.conversationEntries() {
         content = conversationScreenRouteContent(),
     )
     entry<NewChatNavKey>(
-        metadata = paneTitleMetadata(R.string.start_new_conversation),
+        metadata = conversationDetailPaneMetadata() +
+            paneTitleMetadata(R.string.start_new_conversation),
         content = newChatRouteContent(),
     )
     entry<AddParticipantsNavKey>(
@@ -159,6 +160,9 @@ private fun newChatRouteContent(): @Composable (NewChatNavKey) -> Unit {
                 )
                 navigator.navigateToConversation(conversationId = conversationId)
             },
+            modifier = Modifier
+                .fillMaxSize()
+                .consumeOppositePaneInsets(),
         )
     }
 }
