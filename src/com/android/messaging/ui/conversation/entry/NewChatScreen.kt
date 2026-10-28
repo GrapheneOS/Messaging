@@ -68,6 +68,7 @@ internal fun NewChatScreen(
     effectHandler: NewChatEffectHandler,
     onNavigateBack: () -> Unit,
     onNavigateToConversation: NewChatNavigateToConversation,
+    autoFocusQueryKey: Any = Unit,
     modifier: Modifier = Modifier,
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
@@ -96,6 +97,7 @@ internal fun NewChatScreen(
 
     NewChatScreenContent(
         modifier = modifier,
+        autoFocusQueryKey = autoFocusQueryKey,
         isCreatingGroup = uiState.isCreatingGroup,
         isResolvingConversation = uiState.isResolvingConversation,
         isResolvingConversationIndicatorVisible = uiState
@@ -119,6 +121,7 @@ internal fun NewChatScreen(
 @Composable
 private fun NewChatScreenContent(
     modifier: Modifier = Modifier,
+    autoFocusQueryKey: Any = Unit,
     isCreatingGroup: Boolean = false,
     isResolvingConversation: Boolean = false,
     isResolvingConversationIndicatorVisible: Boolean = false,
@@ -151,6 +154,7 @@ private fun NewChatScreenContent(
     ) { contentPadding ->
         NewChatRecipientSelectionContent(
             contentPadding = contentPadding,
+            autoFocusQueryKey = autoFocusQueryKey,
             isCreatingGroup = isCreatingGroup,
             isResolvingConversation = isResolvingConversation,
             isResolvingConversationIndicatorVisible = isResolvingConversationIndicatorVisible,
@@ -205,6 +209,7 @@ private fun NewChatTopAppBar(
 @Composable
 private fun NewChatRecipientSelectionContent(
     contentPadding: PaddingValues,
+    autoFocusQueryKey: Any,
     isCreatingGroup: Boolean,
     isResolvingConversation: Boolean,
     isResolvingConversationIndicatorVisible: Boolean,
@@ -257,6 +262,7 @@ private fun NewChatRecipientSelectionContent(
             },
         ),
         autoFocusQuery = true,
+        autoFocusQueryKey = autoFocusQueryKey,
         onLoadMore = onLoadMore,
         onPrimaryActionClick = onCreateGroupConfirmed,
         onQueryChanged = onQueryChanged,
