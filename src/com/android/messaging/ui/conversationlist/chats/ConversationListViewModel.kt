@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.messaging.data.conversation.event.ConversationArchiveEvents
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListMode
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
@@ -38,6 +39,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -71,6 +73,7 @@ internal class ConversationListViewModel @Inject constructor(
     private val isScrollToTopVisible = MutableStateFlow(false)
     private val isDebugEnabled = MutableStateFlow(debugFeaturesProvider.isEnabled())
     private val openedConversationId = MutableStateFlow<ConversationId?>(value = null)
+    private val openedSearchMessage = MutableStateFlow<OpenedSearchMessage?>(value = null)
     private var isScreenResumed = false
     private var isListScrolledToTop = false
 
@@ -123,6 +126,7 @@ internal class ConversationListViewModel @Inject constructor(
         searchDelegate.bind(
             scope = viewModelScope,
             openedConversationId = openedConversationId,
+            openedMessageId = openedSearchMessage.map { message -> message?.messageId },
         )
         offerUndoForArchivesOutsideList()
     }
@@ -179,6 +183,10 @@ internal class ConversationListViewModel @Inject constructor(
         when (action) {
             is Action.OpenedConversationChanged -> {
                 openedConversationId.value = action.conversationId
+
+                if (openedSearchMessage.value?.conversationId != action.conversationId) {
+                    openedSearchMessage.value = null
+                }
             }
         }
     }
@@ -200,7 +208,21 @@ internal class ConversationListViewModel @Inject constructor(
             }
 
             is Action.SearchConversationClicked -> {
+                openedSearchMessage.value = null
                 _navigationEvents.trySend(NavEvent.OpenConversation(action.conversationId))
+            }
+
+            is Action.SearchMessageClicked -> {
+                openedSearchMessage.value = OpenedSearchMessage(
+                    conversationId = action.conversationId,
+                    messageId = action.messageId,
+                )
+                _navigationEvents.trySend(
+                    NavEvent.OpenMessage(
+                        conversationId = action.conversationId,
+                        messageId = action.messageId,
+                    ),
+                )
             }
         }
     }
@@ -715,3 +737,8 @@ internal class ConversationListViewModel @Inject constructor(
         private const val STATEFLOW_STOP_TIMEOUT_MILLIS = 5_000L
     }
 }
+
+private data class OpenedSearchMessage(
+    val conversationId: ConversationId,
+    val messageId: MessageId,
+)

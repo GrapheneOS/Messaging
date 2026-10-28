@@ -2,9 +2,11 @@ package com.android.messaging.ui.conversationlist.delegate
 
 import androidx.lifecycle.SavedStateHandle
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversationlist.matcher.ConversationSearchMatcherImpl
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.SearchableConversation
+import com.android.messaging.data.conversationlist.model.SearchableMessage
 import com.android.messaging.data.conversationlist.repository.ConversationListSearchRepository
 import com.android.messaging.ui.conversationlist.common.support.previewConversationListItem
 import com.android.messaging.ui.conversationlist.conversationItem
@@ -38,8 +40,10 @@ internal class ConversationListSearchDelegateImplTest {
             searchable(conversationId = BOB_ID, title = "Bob"),
         ),
     )
+    private val messages = MutableStateFlow<ImmutableList<SearchableMessage>>(persistentListOf())
     private val repository = mockk<ConversationListSearchRepository> {
         every { observeSearchableConversations() } returns conversations
+        every { observeMessages(any()) } returns messages
     }
     private val itemUiMapper = mockk<ConversationListItemUiMapper> {
         every { map(any(), any(), any()) } answers {
@@ -54,13 +58,18 @@ internal class ConversationListSearchDelegateImplTest {
     }
     private val savedStateHandle = SavedStateHandle()
     private val openedConversationId = MutableStateFlow<ConversationId?>(value = null)
+    private val openedMessageId = MutableStateFlow<MessageId?>(value = null)
 
     @Test
     fun bind_searchClosed_staysInactiveWithoutReadingConversations() {
         runTest {
             val delegate = createDelegate()
 
-            delegate.bind(scope = backgroundScope, openedConversationId = openedConversationId)
+            delegate.bind(
+                scope = backgroundScope,
+                openedConversationId = openedConversationId,
+                openedMessageId = openedMessageId,
+            )
             runCurrent()
 
             assertEquals(ConversationListSearchUiState(), delegate.state.value)
@@ -72,7 +81,11 @@ internal class ConversationListSearchDelegateImplTest {
     fun open_turnsSearchOnBeforeAnyResultArrives() {
         runTest {
             val delegate = createDelegate()
-            delegate.bind(scope = backgroundScope, openedConversationId = openedConversationId)
+            delegate.bind(
+                scope = backgroundScope,
+                openedConversationId = openedConversationId,
+                openedMessageId = openedMessageId,
+            )
 
             delegate.open()
 
@@ -112,6 +125,44 @@ internal class ConversationListSearchDelegateImplTest {
             runCurrent()
 
             assertEquals(ConversationListSearchContentUiState.Idle, delegate.state.value.content)
+            verify(exactly = 0) { repository.observeMessages(query = "") }
+        }
+    }
+
+    @Test
+    fun setQuery_findsMessagesForTheQueryBelowTheConversations() {
+        runTest {
+            val delegate = createBoundOpenDelegate()
+            messages.value = persistentListOf(message(conversationId = BOB_ID, text = "Ann's car"))
+
+            delegate.setQuery(query = "ann")
+            advanceTimeBy(delayTimeMillis = DEBOUNCE_MILLIS)
+            runCurrent()
+
+            assertEquals(listOf(ANNA_ID), resultIds(delegate))
+            assertEquals(listOf(MESSAGE_ID), resultMessageIds(delegate))
+            verify(exactly = 1) { repository.observeMessages(query = "ann") }
+        }
+    }
+
+    @Test
+    fun messagesChange_whileSearching_updatesResults() {
+        runTest {
+            val delegate = createBoundOpenDelegate()
+            delegate.setQuery(query = "car")
+            advanceTimeBy(delayTimeMillis = DEBOUNCE_MILLIS)
+            runCurrent()
+
+            assertEquals(
+                ConversationListSearchContentUiState.NoResults,
+                delegate.state.value.content,
+            )
+
+            messages.value = persistentListOf(message(conversationId = BOB_ID, text = "New car"))
+            runCurrent()
+
+            assertEquals(emptyList<ConversationId>(), resultIds(delegate))
+            assertEquals(listOf(MESSAGE_ID), resultMessageIds(delegate))
         }
     }
 
@@ -170,7 +221,11 @@ internal class ConversationListSearchDelegateImplTest {
     fun openAndClose_repeated_areIgnored() {
         runTest {
             val delegate = createDelegate()
-            delegate.bind(scope = backgroundScope, openedConversationId = openedConversationId)
+            delegate.bind(
+                scope = backgroundScope,
+                openedConversationId = openedConversationId,
+                openedMessageId = openedMessageId,
+            )
 
             delegate.close()
             assertFalse(savedStateHandle.contains(SEARCH_ACTIVE_KEY))
@@ -191,8 +246,16 @@ internal class ConversationListSearchDelegateImplTest {
             val delegate = createDelegate()
             delegate.open()
 
-            delegate.bind(scope = backgroundScope, openedConversationId = openedConversationId)
-            delegate.bind(scope = backgroundScope, openedConversationId = openedConversationId)
+            delegate.bind(
+                scope = backgroundScope,
+                openedConversationId = openedConversationId,
+                openedMessageId = openedMessageId,
+            )
+            delegate.bind(
+                scope = backgroundScope,
+                openedConversationId = openedConversationId,
+                openedMessageId = openedMessageId,
+            )
             runCurrent()
 
             verify(exactly = 1) { repository.observeSearchableConversations() }
@@ -220,6 +283,24 @@ internal class ConversationListSearchDelegateImplTest {
     }
 
     @Test
+    fun openedMessageChanges_highlightsThatMessageResult() {
+        runTest {
+            messages.value = persistentListOf(message(conversationId = BOB_ID, text = "Ann's car"))
+            openedConversationId.value = BOB_ID
+            val delegate = createBoundOpenDelegate()
+            delegate.setQuery(query = "car")
+            advanceTimeBy(delayTimeMillis = DEBOUNCE_MILLIS)
+            runCurrent()
+            assertEquals(listOf(false), openedMessageFlags(delegate))
+
+            openedMessageId.value = MESSAGE_ID
+            runCurrent()
+
+            assertEquals(listOf(true), openedMessageFlags(delegate))
+        }
+    }
+
+    @Test
     fun restoredSearch_resumesWithTheSavedQuery() {
         runTest {
             savedStateHandle[SEARCH_ACTIVE_KEY] = true
@@ -228,7 +309,11 @@ internal class ConversationListSearchDelegateImplTest {
 
             assertTrue(delegate.state.value.isActive)
 
-            delegate.bind(scope = backgroundScope, openedConversationId = openedConversationId)
+            delegate.bind(
+                scope = backgroundScope,
+                openedConversationId = openedConversationId,
+                openedMessageId = openedMessageId,
+            )
             advanceTimeBy(delayTimeMillis = DEBOUNCE_MILLIS)
             runCurrent()
 
@@ -238,7 +323,11 @@ internal class ConversationListSearchDelegateImplTest {
 
     private fun TestScope.createBoundOpenDelegate(): ConversationListSearchDelegateImpl {
         val delegate = createDelegate()
-        delegate.bind(scope = backgroundScope, openedConversationId = openedConversationId)
+        delegate.bind(
+            scope = backgroundScope,
+            openedConversationId = openedConversationId,
+            openedMessageId = openedMessageId,
+        )
         delegate.open()
         runCurrent()
 
@@ -267,6 +356,32 @@ internal class ConversationListSearchDelegateImplTest {
         return content.conversations.map { item -> item.isOpened }
     }
 
+    private fun openedMessageFlags(delegate: ConversationListSearchDelegate): List<Boolean> {
+        val content = delegate.state.value.content as ConversationListSearchContentUiState.Results
+
+        return content.messages.map { message -> message.item.isOpened }
+    }
+
+    private fun resultMessageIds(delegate: ConversationListSearchDelegate): List<MessageId> {
+        val content = delegate.state.value.content as ConversationListSearchContentUiState.Results
+
+        return content.messages.map { message -> message.messageId }
+    }
+
+    private fun message(
+        conversationId: ConversationId,
+        text: String,
+    ): SearchableMessage {
+        return SearchableMessage(
+            messageId = MESSAGE_ID,
+            conversationId = conversationId,
+            text = text,
+            receivedTimestamp = 0L,
+            isIncoming = true,
+            senderName = null,
+        )
+    }
+
     private fun searchable(
         conversationId: ConversationId,
         title: String,
@@ -285,5 +400,6 @@ internal class ConversationListSearchDelegateImplTest {
         private val ANNA_ID = ConversationId("1")
         private val BOB_ID = ConversationId("2")
         private val BEA_ID = ConversationId("3")
+        private val MESSAGE_ID = MessageId("10")
     }
 }

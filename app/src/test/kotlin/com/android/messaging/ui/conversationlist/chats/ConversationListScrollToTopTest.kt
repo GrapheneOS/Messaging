@@ -96,6 +96,7 @@ internal class ConversationListScrollToTopTest {
         )
         val navigation = ConversationListNavigationCallbacks(
             onNavigateToConversation = {},
+            onNavigateToMessage = { _, _ -> },
             onNavigateToNewChat = {},
             onNavigateToConversationSettings = {},
             onCloseConversation = {},
