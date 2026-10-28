@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import com.android.messaging.data.conversation.event.ConversationArchiveEventsImpl
 import com.android.messaging.data.conversation.model.ArchivedConversation
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
 import com.android.messaging.data.debug.DebugFeaturesProvider
@@ -31,11 +32,13 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
+import io.mockk.slot
 import io.mockk.verify
 import io.mockk.verifyOrder
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
@@ -72,7 +75,7 @@ class ConversationListViewModelTest {
 
         verify(exactly = 1) { optimisticSnapshotDelegate.bind(any(), any()) }
         verify(exactly = 1) { selectionDelegate.bind(any(), snapshotFlow) }
-        verify(exactly = 1) { searchDelegate.bind(any(), any()) }
+        verify(exactly = 1) { searchDelegate.bind(any(), any(), any()) }
     }
 
     @Test
@@ -104,6 +107,80 @@ class ConversationListViewModelTest {
                 viewModel.onAction(Action.SearchConversationClicked(ConversationId("a")))
 
                 assertThat(awaitItem()).isEqualTo(NavEvent.OpenConversation(ConversationId("a")))
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    @Test
+    fun searchMessageClicked_highlightsThatMessageUntilAnotherConversationOpens() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val viewModel = createViewModel()
+            val openedMessageIds = slot<Flow<MessageId?>>()
+            verify { searchDelegate.bind(any(), any(), capture(openedMessageIds)) }
+
+            openedMessageIds.captured.test {
+                assertThat(awaitItem()).isNull()
+
+                viewModel.onAction(
+                    Action.SearchMessageClicked(
+                        conversationId = ConversationId("a"),
+                        messageId = MessageId("m"),
+                    ),
+                )
+                viewModel.onAction(Action.OpenedConversationChanged(ConversationId("a")))
+
+                assertThat(awaitItem()).isEqualTo(MessageId("m"))
+
+                viewModel.onAction(Action.OpenedConversationChanged(ConversationId("b")))
+
+                assertThat(awaitItem()).isNull()
+            }
+        }
+    }
+
+    @Test
+    fun searchConversationClicked_dropsTheOpenedMessage() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val viewModel = createViewModel()
+            val openedMessageIds = slot<Flow<MessageId?>>()
+            verify { searchDelegate.bind(any(), any(), capture(openedMessageIds)) }
+
+            openedMessageIds.captured.test {
+                skipItems(1)
+                viewModel.onAction(
+                    Action.SearchMessageClicked(
+                        conversationId = ConversationId("a"),
+                        messageId = MessageId("m"),
+                    ),
+                )
+                skipItems(1)
+
+                viewModel.onAction(Action.SearchConversationClicked(ConversationId("a")))
+
+                assertThat(awaitItem()).isNull()
+            }
+        }
+    }
+
+    @Test
+    fun searchMessageClicked_emitsOpenMessage() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val viewModel = createViewModel()
+            viewModel.navigationEvents.test {
+                viewModel.onAction(
+                    Action.SearchMessageClicked(
+                        conversationId = ConversationId("a"),
+                        messageId = MessageId("m"),
+                    ),
+                )
+
+                assertThat(awaitItem()).isEqualTo(
+                    NavEvent.OpenMessage(
+                        conversationId = ConversationId("a"),
+                        messageId = MessageId("m"),
+                    ),
+                )
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -537,7 +614,7 @@ class ConversationListViewModelTest {
         every { selectionDelegate.clear() } just runs
 
         every { searchDelegate.state } returns searchStateFlow
-        every { searchDelegate.bind(any(), any()) } just runs
+        every { searchDelegate.bind(any(), any(), any()) } just runs
         every { searchDelegate.open() } just runs
         every { searchDelegate.close() } just runs
         every { searchDelegate.setQuery(any()) } just runs

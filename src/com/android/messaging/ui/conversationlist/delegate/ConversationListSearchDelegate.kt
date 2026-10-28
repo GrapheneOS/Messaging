@@ -2,12 +2,16 @@ package com.android.messaging.ui.conversationlist.delegate
 
 import androidx.lifecycle.SavedStateHandle
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversationlist.matcher.ConversationSearchMatcher
+import com.android.messaging.data.conversationlist.model.SearchableMessage
 import com.android.messaging.data.conversationlist.repository.ConversationListSearchRepository
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.ui.conversationlist.mapper.ConversationListSearchUiStateMapper
 import com.android.messaging.ui.conversationlist.model.ConversationListSearchUiState
 import javax.inject.Inject
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -28,7 +32,11 @@ import kotlinx.coroutines.flow.onEach
 internal interface ConversationListSearchDelegate {
     val state: StateFlow<ConversationListSearchUiState>
 
-    fun bind(scope: CoroutineScope, openedConversationId: Flow<ConversationId?>)
+    fun bind(
+        scope: CoroutineScope,
+        openedConversationId: Flow<ConversationId?>,
+        openedMessageId: Flow<MessageId?>,
+    )
     fun open()
     fun close()
     fun setQuery(query: String)
@@ -61,6 +69,7 @@ internal class ConversationListSearchDelegateImpl @Inject constructor(
     override fun bind(
         scope: CoroutineScope,
         openedConversationId: Flow<ConversationId?>,
+        openedMessageId: Flow<MessageId?>,
     ) {
         if (isBound) {
             return
@@ -71,7 +80,12 @@ internal class ConversationListSearchDelegateImpl @Inject constructor(
         isActive
             .flatMapLatest { active ->
                 when {
-                    active -> observeActiveSearch(openedConversationId = openedConversationId)
+                    active -> {
+                        observeActiveSearch(
+                            openedConversationId = openedConversationId,
+                            openedMessageId = openedMessageId,
+                        )
+                    }
                     else -> flowOf(ConversationListSearchUiState())
                 }
             }
@@ -118,20 +132,54 @@ internal class ConversationListSearchDelegateImpl @Inject constructor(
 
     private fun observeActiveSearch(
         openedConversationId: Flow<ConversationId?>,
+        openedMessageId: Flow<MessageId?>,
     ): Flow<ConversationListSearchUiState> {
         return combine(
             repository.observeSearchableConversations().map(matcher::index),
-            debouncedQuery(),
+            observeFoundMessages(),
             openedConversationId,
-        ) { searchIndex, currentQuery, openedId ->
+            openedMessageId,
+        ) { searchIndex, foundMessages, openedId, openedMessage ->
             ConversationListSearchUiState(
                 isActive = true,
                 content = uiStateMapper.map(
-                    query = currentQuery,
-                    conversationMatches = searchIndex.match(currentQuery),
+                    query = foundMessages.query,
+                    conversationMatches = searchIndex.match(query = foundMessages.query),
+                    messageMatches = searchIndex.matchMessages(
+                        query = foundMessages.query,
+                        messages = foundMessages.messages,
+                    ),
                     openedConversationId = openedId,
+                    openedMessageId = openedMessage,
                 ),
             )
+        }
+    }
+
+    // The query travels with the messages found for it, so both sections of the results
+    // change to a new query together
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun observeFoundMessages(): Flow<FoundMessages> {
+        return debouncedQuery().flatMapLatest { currentQuery ->
+            when {
+                currentQuery.isBlank() -> {
+                    flowOf(
+                        FoundMessages(
+                            query = currentQuery,
+                            messages = persistentListOf(),
+                        ),
+                    )
+                }
+
+                else -> {
+                    repository.observeMessages(query = currentQuery).map { messages ->
+                        FoundMessages(
+                            query = currentQuery,
+                            messages = messages,
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -146,6 +194,11 @@ internal class ConversationListSearchDelegateImpl @Inject constructor(
             currentQuery
         }
     }
+
+    private class FoundMessages(
+        val query: String,
+        val messages: ImmutableList<SearchableMessage>,
+    )
 
     private companion object {
         private const val SEARCH_ACTIVE_KEY = "conversation_list_search_active"

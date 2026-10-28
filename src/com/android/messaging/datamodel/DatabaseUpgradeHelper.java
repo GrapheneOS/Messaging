@@ -63,6 +63,9 @@ public class DatabaseUpgradeHelper {
         if (currentVersion < 5) {
             currentVersion = upgradeToVersion5(db);
         }
+        if (currentVersion < 6) {
+            currentVersion = upgradeToVersion6(db);
+        }
         // Rebuild all the views
         final Context context = Factory.get().getApplicationContext();
         DatabaseHelper.dropAllViews(db);
@@ -161,6 +164,22 @@ public class DatabaseUpgradeHelper {
         LogUtil.i(TAG, "Upgraded database to version 5");
 
         return 5;
+    }
+
+    /**
+     * Adds the full-text index that search finds messages by their text with. Building it can
+     * fail the same way the version 5 index can, so it never throws; search scans the parts
+     * without it. A version 5 build that kept the rows on a downgrade dropped the index's triggers
+     * but not the index, which then missed every message that came in meanwhile - so this rebuilds
+     * the index from scratch instead of creating it only when it's missing.
+     */
+    @VisibleForTesting
+    public int upgradeToVersion6(final SQLiteDatabase db) {
+        DatabaseHelper.rebuildPartsTextIndex(db);
+
+        LogUtil.i(TAG, "Upgraded database to version 6");
+
+        return 6;
     }
 
     /**

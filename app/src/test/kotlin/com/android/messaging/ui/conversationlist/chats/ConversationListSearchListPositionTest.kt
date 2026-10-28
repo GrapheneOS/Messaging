@@ -126,6 +126,7 @@ internal class ConversationListSearchListPositionTest {
     private fun setContent() {
         val navigation = ConversationListNavigationCallbacks(
             onNavigateToConversation = {},
+            onNavigateToMessage = { _, _ -> },
             onNavigateToNewChat = {},
             onNavigateToConversationSettings = {},
             onCloseConversation = {},
