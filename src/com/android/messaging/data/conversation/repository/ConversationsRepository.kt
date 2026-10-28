@@ -9,7 +9,9 @@ import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetailsData
 import com.android.messaging.data.conversation.model.message.ConversationMessageDetailsResult
+import com.android.messaging.data.conversation.model.message.ConversationMessagePosition
 import com.android.messaging.data.conversation.model.message.ConversationMessagesWindow
+import com.android.messaging.data.conversation.model.message.ConversationMessagesWindowRequest
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerDisabledReason
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
@@ -41,6 +43,7 @@ import com.android.messaging.util.db.ext.getLong
 import com.android.messaging.util.db.ext.getStringOrEmpty
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -48,6 +51,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -60,12 +64,12 @@ internal interface ConversationsRepository {
     ): ConversationMetadata?
 
     /**
-     * Window over the newest messages of a conversation, emitted oldest-first; re-queried
-     * whenever the conversation changes or [windowSizes] asks for a larger window.
+     * Window over the messages of a conversation, emitted oldest-first; re-queried whenever the
+     * conversation changes or [windows] asks for another window, which stops loading the one before.
      */
     fun getConversationMessages(
         conversationId: ConversationId,
-        windowSizes: Flow<Int>,
+        windows: Flow<ConversationMessagesWindowRequest>,
     ): Flow<ConversationMessagesWindow>
 
     suspend fun getConversationSendData(
@@ -77,6 +81,15 @@ internal interface ConversationsRepository {
         conversationId: ConversationId,
         messageId: MessageId,
     ): ConversationMessageData?
+
+    /**
+     * Where [messageId] sorts in the conversation, for a window around it; null when the message
+     * no longer exists there.
+     */
+    suspend fun getMessagePosition(
+        conversationId: ConversationId,
+        messageId: MessageId,
+    ): ConversationMessagePosition?
 
     fun deleteMessages(messageIds: Collection<MessageId>)
 
@@ -155,30 +168,22 @@ internal class ConversationsRepositoryImpl @Inject constructor(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun getConversationMessages(
         conversationId: ConversationId,
-        windowSizes: Flow<Int>,
+        windows: Flow<ConversationMessagesWindowRequest>,
     ): Flow<ConversationMessagesWindow> {
         val notifyUri = MessagingContentProvider.buildConversationMessagesUri(conversationId.value)
 
-        return combine(
-            observeUri(uri = notifyUri),
-            windowSizes,
-        ) { _, windowSize -> windowSize }
-            .flowOn(defaultDispatcher)
-            .conflate()
-            .map { windowSize ->
-                val messages = queryConversationMessages(
-                    uri = MessagingContentProvider.buildConversationMessagesUri(
-                        conversationId.value,
-                        windowSize + 1,
-                    ),
-                )
-
-                ConversationMessagesWindow(
-                    messages = messages.takeLast(windowSize),
-                    hasMore = messages.size > windowSize,
-                )
+        // A window moved far away while the one before is still loading must not wait for it.
+        return windows
+            .flatMapLatest { window ->
+                observeUri(uri = notifyUri)
+                    .flowOn(defaultDispatcher)
+                    .conflate()
+                    .map {
+                        queryMessagesWindow(conversationId = conversationId, request = window)
+                    }
             }
             .flowOn(messagingDbDispatcher)
     }
@@ -224,6 +229,24 @@ internal class ConversationsRepositoryImpl @Inject constructor(
                 conversationId = conversationId,
                 messageId = messageId,
             )
+        }
+    }
+
+    override suspend fun getMessagePosition(
+        conversationId: ConversationId,
+        messageId: MessageId,
+    ): ConversationMessagePosition? {
+        return withContext(context = messagingDbDispatcher) {
+            getConversationMessageData(
+                conversationId = conversationId,
+                messageId = messageId,
+            )?.let { message ->
+                // The stored id, which is what the window compares the other messages with.
+                ConversationMessagePosition(
+                    messageId = MessageId(message.messageId),
+                    receivedTimestamp = message.receivedTimeStamp,
+                )
+            }
         }
     }
 
@@ -366,6 +389,81 @@ internal class ConversationsRepositoryImpl @Inject constructor(
                 contentResolver.unregisterContentObserver(observer)
             }
         }
+    }
+
+    private suspend fun queryMessagesWindow(
+        conversationId: ConversationId,
+        request: ConversationMessagesWindowRequest,
+    ): ConversationMessagesWindow {
+        return when (request) {
+            is ConversationMessagesWindowRequest.Newest -> {
+                queryNewestMessagesWindow(conversationId = conversationId, request = request)
+            }
+
+            is ConversationMessagesWindowRequest.Around -> {
+                queryMessagesWindowAround(conversationId = conversationId, request = request)
+            }
+        }
+    }
+
+    private suspend fun queryNewestMessagesWindow(
+        conversationId: ConversationId,
+        request: ConversationMessagesWindowRequest.Newest,
+    ): ConversationMessagesWindow {
+        val messages = queryNewestMessages(
+            conversationId = conversationId,
+            count = request.size + 1,
+        )
+
+        return ConversationMessagesWindow(
+            request = request,
+            messages = messages.takeLast(request.size),
+            hasOlder = messages.size > request.size,
+        )
+    }
+
+    private suspend fun queryMessagesWindowAround(
+        conversationId: ConversationId,
+        request: ConversationMessagesWindowRequest.Around,
+    ): ConversationMessagesWindow {
+        val position = request.position
+        val (newerMessages, olderMessages) = queryConversationMessages(
+            uri = MessagingContentProvider.buildConversationMessagesUri(
+                conversationId.value,
+                position.messageId.value,
+                position.receivedTimestamp,
+                request.olderSize + 1,
+                request.newerSize + 1,
+            ),
+        ).partition { message -> message.sortsAfter(position = position) }
+        val hasNewer = newerMessages.size > request.newerSize
+
+        return ConversationMessagesWindow(
+            request = request,
+            messages = olderMessages.takeLast(request.olderSize) +
+                newerMessages.take(request.newerSize),
+            hasOlder = olderMessages.size > request.olderSize,
+            hasNewer = hasNewer,
+            latestMessage = when {
+                hasNewer -> {
+                    queryNewestMessages(conversationId = conversationId, count = 1).lastOrNull()
+                }
+
+                else -> null
+            },
+        )
+    }
+
+    private suspend fun queryNewestMessages(
+        conversationId: ConversationId,
+        count: Int,
+    ): List<ConversationMessageData> {
+        return queryConversationMessages(
+            uri = MessagingContentProvider.buildConversationMessagesUri(
+                conversationId.value,
+                count,
+            ),
+        )
     }
 
     private suspend fun getConversationMessageData(
@@ -561,5 +659,16 @@ internal class ConversationsRepositoryImpl @Inject constructor(
                     }
                 }
             }.orEmpty()
+    }
+
+    /** The order of [ConversationMessagePosition]: by received timestamp, then by id. */
+    private fun ConversationMessageData.sortsAfter(position: ConversationMessagePosition): Boolean {
+        return when (receivedTimeStamp) {
+            position.receivedTimestamp -> {
+                messageId.toLong() > position.messageId.value.toLong()
+            }
+
+            else -> receivedTimeStamp > position.receivedTimestamp
+        }
     }
 }
