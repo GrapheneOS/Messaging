@@ -41,23 +41,22 @@ private fun DisplayCorneredContent(
     isTop: Boolean,
     entry: NavEntry<NavKey>,
 ) {
-    if (LocalIsListDetailPane.current) {
-        entry.Content()
-        return
+    val pageModifier = when {
+        LocalIsListDetailPane.current -> Modifier
+
+        else -> {
+            Modifier
+                .predictiveBackPage(
+                    transition = LocalNavAnimatedContentScope.current.transition,
+                    isOpen = isTop,
+                )
+                .clip(
+                    shape = RoundedCornerShape(size = cornerRadius),
+                )
+        }
     }
 
-    val transition = LocalNavAnimatedContentScope.current.transition
-
-    Box(
-        modifier = Modifier
-            .predictiveBackPage(
-                transition = transition,
-                isOpen = isTop,
-            )
-            .clip(
-                shape = RoundedCornerShape(size = cornerRadius),
-            ),
-    ) {
+    Box(modifier = pageModifier) {
         entry.Content()
     }
 }
