@@ -25,6 +25,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -76,6 +81,7 @@ internal fun ConversationMediaPickerSheetScaffold(
                 { ConversationPhotoPickerSheetHeader(expansionProgress = expansionProgress) }
             }
         }
+        val isPhotoPickerShown = rememberIsPhotoPickerPlacementSettled(isPhotoPickerBesideContent)
 
         // A wide layout keeps the scaffold with an empty sheet instead of dropping it, so the
         // camera and review keep their state when the device rotates.
@@ -95,7 +101,7 @@ internal fun ConversationMediaPickerSheetScaffold(
             },
             sheetContent = {
                 Box(modifier = Modifier.excludeStatusBarHeight(statusBarInsets = statusBarInsets)) {
-                    if (!isPhotoPickerBesideContent) {
+                    if (isPhotoPickerShown && !isPhotoPickerBesideContent) {
                         photoPickerContent(false)
                     }
                 }
@@ -103,6 +109,7 @@ internal fun ConversationMediaPickerSheetScaffold(
         ) { innerPadding ->
             ConversationMediaPickerSheetBody(
                 isPhotoPickerBesideContent = isPhotoPickerBesideContent,
+                isPhotoPickerShown = isPhotoPickerShown,
                 sheetContentPadding = innerPadding,
                 photoPickerContent = photoPickerContent,
                 content = content,
@@ -118,9 +125,24 @@ internal fun ConversationMediaPickerSheetScaffold(
     }
 }
 
+// The sheet and the pane pickers share one picker state, and a picker clears the state's surface
+// when it detaches. Keeping the new place empty until the old picker has left stops it clearing
+// the surface the new picker opens its session on, which crashed on rotation.
+@Composable
+private fun rememberIsPhotoPickerPlacementSettled(isBesideContent: Boolean): Boolean {
+    var settledIsBesideContent by remember { mutableStateOf(value = isBesideContent) }
+
+    LaunchedEffect(isBesideContent) {
+        settledIsBesideContent = isBesideContent
+    }
+
+    return settledIsBesideContent == isBesideContent
+}
+
 @Composable
 private fun ConversationMediaPickerSheetBody(
     isPhotoPickerBesideContent: Boolean,
+    isPhotoPickerShown: Boolean,
     sheetContentPadding: PaddingValues,
     photoPickerContent: @Composable (isBesideContent: Boolean) -> Unit,
     content: @Composable (PaddingValues) -> Unit,
@@ -145,7 +167,9 @@ private fun ConversationMediaPickerSheetBody(
                     .fillMaxWidth(fraction = PHOTO_PICKER_PANE_WIDTH_FRACTION)
                     .fillMaxHeight(),
             ) {
-                photoPickerContent(true)
+                if (isPhotoPickerShown) {
+                    photoPickerContent(true)
+                }
             }
         }
     }
