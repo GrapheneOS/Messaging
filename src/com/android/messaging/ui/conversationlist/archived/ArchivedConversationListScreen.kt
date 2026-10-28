@@ -68,6 +68,7 @@ internal fun ArchivedConversationListScreen(
     onNavigateToConversationSettings: (ConversationId) -> Unit,
     onCloseConversation: (ConversationId) -> Unit,
     onCloseArchivedList: () -> Unit,
+    openedConversationId: ConversationId?,
     modifier: Modifier = Modifier,
 ) {
     val uiState by screenModel.uiState.collectAsStateWithLifecycle()
@@ -75,6 +76,10 @@ internal fun ArchivedConversationListScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     var pendingDelete by remember { mutableStateOf(false) }
+
+    LaunchedEffect(openedConversationId) {
+        screenModel.onAction(Action.OpenedConversationChanged(openedConversationId))
+    }
 
     CollectEvents(events = screenModel.navigationEvents) { event ->
         when (event) {

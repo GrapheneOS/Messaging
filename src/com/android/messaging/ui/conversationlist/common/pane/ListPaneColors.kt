@@ -12,3 +12,13 @@ internal fun listPaneContentColor(): Color {
         else -> MaterialTheme.colorScheme.background
     }
 }
+
+// The two-pane list already sits on surfaceContainerLow, so a highlighted row needs a color of
+// its own to stand out from both the pane and the unhighlighted rows.
+@Composable
+internal fun listPaneHighlightedItemColor(): Color {
+    return when {
+        LocalIsListDetailPane.current -> MaterialTheme.colorScheme.secondaryContainer
+        else -> MaterialTheme.colorScheme.surfaceContainerLow
+    }
+}
