@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.messages.delegate.conversationmess
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.message.ConversationMessagesWindow
+import com.android.messaging.data.conversation.model.message.ConversationMessagesWindowRequest
 import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagesUiState
@@ -43,7 +44,7 @@ internal class ConversationMessagesDelegateWindowTest : BaseConversationMessages
         runTest(context = mainDispatcherRule.testDispatcher) {
             val windowSizes = givenWindowedConversationMessages(
                 loadedMessageCount = DEFAULT_WINDOW,
-                hasMore = true,
+                hasOlder = true,
             )
             val delegate = createBoundDelegate(
                 conversationIdFlow = MutableStateFlow(CONVERSATION_ID),
@@ -62,7 +63,7 @@ internal class ConversationMessagesDelegateWindowTest : BaseConversationMessages
         runTest(context = mainDispatcherRule.testDispatcher) {
             val windowSizes = givenWindowedConversationMessages(
                 loadedMessageCount = DEFAULT_WINDOW,
-                hasMore = true,
+                hasOlder = true,
             )
             val delegate = createBoundDelegate(
                 conversationIdFlow = MutableStateFlow(CONVERSATION_ID),
@@ -128,7 +129,7 @@ internal class ConversationMessagesDelegateWindowTest : BaseConversationMessages
         runTest(context = mainDispatcherRule.testDispatcher) {
             val windowSizes = givenWindowedConversationMessages(
                 loadedMessageCount = DEFAULT_WINDOW,
-                hasMore = true,
+                hasOlder = true,
             )
             val conversationIdFlow = MutableStateFlow<ConversationId?>(CONVERSATION_ID)
             val delegate = createBoundDelegate(conversationIdFlow = conversationIdFlow)
@@ -148,7 +149,7 @@ internal class ConversationMessagesDelegateWindowTest : BaseConversationMessages
         runTest(context = mainDispatcherRule.testDispatcher) {
             // Short enough to fit in the window, so the request from the oldest message is ignored.
             val windows = MutableStateFlow(
-                value = messagesWindow(loadedMessageCount = DEFAULT_WINDOW - 1, hasMore = false),
+                value = messagesWindow(loadedMessageCount = DEFAULT_WINDOW - 1, hasOlder = false),
             )
             val windowSizes = givenChangingConversationMessages(windows = windows)
             val delegate = createBoundDelegate(
@@ -161,7 +162,7 @@ internal class ConversationMessagesDelegateWindowTest : BaseConversationMessages
 
             // Two more arrive and push the oldest message out of the window, while the user is
             // still sitting at the oldest edge and will not ask for more from there.
-            windows.value = messagesWindow(loadedMessageCount = DEFAULT_WINDOW, hasMore = true)
+            windows.value = messagesWindow(loadedMessageCount = DEFAULT_WINDOW, hasOlder = true)
             runCurrent()
 
             assertEquals(DEFAULT_WINDOW * 2, windowSizes().first())
@@ -172,21 +173,23 @@ internal class ConversationMessagesDelegateWindowTest : BaseConversationMessages
      * Answers every conversation with the newest [messageCount] messages at most, as many of them
      * as the window asks for, and hands back the window sizes the delegate asked for.
      */
-    private fun givenConversationMessagesUpTo(messageCount: Int): () -> Flow<Int> {
+    private fun givenConversationMessagesUpTo(messageCount: Int): () -> Flow<Int?> {
         val message = message(messageId = "message")
         val oldestMessage = message(messageId = OLDEST_MESSAGE_ID)
-        val capturedWindowSizes = slot<Flow<Int>>()
+        val capturedWindows = slot<Flow<ConversationMessagesWindowRequest>>()
 
         every {
             conversationsRepository.getConversationMessages(
                 conversationId = any(),
-                windowSizes = capture(capturedWindowSizes),
+                windows = capture(capturedWindows),
             )
         } answers {
-            capturedWindowSizes.captured.map { windowSize ->
+            capturedWindows.captured.map { request ->
+                val windowSize = (request as ConversationMessagesWindowRequest.Newest).size
                 val loadedMessageCount = minOf(windowSize, messageCount)
 
                 ConversationMessagesWindow(
+                    request = request,
                     // Oldest first, the way the repository hands the window over.
                     messages = List(loadedMessageCount) { index ->
                         when (index) {
@@ -194,22 +197,22 @@ internal class ConversationMessagesDelegateWindowTest : BaseConversationMessages
                             else -> message
                         }
                     },
-                    hasMore = loadedMessageCount < messageCount,
+                    hasOlder = loadedMessageCount < messageCount,
                 )
             }
         }
 
-        return { capturedWindowSizes.captured }
+        return { capturedWindows.captured.newestWindowSizes() }
     }
 
     /** Answers every conversation with the same fixed window. */
     private fun givenWindowedConversationMessages(
         loadedMessageCount: Int,
-        hasMore: Boolean = false,
-    ): () -> Flow<Int> {
+        hasOlder: Boolean = false,
+    ): () -> Flow<Int?> {
         return givenChangingConversationMessages(
             windows = flowOf(
-                messagesWindow(loadedMessageCount = loadedMessageCount, hasMore = hasMore),
+                messagesWindow(loadedMessageCount = loadedMessageCount, hasOlder = hasOlder),
             ),
         )
     }
@@ -220,30 +223,33 @@ internal class ConversationMessagesDelegateWindowTest : BaseConversationMessages
      */
     private fun givenChangingConversationMessages(
         windows: Flow<ConversationMessagesWindow>,
-    ): () -> Flow<Int> {
-        val capturedWindowSizes = slot<Flow<Int>>()
+    ): () -> Flow<Int?> {
+        val capturedWindows = slot<Flow<ConversationMessagesWindowRequest>>()
 
         every {
             conversationsRepository.getConversationMessages(
                 conversationId = any(),
-                windowSizes = capture(capturedWindowSizes),
+                windows = capture(capturedWindows),
             )
         } answers {
-            combine(capturedWindowSizes.captured, windows) { _, window -> window }
+            combine(capturedWindows.captured, windows) { request, window ->
+                window.copy(request = request)
+            }
         }
 
-        return { capturedWindowSizes.captured }
+        return { capturedWindows.captured.newestWindowSizes() }
     }
 
     private fun messagesWindow(
         loadedMessageCount: Int,
-        hasMore: Boolean,
+        hasOlder: Boolean,
     ): ConversationMessagesWindow {
         val message = message(messageId = "message")
 
         return ConversationMessagesWindow(
+            request = ConversationMessagesWindowRequest.Newest(size = DEFAULT_WINDOW),
             messages = List(loadedMessageCount) { message },
-            hasMore = hasMore,
+            hasOlder = hasOlder,
         )
     }
 

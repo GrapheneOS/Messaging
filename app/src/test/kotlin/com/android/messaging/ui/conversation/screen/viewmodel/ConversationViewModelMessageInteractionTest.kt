@@ -5,6 +5,7 @@ import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.domain.conversation.usecase.participant.ResolveContactAction
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveContactActionResult
+import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.ui.contact.model.AddContactRequest
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagesUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
@@ -41,6 +42,67 @@ internal class ConversationViewModelMessageInteractionTest : BaseConversationVie
                 messageSelectionDelegate.mock.onMessageResendClick(
                     messageId = MessageId("message-3")
                 )
+            }
+        }
+    }
+
+    @Test
+    fun onConversationIdChanged_withATargetMessage_startsTheConversationAtIt() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val messagesDelegate = createMessagesDelegateMock()
+            val viewModel = createViewModel(messagesDelegate = messagesDelegate.mock)
+
+            viewModel.onConversationIdChanged(
+                conversationId = CONVERSATION_ID,
+                targetMessageId = MessageId("message-1"),
+            )
+            // Already open, so the screen scrolls to this one within the window.
+            viewModel.onConversationIdChanged(
+                conversationId = CONVERSATION_ID,
+                targetMessageId = MessageId("message-2"),
+            )
+
+            verify(exactly = 1) {
+                messagesDelegate.mock.startAtMessage(
+                    conversationId = CONVERSATION_ID,
+                    messageId = any(),
+                )
+            }
+            verify(exactly = 1) {
+                messagesDelegate.mock.startAtMessage(
+                    conversationId = CONVERSATION_ID,
+                    messageId = MessageId("message-1"),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun targetMessageMethods_forwardToMessagesDelegate() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val messagesDelegate = createMessagesDelegateMock()
+            val viewModel = createViewModel(messagesDelegate = messagesDelegate.mock)
+
+            viewModel.onLoadMessage(messageId = MessageId("message-1"))
+            viewModel.onTargetMessageShown(messageId = MessageId("message-2"))
+            viewModel.onMessageHighlightFinished(messageId = MessageId("message-3"))
+            viewModel.onLoadNewerMessages()
+            viewModel.onLoadNewestMessages()
+
+            verify(exactly = 1) {
+                messagesDelegate.mock.loadMessage(messageId = MessageId("message-1"))
+            }
+            verify(exactly = 1) {
+                messagesDelegate.mock.loadNewerMessages()
+            }
+            verify(exactly = 1) {
+                messagesDelegate.mock.loadNewestMessages()
+            }
+            verify(exactly = 1) {
+                messagesDelegate.mock.highlightMessage(messageId = MessageId("message-2"))
+            }
+            verify(exactly = 1) {
+                messagesDelegate.mock.clearMessageHighlight(messageId = MessageId("message-3"))
             }
         }
     }

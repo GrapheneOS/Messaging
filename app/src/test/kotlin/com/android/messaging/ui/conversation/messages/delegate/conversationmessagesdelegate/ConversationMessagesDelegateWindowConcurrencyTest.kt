@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.messages.delegate.conversationmess
 import android.os.Bundle
 import androidx.lifecycle.SavedStateHandle
 import com.android.messaging.data.conversation.model.message.ConversationMessagesWindow
+import com.android.messaging.data.conversation.model.message.ConversationMessagesWindowRequest
 import com.android.messaging.datamodel.data.ConversationMessageData
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import io.mockk.every
@@ -138,14 +139,15 @@ internal class ConversationMessagesDelegateWindowConcurrencyTest :
         paused: CountDownLatch,
         resumed: CountDownLatch,
     ) {
-        val hasOlderMessages = ReflectionHelpers
-            .getField<MutableStateFlow<Boolean>>(delegate, HAS_OLDER_MESSAGES)
+        // What the request reads first to decide whether the window on screen can grow.
+        val loadedWindowBounds = ReflectionHelpers
+            .getField<MutableStateFlow<Any?>>(delegate, LOADED_WINDOW_BOUNDS)
 
         val pauseOnce = AtomicBoolean(true)
-        val pausingRead = object : MutableStateFlow<Boolean> by hasOlderMessages {
-            override var value: Boolean
+        val pausingRead = object : MutableStateFlow<Any?> by loadedWindowBounds {
+            override var value: Any?
                 get() {
-                    val currentValue = hasOlderMessages.value
+                    val currentValue = loadedWindowBounds.value
 
                     if (Thread.currentThread().name == REQUEST_THREAD_NAME &&
                         pauseOnce.compareAndSet(true, false)
@@ -157,11 +159,11 @@ internal class ConversationMessagesDelegateWindowConcurrencyTest :
                     return currentValue
                 }
                 set(value) {
-                    hasOlderMessages.value = value
+                    loadedWindowBounds.value = value
                 }
         }
 
-        ReflectionHelpers.setField(delegate, HAS_OLDER_MESSAGES, pausingRead)
+        ReflectionHelpers.setField(delegate, LOADED_WINDOW_BOUNDS, pausingRead)
     }
 
     private fun recordingItsCalls(
@@ -202,33 +204,35 @@ internal class ConversationMessagesDelegateWindowConcurrencyTest :
     private fun givenConversationMessagesFillingTheWindow(
         newMessages: Flow<Int> = MutableStateFlow(value = 0),
         hasOlderMessages: Flow<Boolean> = MutableStateFlow(value = true),
-    ): () -> Flow<Int> {
+    ): () -> Flow<Int?> {
         val message = mockk<ConversationMessageData>(relaxed = true)
         every { messageUiModelMapper.map(data = message) } returns
             messageUiModel(messageId = "message")
-        val capturedWindowSizes = slot<Flow<Int>>()
+        val capturedWindows = slot<Flow<ConversationMessagesWindowRequest>>()
 
         every {
             conversationsRepository.getConversationMessages(
                 conversationId = any(),
-                windowSizes = capture(capturedWindowSizes),
+                windows = capture(capturedWindows),
             )
         } answers {
             combine(
-                capturedWindowSizes.captured,
+                capturedWindows.captured,
                 newMessages,
                 hasOlderMessages,
-            ) { windowSize, _, hasMore ->
+            ) { request, _, hasOlder ->
+                val windowSize = (request as ConversationMessagesWindowRequest.Newest).size
                 val loadedMessageCount = minOf(windowSize, MESSAGE_COUNT)
 
                 ConversationMessagesWindow(
+                    request = request,
                     messages = List(loadedMessageCount) { message },
-                    hasMore = hasMore && loadedMessageCount < MESSAGE_COUNT,
+                    hasOlder = hasOlder && loadedMessageCount < MESSAGE_COUNT,
                 )
             }
         }
 
-        return { capturedWindowSizes.captured }
+        return { capturedWindows.captured.newestWindowSizes() }
     }
 
     private class LoadingDispatcher(
@@ -258,7 +262,7 @@ internal class ConversationMessagesDelegateWindowConcurrencyTest :
         private const val MAIN = "main"
         private const val LOADING = "loading dispatcher"
         private const val GET_MUTABLE_STATE_FLOW = "getMutableStateFlow"
-        private const val HAS_OLDER_MESSAGES = "hasOlderMessages"
+        private const val LOADED_WINDOW_BOUNDS = "loadedWindowBounds"
         private const val REQUEST_THREAD_NAME = "test-load-older-messages"
     }
 }

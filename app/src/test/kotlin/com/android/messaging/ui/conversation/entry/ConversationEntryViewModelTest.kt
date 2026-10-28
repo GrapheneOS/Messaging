@@ -119,6 +119,50 @@ internal class ConversationEntryViewModelTest {
     }
 
     @Test
+    fun conversationNavigationRequest_withTargetMessage_setsThePendingScrollToIt() {
+        val viewModel = createViewModel()
+
+        viewModel.onConversationNavigationRequested(
+            conversationId = CONVERSATION_ID,
+            pendingSelfParticipantId = null,
+            targetMessageId = MessageId("message-7"),
+        )
+
+        assertEquals(
+            ConversationEntryUiState(
+                conversationId = CONVERSATION_ID,
+                pendingScrollMessageId = MessageId("message-7"),
+            ),
+            viewModel.uiState.value,
+        )
+    }
+
+    @Test
+    fun targetMessage_afterRecreation_staysPendingUntilConsumed() {
+        val savedStateHandle = SavedStateHandle()
+        createViewModel(savedStateHandle = savedStateHandle).onConversationNavigationRequested(
+            conversationId = CONVERSATION_ID,
+            pendingSelfParticipantId = null,
+            targetMessageId = MessageId("message-7"),
+        )
+
+        val recreatedViewModel = createViewModel(savedStateHandle = savedStateHandle)
+        assertEquals(
+            MessageId("message-7"),
+            recreatedViewModel.uiState.value.pendingScrollMessageId,
+        )
+
+        recreatedViewModel.onScrollMessageIdConsumed(conversationId = CONVERSATION_ID)
+
+        assertNull(
+            createViewModel(savedStateHandle = savedStateHandle)
+                .uiState
+                .value
+                .pendingScrollMessageId,
+        )
+    }
+
+    @Test
     fun consumeCallbacks_clearOnlyMatchingPendingValues() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val launchStore = ConversationLaunchStoreImpl()
