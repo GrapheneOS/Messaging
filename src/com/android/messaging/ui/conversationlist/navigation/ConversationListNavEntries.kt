@@ -127,6 +127,7 @@ private fun archivedConversationListRouteContent():
             onCloseArchivedList = {
                 navigator.removeDestination(destination = ArchivedConversationListNavKey)
             },
+            openedConversationId = openedConversationId(navigator = navigator),
             modifier = Modifier
                 .fillMaxSize()
                 .consumeOppositePaneInsets(),
