@@ -1,5 +1,7 @@
 package com.android.messaging.ui.conversation.mediapicker
 
+import android.content.Context
+import android.view.View
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -18,8 +20,10 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.width
+import androidx.compose.ui.viewinterop.AndroidView
 import com.android.messaging.ui.core.AppTheme
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,6 +40,7 @@ internal class ConversationMediaPickerSheetScaffoldTest {
 
     private val hostSize = mutableStateOf(value = PORTRAIT_SIZE)
     private var contentInstanceCount = 0
+    private var attachedPhotoPickerSurface: View? = null
 
     @Test
     fun tallLayout_keepsThePhotoPickerInTheSheet() {
@@ -82,6 +87,19 @@ internal class ConversationMediaPickerSheetScaffoldTest {
         assertEquals(1, contentInstanceCount)
     }
 
+    @Test
+    fun rotating_detachesTheOldPhotoPickerBeforeTheNewOneAttaches() {
+        setSheetScaffoldContent()
+
+        hostSize.value = LANDSCAPE_SIZE
+        composeTestRule.onNodeWithTag(PHOTO_PICKER_TAG).assertTextEquals(true.toString())
+        assertNotNull(attachedPhotoPickerSurface)
+
+        hostSize.value = PORTRAIT_SIZE
+        composeTestRule.onNodeWithTag(PHOTO_PICKER_TAG).assertTextEquals(false.toString())
+        assertNotNull(attachedPhotoPickerSurface)
+    }
+
     private fun setSheetScaffoldContent() {
         composeTestRule.setContent {
             AppTheme {
@@ -89,6 +107,7 @@ internal class ConversationMediaPickerSheetScaffoldTest {
                     ConversationMediaPickerSheetScaffold(
                         scaffoldState = rememberBottomSheetScaffoldState(),
                         photoPickerContent = { isBesideContent ->
+                            AndroidView(factory = ::createPhotoPickerSurface)
                             Text(
                                 modifier = Modifier
                                     .testTag(PHOTO_PICKER_TAG)
@@ -106,6 +125,23 @@ internal class ConversationMediaPickerSheetScaffoldTest {
                     }
                 }
             }
+        }
+    }
+
+    // Like the embedded photo picker, which shares one surface token between its pickers.
+    private fun createPhotoPickerSurface(context: Context): View {
+        return View(context).apply {
+            addOnAttachStateChangeListener(
+                object : View.OnAttachStateChangeListener {
+                    override fun onViewAttachedToWindow(view: View) {
+                        attachedPhotoPickerSurface = view
+                    }
+
+                    override fun onViewDetachedFromWindow(view: View) {
+                        attachedPhotoPickerSurface = null
+                    }
+                },
+            )
         }
     }
 
