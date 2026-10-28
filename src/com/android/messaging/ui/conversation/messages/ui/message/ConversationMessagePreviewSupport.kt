@@ -42,6 +42,7 @@ internal fun ConversationMessagePreviewItem(
     message: ConversationMessageUiModel,
     isSelected: Boolean = false,
     isSelectionMode: Boolean = false,
+    isHighlighted: Boolean = false,
     showIncomingParticipantIdentity: Boolean = true,
     simDisplayName: String? = null,
 ) {
@@ -49,6 +50,7 @@ internal fun ConversationMessagePreviewItem(
         message = message,
         isSelected = isSelected,
         isSelectionMode = isSelectionMode,
+        isHighlighted = isHighlighted,
         showIncomingParticipantIdentity = showIncomingParticipantIdentity,
         simDisplayName = simDisplayName,
     )

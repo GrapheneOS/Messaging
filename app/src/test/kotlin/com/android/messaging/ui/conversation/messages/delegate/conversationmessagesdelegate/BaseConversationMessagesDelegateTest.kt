@@ -9,6 +9,7 @@ import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentMetadata
 import com.android.messaging.data.conversation.model.attachment.ConversationVCardAttachmentType
 import com.android.messaging.data.conversation.model.message.ConversationMessagesWindow
+import com.android.messaging.data.conversation.model.message.ConversationMessagesWindowRequest
 import com.android.messaging.data.conversation.repository.ConversationVCardMetadataRepository
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.datamodel.data.ConversationMessageData
@@ -24,10 +25,12 @@ import com.android.messaging.ui.conversation.messages.model.message.Conversation
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.TestScope
 import org.junit.Rule
@@ -94,15 +97,30 @@ internal abstract class BaseConversationMessagesDelegateTest {
     protected fun givenConversationMessages(
         messages: Flow<List<ConversationMessageData>>,
         conversationId: ConversationId = CONVERSATION_ID,
-        hasMore: Boolean = false,
+        hasOlder: Boolean = false,
     ) {
+        val capturedWindows = slot<Flow<ConversationMessagesWindowRequest>>()
+
         every {
             conversationsRepository.getConversationMessages(
                 conversationId = conversationId,
-                windowSizes = any(),
+                windows = capture(capturedWindows),
             )
-        } returns messages.map { currentMessages ->
-            ConversationMessagesWindow(messages = currentMessages, hasMore = hasMore)
+        } answers {
+            combine(capturedWindows.captured, messages) { request, currentMessages ->
+                ConversationMessagesWindow(
+                    request = request,
+                    messages = currentMessages,
+                    hasOlder = hasOlder,
+                )
+            }
+        }
+    }
+
+    /** The size of each newest messages window asked for, and null for a window around one. */
+    protected fun Flow<ConversationMessagesWindowRequest>.newestWindowSizes(): Flow<Int?> {
+        return map { request ->
+            (request as? ConversationMessagesWindowRequest.Newest)?.size
         }
     }
 

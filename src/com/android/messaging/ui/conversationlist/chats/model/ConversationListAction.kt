@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationlist.chats.model
 
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversationsettings.model.SnoozeOption
 import com.android.messaging.ui.conversationlist.model.ConversationListAvatarUiModel
 import kotlinx.collections.immutable.ImmutableList
@@ -20,6 +21,8 @@ internal sealed interface ConversationListAction {
     sealed interface SnackbarAction : ConversationListAction
 
     sealed interface PaneStateAction : ConversationListAction
+
+    sealed interface SearchAction : ConversationListAction
 
     // region ConfirmationAction
     data class BlockConfirmed(
@@ -124,5 +127,23 @@ internal sealed interface ConversationListAction {
     data class OpenedConversationChanged(
         val conversationId: ConversationId?,
     ) : PaneStateAction
+    // endregion
+
+    // region SearchAction
+    data object SearchClicked : SearchAction
+    data object SearchClosed : SearchAction
+
+    data class SearchQueryChanged(
+        val query: String,
+    ) : SearchAction
+
+    data class SearchConversationClicked(
+        val conversationId: ConversationId,
+    ) : SearchAction
+
+    data class SearchMessageClicked(
+        val conversationId: ConversationId,
+        val messageId: MessageId,
+    ) : SearchAction
     // endregion
 }

@@ -21,8 +21,10 @@ import com.android.messaging.ui.conversationlist.chats.model.ConversationListEff
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState as State
 import com.android.messaging.ui.conversationlist.common.support.previewConversationListItem
 import com.android.messaging.ui.conversationlist.delegate.ConversationListOptimisticSnapshotDelegate
+import com.android.messaging.ui.conversationlist.delegate.ConversationListSearchDelegate
 import com.android.messaging.ui.conversationlist.delegate.ConversationListSelectionDelegate
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
+import com.android.messaging.ui.conversationlist.model.ConversationListSearchUiState
 import com.android.messaging.ui.conversationlist.snapshotOfIds
 import com.android.messaging.ui.core.AppTheme
 import io.mockk.every
@@ -113,6 +115,7 @@ internal class ConversationListNewestConversationVisibilityTest {
         val viewModel = createViewModel()
         val navigation = ConversationListNavigationCallbacks(
             onNavigateToConversation = {},
+            onNavigateToMessage = { _, _ -> },
             onNavigateToNewChat = {},
             onNavigateToConversationSettings = {},
             onCloseConversation = {},
@@ -179,12 +182,16 @@ internal class ConversationListNewestConversationVisibilityTest {
         val selectionDelegate = mockk<ConversationListSelectionDelegate>(relaxed = true)
         every { selectionDelegate.selectedIds } returns MutableStateFlow(persistentListOf())
 
+        val searchDelegate = mockk<ConversationListSearchDelegate>(relaxed = true)
+        every { searchDelegate.state } returns MutableStateFlow(ConversationListSearchUiState())
+
         return ConversationListViewModel(
             repository = repository,
             uiStateMapper = uiStateMapper,
             selectionDelegate = selectionDelegate,
             actionsDelegate = mockk(relaxed = true),
             optimisticSnapshotDelegate = optimisticSnapshotDelegate,
+            searchDelegate = searchDelegate,
             resolveContactAction = mockk(relaxed = true),
             debugFeaturesProvider = mockk(relaxed = true),
             conversationArchiveEvents = ConversationArchiveEventsImpl(),

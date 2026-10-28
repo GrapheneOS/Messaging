@@ -4,6 +4,8 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 @Immutable
 internal data class ConversationListItemUiModel(
@@ -24,6 +26,9 @@ internal data class ConversationListItemUiModel(
     val isPinned: Boolean,
     val isSelected: Boolean,
     val isOpened: Boolean,
+    val titleMatchRanges: ImmutableList<IntRange> = persistentListOf(),
+    val snippetMatchRanges: ImmutableList<IntRange> = persistentListOf(),
+    val isArchivedBadgeVisible: Boolean = false,
 )
 
 @Immutable

@@ -114,6 +114,10 @@ internal fun conversationListItemBadgeContentDescriptionResIds(
         if (item.isPinned) {
             add(R.string.conversation_list_status_pinned)
         }
+
+        if (item.isArchivedBadgeVisible) {
+            add(R.string.conversation_list_status_archived)
+        }
     }
 }
 

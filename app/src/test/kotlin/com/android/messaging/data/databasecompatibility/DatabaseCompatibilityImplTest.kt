@@ -30,6 +30,24 @@ class DatabaseCompatibilityImplTest {
     }
 
     @Test
+    fun recordingVersion6_marksItCompatibleWithVersion5WhichOnlyLacksTheTextIndex() {
+        val compatibility = DatabaseCompatibilityImpl(
+            preferencesStore = preferencesStore,
+            databaseVersion = NEWER_VERSION,
+        )
+
+        compatibility.recordDatabaseVersion()
+
+        assertEquals(
+            RecordedDatabaseVersion(
+                databaseVersion = NEWER_VERSION,
+                oldestCompatibleVersion = DATABASE_VERSION,
+            ),
+            preferencesStore.recordedVersion,
+        )
+    }
+
+    @Test
     fun aNewerVersionCompatibleWithThisOne_keepsTheRows() {
         preferencesStore.recordedVersion = RecordedDatabaseVersion(
             databaseVersion = NEWER_VERSION,

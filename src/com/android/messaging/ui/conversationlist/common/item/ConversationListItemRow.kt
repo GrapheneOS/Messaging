@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.NotificationsPaused
 import androidx.compose.material.icons.filled.PushPin
@@ -24,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -33,6 +35,7 @@ import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
 import com.android.messaging.ui.common.components.TwoLineListItem
+import com.android.messaging.ui.common.text.highlightedText
 import com.android.messaging.ui.conversationlist.common.support.conversationListItemTestTag
 import com.android.messaging.ui.conversationlist.common.support.previewConversationListItem
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
@@ -97,7 +100,10 @@ private fun ConversationListItemHeader(item: ConversationListItemUiModel) {
                     weight = 1f,
                     fill = false,
                 ),
-                text = item.title.orEmpty(),
+                text = highlightedText(
+                    text = item.title.orEmpty(),
+                    matchRanges = item.titleMatchRanges,
+                ),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = itemUnreadFontWeight(item),
                 color = MaterialTheme.colorScheme.onSurface,
@@ -138,6 +144,10 @@ private fun ConversationListItemBadges(item: ConversationListItemUiModel) {
 
         if (item.isPinned) {
             ConversationListItemBadgeIcon(Icons.Default.PushPin)
+        }
+
+        if (item.isArchivedBadgeVisible) {
+            ConversationListItemBadgeIcon(Icons.Default.Archive)
         }
     }
 }
@@ -221,24 +231,27 @@ private fun ConversationListItemStatusLabel(item: ConversationListItemUiModel) {
 }
 
 @Composable
-private fun itemSnippetText(item: ConversationListItemUiModel): String? {
+private fun itemSnippetText(item: ConversationListItemUiModel): AnnotatedString? {
     val snippetText = item.mmsDownloadTitleResId?.let { stringResource(it) }
         ?: item.snippet.text?.takeIf(String::isNotBlank)
 
     if (snippetText != null) {
         val senderName = item.snippet.senderName?.takeIf(String::isNotBlank)
-
-        return when {
-            item.avatar.isGroup && !item.isOutgoing && senderName != null -> {
-                "$senderName: $snippetText"
-            }
-
-            else -> snippetText
+        val senderPrefix = when {
+            item.avatar.isGroup && !item.isOutgoing && senderName != null -> "$senderName: "
+            else -> ""
         }
+
+        return highlightedText(
+            text = senderPrefix + snippetText,
+            matchRanges = item.snippetMatchRanges.map { range ->
+                (range.first + senderPrefix.length)..(range.last + senderPrefix.length)
+            },
+        )
     }
 
     return item.snippet.preview?.let { preview ->
-        stringResource(preview.snippetLabelResId())
+        AnnotatedString(stringResource(preview.snippetLabelResId()))
     }
 }
 

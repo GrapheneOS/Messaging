@@ -208,7 +208,10 @@ private fun ConversationPendingLaunchEffects(
     val pendingStartupAttachment = pendingLaunchPayload.startupAttachment
 
     LaunchedEffect(conversationId, screenModel) {
-        screenModel.onConversationIdChanged(conversationId = conversationId)
+        screenModel.onConversationIdChanged(
+            conversationId = conversationId,
+            targetMessageId = pendingLaunchPayload.scrollMessageId,
+        )
     }
 
     LaunchedEffect(conversationId, pendingDraft, screenModel) {
