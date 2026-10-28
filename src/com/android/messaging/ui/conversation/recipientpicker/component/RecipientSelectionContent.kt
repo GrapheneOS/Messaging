@@ -25,7 +25,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
@@ -64,6 +63,7 @@ internal fun RecipientSelectionContent(
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
     containerShape: Shape = RectangleShape,
     autoFocusQuery: Boolean = false,
+    autoFocusQueryKey: Any = Unit,
     onLoadMore: () -> Unit = {},
     onPrimaryActionClick: () -> Unit = {},
     onQueryChanged: (String) -> Unit = {},
@@ -81,6 +81,7 @@ internal fun RecipientSelectionContent(
     )
     RecipientSelectionAutoFocusEffect(
         autoFocusQuery = autoFocusQuery,
+        autoFocusQueryKey = autoFocusQueryKey,
         focusRequester = queryFocusRequester,
     )
 
@@ -372,13 +373,11 @@ private fun RecipientSelectionArmedContactsArea(
 @Composable
 private fun RecipientSelectionAutoFocusEffect(
     autoFocusQuery: Boolean,
+    autoFocusQueryKey: Any,
     focusRequester: FocusRequester,
 ) {
     if (autoFocusQuery) {
-        LaunchedEffect(Unit) {
-            // Focusing before the first layout crashes Compose's lookahead measure when the
-            // window turns two-pane and the list-detail scaffold is built around this screen
-            withFrameNanos {}
+        LaunchedEffect(autoFocusQueryKey) {
             focusRequester.requestFocus()
         }
     }

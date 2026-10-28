@@ -1,7 +1,15 @@
 package com.android.messaging.ui.conversation.entry
 
 import androidx.activity.ComponentActivity
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.layout.PaneScaffoldDirective
+import androidx.compose.material3.adaptive.navigation.BackNavigationBehavior
+import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
@@ -16,6 +24,9 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import com.android.messaging.ui.common.components.ListDetailPaneSide
 import com.android.messaging.ui.common.components.LocalIsListDetailPane
 import com.android.messaging.ui.common.components.LocalListDetailPaneSide
@@ -23,8 +34,14 @@ import com.android.messaging.ui.conversation.NEW_CHAT_CONTACT_RESOLVING_INDICATO
 import com.android.messaging.ui.conversation.NEW_CHAT_CREATE_GROUP_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.NEW_CHAT_CREATE_GROUP_NEXT_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.entry.model.NewChatUiState
+import com.android.messaging.ui.conversation.navigation.NewChatNavKey
+import com.android.messaging.ui.conversation.navigation.conversationDetailPaneMetadata
+import com.android.messaging.ui.conversation.navigation.conversationListPaneMetadata
 import com.android.messaging.ui.conversation.newChatContactRowTestTag
+import com.android.messaging.ui.conversationlist.navigation.ConversationListNavKey
 import com.android.messaging.ui.core.AppTheme
+import com.android.messaging.ui.navigation.AppNavDisplay
+import com.android.messaging.ui.navigation.rememberAppSceneStrategies
 import com.android.messaging.ui.recipientselection.component.row.CONTACT_ID
 import com.android.messaging.ui.recipientselection.component.row.MOBILE_NORMALIZED_DESTINATION
 import com.android.messaging.ui.recipientselection.component.row.contactItem
@@ -42,6 +59,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 class NewChatScreenTest {
@@ -279,6 +297,60 @@ class NewChatScreenTest {
             .assertIsFocused()
     }
 
+    @OptIn(ExperimentalMaterial3AdaptiveApi::class)
+    @Config(qualifiers = TABLET_QUALIFIERS)
+    @Test
+    fun paneCountChange_keepsTheRecipientFieldFocused() {
+        val screenModel = createScreenModel(initialUiState = NewChatUiState())
+        val backStack = mutableStateListOf<NavKey>(ConversationListNavKey, NewChatNavKey)
+        var showsTwoPanes by mutableStateOf(false)
+
+        composeTestRule.setContent {
+            val maxHorizontalPartitions = when {
+                showsTwoPanes -> TWO_PANES
+                else -> SINGLE_PANE
+            }
+
+            AppTheme {
+                AppNavDisplay(
+                    backStack = backStack,
+                    entryProvider = entryProvider {
+                        entry<ConversationListNavKey>(metadata = conversationListPaneMetadata()) {}
+                        entry<NewChatNavKey>(metadata = conversationDetailPaneMetadata()) {
+                            NewChatScreen(
+                                screenModel = screenModel,
+                                effectHandler = mockk(relaxed = true),
+                                onNavigateBack = {},
+                                onNavigateToConversation = { _, _ -> },
+                                autoFocusQueryKey = LocalNavAnimatedContentScope.current,
+                            )
+                        }
+                    },
+                    onBack = {},
+                    sceneStrategies = rememberAppSceneStrategies(
+                        additionalStrategies = listOf(
+                            rememberListDetailSceneStrategy(
+                                backNavigationBehavior = BackNavigationBehavior.PopLatest,
+                                directive = PaneScaffoldDirective.Default.copy(
+                                    maxHorizontalPartitions = maxHorizontalPartitions,
+                                ),
+                            ),
+                        ),
+                    ),
+                    showsTwoPanes = showsTwoPanes,
+                )
+            }
+        }
+
+        for (twoPanes in listOf(true, false)) {
+            showsTwoPanes = twoPanes
+
+            composeTestRule
+                .onNode(matcher = hasSetTextAction())
+                .assertIsFocused()
+        }
+    }
+
     private fun setContent(
         screenModel: NewChatScreenModel,
         isListDetailPane: Boolean = false,
@@ -327,5 +399,11 @@ class NewChatScreenTest {
             every { navigationEvents } returns MutableSharedFlow()
             every { uiState } returns uiStateFlow
         }
+    }
+
+    private companion object {
+        private const val SINGLE_PANE = 1
+        private const val TWO_PANES = 2
+        private const val TABLET_QUALIFIERS = "w1280dp-h800dp"
     }
 }
