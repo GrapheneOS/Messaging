@@ -1,9 +1,11 @@
 package com.android.messaging.data.conversationlist.matcher
 
+import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationSearchMatch
+import com.android.messaging.data.conversationlist.model.MessageSearchMatch
 import com.android.messaging.data.conversationlist.model.SearchableConversation
-import java.text.Normalizer
+import com.android.messaging.data.conversationlist.model.SearchableMessage
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -14,9 +16,18 @@ internal interface ConversationSearchMatcher {
     fun index(conversations: List<SearchableConversation>): ConversationSearchIndex
 }
 
-internal fun interface ConversationSearchIndex {
+internal interface ConversationSearchIndex {
 
     fun match(query: String): ImmutableList<ConversationSearchMatch>
+
+    /**
+     * Pairs the messages found by their text with their conversations, leaving out the ones in
+     * conversations search can't find, and finds the words to highlight in them.
+     */
+    fun matchMessages(
+        query: String,
+        messages: List<SearchableMessage>,
+    ): ImmutableList<MessageSearchMatch>
 }
 
 internal class ConversationSearchMatcherImpl @Inject constructor() : ConversationSearchMatcher {
@@ -25,12 +36,26 @@ internal class ConversationSearchMatcherImpl @Inject constructor() : Conversatio
         // Folding is the costly part, so it runs once per change to the conversations rather
         // than once per keystroke
         val entries = conversations.map(::indexConversation)
+        val entriesById = entries.associateBy { entry -> entry.item.conversationId }
 
-        return ConversationSearchIndex { query ->
-            matchEntries(
-                entries = entries,
-                query = query,
-            )
+        return object : ConversationSearchIndex {
+            override fun match(query: String): ImmutableList<ConversationSearchMatch> {
+                return matchEntries(
+                    entries = entries,
+                    query = query,
+                )
+            }
+
+            override fun matchMessages(
+                query: String,
+                messages: List<SearchableMessage>,
+            ): ImmutableList<MessageSearchMatch> {
+                return resolveMessages(
+                    entriesById = entriesById,
+                    query = query,
+                    messages = messages,
+                )
+            }
         }
     }
 
@@ -107,6 +132,32 @@ internal class ConversationSearchMatcherImpl @Inject constructor() : Conversatio
         )
     }
 
+    private fun resolveMessages(
+        entriesById: Map<ConversationId, IndexedConversation>,
+        query: String,
+        messages: List<SearchableMessage>,
+    ): ImmutableList<MessageSearchMatch> {
+        // The text index matches the starts of words, so highlights only start words too
+        val terms = foldText(query).text
+            .split(NON_WORD_REGEX)
+            .filter(String::isNotEmpty)
+
+        return messages
+            .mapNotNull { message ->
+                val entry = entriesById[message.conversationId] ?: return@mapNotNull null
+
+                MessageSearchMatch(
+                    item = entry.item,
+                    message = message,
+                    textMatchRanges = foldText(message.text).findSourceRanges(
+                        terms = terms,
+                        isWordStartOnly = true,
+                    ),
+                )
+            }
+            .toImmutableList()
+    }
+
     private fun phoneQueryDigitsOrNull(query: String): String? {
         val trimmedQuery = query.trim()
         val isPhoneQuery = trimmedQuery.all { char ->
@@ -116,43 +167,6 @@ internal class ConversationSearchMatcherImpl @Inject constructor() : Conversatio
         return trimmedQuery
             .filter(::isAsciiDigit)
             .takeIf { digits -> isPhoneQuery && digits.length >= MIN_PHONE_QUERY_DIGITS }
-    }
-
-    private fun foldText(text: String): FoldedText {
-        if (text.all { char -> char.code < ASCII_LIMIT }) {
-            return FoldedText(
-                text = text.lowercase(),
-                sourceStarts = null,
-                sourceLength = text.length,
-            )
-        }
-
-        val folded = StringBuilder(text.length)
-        val sourceStarts = ArrayList<Int>(text.length)
-        var index = 0
-
-        // Folding each code point on its own keeps track of where every folded character came
-        // from, so matches can be highlighted in the original text
-        while (index < text.length) {
-            val charCount = Character.charCount(text.codePointAt(index))
-            val foldedCodePoint = Normalizer
-                .normalize(text.substring(index, index + charCount), Normalizer.Form.NFD)
-                .replace(COMBINING_MARKS_REGEX, "")
-                .lowercase()
-
-            foldedCodePoint.forEach { char ->
-                folded.append(char)
-                sourceStarts.add(index)
-            }
-
-            index += charCount
-        }
-
-        return FoldedText(
-            text = folded.toString(),
-            sourceStarts = sourceStarts.toIntArray(),
-            sourceLength = text.length,
-        )
     }
 
     private fun isAsciiDigit(char: Char): Boolean {
@@ -166,73 +180,11 @@ internal class ConversationSearchMatcherImpl @Inject constructor() : Conversatio
         val destinationDigits: List<String>,
     )
 
-    private class FoldedText(
-        val text: String,
-        private val sourceStarts: IntArray?,
-        private val sourceLength: Int,
-    ) {
-
-        fun findSourceRanges(terms: List<String>): ImmutableList<IntRange> {
-            val ranges = terms
-                .flatMap(::findOccurrences)
-                .sortedBy(IntRange::first)
-
-            return mergeRanges(ranges)
-                .map(::toSourceRange)
-                .toImmutableList()
-        }
-
-        private fun findOccurrences(term: String): List<IntRange> {
-            return buildList {
-                var start = text.indexOf(term)
-
-                while (start >= 0) {
-                    add(start until start + term.length)
-                    start = text.indexOf(term, startIndex = start + term.length)
-                }
-            }
-        }
-
-        private fun mergeRanges(sortedRanges: List<IntRange>): List<IntRange> {
-            val merged = ArrayList<IntRange>(sortedRanges.size)
-
-            sortedRanges.forEach { range ->
-                val last = merged.lastOrNull()
-
-                when {
-                    last != null && range.first <= last.last + 1 -> {
-                        merged[merged.lastIndex] = last.first..maxOf(last.last, range.last)
-                    }
-
-                    else -> merged.add(range)
-                }
-            }
-
-            return merged
-        }
-
-        private fun toSourceRange(range: IntRange): IntRange {
-            val starts = sourceStarts ?: return range
-
-            val start = starts[range.first]
-
-            // Ending just before the next folded character's source keeps any combining marks
-            // that trail the last matched character inside the range
-            val end = when {
-                range.last + 1 < starts.size -> starts[range.last + 1] - 1
-                else -> sourceLength - 1
-            }
-
-            return start..maxOf(start, end)
-        }
-    }
-
     private companion object {
-        private const val ASCII_LIMIT = 0x80
         private const val MIN_PHONE_QUERY_DIGITS = 3
         private const val PHONE_NUMBER_SEPARATORS = "+-(). "
 
-        private val COMBINING_MARKS_REGEX = Regex("\\p{Mn}+")
         private val WHITESPACE_REGEX = Regex("\\s+")
+        private val NON_WORD_REGEX = Regex("[^\\p{L}\\p{N}]+")
     }
 }

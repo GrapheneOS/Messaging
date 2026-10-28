@@ -115,6 +115,7 @@ internal class ConversationListNewestConversationVisibilityTest {
         val viewModel = createViewModel()
         val navigation = ConversationListNavigationCallbacks(
             onNavigateToConversation = {},
+            onNavigateToMessage = { _, _ -> },
             onNavigateToNewChat = {},
             onNavigateToConversationSettings = {},
             onCloseConversation = {},

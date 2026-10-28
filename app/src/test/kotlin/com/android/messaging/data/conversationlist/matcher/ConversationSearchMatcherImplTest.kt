@@ -1,7 +1,9 @@
 package com.android.messaging.data.conversationlist.matcher
 
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversationlist.model.SearchableConversation
+import com.android.messaging.data.conversationlist.model.SearchableMessage
 import com.android.messaging.data.conversationlist.model.SearchableParticipant
 import com.android.messaging.ui.conversationlist.conversationItem
 import kotlinx.collections.immutable.toImmutableList
@@ -167,6 +169,69 @@ internal class ConversationSearchMatcherImplTest {
         assertEquals(
             listOf(ConversationId("b"), ConversationId("a")),
             matches.map { it.item.conversationId },
+        )
+    }
+
+    @Test
+    fun matchMessages_pairsEachMessageWithItsConversationInTheMessagesOrder() {
+        val first = searchableConversation(id = "1", title = "Anna")
+        val second = searchableConversation(id = "2", title = "Bob")
+
+        val matches = matcher.index(listOf(first, second)).matchMessages(
+            query = "lunch",
+            messages = listOf(
+                message(id = "20", conversationId = "2", text = "Lunch?"),
+                message(id = "10", conversationId = "1", text = "Lunch at noon"),
+            ),
+        )
+
+        assertEquals(
+            listOf("2" to "20", "1" to "10"),
+            matches.map { match ->
+                match.item.conversationId.value to match.message.messageId.value
+            },
+        )
+    }
+
+    @Test
+    fun matchMessages_messageOfAConversationSearchLeavesOut_isDropped() {
+        val conversation = searchableConversation(id = "1", title = "Anna")
+
+        val matches = matcher.index(listOf(conversation)).matchMessages(
+            query = "lunch",
+            messages = listOf(message(id = "30", conversationId = "blocked", text = "Lunch")),
+        )
+
+        assertTrue(matches.isEmpty())
+    }
+
+    @Test
+    fun matchMessages_highlightsWordStartsIgnoringCaseAndAccents() {
+        val conversation = searchableConversation(id = "1", title = "Anna")
+
+        val matches = matcher.index(listOf(conversation)).matchMessages(
+            query = "CAFE, pre",
+            messages = listOf(
+                message(id = "10", conversationId = "1", text = "Café? Prepare the espresso"),
+            ),
+        )
+
+        // "pre" inside "espresso" doesn't start a word, so the text index didn't match it there
+        assertEquals(listOf(0..3, 6..8), matches.single().textMatchRanges)
+    }
+
+    private fun message(
+        id: String,
+        conversationId: String,
+        text: String,
+    ): SearchableMessage {
+        return SearchableMessage(
+            messageId = MessageId(id),
+            conversationId = ConversationId(conversationId),
+            text = text,
+            receivedTimestamp = 0L,
+            isIncoming = true,
+            senderName = null,
         )
     }
 

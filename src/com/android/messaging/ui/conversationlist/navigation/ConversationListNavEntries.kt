@@ -55,6 +55,12 @@ private fun conversationListRouteContent(): @Composable (ConversationListNavKey)
                 onNavigateToConversation = { conversationId ->
                     navigator.navigateToConversation(conversationId = conversationId)
                 },
+                onNavigateToMessage = { conversationId, messageId ->
+                    navigator.navigateToConversation(
+                        conversationId = conversationId,
+                        targetMessageId = messageId,
+                    )
+                },
                 onNavigateToNewChat = navigator::navigateToNewChat,
                 onNavigateToConversationSettings = { conversationId ->
                     navigator.navigateToConversationSettings(conversationId = conversationId)

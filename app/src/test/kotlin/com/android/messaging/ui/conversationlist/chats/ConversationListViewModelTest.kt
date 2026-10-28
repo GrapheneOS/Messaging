@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversationlist.chats
 import app.cash.turbine.test
 import com.android.messaging.data.conversation.event.ConversationArchiveEventsImpl
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
 import com.android.messaging.data.debug.DebugFeaturesProvider
@@ -101,6 +102,29 @@ class ConversationListViewModelTest {
                 viewModel.onAction(Action.SearchConversationClicked(ConversationId("a")))
 
                 assertThat(awaitItem()).isEqualTo(NavEvent.OpenConversation(ConversationId("a")))
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    @Test
+    fun searchMessageClicked_emitsOpenMessage() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val viewModel = createViewModel()
+            viewModel.navigationEvents.test {
+                viewModel.onAction(
+                    Action.SearchMessageClicked(
+                        conversationId = ConversationId("a"),
+                        messageId = MessageId("m"),
+                    ),
+                )
+
+                assertThat(awaitItem()).isEqualTo(
+                    NavEvent.OpenMessage(
+                        conversationId = ConversationId("a"),
+                        messageId = MessageId("m"),
+                    ),
+                )
                 cancelAndIgnoreRemainingEvents()
             }
         }
