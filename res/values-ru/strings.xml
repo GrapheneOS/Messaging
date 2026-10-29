@@ -352,4 +352,6 @@
     <string name="video_attachment_limit_exceeded_when_sending" msgid="8545536951461996462">"Вы можете отправлять по одному видео за раз. Удалите лишние ролики и повторите попытку."</string>
     <string name="attachment_limit_reached_send_anyway" msgid="2348790618093735551">"Отправить"</string>
     <string name="conversation_creation_failure" msgid="8597624563218724441">"Не удается начать разговор"</string>
+    <string name="send_on_enter_pref_title">Отправка по Enter на физической клавиатуре</string>
+    <string name="send_on_enter_pref_summary">Отправлять сообщение при нажатии Enter на физической клавиатуре. Используйте Shift + Enter для новой строки. Ctrl + Enter всегда отправляет сообщение</string>
 </resources>

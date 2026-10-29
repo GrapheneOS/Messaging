@@ -322,4 +322,6 @@
     <string name="video_attachment_limit_exceeded_when_sending" msgid="8545536951461996462">"您在每条消息中只能发送一个视频。请移除多余的视频，然后重试。"</string>
     <string name="attachment_limit_reached_send_anyway" msgid="2348790618093735551">"仍然发送"</string>
     <string name="conversation_creation_failure" msgid="8597624563218724441">"无法发起对话"</string>
+    <string name="send_on_enter_pref_title">在物理键盘上按 Enter 键发送</string>
+    <string name="send_on_enter_pref_summary">在物理键盘上按 Enter 键时发送消息。使用 Shift + Enter 换行。Ctrl + Enter 始终发送消息</string>
 </resources>

@@ -401,6 +401,8 @@
     <string name="send_sound_pref_title">Outgoing message sounds</string>
     <string name="in_conversation_sound_pref_title">In-conversation message sounds</string>
     <string name="in_conversation_sound_pref_summary">Play a quiet sound for a message that arrives in the conversation you are viewing. Muted and snoozed conversations stay silent.</string>
+    <string name="send_on_enter_pref_title">Send on Enter on physical keyboard</string>
+    <string name="send_on_enter_pref_summary">Send a message when pressing Enter on a physical keyboard. Use Shift + Enter for a new line. Ctrl + Enter always send the message</string>
 
     <string name="dump_sms_pref_title">Dump SMS</string>
     <string name="dump_sms_pref_summary">Dump received SMS raw data into external storage file</string>
