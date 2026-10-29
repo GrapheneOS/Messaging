@@ -33,6 +33,7 @@ internal sealed interface ConversationListAction {
     // region SnackbarAction
     data class ArchiveUndoClicked(
         val conversationIds: ImmutableList<ConversationId>,
+        val pinnedConversationIds: ImmutableList<ConversationId>,
         val isArchived: Boolean,
     ) : SnackbarAction
 
@@ -43,6 +44,7 @@ internal sealed interface ConversationListAction {
     data class BlockUndoClicked(
         val conversationId: ConversationId,
         val destination: String,
+        val wasPinned: Boolean,
     ) : SnackbarAction
     // endregion
 

@@ -1,6 +1,7 @@
 package com.android.messaging.domain.conversation.usecase.action
 
 import com.android.messaging.data.conversation.event.ConversationArchiveEvents
+import com.android.messaging.data.conversation.model.ArchivedConversation
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import javax.inject.Inject
@@ -15,7 +16,14 @@ internal class ArchiveConversationImpl @Inject constructor(
 ) : ArchiveConversation {
 
     override suspend fun invoke(conversationId: ConversationId) {
-        conversationArchiveEvents.notifyArchived(conversationId = conversationId)
+        conversationArchiveEvents.notifyArchived(
+            archivedConversation = ArchivedConversation(
+                conversationId = conversationId,
+                wasPinned = conversationsRepository.isConversationPinned(
+                    conversationId = conversationId,
+                ),
+            ),
+        )
         conversationsRepository.archiveConversation(conversationId = conversationId)
     }
 }

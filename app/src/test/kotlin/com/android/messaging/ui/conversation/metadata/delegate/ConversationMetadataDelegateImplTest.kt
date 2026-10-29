@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.metadata.delegate
 import app.cash.turbine.test
 import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepository
 import com.android.messaging.data.conversation.event.ConversationArchiveEventsImpl
+import com.android.messaging.data.conversation.model.ArchivedConversation
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
@@ -17,6 +18,7 @@ import com.android.messaging.ui.conversation.metadata.model.ConversationMetadata
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenEffect
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenNavEvent
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -77,6 +79,9 @@ class ConversationMetadataDelegateImplTest {
                     harness.conversationsRepository
                         .unarchiveConversation(conversationId = ConversationId("conversation-42"))
                 }
+                coVerify(exactly = 0) {
+                    harness.conversationsRepository.pinConversation(conversationId = any())
+                }
             } finally {
                 harness.cancel()
             }
@@ -90,13 +95,45 @@ class ConversationMetadataDelegateImplTest {
 
             try {
                 harness.delegate.onUndoArchiveClick(
-                    conversationId = ConversationId("conversation-7"),
+                    archivedConversation = ArchivedConversation(
+                        conversationId = ConversationId("conversation-7"),
+                        wasPinned = false,
+                    ),
                 )
                 advanceUntilIdle()
 
                 coVerify(exactly = 1) {
                     harness.conversationsRepository
                         .unarchiveConversation(conversationId = ConversationId("conversation-7"))
+                }
+                coVerify(exactly = 0) {
+                    harness.conversationsRepository.pinConversation(conversationId = any())
+                }
+            } finally {
+                harness.cancel()
+            }
+        }
+    }
+
+    @Test
+    fun onUndoArchiveClick_repinsAPinnedConversationOnceUnarchived() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val harness = createHarness(conversationId = ConversationId("conversation-42"))
+
+            try {
+                harness.delegate.onUndoArchiveClick(
+                    archivedConversation = ArchivedConversation(
+                        conversationId = ConversationId("conversation-7"),
+                        wasPinned = true,
+                    ),
+                )
+                advanceUntilIdle()
+
+                coVerifyOrder {
+                    harness.conversationsRepository
+                        .unarchiveConversation(conversationId = ConversationId("conversation-7"))
+                    harness.conversationsRepository
+                        .pinConversation(conversationId = ConversationId("conversation-7"))
                 }
             } finally {
                 harness.cancel()

@@ -37,7 +37,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -153,17 +152,13 @@ internal class ConversationListViewModel @Inject constructor(
             is Action.ArchiveUndoClicked -> {
                 onArchiveUndoClicked(
                     conversationIds = action.conversationIds,
+                    pinnedConversationIds = action.pinnedConversationIds,
                     isArchived = action.isArchived,
                 )
             }
 
             is Action.BlockUndoClicked -> {
-                viewModelScope.launch {
-                    actionsDelegate.unblock(
-                        conversationId = action.conversationId,
-                        destination = action.destination,
-                    )
-                }
+                onBlockUndoClicked(action = action)
             }
         }
     }
@@ -180,6 +175,8 @@ internal class ConversationListViewModel @Inject constructor(
         conversationId: ConversationId,
         destination: String,
     ) {
+        val wasPinned = itemById(conversationId)?.isPinned == true
+
         viewModelScope.launch {
             val success = actionsDelegate.block(
                 conversationId = conversationId,
@@ -194,6 +191,7 @@ internal class ConversationListViewModel @Inject constructor(
                 Effect.ConversationBlocked(
                     conversationId = conversationId,
                     destination = destination,
+                    wasPinned = wasPinned,
                     success = success,
                 ),
             )
@@ -213,12 +211,43 @@ internal class ConversationListViewModel @Inject constructor(
         selectionDelegate.clear()
     }
 
+    private fun onBlockUndoClicked(action: Action.BlockUndoClicked) {
+        viewModelScope.launch {
+            actionsDelegate.unblock(
+                conversationId = action.conversationId,
+                destination = action.destination,
+            )
+
+            if (action.wasPinned) {
+                // Unblocking unarchives in the background, and the pin must not land before that
+                val conversationIds = listOf(action.conversationId)
+
+                actionsDelegate.setArchived(
+                    conversationIds = conversationIds,
+                    isArchived = false,
+                )
+                actionsDelegate.setPinned(
+                    conversationIds = conversationIds,
+                    isPinned = true,
+                )
+            }
+        }
+    }
+
     private fun onArchiveUndoClicked(
         conversationIds: List<ConversationId>,
+        pinnedConversationIds: List<ConversationId>,
         isArchived: Boolean,
     ) {
         when {
-            isArchived -> optimisticSnapshotDelegate.restore(conversationIds)
+            isArchived -> {
+                optimisticSnapshotDelegate.restore(conversationIds)
+                optimisticSnapshotDelegate.pin(
+                    conversationIds = pinnedConversationIds,
+                    isPinned = true,
+                )
+            }
+
             else -> optimisticSnapshotDelegate.remove(conversationIds)
         }
 
@@ -227,6 +256,13 @@ internal class ConversationListViewModel @Inject constructor(
                 conversationIds = conversationIds,
                 isArchived = !isArchived,
             )
+
+            if (isArchived) {
+                actionsDelegate.setPinned(
+                    conversationIds = pinnedConversationIds,
+                    isPinned = true,
+                )
+            }
         }
     }
 
@@ -349,6 +385,10 @@ internal class ConversationListViewModel @Inject constructor(
     }
 
     private fun archive(conversationIds: List<ConversationId>) {
+        val pinnedConversationIds = conversationIds.filter { conversationId ->
+            itemById(conversationId)?.isPinned == true
+        }
+
         optimisticSnapshotDelegate.remove(conversationIds)
         viewModelScope.launch {
             actionsDelegate.setArchived(
@@ -364,6 +404,7 @@ internal class ConversationListViewModel @Inject constructor(
         _effects.trySend(
             Effect.ArchiveStatusChanged(
                 conversationIds = conversationIds.toImmutableList(),
+                pinnedConversationIds = pinnedConversationIds.toImmutableList(),
                 isArchived = true,
             ),
         )
@@ -371,19 +412,22 @@ internal class ConversationListViewModel @Inject constructor(
 
     private fun offerUndoForArchivesOutsideList() {
         viewModelScope.launch(mainDispatcher) {
-            conversationArchiveEvents
-                .archivedConversationIds
-                .map(::persistentListOf)
-                .collect { conversationIds ->
-                    optimisticSnapshotDelegate.remove(conversationIds)
+            conversationArchiveEvents.archivedConversations.collect { archivedConversation ->
+                val conversationIds = persistentListOf(archivedConversation.conversationId)
 
-                    _effects.trySend(
-                        Effect.ArchiveStatusChanged(
-                            conversationIds = conversationIds,
-                            isArchived = true,
-                        ),
-                    )
-                }
+                optimisticSnapshotDelegate.remove(conversationIds)
+
+                _effects.trySend(
+                    Effect.ArchiveStatusChanged(
+                        conversationIds = conversationIds,
+                        pinnedConversationIds = when {
+                            archivedConversation.wasPinned -> conversationIds
+                            else -> persistentListOf()
+                        },
+                        isArchived = true,
+                    ),
+                )
+            }
         }
     }
 

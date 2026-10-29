@@ -179,7 +179,7 @@ private fun ConversationArchiveUndoEffect(
 ) {
     val resources = LocalResources.current
 
-    CollectEvents(events = screenModel.archivedConversationIds) { conversationId ->
+    CollectEvents(events = screenModel.archivedConversations) { archivedConversation ->
         // An Indefinite notice (new message) would otherwise hold Undo back.
         snackbarHostState.currentSnackbarData?.dismiss()
 
@@ -189,7 +189,7 @@ private fun ConversationArchiveUndoEffect(
         )
 
         if (undoClicked) {
-            screenModel.onUndoArchiveClick(conversationId = conversationId)
+            screenModel.onUndoArchiveClick(archivedConversation = archivedConversation)
         }
     }
 }

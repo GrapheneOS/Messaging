@@ -1,23 +1,23 @@
 package com.android.messaging.data.conversation.event
 
-import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ArchivedConversation
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 
 internal interface ConversationArchiveEvents {
-    val archivedConversationIds: Flow<ConversationId>
+    val archivedConversations: Flow<ArchivedConversation>
 
-    fun notifyArchived(conversationId: ConversationId)
+    fun notifyArchived(archivedConversation: ArchivedConversation)
 }
 
 internal class ConversationArchiveEventsImpl @Inject constructor() : ConversationArchiveEvents {
 
-    private val _archivedConversationIds = Channel<ConversationId>(Channel.BUFFERED)
-    override val archivedConversationIds = _archivedConversationIds.receiveAsFlow()
+    private val _archivedConversations = Channel<ArchivedConversation>(Channel.BUFFERED)
+    override val archivedConversations = _archivedConversations.receiveAsFlow()
 
-    override fun notifyArchived(conversationId: ConversationId) {
-        _archivedConversationIds.trySend(conversationId)
+    override fun notifyArchived(archivedConversation: ArchivedConversation) {
+        _archivedConversations.trySend(archivedConversation)
     }
 }

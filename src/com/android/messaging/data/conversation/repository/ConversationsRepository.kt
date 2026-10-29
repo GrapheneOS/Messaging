@@ -93,6 +93,8 @@ internal interface ConversationsRepository {
 
     suspend fun unarchiveConversation(conversationId: ConversationId)
 
+    suspend fun isConversationPinned(conversationId: ConversationId): Boolean
+
     suspend fun pinConversation(conversationId: ConversationId)
 
     suspend fun unpinConversation(conversationId: ConversationId)
@@ -281,6 +283,14 @@ internal class ConversationsRepositoryImpl @Inject constructor(
 
         withContext(messagingDbDispatcher) {
             conversationArchiveStore.unarchiveConversation(conversationId)
+        }
+    }
+
+    override suspend fun isConversationPinned(conversationId: ConversationId): Boolean {
+        if (conversationId.isBlank()) return false
+
+        return withContext(messagingDbDispatcher) {
+            conversationPinStore.isConversationPinned(conversationId)
         }
     }
 

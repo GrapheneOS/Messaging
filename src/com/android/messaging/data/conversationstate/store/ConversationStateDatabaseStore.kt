@@ -89,7 +89,10 @@ internal class ConversationStateDatabaseStoreImpl @Inject constructor() :
     private fun archiveThread(db: SQLiteDatabase, threadId: String, mirroredAt: Long) {
         db.update(
             DatabaseHelper.CONVERSATIONS_TABLE,
-            contentValuesOf(ConversationColumns.ARCHIVE_STATUS to 1),
+            contentValuesOf(
+                ConversationColumns.ARCHIVE_STATUS to 1,
+                ConversationColumns.PINNED to 0,
+            ),
             "${ConversationColumns.SMS_THREAD_ID}=? AND ${ConversationColumns.SORT_TIMESTAMP}<=?",
             arrayOf(threadId, mirroredAt.toString()),
         )
