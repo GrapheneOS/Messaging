@@ -15,6 +15,8 @@ import io.mockk.unmockkAll
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.After
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -117,6 +119,26 @@ internal class ConversationsRepositoryActionsTest : BaseConversationsRepositoryT
                 conversationArchiveStore.unarchiveConversation(
                     ConversationId("conversation-unarchive")
                 )
+            }
+        }
+    }
+
+    @Test
+    fun isConversationPinned_skipsBlankIdAndReadsTheStoreOtherwise() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            every {
+                conversationPinStore.isConversationPinned(ConversationId("conversation-pinned"))
+            } returns true
+            val repository = createRepository()
+
+            assertFalse(repository.isConversationPinned(conversationId = ConversationId(" ")))
+            assertTrue(
+                repository.isConversationPinned(
+                    conversationId = ConversationId("conversation-pinned"),
+                ),
+            )
+            verify(exactly = 0) {
+                conversationPinStore.isConversationPinned(ConversationId(" "))
             }
         }
     }

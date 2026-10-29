@@ -5,6 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.messaging.R
+import com.android.messaging.data.conversation.model.ArchivedConversation
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
@@ -63,7 +64,7 @@ internal interface ConversationScreenModel :
     ConversationMessageSelectionActions {
     val effects: Flow<ConversationScreenEffect>
     val navigationEvents: Flow<NavEvent>
-    val archivedConversationIds: Flow<ConversationId>
+    val archivedConversations: Flow<ArchivedConversation>
     val mediaPickerOverlayUiState: StateFlow<ConversationMediaPickerOverlayUiState>
     val scaffoldUiState: StateFlow<ConversationScreenScaffoldUiState>
 
@@ -117,7 +118,7 @@ internal interface ConversationScreenModel :
 
     fun onArchiveConversationClick()
     fun onUnarchiveConversationClick()
-    fun onUndoArchiveClick(conversationId: ConversationId)
+    fun onUndoArchiveClick(archivedConversation: ArchivedConversation)
     fun onUnblockClick()
     fun onAddContactClick()
     fun onDeleteConversationClick()
@@ -171,7 +172,7 @@ internal class ConversationViewModel @Inject constructor(
 
     override val effects = _effects.asSharedFlow()
     override val navigationEvents = _navigationEvents.asSharedFlow()
-    override val archivedConversationIds = conversationMetadataDelegate.archivedConversationIds
+    override val archivedConversations = conversationMetadataDelegate.archivedConversations
 
     init {
         initializeDelegates()
@@ -704,8 +705,10 @@ internal class ConversationViewModel @Inject constructor(
         conversationMetadataDelegate.onUnarchiveConversationClick()
     }
 
-    override fun onUndoArchiveClick(conversationId: ConversationId) {
-        conversationMetadataDelegate.onUndoArchiveClick(conversationId = conversationId)
+    override fun onUndoArchiveClick(archivedConversation: ArchivedConversation) {
+        conversationMetadataDelegate.onUndoArchiveClick(
+            archivedConversation = archivedConversation,
+        )
     }
 
     override fun onUnblockClick() {

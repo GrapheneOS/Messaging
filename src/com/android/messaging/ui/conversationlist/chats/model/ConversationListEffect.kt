@@ -11,6 +11,7 @@ internal sealed interface ConversationListEffect {
 
     data class ArchiveStatusChanged(
         val conversationIds: ImmutableList<ConversationId>,
+        val pinnedConversationIds: ImmutableList<ConversationId>,
         val isArchived: Boolean,
     ) : ConversationListEffect
 
@@ -40,6 +41,7 @@ internal sealed interface ConversationListEffect {
     data class ConversationBlocked(
         val conversationId: ConversationId,
         val destination: String,
+        val wasPinned: Boolean,
         val success: Boolean,
     ) : ConversationListEffect
 }

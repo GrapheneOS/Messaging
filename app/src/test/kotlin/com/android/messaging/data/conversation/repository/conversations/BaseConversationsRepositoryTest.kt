@@ -34,6 +34,7 @@ internal abstract class BaseConversationsRepositoryTest {
     protected lateinit var messageDetailsMapper: ConversationMessageDetailsMapper
     protected lateinit var messageDetailsPlatformSource: MessageDetailsPlatformSource
     protected lateinit var conversationArchiveStore: ConversationArchiveStore
+    protected lateinit var conversationPinStore: ConversationPinStore
     protected lateinit var notificationRepository: ConversationNotificationRepository
     protected val isSnoozedFlow = MutableStateFlow(value = false)
     protected val mmsConfigLoadCount = MutableStateFlow(value = 0)
@@ -44,6 +45,7 @@ internal abstract class BaseConversationsRepositoryTest {
         messageDetailsMapper = mockk(relaxed = true)
         messageDetailsPlatformSource = mockk(relaxed = true)
         conversationArchiveStore = mockk(relaxed = true)
+        conversationPinStore = mockk(relaxed = true)
         notificationRepository = mockk {
             every { observeIsSnoozed(conversationId = any()) } returns isSnoozedFlow
             every { isSnoozed(conversationId = any()) } answers { isSnoozedFlow.value }
@@ -57,7 +59,7 @@ internal abstract class BaseConversationsRepositoryTest {
             messageDetailsPlatformSource = messageDetailsPlatformSource,
             conversationSelfIdStore = mockk<ConversationSelfIdStore>(relaxed = true),
             conversationReadStore = mockk<ConversationReadStore>(relaxed = true),
-            conversationPinStore = mockk<ConversationPinStore>(relaxed = true),
+            conversationPinStore = conversationPinStore,
             conversationArchiveStore = conversationArchiveStore,
             notificationRepository = notificationRepository,
             mmsConfigLoadSource = mockk<MmsConfigLoadSource> {

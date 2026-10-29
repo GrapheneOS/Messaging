@@ -6,7 +6,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeDown
 import com.android.messaging.R
-import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.ArchivedConversation
 import com.android.messaging.testutil.TEST_CONVERSATION_ID as CONVERSATION_ID
 import com.android.messaging.testutil.TEST_WAIT_TIMEOUT_MILLIS
 import com.android.messaging.ui.conversation.CONVERSATION_MESSAGES_LIST_TEST_TAG
@@ -53,10 +53,12 @@ internal class ConversationScreenArchiveUndoTest : BaseConversationScreenTest() 
         val navigationEvents = MutableSharedFlow<ConversationScreenNavEvent>(
             extraBufferCapacity = 1,
         )
-        val archivedConversationIds = MutableSharedFlow<ConversationId>(extraBufferCapacity = 1)
+        val archivedConversations = MutableSharedFlow<ArchivedConversation>(
+            extraBufferCapacity = 1,
+        )
         val screenModel = createScreenModel().model
         every { screenModel.navigationEvents } returns navigationEvents
-        every { screenModel.archivedConversationIds } returns archivedConversationIds
+        every { screenModel.archivedConversations } returns archivedConversations
         var closeCount = 0
 
         setContent(
@@ -66,11 +68,11 @@ internal class ConversationScreenArchiveUndoTest : BaseConversationScreenTest() 
         )
         composeTestRule.waitUntil(timeoutMillis = TEST_WAIT_TIMEOUT_MILLIS) {
             navigationEvents.subscriptionCount.value == 1 &&
-                archivedConversationIds.subscriptionCount.value == 1
+                archivedConversations.subscriptionCount.value == 1
         }
 
         navigationEvents.tryEmit(ConversationScreenNavEvent.CloseAfterArchive)
-        archivedConversationIds.tryEmit(CONVERSATION_ID)
+        archivedConversations.tryEmit(ARCHIVED_CONVERSATION)
 
         val activity = composeTestRule.activity
         composeTestRule
@@ -82,7 +84,7 @@ internal class ConversationScreenArchiveUndoTest : BaseConversationScreenTest() 
 
         composeTestRule.runOnIdle {
             verify(exactly = 1) {
-                screenModel.onUndoArchiveClick(conversationId = CONVERSATION_ID)
+                screenModel.onUndoArchiveClick(archivedConversation = ARCHIVED_CONVERSATION)
             }
             assertEquals(0, closeCount)
         }
@@ -92,7 +94,7 @@ internal class ConversationScreenArchiveUndoTest : BaseConversationScreenTest() 
     fun archivedBeforeComposition_undoSurvivesTheInitialScrollToLatest() {
         val handle = createScreenModel()
         val screenModel = handle.model
-        every { screenModel.archivedConversationIds } returns flowOf(CONVERSATION_ID)
+        every { screenModel.archivedConversations } returns flowOf(ARCHIVED_CONVERSATION)
         handle.scaffoldUiStateFlow.value = createPresentUiState(
             messages = createMessages(
                 count = 3,
@@ -113,10 +115,12 @@ internal class ConversationScreenArchiveUndoTest : BaseConversationScreenTest() 
 
     @Test
     fun archiveWhileTheNewMessageNoticeIsShown_replacesItWithUndo() {
-        val archivedConversationIds = MutableSharedFlow<ConversationId>(extraBufferCapacity = 1)
+        val archivedConversations = MutableSharedFlow<ArchivedConversation>(
+            extraBufferCapacity = 1,
+        )
         val handle = createScreenModel()
         val screenModel = handle.model
-        every { screenModel.archivedConversationIds } returns archivedConversationIds
+        every { screenModel.archivedConversations } returns archivedConversations
         handle.scaffoldUiStateFlow.value = createPresentUiState(
             messages = createMessages(
                 count = 30,
@@ -144,13 +148,20 @@ internal class ConversationScreenArchiveUndoTest : BaseConversationScreenTest() 
             .onNodeWithText(activity.getString(R.string.in_conversation_notify_new_message_text))
             .assertExists()
         composeTestRule.waitUntil(timeoutMillis = TEST_WAIT_TIMEOUT_MILLIS) {
-            archivedConversationIds.subscriptionCount.value == 1
+            archivedConversations.subscriptionCount.value == 1
         }
 
-        archivedConversationIds.tryEmit(CONVERSATION_ID)
+        archivedConversations.tryEmit(ARCHIVED_CONVERSATION)
 
         composeTestRule
             .onNodeWithText(activity.getString(R.string.archived_toast_message, 1))
             .assertExists()
+    }
+
+    private companion object {
+        val ARCHIVED_CONVERSATION = ArchivedConversation(
+            conversationId = CONVERSATION_ID,
+            wasPinned = true,
+        )
     }
 }

@@ -20,6 +20,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
 
@@ -903,5 +904,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         mUpgradeHelper.doOnUpgrade(db, oldVersion, newVersion);
+    }
+
+    @Override
+    public void onOpen(SQLiteDatabase db) {
+        unpinArchivedConversations(db);
+    }
+
+    @VisibleForTesting
+    static void unpinArchivedConversations(final SQLiteDatabase db) {
+        try {
+            db.execSQL("UPDATE " + CONVERSATIONS_TABLE
+                    + " SET " + ConversationColumns.PINNED + "=0"
+                    + " WHERE " + ConversationColumns.PINNED + "=1"
+                    + " AND +" + ConversationColumns.ARCHIVE_STATUS + "=1");
+        } catch (final SQLiteException ex) {
+            LogUtil.e(LogUtil.BUGLE_TAG, "Couldn't unpin the archived conversations", ex);
+        }
     }
 }

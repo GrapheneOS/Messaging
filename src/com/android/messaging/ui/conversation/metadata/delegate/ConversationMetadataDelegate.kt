@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.metadata.delegate
 import com.android.messaging.R
 import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepository
 import com.android.messaging.data.conversation.event.ConversationArchiveEvents
+import com.android.messaging.data.conversation.model.ArchivedConversation
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
 import com.android.messaging.data.conversation.repository.ConversationsRepository
@@ -34,12 +35,12 @@ internal interface ConversationMetadataDelegate :
     ConversationScreenDelegate<ConversationMetadataUiState> {
     val effects: Flow<ConversationScreenEffect>
     val navigationEvents: Flow<NavEvent>
-    val archivedConversationIds: Flow<ConversationId>
+    val archivedConversations: Flow<ArchivedConversation>
     val isDeleteConversationConfirmationVisible: StateFlow<Boolean>
 
     fun onArchiveConversationClick()
     fun onUnarchiveConversationClick()
-    fun onUndoArchiveClick(conversationId: ConversationId)
+    fun onUndoArchiveClick(archivedConversation: ArchivedConversation)
     fun onUnblockConversationClick()
     fun onAddContactClick()
     fun onDeleteConversationClick()
@@ -69,7 +70,7 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
 
     override val effects = _effects.asSharedFlow()
     override val navigationEvents = _navigationEvents.asSharedFlow()
-    override val archivedConversationIds = conversationArchiveEvents.archivedConversationIds
+    override val archivedConversations = conversationArchiveEvents.archivedConversations
     override val state = _state.asStateFlow()
     override val isDeleteConversationConfirmationVisible =
         _isDeleteConversationConfirmationVisible.asStateFlow()
@@ -136,12 +137,20 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
     override fun onUnarchiveConversationClick() {
         val conversationId = currentConversationId ?: return
 
-        onUndoArchiveClick(conversationId = conversationId)
-    }
-
-    override fun onUndoArchiveClick(conversationId: ConversationId) {
         boundScope?.launch(defaultDispatcher) {
             conversationsRepository.unarchiveConversation(conversationId = conversationId)
+        }
+    }
+
+    override fun onUndoArchiveClick(archivedConversation: ArchivedConversation) {
+        val conversationId = archivedConversation.conversationId
+
+        boundScope?.launch(defaultDispatcher) {
+            conversationsRepository.unarchiveConversation(conversationId = conversationId)
+
+            if (archivedConversation.wasPinned) {
+                conversationsRepository.pinConversation(conversationId = conversationId)
+            }
         }
     }
 
