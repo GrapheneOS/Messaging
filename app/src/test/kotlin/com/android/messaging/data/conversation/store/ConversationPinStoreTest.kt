@@ -1,8 +1,11 @@
 package com.android.messaging.data.conversation.store
 
+import android.database.MatrixCursor
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.datamodel.BugleDatabaseOperations
 import com.android.messaging.datamodel.DataModel
+import com.android.messaging.datamodel.DatabaseHelper
+import com.android.messaging.datamodel.DatabaseHelper.ConversationColumns
 import com.android.messaging.datamodel.DatabaseWrapper
 import com.android.messaging.datamodel.MessagingContentProvider
 import io.mockk.every
@@ -14,8 +17,10 @@ import io.mockk.unmockkAll
 import io.mockk.verify
 import io.mockk.verifyOrder
 import org.junit.After
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -47,6 +52,33 @@ internal class ConversationPinStoreTest {
     @After
     fun tearDown() {
         unmockkAll()
+    }
+
+    @Test
+    fun isConversationPinned_readsThePinnedColumnOfTheConversation() {
+        stubPinnedQuery(pinnedValues = listOf(1))
+
+        assertTrue(store.isConversationPinned(conversationId = CONVERSATION_ID))
+        verify(exactly = 1) {
+            databaseWrapper.query(
+                DatabaseHelper.CONVERSATIONS_TABLE,
+                arrayOf(ConversationColumns.PINNED),
+                "${ConversationColumns._ID}=?",
+                arrayOf(CONVERSATION_ID.value),
+                null,
+                null,
+                null,
+            )
+        }
+    }
+
+    @Test
+    fun isConversationPinned_unpinnedOrMissingConversation_returnsFalse() {
+        stubPinnedQuery(pinnedValues = listOf(0))
+        assertFalse(store.isConversationPinned(conversationId = CONVERSATION_ID))
+
+        stubPinnedQuery(pinnedValues = emptyList())
+        assertFalse(store.isConversationPinned(conversationId = CONVERSATION_ID))
     }
 
     @Test
@@ -102,6 +134,15 @@ internal class ConversationPinStoreTest {
         verify(exactly = 0) {
             MessagingContentProvider.notifyConversationMetadataChanged(any())
         }
+    }
+
+    private fun stubPinnedQuery(pinnedValues: List<Int>) {
+        val cursor = MatrixCursor(arrayOf(ConversationColumns.PINNED))
+        pinnedValues.forEach { pinnedValue -> cursor.addRow(arrayOf(pinnedValue)) }
+
+        every {
+            databaseWrapper.query(any(), any(), any(), any(), any(), any(), any())
+        } returns cursor
     }
 
     private companion object {

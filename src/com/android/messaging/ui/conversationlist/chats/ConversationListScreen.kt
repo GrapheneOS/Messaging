@@ -341,6 +341,7 @@ private fun CoroutineScope.launchArchivedSnackbar(
             onAction(
                 Action.ArchiveUndoClicked(
                     conversationIds = effect.conversationIds,
+                    pinnedConversationIds = effect.pinnedConversationIds,
                     isArchived = effect.isArchived,
                 ),
             )
@@ -376,6 +377,7 @@ private fun CoroutineScope.launchBlockedSnackbar(
                 Action.BlockUndoClicked(
                     conversationId = effect.conversationId,
                     destination = effect.destination,
+                    wasPinned = effect.wasPinned,
                 ),
             )
         }

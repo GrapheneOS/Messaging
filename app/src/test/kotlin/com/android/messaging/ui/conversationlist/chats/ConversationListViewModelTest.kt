@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversationlist.chats
 
 import app.cash.turbine.test
 import com.android.messaging.data.conversation.event.ConversationArchiveEventsImpl
+import com.android.messaging.data.conversation.model.ArchivedConversation
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.data.conversationlist.repository.ConversationListRepository
@@ -21,11 +22,13 @@ import com.android.messaging.ui.conversationlist.delegate.ConversationListSelect
 import com.android.messaging.ui.conversationlist.snapshotOf
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -78,6 +81,7 @@ class ConversationListViewModelTest {
                 assertThat(awaitItem()).isEqualTo(
                     Effect.ArchiveStatusChanged(
                         conversationIds = persistentListOf(ConversationId("a")),
+                        pinnedConversationIds = persistentListOf(),
                         isArchived = true,
                     )
                 )
@@ -92,17 +96,51 @@ class ConversationListViewModelTest {
     }
 
     @Test
+    fun archiveClicked_reportsWhichArchivedConversationsWerePinned() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            selectedIdsFlow.value = persistentListOf(ConversationId("a"), ConversationId("b"))
+            snapshotFlow.value = snapshotOf(
+                conversationItem(ConversationId("a"), isPinned = true),
+                conversationItem(ConversationId("b")),
+            )
+
+            val viewModel = createViewModel()
+            viewModel.effects.test {
+                viewModel.onAction(Action.ArchiveClicked)
+
+                assertThat(awaitItem()).isEqualTo(
+                    Effect.ArchiveStatusChanged(
+                        conversationIds = persistentListOf(
+                            ConversationId("a"),
+                            ConversationId("b"),
+                        ),
+                        pinnedConversationIds = persistentListOf(ConversationId("a")),
+                        isArchived = true,
+                    )
+                )
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    @Test
     fun conversationArchivedOutsideList_removesItAndOffersUndoWithoutPersistingAgain() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val viewModel = createViewModel()
             runCurrent()
 
             viewModel.effects.test {
-                conversationArchiveEvents.notifyArchived(conversationId = ConversationId("a"))
+                conversationArchiveEvents.notifyArchived(
+                    archivedConversation = ArchivedConversation(
+                        conversationId = ConversationId("a"),
+                        wasPinned = false,
+                    ),
+                )
 
                 assertThat(awaitItem()).isEqualTo(
                     Effect.ArchiveStatusChanged(
                         conversationIds = persistentListOf(ConversationId("a")),
+                        pinnedConversationIds = persistentListOf(),
                         isArchived = true,
                     )
                 )
@@ -116,15 +154,47 @@ class ConversationListViewModelTest {
     }
 
     @Test
+    fun pinnedConversationArchivedOutsideList_offersUndoThatRestoresThePin() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val viewModel = createViewModel()
+            runCurrent()
+
+            viewModel.effects.test {
+                conversationArchiveEvents.notifyArchived(
+                    archivedConversation = ArchivedConversation(
+                        conversationId = ConversationId("a"),
+                        wasPinned = true,
+                    ),
+                )
+
+                assertThat(awaitItem()).isEqualTo(
+                    Effect.ArchiveStatusChanged(
+                        conversationIds = persistentListOf(ConversationId("a")),
+                        pinnedConversationIds = persistentListOf(ConversationId("a")),
+                        isArchived = true,
+                    )
+                )
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    @Test
     fun conversationArchivedBeforeListExists_offersUndoOnceListStarts() {
         runTest(context = mainDispatcherRule.testDispatcher) {
-            conversationArchiveEvents.notifyArchived(conversationId = ConversationId("a"))
+            conversationArchiveEvents.notifyArchived(
+                archivedConversation = ArchivedConversation(
+                    conversationId = ConversationId("a"),
+                    wasPinned = false,
+                ),
+            )
 
             val viewModel = createViewModel()
             viewModel.effects.test {
                 assertThat(awaitItem()).isEqualTo(
                     Effect.ArchiveStatusChanged(
                         conversationIds = persistentListOf(ConversationId("a")),
+                        pinnedConversationIds = persistentListOf(),
                         isArchived = true,
                     )
                 )
@@ -258,6 +328,7 @@ class ConversationListViewModelTest {
             viewModel.onAction(
                 Action.ArchiveUndoClicked(
                     conversationIds = persistentListOf(ConversationId("a")),
+                    pinnedConversationIds = persistentListOf(),
                     isArchived = true,
                 ),
             )
@@ -266,6 +337,34 @@ class ConversationListViewModelTest {
             verify { optimisticSnapshotDelegate.restore(listOf(ConversationId("a"))) }
             coVerify {
                 actionsDelegate.setArchived(listOf(ConversationId("a")), isArchived = false)
+            }
+            coVerify(exactly = 0) { actionsDelegate.setPinned(listOf(ConversationId("a")), any()) }
+        }
+    }
+
+    @Test
+    fun archiveUndoClicked_repinsTheConversationsThatWerePinnedOnceUnarchived() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val viewModel = createViewModel()
+            viewModel.onAction(
+                Action.ArchiveUndoClicked(
+                    conversationIds = persistentListOf(ConversationId("a"), ConversationId("b")),
+                    pinnedConversationIds = persistentListOf(ConversationId("a")),
+                    isArchived = true,
+                ),
+            )
+            advanceUntilIdle()
+
+            verifyOrder {
+                optimisticSnapshotDelegate.restore(listOf(ConversationId("a"), ConversationId("b")))
+                optimisticSnapshotDelegate.pin(listOf(ConversationId("a")), isPinned = true)
+            }
+            coVerifyOrder {
+                actionsDelegate.setArchived(
+                    listOf(ConversationId("a"), ConversationId("b")),
+                    isArchived = false,
+                )
+                actionsDelegate.setPinned(listOf(ConversationId("a")), isPinned = true)
             }
         }
     }
@@ -277,6 +376,7 @@ class ConversationListViewModelTest {
             viewModel.onAction(
                 Action.ArchiveUndoClicked(
                     conversationIds = persistentListOf(ConversationId("a")),
+                    pinnedConversationIds = persistentListOf(),
                     isArchived = false,
                 ),
             )
@@ -284,6 +384,74 @@ class ConversationListViewModelTest {
 
             verify { optimisticSnapshotDelegate.remove(listOf(ConversationId("a"))) }
             coVerify { actionsDelegate.setArchived(listOf(ConversationId("a")), isArchived = true) }
+            coVerify(exactly = 0) { actionsDelegate.setPinned(any(), any()) }
+        }
+    }
+
+    @Test
+    fun blockConfirmed_reportsWhetherTheBlockedConversationWasPinned() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            snapshotFlow.value = snapshotOf(conversationItem(ConversationId("a"), isPinned = true))
+
+            val viewModel = createViewModel()
+            viewModel.effects.test {
+                viewModel.onAction(
+                    Action.BlockConfirmed(
+                        conversationId = ConversationId("a"),
+                        destination = DESTINATION,
+                    ),
+                )
+
+                assertThat(awaitItem()).isEqualTo(
+                    Effect.ConversationBlocked(
+                        conversationId = ConversationId("a"),
+                        destination = DESTINATION,
+                        wasPinned = true,
+                        success = false,
+                    )
+                )
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    @Test
+    fun blockUndoClicked_repinsTheConversationOnceUnblockedAndUnarchived() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val viewModel = createViewModel()
+            viewModel.onAction(
+                Action.BlockUndoClicked(
+                    conversationId = ConversationId("a"),
+                    destination = DESTINATION,
+                    wasPinned = true,
+                ),
+            )
+            advanceUntilIdle()
+
+            coVerifyOrder {
+                actionsDelegate.unblock(ConversationId("a"), DESTINATION)
+                actionsDelegate.setArchived(listOf(ConversationId("a")), isArchived = false)
+                actionsDelegate.setPinned(listOf(ConversationId("a")), isPinned = true)
+            }
+        }
+    }
+
+    @Test
+    fun blockUndoClicked_ofUnpinnedConversation_onlyUnblocks() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val viewModel = createViewModel()
+            viewModel.onAction(
+                Action.BlockUndoClicked(
+                    conversationId = ConversationId("a"),
+                    destination = DESTINATION,
+                    wasPinned = false,
+                ),
+            )
+            advanceUntilIdle()
+
+            coVerify { actionsDelegate.unblock(ConversationId("a"), DESTINATION) }
+            coVerify(exactly = 0) { actionsDelegate.setArchived(any(), any()) }
+            coVerify(exactly = 0) { actionsDelegate.setPinned(any(), any()) }
         }
     }
 
@@ -330,5 +498,9 @@ class ConversationListViewModelTest {
             defaultDispatcher = mainDispatcherRule.testDispatcher,
             mainDispatcher = mainDispatcherRule.testDispatcher,
         )
+    }
+
+    private companion object {
+        const val DESTINATION = "+15551234567"
     }
 }

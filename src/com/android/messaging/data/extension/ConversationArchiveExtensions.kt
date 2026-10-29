@@ -19,7 +19,10 @@ internal fun SQLiteDatabase.archiveDirectConversations(
     }
     update(
         DatabaseHelper.CONVERSATIONS_TABLE,
-        contentValuesOf(ConversationColumns.ARCHIVE_STATUS to 1),
+        contentValuesOf(
+            ConversationColumns.ARCHIVE_STATUS to 1,
+            ConversationColumns.PINNED to 0,
+        ),
         selection,
         arrayOf(destination) + exceptThreadIds,
     )
