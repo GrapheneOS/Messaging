@@ -278,7 +278,7 @@ private fun Modifier.trackPinAnimationBounds(
             itemKey = conversationId,
             boundsInRoot = coordinates.boundsInRoot(),
             isPhysicallyVisible = physicallyVisibleItems.any { visibleItem ->
-                visibleItem.key == conversationId
+                visibleItem.key == conversationId.value
             },
             firstVisibleItemIndex = firstVisibleItemIndex,
             lastVisibleItemIndex = lastVisibleItemIndex,
