@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.messages.delegate.selection
 
+import app.cash.turbine.test
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageSelectionUiState
@@ -94,6 +95,50 @@ internal class ConversationMessageSelectionDelegateDeleteTest :
                     ConversationMessageSelectionUiState(),
                     harness.delegate.state.value,
                 )
+            } finally {
+                harness.cancel()
+            }
+        }
+    }
+
+    @Test
+    fun deleteAction_whenPreferredSmsSimIsMissing_deletesSelectedMessage() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val harness = createHarness(
+                actionRequirements = createNoPreferredSmsSimRequirements(),
+            )
+
+            try {
+                harness.messagesStateFlow.value = createMessagesUiState(
+                    createMessageUiModel(messageId = "message-1"),
+                )
+                advanceUntilIdle()
+                harness.delegate.onMessageLongClick(messageId = MessageId("message-1"))
+                advanceUntilIdle()
+
+                harness.delegate.effects.test {
+                    harness.delegate.onMessageSelectionActionClick(
+                        action = ConversationMessageAction.Delete,
+                    )
+                    advanceUntilIdle()
+
+                    assertEquals(
+                        persistentSetOf(MessageId("message-1")),
+                        harness.delegate.state.value.deleteConfirmation?.messageIds,
+                    )
+
+                    harness.delegate.confirmDeleteSelectedMessages()
+                    advanceUntilIdle()
+
+                    expectNoEvents()
+                    cancelAndIgnoreRemainingEvents()
+                }
+
+                verify(exactly = 1) {
+                    harness.conversationsRepository.deleteMessages(
+                        messageIds = persistentSetOf(MessageId("message-1")),
+                    )
+                }
             } finally {
                 harness.cancel()
             }

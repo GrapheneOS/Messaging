@@ -179,7 +179,7 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
             return
         }
 
-        when (checkConversationActionRequirements()) {
+        when (checkConversationActionRequirements(requiresPreferredSmsSim = false)) {
             ConversationActionRequirementsResult.Ready -> {
                 _isDeleteConversationConfirmationVisible.value = true
             }
