@@ -84,8 +84,17 @@ internal abstract class BaseConversationMessageSelectionDelegateTest {
         results: List<ConversationActionRequirementsResult>,
     ): CheckConversationActionRequirements {
         val mock = mockk<CheckConversationActionRequirements>()
-        every { mock.invoke() } returnsMany results
+        every { mock.invoke(requiresPreferredSmsSim = any()) } returnsMany results
         return mock
+    }
+
+    protected fun createNoPreferredSmsSimRequirements(): CheckConversationActionRequirements {
+        return CheckConversationActionRequirements { requiresPreferredSmsSim ->
+            when {
+                requiresPreferredSmsSim -> ConversationActionRequirementsResult.NoPreferredSmsSim
+                else -> ConversationActionRequirementsResult.Ready
+            }
+        }
     }
 
     protected fun createAttachmentPart(): ConversationMessagePartUiModel.Attachment {

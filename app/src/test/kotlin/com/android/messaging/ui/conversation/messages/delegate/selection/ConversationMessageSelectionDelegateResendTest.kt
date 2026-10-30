@@ -128,9 +128,7 @@ internal class ConversationMessageSelectionDelegateResendTest :
     fun resendAction_whenPreferredSmsSimIsMissing_emitsNoPreferredSimMessage() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val harness = createHarness(
-                actionRequirements = createActionRequirementsMock(
-                    initialResult = ConversationActionRequirementsResult.NoPreferredSmsSim,
-                ),
+                actionRequirements = createNoPreferredSmsSimRequirements(),
             )
 
             try {

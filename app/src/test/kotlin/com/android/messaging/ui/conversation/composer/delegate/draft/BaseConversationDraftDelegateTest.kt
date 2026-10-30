@@ -141,7 +141,7 @@ internal abstract class BaseConversationDraftDelegateTest {
         results: List<ConversationActionRequirementsResult>,
     ): CheckConversationActionRequirements {
         val mock = mockk<CheckConversationActionRequirements>()
-        every { mock.invoke() } returnsMany results
+        every { mock.invoke(requiresPreferredSmsSim = true) } returnsMany results
         return mock
     }
 

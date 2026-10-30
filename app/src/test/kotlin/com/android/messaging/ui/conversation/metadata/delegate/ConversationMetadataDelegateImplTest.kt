@@ -9,6 +9,7 @@ import com.android.messaging.data.conversation.model.metadata.ConversationCompos
 import com.android.messaging.data.conversation.model.metadata.ConversationMetadata
 import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.domain.conversation.usecase.action.ArchiveConversation
+import com.android.messaging.domain.conversation.usecase.action.CheckConversationActionRequirements
 import com.android.messaging.domain.conversation.usecase.action.ConversationActionRequirementsResult
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.testutil.TEST_CALL_ACTION_PHONE_NUMBER
@@ -231,6 +232,43 @@ class ConversationMetadataDelegateImplTest {
     }
 
     @Test
+    fun onDeleteConversationClick_whenPreferredSmsSimIsMissing_showsConfirmation() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val harness = createHarness(
+                conversationId = ConversationId("conversation-42"),
+                checkConversationActionRequirements = { requiresPreferredSmsSim ->
+                    when {
+                        requiresPreferredSmsSim -> {
+                            ConversationActionRequirementsResult.NoPreferredSmsSim
+                        }
+
+                        else -> ConversationActionRequirementsResult.Ready
+                    }
+                },
+            )
+
+            try {
+                advanceUntilIdle()
+
+                harness.delegate.effects.test {
+                    harness.delegate.onDeleteConversationClick()
+                    advanceUntilIdle()
+
+                    expectNoEvents()
+                    cancelAndIgnoreRemainingEvents()
+                }
+
+                assertEquals(
+                    true,
+                    harness.delegate.isDeleteConversationConfirmationVisible.value,
+                )
+            } finally {
+                harness.cancel()
+            }
+        }
+    }
+
+    @Test
     fun confirmDeleteConversation_deletesViaRepositoryAndEmitsCloseConversation() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val harness = createHarness(conversationId = ConversationId("conversation-42"))
@@ -308,7 +346,11 @@ class ConversationMetadataDelegateImplTest {
         }
     }
 
-    private fun createHarness(conversationId: ConversationId?): DelegateHarness {
+    private fun createHarness(
+        conversationId: ConversationId?,
+        checkConversationActionRequirements: CheckConversationActionRequirements =
+            CheckConversationActionRequirements { ConversationActionRequirementsResult.Ready },
+    ): DelegateHarness {
         val dispatcher = mainDispatcherRule.testDispatcher
         val scope = TestScope(dispatcher)
         val conversationsRepository = mockk<ConversationsRepository>(relaxed = true)
@@ -342,9 +384,7 @@ class ConversationMetadataDelegateImplTest {
         }
 
         val delegate = ConversationMetadataDelegateImpl(
-            checkConversationActionRequirements = {
-                ConversationActionRequirementsResult.Ready
-            },
+            checkConversationActionRequirements = checkConversationActionRequirements,
             conversationsRepository = conversationsRepository,
             conversationMetadataUiStateMapper = mapper,
             blockedParticipantsRepository = mockk<BlockedParticipantsRepository>(relaxed = true),

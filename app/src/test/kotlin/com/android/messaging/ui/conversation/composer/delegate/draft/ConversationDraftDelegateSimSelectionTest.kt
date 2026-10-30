@@ -48,7 +48,7 @@ internal class ConversationDraftDelegateSimSelectionTest {
     @Before
     fun setUp() {
         every {
-            checkConversationActionRequirements()
+            checkConversationActionRequirements(requiresPreferredSmsSim = true)
         } returns ConversationActionRequirementsResult.Ready
 
         every {
