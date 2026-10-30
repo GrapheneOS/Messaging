@@ -1594,7 +1594,7 @@ public class MmsUtils {
                 text = text.substring(0, mmsTextLengthLimit);
             }
             messagePart = MessagePartData.createTextMessagePart(text);
-        } else if (part.isMedia()) {
+        } else if (part.isMedia() || part.isFile()) {
             messagePart = MessagePartData.createMediaMessagePart(part.mContentType,
                     part.getDataUri(), MessagePartData.UNSPECIFIED_SIZE,
                     MessagePartData.UNSPECIFIED_SIZE);
