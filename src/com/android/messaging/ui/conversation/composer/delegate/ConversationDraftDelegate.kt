@@ -492,7 +492,7 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
     }
 
     private fun sendDraftWhenActionRequirementsSatisfied(sendRequest: DraftSendRequest) {
-        when (checkConversationActionRequirements()) {
+        when (checkConversationActionRequirements(requiresPreferredSmsSim = true)) {
             ConversationActionRequirementsResult.Ready -> {
                 sendDraft(sendRequest = sendRequest)
             }

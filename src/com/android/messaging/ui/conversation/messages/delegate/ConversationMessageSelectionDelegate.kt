@@ -306,6 +306,7 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
     ) {
         runWhenConversationActionRequirementsSatisfied(
             isSending = false,
+            requiresPreferredSmsSim = false,
             onReady = {
                 messageSelectionState.update { currentState ->
                     currentState.copy(
@@ -322,6 +323,7 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
     ) {
         runWhenConversationActionRequirementsSatisfied(
             isSending = false,
+            requiresPreferredSmsSim = false,
             onReady = {
                 clearMessageSelection()
                 conversationsRepository.deleteMessages(messageIds = messageIds)
@@ -343,6 +345,7 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
     ) {
         runWhenConversationActionRequirementsSatisfied(
             isSending = messageAction.isSending,
+            requiresPreferredSmsSim = true,
             onReady = {
                 runMessageAction(messageAction = messageAction)
             },
@@ -354,11 +357,16 @@ internal class ConversationMessageSelectionDelegateImpl @Inject constructor(
 
     private fun runWhenConversationActionRequirementsSatisfied(
         isSending: Boolean,
+        requiresPreferredSmsSim: Boolean,
         onReady: () -> Unit,
         onBlocked: () -> Unit = {},
         onMissingDefaultSmsRole: () -> Unit = {},
     ) {
-        when (checkConversationActionRequirements()) {
+        val requirementsResult = checkConversationActionRequirements(
+            requiresPreferredSmsSim = requiresPreferredSmsSim,
+        )
+
+        when (requirementsResult) {
             ConversationActionRequirementsResult.Ready -> {
                 onReady()
             }

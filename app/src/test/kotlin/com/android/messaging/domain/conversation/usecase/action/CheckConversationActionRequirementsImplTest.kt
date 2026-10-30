@@ -37,7 +37,7 @@ class CheckConversationActionRequirementsImplTest {
 
         assertEquals(
             ConversationActionRequirementsResult.SmsNotCapable,
-            useCase(),
+            useCase(requiresPreferredSmsSim = true),
         )
     }
 
@@ -49,7 +49,7 @@ class CheckConversationActionRequirementsImplTest {
 
         assertEquals(
             ConversationActionRequirementsResult.NoPreferredSmsSim,
-            useCase(),
+            useCase(requiresPreferredSmsSim = true),
         )
     }
 
@@ -64,7 +64,7 @@ class CheckConversationActionRequirementsImplTest {
 
         assertEquals(
             ConversationActionRequirementsResult.MissingDefaultSmsRole,
-            useCase(),
+            useCase(requiresPreferredSmsSim = true),
         )
     }
 
@@ -82,7 +82,43 @@ class CheckConversationActionRequirementsImplTest {
 
         assertEquals(
             ConversationActionRequirementsResult.MissingDefaultSmsRole,
-            useCase(),
+            useCase(requiresPreferredSmsSim = true),
+        )
+    }
+
+    @Test
+    fun invoke_whenPreferredSmsSimIsNotRequired_ignoresMissingPreferredSmsSim() {
+        every { phoneUtils.isSmsCapable } returns true
+        every { phoneUtils.hasPreferredSmsSim } returns false
+        every {
+            roleManager.isRoleAvailable(RoleManager.ROLE_SMS)
+        } returns true
+        every {
+            roleManager.isRoleHeld(RoleManager.ROLE_SMS)
+        } returns true
+        val useCase = CheckConversationActionRequirementsImpl(roleManager = roleManager)
+
+        assertEquals(
+            ConversationActionRequirementsResult.Ready,
+            useCase(requiresPreferredSmsSim = false),
+        )
+    }
+
+    @Test
+    fun invoke_whenSimNotRequiredAndSmsRoleNotHeld_returnsMissingDefaultSmsRole() {
+        every { phoneUtils.isSmsCapable } returns true
+        every { phoneUtils.hasPreferredSmsSim } returns false
+        every {
+            roleManager.isRoleAvailable(RoleManager.ROLE_SMS)
+        } returns true
+        every {
+            roleManager.isRoleHeld(RoleManager.ROLE_SMS)
+        } returns false
+        val useCase = CheckConversationActionRequirementsImpl(roleManager = roleManager)
+
+        assertEquals(
+            ConversationActionRequirementsResult.MissingDefaultSmsRole,
+            useCase(requiresPreferredSmsSim = false),
         )
     }
 
@@ -100,7 +136,7 @@ class CheckConversationActionRequirementsImplTest {
 
         assertEquals(
             ConversationActionRequirementsResult.Ready,
-            useCase(),
+            useCase(requiresPreferredSmsSim = true),
         )
     }
 }
