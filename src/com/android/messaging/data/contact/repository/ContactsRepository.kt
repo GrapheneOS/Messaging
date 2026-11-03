@@ -2,6 +2,7 @@ package com.android.messaging.data.contact.repository
 
 import android.content.ContentResolver
 import android.database.Cursor
+import android.icu.text.Collator
 import android.net.Uri
 import android.provider.ContactsContract
 import android.provider.ContactsContract.CommonDataKinds.Email
@@ -71,7 +72,7 @@ internal class ContactsRepositoryImpl @Inject constructor(
             sortOrder = SORT_BY_SORT_KEY_PRIMARY_ASC,
         )
 
-        val mergedRows = (phoneRows + emailRows).sortedBy { row -> row.sortKey }
+        val mergedRows = sortByLocalizedSortKey(rows = phoneRows + emailRows)
 
         val contactGroups = when {
             mergedRows.isEmpty() -> emptyList()
@@ -97,7 +98,7 @@ internal class ContactsRepositoryImpl @Inject constructor(
             sortOrder = SORT_BY_SORT_KEY_PRIMARY_ASC,
         )
 
-        val mergedMatches = (phoneMatches + emailMatches).sortedBy { it.sortKey }
+        val mergedMatches = sortByLocalizedSortKey(rows = phoneMatches + emailMatches)
 
         if (mergedMatches.isEmpty()) {
             val hasDigits = query.any { character -> character.isDigit() }
@@ -134,13 +135,9 @@ internal class ContactsRepositoryImpl @Inject constructor(
         matchRows: List<DestinationRow>,
         offset: Int,
     ): ContactsPage {
-        val contactSortKeys = LinkedHashMap<Long, String>()
-
-        matchRows.forEach { row ->
-            contactSortKeys.putIfAbsent(row.contactId, row.sortKey)
-        }
-
-        val orderedContactIds = contactSortKeys.keys.toList()
+        val orderedContactIds = matchRows
+            .map(DestinationRow::contactId)
+            .distinct()
 
         val pageStart = offset.coerceAtMost(maximumValue = orderedContactIds.size)
         val pageEndExclusive = (pageStart + PAGE_SIZE)
@@ -154,10 +151,7 @@ internal class ContactsRepositoryImpl @Inject constructor(
         val pageGroups = when {
             pageContactIds.isEmpty() -> emptyList()
             else -> {
-                loadAndGroupDestinationsForContacts(
-                    contactIds = pageContactIds,
-                    sortKeysByContactId = contactSortKeys,
-                )
+                loadAndGroupDestinationsForContacts(contactIds = pageContactIds)
             }
         }
 
@@ -176,7 +170,6 @@ internal class ContactsRepositoryImpl @Inject constructor(
 
     private fun loadAndGroupDestinationsForContacts(
         contactIds: List<Long>,
-        sortKeysByContactId: Map<Long, String>,
     ): List<List<DestinationRow>> {
         val phoneRows = readDestinationRowsForContacts(
             uri = Phone.CONTENT_URI,
@@ -198,18 +191,12 @@ internal class ContactsRepositoryImpl @Inject constructor(
             rowsByContact[row.contactId]?.add(row)
         }
 
-        return rowsByContact.entries
-            .asSequence()
-            .filter { (_, rows) -> rows.isNotEmpty() }
-            .sortedWith(
-                compareBy<Map.Entry<Long, List<DestinationRow>>> {
-                    sortKeysByContactId[it.key].orEmpty()
-                }
-                    .thenBy { it.value.first().displayName }
-                    .thenBy { it.key },
-            )
-            .map { it.value }
-            .toList()
+        return rowsByContact.values.filter { rows -> rows.isNotEmpty() }
+    }
+
+    private fun sortByLocalizedSortKey(rows: List<DestinationRow>): List<DestinationRow> {
+        val collator = Collator.getInstance()
+        return rows.sortedWith(compareBy(collator) { row -> row.sortKey })
     }
 
     private fun emptyContactsPage(): ContactsPage {

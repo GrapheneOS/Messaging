@@ -1,5 +1,6 @@
 package com.android.messaging.ui.recipientselection.component
 
+import android.icu.text.Collator
 import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
 import com.android.messaging.ui.recipientselection.model.section.RecipientContactListEntry
 import kotlinx.collections.immutable.ImmutableList
@@ -32,7 +33,7 @@ internal fun recipientContactListEntries(
 
     val entries = persistentListOf<RecipientContactListEntry>().builder()
     sections.keys
-        .sortedWith(SECTION_LABEL_COMPARATOR)
+        .sortedWith(sectionLabelComparator())
         .forEach { label ->
             val sectionItems = sections.getValue(label)
             entries.add(RecipientContactListEntry.Header(label))
@@ -66,13 +67,7 @@ internal fun recipientContactSectionLabel(item: RecipientPickerListItem): String
     }
 }
 
-private val SECTION_LABEL_COMPARATOR = Comparator<String> { first, second ->
-    val firstIsNonLetter = first == NON_LETTER_SECTION_LABEL
-    val secondIsNonLetter = second == NON_LETTER_SECTION_LABEL
-
-    when {
-        firstIsNonLetter == secondIsNonLetter -> first.compareTo(second)
-        firstIsNonLetter -> 1
-        else -> -1
-    }
+private fun sectionLabelComparator(): Comparator<String> {
+    return compareBy<String> { label -> label == NON_LETTER_SECTION_LABEL }
+        .then(Collator.getInstance())
 }
