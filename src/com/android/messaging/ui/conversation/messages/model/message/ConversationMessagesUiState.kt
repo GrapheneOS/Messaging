@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.messages.model.message
 
 import androidx.compose.runtime.Immutable
+import com.android.messaging.data.appsettings.model.LinkOpeningMode
 import com.android.messaging.data.conversation.model.MessageId
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -31,5 +32,6 @@ internal sealed interface ConversationMessagesUiState {
         val windowId: Int = 0,
         val hasNewerMessages: Boolean = false,
         val latestUnloadedMessage: ConversationMessageUiModel? = null,
+        val linkOpeningMode: LinkOpeningMode = LinkOpeningMode.AskBeforeOpening,
     ) : ConversationMessagesUiState
 }

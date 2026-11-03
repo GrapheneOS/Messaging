@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.messages.delegate.conversationmess
 import android.net.Uri
 import android.os.Parcel
 import androidx.lifecycle.SavedStateHandle
+import com.android.messaging.data.appsettings.model.LinkOpeningMode
 import com.android.messaging.data.appsettings.repository.AppSettingsRepository
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
@@ -43,6 +44,7 @@ internal abstract class BaseConversationMessagesDelegateTest {
     protected val conversationsRepository = mockk<ConversationsRepository>()
     protected val appSettingsRepository = mockk<AppSettingsRepository> {
         coEvery { isYouTubeLinkPreviewsEnabled() } returns false
+        coEvery { getLinkOpeningMode() } returns LinkOpeningMode.AskBeforeOpening
     }
     protected val resolveAudioDurationMillis =
         mockk<ResolveAudioDurationMillis>(relaxed = true)

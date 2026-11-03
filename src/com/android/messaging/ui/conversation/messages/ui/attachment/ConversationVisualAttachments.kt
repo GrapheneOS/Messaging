@@ -35,9 +35,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.data.appsettings.model.LinkOpeningMode
 import com.android.messaging.ui.common.components.attachment.MediaThumbnail
+import com.android.messaging.ui.conversation.messages.model.attachment.ConversationAttachmentOpenAction
 import com.android.messaging.ui.conversation.messages.model.attachment.ConversationMessageAttachment
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
+import com.android.messaging.ui.conversation.messages.ui.text.LocalConversationMessageLinkOpeningMode
 import com.android.messaging.ui.conversation.preview.previewMessageAttachments
 import com.android.messaging.ui.core.MessagingPreviewColumn
 import com.android.messaging.util.ContentType
@@ -212,8 +215,11 @@ private fun ConversationVisualAttachmentSurface(
     overlay: @Composable BoxScope.() -> Unit,
 ) {
     val density = LocalDensity.current
-    val openAction = remember(attachment) {
-        attachment.toConversationAttachmentOpenActionOrNull()
+    val linksEnabled = LocalConversationMessageLinkOpeningMode.current != LinkOpeningMode.DoNotOpen
+    val openAction = remember(attachment, linksEnabled) {
+        attachment.toConversationAttachmentOpenActionOrNull()?.takeIf { action ->
+            linksEnabled || action !is ConversationAttachmentOpenAction.OpenExternal
+        }
     }
     val description = stringResource(
         id = when {

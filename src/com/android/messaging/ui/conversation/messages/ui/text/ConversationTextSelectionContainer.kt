@@ -5,6 +5,9 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.text.contextmenu.builder.item
+import androidx.compose.foundation.text.contextmenu.data.TextContextMenuComponent
+import androidx.compose.foundation.text.contextmenu.data.TextContextMenuItem
+import androidx.compose.foundation.text.contextmenu.data.TextContextMenuSeparator
 import androidx.compose.foundation.text.contextmenu.modifier.appendTextContextMenuComponents
 import androidx.compose.foundation.text.contextmenu.modifier.filterTextContextMenuComponents
 import androidx.compose.foundation.text.selection.DisableSelection
@@ -14,6 +17,7 @@ import androidx.compose.foundation.text.selection.rememberSelectionState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
@@ -26,16 +30,24 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import com.android.messaging.R
+import com.android.messaging.data.appsettings.model.LinkOpeningMode
 import com.android.messaging.ui.conversation.messages.model.text.ConversationTextLink
 import com.android.messaging.ui.conversation.messages.model.text.ConversationTextLinkKind
 
 @Composable
 internal fun ConversationTextSelectionContainer(
     enabled: Boolean,
+    onExternalUriClick: (String) -> Unit,
     content: @Composable () -> Unit,
 ) {
     val state = LocalConversationTextSelection.current
     val selection = state?.selection ?: rememberSelectionState()
+    val linkOpeningMode = LocalConversationMessageLinkOpeningMode.current
+    val open = rememberConversationLinkOpenAction(
+        state = state.takeIf { linkOpeningMode != LinkOpeningMode.DoNotOpen },
+        onExternalUriClick = onExternalUriClick,
+    )
+    val currentOpen = rememberUpdatedState(newValue = open)
     val copy = rememberConversationLinkCopyAction(state = state)
     val currentCopy = rememberUpdatedState(newValue = copy)
     val selectMessageLabel = stringResource(R.string.conversation_message_select_message)
@@ -50,6 +62,12 @@ internal fun ConversationTextSelectionContainer(
             modifier = Modifier
                 .appendTextContextMenuComponents {
                     if (state != null && state.hasSelection && enabled) {
+                        currentOpen.value?.let { action ->
+                            item(key = "open-detected-content", label = action.label) {
+                                action.action()
+                                close()
+                            }
+                        }
                         currentCopy.value?.let { action ->
                             item(key = "copy-detected-content", label = action.label) {
                                 action.action()
@@ -63,9 +81,14 @@ internal fun ConversationTextSelectionContainer(
                     }
                 }
                 // SelectionContainer clears a selection before it hides its toolbar, which would
-                // otherwise redraw with only "Select all" while it fades out.
-                .filterTextContextMenuComponents {
-                    selection.selectedTexts.any { text -> text.isNotEmpty() }
+                // otherwise redraw with only "Select all" while it fades out. The system's smart
+                // actions open what they detect without asking, even in text the app does not
+                // linkify such as a subject, so they stay only when links open on tap.
+                .filterTextContextMenuComponents { component ->
+                    val keepsSystemActions =
+                        linkOpeningMode == LinkOpeningMode.OpenOnTap && state?.selectedLink == null
+                    selection.selectedTexts.any { text -> text.isNotEmpty() } &&
+                        (keepsSystemActions || !component.isSmartSelectionAction())
                 },
         ) {
             when {
@@ -124,6 +147,31 @@ private fun rememberConversationLinkCopyAction(
 }
 
 @Composable
+private fun rememberConversationLinkOpenAction(
+    state: ConversationTextSelectionState?,
+    onExternalUriClick: (String) -> Unit,
+): CustomAccessibilityAction? {
+    val currentOnExternalUriClick by rememberUpdatedState(newValue = onExternalUriClick)
+    val selectedLink = state?.selectedLink
+    val label = selectedLink?.let { link -> stringResource(id = link.kind.openLabelRes()) }
+    return remember(state, selectedLink, label) {
+        when {
+            state == null || selectedLink == null || label == null -> null
+            else -> {
+                CustomAccessibilityAction(label = label) {
+                    val matchesDisplayedAction = state.selectedLink == selectedLink
+                    if (matchesDisplayedAction) {
+                        state.selection.clear()
+                        currentOnExternalUriClick(selectedLink.url)
+                    }
+                    matchesDisplayedAction
+                }
+            }
+        }
+    }
+}
+
+@Composable
 internal fun conversationTextAccessibilityActions(
     hasText: Boolean,
 ): List<CustomAccessibilityAction> {
@@ -171,6 +219,10 @@ private fun rememberConversationLinkCopyActions(
     }
 }
 
+private fun TextContextMenuComponent.isSmartSelectionAction(): Boolean {
+    return this !is TextContextMenuItem && this !== TextContextMenuSeparator
+}
+
 @StringRes
 private fun ConversationTextLinkKind.copyLabelRes(): Int {
     return when (this) {
@@ -178,6 +230,16 @@ private fun ConversationTextLinkKind.copyLabelRes(): Int {
         ConversationTextLinkKind.Phone -> R.string.conversation_copy_phone_number
         ConversationTextLinkKind.Email -> R.string.conversation_copy_email_address
         ConversationTextLinkKind.Address -> R.string.conversation_copy_address
+    }
+}
+
+@StringRes
+private fun ConversationTextLinkKind.openLabelRes(): Int {
+    return when (this) {
+        ConversationTextLinkKind.Web -> R.string.conversation_open_link
+        ConversationTextLinkKind.Phone -> R.string.conversation_call_phone_number
+        ConversationTextLinkKind.Email -> R.string.conversation_send_email
+        ConversationTextLinkKind.Address -> R.string.conversation_show_address_on_map
     }
 }
 

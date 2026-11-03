@@ -1,6 +1,7 @@
 package com.android.messaging.ui.appsettings.general.delegate.appsettingsdelegate
 
 import com.android.messaging.data.appsettings.model.AppBooleanPref
+import com.android.messaging.data.appsettings.model.LinkOpeningMode
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -92,6 +93,25 @@ internal class AppSettingsDelegatePreferenceTest : BaseAppSettingsDelegateTest()
     }
 
     @Test
+    fun onLinkOpeningModeChanged_writesModeThenRefreshesState() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher,
+        ) {
+            givenSecondLoadProducesReloadedState()
+            val delegate = createBoundDelegate()
+
+            delegate.onLinkOpeningModeChanged(mode = LinkOpeningMode.DoNotOpen)
+            runCurrent()
+
+            coVerifyOrder {
+                repository.setLinkOpeningMode(mode = LinkOpeningMode.DoNotOpen)
+                repository.getAppSettings()
+            }
+            assertEquals(reloadedState, delegate.state.value)
+        }
+    }
+
+    @Test
     fun booleanPrefChange_beforeBind_doesNotWriteOrLoad() {
         runTest(
             context = mainDispatcherRule.testDispatcher,
@@ -101,6 +121,7 @@ internal class AppSettingsDelegatePreferenceTest : BaseAppSettingsDelegateTest()
             delegate.onSendSoundChanged(enabled = false)
             delegate.onDumpSmsChanged(enabled = true)
             delegate.onDumpMmsChanged(enabled = true)
+            delegate.onLinkOpeningModeChanged(mode = LinkOpeningMode.OpenOnTap)
             runCurrent()
 
             coVerify(exactly = 0) {
@@ -109,6 +130,7 @@ internal class AppSettingsDelegatePreferenceTest : BaseAppSettingsDelegateTest()
                     enabled = any(),
                 )
             }
+            coVerify(exactly = 0) { repository.setLinkOpeningMode(mode = any()) }
             coVerify(exactly = 0) { repository.getAppSettings() }
         }
     }

@@ -1,5 +1,8 @@
 package com.android.messaging.ui.conversation.messages.ui.attachment.rendering
 
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.hasClickAction
+import com.android.messaging.data.appsettings.model.LinkOpeningMode
 import io.mockk.verify
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -87,6 +90,39 @@ internal class ConversationVisualAttachmentsInteractionTest :
             }
             verify(exactly = 0) {
                 onAttachmentClick.invoke(any(), any(), any())
+            }
+        }
+    }
+
+    @Test
+    fun youTubePreviewWithLinksDisabled_isNotClickable() {
+        setMessageAttachmentsContent(
+            attachmentSections = gallerySections(youTubeAttachment()),
+            linkOpeningMode = LinkOpeningMode.DoNotOpen,
+        )
+
+        composeTestRule.onAllNodes(hasClickAction()).assertCountEquals(0)
+        clickMessageAttachmentsAt()
+
+        composeTestRule.runOnIdle {
+            verify(exactly = 0) {
+                onExternalUriClick.invoke(any())
+            }
+        }
+    }
+
+    @Test
+    fun imageAttachmentWithLinksDisabled_stillOpensContent() {
+        setMessageAttachmentsContent(
+            attachmentSections = gallerySections(imageAttachment()),
+            linkOpeningMode = LinkOpeningMode.DoNotOpen,
+        )
+
+        clickMessageAttachmentsAt()
+
+        composeTestRule.runOnIdle {
+            verify(exactly = 1) {
+                onAttachmentClick.invoke(IMAGE_CONTENT_TYPE, IMAGE_CONTENT_URI, "")
             }
         }
     }

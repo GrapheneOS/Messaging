@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -25,6 +26,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
+import com.android.messaging.data.appsettings.model.LinkOpeningMode
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.subscription.model.Subscription
@@ -37,6 +39,7 @@ import com.android.messaging.ui.conversation.messages.ui.message.ConversationMes
 import com.android.messaging.ui.conversation.messages.ui.message.conversationMessageDisplayEpochDay
 import com.android.messaging.ui.conversation.messages.ui.message.formatDateSeparatorText
 import com.android.messaging.ui.conversation.messages.ui.message.resolveConversationMessageSimDisplayName
+import com.android.messaging.ui.conversation.messages.ui.text.LocalConversationMessageLinkOpeningMode
 import com.android.messaging.ui.conversation.preview.previewMessages
 import com.android.messaging.ui.conversation.preview.previewSubscriptions
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
@@ -79,6 +82,7 @@ internal fun ConversationMessages(
     highlightedMessageId: MessageId? = null,
     showIncomingParticipantIdentity: Boolean = true,
     youTubeLinkPreviewsEnabled: Boolean = false,
+    linkOpeningMode: LinkOpeningMode = LinkOpeningMode.AskBeforeOpening,
     subscriptions: ImmutableList<Subscription> = persistentListOf(),
     currentSendSimDisplayName: String? = null,
     additionalTopContentPadding: Dp = 0.dp,
@@ -107,44 +111,46 @@ internal fun ConversationMessages(
         currentSendSimDisplayName = currentSendSimDisplayName,
     ) > 0
 
-    LazyColumn(
-        state = listState,
-        reverseLayout = true,
-        modifier = modifier
-            .fillMaxSize()
-            .testTag(CONVERSATION_MESSAGES_LIST_TEST_TAG)
-            .background(color = MaterialTheme.colorScheme.background),
-        contentPadding = conversationMessagesContentPadding(
-            shouldShowSendSimIndicator = shouldShowSendSimIndicator,
-            additionalTopContentPadding = additionalTopContentPadding,
-        ),
-    ) {
-        conversationSendSimIndicatorItem(
-            currentSendSimDisplayName = currentSendSimDisplayName,
-            shouldShowSendSimIndicator = shouldShowSendSimIndicator,
-            isSelectionMode = isSelectionMode,
-            onSimSelectorClick = onSimSelectorClick,
-        )
+    CompositionLocalProvider(LocalConversationMessageLinkOpeningMode provides linkOpeningMode) {
+        LazyColumn(
+            state = listState,
+            reverseLayout = true,
+            modifier = modifier
+                .fillMaxSize()
+                .testTag(CONVERSATION_MESSAGES_LIST_TEST_TAG)
+                .background(color = MaterialTheme.colorScheme.background),
+            contentPadding = conversationMessagesContentPadding(
+                shouldShowSendSimIndicator = shouldShowSendSimIndicator,
+                additionalTopContentPadding = additionalTopContentPadding,
+            ),
+        ) {
+            conversationSendSimIndicatorItem(
+                currentSendSimDisplayName = currentSendSimDisplayName,
+                shouldShowSendSimIndicator = shouldShowSendSimIndicator,
+                isSelectionMode = isSelectionMode,
+                onSimSelectorClick = onSimSelectorClick,
+            )
 
-        conversationMessageItems(
-            displayMessages = displayMessages,
-            timeZone = timeZone,
-            selectedMessageIds = selectedMessageIds,
-            highlightedMessageId = highlightedMessageId,
-            isSelectionMode = isSelectionMode,
-            showIncomingParticipantIdentity = showIncomingParticipantIdentity,
-            youTubeLinkPreviewsEnabled = youTubeLinkPreviewsEnabled,
-            simDisplayNameByParticipantId = simDisplayNameByParticipantId,
-            onAttachmentClick = onAttachmentClick,
-            onExternalUriClick = onExternalUriClick,
-            onMessageClick = onMessageClick,
-            onMessageAvatarClick = onMessageAvatarClick,
-            onMessageDownloadClick = onMessageDownloadClick,
-            onMessageActionClick = onMessageActionClick,
-            onMessageLongClick = onMessageLongClick,
-            onMessageResendClick = onMessageResendClick,
-            onSimSelectorClick = onSimSelectorClick,
-        )
+            conversationMessageItems(
+                displayMessages = displayMessages,
+                timeZone = timeZone,
+                selectedMessageIds = selectedMessageIds,
+                highlightedMessageId = highlightedMessageId,
+                isSelectionMode = isSelectionMode,
+                showIncomingParticipantIdentity = showIncomingParticipantIdentity,
+                youTubeLinkPreviewsEnabled = youTubeLinkPreviewsEnabled,
+                simDisplayNameByParticipantId = simDisplayNameByParticipantId,
+                onAttachmentClick = onAttachmentClick,
+                onExternalUriClick = onExternalUriClick,
+                onMessageClick = onMessageClick,
+                onMessageAvatarClick = onMessageAvatarClick,
+                onMessageDownloadClick = onMessageDownloadClick,
+                onMessageActionClick = onMessageActionClick,
+                onMessageLongClick = onMessageLongClick,
+                onMessageResendClick = onMessageResendClick,
+                onSimSelectorClick = onSimSelectorClick,
+            )
+        }
     }
 }
 

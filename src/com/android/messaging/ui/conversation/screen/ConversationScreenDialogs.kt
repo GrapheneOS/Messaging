@@ -31,6 +31,7 @@ import com.android.messaging.ui.conversation.CONVERSATION_DELETE_MESSAGES_DISMIS
 import com.android.messaging.ui.conversation.CONVERSATION_SUBJECT_DIALOG_CLEAR_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_SUBJECT_DIALOG_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_SUBJECT_DIALOG_TEXT_FIELD_TEST_TAG
+import com.android.messaging.ui.conversation.links.ui.ConversationLinkConfirmationDialog
 import com.android.messaging.ui.conversation.screen.model.ConversationAttachmentLimitWarning
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageDeleteConfirmationUiState
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaffoldUiState
@@ -70,6 +71,14 @@ internal fun ConversationScreenDialogs(
             initialSubjectText = uiState.composer.subjectText,
             onConfirm = screenModel::onSubjectDialogConfirm,
             onDismiss = screenModel::onSubjectDialogDismiss,
+        )
+    }
+
+    uiState.linkConfirmation?.let { confirmation ->
+        ConversationLinkConfirmationDialog(
+            confirmation = confirmation,
+            onConfirm = { screenModel.confirmOpenLink(confirmation = confirmation) },
+            onDismiss = screenModel::dismissOpenLinkConfirmation,
         )
     }
 }

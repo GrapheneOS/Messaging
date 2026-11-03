@@ -27,6 +27,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import com.android.messaging.data.appsettings.model.LinkOpeningMode
 import com.android.messaging.ui.core.MessagingPreviewColumn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -52,6 +53,11 @@ internal val LocalConversationMessageLinkColor: ProvidableCompositionLocal<Color
         null
     }
 
+internal val LocalConversationMessageLinkOpeningMode: ProvidableCompositionLocal<LinkOpeningMode> =
+    compositionLocalOf {
+        LinkOpeningMode.AskBeforeOpening
+    }
+
 @Composable
 internal fun ConversationMessageText(
     modifier: Modifier = Modifier,
@@ -68,6 +74,7 @@ internal fun ConversationMessageText(
     val gesture = remember { ConversationTextLinkGesture() }
     val hapticFeedback = LocalHapticFeedback.current
     val linkStyle = rememberConversationTextLinkStyle()
+    val linksEnabled = LocalConversationMessageLinkOpeningMode.current != LinkOpeningMode.DoNotOpen
     val linkClick = remember(state, coordinator, gesture) {
         { uri: String ->
             when {
@@ -84,10 +91,11 @@ internal fun ConversationMessageText(
         }
         state.updateLinks(detectedLinks = links)
     }
-    val textWithLinks = remember(text, state.links, linkStyle, linkClick) {
+    val textWithLinks = remember(text, state.links, linksEnabled, linkStyle, linkClick) {
         buildConversationLinkedAnnotatedString(
             text = text,
             links = state.links,
+            linksEnabled = linksEnabled,
             linkStyle = linkStyle,
             onExternalUriClick = linkClick,
         )
@@ -180,6 +188,25 @@ private fun ConversationMessageTextLinksPreview() {
             text = PREVIEW_ADDRESS_LINK_TEXT,
             style = MaterialTheme.typography.bodyLarge,
         )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ConversationMessageTextLinksDisabledPreview() {
+    ConversationMessageTextPreviewColumn {
+        CompositionLocalProvider(
+            LocalConversationMessageLinkOpeningMode provides LinkOpeningMode.DoNotOpen,
+        ) {
+            ConversationMessageTextPreviewSample(
+                text = PREVIEW_MIXED_LINK_TEXT,
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            ConversationMessageTextPreviewSample(
+                text = PREVIEW_EMAIL_LINK_TEXT,
+                style = MaterialTheme.typography.bodyLarge,
+            )
+        }
     }
 }
 

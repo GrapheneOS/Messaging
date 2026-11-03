@@ -347,6 +347,7 @@ private fun ConversationScreenPresentContent(
             highlightedMessageId = messagesState.highlightedMessageId,
             showIncomingParticipantIdentity = showIncomingParticipantIdentity,
             youTubeLinkPreviewsEnabled = messagesState.youTubeLinkPreviewsEnabled,
+            linkOpeningMode = messagesState.linkOpeningMode,
             subscriptions = uiState.composer.simSelector.subscriptions,
             currentSendSimDisplayName = currentSendSimDisplayName,
             additionalTopContentPadding = additionalTopContentPadding,

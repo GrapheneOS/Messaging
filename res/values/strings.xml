@@ -59,6 +59,14 @@
     <string name="conversation_copy_phone_number">Copy phone number</string>
     <string name="conversation_copy_email_address">Copy email address</string>
     <string name="conversation_copy_address">Copy address</string>
+    <!-- Text selection toolbar action that opens the selected link -->
+    <string name="conversation_open_link">Open link</string>
+    <!-- Text selection toolbar action that calls the selected phone number -->
+    <string name="conversation_call_phone_number">Call</string>
+    <!-- Text selection toolbar action that writes an email to the selected address -->
+    <string name="conversation_send_email">Send email</string>
+    <!-- Text selection toolbar action that shows the selected street address on a map -->
+    <string name="conversation_show_address_on_map">Show on map</string>
     <string name="conversation_copy_link_target">Copy link <xliff:g id="link" example="https://example.com">%1$s</xliff:g></string>
     <string name="conversation_copy_phone_number_target">Copy phone number <xliff:g id="phone_number" example="+1 555-0100">%1$s</xliff:g></string>
     <string name="conversation_copy_email_address_target">Copy email address <xliff:g id="email_address" example="name@example.com">%1$s</xliff:g></string>
@@ -821,6 +829,33 @@
 
     <!-- The description for the YouTube link previews setting -->
     <string name="youtube_link_previews_pref_summary">Show video thumbnails for YouTube links in conversations. Enabling this fetches thumbnails from YouTube and may reduce privacy</string>
+
+    <!-- The title for the setting that controls what tapping a link in a message does -->
+    <string name="link_opening_pref_title">Links in messages</string>
+
+    <!-- Link setting option: tapping a link shows where it goes and asks before opening it -->
+    <string name="link_opening_ask">Ask before opening</string>
+
+    <!-- The description for the "Ask before opening" link setting option -->
+    <string name="link_opening_ask_summary">Show where a link goes and ask before opening it</string>
+
+    <!-- Link setting option: tapping a link opens it right away -->
+    <string name="link_opening_open">Open on tap</string>
+
+    <!-- The description for the "Open on tap" link setting option -->
+    <string name="link_opening_open_summary">Open links as soon as you tap them</string>
+
+    <!-- Link setting option: links can't be opened from messages -->
+    <string name="link_opening_off">Don\'t open</string>
+
+    <!-- The description for the "Don't open" link setting option -->
+    <string name="link_opening_off_summary">Show links as plain text. Long-press a link to copy it</string>
+
+    <!-- Title of the dialog that asks before opening a link tapped in a message -->
+    <string name="conversation_open_link_title">Open link?</string>
+
+    <!-- Button in the dialog that opens a link tapped in a message -->
+    <string name="conversation_open_link_confirm">Open</string>
 
     <!-- The title for sim_specific settings  -->
     <string name="sim_specific_settings">\"<xliff:g id="sim_name">%s</xliff:g>\" SIM</string>

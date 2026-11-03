@@ -4,6 +4,7 @@ import android.content.Context
 import com.android.messaging.R
 import com.android.messaging.data.appsettings.model.AppBooleanPref
 import com.android.messaging.data.appsettings.model.AppSettings
+import com.android.messaging.data.appsettings.model.LinkOpeningMode
 import com.android.messaging.data.debug.DebugFeaturesProvider
 import com.android.messaging.di.core.IoDispatcher
 import com.android.messaging.util.BuglePrefs
@@ -16,7 +17,9 @@ import kotlinx.coroutines.withContext
 internal interface AppSettingsRepository {
     suspend fun getAppSettings(): AppSettings
     suspend fun isYouTubeLinkPreviewsEnabled(): Boolean
+    suspend fun getLinkOpeningMode(): LinkOpeningMode
     suspend fun setBooleanPref(pref: AppBooleanPref, enabled: Boolean)
+    suspend fun setLinkOpeningMode(mode: LinkOpeningMode)
 }
 
 internal class AppSettingsRepositoryImpl @Inject constructor(
@@ -43,6 +46,7 @@ internal class AppSettingsRepositoryImpl @Inject constructor(
                     resources.getBoolean(R.bool.in_conversation_sound_pref_default),
                 ),
                 youTubeLinkPreviewsEnabled = readYouTubeLinkPreviewsEnabled(),
+                linkOpeningMode = readLinkOpeningMode(),
                 isDebugEnabled = debugFeaturesProvider.isEnabled(),
                 dumpSmsEnabled = appPrefs.getBoolean(
                     context.getString(R.string.dump_sms_pref_key),
@@ -62,6 +66,12 @@ internal class AppSettingsRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getLinkOpeningMode(): LinkOpeningMode {
+        return withContext(ioDispatcher) {
+            readLinkOpeningMode()
+        }
+    }
+
     override suspend fun setBooleanPref(
         pref: AppBooleanPref,
         enabled: Boolean,
@@ -74,10 +84,34 @@ internal class AppSettingsRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun setLinkOpeningMode(mode: LinkOpeningMode) {
+        withContext(ioDispatcher) {
+            BuglePrefs.getApplicationPrefs().putString(
+                context.getString(R.string.link_opening_pref_key),
+                mode.prefValue,
+            )
+        }
+    }
+
     private fun readYouTubeLinkPreviewsEnabled(): Boolean {
         return BuglePrefs.getApplicationPrefs().getBoolean(
             context.getString(R.string.youtube_link_previews_pref_key),
             context.resources.getBoolean(R.bool.youtube_link_previews_pref_default),
         )
+    }
+
+    private fun readLinkOpeningMode(): LinkOpeningMode {
+        val defaultValue = context.getString(R.string.link_opening_pref_default)
+        val value = BuglePrefs.getApplicationPrefs().getString(
+            context.getString(R.string.link_opening_pref_key),
+            defaultValue,
+        )
+        return linkOpeningModeOrNull(prefValue = value)
+            ?: linkOpeningModeOrNull(prefValue = defaultValue)
+            ?: LinkOpeningMode.AskBeforeOpening
+    }
+
+    private fun linkOpeningModeOrNull(prefValue: String?): LinkOpeningMode? {
+        return LinkOpeningMode.entries.firstOrNull { mode -> mode.prefValue == prefValue }
     }
 }

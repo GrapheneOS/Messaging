@@ -12,21 +12,24 @@ private const val LINK_OCCURRENCE_TAG = "conversation-link-occurrence"
 internal fun buildConversationLinkedAnnotatedString(
     text: String,
     links: List<ConversationTextLink>,
+    linksEnabled: Boolean,
     linkStyle: TextLinkStyles,
     onExternalUriClick: (String) -> Unit,
 ): AnnotatedString {
     return buildAnnotatedString {
         append(text)
         links.forEach { link ->
-            addLink(
-                url = LinkAnnotation.Url(
-                    url = link.url,
-                    styles = linkStyle,
-                    linkInteractionListener = { onExternalUriClick(link.url) },
-                ),
-                start = link.start,
-                end = link.end,
-            )
+            if (linksEnabled) {
+                addLink(
+                    url = LinkAnnotation.Url(
+                        url = link.url,
+                        styles = linkStyle,
+                        linkInteractionListener = { onExternalUriClick(link.url) },
+                    ),
+                    start = link.start,
+                    end = link.end,
+                )
+            }
             addStringAnnotation(
                 tag = LINK_OCCURRENCE_TAG,
                 annotation = conversationLinkOccurrenceId(link = link),

@@ -24,6 +24,7 @@ import com.android.messaging.ui.conversation.composer.mapper.ConversationCompose
 import com.android.messaging.ui.conversation.composer.model.ConversationComposerUiState
 import com.android.messaging.ui.conversation.composer.model.ConversationDraftState
 import com.android.messaging.ui.conversation.focus.delegate.ConversationFocusDelegate
+import com.android.messaging.ui.conversation.links.delegate.ConversationLinkDelegate
 import com.android.messaging.ui.conversation.mediapicker.delegate.ConversationMediaPickerDelegate
 import com.android.messaging.ui.conversation.messages.delegate.ConversationMessageSelectionDelegate
 import com.android.messaging.ui.conversation.messages.delegate.ConversationMessagesDelegate
@@ -67,6 +68,7 @@ internal class ConversationViewModelSimSelectionTest {
     private val conversationMediaPickerDelegate = mockk<ConversationMediaPickerDelegate>()
     private val conversationMetadataDelegate = mockk<ConversationMetadataDelegate>()
     private val conversationFocusDelegate = mockk<ConversationFocusDelegate>()
+    private val conversationLinkDelegate = mockk<ConversationLinkDelegate>()
     private val conversationComposerUiStateMapper = mockk<ConversationComposerUiStateMapper>()
     private val simSelectionRepository = mockk<ConversationSimSelectionRepository>()
     private val subscriptionsRepository = mockk<SubscriptionsRepository>()
@@ -129,6 +131,10 @@ internal class ConversationViewModelSimSelectionTest {
         every { conversationMetadataDelegate.bind(any(), any()) } just runs
 
         every { conversationFocusDelegate.bind(any(), any()) } just runs
+
+        every { conversationLinkDelegate.state } returns MutableStateFlow(null)
+        every { conversationLinkDelegate.effects } returns emptyFlow()
+        every { conversationLinkDelegate.bind(any(), any()) } just runs
 
         every {
             conversationComposerUiStateMapper.map(
@@ -297,6 +303,7 @@ internal class ConversationViewModelSimSelectionTest {
             conversationMediaPickerDelegate = conversationMediaPickerDelegate,
             conversationMetadataDelegate = conversationMetadataDelegate,
             conversationFocusDelegate = conversationFocusDelegate,
+            conversationLinkDelegate = conversationLinkDelegate,
             conversationSubscriptionSelectionDelegate = subscriptionSelectionDelegate,
             conversationComposerUiStateMapper = conversationComposerUiStateMapper,
             simSelectionRepository = simSelectionRepository,

@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversation.messages.ui.text.links
 
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.TextLinkStyles
 import com.android.messaging.ui.conversation.messages.model.text.ConversationTextLink
 import com.android.messaging.ui.conversation.messages.model.text.ConversationTextLinkKind
@@ -9,6 +10,7 @@ import com.android.messaging.ui.conversation.messages.ui.text.clipboardText
 import com.android.messaging.ui.conversation.messages.ui.text.selectedConversationTextLink
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 internal class ConversationTextSelectionCopyTest {
@@ -23,6 +25,35 @@ internal class ConversationTextSelectionCopyTest {
         )
         assertEquals(link, selected)
         assertEquals("http://example.com/path", selected?.clipboardText())
+    }
+
+    @Test
+    fun disabledLinksAreNotClickableButStillCopyTheirFullTarget() {
+        val text = "Visit example.com/path now"
+        val link = link(text = text, value = "example.com/path", url = "http://example.com/path")
+        val annotated = annotated(text = text, links = listOf(link), linksEnabled = false)
+
+        val selected = selectedConversationTextLink(
+            selectedTexts = listOf(annotated.subSequence(link.start, link.start + 3)),
+            links = listOf(link),
+        )
+
+        assertTrue(annotated.getLinkAnnotations(start = 0, end = text.length).isEmpty())
+        assertEquals(link, selected)
+        assertEquals("http://example.com/path", selected?.clipboardText())
+    }
+
+    @Test
+    fun enabledLinksAreClickable() {
+        val text = "Visit example.com/path now"
+        val link = link(text = text, value = "example.com/path", url = "http://example.com/path")
+        val annotated = annotated(text = text, links = listOf(link))
+
+        val linkAnnotation = annotated.getLinkAnnotations(start = 0, end = text.length).single()
+
+        assertEquals(link.start, linkAnnotation.start)
+        assertEquals(link.end, linkAnnotation.end)
+        assertEquals("http://example.com/path", (linkAnnotation.item as LinkAnnotation.Url).url)
     }
 
     @Test
@@ -112,10 +143,15 @@ internal class ConversationTextSelectionCopyTest {
         )
     }
 
-    private fun annotated(text: String, links: List<ConversationTextLink>): AnnotatedString {
+    private fun annotated(
+        text: String,
+        links: List<ConversationTextLink>,
+        linksEnabled: Boolean = true,
+    ): AnnotatedString {
         return buildConversationLinkedAnnotatedString(
             text = text,
             links = links,
+            linksEnabled = linksEnabled,
             linkStyle = TextLinkStyles(),
             onExternalUriClick = {},
         )

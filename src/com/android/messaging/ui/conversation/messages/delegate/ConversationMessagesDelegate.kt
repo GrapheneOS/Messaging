@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.messages.delegate
 
 import android.os.Bundle
 import androidx.lifecycle.SavedStateHandle
+import com.android.messaging.data.appsettings.model.LinkOpeningMode
 import com.android.messaging.data.appsettings.repository.AppSettingsRepository
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.MessageId
@@ -451,7 +452,8 @@ internal class ConversationMessagesDelegateImpl @Inject constructor(
                 },
             observeYouTubeLinkPreviewsEnabled(),
             messageTargets,
-        ) { content, youTubeLinkPreviewsEnabled, targets ->
+            observeLinkOpeningMode(),
+        ) { content, youTubeLinkPreviewsEnabled, targets, linkOpeningMode ->
             ConversationMessagesUiState.Present(
                 messages = content.messages,
                 youTubeLinkPreviewsEnabled = youTubeLinkPreviewsEnabled,
@@ -460,6 +462,7 @@ internal class ConversationMessagesDelegateImpl @Inject constructor(
                 windowId = content.windowId,
                 hasNewerMessages = content.hasNewerMessages,
                 latestUnloadedMessage = content.latestUnloadedMessage,
+                linkOpeningMode = linkOpeningMode,
             )
         }
             .flowOn(defaultDispatcher)
@@ -469,6 +472,13 @@ internal class ConversationMessagesDelegateImpl @Inject constructor(
         return refreshTriggers
             .onStart { emit(Unit) }
             .map { appSettingsRepository.isYouTubeLinkPreviewsEnabled() }
+            .distinctUntilChanged()
+    }
+
+    private fun observeLinkOpeningMode(): Flow<LinkOpeningMode> {
+        return refreshTriggers
+            .onStart { emit(Unit) }
+            .map { appSettingsRepository.getLinkOpeningMode() }
             .distinctUntilChanged()
     }
 

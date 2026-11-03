@@ -31,6 +31,8 @@ import com.android.messaging.ui.conversation.composer.model.ConversationComposer
 import com.android.messaging.ui.conversation.composer.model.ConversationDraftState
 import com.android.messaging.ui.conversation.composer.model.ConversationSubscriptionSelectionState
 import com.android.messaging.ui.conversation.focus.delegate.ConversationFocusDelegate
+import com.android.messaging.ui.conversation.links.delegate.ConversationLinkDelegate
+import com.android.messaging.ui.conversation.links.model.ConversationLinkConfirmationUiState
 import com.android.messaging.ui.conversation.mediapicker.delegate.ConversationMediaPickerDelegate
 import com.android.messaging.ui.conversation.messages.delegate.ConversationMessageSelectionDelegate
 import com.android.messaging.ui.conversation.messages.delegate.ConversationMessagesDelegate
@@ -73,6 +75,7 @@ internal abstract class BaseConversationViewModelTest {
         mediaPickerDelegate: ConversationMediaPickerDelegate = createMediaPickerDelegateMock().mock,
         metadataDelegate: ConversationMetadataDelegate = createMetadataDelegateMock().mock,
         focusDelegate: ConversationFocusDelegate = createFocusDelegateMock().mock,
+        linkDelegate: ConversationLinkDelegate = createLinkDelegateMock().mock,
         canAddMoreConversationParticipants: CanAddMoreConversationParticipants = mockk {
             every { invoke(participantCount = any()) } returns false
         },
@@ -98,6 +101,7 @@ internal abstract class BaseConversationViewModelTest {
             conversationMediaPickerDelegate = mediaPickerDelegate,
             conversationMetadataDelegate = metadataDelegate,
             conversationFocusDelegate = focusDelegate,
+            conversationLinkDelegate = linkDelegate,
             conversationSubscriptionSelectionDelegate = subscriptionSelectionDelegate,
             conversationComposerUiStateMapper = composerUiStateMapper,
             simSelectionRepository = simSelectionRepository,
@@ -359,6 +363,29 @@ internal abstract class BaseConversationViewModelTest {
         )
     }
 
+    protected fun createLinkDelegateMock(): LinkDelegateMock {
+        val bindCalls = mutableListOf<BindCall>()
+        val stateFlow = MutableStateFlow<ConversationLinkConfirmationUiState?>(value = null)
+        val effectsFlow = MutableSharedFlow<ConversationScreenEffect>()
+        val mock = mockk<ConversationLinkDelegate>(relaxed = true)
+        every { mock.state } returns stateFlow
+        every { mock.effects } returns effectsFlow
+        every {
+            mock.bind(any(), any())
+        } answers {
+            bindCalls += BindCall(
+                scope = firstArg(),
+                conversationIdFlow = secondArg(),
+            )
+        }
+        return LinkDelegateMock(
+            mock = mock,
+            stateFlow = stateFlow,
+            effectsFlow = effectsFlow,
+            bindCalls = bindCalls,
+        )
+    }
+
     protected fun createComposerUiStateMapperMock(
         mappedUiState: ConversationComposerUiState,
     ): ConversationComposerUiStateMapper {
@@ -473,6 +500,13 @@ internal abstract class BaseConversationViewModelTest {
     protected data class FocusDelegateMock(
         val mock: ConversationFocusDelegate,
         val bindCalls: List<FocusBindCall>,
+    )
+
+    protected data class LinkDelegateMock(
+        val mock: ConversationLinkDelegate,
+        val stateFlow: MutableStateFlow<ConversationLinkConfirmationUiState?>,
+        val effectsFlow: MutableSharedFlow<ConversationScreenEffect>,
+        val bindCalls: List<BindCall>,
     )
 
     protected companion object {
