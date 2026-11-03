@@ -217,7 +217,7 @@ private fun ConversationListEffects(
 ) {
     val context = LocalContext.current
     val undoLabel = stringResource(R.string.snack_bar_undo)
-    val snackbarScope = rememberCoroutineScope()
+    val effectScope = rememberCoroutineScope()
 
     val currentContext by rememberUpdatedState(context)
     val currentEffectHandler by rememberUpdatedState(effectHandler)
@@ -236,7 +236,7 @@ private fun ConversationListEffects(
                 }
 
                 is Effect.ArchiveStatusChanged, is Effect.ConversationBlocked -> {
-                    snackbarScope.launchSnackbarForEffect(
+                    effectScope.launchSnackbarForEffect(
                         snackbarHostState = snackbarHostState,
                         context = currentContext,
                         undoLabel = currentUndoLabel,
@@ -254,7 +254,9 @@ private fun ConversationListEffects(
                 }
 
                 Effect.ScrollToTop -> {
-                    listState.animateScrollToItem(index = 0)
+                    effectScope.launch {
+                        listState.animateScrollToItem(index = 0)
+                    }
                 }
 
                 else -> currentEffectHandler.handle(effect)
