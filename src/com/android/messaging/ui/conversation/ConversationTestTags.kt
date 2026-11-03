@@ -37,6 +37,10 @@ internal const val CONVERSATION_DELETE_MESSAGES_CONFIRM_BUTTON_TEST_TAG =
     "conversation_delete_messages_confirm_button"
 internal const val CONVERSATION_DELETE_MESSAGES_DISMISS_BUTTON_TEST_TAG =
     "conversation_delete_messages_dismiss_button"
+internal const val CONVERSATION_OPEN_LINK_CONFIRM_BUTTON_TEST_TAG =
+    "conversation_open_link_confirm_button"
+internal const val CONVERSATION_OPEN_LINK_DISMISS_BUTTON_TEST_TAG =
+    "conversation_open_link_dismiss_button"
 internal const val CONVERSATION_INLINE_AUDIO_ATTACHMENT_PLAY_BUTTON_TEST_TAG =
     "conversation_inline_audio_attachment_play_button"
 internal const val CONVERSATION_INLINE_AUDIO_ATTACHMENT_PROGRESS_TEST_TAG =

@@ -1,6 +1,7 @@
 package com.android.messaging.ui.appsettings.general
 
 import app.cash.turbine.test
+import com.android.messaging.data.appsettings.model.LinkOpeningMode
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.ui.appsettings.general.delegate.AppSettingsDelegate
 import com.android.messaging.ui.appsettings.general.model.AppSettingsAction as Action
@@ -104,6 +105,20 @@ class AppSettingsViewModelTest {
 
             verify(exactly = 1) {
                 delegate.onDumpMmsChanged(enabled = true)
+            }
+        }
+    }
+
+    @Test
+    fun onLinkOpeningModeChanged_delegatesToAppSettings() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val delegate = mockDelegate()
+            val viewModel = createViewModel(delegate = delegate)
+
+            viewModel.onAction(Action.LinkOpeningModeChanged(mode = LinkOpeningMode.DoNotOpen))
+
+            verify(exactly = 1) {
+                delegate.onLinkOpeningModeChanged(mode = LinkOpeningMode.DoNotOpen)
             }
         }
     }

@@ -1,13 +1,20 @@
 package com.android.messaging.ui.conversation.messages.ui.message.rendering
 
+import android.app.PendingIntent
+import android.app.RemoteAction
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.drawable.Icon
 import android.view.ViewConfiguration
+import android.view.textclassifier.TextClassification
 import android.view.textclassifier.TextClassificationManager
 import android.view.textclassifier.TextClassifier
 import android.view.textclassifier.TextLinks
 import androidx.compose.foundation.text.contextmenu.data.TextContextMenuItem
 import androidx.compose.foundation.text.contextmenu.data.TextContextMenuKeys
+import androidx.compose.foundation.text.contextmenu.data.TextContextMenuSeparator
 import androidx.compose.foundation.text.contextmenu.data.TextContextMenuSession
 import androidx.compose.foundation.text.contextmenu.provider.TextContextMenuDataProvider
 import androidx.compose.foundation.text.contextmenu.provider.TextContextMenuProvider
@@ -19,9 +26,11 @@ import androidx.compose.ui.test.click
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTouchInput
+import androidx.core.net.toUri
 import androidx.test.core.app.ApplicationProvider
 import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
+import com.android.messaging.data.appsettings.model.LinkOpeningMode
 import com.android.messaging.testutil.TEST_WAIT_TIMEOUT_MILLIS
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessageUiModel
 import io.mockk.verify
@@ -29,6 +38,7 @@ import kotlinx.coroutines.awaitCancellation
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -40,13 +50,24 @@ internal class ConversationMessageTextLinkGestureTest : BaseConversationMessageR
 
     private val textContextMenuToolbar = RecordingTextContextMenuToolbar()
 
+    @Volatile
+    private var classifiedSelectionCount = 0
+
     @Before
     fun classifyLinksByPattern() {
-        ApplicationProvider
-            .getApplicationContext<Context>()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val openLinkAction = openLinkAction(context = context)
+        context
             .getSystemService(TextClassificationManager::class.java)
             .setTextClassifier(
                 object : TextClassifier {
+                    override fun classifyText(
+                        request: TextClassification.Request,
+                    ): TextClassification {
+                        classifiedSelectionCount++
+                        return TextClassification.Builder().addAction(openLinkAction).build()
+                    }
+
                     override fun generateLinks(request: TextLinks.Request): TextLinks {
                         val text = request.text.toString()
                         val builder = TextLinks.Builder(text)
@@ -130,6 +151,73 @@ internal class ConversationMessageTextLinkGestureTest : BaseConversationMessageR
 
         assertNotNull(textContextMenuToolbar.item(label = copyLinkLabel()))
         linkText.performTouchInput { up() }
+    }
+
+    @Test
+    fun selectedLink_opensThroughTheAppInsteadOfTheSystemAction() {
+        setLinkMessageContent()
+
+        selectTextAndAwaitToolbar(text = LINK_TEXT)
+        assertEquals(0, textContextMenuToolbar.systemActionCount())
+        textContextMenuToolbar.click(label = openLinkLabel())
+
+        composeTestRule.runOnIdle {
+            verify(exactly = 1) { onExternalUriClick(LINK_TEXT) }
+        }
+    }
+
+    @Test
+    fun selectedTextWithoutALink_keepsTheSystemActionWhenLinksOpenOnTap() {
+        setConversationMessageContent(
+            message = message(text = PLAIN_TEXT),
+            textContextMenuToolbar = textContextMenuToolbar,
+            linkOpeningMode = LinkOpeningMode.OpenOnTap,
+        )
+
+        selectTextAndAwaitToolbar(
+            text = PLAIN_TEXT,
+            awaitedItemLabel = selectMessageLabel(),
+        )
+
+        assertEquals(1, textContextMenuToolbar.systemActionCount())
+    }
+
+    @Test
+    fun selectedSubjectLink_offersNoWayToOpenItWhenAskingBeforeOpening() {
+        selectSubjectLink(linkOpeningMode = LinkOpeningMode.AskBeforeOpening)
+
+        composeTestRule.runOnIdle {
+            assertEquals(0, textContextMenuToolbar.systemActionCount())
+            assertNull(textContextMenuToolbar.item(label = openLinkLabel()))
+        }
+    }
+
+    @Test
+    fun selectedSubjectLink_keepsTheSystemActionWhenLinksOpenOnTap() {
+        selectSubjectLink(linkOpeningMode = LinkOpeningMode.OpenOnTap)
+
+        assertEquals(1, textContextMenuToolbar.systemActionCount())
+    }
+
+    @Test
+    fun selectedDisabledLink_offersNoSystemActionButStillCopiesTheWholeLink() {
+        setConversationMessageContent(
+            message = message(text = LINK_TEXT),
+            textContextMenuToolbar = textContextMenuToolbar,
+            linkOpeningMode = LinkOpeningMode.DoNotOpen,
+        )
+        composeTestRule.waitUntil(timeoutMillis = TEST_WAIT_TIMEOUT_MILLIS) {
+            copyLinkActionLabels(text = LINK_TEXT).isNotEmpty()
+        }
+
+        selectTextAndAwaitToolbar(text = LINK_TEXT)
+        assertEquals(0, textContextMenuToolbar.systemActionCount())
+        assertNull(textContextMenuToolbar.item(label = openLinkLabel()))
+        textContextMenuToolbar.click(label = copyLinkLabel())
+
+        composeTestRule.runOnIdle {
+            verify(exactly = 1) { onCopyText(LINK_TEXT) }
+        }
     }
 
     @Test
@@ -255,6 +343,33 @@ internal class ConversationMessageTextLinkGestureTest : BaseConversationMessageR
         awaitLinkAnnotated(text = LINK_TEXT)
     }
 
+    private fun selectSubjectLink(linkOpeningMode: LinkOpeningMode) {
+        setConversationMessageContent(
+            message = message(
+                text = null,
+                mmsSubject = LINK_TEXT,
+                protocol = ConversationMessageUiModel.Protocol.MMS,
+            ),
+            textContextMenuToolbar = textContextMenuToolbar,
+            linkOpeningMode = linkOpeningMode,
+        )
+        selectTextAndAwaitToolbar(text = LINK_TEXT, awaitedItemLabel = selectMessageLabel())
+    }
+
+    private fun openLinkAction(context: Context): RemoteAction {
+        return RemoteAction(
+            Icon.createWithBitmap(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)),
+            OPEN_LINK_ACTION_TITLE,
+            OPEN_LINK_ACTION_TITLE,
+            PendingIntent.getActivity(
+                context,
+                0,
+                Intent(Intent.ACTION_VIEW, LINK_TEXT.toUri()),
+                PendingIntent.FLAG_IMMUTABLE,
+            ),
+        )
+    }
+
     private fun copiedText(): String {
         val clipboard = targetContext.getSystemService(ClipboardManager::class.java)
         return composeTestRule.runOnIdle {
@@ -275,6 +390,23 @@ internal class ConversationMessageTextLinkGestureTest : BaseConversationMessageR
         return linkText
     }
 
+    // A long press outside a link shows the platform magnifier, which Robolectric cannot dismiss.
+    private fun selectTextAndAwaitToolbar(
+        text: String,
+        awaitedItemLabel: String = copyLinkLabel(),
+    ) {
+        requireNotNull(
+            findCustomAction(
+                text = text,
+                label = targetContext.getString(R.string.conversation_message_select_text),
+            ),
+        ).action()
+        // The toolbar shows only after text classification, which runs off the main clock.
+        composeTestRule.waitUntil(timeoutMillis = TEST_WAIT_TIMEOUT_MILLIS) {
+            classifiedSelectionCount > 0 && textContextMenuToolbar.item(awaitedItemLabel) != null
+        }
+    }
+
     private fun clickLinkText(delayMillis: Long = 0) {
         composeTestRule
             .onNodeWithText(text = LINK_TEXT, useUnmergedTree = true)
@@ -286,6 +418,14 @@ internal class ConversationMessageTextLinkGestureTest : BaseConversationMessageR
 
     private fun copyLinkLabel(): String {
         return targetContext.getString(R.string.conversation_copy_link)
+    }
+
+    private fun openLinkLabel(): String {
+        return targetContext.getString(R.string.conversation_open_link)
+    }
+
+    private fun selectMessageLabel(): String {
+        return targetContext.getString(R.string.conversation_message_select_message)
     }
 
     private fun copyLinkTargetAction(text: String, target: String): CustomAccessibilityAction {
@@ -341,6 +481,15 @@ internal class ConversationMessageTextLinkGestureTest : BaseConversationMessageR
             click(item = items().single { it.key == TextContextMenuKeys.CopyKey })
         }
 
+        // Compose adds the classifier's actions as its own internal component type.
+        fun systemActionCount(): Int {
+            return shownMenu
+                ?.data()
+                ?.components
+                ?.count { it !is TextContextMenuItem && it !== TextContextMenuSeparator }
+                ?: 0
+        }
+
         // The platform toolbar keeps redrawing from its data while its dismiss animation runs.
         fun closedMenuItemLabels(): List<String> {
             return items(menu = lastShownMenu).map { it.label }
@@ -373,6 +522,8 @@ internal class ConversationMessageTextLinkGestureTest : BaseConversationMessageR
         private const val EMAIL_ADDRESS_TEXT = "name@example.com"
         private const val CONTACT_DETAILS_TEXT = "Call $PHONE_NUMBER_TEXT or $EMAIL_ADDRESS_TEXT"
         private const val SUBJECT_TEXT = "Message subject"
+        private const val PLAIN_TEXT = "See you tonight"
+        private const val OPEN_LINK_ACTION_TITLE = "Open"
         private val LINK_PATTERNS = mapOf(
             TextClassifier.TYPE_URL to Regex(pattern = "https://\\S+"),
             TextClassifier.TYPE_PHONE to Regex(pattern = "\\+[\\d-]+"),

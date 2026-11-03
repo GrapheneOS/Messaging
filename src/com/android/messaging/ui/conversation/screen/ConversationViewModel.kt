@@ -29,6 +29,9 @@ import com.android.messaging.ui.conversation.composer.model.ComposerAttachmentUi
 import com.android.messaging.ui.conversation.composer.model.ConversationComposerUiState
 import com.android.messaging.ui.conversation.entry.model.ConversationEntryStartupAttachment
 import com.android.messaging.ui.conversation.focus.delegate.ConversationFocusDelegate
+import com.android.messaging.ui.conversation.links.delegate.ConversationLinkActions
+import com.android.messaging.ui.conversation.links.delegate.ConversationLinkDelegate
+import com.android.messaging.ui.conversation.links.model.ConversationLinkConfirmationUiState
 import com.android.messaging.ui.conversation.mediapicker.delegate.ConversationMediaPickerAttachmentActions
 import com.android.messaging.ui.conversation.mediapicker.delegate.ConversationMediaPickerDelegate
 import com.android.messaging.ui.conversation.messages.delegate.ConversationMessageSelectionActions
@@ -59,6 +62,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 internal interface ConversationScreenModel :
+    ConversationLinkActions,
     ConversationMediaPickerAttachmentActions,
     ConversationMessageSelectionActions {
     val effects: Flow<ConversationScreenEffect>
@@ -103,8 +107,6 @@ internal interface ConversationScreenModel :
     fun onCallClick()
 
     fun onSimSelected(selfParticipantId: ParticipantId)
-
-    fun onExternalUriClicked(uri: String)
 
     fun onMessageTextChanged(text: String, textRevision: Int)
     fun tryStartAddingAttachment(): Boolean
@@ -153,6 +155,7 @@ internal class ConversationViewModel @Inject constructor(
     private val conversationMediaPickerDelegate: ConversationMediaPickerDelegate,
     private val conversationMetadataDelegate: ConversationMetadataDelegate,
     private val conversationFocusDelegate: ConversationFocusDelegate,
+    private val conversationLinkDelegate: ConversationLinkDelegate,
     private val conversationSubscriptionSelectionDelegate:
     ConversationSubscriptionSelectionDelegate,
     conversationComposerUiStateMapper: ConversationComposerUiStateMapper,
@@ -167,6 +170,7 @@ internal class ConversationViewModel @Inject constructor(
     private val resolveContactAction: ResolveContactAction,
 ) : ViewModel(),
     ConversationScreenModel,
+    ConversationLinkActions by conversationLinkDelegate,
     ConversationMediaPickerAttachmentActions by conversationMediaPickerDelegate,
     ConversationMessageSelectionActions by conversationMessageSelectionDelegate {
 
@@ -227,13 +231,9 @@ internal class ConversationViewModel @Inject constructor(
         conversationDraftDelegate.attachmentLimitWarning,
         conversationMetadataDelegate.isDeleteConversationConfirmationVisible,
         conversationDraftDelegate.isSubjectDialogVisible,
-    ) { attachmentLimitWarning, isDeleteConversationConfirmationVisible, isSubjectDialogVisible ->
-        ConversationScreenDialogUiState(
-            attachmentLimitWarning = attachmentLimitWarning,
-            isDeleteConversationConfirmationVisible = isDeleteConversationConfirmationVisible,
-            isSubjectDialogVisible = isSubjectDialogVisible,
-        )
-    }
+        conversationLinkDelegate.state,
+        ::ConversationScreenDialogUiState,
+    )
 
     override val scaffoldUiState: StateFlow<ConversationScreenScaffoldUiState> = combine(
         conversationMetadataDelegate.state,
@@ -251,6 +251,7 @@ internal class ConversationViewModel @Inject constructor(
             isDeleteConversationConfirmationVisible = dialogUiState
                 .isDeleteConversationConfirmationVisible,
             isSubjectDialogVisible = dialogUiState.isSubjectDialogVisible,
+            linkConfirmation = dialogUiState.linkConfirmation,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -266,6 +267,7 @@ internal class ConversationViewModel @Inject constructor(
             isDeleteConversationConfirmationVisible =
                 conversationMetadataDelegate.isDeleteConversationConfirmationVisible.value,
             isSubjectDialogVisible = conversationDraftDelegate.isSubjectDialogVisible.value,
+            linkConfirmation = conversationLinkDelegate.state.value,
         ),
     )
 
@@ -277,6 +279,7 @@ internal class ConversationViewModel @Inject constructor(
         attachmentLimitWarning: ConversationAttachmentLimitWarning?,
         isDeleteConversationConfirmationVisible: Boolean,
         isSubjectDialogVisible: Boolean,
+        linkConfirmation: ConversationLinkConfirmationUiState?,
     ): ConversationScreenScaffoldUiState {
         val isPresent = metadataState is ConversationMetadataUiState.Present
         val presentMetadata = metadataState as? ConversationMetadataUiState.Present
@@ -294,6 +297,7 @@ internal class ConversationViewModel @Inject constructor(
             attachmentLimitWarning = attachmentLimitWarning,
             isDeleteConversationConfirmationVisible = isDeleteConversationConfirmationVisible,
             isSubjectDialogVisible = isSubjectDialogVisible,
+            linkConfirmation = linkConfirmation,
             metadata = metadataState,
             messages = messagesUiState,
             composer = composerUiState,
@@ -365,6 +369,10 @@ internal class ConversationViewModel @Inject constructor(
             scope = viewModelScope,
             conversationIdFlow = conversationIdFlow,
         )
+        conversationLinkDelegate.bind(
+            scope = viewModelScope,
+            conversationIdFlow = conversationIdFlow,
+        )
         conversationSubscriptionSelectionDelegate.bind(scope = viewModelScope)
         bindDelegateStreams()
     }
@@ -373,6 +381,7 @@ internal class ConversationViewModel @Inject constructor(
         viewModelScope.launch(defaultDispatcher) {
             merge(
                 conversationDraftDelegate.effects,
+                conversationLinkDelegate.effects,
                 conversationMediaPickerDelegate.effects,
                 conversationMessageSelectionDelegate.effects,
                 conversationMetadataDelegate.effects,
@@ -599,14 +608,6 @@ internal class ConversationViewModel @Inject constructor(
         simSelectionRepository.setSelectedSelfId(
             conversationId = conversationId,
             selfId = selfParticipantId,
-        )
-    }
-
-    override fun onExternalUriClicked(uri: String) {
-        emitEffect(
-            ConversationScreenEffect.OpenExternalUri(
-                uri = uri,
-            ),
         )
     }
 
@@ -849,4 +850,5 @@ private data class ConversationScreenDialogUiState(
     val attachmentLimitWarning: ConversationAttachmentLimitWarning?,
     val isDeleteConversationConfirmationVisible: Boolean,
     val isSubjectDialogVisible: Boolean,
+    val linkConfirmation: ConversationLinkConfirmationUiState?,
 )

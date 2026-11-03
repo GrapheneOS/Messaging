@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.screen.model
 
 import androidx.compose.runtime.Immutable
 import com.android.messaging.ui.conversation.composer.model.ConversationComposerUiState
+import com.android.messaging.ui.conversation.links.model.ConversationLinkConfirmationUiState
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagesUiState
 import com.android.messaging.ui.conversation.metadata.model.ConversationMetadataUiState
 
@@ -18,6 +19,7 @@ internal data class ConversationScreenScaffoldUiState(
     val attachmentLimitWarning: ConversationAttachmentLimitWarning? = null,
     val isDeleteConversationConfirmationVisible: Boolean = false,
     val isSubjectDialogVisible: Boolean = false,
+    val linkConfirmation: ConversationLinkConfirmationUiState? = null,
     val metadata: ConversationMetadataUiState = ConversationMetadataUiState.Loading,
     val messages: ConversationMessagesUiState = ConversationMessagesUiState.Loading,
     val composer: ConversationComposerUiState = ConversationComposerUiState(),

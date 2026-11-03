@@ -2,6 +2,7 @@ package com.android.messaging.ui.conversation.messages.ui.attachment.rendering
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.testTag
@@ -12,6 +13,7 @@ import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.Dp
+import com.android.messaging.data.appsettings.model.LinkOpeningMode
 import com.android.messaging.ui.conversation.messages.model.attachment.ConversationAttachmentSections
 import com.android.messaging.ui.conversation.messages.model.attachment.ConversationInlineAttachment
 import com.android.messaging.ui.conversation.messages.model.attachment.ConversationMessageAttachment
@@ -21,6 +23,7 @@ import com.android.messaging.ui.conversation.messages.ui.attachment.Conversation
 import com.android.messaging.ui.conversation.messages.ui.attachment.ConversationMessageAttachments
 import com.android.messaging.ui.conversation.messages.ui.attachment.ConversationStandaloneVisualAttachment
 import com.android.messaging.ui.conversation.messages.ui.attachment.rememberConversationInlineAudioAttachmentColors
+import com.android.messaging.ui.conversation.messages.ui.text.LocalConversationMessageLinkOpeningMode
 import com.android.messaging.ui.core.AppTheme
 import io.mockk.clearAllMocks
 import io.mockk.mockk
@@ -50,23 +53,28 @@ internal abstract class BaseConversationMessageAttachmentRenderingTest {
         isSelectionMode: Boolean = false,
         useStandaloneAudioAttachmentBackground: Boolean = false,
         width: Dp = ATTACHMENT_WIDTH,
+        linkOpeningMode: LinkOpeningMode = LinkOpeningMode.AskBeforeOpening,
     ) {
         composeTestRule.setContent {
             AppTheme {
-                ConversationMessageAttachments(
-                    modifier = Modifier
-                        .width(width = width)
-                        .testTag(tag = MESSAGE_ATTACHMENTS_TAG),
-                    attachmentSections = attachmentSections,
-                    hasTextAboveVisualAttachments = hasTextAboveVisualAttachments,
-                    hasTextBelowVisualAttachments = hasTextBelowVisualAttachments,
-                    isIncoming = isIncoming,
-                    isSelectionMode = isSelectionMode,
-                    useStandaloneAudioAttachmentBg = useStandaloneAudioAttachmentBackground,
-                    onAttachmentClick = onAttachmentClick,
-                    onExternalUriClick = onExternalUriClick,
-                    onMessageLongClick = onMessageLongClick,
-                )
+                CompositionLocalProvider(
+                    LocalConversationMessageLinkOpeningMode provides linkOpeningMode,
+                ) {
+                    ConversationMessageAttachments(
+                        modifier = Modifier
+                            .width(width = width)
+                            .testTag(tag = MESSAGE_ATTACHMENTS_TAG),
+                        attachmentSections = attachmentSections,
+                        hasTextAboveVisualAttachments = hasTextAboveVisualAttachments,
+                        hasTextBelowVisualAttachments = hasTextBelowVisualAttachments,
+                        isIncoming = isIncoming,
+                        isSelectionMode = isSelectionMode,
+                        useStandaloneAudioAttachmentBg = useStandaloneAudioAttachmentBackground,
+                        onAttachmentClick = onAttachmentClick,
+                        onExternalUriClick = onExternalUriClick,
+                        onMessageLongClick = onMessageLongClick,
+                    )
+                }
             }
         }
     }

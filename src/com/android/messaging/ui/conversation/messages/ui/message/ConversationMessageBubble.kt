@@ -59,7 +59,10 @@ internal fun ConversationMessageBubble(
         .widthIn(max = maxBubbleWidth)
         .then(other = modifier)
 
-    ConversationTextSelectionContainer(enabled = !isSelectionMode) {
+    ConversationTextSelectionContainer(
+        enabled = !isSelectionMode,
+        onExternalUriClick = onExternalUriClick,
+    ) {
         when (layout.bubbleLayoutMode) {
             ConversationMessageBubbleLayoutMode.AttachmentOnlyWithoutSurface -> {
                 ConversationMessageAttachmentOnlyBubble(

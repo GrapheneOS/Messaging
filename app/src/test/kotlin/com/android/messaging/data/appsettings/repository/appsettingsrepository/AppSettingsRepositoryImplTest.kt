@@ -5,6 +5,7 @@ import android.content.res.Resources
 import com.android.messaging.Factory
 import com.android.messaging.R
 import com.android.messaging.data.appsettings.model.AppBooleanPref
+import com.android.messaging.data.appsettings.model.LinkOpeningMode
 import com.android.messaging.data.appsettings.repository.AppSettingsRepositoryImpl
 import com.android.messaging.data.debug.DebugFeaturesProvider
 import com.android.messaging.datamodel.data.ParticipantData
@@ -73,6 +74,10 @@ internal class AppSettingsRepositoryImplTest {
         every {
             resources.getBoolean(R.bool.youtube_link_previews_pref_default)
         } returns YOUTUBE_LINK_PREVIEWS_DEFAULT
+        every { context.getString(R.string.link_opening_pref_key) } returns LINK_OPENING_PREF_KEY
+        every {
+            context.getString(R.string.link_opening_pref_default)
+        } returns LINK_OPENING_DEFAULT
         every { resources.getBoolean(R.bool.send_sound_pref_default) } returns
             SEND_SOUND_DEFAULT
         every {
@@ -108,6 +113,9 @@ internal class AppSettingsRepositoryImplTest {
                     YOUTUBE_LINK_PREVIEWS_DEFAULT,
                 )
             } returns true
+            every {
+                appPrefs.getString(LINK_OPENING_PREF_KEY, LINK_OPENING_DEFAULT)
+            } returns LinkOpeningMode.OpenOnTap.prefValue
 
             val result = createRepository(
                 ioDispatcher = UnconfinedTestDispatcher(testScheduler),
@@ -118,6 +126,7 @@ internal class AppSettingsRepositoryImplTest {
             assertFalse(result.sendSoundEnabled)
             assertTrue(result.inConversationSoundEnabled)
             assertTrue(result.youTubeLinkPreviewsEnabled)
+            assertEquals(LinkOpeningMode.OpenOnTap, result.linkOpeningMode)
             assertTrue(result.isDebugEnabled)
             assertTrue(result.dumpSmsEnabled)
             assertFalse(result.dumpMmsEnabled)
@@ -224,6 +233,68 @@ internal class AppSettingsRepositoryImplTest {
         }
     }
 
+    @Test
+    fun getLinkOpeningMode_readsEveryStoredMode() {
+        runTest {
+            val repository = createRepository(
+                ioDispatcher = UnconfinedTestDispatcher(testScheduler),
+            )
+
+            LinkOpeningMode.entries.forEach { mode ->
+                every {
+                    appPrefs.getString(LINK_OPENING_PREF_KEY, LINK_OPENING_DEFAULT)
+                } returns mode.prefValue
+
+                assertEquals(mode, repository.getLinkOpeningMode())
+            }
+        }
+    }
+
+    @Test
+    fun getLinkOpeningMode_fallsBackToAskBeforeOpeningForUnknownStoredValue() {
+        runTest {
+            every {
+                appPrefs.getString(LINK_OPENING_PREF_KEY, LINK_OPENING_DEFAULT)
+            } returns "unknown"
+
+            val result = createRepository(
+                ioDispatcher = UnconfinedTestDispatcher(testScheduler),
+            ).getLinkOpeningMode()
+
+            assertEquals(LinkOpeningMode.AskBeforeOpening, result)
+        }
+    }
+
+    @Test
+    fun getLinkOpeningMode_defaultsToAskBeforeOpeningFromResources() {
+        runTest {
+            every { appPrefs.getString(any(), any()) } answers { secondArg() }
+
+            val result = AppSettingsRepositoryImpl(
+                context = RuntimeEnvironment.getApplication().applicationContext,
+                ioDispatcher = UnconfinedTestDispatcher(testScheduler),
+                debugFeaturesProvider = debugFeaturesProvider,
+            ).getLinkOpeningMode()
+
+            assertEquals(LinkOpeningMode.AskBeforeOpening, result)
+        }
+    }
+
+    @Test
+    fun setLinkOpeningMode_writesModePreferenceValue() {
+        runTest {
+            every { appPrefs.putString(any(), any()) } just runs
+
+            createRepository(
+                ioDispatcher = UnconfinedTestDispatcher(testScheduler),
+            ).setLinkOpeningMode(mode = LinkOpeningMode.DoNotOpen)
+
+            verify(exactly = 1) {
+                appPrefs.putString(LINK_OPENING_PREF_KEY, LinkOpeningMode.DoNotOpen.prefValue)
+            }
+        }
+    }
+
     private fun createRepository(ioDispatcher: CoroutineDispatcher): AppSettingsRepositoryImpl {
         return AppSettingsRepositoryImpl(
             context = context,
@@ -240,6 +311,8 @@ internal class AppSettingsRepositoryImplTest {
         private const val DUMP_SMS_PREF_KEY = "dump_sms"
         private const val IN_CONVERSATION_SOUND_DEFAULT = false
         private const val IN_CONVERSATION_SOUND_PREF_KEY = "in_conversation_sound"
+        private const val LINK_OPENING_DEFAULT = "ask"
+        private const val LINK_OPENING_PREF_KEY = "link_opening"
         private const val SEND_SOUND_DEFAULT = true
         private const val SEND_SOUND_PREF_KEY = "send_sound"
         private const val YOUTUBE_LINK_PREVIEWS_DEFAULT = false

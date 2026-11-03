@@ -1,5 +1,7 @@
 package com.android.messaging.ui.appsettings.general.model
 
+import com.android.messaging.data.appsettings.model.LinkOpeningMode
+
 internal sealed interface AppSettingsAction {
 
     data object NotificationsClicked : AppSettingsAction
@@ -23,6 +25,10 @@ internal sealed interface AppSettingsAction {
 
     data class YouTubeLinkPreviewsChanged(
         val enabled: Boolean,
+    ) : AppSettingsAction
+
+    data class LinkOpeningModeChanged(
+        val mode: LinkOpeningMode,
     ) : AppSettingsAction
 
     data class DefaultSmsAppClicked(

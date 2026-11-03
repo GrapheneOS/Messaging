@@ -1,6 +1,7 @@
 package com.android.messaging.ui.appsettings.general.delegate
 
 import com.android.messaging.data.appsettings.model.AppBooleanPref
+import com.android.messaging.data.appsettings.model.LinkOpeningMode
 import com.android.messaging.data.appsettings.repository.AppSettingsRepository
 import com.android.messaging.ui.appsettings.common.SettingsScreenDelegate
 import com.android.messaging.ui.appsettings.general.mapper.AppSettingsUiStateMapper
@@ -20,6 +21,7 @@ internal interface AppSettingsDelegate : SettingsScreenDelegate<AppSettingsUiSta
     fun onSendSoundChanged(enabled: Boolean)
     fun onInConversationSoundChanged(enabled: Boolean)
     fun onYouTubeLinkPreviewsChanged(enabled: Boolean)
+    fun onLinkOpeningModeChanged(mode: LinkOpeningMode)
     fun onDumpSmsChanged(enabled: Boolean)
     fun onDumpMmsChanged(enabled: Boolean)
 }
@@ -79,6 +81,12 @@ internal class AppSettingsDelegateImpl @Inject constructor(
         )
     }
 
+    override fun onLinkOpeningModeChanged(mode: LinkOpeningMode) {
+        writePref {
+            repository.setLinkOpeningMode(mode = mode)
+        }
+    }
+
     override fun onDumpSmsChanged(enabled: Boolean) {
         setBooleanPref(
             pref = AppBooleanPref.DUMP_SMS,
@@ -97,11 +105,17 @@ internal class AppSettingsDelegateImpl @Inject constructor(
         pref: AppBooleanPref,
         enabled: Boolean,
     ) {
-        boundScope?.launch {
+        writePref {
             repository.setBooleanPref(
                 pref = pref,
                 enabled = enabled,
             )
+        }
+    }
+
+    private fun writePref(write: suspend () -> Unit) {
+        boundScope?.launch {
+            write()
             refresh()
         }
     }

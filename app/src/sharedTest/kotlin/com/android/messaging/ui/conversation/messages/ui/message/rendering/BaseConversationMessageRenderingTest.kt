@@ -18,6 +18,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.core.net.toUri
+import com.android.messaging.data.appsettings.model.LinkOpeningMode
 import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.datamodel.data.ParticipantData
@@ -32,6 +33,7 @@ import com.android.messaging.ui.conversation.messages.ui.message.ConversationMes
 import com.android.messaging.ui.conversation.messages.ui.message.ConversationMessageAvatar
 import com.android.messaging.ui.conversation.messages.ui.message.ConversationMmsDownloadBody
 import com.android.messaging.ui.conversation.messages.ui.text.ConversationTextSelectionHost
+import com.android.messaging.ui.conversation.messages.ui.text.LocalConversationMessageLinkOpeningMode
 import com.android.messaging.ui.conversation.screen.model.ConversationMessageAction
 import com.android.messaging.ui.core.AppTheme
 import io.mockk.clearAllMocks
@@ -70,12 +72,14 @@ internal abstract class BaseConversationMessageRenderingTest {
         showIncomingParticipantIdentity: Boolean = true,
         simDisplayName: String? = null,
         textContextMenuToolbar: TextContextMenuProvider? = null,
+        linkOpeningMode: LinkOpeningMode = LinkOpeningMode.AskBeforeOpening,
     ) {
         composeTestRule.setContent {
             AppTheme {
                 CompositionLocalProvider(
                     LocalTextContextMenuToolbarProvider provides
                         (textContextMenuToolbar ?: LocalTextContextMenuToolbarProvider.current),
+                    LocalConversationMessageLinkOpeningMode provides linkOpeningMode,
                 ) {
                     ConversationTextSelectionHost(
                         conversationId = message.conversationId,

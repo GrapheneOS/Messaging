@@ -57,6 +57,7 @@ internal abstract class BaseAppSettingsDelegateTest {
                 enabled = any(),
             )
         } just Runs
+        coEvery { repository.setLinkOpeningMode(mode = any()) } just Runs
     }
 
     protected fun createDelegate(): AppSettingsDelegateImpl {
