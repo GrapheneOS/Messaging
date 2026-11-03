@@ -364,6 +364,52 @@ internal class ContactsRepositoryImplTest {
     }
 
     @Test
+    fun browseMergesPhoneAndEmailContactsInPersianAlphabetOrder() = runTest {
+        stubDefaultPhoneCursor(
+            rows = listOf(
+                phoneRow(contactId = 1L, sortKey = "بهرام", number = "+15550001"),
+                phoneRow(contactId = 2L, sortKey = "پرویز", number = "+15550002"),
+                phoneRow(contactId = 3L, sortKey = "تینا", number = "+15550003"),
+                phoneRow(contactId = 5L, sortKey = "ژاله", number = "+15550005"),
+                phoneRow(contactId = 6L, sortKey = "کامران", number = "+15550006"),
+            ),
+        )
+        stubDefaultEmailCursor(
+            rows = listOf(
+                emailRow(contactId = 4L, sortKey = "چکاوک", address = "chakavak@example.com"),
+                emailRow(contactId = 7L, sortKey = "گلاره", address = "gelareh@example.com"),
+                emailRow(contactId = 8L, sortKey = "لیلا", address = "leila@example.com"),
+            ),
+        )
+
+        val repo = createRepository()
+        val page = repo.searchContacts(query = "", offset = 0).first()
+
+        Assert.assertEquals((1L..8L).toList(), page.contacts.map(Contact::id))
+    }
+
+    @Test
+    fun searchMergesLowercaseAndAccentedNamesInAlphabetOrder() = runTest {
+        val phoneRows = listOf(
+            phoneRow(contactId = 1L, sortKey = "alice", number = "+15550001"),
+            phoneRow(contactId = 3L, sortKey = "Émile", number = "+15550003"),
+        )
+        val emailRows = listOf(
+            emailRow(contactId = 2L, sortKey = "Bob", address = "bob@example.com"),
+            emailRow(contactId = 4L, sortKey = "Zoe", address = "zoe@example.com"),
+        )
+        stubFilterPhoneCursor(query = "e", rows = phoneRows)
+        stubFilterEmailCursor(query = "e", rows = emailRows)
+        stubExpansionPhoneCursor(rows = phoneRows)
+        stubExpansionEmailCursor(rows = emailRows)
+
+        val repo = createRepository()
+        val page = repo.searchContacts(query = "e", offset = 0).first()
+
+        Assert.assertEquals(listOf(1L, 2L, 3L, 4L), page.contacts.map(Contact::id))
+    }
+
+    @Test
     fun phoneAndEmailDestinationsForSameContactMerge() = runTest {
         stubFilterPhoneCursor(
             query = "Dee",
@@ -691,7 +737,7 @@ internal class ContactsRepositoryImplTest {
         contactId: Long,
         sortKey: String,
         number: String,
-        type: Int,
+        type: Int = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
         customLabel: String? = null,
         isPrimary: Boolean = false,
         isSuperPrimary: Boolean = false,
@@ -716,7 +762,7 @@ internal class ContactsRepositoryImplTest {
         contactId: Long,
         sortKey: String,
         address: String,
-        type: Int,
+        type: Int = ContactsContract.CommonDataKinds.Email.TYPE_HOME,
         customLabel: String? = null,
         dataId: Long = nextDataId++,
     ): RawRow {
