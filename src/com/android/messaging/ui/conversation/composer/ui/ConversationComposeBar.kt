@@ -214,6 +214,7 @@ private fun rememberConversationAudioRecordingGestureController(
     )
 }
 
+@Suppress("LongMethod") // Long arguments list, not too much logic, so it's ok to suppress
 @Composable
 internal fun ConversationComposeInputContent(
     audioRecording: ConversationAudioRecordingUiState,
@@ -282,8 +283,9 @@ internal fun ConversationComposeInputContent(
         fieldOverlay = {
             ConversationComposeRecordingOverlay(
                 modifier = Modifier.matchParentSize(),
+                audioRecording = audioRecording,
                 inputState = inputState,
-                durationMillis = audioRecording.durationMillis,
+                onAudioRecordingFinish = onAudioRecordingFinish,
             )
         },
         sendAction = {
@@ -419,20 +421,32 @@ private fun conversationMessageTextChangeHandler(
 
 @Composable
 private fun ConversationComposeRecordingOverlay(
+    audioRecording: ConversationAudioRecordingUiState,
     inputState: ConversationComposeInputState,
-    durationMillis: Long,
+    onAudioRecordingFinish: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    ConversationAudioRecordingContentOverlay(
-        modifier = modifier
-            .consumeRecordingInputTouches(
-                isActiveRecording = inputState.isActiveRecording,
-            ),
-        isActiveRecording = inputState.isActiveRecording,
-        durationMillis = durationMillis,
-        cancelProgress = inputState.cancelProgress,
-        isCancellationArmed = inputState.isCancellationArmed,
-    )
+    Box(modifier = modifier) {
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .consumeRecordingInputTouches(
+                    isActiveRecording = inputState.isActiveRecording,
+                ),
+        )
+
+        ConversationAudioRecordingContentOverlay(
+            modifier = Modifier.matchParentSize(),
+            isActiveRecording = inputState.isActiveRecording,
+            durationMillis = audioRecording.durationMillis,
+            cancelProgress = inputState.cancelProgress,
+            isCancellationArmed = inputState.isCancellationArmed,
+            isLocked = audioRecording.isLocked,
+            onCancelClick = {
+                onAudioRecordingFinish(true)
+            },
+        )
+    }
 }
 
 private fun Modifier.consumeRecordingInputTouches(isActiveRecording: Boolean): Modifier {
@@ -471,6 +485,8 @@ private fun ConversationAudioRecordingContentOverlay(
     durationMillis: Long,
     cancelProgress: Float,
     isCancellationArmed: Boolean,
+    isLocked: Boolean,
+    onCancelClick: () -> Unit,
 ) {
     AnimatedContent(
         modifier = modifier,
@@ -490,6 +506,8 @@ private fun ConversationAudioRecordingContentOverlay(
                         durationMillis = durationMillis,
                         cancelProgress = cancelProgress,
                         isCancellationArmed = isCancellationArmed,
+                        isLocked = isLocked,
+                        onCancelClick = onCancelClick,
                     )
                 }
             }

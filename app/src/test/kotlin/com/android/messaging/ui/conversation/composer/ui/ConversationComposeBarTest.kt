@@ -16,19 +16,27 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
@@ -43,6 +51,7 @@ import com.android.messaging.ui.conversation.CONVERSATION_ATTACHMENT_BUTTON_TEST
 import com.android.messaging.ui.conversation.CONVERSATION_ATTACHMENT_CONTACT_MENU_ITEM_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_ATTACHMENT_MEDIA_MENU_ITEM_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_AUDIO_RECORDING_BAR_TEST_TAG
+import com.android.messaging.ui.conversation.CONVERSATION_AUDIO_RECORDING_CANCEL_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_AUDIO_RECORDING_LOCK_AFFORDANCE_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_MMS_INDICATOR_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_SEGMENT_COUNTER_TEST_TAG
@@ -859,6 +868,238 @@ class ConversationComposeBarTest {
         }
     }
 
+    @Test
+    fun lockedRecording_cancelButtonCancelsRecording() {
+        var audioRecording by mutableStateOf(ConversationAudioRecordingUiState())
+        var finishRequests = 0
+        var cancelRequests = 0
+        val lockDragDistancePx = with(composeTestRule.density) {
+            (AUDIO_RECORD_LOCK_THRESHOLD + 24.dp).toPx()
+        }
+
+        setContent(
+            audioRecording = { audioRecording },
+            messageText = { "" },
+            isSendActionEnabled = false,
+            shouldShowRecordAction = { true },
+            onAudioRecordingStartRequest = {
+                audioRecording = recordingAudioState()
+            },
+            onAudioRecordingFinish = {
+                finishRequests += 1
+                audioRecording = finalizingAudioState()
+            },
+            onAudioRecordingLock = {
+                audioRecording = recordingAudioState(isLocked = true)
+                true
+            },
+            onAudioRecordingCancel = {
+                cancelRequests += 1
+                audioRecording = ConversationAudioRecordingUiState()
+            },
+        )
+
+        composeTestRule
+            .onNodeWithTag(CONVERSATION_SEND_BUTTON_TEST_TAG)
+            .performTouchInput {
+                down(center)
+                advanceEventTime(durationMillis = 700L)
+                moveBy(
+                    Offset(
+                        x = 0f,
+                        y = -lockDragDistancePx,
+                    ),
+                )
+                up()
+            }
+
+        composeTestRule
+            .onNodeWithTag(CONVERSATION_AUDIO_RECORDING_CANCEL_BUTTON_TEST_TAG)
+            .assertIsDisplayed()
+            .performTapWithFingerJitter()
+
+        composeTestRule.runOnIdle {
+            assertEquals(0, finishRequests)
+            assertEquals(1, cancelRequests)
+            assertEquals(ConversationAudioRecordingPhase.Idle, audioRecording.phase)
+        }
+    }
+
+    @Test
+    fun heldRecording_showsSlideToCancelHintInsteadOfCancelButton() {
+        setContent(
+            audioRecording = recordingAudioState(),
+            messageText = "",
+            shouldShowRecordAction = true,
+        )
+
+        composeTestRule
+            .onNodeWithText(
+                targetContext.getString(R.string.conversation_audio_recording_slide_to_cancel),
+            )
+            .assertIsDisplayed()
+        composeTestRule
+            .onAllNodesWithTag(CONVERSATION_AUDIO_RECORDING_CANCEL_BUTTON_TEST_TAG)
+            .assertCountEquals(expectedSize = 0)
+    }
+
+    @Test
+    fun recordButtonTap_showsHoldToRecordHintWithoutRecording() {
+        var startRequests = 0
+        var finishRequests = 0
+        var cancelRequests = 0
+
+        setContent(
+            messageText = "",
+            isSendActionEnabled = false,
+            shouldShowRecordAction = true,
+            onAudioRecordingStartRequest = {
+                startRequests += 1
+            },
+            onAudioRecordingFinish = {
+                finishRequests += 1
+            },
+            onAudioRecordingCancel = {
+                cancelRequests += 1
+            },
+        )
+
+        composeTestRule
+            .onNodeWithTag(CONVERSATION_SEND_BUTTON_TEST_TAG)
+            .performTapWithFingerJitter()
+
+        composeTestRule
+            .onNodeWithText(recordHintText())
+            .assertIsDisplayed()
+
+        composeTestRule.runOnIdle {
+            assertEquals(0, startRequests)
+            assertEquals(0, finishRequests)
+            assertEquals(0, cancelRequests)
+        }
+    }
+
+    @Test
+    fun recordHint_hidesAfterItsDuration() {
+        setContent(
+            messageText = "",
+            isSendActionEnabled = false,
+            shouldShowRecordAction = true,
+        )
+
+        composeTestRule
+            .onNodeWithTag(CONVERSATION_SEND_BUTTON_TEST_TAG)
+            .performClick()
+        composeTestRule.mainClock.advanceTimeBy(milliseconds = RECORD_HINT_DURATION_MILLIS - 500L)
+
+        composeTestRule
+            .onNodeWithText(recordHintText())
+            .assertIsDisplayed()
+
+        composeTestRule.mainClock.advanceTimeBy(milliseconds = 1_000L)
+
+        composeTestRule
+            .onAllNodesWithText(recordHintText())
+            .assertCountEquals(expectedSize = 0)
+    }
+
+    @Test
+    fun recordButtonPressThatSlidesOff_showsNoHint() {
+        var startRequests = 0
+
+        setContent(
+            messageText = "",
+            isSendActionEnabled = false,
+            shouldShowRecordAction = true,
+            onAudioRecordingStartRequest = {
+                startRequests += 1
+            },
+        )
+
+        composeTestRule
+            .onNodeWithTag(CONVERSATION_SEND_BUTTON_TEST_TAG)
+            .performTouchInput {
+                down(center)
+                moveBy(
+                    Offset(
+                        x = -width.toFloat(),
+                        y = 0f,
+                    ),
+                )
+                up()
+            }
+
+        composeTestRule
+            .onAllNodesWithText(recordHintText())
+            .assertCountEquals(expectedSize = 0)
+
+        composeTestRule.runOnIdle {
+            assertEquals(0, startRequests)
+        }
+    }
+
+    @Test
+    fun recordButtonAccessibilityClick_showsHoldToRecordHint() {
+        setContent(
+            messageText = "",
+            isSendActionEnabled = false,
+            shouldShowRecordAction = true,
+        )
+
+        composeTestRule
+            .onNode(
+                hasClickAction() and hasAnyAncestor(hasTestTag(CONVERSATION_SEND_BUTTON_TEST_TAG)),
+            )
+            .performSemanticsAction(SemanticsActions.OnClick)
+
+        composeTestRule
+            .onNodeWithText(recordHintText())
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun recordHint_hidesWhenALongPressStartsRecording() {
+        var audioRecording by mutableStateOf(ConversationAudioRecordingUiState())
+
+        setContent(
+            audioRecording = { audioRecording },
+            messageText = { "" },
+            isSendActionEnabled = false,
+            shouldShowRecordAction = { true },
+            onAudioRecordingStartRequest = {
+                audioRecording = recordingAudioState()
+            },
+        )
+
+        composeTestRule
+            .onNodeWithTag(CONVERSATION_SEND_BUTTON_TEST_TAG)
+            .performClick()
+        composeTestRule
+            .onNodeWithText(recordHintText())
+            .assertIsDisplayed()
+
+        composeTestRule
+            .onNodeWithTag(CONVERSATION_SEND_BUTTON_TEST_TAG)
+            .performTouchInput {
+                down(center)
+            }
+        composeTestRule.mainClock.advanceTimeBy(milliseconds = 700L)
+
+        composeTestRule
+            .onAllNodesWithText(recordHintText())
+            .assertCountEquals(expectedSize = 0)
+
+        composeTestRule.runOnIdle {
+            assertEquals(ConversationAudioRecordingPhase.Recording, audioRecording.phase)
+        }
+
+        composeTestRule
+            .onNodeWithTag(CONVERSATION_SEND_BUTTON_TEST_TAG)
+            .performTouchInput {
+                up()
+            }
+    }
+
     /**
      * Back is delivered to the focused window, so a `FLAG_NOT_FOCUSABLE` menu never sees it and
      * the press reaches the navigation stack instead, closing the conversation along with the
@@ -1072,6 +1313,25 @@ class ConversationComposeBarTest {
             durationMillis = durationMillis,
             isLocked = isLocked,
         )
+    }
+
+    private fun SemanticsNodeInteraction.performTapWithFingerJitter() {
+        performTouchInput {
+            down(center)
+            advanceEventTime(durationMillis = 50L)
+            moveBy(
+                Offset(
+                    x = 2f,
+                    y = 0f,
+                ),
+            )
+            advanceEventTime(durationMillis = 50L)
+            up()
+        }
+    }
+
+    private fun recordHintText(): String {
+        return targetContext.getString(R.string.audio_record_view_content_description)
     }
 
     private fun finalizingAudioState(): ConversationAudioRecordingUiState {

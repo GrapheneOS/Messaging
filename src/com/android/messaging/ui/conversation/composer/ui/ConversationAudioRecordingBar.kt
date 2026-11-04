@@ -1,5 +1,6 @@
 package com.android.messaging.ui.conversation.composer.ui
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -14,6 +15,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,6 +37,7 @@ import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,6 +64,8 @@ internal fun ConversationAudioRecordingBar(
     durationMillis: Long,
     cancelProgress: Float,
     isCancellationArmed: Boolean,
+    isLocked: Boolean,
+    onCancelClick: () -> Unit,
 ) {
     val visualState = animateAudioRecordingBarVisualState(
         cancelProgress = cancelProgress,
@@ -98,13 +103,63 @@ internal fun ConversationAudioRecordingBar(
                 contentColor = visualState.contentColor,
             )
 
-            AudioRecordingCancelHint(
+            AudioRecordingCancelAction(
                 modifier = Modifier
                     .weight(weight = 1f)
                     .padding(end = 8.dp),
+                isLocked = isLocked,
                 contentColor = visualState.contentColor,
                 hintAlpha = visualState.hintAlpha,
+                onCancelClick = onCancelClick,
             )
+        }
+    }
+}
+
+@Composable
+private fun AudioRecordingCancelAction(
+    modifier: Modifier = Modifier,
+    isLocked: Boolean,
+    contentColor: Color,
+    hintAlpha: Float,
+    onCancelClick: () -> Unit,
+) {
+    AnimatedContent(
+        modifier = modifier,
+        targetState = isLocked,
+        transitionSpec = {
+            fadeIn(animationSpec = tween(durationMillis = 180))
+                .togetherWith(fadeOut(animationSpec = tween(durationMillis = 120)))
+        },
+        contentAlignment = Alignment.CenterStart,
+        label = "conversation_audio_recording_cancel_action",
+    ) { isRecordingLocked ->
+        when {
+            isRecordingLocked -> {
+                AudioRecordingCancelButton(onClick = onCancelClick)
+            }
+
+            else -> {
+                AudioRecordingCancelHint(
+                    contentColor = contentColor,
+                    hintAlpha = hintAlpha,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AudioRecordingCancelButton(onClick: () -> Unit) {
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center,
+    ) {
+        TextButton(
+            modifier = Modifier.testTag(CONVERSATION_AUDIO_RECORDING_CANCEL_BUTTON_TEST_TAG),
+            onClick = onClick,
+        ) {
+            Text(text = stringResource(android.R.string.cancel))
         }
     }
 }
@@ -168,7 +223,6 @@ private fun AudioRecordingDeleteIcon(
             ),
     ) {
         Icon(
-            modifier = Modifier.testTag(CONVERSATION_AUDIO_RECORDING_CANCEL_BUTTON_TEST_TAG),
             imageVector = Icons.Rounded.DeleteOutline,
             contentDescription = null,
             tint = tint,
@@ -418,11 +472,22 @@ private fun ConversationAudioRecordingBarPreview() {
                 durationMillis = 12_000L,
                 cancelProgress = 0f,
                 isCancellationArmed = false,
+                isLocked = false,
+                onCancelClick = {},
             )
             ConversationAudioRecordingBar(
                 durationMillis = 65_000L,
                 cancelProgress = 1f,
                 isCancellationArmed = true,
+                isLocked = false,
+                onCancelClick = {},
+            )
+            ConversationAudioRecordingBar(
+                durationMillis = 23_000L,
+                cancelProgress = 0f,
+                isCancellationArmed = false,
+                isLocked = true,
+                onCancelClick = {},
             )
             Row(horizontalArrangement = Arrangement.spacedBy(space = 16.dp)) {
                 ConversationAudioRecordingLockAffordance(lockProgress = 0f)
