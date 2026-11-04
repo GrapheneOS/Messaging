@@ -307,8 +307,18 @@ internal class ConversationMediaPickerDelegateImpl @Inject constructor(
             conversationAttachmentsRepository
                 .createDraftAttachmentsFromContacts(contactUris = resolvedContactUris)
                 .filter { it.isNotEmpty() }
-                .collect(conversationDraftDelegate::addAttachments)
+                .collect(::addContactAttachments)
         }
+    }
+
+    private fun addContactAttachments(attachments: List<ConversationDraftAttachment>) {
+        val acceptedContentUris = conversationDraftDelegate
+            .addAttachments(attachments = attachments)
+            .mapTo(mutableSetOf()) { acceptedAttachment -> acceptedAttachment.contentUri }
+
+        attachments
+            .filterNot { attachment -> attachment.contentUri in acceptedContentUris }
+            .forEach { attachment -> deleteTemporaryAttachment(attachment.contentUri) }
     }
 
     override fun onRemovePendingAttachment(pendingAttachmentId: String) {

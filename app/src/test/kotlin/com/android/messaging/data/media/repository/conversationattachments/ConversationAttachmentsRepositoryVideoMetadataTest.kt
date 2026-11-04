@@ -262,6 +262,7 @@ internal class ConversationAttachmentsRepositoryVideoMetadataTest {
     ): ConversationAttachmentsRepositoryImpl {
         return ConversationAttachmentsRepositoryImpl(
             contentResolver = contentResolver,
+            contactVCardComposer = mockk(),
             ioDispatcher = mainDispatcherRule.testDispatcher,
         )
     }

@@ -5,7 +5,11 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.provider.OpenableColumns
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
+import com.android.messaging.data.extension.contactLookupUrisFromVCardUri
+import com.android.messaging.data.extension.excludesVCardPhotos
+import com.android.messaging.data.extension.isContactVCardUri
 import com.android.messaging.data.shareintent.model.SharedTextContentResult
+import com.android.messaging.data.vcard.composer.ContactVCardComposer
 import com.android.messaging.di.core.IoDispatcher
 import com.android.messaging.util.ContentType
 import com.android.messaging.util.LogUtil
@@ -27,6 +31,7 @@ internal interface SharedAttachmentRepository {
 
 internal class SharedAttachmentRepositoryImpl @Inject constructor(
     private val contentResolver: ContentResolver,
+    private val contactVCardComposer: ContactVCardComposer,
     @param:IoDispatcher
     private val ioDispatcher: CoroutineDispatcher,
 ) : SharedAttachmentRepository {
@@ -39,7 +44,7 @@ internal class SharedAttachmentRepositoryImpl @Inject constructor(
             val displayName = queryDisplayName(sourceUri)
             val durationMillis = audioDurationMillis(sourceUri, contentType)
 
-            when (val persistedUri = UriUtil.persistContentToScratchSpace(sourceUri)) {
+            when (val persistedUri = persistSourceToScratchSpace(sourceUri = sourceUri)) {
                 null -> {
                     LogUtil.w(TAG, "Failed to persist shared attachment to scratch space")
                     null
@@ -76,6 +81,28 @@ internal class SharedAttachmentRepositoryImpl @Inject constructor(
                 },
             )
         }
+    }
+
+    private fun persistSourceToScratchSpace(sourceUri: Uri): Uri? {
+        val composedVCardUri = when {
+            sourceUri.isContactVCardUri() -> {
+                composeContactVCard(vCardUri = sourceUri)
+            }
+            else -> null
+        }
+
+        return composedVCardUri ?: UriUtil.persistContentToScratchSpace(sourceUri)
+    }
+
+    private fun composeContactVCard(vCardUri: Uri): Uri? {
+        return runCatching {
+            contactVCardComposer.composeToScratchSpace(
+                contactUris = vCardUri.contactLookupUrisFromVCardUri(),
+                includePhotos = !vCardUri.excludesVCardPhotos(),
+            )
+        }.onFailure {
+            LogUtil.w(TAG, "Could not compose a vCard for shared contacts $vCardUri", it)
+        }.getOrNull()
     }
 
     private fun audioDurationMillis(sourceUri: Uri, contentType: String): Long? {

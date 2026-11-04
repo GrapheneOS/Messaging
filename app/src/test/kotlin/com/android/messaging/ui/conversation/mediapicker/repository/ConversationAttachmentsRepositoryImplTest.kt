@@ -14,6 +14,7 @@ import com.android.messaging.data.media.model.AttachmentToSave
 import com.android.messaging.data.media.model.PhotoPickerDraftAttachmentResult
 import com.android.messaging.data.media.model.SaveAttachmentsResult
 import com.android.messaging.data.media.repository.ConversationAttachmentsRepositoryImpl
+import com.android.messaging.data.vcard.composer.ContactVCardComposer
 import com.android.messaging.datamodel.MediaScratchFileProvider
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.testutil.TEST_CONTACT_URI
@@ -43,6 +44,8 @@ class ConversationAttachmentsRepositoryImplTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
+    private val contactVCardComposer = mockk<ContactVCardComposer>()
+
     @Test
     fun createDraftAttachmentsFromPhotoPicker_resolvesImageAttachment() {
         runTest(
@@ -61,6 +64,7 @@ class ConversationAttachmentsRepositoryImplTest {
             )
             val repository = ConversationAttachmentsRepositoryImpl(
                 contentResolver = contentResolver,
+                contactVCardComposer = contactVCardComposer,
                 ioDispatcher = mainDispatcherRule.testDispatcher,
             )
 
@@ -112,6 +116,7 @@ class ConversationAttachmentsRepositoryImplTest {
             )
             val repository = ConversationAttachmentsRepositoryImpl(
                 contentResolver = contentResolver,
+                contactVCardComposer = contactVCardComposer,
                 ioDispatcher = mainDispatcherRule.testDispatcher,
             )
 
@@ -130,29 +135,31 @@ class ConversationAttachmentsRepositoryImplTest {
     }
 
     @Test
-    fun createDraftAttachmentsFromContacts_returnsVCardAttachmentPerResolvedContact() {
+    fun createDraftAttachmentsFromContacts_returnsComposedVCardAttachmentPerContact() {
         runTest(
             context = mainDispatcherRule.testDispatcher,
         ) {
-            val contentResolver = mockk<ContentResolver>()
             every {
-                contentResolver.query(Uri.parse(TEST_CONTACT_URI), any(), any(), any(), any())
-            } returns createContactsCursor(arrayOf<Any?>("lookup-key-1"))
+                contactVCardComposer.composeToScratchSpace(
+                    contactUris = listOf(Uri.parse(TEST_CONTACT_URI)),
+                    includePhotos = true,
+                )
+            } returns Uri.parse(FIRST_VCARD_SCRATCH_URI)
             every {
-                contentResolver.query(Uri.parse(SECOND_CONTACT_URI), any(), any(), any(), any())
-            } returns createContactsCursor(arrayOf<Any?>("lookup-key-2"))
-            val repository = ConversationAttachmentsRepositoryImpl(
-                contentResolver = contentResolver,
-                ioDispatcher = mainDispatcherRule.testDispatcher,
-            )
+                contactVCardComposer.composeToScratchSpace(
+                    contactUris = listOf(Uri.parse(SECOND_CONTACT_URI)),
+                    includePhotos = true,
+                )
+            } returns Uri.parse(SECOND_VCARD_SCRATCH_URI)
+            val repository = createContactAttachmentsRepository()
 
             repository.createDraftAttachmentsFromContacts(
                 contactUris = listOf(TEST_CONTACT_URI, SECOND_CONTACT_URI),
             ).test {
                 assertEquals(
                     listOf(
-                        createVCardAttachment(lookupKey = "lookup-key-1"),
-                        createVCardAttachment(lookupKey = "lookup-key-2"),
+                        createVCardAttachment(contentUri = FIRST_VCARD_SCRATCH_URI),
+                        createVCardAttachment(contentUri = SECOND_VCARD_SCRATCH_URI),
                     ),
                     awaitItem(),
                 )
@@ -162,27 +169,29 @@ class ConversationAttachmentsRepositoryImplTest {
     }
 
     @Test
-    fun createDraftAttachmentsFromContacts_skipsContactsWithoutLookupKey() {
+    fun createDraftAttachmentsFromContacts_skipsContactsWithoutComposedVCard() {
         runTest(
             context = mainDispatcherRule.testDispatcher,
         ) {
-            val contentResolver = mockk<ContentResolver>()
             every {
-                contentResolver.query(Uri.parse(TEST_CONTACT_URI), any(), any(), any(), any())
-            } returns createContactsCursor(arrayOf<Any?>(""))
+                contactVCardComposer.composeToScratchSpace(
+                    contactUris = listOf(Uri.parse(TEST_CONTACT_URI)),
+                    includePhotos = true,
+                )
+            } returns null
             every {
-                contentResolver.query(Uri.parse(SECOND_CONTACT_URI), any(), any(), any(), any())
-            } returns createContactsCursor(arrayOf<Any?>("lookup-key-2"))
-            val repository = ConversationAttachmentsRepositoryImpl(
-                contentResolver = contentResolver,
-                ioDispatcher = mainDispatcherRule.testDispatcher,
-            )
+                contactVCardComposer.composeToScratchSpace(
+                    contactUris = listOf(Uri.parse(SECOND_CONTACT_URI)),
+                    includePhotos = true,
+                )
+            } returns Uri.parse(SECOND_VCARD_SCRATCH_URI)
+            val repository = createContactAttachmentsRepository()
 
             repository.createDraftAttachmentsFromContacts(
                 contactUris = listOf(TEST_CONTACT_URI, SECOND_CONTACT_URI),
             ).test {
                 assertEquals(
-                    listOf(createVCardAttachment(lookupKey = "lookup-key-2")),
+                    listOf(createVCardAttachment(contentUri = SECOND_VCARD_SCRATCH_URI)),
                     awaitItem(),
                 )
                 awaitComplete()
@@ -191,27 +200,29 @@ class ConversationAttachmentsRepositoryImplTest {
     }
 
     @Test
-    fun createDraftAttachmentsFromContacts_skipsContactsThatFailToResolve() {
+    fun createDraftAttachmentsFromContacts_skipsContactsThatFailToCompose() {
         runTest(
             context = mainDispatcherRule.testDispatcher,
         ) {
-            val contentResolver = mockk<ContentResolver>()
             every {
-                contentResolver.query(Uri.parse(TEST_CONTACT_URI), any(), any(), any(), any())
+                contactVCardComposer.composeToScratchSpace(
+                    contactUris = listOf(Uri.parse(TEST_CONTACT_URI)),
+                    includePhotos = true,
+                )
             } throws IllegalStateException("boom")
             every {
-                contentResolver.query(Uri.parse(SECOND_CONTACT_URI), any(), any(), any(), any())
-            } returns createContactsCursor(arrayOf<Any?>("lookup-key-2"))
-            val repository = ConversationAttachmentsRepositoryImpl(
-                contentResolver = contentResolver,
-                ioDispatcher = mainDispatcherRule.testDispatcher,
-            )
+                contactVCardComposer.composeToScratchSpace(
+                    contactUris = listOf(Uri.parse(SECOND_CONTACT_URI)),
+                    includePhotos = true,
+                )
+            } returns Uri.parse(SECOND_VCARD_SCRATCH_URI)
+            val repository = createContactAttachmentsRepository()
 
             repository.createDraftAttachmentsFromContacts(
                 contactUris = listOf(TEST_CONTACT_URI, SECOND_CONTACT_URI),
             ).test {
                 assertEquals(
-                    listOf(createVCardAttachment(lookupKey = "lookup-key-2")),
+                    listOf(createVCardAttachment(contentUri = SECOND_VCARD_SCRATCH_URI)),
                     awaitItem(),
                 )
                 awaitComplete()
@@ -227,6 +238,7 @@ class ConversationAttachmentsRepositoryImplTest {
             val contentResolver = createContentResolver(contactCursor = createContactsCursor())
             val repository = ConversationAttachmentsRepositoryImpl(
                 contentResolver = contentResolver,
+                contactVCardComposer = contactVCardComposer,
                 ioDispatcher = mainDispatcherRule.testDispatcher,
             )
             val scratchUri = Uri.parse("content://${MediaScratchFileProvider.AUTHORITY}/12345")
@@ -264,6 +276,7 @@ class ConversationAttachmentsRepositoryImplTest {
             } throws IllegalStateException("boom")
             val repository = ConversationAttachmentsRepositoryImpl(
                 contentResolver = contentResolver,
+                contactVCardComposer = contactVCardComposer,
                 ioDispatcher = mainDispatcherRule.testDispatcher,
             )
 
@@ -292,6 +305,7 @@ class ConversationAttachmentsRepositoryImplTest {
             )
             val repository = ConversationAttachmentsRepositoryImpl(
                 contentResolver = contentResolver,
+                contactVCardComposer = contactVCardComposer,
                 ioDispatcher = mainDispatcherRule.testDispatcher,
             )
 
@@ -360,6 +374,7 @@ class ConversationAttachmentsRepositoryImplTest {
             val contentResolver = createContentResolverForSave(pendingUri = pendingUri)
             val repository = ConversationAttachmentsRepositoryImpl(
                 contentResolver = contentResolver,
+                contactVCardComposer = contactVCardComposer,
                 ioDispatcher = mainDispatcherRule.testDispatcher,
             )
 
@@ -406,6 +421,7 @@ class ConversationAttachmentsRepositoryImplTest {
             val contentResolver = createContentResolverForSave(pendingUri = pendingUri)
             val repository = ConversationAttachmentsRepositoryImpl(
                 contentResolver = contentResolver,
+                contactVCardComposer = contactVCardComposer,
                 ioDispatcher = mainDispatcherRule.testDispatcher,
             )
 
@@ -452,6 +468,7 @@ class ConversationAttachmentsRepositoryImplTest {
             every { contentResolver.insert(any(), any()) } returns null
             val repository = ConversationAttachmentsRepositoryImpl(
                 contentResolver = contentResolver,
+                contactVCardComposer = contactVCardComposer,
                 ioDispatcher = mainDispatcherRule.testDispatcher,
             )
 
@@ -493,6 +510,7 @@ class ConversationAttachmentsRepositoryImplTest {
             every { contentResolver.delete(pendingUri, null, null) } returns 1
             val repository = ConversationAttachmentsRepositoryImpl(
                 contentResolver = contentResolver,
+                contactVCardComposer = contactVCardComposer,
                 ioDispatcher = mainDispatcherRule.testDispatcher,
             )
 
@@ -534,6 +552,7 @@ class ConversationAttachmentsRepositoryImplTest {
             val contentResolver = createContentResolverForSave(pendingUri = pendingUri)
             val repository = ConversationAttachmentsRepositoryImpl(
                 contentResolver = contentResolver,
+                contactVCardComposer = contactVCardComposer,
                 ioDispatcher = mainDispatcherRule.testDispatcher,
             )
 
@@ -611,10 +630,18 @@ class ConversationAttachmentsRepositoryImplTest {
         return contentResolver
     }
 
-    private fun createVCardAttachment(lookupKey: String): ConversationDraftAttachment {
+    private fun createContactAttachmentsRepository(): ConversationAttachmentsRepositoryImpl {
+        return ConversationAttachmentsRepositoryImpl(
+            contentResolver = mockk(),
+            contactVCardComposer = contactVCardComposer,
+            ioDispatcher = mainDispatcherRule.testDispatcher,
+        )
+    }
+
+    private fun createVCardAttachment(contentUri: String): ConversationDraftAttachment {
         return ConversationDraftAttachment(
             contentType = ContentType.TEXT_VCARD,
-            contentUri = Uri.withAppendedPath(Contacts.CONTENT_VCARD_URI, lookupKey).toString(),
+            contentUri = contentUri,
         )
     }
 
@@ -630,6 +657,10 @@ class ConversationAttachmentsRepositoryImplTest {
 
     private companion object {
         private const val SECOND_CONTACT_URI = "content://contacts/lookup/2"
+        private const val FIRST_VCARD_SCRATCH_URI =
+            "content://${MediaScratchFileProvider.AUTHORITY}/scratch-contact-1"
+        private const val SECOND_VCARD_SCRATCH_URI =
+            "content://${MediaScratchFileProvider.AUTHORITY}/scratch-contact-2"
         private val onePixelPngBytes = byteArrayOf(
             0x89.toByte(),
             0x50,

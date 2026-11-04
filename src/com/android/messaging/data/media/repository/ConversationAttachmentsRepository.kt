@@ -6,16 +6,15 @@ import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Environment
-import android.provider.ContactsContract.Contacts
 import android.provider.MediaStore
 import android.webkit.MimeTypeMap
-import androidx.core.database.getStringOrNull
 import androidx.core.net.toUri
 import com.android.messaging.data.conversation.model.draft.ConversationDraftAttachment
 import com.android.messaging.data.conversation.model.draft.PhotoPickerDraftAttachment
 import com.android.messaging.data.media.model.AttachmentToSave
 import com.android.messaging.data.media.model.PhotoPickerDraftAttachmentResult
 import com.android.messaging.data.media.model.SaveAttachmentsResult
+import com.android.messaging.data.vcard.composer.ContactVCardComposer
 import com.android.messaging.datamodel.MediaScratchFileProvider
 import com.android.messaging.di.core.IoDispatcher
 import com.android.messaging.util.ContentType
@@ -51,6 +50,7 @@ internal interface ConversationAttachmentsRepository {
 
 internal class ConversationAttachmentsRepositoryImpl @Inject constructor(
     private val contentResolver: ContentResolver,
+    private val contactVCardComposer: ContactVCardComposer,
     @param:IoDispatcher
     private val ioDispatcher: CoroutineDispatcher,
 ) : ConversationAttachmentsRepository {
@@ -485,35 +485,17 @@ internal class ConversationAttachmentsRepositoryImpl @Inject constructor(
     private fun queryDraftAttachmentFromContact(
         contactUri: String,
     ): ConversationDraftAttachment? {
-        val lookupKey = contentResolver.query(
-            contactUri.toUri(),
-            arrayOf(Contacts.LOOKUP_KEY),
-            null,
-            null,
-            null,
-        )?.use { cursor ->
-            val lookupKeyColumnIndex = cursor.getColumnIndexOrThrow(Contacts.LOOKUP_KEY)
-
-            when {
-                cursor.moveToFirst() -> cursor.getStringOrNull(lookupKeyColumnIndex)
-                else -> null
+        return contactVCardComposer
+            .composeToScratchSpace(
+                contactUris = listOf(contactUri.toUri()),
+                includePhotos = true,
+            )
+            ?.let { vCardUri ->
+                ConversationDraftAttachment(
+                    contentType = ContentType.TEXT_VCARD,
+                    contentUri = vCardUri.toString(),
+                )
             }
-        }
-
-        if (lookupKey.isNullOrBlank()) {
-            LogUtil.w(TAG, "Unable to resolve contact lookup key for $contactUri")
-            return null
-        }
-
-        val vCardUri = Uri.withAppendedPath(
-            Contacts.CONTENT_VCARD_URI,
-            lookupKey,
-        )
-
-        return ConversationDraftAttachment(
-            contentType = ContentType.TEXT_VCARD,
-            contentUri = vCardUri.toString(),
-        )
     }
 
     private companion object {

@@ -1,5 +1,7 @@
 package com.android.messaging.di.vcard
 
+import com.android.messaging.data.vcard.composer.ContactVCardComposer
+import com.android.messaging.data.vcard.composer.ContactVCardComposerImpl
 import com.android.messaging.data.vcard.mapper.VCardEntrySummarizer
 import com.android.messaging.data.vcard.mapper.VCardEntrySummarizerImpl
 import com.android.messaging.data.vcard.parser.VCardParser
@@ -18,6 +20,12 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal abstract class VCardBindsModule {
+
+    @Binds
+    @Reusable
+    abstract fun bindContactVCardComposer(
+        impl: ContactVCardComposerImpl,
+    ): ContactVCardComposer
 
     @Binds
     @Reusable
