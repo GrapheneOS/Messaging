@@ -280,7 +280,7 @@ class MessageNotificationAttachmentUriTest {
         val style = MessagingStyle(SELF).also { it.addMessage(message) }
         val notification =
             NotificationCompat.Builder(context, NotificationChannelUtil.INCOMING_MESSAGES)
-                .setSmallIcon(R.drawable.ic_sms_light)
+                .setSmallIcon(R.drawable.ic_notification)
                 .setStyle(style)
                 .build()
 

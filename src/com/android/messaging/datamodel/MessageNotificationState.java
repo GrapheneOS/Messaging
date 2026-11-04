@@ -878,7 +878,7 @@ public class MessageNotificationState {
                         .setContentTitle(line1)
                         .setTicker(line1)
                         .setWhen(when > 0 ? when : System.currentTimeMillis())
-                        .setSmallIcon(R.drawable.ic_failed_light)
+                        .setSmallIcon(R.drawable.ic_notification_failed)
                         .setDeleteIntent(pendingIntentForDelete)
                         .setContentIntent(destinationIntent)
                         .setContentText(line2)

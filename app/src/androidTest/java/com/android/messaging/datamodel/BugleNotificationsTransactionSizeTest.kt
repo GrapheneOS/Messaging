@@ -73,7 +73,7 @@ class BugleNotificationsTransactionSizeTest {
             context,
             NotificationChannelUtil.INCOMING_MESSAGES,
         )
-            .setSmallIcon(R.drawable.ic_sms_light)
+            .setSmallIcon(R.drawable.ic_notification)
             .setStyle(style)
 
         peopleInConversation

@@ -101,6 +101,18 @@ class MessageNotificationStateFailedMessagesTest {
     }
 
     @Test
+    fun checkFailedMessagesShowsTheFailureIcon() {
+        insertFailedMessage()
+
+        checkFailedMessages()
+
+        assertEquals(
+            R.drawable.ic_notification_failed,
+            postedFailureNotification().smallIcon.resId,
+        )
+    }
+
+    @Test
     fun checkFailedMessagesShowsTheTextOfTheMessageThatFailed() {
         insertFailedMessage()
 
