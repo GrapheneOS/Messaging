@@ -2,17 +2,24 @@ package com.android.messaging.ui.conversation.composer.ui
 
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.awaitLongPressOrCancellation
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.AwaitPointerEventScope
+import androidx.compose.ui.input.pointer.PointerEventTimeoutCancellationException
 import androidx.compose.ui.input.pointer.PointerId
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import com.android.messaging.ui.conversation.composer.model.ConversationSendActionButtonGestureState
 import com.android.messaging.ui.conversation.composer.model.ConversationSendActionButtonMode
+
+private enum class RecordButtonPress {
+    Tap,
+    LongPress,
+    Cancelled,
+}
 
 @Composable
 internal fun Modifier.conversationSendActionButtonGesture(
@@ -23,6 +30,7 @@ internal fun Modifier.conversationSendActionButtonGesture(
     isRecordingActive: Boolean,
     isRecordingLocked: Boolean,
     onGestureActiveChange: (Boolean) -> Unit,
+    onRecordTap: () -> Unit,
     onRecordGestureStart: () -> Unit,
     onRecordGestureMove: (ConversationSendActionButtonGestureState) -> Unit,
     onRecordGestureLock: () -> Boolean,
@@ -32,6 +40,7 @@ internal fun Modifier.conversationSendActionButtonGesture(
     val currentIsRecordingActive by rememberUpdatedState(newValue = isRecordingActive)
     val currentIsRecordingLocked by rememberUpdatedState(newValue = isRecordingLocked)
     val currentOnGestureActiveChange by rememberUpdatedState(newValue = onGestureActiveChange)
+    val currentOnRecordTap by rememberUpdatedState(newValue = onRecordTap)
     val currentOnRecordGestureStart by rememberUpdatedState(newValue = onRecordGestureStart)
     val currentOnRecordGestureMove by rememberUpdatedState(newValue = onRecordGestureMove)
     val currentOnRecordGestureLock by rememberUpdatedState(newValue = onRecordGestureLock)
@@ -66,6 +75,7 @@ internal fun Modifier.conversationSendActionButtonGesture(
                         cancelThresholdPx = cancelThresholdPx,
                         lockThresholdPx = lockThresholdPx,
                         onGestureActiveChange = currentOnGestureActiveChange,
+                        onRecordTap = currentOnRecordTap,
                         onRecordGestureStart = currentOnRecordGestureStart,
                         onRecordGestureMove = currentOnRecordGestureMove,
                         onRecordGestureLock = currentOnRecordGestureLock,
@@ -81,6 +91,7 @@ private suspend fun AwaitPointerEventScope.handleRecordGesture(
     cancelThresholdPx: Float,
     lockThresholdPx: Float,
     onGestureActiveChange: (Boolean) -> Unit,
+    onRecordTap: () -> Unit,
     onRecordGestureStart: () -> Unit,
     onRecordGestureMove: (ConversationSendActionButtonGestureState) -> Unit,
     onRecordGestureLock: () -> Boolean,
@@ -88,27 +99,46 @@ private suspend fun AwaitPointerEventScope.handleRecordGesture(
 ) {
     val initialDown = awaitFirstDown(requireUnconsumed = false)
 
-    val longPressChange = awaitLongPressOrCancellation(pointerId = initialDown.id)
-        ?: return
+    when (awaitRecordButtonPress()) {
+        RecordButtonPress.Tap -> onRecordTap()
 
-    onGestureActiveChange(true)
-    onRecordGestureStart()
+        RecordButtonPress.LongPress -> {
+            onGestureActiveChange(true)
+            onRecordGestureStart()
 
-    trackRecordGestureDrag(
-        initialDown = initialDown,
-        longPressChange = longPressChange,
-        cancelThresholdPx = cancelThresholdPx,
-        lockThresholdPx = lockThresholdPx,
-        onGestureActiveChange = onGestureActiveChange,
-        onRecordGestureMove = onRecordGestureMove,
-        onRecordGestureLock = onRecordGestureLock,
-        onRecordGestureFinish = onRecordGestureFinish,
-    )
+            trackRecordGestureDrag(
+                initialDown = initialDown,
+                cancelThresholdPx = cancelThresholdPx,
+                lockThresholdPx = lockThresholdPx,
+                onGestureActiveChange = onGestureActiveChange,
+                onRecordGestureMove = onRecordGestureMove,
+                onRecordGestureLock = onRecordGestureLock,
+                onRecordGestureFinish = onRecordGestureFinish,
+            )
+        }
+
+        RecordButtonPress.Cancelled -> Unit
+    }
+}
+
+private suspend fun AwaitPointerEventScope.awaitRecordButtonPress(): RecordButtonPress {
+    return try {
+        withTimeout(timeMillis = viewConfiguration.longPressTimeoutMillis) {
+            val upChange = waitForUpOrCancellation()
+            upChange?.consume()
+
+            when (upChange) {
+                null -> RecordButtonPress.Cancelled
+                else -> RecordButtonPress.Tap
+            }
+        }
+    } catch (_: PointerEventTimeoutCancellationException) {
+        RecordButtonPress.LongPress
+    }
 }
 
 private suspend fun AwaitPointerEventScope.trackRecordGestureDrag(
     initialDown: PointerInputChange,
-    longPressChange: PointerInputChange,
     cancelThresholdPx: Float,
     lockThresholdPx: Float,
     onGestureActiveChange: (Boolean) -> Unit,
@@ -117,8 +147,6 @@ private suspend fun AwaitPointerEventScope.trackRecordGestureDrag(
     onRecordGestureFinish: (Boolean) -> Unit,
 ) {
     var isRecordingLocked = false
-
-    longPressChange.consume()
 
     val releaseGestureState = awaitRecordGestureRelease(initialDown = initialDown) { gestureState ->
         isRecordingLocked = updateRecordGestureLockState(

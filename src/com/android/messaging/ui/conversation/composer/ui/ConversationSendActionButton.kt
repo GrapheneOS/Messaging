@@ -23,17 +23,27 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.rounded.Mic
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -42,6 +52,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.AccessibilityManager
+import androidx.compose.ui.platform.LocalAccessibilityManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -53,6 +65,7 @@ import com.android.messaging.R
 import com.android.messaging.ui.conversation.composer.model.ConversationSendActionButtonGestureState
 import com.android.messaging.ui.conversation.composer.model.ConversationSendActionButtonMode
 import com.android.messaging.ui.core.MessagingPreviewColumn
+import kotlinx.coroutines.withTimeoutOrNull
 
 @Immutable
 private data class ConversationSendActionButtonVisualState(
@@ -68,6 +81,8 @@ private val SEND_ACTION_BUTTON_PULSE_SCALE_ANIMATION_SPEC = infiniteRepeatable<F
     ),
     repeatMode = RepeatMode.Reverse,
 )
+
+internal const val RECORD_HINT_DURATION_MILLIS = 2_500L
 
 private val SEND_ACTION_BUTTON_BASE_SCALE_ANIMATION_SPEC = tween<Float>(durationMillis = 180)
 private val SEND_ACTION_BUTTON_COLOR_ANIMATION_SPEC = tween<Color>(durationMillis = 220)
@@ -112,6 +127,16 @@ internal fun ConversationSendActionButton(
     var isRecordGestureActive by remember(mode, enabled) {
         mutableStateOf(value = false)
     }
+    var recordHintRequest by remember {
+        mutableIntStateOf(value = 0)
+    }
+    val isRecordHintAvailable = mode == ConversationSendActionButtonMode.Record &&
+        enabled &&
+        !isRecordingActive &&
+        !isRecordGestureActive
+    val onRecordHintRequest = {
+        recordHintRequest += 1
+    }
 
     val visualState = animateConversationSendActionButtonVisualState(
         isRecordingActive = isRecordingActive,
@@ -135,6 +160,7 @@ internal fun ConversationSendActionButton(
         onGestureActiveChange = { isActive ->
             isRecordGestureActive = isActive
         },
+        onRecordTap = onRecordHintRequest,
         onRecordGestureStart = onRecordGestureStart,
         onRecordGestureMove = onRecordGestureMove,
         onRecordGestureLock = onRecordGestureLock,
@@ -142,17 +168,76 @@ internal fun ConversationSendActionButton(
         onLockedStopClick = onLockedStopClick,
     )
 
-    ConversationSendActionButtonLayout(
-        modifier = modifier,
-        isRecordingActive = isRecordingActive,
-        buttonModifier = gestureModifier,
-        enabled = enabled,
-        mode = mode,
-        onClick = onClick,
-        onLockedStopClick = onLockedStopClick,
-        onSendActionLongClick = onSendActionLongClick,
-        visualState = visualState,
+    RecordHintTooltipBox(
+        showRequest = recordHintRequest,
+        isAvailable = isRecordHintAvailable,
+    ) {
+        ConversationSendActionButtonLayout(
+            modifier = modifier,
+            isRecordingActive = isRecordingActive,
+            buttonModifier = gestureModifier,
+            enabled = enabled,
+            mode = mode,
+            isRecordHintAvailable = isRecordHintAvailable,
+            onClick = onClick,
+            onLockedStopClick = onLockedStopClick,
+            onRecordHintRequest = onRecordHintRequest,
+            onSendActionLongClick = onSendActionLongClick,
+            visualState = visualState,
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RecordHintTooltipBox(
+    showRequest: Int,
+    isAvailable: Boolean,
+    content: @Composable () -> Unit,
+) {
+    val tooltipState = rememberTooltipState(isPersistent = true)
+    val accessibilityManager = LocalAccessibilityManager.current
+
+    LaunchedEffect(tooltipState, showRequest) {
+        if (showRequest > 0) {
+            withTimeoutOrNull(
+                timeMillis = recordHintDurationMillis(accessibilityManager = accessibilityManager),
+            ) {
+                tooltipState.show()
+            }
+        }
+    }
+
+    LaunchedEffect(tooltipState, isAvailable) {
+        if (!isAvailable) {
+            tooltipState.dismiss()
+        }
+    }
+
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+            positioning = TooltipAnchorPosition.Above,
+        ),
+        tooltip = {
+            // TooltipBox fades the tooltip in a layer clipped to its bounds, so a caret drawn
+            // outside them only appears once the tooltip is fully opaque.
+            Box(modifier = Modifier.padding(bottom = TooltipDefaults.caretSize.height)) {
+                PlainTooltip(caretShape = TooltipDefaults.caretShape()) {
+                    Text(text = stringResource(id = R.string.audio_record_view_content_description))
+                }
+            }
+        },
+        state = tooltipState,
+        enableUserInput = false,
+        content = content,
     )
+}
+
+private fun recordHintDurationMillis(accessibilityManager: AccessibilityManager?): Long {
+    return accessibilityManager?.calculateRecommendedTimeoutMillis(
+        originalTimeoutMillis = RECORD_HINT_DURATION_MILLIS,
+        containsText = true,
+    ) ?: RECORD_HINT_DURATION_MILLIS
 }
 
 @Composable
@@ -218,8 +303,10 @@ private fun ConversationSendActionButtonLayout(
     buttonModifier: Modifier,
     enabled: Boolean,
     mode: ConversationSendActionButtonMode,
+    isRecordHintAvailable: Boolean,
     onClick: () -> Unit,
     onLockedStopClick: () -> Unit,
+    onRecordHintRequest: () -> Unit,
     onSendActionLongClick: () -> Unit,
     visualState: ConversationSendActionButtonVisualState,
 ) {
@@ -234,8 +321,10 @@ private fun ConversationSendActionButtonLayout(
             modifier = buttonModifier,
             enabled = enabled,
             mode = mode,
+            isRecordHintAvailable = isRecordHintAvailable,
             onClick = onClick,
             onLockedStopClick = onLockedStopClick,
+            onRecordHintRequest = onRecordHintRequest,
             onSendActionLongClick = onSendActionLongClick,
             visualState = visualState,
         )
@@ -247,8 +336,10 @@ private fun ConversationSendActionButtonContent(
     modifier: Modifier,
     enabled: Boolean,
     mode: ConversationSendActionButtonMode,
+    isRecordHintAvailable: Boolean,
     onClick: () -> Unit,
     onLockedStopClick: () -> Unit,
+    onRecordHintRequest: () -> Unit,
     onSendActionLongClick: () -> Unit,
     visualState: ConversationSendActionButtonVisualState,
 ) {
@@ -266,9 +357,11 @@ private fun ConversationSendActionButtonContent(
         modifier = Modifier
             .fillMaxSize()
             .scale(scale = visualState.buttonScale)
-            .stopSemanticsModifier(
+            .recordSemanticsModifier(
                 mode = mode,
+                isRecordHintAvailable = isRecordHintAvailable,
                 onLockedStopClick = onLockedStopClick,
+                onRecordHintRequest = onRecordHintRequest,
             )
             .then(modifier),
         shape = CircleShape,
@@ -294,19 +387,30 @@ private fun ConversationSendActionButtonContent(
 }
 
 @Composable
-private fun Modifier.stopSemanticsModifier(
+private fun Modifier.recordSemanticsModifier(
     mode: ConversationSendActionButtonMode,
+    isRecordHintAvailable: Boolean,
     onLockedStopClick: () -> Unit,
+    onRecordHintRequest: () -> Unit,
 ): Modifier {
     val stopContentDescription = stringResource(
         id = R.string.audio_record_stop_content_description,
     )
 
-    return when (mode) {
-        ConversationSendActionButtonMode.Stop -> {
+    return when {
+        mode == ConversationSendActionButtonMode.Stop -> {
             semantics {
                 onClick(label = stopContentDescription) {
                     onLockedStopClick()
+                    true
+                }
+            }
+        }
+
+        isRecordHintAvailable -> {
+            semantics {
+                onClick {
+                    onRecordHintRequest()
                     true
                 }
             }
