@@ -111,6 +111,70 @@ internal class ConversationMediaPickerDelegateDirectSourcesTest :
                 verify(exactly = 1) {
                     draftDelegate.addAttachments(attachments = attachments)
                 }
+                verify(exactly = 0) {
+                    @Suppress("UnusedFlow")
+                    attachmentRepository.deleteTemporaryAttachment(any())
+                }
+            } finally {
+                boundScope.cancel()
+            }
+        }
+    }
+
+    @Test
+    fun onContactCardsPicked_deletesContactCardsOverAttachmentLimit() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher
+        ) {
+            val dispatcher = mainDispatcherRule.testDispatcher
+            val acceptedAttachment = ConversationDraftAttachment(
+                contentType = "text/x-vCard",
+                contentUri = "content://scratch/contact-1.vcf",
+            )
+            val rejectedAttachment = ConversationDraftAttachment(
+                contentType = "text/x-vCard",
+                contentUri = "content://scratch/contact-2.vcf",
+            )
+            val draftDelegate = createMediaPickerDraftDelegateMock()
+            every {
+                draftDelegate.addAttachments(attachments = any())
+            } returns listOf(acceptedAttachment)
+            val attachmentRepository = createAttachmentRepositoryMock(
+                createDraftAttachmentsFromContactsFlow = flowOf(
+                    listOf(acceptedAttachment, rejectedAttachment),
+                ),
+            )
+            val delegate = createDelegate(
+                draftDelegate = draftDelegate,
+                attachmentMapper = createDraftAttachmentMapperMock(),
+                attachmentRepository = attachmentRepository,
+                defaultDispatcher = dispatcher,
+            )
+            val boundScope = CoroutineScope(dispatcher + SupervisorJob())
+
+            try {
+                delegate.bind(
+                    scope = boundScope,
+                    conversationIdFlow = MutableStateFlow(value = null),
+                )
+
+                delegate.onContactCardsPicked(
+                    contactUris = listOf(TEST_CONTACT_URI, SECOND_CONTACT_URI),
+                )
+                advanceUntilIdle()
+
+                verify(exactly = 1) {
+                    @Suppress("UnusedFlow")
+                    attachmentRepository.deleteTemporaryAttachment(
+                        contentUri = rejectedAttachment.contentUri,
+                    )
+                }
+                verify(exactly = 0) {
+                    @Suppress("UnusedFlow")
+                    attachmentRepository.deleteTemporaryAttachment(
+                        contentUri = acceptedAttachment.contentUri,
+                    )
+                }
             } finally {
                 boundScope.cancel()
             }

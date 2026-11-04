@@ -5,8 +5,10 @@ import android.database.Cursor
 import android.database.MatrixCursor
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.provider.ContactsContract.Contacts
 import android.provider.OpenableColumns
 import com.android.messaging.data.shareintent.model.SharedTextContentResult
+import com.android.messaging.data.vcard.composer.ContactVCardComposer
 import com.android.messaging.util.ContentType
 import com.android.messaging.util.MediaMetadataRetrieverWrapper
 import com.android.messaging.util.UriUtil
@@ -17,6 +19,7 @@ import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
+import io.mockk.verify
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -35,10 +38,12 @@ import org.robolectric.RobolectricTestRunner
 internal class SharedAttachmentRepositoryImplTest {
 
     private val contentResolver = mockk<ContentResolver>()
+    private val contactVCardComposer = mockk<ContactVCardComposer>()
     private val testDispatcher = StandardTestDispatcher()
 
     private val repository = SharedAttachmentRepositoryImpl(
         contentResolver = contentResolver,
+        contactVCardComposer = contactVCardComposer,
         ioDispatcher = testDispatcher,
     )
 
@@ -153,6 +158,90 @@ internal class SharedAttachmentRepositoryImplTest {
     }
 
     @Test
+    fun persistToScratchSpace_sharedContact_composesMergedVCard() = runTest(testDispatcher) {
+        every {
+            contactVCardComposer.composeToScratchSpace(
+                contactUris = listOf(contactLookupUri(lookupKey = "lookup-key-1")),
+                includePhotos = true,
+            )
+        } returns COMPOSED_VCARD_URI
+
+        val result = repository.persistToScratchSpace(
+            sourceUri = Uri.withAppendedPath(Contacts.CONTENT_VCARD_URI, "lookup-key-1"),
+            contentType = ContentType.TEXT_VCARD,
+        )
+
+        assertEquals(COMPOSED_VCARD_URI.toString(), result?.contentUri)
+        verify(exactly = 0) { UriUtil.persistContentToScratchSpace(any<Uri>()) }
+    }
+
+    @Test
+    fun persistToScratchSpace_sharedContactWithoutPhoto_composesWithoutPhotos() = runTest(
+        testDispatcher,
+    ) {
+        every {
+            contactVCardComposer.composeToScratchSpace(
+                contactUris = listOf(contactLookupUri(lookupKey = "lookup-key-1")),
+                includePhotos = false,
+            )
+        } returns COMPOSED_VCARD_URI
+        val noPhotoVCardUri = Uri.withAppendedPath(Contacts.CONTENT_VCARD_URI, "lookup-key-1")
+            .buildUpon()
+            .appendQueryParameter(Contacts.QUERY_PARAMETER_VCARD_NO_PHOTO, "true")
+            .build()
+
+        val result = repository.persistToScratchSpace(
+            sourceUri = noPhotoVCardUri,
+            contentType = ContentType.TEXT_VCARD,
+        )
+
+        assertEquals(COMPOSED_VCARD_URI.toString(), result?.contentUri)
+        verify(exactly = 0) { UriUtil.persistContentToScratchSpace(any<Uri>()) }
+    }
+
+    @Test
+    fun persistToScratchSpace_sharedContacts_composesEveryLookupKey() = runTest(testDispatcher) {
+        every {
+            contactVCardComposer.composeToScratchSpace(
+                contactUris = listOf(
+                    contactLookupUri(lookupKey = "lookup-key-1"),
+                    contactLookupUri(lookupKey = "lookup:key-2"),
+                ),
+                includePhotos = true,
+            )
+        } returns COMPOSED_VCARD_URI
+        val multiVCardUri = Uri.withAppendedPath(
+            Contacts.CONTENT_MULTI_VCARD_URI,
+            Uri.encode("lookup-key-1:${Uri.encode("lookup:key-2")}"),
+        )
+
+        val result = repository.persistToScratchSpace(
+            sourceUri = multiVCardUri,
+            contentType = ContentType.TEXT_VCARD,
+        )
+
+        assertEquals(COMPOSED_VCARD_URI.toString(), result?.contentUri)
+    }
+
+    @Test
+    fun persistToScratchSpace_sharedContactNotComposed_copiesSharedBytes() = runTest(
+        testDispatcher,
+    ) {
+        val vCardUri = Uri.withAppendedPath(Contacts.CONTENT_VCARD_URI, "lookup-key-1")
+        every {
+            contactVCardComposer.composeToScratchSpace(contactUris = any(), includePhotos = any())
+        } throws SecurityException("denied")
+
+        val result = repository.persistToScratchSpace(
+            sourceUri = vCardUri,
+            contentType = ContentType.TEXT_VCARD,
+        )
+
+        assertEquals(PERSISTED_URI.toString(), result?.contentUri)
+        verify { UriUtil.persistContentToScratchSpace(vCardUri) }
+    }
+
+    @Test
     fun readTextContent_returnsStreamText() = runTest(testDispatcher) {
         every { contentResolver.openInputStream(SOURCE_URI) } returns
             ByteArrayInputStream("line one\nline two".toByteArray())
@@ -200,6 +289,10 @@ internal class SharedAttachmentRepositoryImplTest {
         }
     }
 
+    private fun contactLookupUri(lookupKey: String): Uri {
+        return Contacts.CONTENT_LOOKUP_URI.buildUpon().appendPath(lookupKey).build()
+    }
+
     private fun stubAudioDuration(durationMillis: Int) {
         mockkConstructor(MediaMetadataRetrieverWrapper::class)
         every { anyConstructed<MediaMetadataRetrieverWrapper>().setDataSource(any()) } just Runs
@@ -221,6 +314,7 @@ internal class SharedAttachmentRepositoryImplTest {
     private companion object {
         private val SOURCE_URI: Uri = Uri.parse("content://media/external/images/1")
         private val PERSISTED_URI: Uri = Uri.parse("content://scratch/1")
+        private val COMPOSED_VCARD_URI: Uri = Uri.parse("content://scratch/contact.vcf")
         private const val IMAGE_TYPE = ContentType.IMAGE_JPEG
         private const val AUDIO_TYPE = ContentType.AUDIO_MP3
     }

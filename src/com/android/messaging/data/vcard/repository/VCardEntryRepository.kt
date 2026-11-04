@@ -2,9 +2,9 @@ package com.android.messaging.data.vcard.repository
 
 import android.content.ContentResolver
 import android.database.ContentObserver
-import android.net.Uri
 import android.provider.ContactsContract.Contacts
 import androidx.core.net.toUri
+import com.android.messaging.data.extension.isContactVCardUri
 import com.android.messaging.data.vcard.parser.VCardParser
 import com.android.messaging.datamodel.media.CustomVCardEntry
 import javax.inject.Inject
@@ -127,17 +127,6 @@ internal class VCardEntryRepositoryImpl @Inject constructor(
 
     private fun shouldCache(vCardUri: String): Boolean {
         return !vCardUri.toUri().isContactVCardUri()
-    }
-
-    private fun Uri.isContactVCardUri(): Boolean {
-        return matchesVCardUri(Contacts.CONTENT_VCARD_URI) ||
-            matchesVCardUri(Contacts.CONTENT_MULTI_VCARD_URI)
-    }
-
-    private fun Uri.matchesVCardUri(base: Uri): Boolean {
-        return scheme == base.scheme &&
-            authority == base.authority &&
-            pathSegments.take(base.pathSegments.size) == base.pathSegments
     }
 
     private suspend fun cached(vCardUri: String): List<CustomVCardEntry>? {
