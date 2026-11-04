@@ -40,7 +40,7 @@ internal class SecondaryUserNotifierImpl @Inject constructor(
             .setContentTitle(title)
             .setContentText(text)
             .setTicker(context.getString(R.string.secondary_user_new_message_ticker))
-            .setSmallIcon(R.drawable.ic_sms_light)
+            .setSmallIcon(R.drawable.ic_notification)
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
             .setContentIntent(pendingIntent)
             .setStyle(style)

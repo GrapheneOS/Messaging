@@ -75,7 +75,7 @@ public class SmsStorageStatusManager {
         builder.setContentTitle(resources.getString(R.string.sms_storage_low_title))
                 .setContentText(resources.getString(R.string.sms_storage_low_text))
                 .setTicker(resources.getString(R.string.sms_storage_low_notification_ticker))
-                .setSmallIcon(R.drawable.ic_sms_light)
+                .setSmallIcon(R.drawable.ic_notification)
                 .setPriority(Notification.PRIORITY_DEFAULT)
                 .setOngoing(false)
                 .setAutoCancel(false)

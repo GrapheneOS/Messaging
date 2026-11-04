@@ -2,6 +2,7 @@ package com.android.messaging.datamodel
 
 import androidx.core.app.NotificationManagerCompat
 import com.android.messaging.FactoryTestAccess
+import com.android.messaging.R
 import com.android.messaging.data.conversationsettings.repository.ConversationSnoozeQuery
 import com.android.messaging.datamodel.data.ConversationListItemData
 import com.android.messaging.testutil.installTestFactory
@@ -13,6 +14,7 @@ import io.mockk.runs
 import io.mockk.unmockkAll
 import io.mockk.verify
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -122,6 +124,20 @@ class BugleNotificationsMultipleConversationsTest {
                 it.endsWith(BugleNotifications.SMS_OVERFLOW_NOTIFICATION_TAG)
             },
         )
+    }
+
+    @Test
+    fun createMessageNotification_overTheCap_showsTheAppIconOnTheOverflow() {
+        val conversations = (1..BugleNotifications.MAX_CONVERSATION_NOTIFICATIONS + 1)
+            .map { createNotificationConversation(it.toString()) }
+        givenUnseenMessages(*conversations.toTypedArray())
+
+        BugleNotifications.createMessageNotification(conversations.first().mConversationId)
+
+        val overflow = NotificationManagerCompat.from(RuntimeEnvironment.getApplication())
+            .activeNotifications
+            .single { it.tag.endsWith(BugleNotifications.SMS_OVERFLOW_NOTIFICATION_TAG) }
+        assertEquals(R.drawable.ic_notification, overflow.notification.smallIcon.resId)
     }
 
     @Test

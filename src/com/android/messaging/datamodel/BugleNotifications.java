@@ -278,7 +278,7 @@ public class BugleNotifications {
                 NotificationChannelUtil.INCOMING_MESSAGES)
                 .setContentTitle(context.getResources().getQuantityString(
                         R.plurals.notification_more_conversations, overflowCount, overflowCount))
-                .setSmallIcon(R.drawable.ic_sms_light)
+                .setSmallIcon(R.drawable.ic_notification)
                 .setContentIntent(
                         UIIntents.get().getPendingIntentForConversationListActivity(context))
                 .setCategory(NotificationCompat.CATEGORY_MESSAGE)
@@ -586,7 +586,7 @@ public class BugleNotifications {
         }
 
         notifBuilder
-                .setSmallIcon(R.drawable.ic_sms_light)
+                .setSmallIcon(R.drawable.ic_notification)
                 .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
                 .setCategory(NotificationCompat.CATEGORY_MESSAGE);
 
@@ -654,7 +654,7 @@ public class BugleNotifications {
                 .setContentTitle(line1)
                 .setContentText(line2)
                 .setStyle(new NotificationCompat.BigTextStyle(builder).bigText(line2))
-                .setSmallIcon(R.drawable.ic_failed_light)
+                .setSmallIcon(R.drawable.ic_notification_failed)
                 .setContentIntent(destinationIntent)
                 .setSound(UriUtil.getUriForResourceId(context, R.raw.message_failure));
 

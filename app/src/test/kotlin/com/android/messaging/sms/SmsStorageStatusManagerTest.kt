@@ -146,7 +146,7 @@ internal class SmsStorageStatusManagerTest {
             STORAGE_WARNING_TEXT,
             notification.extras.getCharSequence(Notification.EXTRA_BIG_TEXT).toString(),
         )
-        assertEquals(R.drawable.ic_sms_light, notification.smallIcon.resId)
+        assertEquals(R.drawable.ic_notification, notification.smallIcon.resId)
         assertFalse(notification.flags and Notification.FLAG_ONGOING_EVENT != 0)
         assertFalse(notification.flags and Notification.FLAG_AUTO_CANCEL != 0)
 
