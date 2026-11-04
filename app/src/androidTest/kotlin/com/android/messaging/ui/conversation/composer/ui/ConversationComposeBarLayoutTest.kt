@@ -11,10 +11,9 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.unit.Density
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
 import com.android.messaging.ui.conversation.CONVERSATION_SEND_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_TEXT_FIELD_TEST_TAG
-import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingUiState
+import com.android.messaging.ui.conversation.composer.model.ConversationComposerUiState
 import com.android.messaging.ui.core.AppTheme
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -44,17 +43,12 @@ class ConversationComposeBarLayoutTest {
                         contentAlignment = Alignment.BottomCenter,
                     ) {
                         ConversationComposeBar(
-                            audioRecording = ConversationAudioRecordingUiState(),
-                            messageText = "Hello",
-                            messageTextRevision = 0,
-                            subjectText = "",
-                            sendProtocol = ConversationDraftSendProtocol.SMS,
-                            segmentCounter = null,
-                            isMessageFieldEnabled = true,
-                            isAttachmentActionEnabled = false,
-                            isRecordActionEnabled = true,
-                            isSendActionEnabled = true,
-                            shouldShowRecordAction = false,
+                            uiState = ConversationComposerUiState(
+                                messageText = "Hello",
+                                isMessageFieldEnabled = true,
+                                isRecordActionEnabled = true,
+                                isSendEnabled = true,
+                            ),
                             onContactAttachClick = {},
                             onMediaPickerClick = {},
                             onLockedAudioRecordingStartRequest = {},

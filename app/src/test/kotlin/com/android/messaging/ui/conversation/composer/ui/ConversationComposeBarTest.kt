@@ -59,6 +59,7 @@ import com.android.messaging.ui.conversation.CONVERSATION_SEND_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.CONVERSATION_TEXT_FIELD_TEST_TAG
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingPhase
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingUiState
+import com.android.messaging.ui.conversation.composer.model.ConversationComposerUiState
 import com.android.messaging.ui.conversation.composer.model.ConversationSegmentCounterUiState
 import com.android.messaging.ui.core.AppTheme
 import io.mockk.every
@@ -1251,17 +1252,18 @@ class ConversationComposeBarTest {
                     contentAlignment = Alignment.BottomCenter,
                 ) {
                     ConversationComposeBar(
-                        audioRecording = audioRecording(),
-                        messageText = messageText(),
-                        messageTextRevision = 0,
-                        subjectText = subjectText,
-                        sendProtocol = sendProtocol,
-                        segmentCounter = segmentCounter,
-                        isMessageFieldEnabled = isMessageFieldEnabled,
-                        isAttachmentActionEnabled = isAttachmentActionEnabled,
-                        isRecordActionEnabled = isRecordActionEnabled,
-                        isSendActionEnabled = isSendActionEnabled,
-                        shouldShowRecordAction = shouldShowRecordAction(),
+                        uiState = ConversationComposerUiState(
+                            audioRecording = audioRecording(),
+                            messageText = messageText(),
+                            subjectText = subjectText,
+                            sendProtocol = sendProtocol,
+                            segmentCounter = segmentCounter,
+                            isMessageFieldEnabled = isMessageFieldEnabled,
+                            isAttachmentActionEnabled = isAttachmentActionEnabled,
+                            isRecordActionEnabled = isRecordActionEnabled,
+                            isSendEnabled = isSendActionEnabled,
+                            shouldShowRecordAction = shouldShowRecordAction(),
+                        ),
                         onContactAttachClick = onContactAttachClick,
                         onMediaPickerClick = onMediaPickerClick,
                         onLockedAudioRecordingStartRequest = onLockedAudioRecordingStartRequest,

@@ -305,18 +305,7 @@ private fun ConversationScreenBottomBar(
     }
 
     ConversationComposerSection(
-        audioRecording = uiState.composer.audioRecording,
-        attachments = uiState.composer.attachments,
-        messageText = uiState.composer.messageText,
-        messageTextRevision = uiState.composer.messageTextRevision,
-        subjectText = uiState.composer.subjectText,
-        sendProtocol = uiState.composer.sendProtocol,
-        segmentCounter = uiState.composer.segmentCounter,
-        isMessageFieldEnabled = uiState.composer.isMessageFieldEnabled,
-        isAttachmentActionEnabled = uiState.composer.isAttachmentActionEnabled,
-        isRecordActionEnabled = uiState.composer.isRecordActionEnabled,
-        isSendActionEnabled = uiState.composer.isSendEnabled,
-        shouldShowRecordAction = uiState.composer.shouldShowRecordAction,
+        uiState = uiState.composer,
         messageFieldFocusRequester = messageFieldFocusRequester,
         onContactAttachClick = onOpenContactPicker,
         onMediaPickerClick = onOpenMediaPicker,

@@ -5,29 +5,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.android.messaging.domain.conversation.usecase.draft.model.ConversationDraftSendProtocol
-import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingUiState
 import com.android.messaging.ui.conversation.composer.model.ComposerAttachmentUiModel
-import com.android.messaging.ui.conversation.composer.model.ConversationSegmentCounterUiState
+import com.android.messaging.ui.conversation.composer.model.ConversationComposerUiState
 import com.android.messaging.ui.conversation.preview.previewComposerWithAttachments
 import com.android.messaging.ui.core.MessagingPreviewTheme
-import kotlinx.collections.immutable.ImmutableList
 
 @Composable
 internal fun ConversationComposerSection(
     modifier: Modifier = Modifier,
-    audioRecording: ConversationAudioRecordingUiState,
-    attachments: ImmutableList<ComposerAttachmentUiModel>,
-    messageText: String,
-    messageTextRevision: Int,
-    subjectText: String,
-    sendProtocol: ConversationDraftSendProtocol,
-    segmentCounter: ConversationSegmentCounterUiState?,
-    isMessageFieldEnabled: Boolean,
-    isAttachmentActionEnabled: Boolean,
-    isRecordActionEnabled: Boolean,
-    isSendActionEnabled: Boolean,
-    shouldShowRecordAction: Boolean,
+    uiState: ConversationComposerUiState,
     messageFieldFocusRequester: FocusRequester,
     onContactAttachClick: () -> Unit,
     onMediaPickerClick: () -> Unit,
@@ -49,24 +35,14 @@ internal fun ConversationComposerSection(
         modifier = modifier,
     ) {
         ConversationAttachmentPreview(
-            attachments = attachments,
+            attachments = uiState.attachments,
             onPendingAttachmentRemove = onPendingAttachmentRemove,
             onResolvedAttachmentClick = onResolvedAttachmentClick,
             onResolvedAttachmentRemove = onResolvedAttachmentRemove,
         )
 
         ConversationComposeBar(
-            audioRecording = audioRecording,
-            messageText = messageText,
-            messageTextRevision = messageTextRevision,
-            subjectText = subjectText,
-            sendProtocol = sendProtocol,
-            segmentCounter = segmentCounter,
-            isMessageFieldEnabled = isMessageFieldEnabled,
-            isAttachmentActionEnabled = isAttachmentActionEnabled,
-            isRecordActionEnabled = isRecordActionEnabled,
-            isSendActionEnabled = isSendActionEnabled,
-            shouldShowRecordAction = shouldShowRecordAction,
+            uiState = uiState,
             messageFieldFocusRequester = messageFieldFocusRequester,
             onContactAttachClick = onContactAttachClick,
             onMediaPickerClick = onMediaPickerClick,
@@ -87,21 +63,9 @@ internal fun ConversationComposerSection(
 @PreviewLightDark
 @Composable
 private fun ConversationComposerSectionPreview() {
-    val uiState = previewComposerWithAttachments()
     MessagingPreviewTheme {
         ConversationComposerSection(
-            audioRecording = uiState.audioRecording,
-            attachments = uiState.attachments,
-            messageText = uiState.messageText,
-            messageTextRevision = uiState.messageTextRevision,
-            subjectText = uiState.subjectText,
-            sendProtocol = uiState.sendProtocol,
-            segmentCounter = uiState.segmentCounter,
-            isMessageFieldEnabled = uiState.isMessageFieldEnabled,
-            isAttachmentActionEnabled = uiState.isAttachmentActionEnabled,
-            isRecordActionEnabled = uiState.isRecordActionEnabled,
-            isSendActionEnabled = uiState.isSendEnabled,
-            shouldShowRecordAction = uiState.shouldShowRecordAction,
+            uiState = previewComposerWithAttachments(),
             messageFieldFocusRequester = FocusRequester(),
             onContactAttachClick = {},
             onMediaPickerClick = {},
