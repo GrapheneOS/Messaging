@@ -21,6 +21,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.telephony.SubscriptionInfo;
+import android.telephony.SubscriptionManager;
+import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 
 import com.android.messaging.Factory;
@@ -29,6 +32,7 @@ import com.android.messaging.datamodel.DataModel;
 import com.android.messaging.datamodel.binding.Binding;
 import com.android.messaging.datamodel.binding.BindingBase;
 import com.android.messaging.datamodel.data.LaunchConversationData;
+import com.android.messaging.datamodel.data.ParticipantData;
 import com.android.messaging.ui.UIIntents;
 import com.android.messaging.util.ContentType;
 import com.android.messaging.util.LogUtil;
@@ -51,6 +55,12 @@ public class LaunchConversationActivity extends Activity implements
     private static final int MAX_RECIPIENT_LENGTH = 100;
     static final String SMS_BODY = "sms_body";
     static final String ADDRESS = "address";
+    /**
+     * SIM slot to send from, set by telephony when it opens a conversation with emergency services
+     * over satellite. The platform defines it as {@code TelephonyManager.EXTRA_SIM_SLOT_ID}, which
+     * is hidden from the SDK.
+     */
+    static final String SIM_SLOT = "simSlot";
     final Binding<LaunchConversationData> mBinding = BindingBase.createBinding(this);
     String mSmsBody;
 
@@ -95,7 +105,11 @@ public class LaunchConversationActivity extends Activity implements
             }
             if (recipients != null) {
                 mBinding.bind(DataModel.get().createLaunchConversationData(this));
-                mBinding.getData().getOrCreateConversation(mBinding, recipients);
+                mBinding.getData().getOrCreateConversation(mBinding, recipients,
+                        getSelfSubId(getSystemService(SubscriptionManager.class),
+                                getSystemService(TelephonyManager.class), recipients,
+                                intent.getIntExtra(SIM_SLOT,
+                                        SubscriptionManager.INVALID_SIM_SLOT_INDEX)));
             } else {
                 // No recipients were specified in the intent.
                 // Start a new conversation with contact picker. The new conversation will be
@@ -107,6 +121,34 @@ public class LaunchConversationActivity extends Activity implements
         }
         // As of M, activities without a visible window must finish before onResume completes.
         finish();
+    }
+
+    /**
+     * Returns the subscription in {@code slotIndex} to send from, or the default. Any app can set
+     * the slot, so it is only honored for a conversation with emergency services, which is the
+     * only case telephony sets it.
+     */
+    static int getSelfSubId(final SubscriptionManager subscriptionManager,
+            final TelephonyManager telephonyManager, final String[] recipients,
+            final int slotIndex) {
+        if (slotIndex < 0 || subscriptionManager == null || telephonyManager == null) {
+            return ParticipantData.DEFAULT_SELF_SUB_ID;
+        }
+        try {
+            for (final String recipient : recipients) {
+                if (!telephonyManager.isEmergencyNumber(recipient)) {
+                    return ParticipantData.DEFAULT_SELF_SUB_ID;
+                }
+            }
+            final SubscriptionInfo info =
+                    subscriptionManager.getActiveSubscriptionInfoForSimSlotIndex(slotIndex);
+            return info != null ? info.getSubscriptionId() : ParticipantData.DEFAULT_SELF_SUB_ID;
+        } catch (final SecurityException | IllegalStateException
+                | UnsupportedOperationException e) {
+            LogUtil.w(LogUtil.BUGLE_TAG, "Cannot resolve the subscription in SIM slot "
+                    + slotIndex, e);
+            return ParticipantData.DEFAULT_SELF_SUB_ID;
+        }
     }
 
     private String[] trimInvalidRecipients(String[] recipients) {
