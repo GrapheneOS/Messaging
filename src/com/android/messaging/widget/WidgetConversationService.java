@@ -16,6 +16,7 @@
 
 package com.android.messaging.widget;
 
+import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -32,14 +33,13 @@ import android.view.View;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
+import androidx.annotation.Nullable;
+
 import com.android.messaging.R;
 import com.android.messaging.datamodel.MessagingContentProvider;
 import com.android.messaging.datamodel.data.ConversationMessageData;
 import com.android.messaging.datamodel.data.MessageData;
 import com.android.messaging.datamodel.data.MessagePartData;
-import com.android.messaging.datamodel.media.ImageResource;
-import com.android.messaging.datamodel.media.MediaRequest;
-import com.android.messaging.datamodel.media.MediaResourceManager;
 import com.android.messaging.datamodel.media.MessagePartImageRequestDescriptor;
 import com.android.messaging.datamodel.media.MessagePartVideoThumbnailRequestDescriptor;
 import com.android.messaging.datamodel.media.UriImageRequestDescriptor;
@@ -131,12 +131,18 @@ public class WidgetConversationService extends RemoteViewsService {
                     return getViewMoreItemsView();
                 }
                 // The message cursor is in reverse order for performance reasons.
-                final int position = getCount() - originalPosition - 1;
+                final RemoteViews itemView = getItemView(getCount() - originalPosition - 1);
+                return itemView != null ? itemView : getViewMoreItemsView();
+            }
+        }
+
+        @Override
+        @Nullable
+        protected RemoteViews getItemView(final int position) {
+            synchronized (sWidgetLock) {
                 if (!mCursor.moveToPosition(position)) {
-                    // If we ever fail to move to a position, return the "View More messages"
-                    // view.
                     LogUtil.w(TAG, "Failed to move to position: " + position);
-                    return getViewMoreItemsView();
+                    return null;
                 }
 
                 final ConversationMessageData message = new ConversationMessageData();
@@ -165,8 +171,7 @@ public class WidgetConversationService extends RemoteViewsService {
                 remoteViews.setViewVisibility(R.id.attachmentFrame, View.GONE);
 
                 if (LogUtil.isLoggable(TAG, LogUtil.VERBOSE)) {
-                    LogUtil.v(TAG, "getViewAt position: " + originalPosition +
-                            " computed position: " + position +
+                    LogUtil.v(TAG, "getItemView position: " + position +
                             " cursorCount: " + mCursor.getCount() +
                             " MAX_ITEMS_TO_SHOW: " + MAX_ITEMS_TO_SHOW);
                 }
@@ -437,11 +442,7 @@ public class WidgetConversationService extends RemoteViewsService {
             } else {
                 return null;
             }
-
-            final MediaRequest<ImageResource> imageRequest =
-                    descriptor.buildSyncMediaRequest(mContext);
-            return copyBitmapAndRelease(
-                    MediaResourceManager.get().requestMediaResourceSync(imageRequest));
+            return loadBitmap(descriptor);
         }
 
         /**
@@ -486,6 +487,18 @@ public class WidgetConversationService extends RemoteViewsService {
         protected int getMainLayoutId() {
             return R.layout.widget_conversation;
         }
+
+        @Override
+        protected boolean isNewestItemLast() {
+            return true;
+        }
     }
 
+    static RemoteViews.RemoteCollectionItems buildItems(final Context context,
+            final int appWidgetId, final String conversationId, final long maxBitmapByteCount) {
+        final Intent intent = new Intent(context, WidgetConversationService.class);
+        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+        intent.putExtra(UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID, conversationId);
+        return new WidgetConversationFactory(context, intent).buildItems(maxBitmapByteCount);
+    }
 }

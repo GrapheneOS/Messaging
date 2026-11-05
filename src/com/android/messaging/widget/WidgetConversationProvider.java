@@ -23,7 +23,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.RemoteViews;
@@ -33,9 +32,8 @@ import com.android.messaging.datamodel.MessagingContentProvider;
 import com.android.messaging.datamodel.data.ConversationListItemData;
 import com.android.messaging.ui.UIIntents;
 import com.android.messaging.util.LogUtil;
-import com.android.messaging.util.OsUtil;
-import com.android.messaging.util.SafeAsyncTask;
-import com.android.messaging.util.UiUtils;
+
+import java.util.Arrays;
 
 public class WidgetConversationProvider extends BaseWidgetProvider {
     public static final String ACTION_NOTIFY_MESSAGES_CHANGED =
@@ -48,35 +46,25 @@ public class WidgetConversationProvider extends BaseWidgetProvider {
     public static final String UI_INTENT_EXTRA_RECIPIENT = "recipient";
     public static final String UI_INTENT_EXTRA_ICON = "icon";
 
-    /**
-     * Update the widget appWidgetId
-     */
-    @Override
-    protected void updateWidget(final Context context, final int appWidgetId) {
-        if (LogUtil.isLoggable(TAG, LogUtil.VERBOSE)) {
-            LogUtil.v(TAG, "updateWidget appWidgetId: " + appWidgetId);
-        }
-        if (OsUtil.hasRequiredPermissions()) {
-            rebuildWidget(context, appWidgetId);
-        } else {
-            AppWidgetManager.getInstance(context).updateAppWidget(appWidgetId,
-                    UiUtils.getWidgetMissingPermissionView(context));
-        }
-    }
-
     @Override
     protected String getAction() {
         return ACTION_NOTIFY_MESSAGES_CHANGED;
     }
 
     @Override
-    protected int getListId() {
-        return R.id.message_list;
+    protected WidgetViewsBuilder getViewsBuilder() {
+        return WidgetConversationProvider::buildViews;
     }
 
     public static void rebuildWidget(final Context context, final int appWidgetId) {
+        WidgetRebuilder.get(context).rebuild(new int[] { appWidgetId },
+                WidgetConversationProvider::buildViews, null /* pendingResult */);
+    }
+
+    static RemoteViews buildViews(final Context context, final int appWidgetId,
+            final long maxBitmapByteCount) {
         if (LogUtil.isLoggable(TAG, LogUtil.VERBOSE)) {
-            LogUtil.v(TAG, "WidgetConversationProvider.rebuildWidget appWidgetId: " + appWidgetId);
+            LogUtil.v(TAG, "WidgetConversationProvider.buildViews appWidgetId: " + appWidgetId);
         }
         final RemoteViews remoteViews = new RemoteViews(context.getPackageName(),
                 R.layout.widget_conversation);
@@ -98,7 +86,7 @@ public class WidgetConversationProvider extends BaseWidgetProvider {
             remoteViews.setOnClickPendingIntent(R.id.widget_header, clickIntent);
 
             if (LogUtil.isLoggable(TAG, LogUtil.VERBOSE)) {
-                LogUtil.v(TAG, "WidgetConversationProvider.rebuildWidget appWidgetId: " +
+                LogUtil.v(TAG, "WidgetConversationProvider.buildViews appWidgetId: " +
                         appWidgetId + " going into configure state");
             }
         } else {
@@ -109,25 +97,17 @@ public class WidgetConversationProvider extends BaseWidgetProvider {
 
             final String conversationId =
                     WidgetConversationPrefs.getConversationIdPref(appWidgetId);
-            final boolean isMainThread =  Looper.myLooper() == Looper.getMainLooper();
-            // If we're running on the UI thread, we can't do the DB access needed to get the
-            // conversation data. We'll do excute this again off of the UI thread.
-            final ConversationListItemData convData = isMainThread ?
-                    null : getConversationData(context, conversationId);
+            final ConversationListItemData convData =
+                    getConversationData(context, conversationId);
             if (!TextUtils.equals(conversationId,
                     WidgetConversationPrefs.getConversationIdPref(appWidgetId))) {
                 // Reading the conversation can create the database, which resets every widget.
                 // Rebuild from what the widget shows now rather than put back what it showed.
-                rebuildWidget(context, appWidgetId);
-                return;
+                return buildViews(context, appWidgetId, maxBitmapByteCount);
             }
 
-            // Launch an intent to avoid ANRs
-            final Intent intent = new Intent(context, WidgetConversationService.class);
-            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
-            intent.putExtra(UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID, conversationId);
-            intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
-            remoteViews.setRemoteAdapter(appWidgetId, R.id.message_list, intent);
+            remoteViews.setRemoteAdapter(R.id.message_list, WidgetConversationService.buildItems(
+                    context, appWidgetId, conversationId, maxBitmapByteCount));
 
             remoteViews.setTextViewText(R.id.widget_label, convData != null ?
                     convData.getName() : context.getString(R.string.app_name));
@@ -148,23 +128,8 @@ public class WidgetConversationProvider extends BaseWidgetProvider {
             clickIntent = uiIntents.getWidgetPendingIntentForConversationActivity(context,
                     conversationId, WIDGET_CONVERSATION_TEMPLATE_REQUEST_CODE);
             remoteViews.setPendingIntentTemplate(R.id.message_list, clickIntent);
-
-            if (isMainThread) {
-                // We're running on the UI thread and we couldn't update all the parts of the
-                // widget dependent on ConversationListItemData. However, we have to update
-                // the widget regardless, even with those missing pieces. Here we update the
-                // widget again in the background.
-                SafeAsyncTask.executeOnThreadPool(new Runnable() {
-                    @Override
-                    public void run() {
-                        rebuildWidget(context, appWidgetId);
-                    }
-                });
-            }
         }
-
-        AppWidgetManager.getInstance(context).updateAppWidget(appWidgetId, remoteViews);
-
+        return remoteViews;
     }
 
     /*
@@ -177,7 +142,7 @@ public class WidgetConversationProvider extends BaseWidgetProvider {
         }
         final Intent intent = new Intent(ACTION_NOTIFY_MESSAGES_CHANGED);
         intent.putExtra(UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID, conversationId);
-        intent.setPackage(context.getPackageName());
+        intent.setClass(context, WidgetConversationProvider.class);
         context.sendBroadcast(intent);
     }
 
@@ -261,15 +226,10 @@ public class WidgetConversationProvider extends BaseWidgetProvider {
                     .getString(UIIntents.UI_INTENT_EXTRA_CONVERSATION_ID);
 
             // Only update the widgets that match the conversation id that changed.
-            for (final int widgetId : appWidgetIds) {
-                // Retrieve the persisted information for this widget from preferences.
-                final String widgetConvId =
-                        WidgetConversationPrefs.getConversationIdPref(widgetId);
-                if (conversationId == null || TextUtils.equals(conversationId, widgetConvId)) {
-                    // Update the list portion (i.e. the message list) of the widget
-                    appWidgetManager.notifyAppWidgetViewDataChanged(widgetId, getListId());
-                }
-            }
+            rebuildWidgets(context, Arrays.stream(appWidgetIds)
+                    .filter(widgetId -> conversationId == null || TextUtils.equals(conversationId,
+                            WidgetConversationPrefs.getConversationIdPref(widgetId)))
+                    .toArray());
         } else {
             super.onReceive(context, intent);
         }

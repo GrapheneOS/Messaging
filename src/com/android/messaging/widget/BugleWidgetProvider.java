@@ -17,18 +17,13 @@
 package com.android.messaging.widget;
 
 import android.app.PendingIntent;
-import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.widget.RemoteViews;
 
 import com.android.messaging.R;
 import com.android.messaging.ui.UIIntents;
 import com.android.messaging.util.LogUtil;
-import com.android.messaging.util.OsUtil;
-import com.android.messaging.util.SafeAsyncTask;
-import com.android.messaging.util.UiUtils;
 
 public class BugleWidgetProvider extends BaseWidgetProvider {
     public static final String ACTION_NOTIFY_CONVERSATIONS_CHANGED =
@@ -36,47 +31,27 @@ public class BugleWidgetProvider extends BaseWidgetProvider {
 
     public static final int WIDGET_NEW_CONVERSATION_REQUEST_CODE = 986;
 
-    /**
-     * Update the widget appWidgetId
-     */
-    @Override
-    protected void updateWidget(final Context context, final int appWidgetId) {
-        if (OsUtil.hasRequiredPermissions()) {
-            SafeAsyncTask.executeOnThreadPool(new Runnable() {
-                @Override
-                public void run() {
-                    rebuildWidget(context, appWidgetId);
-                }
-            });
-        } else {
-            AppWidgetManager.getInstance(context).updateAppWidget(appWidgetId,
-                    UiUtils.getWidgetMissingPermissionView(context));
-        }
-    }
-
     @Override
     protected String getAction() {
         return ACTION_NOTIFY_CONVERSATIONS_CHANGED;
     }
 
     @Override
-    protected int getListId() {
-        return R.id.conversation_list;
+    protected WidgetViewsBuilder getViewsBuilder() {
+        return BugleWidgetProvider::buildViews;
     }
 
-    public static void rebuildWidget(final Context context, final int appWidgetId) {
+    static RemoteViews buildViews(final Context context, final int appWidgetId,
+            final long maxBitmapByteCount) {
         if (LogUtil.isLoggable(TAG, LogUtil.VERBOSE)) {
-            LogUtil.v(TAG, "BugleWidgetProvider.rebuildWidget appWidgetId: " + appWidgetId);
+            LogUtil.v(TAG, "BugleWidgetProvider.buildViews appWidgetId: " + appWidgetId);
         }
         final RemoteViews remoteViews = new RemoteViews(context.getPackageName(),
                 R.layout.widget_conversation_list);
         PendingIntent clickIntent;
 
-        // Launch an intent to avoid ANRs
-        final Intent intent = new Intent(context, WidgetConversationListService.class);
-        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
-        intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
-        remoteViews.setRemoteAdapter(appWidgetId, R.id.conversation_list, intent);
+        remoteViews.setRemoteAdapter(R.id.conversation_list,
+                WidgetConversationListService.buildItems(context, appWidgetId, maxBitmapByteCount));
 
         remoteViews.setTextViewText(R.id.widget_label, context.getString(R.string.app_name));
 
@@ -96,8 +71,7 @@ public class BugleWidgetProvider extends BaseWidgetProvider {
         clickIntent = UIIntents.get().getWidgetPendingIntentForConversationActivity(context,
                 null /*conversationId*/, WIDGET_CONVERSATION_REQUEST_CODE);
         remoteViews.setPendingIntentTemplate(R.id.conversation_list, clickIntent);
-
-        AppWidgetManager.getInstance(context).updateAppWidget(appWidgetId, remoteViews);
+        return remoteViews;
     }
 
     /*
@@ -109,7 +83,7 @@ public class BugleWidgetProvider extends BaseWidgetProvider {
             LogUtil.v(TAG, "notifyConversationListChanged");
         }
         final Intent intent = new Intent(ACTION_NOTIFY_CONVERSATIONS_CHANGED);
-        intent.setPackage(context.getPackageName());
+        intent.setClass(context, BugleWidgetProvider.class);
         context.sendBroadcast(intent);
     }
 }
