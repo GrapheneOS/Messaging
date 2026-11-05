@@ -411,6 +411,62 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "CREATE INDEX index_" + PARTS_TABLE + "_message_id ON " + PARTS_TABLE + "("
                     + PartColumns.MESSAGE_ID + ")";
 
+    // Full-text index of the parts' text, which search finds messages by. It keeps no copy of the
+    // text but reads it back from the parts table, so the triggers below keep the two in step.
+    // Its words ignore case and accents in any script, which LIKE can't do.
+    public static final String PARTS_TEXT_INDEX_TABLE = "parts_fts";
+
+    private static final String CREATE_PARTS_TEXT_INDEX_TABLE_SQL =
+            "CREATE VIRTUAL TABLE " + PARTS_TEXT_INDEX_TABLE + " USING fts4("
+                    + "content=\"" + PARTS_TABLE + "\", "
+                    + PartColumns.TEXT + ", "
+                    + "tokenize=unicode61 \"remove_diacritics=2\")";
+
+    private static final String FILL_PARTS_TEXT_INDEX_SQL =
+            "INSERT INTO " + PARTS_TEXT_INDEX_TABLE + "(" + PARTS_TEXT_INDEX_TABLE + ")"
+                    + " VALUES('rebuild')";
+
+    // Search takes this trigger to mean the index is complete, so it is created last
+    public static final String PARTS_TEXT_INDEX_INSERT_TRIGGER =
+            PARTS_TEXT_INDEX_TABLE + "_after_insert";
+
+    private static final String PARTS_TEXT_INDEX_DELETE_TRIGGER =
+            PARTS_TEXT_INDEX_TABLE + "_before_delete";
+
+    private static final String PARTS_TEXT_INDEX_BEFORE_UPDATE_TRIGGER =
+            PARTS_TEXT_INDEX_TABLE + "_before_update";
+
+    private static final String PARTS_TEXT_INDEX_AFTER_UPDATE_TRIGGER =
+            PARTS_TEXT_INDEX_TABLE + "_after_update";
+
+    private static final String REMOVE_OLD_PART_FROM_TEXT_INDEX_SQL =
+            " BEGIN DELETE FROM " + PARTS_TEXT_INDEX_TABLE
+                    + " WHERE docid = OLD." + PartColumns._ID + "; END";
+
+    private static final String ADD_NEW_PART_TO_TEXT_INDEX_SQL =
+            " BEGIN INSERT INTO " + PARTS_TEXT_INDEX_TABLE + "(docid, " + PartColumns.TEXT + ")"
+                    + " VALUES (NEW." + PartColumns._ID + ", NEW." + PartColumns.TEXT + "); END";
+
+    // The index finds the words to remove by reading the row's text back, so a row leaves the
+    // index before it changes and joins it again after
+    private static final String[] CREATE_PARTS_TEXT_INDEX_TRIGGER_SQLS = new String[] {
+            "CREATE TRIGGER " + PARTS_TEXT_INDEX_DELETE_TRIGGER + " BEFORE DELETE ON "
+                    + PARTS_TABLE + REMOVE_OLD_PART_FROM_TEXT_INDEX_SQL,
+            "CREATE TRIGGER " + PARTS_TEXT_INDEX_BEFORE_UPDATE_TRIGGER + " BEFORE UPDATE OF "
+                    + PartColumns.TEXT + " ON " + PARTS_TABLE + REMOVE_OLD_PART_FROM_TEXT_INDEX_SQL,
+            "CREATE TRIGGER " + PARTS_TEXT_INDEX_AFTER_UPDATE_TRIGGER + " AFTER UPDATE OF "
+                    + PartColumns.TEXT + " ON " + PARTS_TABLE + ADD_NEW_PART_TO_TEXT_INDEX_SQL,
+            "CREATE TRIGGER " + PARTS_TEXT_INDEX_INSERT_TRIGGER + " AFTER INSERT ON "
+                    + PARTS_TABLE + ADD_NEW_PART_TO_TEXT_INDEX_SQL,
+    };
+
+    private static final String[] PARTS_TEXT_INDEX_TRIGGERS = new String[] {
+            PARTS_TEXT_INDEX_INSERT_TRIGGER,
+            PARTS_TEXT_INDEX_DELETE_TRIGGER,
+            PARTS_TEXT_INDEX_BEFORE_UPDATE_TRIGGER,
+            PARTS_TEXT_INDEX_AFTER_UPDATE_TRIGGER,
+    };
+
     // Participants table schema
     public static class ParticipantColumns implements BaseColumns {
         /* The subscription id for the sim associated with this self participant.
@@ -867,6 +923,42 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         for (final String sql : CREATE_TRIGGER_SQLS) {
             db.execSQL(sql);
         }
+
+        rebuildPartsTextIndex(db);
+    }
+
+    /**
+     * Drops the full-text index of the parts and builds it again from the parts table. Building
+     * it costs time and disk proportional to the parts, so it is the one schema step that can
+     * realistically fail - and a failure that reached the callers would rebuild every table and
+     * take the user's messages along. Search falls back to scanning the parts without the index,
+     * so a failure leaves no index rather than one that silently misses messages.
+     */
+    static void rebuildPartsTextIndex(final SQLiteDatabase db) {
+        try {
+            dropPartsTextIndex(db);
+            db.execSQL(CREATE_PARTS_TEXT_INDEX_TABLE_SQL);
+            db.execSQL(FILL_PARTS_TEXT_INDEX_SQL);
+            for (final String sql : CREATE_PARTS_TEXT_INDEX_TRIGGER_SQLS) {
+                db.execSQL(sql);
+            }
+        } catch (final SQLException ex) {
+            LogUtil.e(LogUtil.BUGLE_DATABASE_TAG, "Couldn't build the parts text index", ex);
+            try {
+                dropPartsTextIndex(db);
+            } catch (final SQLException dropEx) {
+                LogUtil.e(LogUtil.BUGLE_DATABASE_TAG,
+                        "Couldn't drop the incomplete parts text index", dropEx);
+            }
+        }
+    }
+
+    private static void dropPartsTextIndex(final SQLiteDatabase db) {
+        // Triggers first: one left behind without the index would fail every insert into parts
+        for (final String trigger : PARTS_TEXT_INDEX_TRIGGERS) {
+            db.execSQL("DROP TRIGGER IF EXISTS " + trigger);
+        }
+        db.execSQL("DROP TABLE IF EXISTS " + PARTS_TEXT_INDEX_TABLE);
     }
 
     /**

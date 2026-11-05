@@ -1,6 +1,7 @@
 package com.android.messaging.ui.conversationlist.chats.model
 
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 
 internal sealed interface ConversationListNavEvent {
 
@@ -11,6 +12,11 @@ internal sealed interface ConversationListNavEvent {
 
     data class OpenConversation(
         val conversationId: ConversationId,
+    ) : ConversationListNavEvent
+
+    data class OpenMessage(
+        val conversationId: ConversationId,
+        val messageId: MessageId,
     ) : ConversationListNavEvent
 
     data class OpenConversationSettings(
