@@ -91,6 +91,7 @@ internal class ConversationSettingsRepositoryImpl @Inject constructor(
             conversationId = conversationId,
             conversationTitle = metadata?.conversationName.orEmpty(),
             isArchived = metadata?.isArchived ?: false,
+            isListed = (metadata?.sortTimestamp ?: 0L) > 0L,
             isSnoozed = notificationRepository.isSnoozed(conversationId),
             participants = participants.toImmutableList(),
             dbSelfParticipantId = metadata?.selfParticipantId,

@@ -12,6 +12,7 @@ internal data class ConversationSettingsUiState(
     val conversationId: ConversationId,
     val conversationTitle: String = "",
     val isArchived: Boolean = false,
+    val canChangeArchiveStatus: Boolean = false,
     val isSnoozed: Boolean = false,
     val participants: ImmutableList<ParticipantUiState> = persistentListOf(),
     val otherParticipant: ParticipantUiState? = null,
