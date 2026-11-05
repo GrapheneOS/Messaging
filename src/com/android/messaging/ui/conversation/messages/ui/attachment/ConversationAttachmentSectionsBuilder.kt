@@ -8,6 +8,7 @@ import com.android.messaging.ui.conversation.messages.model.attachment.Conversat
 import com.android.messaging.ui.conversation.messages.model.attachment.ConversationInlineAttachment
 import com.android.messaging.ui.conversation.messages.model.attachment.ConversationMessageAttachment
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagePartUiModel
+import com.android.messaging.util.ContentType
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
@@ -118,7 +119,7 @@ private fun toInlineAttachment(
         is ConversationMessageAttachment.Unsupported -> {
             createFileInlineAttachment(
                 key = attachment.key,
-                titleText = attachment.part.contentType.ifBlank { null },
+                part = attachment.part,
                 openAction = attachment.toConversationAttachmentOpenActionOrNull(),
             )
         }
@@ -158,7 +159,7 @@ private fun toMediaInlineAttachment(
         is ConversationMessagePartUiModel.Attachment.File -> {
             createFileInlineAttachment(
                 key = attachment.key,
-                titleText = part.contentType.ifBlank { null },
+                part = part,
                 openAction = attachment.toConversationAttachmentOpenActionOrNull(),
             )
         }
@@ -207,14 +208,16 @@ private fun createVCardInlineAttachment(
 
 private fun createFileInlineAttachment(
     key: String,
-    titleText: String?,
+    part: ConversationMessagePartUiModel.Attachment,
     openAction: ConversationAttachmentOpenAction?,
 ): ConversationInlineAttachment {
+    val isPdf = ContentType.isPdfType(part.contentType)
+
     return ConversationInlineAttachment.File(
         key = key,
         openAction = openAction,
-        subtitleTextResId = null,
-        titleText = titleText,
-        titleTextResId = R.string.notification_file,
+        subtitleTextResId = if (isPdf) R.string.notification_file else null,
+        titleText = if (isPdf) null else part.contentType.ifBlank { null },
+        titleTextResId = if (isPdf) R.string.pdf_attachment else R.string.notification_file,
     )
 }

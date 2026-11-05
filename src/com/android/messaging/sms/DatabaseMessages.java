@@ -578,7 +578,7 @@ public class DatabaseMessages {
             mWidth = 0;
             mHeight = 0;
             mSize = 0;
-            if (isMedia()) {
+            if (isMedia() || isFile()) {
                 // For importing we don't load media since performance is critical
                 // For loading when we receive mms, we do load media to get enough
                 // information of the media file
@@ -587,7 +587,7 @@ public class DatabaseMessages {
                         loadImage();
                     } else if (ContentType.isVideoType(mContentType)) {
                         loadVideo();
-                    } // No need to load audio for parsing
+                    } // No need to load audio/file data for parsing
                     mSize = MmsUtils.getMediaFileSize(getDataUri());
                 }
             } else {
@@ -791,6 +791,14 @@ public class DatabaseMessages {
                     || ContentType.isVideoType(mContentType)
                     || ContentType.isAudioType(mContentType)
                     || ContentType.isVCardType(mContentType);
+        }
+
+        /**
+         * A non-media file attachment (e.g. PDF) carried inside an MMS. These parts must not be
+         * dropped during import and must not be read as text.
+         */
+        public boolean isFile() {
+            return ContentType.isPdfType(mContentType);
         }
 
         public boolean isImage() {
