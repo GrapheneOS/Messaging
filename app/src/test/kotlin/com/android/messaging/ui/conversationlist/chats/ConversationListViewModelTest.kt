@@ -1,6 +1,8 @@
 package com.android.messaging.ui.conversationlist.chats
 
 import app.cash.turbine.test
+import com.android.messaging.data.appsettings.model.ConversationSwipeSettings
+import com.android.messaging.data.appsettings.repository.AppSettingsRepository
 import com.android.messaging.data.conversation.event.ConversationArchiveEventsImpl
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
@@ -43,7 +45,8 @@ class ConversationListViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val repository = mockk<ConversationListRepository>()
+    private val conversationListRepository = mockk<ConversationListRepository>()
+    private val appSettingsRepository = mockk<AppSettingsRepository>()
     private val uiStateMapper = mockk<ConversationListUiStateMapper>()
     private val selectionDelegate = mockk<ConversationListSelectionDelegate>()
     private val actionsDelegate = mockk<ConversationListActionsDelegate>()
@@ -288,8 +291,8 @@ class ConversationListViewModelTest {
     }
 
     private fun createViewModel(): ConversationListViewModel {
-        every { repository.refresh() } just runs
-        every { repository.setNewestConversationVisible(any()) } just runs
+        every { conversationListRepository.refresh() } just runs
+        every { conversationListRepository.setNewestConversationVisible(any()) } just runs
 
         every { optimisticSnapshotDelegate.snapshot } returns snapshotFlow
         every { optimisticSnapshotDelegate.bind(any(), any()) } just runs
@@ -317,15 +320,18 @@ class ConversationListViewModelTest {
         every { debugFeaturesProvider.isEnabled() } returns false
         every { resolveContactAction(any(), any(), any()) } returns
             ResolveContactActionResult.Unavailable
+        coEvery { appSettingsRepository.getConversationSwipeSettings() } returns
+            ConversationSwipeSettings.Default
 
         return ConversationListViewModel(
-            repository = repository,
+            conversationListRepository = conversationListRepository,
+            appSettingsRepository = appSettingsRepository,
             uiStateMapper = uiStateMapper,
             selectionDelegate = selectionDelegate,
             actionsDelegate = actionsDelegate,
             optimisticSnapshotDelegate = optimisticSnapshotDelegate,
-            debugFeaturesProvider = debugFeaturesProvider,
             resolveContactAction = resolveContactAction,
+            debugFeaturesProvider = debugFeaturesProvider,
             conversationArchiveEvents = conversationArchiveEvents,
             defaultDispatcher = mainDispatcherRule.testDispatcher,
             mainDispatcher = mainDispatcherRule.testDispatcher,

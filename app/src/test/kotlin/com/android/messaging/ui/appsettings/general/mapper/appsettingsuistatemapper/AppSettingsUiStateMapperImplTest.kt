@@ -3,6 +3,8 @@ package com.android.messaging.ui.appsettings.general.mapper.appsettingsuistatema
 import android.content.Context
 import com.android.messaging.R
 import com.android.messaging.data.appsettings.model.AppSettings
+import com.android.messaging.data.appsettings.model.ConversationSwipeOption
+import com.android.messaging.data.appsettings.model.ConversationSwipeSettings
 import com.android.messaging.ui.appsettings.general.mapper.AppSettingsUiStateMapperImpl
 import com.android.messaging.ui.appsettings.general.model.AppSettingsUiState
 import io.mockk.every
@@ -30,6 +32,10 @@ internal class AppSettingsUiStateMapperImplTest {
                 sendSoundEnabled = false,
                 inConversationSoundEnabled = true,
                 youTubeLinkPreviewsEnabled = true,
+                conversationSwipeSettings = ConversationSwipeSettings(
+                    startToEnd = ConversationSwipeOption.Delete,
+                    endToStart = ConversationSwipeOption.ToggleRead,
+                ),
                 isDebugEnabled = true,
                 dumpSmsEnabled = true,
                 dumpMmsEnabled = false,
@@ -43,6 +49,10 @@ internal class AppSettingsUiStateMapperImplTest {
                 sendSoundEnabled = false,
                 inConversationSoundEnabled = true,
                 youTubeLinkPreviewsEnabled = true,
+                conversationSwipeSettings = ConversationSwipeSettings(
+                    startToEnd = ConversationSwipeOption.Delete,
+                    endToStart = ConversationSwipeOption.ToggleRead,
+                ),
                 isDebugEnabled = true,
                 dumpSmsEnabled = true,
                 dumpMmsEnabled = false,

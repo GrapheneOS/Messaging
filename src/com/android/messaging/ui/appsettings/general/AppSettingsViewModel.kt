@@ -49,6 +49,14 @@ internal class AppSettingsViewModel @Inject constructor(
                 appSettingsDelegate.onYouTubeLinkPreviewsChanged(action.enabled)
             }
 
+            is Action.ConversationSwipeStartToEndOptionChanged -> {
+                appSettingsDelegate.onConversationSwipeStartToEndOptionChanged(action.option)
+            }
+
+            is Action.ConversationSwipeEndToStartOptionChanged -> {
+                appSettingsDelegate.onConversationSwipeEndToStartOptionChanged(action.option)
+            }
+
             is Action.NotificationsClicked -> _effects.trySend(Effect.OpenNotificationSettings)
 
             is Action.DefaultSmsAppClicked -> {

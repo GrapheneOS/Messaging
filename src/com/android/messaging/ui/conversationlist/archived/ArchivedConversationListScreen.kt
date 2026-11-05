@@ -343,6 +343,7 @@ private fun ConversationListItemEvent.toArchivedAction(): Action {
 
             ConversationSwipeKind.Archive -> unsupportedSwipeKind(kind)
             ConversationSwipeKind.ToggleRead -> unsupportedSwipeKind(kind)
+            ConversationSwipeKind.Delete -> unsupportedSwipeKind(kind)
         }
     }
 }
