@@ -109,7 +109,7 @@ public class BugleWidgetProvider extends BaseWidgetProvider {
             LogUtil.v(TAG, "notifyConversationListChanged");
         }
         final Intent intent = new Intent(ACTION_NOTIFY_CONVERSATIONS_CHANGED);
-        intent.setPackage(context.getPackageName());
+        intent.setClass(context, BugleWidgetProvider.class);
         context.sendBroadcast(intent);
     }
 }
