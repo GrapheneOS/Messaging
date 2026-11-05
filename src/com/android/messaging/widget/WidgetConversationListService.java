@@ -16,6 +16,7 @@
 
 package com.android.messaging.widget;
 
+import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -31,6 +32,8 @@ import android.text.style.StyleSpan;
 import android.view.View;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
+
+import androidx.annotation.Nullable;
 
 import com.android.messaging.R;
 import com.android.messaging.datamodel.MessagingContentProvider;
@@ -86,12 +89,18 @@ public class WidgetConversationListService extends RemoteViewsService {
                         || (mShouldShowViewMore && position >= getItemCount())) {
                     return getViewMoreItemsView();
                 }
+                final RemoteViews itemView = getItemView(position);
+                return itemView != null ? itemView : getViewMoreItemsView();
+            }
+        }
 
+        @Override
+        @Nullable
+        protected RemoteViews getItemView(final int position) {
+            synchronized (sWidgetLock) {
                 if (!mCursor.moveToPosition(position)) {
-                    // If we ever fail to move to a position, return the "View More conversations"
-                    // view.
                     LogUtil.w(TAG, "Failed to move to position: " + position);
-                    return getViewMoreItemsView();
+                    return null;
                 }
 
                 final ConversationListItemData conv = new ConversationListItemData();
@@ -370,6 +379,17 @@ public class WidgetConversationListService extends RemoteViewsService {
         protected int getMainLayoutId() {
             return R.layout.widget_conversation_list;
         }
+
+        @Override
+        protected boolean isNewestItemLast() {
+            return false;
+        }
     }
 
+    static RemoteViews.RemoteCollectionItems buildItems(final Context context,
+            final int appWidgetId, final long maxBitmapByteCount) {
+        final Intent intent = new Intent(context, WidgetConversationListService.class);
+        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+        return new WidgetConversationListFactory(context, intent).buildItems(maxBitmapByteCount);
+    }
 }
