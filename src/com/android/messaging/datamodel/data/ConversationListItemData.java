@@ -86,7 +86,11 @@ public class ConversationListItemData {
         mIcon = cursor.getString(INDEX_CONVERSATION_ICON);
         mSnippetText = cursor.getString(INDEX_SNIPPET_TEXT);
         mTimestamp = cursor.getLong(INDEX_SORT_TIMESTAMP);
-        mIsRead = cursor.getInt(INDEX_READ) == 1;
+        // A conversation with no messages yet (only a draft) has no latest message to join
+        // against, so the view yields NULL for the read flag. Treat that as read rather than
+        // letting getInt() turn NULL into 0, which would show an unread indicator for a
+        // conversation nothing was ever received in.
+        mIsRead = cursor.isNull(INDEX_READ) || cursor.getInt(INDEX_READ) == 1;
         final String previewUriString = cursor.getString(INDEX_PREVIEW_URI);
         mPreviewUri = TextUtils.isEmpty(previewUriString) ? null : Uri.parse(previewUriString);
         mPreviewContentType = cursor.getString(INDEX_PREVIEW_CONTENT_TYPE);
