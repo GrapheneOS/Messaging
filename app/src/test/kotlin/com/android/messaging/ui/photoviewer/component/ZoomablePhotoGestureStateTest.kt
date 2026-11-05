@@ -93,18 +93,18 @@ internal class ZoomablePhotoGestureStateTest {
     }
 
     @Test
-    fun resetAll_clearsZoomOffsetAndAnimationFlag() {
+    fun resetAll_clearsZoomOffsetWithAnimation() {
         val state = ZoomablePhotoGestureState()
 
         state.updateContainerSize(containerSize = IntSize(width = 100, height = 100))
-        state.applyDoubleTap(tapOffset = Offset(x = 75f, y = 25f))
+        state.applyTransform(zoomChange = 2f, panChange = Offset(x = 20f, y = 20f))
 
         state.resetAll()
 
         assertEquals(1f, state.scale, FLOAT_DELTA)
         assertEquals(Offset.Zero, state.offset)
         assertFalse(state.isZoomed())
-        assertFalse(state.isZoomAnimationEnabled)
+        assertTrue(state.isZoomAnimationEnabled)
     }
 
     @Test

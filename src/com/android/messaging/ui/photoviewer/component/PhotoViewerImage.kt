@@ -1,31 +1,34 @@
 package com.android.messaging.ui.photoviewer.component
 
-import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.shape.CornerBasedShape
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.lerp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import com.android.messaging.R
 import com.android.messaging.data.media.model.PhotoViewerItem
 import com.android.messaging.ui.common.components.mediapreview.mediaReviewPageTransform
 import com.android.messaging.ui.photoviewer.screen.model.PhotoViewerDisplayMode
+import kotlin.math.roundToInt
 
 private const val PHOTO_VIEWER_DEFAULT_IMAGE_ASPECT_RATIO = 0.75f
 
@@ -38,56 +41,39 @@ internal fun PhotoViewerImage(
     page: Int,
     pagerState: PagerState,
     displayMode: PhotoViewerDisplayMode,
+    immersiveProgress: () -> Float,
     imageSize: IntSize?,
     imageDecodeSize: IntSize,
     onImageLoading: () -> Unit,
     onImageError: () -> Unit,
     onImageLoaded: (IntSize) -> Unit,
 ) {
-    BoxWithConstraints(
+    val carouselShape = MaterialTheme.shapes.extraLarge
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(
-                top = when (displayMode) {
-                    PhotoViewerDisplayMode.Carousel -> PhotoViewerCarouselTopPadding
-                    PhotoViewerDisplayMode.Immersive -> 0.dp
-                },
-                bottom = when (displayMode) {
-                    PhotoViewerDisplayMode.Carousel -> PhotoViewerCarouselBottomPadding
-                    PhotoViewerDisplayMode.Immersive -> 0.dp
-                },
-            ),
-        contentAlignment = Alignment.Center,
-    ) {
-        val imageLayout = rememberPhotoViewerImageLayout(
-            maxWidth = maxWidth,
-            maxHeight = maxHeight,
-            imageSize = imageSize,
-        )
-
-        Surface(
-            modifier = Modifier
-                .width(width = imageLayout.width)
-                .height(height = imageLayout.height)
-                .photoViewerPageTransform(
-                    page = page,
-                    pagerState = pagerState,
-                    displayMode = displayMode,
-                ),
-            shape = when (displayMode) {
-                PhotoViewerDisplayMode.Carousel -> MaterialTheme.shapes.extraLarge
-                PhotoViewerDisplayMode.Immersive -> RectangleShape
-            },
-            color = Color.Transparent,
-        ) {
-            PhotoViewerAsyncImage(
-                item = item,
-                imageDecodeSize = imageDecodeSize,
-                onImageLoading = onImageLoading,
-                onImageError = onImageError,
-                onImageLoaded = onImageLoaded,
+            .photoViewerImageBounds(
+                imageAspectRatio = resolvePhotoViewerImageAspectRatio(imageSize = imageSize),
+                immersiveProgress = immersiveProgress,
             )
-        }
+            .photoViewerPageTransform(
+                page = page,
+                pagerState = pagerState,
+                displayMode = displayMode,
+            )
+            .graphicsLayer {
+                shape = carouselShape.scaleCorners(scale = 1f - immersiveProgress())
+                clip = true
+            },
+    ) {
+        PhotoViewerAsyncImage(
+            item = item,
+            imageDecodeSize = imageDecodeSize,
+            onImageLoading = onImageLoading,
+            onImageError = onImageError,
+            onImageLoaded = onImageLoaded,
+        )
     }
 }
 
@@ -151,26 +137,54 @@ private fun rememberPhotoViewerImageRequest(
     }
 }
 
-@Composable
-private fun rememberPhotoViewerImageLayout(
-    maxWidth: Dp,
-    maxHeight: Dp,
-    imageSize: IntSize?,
-): PhotoViewerImageLayout {
-    return remember(maxWidth, maxHeight, imageSize) {
-        val aspectRatio = resolvePhotoViewerImageAspectRatio(imageSize = imageSize)
-        val widthFromHeight = maxHeight * aspectRatio
-
-        val width = when {
-            maxWidth <= widthFromHeight -> maxWidth
-            else -> widthFromHeight
-        }
-
-        PhotoViewerImageLayout(
-            width = width,
-            height = width / aspectRatio,
+private fun Modifier.photoViewerImageBounds(
+    imageAspectRatio: Float,
+    immersiveProgress: () -> Float,
+): Modifier {
+    return layout { measurable, constraints ->
+        val progress = immersiveProgress()
+        val bounds = resolvePhotoViewerImageBounds(
+            containerSize = IntSize(width = constraints.maxWidth, height = constraints.maxHeight),
+            imageAspectRatio = imageAspectRatio,
+            topPadding = lerp(
+                start = PhotoViewerCarouselTopPadding,
+                stop = 0.dp,
+                fraction = progress,
+            ).roundToPx(),
+            bottomPadding = lerp(
+                start = PhotoViewerCarouselBottomPadding,
+                stop = 0.dp,
+                fraction = progress,
+            ).roundToPx(),
         )
+        val placeable = measurable.measure(
+            constraints = Constraints.fixed(width = bounds.width, height = bounds.height),
+        )
+
+        layout(width = constraints.maxWidth, height = constraints.maxHeight) {
+            placeable.place(position = bounds.topLeft)
+        }
     }
+}
+
+internal fun resolvePhotoViewerImageBounds(
+    containerSize: IntSize,
+    imageAspectRatio: Float,
+    topPadding: Int,
+    bottomPadding: Int,
+): IntRect {
+    val availableHeight = (containerSize.height - topPadding - bottomPadding)
+        .coerceAtLeast(minimumValue = 0)
+    val width = minOf(containerSize.width.toFloat(), availableHeight * imageAspectRatio)
+    val height = width / imageAspectRatio
+
+    return IntRect(
+        offset = IntOffset(
+            x = ((containerSize.width - width) / 2f).roundToInt(),
+            y = (topPadding + (availableHeight - height) / 2f).roundToInt(),
+        ),
+        size = IntSize(width = width.roundToInt(), height = height.roundToInt()),
+    )
 }
 
 private fun resolvePhotoViewerImageAspectRatio(imageSize: IntSize?): Float {
@@ -202,7 +216,20 @@ private fun Modifier.photoViewerPageTransform(
     }
 }
 
-private data class PhotoViewerImageLayout(
-    val width: Dp,
-    val height: Dp,
-)
+private fun CornerBasedShape.scaleCorners(scale: Float): CornerBasedShape {
+    return copy(
+        topStart = ScaledCornerSize(cornerSize = topStart, scale = scale),
+        topEnd = ScaledCornerSize(cornerSize = topEnd, scale = scale),
+        bottomEnd = ScaledCornerSize(cornerSize = bottomEnd, scale = scale),
+        bottomStart = ScaledCornerSize(cornerSize = bottomStart, scale = scale),
+    )
+}
+
+private data class ScaledCornerSize(
+    private val cornerSize: CornerSize,
+    private val scale: Float,
+) : CornerSize {
+    override fun toPx(shapeSize: Size, density: Density): Float {
+        return cornerSize.toPx(shapeSize = shapeSize, density = density) * scale
+    }
+}
