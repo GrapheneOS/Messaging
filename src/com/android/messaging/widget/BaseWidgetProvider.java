@@ -43,9 +43,7 @@ public abstract class BaseWidgetProvider extends AppWidgetProvider {
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         super.onUpdate(context, appWidgetManager, appWidgetIds);
 
-        for (int i = 0; i < appWidgetIds.length; ++i) {
-            updateWidget(context, appWidgetIds[i]);
-        }
+        rebuildWidgets(context, appWidgetIds);
     }
 
     @Override
@@ -64,14 +62,7 @@ public abstract class BaseWidgetProvider extends AppWidgetProvider {
             final int[] appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(context,
                     this.getClass()));
 
-            if (appWidgetIds.length > 0) {
-                // We need to update all Bugle app widgets on the home screen.
-                if (LogUtil.isLoggable(TAG, LogUtil.VERBOSE)) {
-                    LogUtil.v(TAG, "onReceive notifyAppWidgetViewDataChanged listId: " +
-                            getListId() + " first widgetId: " + appWidgetIds[0]);
-                }
-                appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, getListId());
-            }
+            rebuildWidgets(context, appWidgetIds);
         } else {
             super.onReceive(context, intent);
         }
@@ -79,14 +70,16 @@ public abstract class BaseWidgetProvider extends AppWidgetProvider {
 
     protected abstract String getAction();
 
-    protected abstract int getListId();
+    protected abstract WidgetViewsBuilder getViewsBuilder();
 
-    /**
-     * Update the widget appWidgetId
-     */
-    protected abstract void updateWidget(Context context, int appWidgetId);
+    protected void rebuildWidgets(final Context context, final int[] appWidgetIds) {
+        if (appWidgetIds.length > 0) {
+            WidgetRebuilder.get(context).rebuild(appWidgetIds, getViewsBuilder(), goAsync());
+        }
+    }
 
-    private int getWidgetSize(AppWidgetManager appWidgetManager, int appWidgetId) {
+    private int getWidgetSize(Context context, AppWidgetManager appWidgetManager,
+            int appWidgetId) {
         if (LogUtil.isLoggable(TAG, LogUtil.VERBOSE)) {
             LogUtil.v(TAG, "BaseWidgetProvider.getWidgetSize");
         }
@@ -122,7 +115,7 @@ public abstract class BaseWidgetProvider extends AppWidgetProvider {
             appWidgetManager.updateAppWidgetOptions(appWidgetId, options);
 
             // The size changed. We have to force the widget to rebuild the list.
-            appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, getListId());
+            rebuildWidgets(context, new int[] { appWidgetId });
 
             if (LogUtil.isLoggable(TAG, LogUtil.VERBOSE)) {
                 LogUtil.v(TAG, "BaseWidgetProvider.getWidgetSize old size: " + savedSize
@@ -150,7 +143,7 @@ public abstract class BaseWidgetProvider extends AppWidgetProvider {
     public void onAppWidgetOptionsChanged(Context context, AppWidgetManager appWidgetManager,
             int appWidgetId, Bundle newOptions) {
 
-        final int widgetSize = getWidgetSize(appWidgetManager, appWidgetId);
+        final int widgetSize = getWidgetSize(context, appWidgetManager, appWidgetId);
 
         if (LogUtil.isLoggable(TAG, LogUtil.VERBOSE)) {
             LogUtil.v(TAG, "BaseWidgetProvider.onAppWidgetOptionsChanged new size: " +

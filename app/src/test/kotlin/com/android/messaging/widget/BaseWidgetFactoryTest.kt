@@ -4,6 +4,7 @@ import android.app.Application
 import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.database.Cursor
+import android.database.MatrixCursor
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.media.ExifInterface
@@ -25,6 +26,8 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -111,24 +114,120 @@ internal class BaseWidgetFactoryTest {
         assertNull(factory.loadAvatar(FIRST_SENDER))
     }
 
+    @Test
+    fun buildItems_avatarsPassTheBitmapBudget_keepsTheNewestItemsAndPutsViewMoreLast() {
+        val factory = TestWidgetFactory(senders = listOf(FIRST_SENDER, SECOND_SENDER, THIRD_SENDER))
+
+        val items = factory.buildItems(TWO_AVATARS_BYTE_COUNT)
+
+        assertEquals(
+            listOf(
+                factory.itemViews.getValue(0),
+                factory.itemViews.getValue(1),
+                factory.viewMoreView,
+            ),
+            items.views(),
+        )
+        assertEquals(listOf(0L, 1L, 2L), items.ids())
+    }
+
+    @Test
+    fun buildItems_newestItemLast_putsViewMoreFirstAndTheNewestItemAtTheBottom() {
+        val factory = TestWidgetFactory(
+            senders = listOf(FIRST_SENDER, SECOND_SENDER, THIRD_SENDER),
+            isNewestItemLast = true,
+        )
+
+        val items = factory.buildItems(TWO_AVATARS_BYTE_COUNT)
+
+        assertEquals(
+            listOf(
+                factory.viewMoreView,
+                factory.itemViews.getValue(1),
+                factory.itemViews.getValue(0),
+            ),
+            items.views(),
+        )
+    }
+
+    @Test
+    fun buildItems_rowsShareASender_loadsTheirAvatarOnceAndCountsItOnce() {
+        val factory = TestWidgetFactory(senders = listOf(FIRST_SENDER, FIRST_SENDER, SECOND_SENDER))
+
+        val items = factory.buildItems(TWO_AVATARS_BYTE_COUNT)
+
+        assertEquals(3, items.itemCount)
+        assertEquals(2, loadedResources.size)
+    }
+
+    @Test
+    fun buildItems_rowsPassTheParcelLimit_stopsBeforeTheRowThatPassesIt() {
+        val factory = TestWidgetFactory(
+            senders = listOf(FIRST_SENDER, SECOND_SENDER),
+            messageLength = OVER_HALF_PARCEL_LIMIT_MESSAGE_LENGTH,
+        )
+
+        val items = factory.buildItems(Long.MAX_VALUE)
+
+        assertEquals(listOf(factory.itemViews.getValue(0), factory.viewMoreView), items.views())
+    }
+
+    @Test
+    fun buildItems_afterLoadingTheRows_closesTheCursor() {
+        val factory = TestWidgetFactory(senders = listOf(FIRST_SENDER))
+
+        factory.buildItems(Long.MAX_VALUE)
+
+        assertTrue(factory.cursor.isClosed)
+    }
+
+    @Test
+    fun buildItems_avatarLoadedForTheBuild_isReleasedAndSharedByEveryRowOfThatSender() {
+        val factory = TestWidgetFactory(senders = listOf(FIRST_SENDER, FIRST_SENDER))
+
+        factory.buildItems(Long.MAX_VALUE)
+
+        assertSame(factory.avatars.getValue(0), factory.avatars.getValue(1))
+        assertEquals(0, loadedResources.single().refCount)
+    }
+
+    private fun RemoteViews.RemoteCollectionItems.views(): List<RemoteViews> {
+        return (0 until itemCount).map { position -> getItemView(position) }
+    }
+
+    private fun RemoteViews.RemoteCollectionItems.ids(): List<Long> {
+        return (0 until itemCount).map { position -> getItemId(position) }
+    }
+
     private fun messageRow(avatar: Bitmap): RemoteViews {
         return RemoteViews(context.packageName, R.layout.widget_message_item_incoming).apply {
             setImageViewBitmap(R.id.avatarView, avatar)
         }
     }
 
-    private inner class TestWidgetFactory : BaseWidgetFactory(context, Intent()) {
+    private inner class TestWidgetFactory(
+        senders: List<String> = emptyList(),
+        private val isNewestItemLast: Boolean = false,
+        private val messageLength: Int = 0,
+    ) : BaseWidgetFactory(context, Intent()) {
+
+        val cursor = MatrixCursor(arrayOf(SENDER_COLUMN)).apply {
+            senders.forEach { sender -> addRow(arrayOf(sender)) }
+        }
+        val itemViews = mutableMapOf<Int, RemoteViews>()
+        val avatars = mutableMapOf<Int, Bitmap?>()
+        val viewMoreView = RemoteViews(context.packageName, R.layout.widget_loading)
 
         fun loadAvatar(name: String): Bitmap? {
             return getAvatarBitmap(AvatarUriUtil.createAvatarUri(null, name, null, null))
         }
 
-        override fun doQuery(): Cursor? {
-            return null
+        override fun doQuery(): Cursor {
+            return cursor
         }
 
-        override fun getViewMoreItemsView(): RemoteViews? {
-            return null
+        override fun getViewMoreItemsView(): RemoteViews {
+            return viewMoreView
         }
 
         override fun getMainLayoutId(): Int {
@@ -139,12 +238,31 @@ internal class BaseWidgetFactoryTest {
             return null
         }
 
+        override fun getItemView(cursorPosition: Int): RemoteViews? {
+            return when {
+                !cursor.moveToPosition(cursorPosition) -> null
+                else -> {
+                    val avatar = loadAvatar(cursor.getString(0))
+                    avatars[cursorPosition] = avatar
+                    RemoteViews(context.packageName, R.layout.widget_message_item_incoming).apply {
+                        setImageViewBitmap(R.id.avatarView, avatar)
+                        setTextViewText(R.id.message, "m".repeat(messageLength))
+                        itemViews[cursorPosition] = this
+                    }
+                }
+            }
+        }
+
+        override fun isNewestItemLast(): Boolean {
+            return isNewestItemLast
+        }
+
         override fun getLoadingView(): RemoteViews? {
             return null
         }
 
         override fun getViewTypeCount(): Int {
-            return 1
+            return 2
         }
     }
 
@@ -155,5 +273,10 @@ internal class BaseWidgetFactoryTest {
         private const val FIRST_SENDER = "Ada"
         private const val SECOND_ROW_ID = 2L
         private const val SECOND_SENDER = "Grace"
+        private const val THIRD_SENDER = "Hedy"
+        private const val SENDER_COLUMN = "sender"
+        private const val TWO_AVATARS_BYTE_COUNT = 2L * AVATAR_SIZE * AVATAR_SIZE * 4
+
+        private const val OVER_HALF_PARCEL_LIMIT_MESSAGE_LENGTH = 150_000
     }
 }

@@ -24,11 +24,14 @@ import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Binder;
+import android.os.Parcel;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.StyleSpan;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
+
+import androidx.annotation.Nullable;
 
 import com.android.messaging.R;
 import com.android.messaging.datamodel.media.AvatarGroupRequestDescriptor;
@@ -40,6 +43,12 @@ import com.android.messaging.datamodel.media.MediaResourceManager;
 import com.android.messaging.util.AvatarUriUtil;
 import com.android.messaging.util.LogUtil;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Remote Views Factory for Bugle Widget.
  */
@@ -47,6 +56,11 @@ abstract class BaseWidgetFactory implements RemoteViewsService.RemoteViewsFactor
     protected static final String TAG = LogUtil.BUGLE_WIDGET_TAG;
 
     protected static final int MAX_ITEMS_TO_SHOW = 25;
+
+    /**
+     * The rows go to the system in a single binder transaction, which fails past 1 MB.
+     */
+    private static final int MAX_ITEMS_PARCEL_SIZE = 500_000;
 
     /**
      * Lock to avoid race condition between widgets.
@@ -59,6 +73,8 @@ abstract class BaseWidgetFactory implements RemoteViewsService.RemoteViewsFactor
     protected Cursor mCursor;
     protected final AppWidgetManager mAppWidgetManager;
     protected int mIconSize;
+    private final Map<Uri, Bitmap> mAvatarBitmaps = new HashMap<>();
+    private long mBitmapByteCount;
 
     public BaseWidgetFactory(Context context, Intent intent) {
         mContext = context;
@@ -103,10 +119,11 @@ abstract class BaseWidgetFactory implements RemoteViewsService.RemoteViewsFactor
                 mCursor.close();
                 mCursor = null;
             }
+            mAvatarBitmaps.clear();
+            mBitmapByteCount = 0;
             final long token = Binder.clearCallingIdentity();
             try {
                 mCursor = doQuery();
-                onLoadComplete();
             } finally {
                 Binder.restoreCallingIdentity(token);
             }
@@ -165,6 +182,9 @@ abstract class BaseWidgetFactory implements RemoteViewsService.RemoteViewsFactor
     }
 
     protected Bitmap getAvatarBitmap(final Uri avatarUri) {
+        if (mAvatarBitmaps.containsKey(avatarUri)) {
+            return mAvatarBitmaps.get(avatarUri);
+        }
         final String avatarType = avatarUri == null ?
                 null : AvatarUriUtil.getAvatarType(avatarUri);
         ImageRequestDescriptor descriptor;
@@ -174,10 +194,20 @@ abstract class BaseWidgetFactory implements RemoteViewsService.RemoteViewsFactor
             descriptor = new AvatarRequestDescriptor(avatarUri, mIconSize, mIconSize);
         }
 
+        final Bitmap avatar = loadBitmap(descriptor);
+        mAvatarBitmaps.put(avatarUri, avatar);
+        return avatar;
+    }
+
+    protected Bitmap loadBitmap(final ImageRequestDescriptor descriptor) {
         final MediaRequest<ImageResource> imageRequest =
                 descriptor.buildSyncMediaRequest(mContext);
-        return copyBitmapAndRelease(
+        final Bitmap bitmap = copyBitmapAndRelease(
                 MediaResourceManager.get().requestMediaResourceSync(imageRequest));
+        if (bitmap != null) {
+            mBitmapByteCount += bitmap.getAllocationByteCount();
+        }
+        return bitmap;
     }
 
     /**
@@ -213,14 +243,57 @@ abstract class BaseWidgetFactory implements RemoteViewsService.RemoteViewsFactor
         return position;
     }
 
-    private void onLoadComplete() {
-        if (LogUtil.isLoggable(TAG, LogUtil.VERBOSE)) {
-            LogUtil.v(TAG, "onLoadComplete");
+    protected abstract int getMainLayoutId();
+
+    @Nullable
+    protected abstract RemoteViews getItemView(int cursorPosition);
+
+    protected abstract boolean isNewestItemLast();
+
+    RemoteViews.RemoteCollectionItems buildItems(final long maxBitmapByteCount) {
+        synchronized (sWidgetLock) {
+            final Parcel sizeParcel = Parcel.obtain();
+            try {
+                onDataSetChanged();
+                final List<RemoteViews> rows = buildRows(maxBitmapByteCount, sizeParcel);
+                if (isNewestItemLast()) {
+                    Collections.reverse(rows);
+                }
+                if (mCursor != null && rows.size() < mCursor.getCount()) {
+                    rows.add(isNewestItemLast() ? 0 : rows.size(), getViewMoreItemsView());
+                }
+                final RemoteViews.RemoteCollectionItems.Builder items =
+                        new RemoteViews.RemoteCollectionItems.Builder()
+                                .setHasStableIds(hasStableIds())
+                                .setViewTypeCount(getViewTypeCount());
+                for (int position = 0; position < rows.size(); position++) {
+                    items.addItem(getItemId(position), rows.get(position));
+                }
+                return items.build();
+            } finally {
+                sizeParcel.recycle();
+                onDestroy();
+            }
         }
-        final RemoteViews remoteViews = new RemoteViews(mContext.getPackageName(),
-                getMainLayoutId());
-        mAppWidgetManager.partiallyUpdateAppWidget(mAppWidgetId, remoteViews);
     }
 
-    protected abstract int getMainLayoutId();
+    private List<RemoteViews> buildRows(final long maxBitmapByteCount, final Parcel sizeParcel) {
+        final int itemCount = mCursor == null ? 0 : getItemCount();
+        final List<RemoteViews> rows = new ArrayList<>(itemCount + 1);
+        for (int position = 0; position < itemCount; position++) {
+            final RemoteViews row = getItemView(position);
+            if (row == null) {
+                break;
+            }
+            row.writeToParcel(sizeParcel, 0 /* flags */);
+            if (mBitmapByteCount > maxBitmapByteCount
+                    || sizeParcel.dataSize() > MAX_ITEMS_PARCEL_SIZE) {
+                LogUtil.w(TAG, "Widget " + mAppWidgetId + " shows " + position + " of "
+                        + itemCount + " items, the rest don't fit in one update");
+                break;
+            }
+            rows.add(row);
+        }
+        return rows;
+    }
 }

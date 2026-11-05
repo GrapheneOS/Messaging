@@ -2,6 +2,7 @@ package com.android.messaging.di.core
 
 import android.app.NotificationManager
 import android.app.role.RoleManager
+import android.appwidget.AppWidgetManager
 import android.content.ClipboardManager
 import android.content.ContentResolver
 import android.content.Context
@@ -89,6 +90,15 @@ internal class CoreProvidesModule {
         context: Context,
     ): PackageManager {
         return context.packageManager
+    }
+
+    @Provides
+    @Reusable
+    fun provideAppWidgetManager(
+        @ApplicationContext
+        context: Context,
+    ): AppWidgetManager {
+        return AppWidgetManager.getInstance(context)
     }
 
     @Provides
