@@ -604,6 +604,9 @@ public class BugleDatabaseOperations {
         Assert.isTrue(dbWrapper.getDatabase().inTransaction());
         final ContentValues values = new ContentValues();
         values.put(ConversationColumns.ARCHIVE_STATUS, isArchived ? 1 : 0);
+        if (isArchived) {
+            values.put(ConversationColumns.PINNED, 0);
+        }
         updateConversationRowIfExists(dbWrapper, conversationId, values);
     }
 

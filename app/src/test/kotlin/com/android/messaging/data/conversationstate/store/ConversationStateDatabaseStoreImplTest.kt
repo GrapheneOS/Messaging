@@ -135,6 +135,18 @@ class ConversationStateDatabaseStoreImplTest {
     }
 
     @Test
+    fun restore_unpinsTheConversationsItArchives() {
+        insertResyncedConversations(sortTimestamp = SYNCED_SORT_TIMESTAMP, isPinned = true)
+
+        store.restore(mirroredState = MIRRORED_STATE)
+
+        assertFalse(db.isPinned(threadId = BLOCKED_THREAD_ID))
+        assertFalse(db.isPinned(threadId = ARCHIVED_THREAD_ID))
+        assertTrue(db.isPinned(threadId = OTHER_THREAD_ID))
+        assertTrue(db.isPinned(threadId = UNARCHIVED_BLOCKED_THREAD_ID))
+    }
+
+    @Test
     fun restore_createsTheParticipantOfABlockedSenderWithNoConversation() {
         store.restore(mirroredState = MIRRORED_STATE)
 
@@ -180,26 +192,30 @@ class ConversationStateDatabaseStoreImplTest {
         assertFalse(db.isArchived(threadId = ARCHIVED_THREAD_ID))
     }
 
-    private fun insertResyncedConversations(sortTimestamp: Long) {
+    private fun insertResyncedConversations(sortTimestamp: Long, isPinned: Boolean = false) {
         db.insertSyncedConversation(
             destination = BLOCKED_DESTINATION,
             threadId = BLOCKED_THREAD_ID,
             sortTimestamp = sortTimestamp,
+            isPinned = isPinned,
         )
         db.insertSyncedConversation(
             destination = ARCHIVED_DESTINATION,
             threadId = ARCHIVED_THREAD_ID,
             sortTimestamp = sortTimestamp,
+            isPinned = isPinned,
         )
         db.insertSyncedConversation(
             destination = OTHER_DESTINATION,
             threadId = OTHER_THREAD_ID,
             sortTimestamp = sortTimestamp,
+            isPinned = isPinned,
         )
         db.insertSyncedConversation(
             destination = UNARCHIVED_BLOCKED_DESTINATION,
             threadId = UNARCHIVED_BLOCKED_THREAD_ID,
             sortTimestamp = sortTimestamp,
+            isPinned = isPinned,
         )
     }
 
@@ -209,6 +225,7 @@ class ConversationStateDatabaseStoreImplTest {
         isBlocked: Boolean = false,
         isArchived: Boolean = false,
         sortTimestamp: Long = SYNCED_SORT_TIMESTAMP,
+        isPinned: Boolean = false,
     ) {
         val participantId = insert(
             DatabaseHelper.PARTICIPANTS_TABLE,
@@ -227,6 +244,7 @@ class ConversationStateDatabaseStoreImplTest {
             contentValuesOf(
                 ConversationColumns.SMS_THREAD_ID to threadId,
                 ConversationColumns.ARCHIVE_STATUS to if (isArchived) 1 else 0,
+                ConversationColumns.PINNED to if (isPinned) 1 else 0,
                 ConversationColumns.SORT_TIMESTAMP to sortTimestamp,
                 ConversationColumns.PARTICIPANT_COUNT to 1,
                 ConversationColumns.OTHER_PARTICIPANT_NORMALIZED_DESTINATION to destination,
@@ -256,8 +274,19 @@ class ConversationStateDatabaseStoreImplTest {
     }
 
     private fun DatabaseWrapper.isArchived(threadId: Long): Boolean {
+        return readConversationFlag(
+            column = ConversationColumns.ARCHIVE_STATUS,
+            threadId = threadId,
+        )
+    }
+
+    private fun DatabaseWrapper.isPinned(threadId: Long): Boolean {
+        return readConversationFlag(column = ConversationColumns.PINNED, threadId = threadId)
+    }
+
+    private fun DatabaseWrapper.readConversationFlag(column: String, threadId: Long): Boolean {
         return rawQuery(
-            "SELECT ${ConversationColumns.ARCHIVE_STATUS} FROM " +
+            "SELECT $column FROM " +
                 "${DatabaseHelper.CONVERSATIONS_TABLE} WHERE ${ConversationColumns.SMS_THREAD_ID}=?",
             arrayOf(threadId.toString()),
         ).use { cursor ->
