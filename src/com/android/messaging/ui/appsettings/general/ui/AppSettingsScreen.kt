@@ -120,6 +120,17 @@ private fun LazyListScope.coreSettingsItems(
         )
     }
 
+    item(key = "send_on_enter") {
+        SettingsSwitchItem(
+            title = stringResource(R.string.send_on_enter_pref_title),
+            summary = stringResource(R.string.send_on_enter_pref_summary),
+            checked = appSettings.sendOnEnterEnabled,
+            onCheckedChange = {
+                onAction(Action.SendOnEnterChanged(it))
+            },
+        )
+    }
+
     item(key = "privacy") {
         SettingsClickableItem(
             title = stringResource(R.string.privacy_settings_activity_title),

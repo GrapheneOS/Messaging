@@ -322,4 +322,6 @@
     <string name="video_attachment_limit_exceeded_when_sending" msgid="8545536951461996462">"Você só pode enviar um vídeo por mensagem. Remova os vídeos adicionais e tente novamente."</string>
     <string name="attachment_limit_reached_send_anyway" msgid="2348790618093735551">"Enviar mesmo assim"</string>
     <string name="conversation_creation_failure" msgid="8597624563218724441">"Não foi possível iniciar a conversa"</string>
+    <string name="send_on_enter_pref_title">Enviar com Enter no teclado físico</string>
+    <string name="send_on_enter_pref_summary">Enviar mensagem ao premir Enter num teclado físico. Use Shift + Enter para uma nova linha. Ctrl + Enter envia sempre a mensagem</string>
 </resources>

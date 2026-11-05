@@ -1,6 +1,7 @@
 package com.android.messaging.ui.common.components.composer
 
 import android.text.InputType
+import android.view.KeyEvent
 import android.view.View
 import android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction
 import android.view.inputmethod.EditorInfo
@@ -60,6 +61,44 @@ internal class MessageComposeBarInputTypeTest {
         field.performAccessibilityAction(AccessibilityAction.ACTION_IME_ENTER.id, null)
 
         assertEquals(1, sendCount)
+    }
+
+    @Test
+    fun messageComposeField_withCtrlEnter_triggersImeSend() {
+        var sendCount = 0
+        val field = focusedField(onImeSend = { sendCount++ })
+
+        field.dispatchKeyEvent(
+            KeyEvent(
+                0L,
+                0L,
+                KeyEvent.ACTION_DOWN,
+                KeyEvent.KEYCODE_ENTER,
+                0,
+                KeyEvent.META_CTRL_ON,
+            ),
+        )
+
+        assertEquals(1, sendCount)
+    }
+
+    @Test
+    fun messageComposeField_withRegularEnter_doesNotTriggerImeSend() {
+        var sendCount = 0
+        val field = focusedField(onImeSend = { sendCount++ })
+
+        field.dispatchKeyEvent(
+            KeyEvent(
+                0L,
+                0L,
+                KeyEvent.ACTION_DOWN,
+                KeyEvent.KEYCODE_ENTER,
+                0,
+                0,
+            ),
+        )
+
+        assertEquals(0, sendCount)
     }
 
     private fun focusedFieldInputType(): Int {

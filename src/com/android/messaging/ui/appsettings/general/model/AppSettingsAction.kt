@@ -25,6 +25,10 @@ internal sealed interface AppSettingsAction {
         val enabled: Boolean,
     ) : AppSettingsAction
 
+    data class SendOnEnterChanged(
+        val enabled: Boolean,
+    ) : AppSettingsAction
+
     data class DefaultSmsAppClicked(
         val isCurrentlyDefault: Boolean,
     ) : AppSettingsAction

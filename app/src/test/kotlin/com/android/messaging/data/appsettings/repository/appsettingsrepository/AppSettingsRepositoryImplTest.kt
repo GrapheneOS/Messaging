@@ -73,6 +73,12 @@ internal class AppSettingsRepositoryImplTest {
         every {
             resources.getBoolean(R.bool.youtube_link_previews_pref_default)
         } returns YOUTUBE_LINK_PREVIEWS_DEFAULT
+        every {
+            context.getString(R.string.send_on_enter_pref_key)
+        } returns SEND_ON_ENTER_PREF_KEY
+        every {
+            resources.getBoolean(R.bool.send_on_enter_pref_default)
+        } returns SEND_ON_ENTER_DEFAULT
         every { resources.getBoolean(R.bool.send_sound_pref_default) } returns
             SEND_SOUND_DEFAULT
         every {
@@ -106,6 +112,12 @@ internal class AppSettingsRepositoryImplTest {
                 appPrefs.getBoolean(
                     YOUTUBE_LINK_PREVIEWS_PREF_KEY,
                     YOUTUBE_LINK_PREVIEWS_DEFAULT,
+                )
+            } returns true
+            every {
+                appPrefs.getBoolean(
+                    SEND_ON_ENTER_PREF_KEY,
+                    SEND_ON_ENTER_DEFAULT,
                 )
             } returns true
 
@@ -242,6 +254,8 @@ internal class AppSettingsRepositoryImplTest {
         private const val IN_CONVERSATION_SOUND_PREF_KEY = "in_conversation_sound"
         private const val SEND_SOUND_DEFAULT = true
         private const val SEND_SOUND_PREF_KEY = "send_sound"
+        private const val SEND_ON_ENTER_DEFAULT = false
+        private const val SEND_ON_ENTER_PREF_KEY = "send_on_enter"
         private const val YOUTUBE_LINK_PREVIEWS_DEFAULT = false
         private const val YOUTUBE_LINK_PREVIEWS_PREF_KEY = "youtube_link_previews"
     }

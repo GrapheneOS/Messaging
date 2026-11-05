@@ -322,4 +322,6 @@
     <string name="video_attachment_limit_exceeded_when_sending" msgid="8545536951461996462">"Pro Nachricht kann nur ein Video gesendet werden. Bitte entfernen Sie überzählige Videos und versuchen Sie es erneut."</string>
     <string name="attachment_limit_reached_send_anyway" msgid="2348790618093735551">"Trotzdem senden"</string>
     <string name="conversation_creation_failure" msgid="8597624563218724441">"Die Unterhaltung konnte nicht gestartet werden."</string>
+    <string name="send_on_enter_pref_title">Mit Enter auf physischer Tastatur senden</string>
+    <string name="send_on_enter_pref_summary">Nachricht beim Drücken der Enter-Taste auf einer physischen Tastatur senden. Verwenden Sie Shift + Enter für eine neue Zeile. Strg + Enter sendet immer die Nachricht</string>
 </resources>

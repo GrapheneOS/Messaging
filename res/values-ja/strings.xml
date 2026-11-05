@@ -322,4 +322,6 @@
     <string name="video_attachment_limit_exceeded_when_sending" msgid="8545536951461996462">"送信できる動画は1件のメッセージにつき1本までです。追加した動画を削除してもう一度お試しください。"</string>
     <string name="attachment_limit_reached_send_anyway" msgid="2348790618093735551">"このまま送信"</string>
     <string name="conversation_creation_failure" msgid="8597624563218724441">"スレッドを開始できませんでした"</string>
+    <string name="send_on_enter_pref_title">物理キーボードのEnterで送信</string>
+    <string name="send_on_enter_pref_summary">物理キーボードのEnterキーを押してメッセージを送信します。改行するにはShift + Enterを使用します。Ctrl + Enterは常にメッセージを送信します</string>
 </resources>

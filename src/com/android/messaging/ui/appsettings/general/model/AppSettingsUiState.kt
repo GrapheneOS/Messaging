@@ -9,6 +9,7 @@ internal data class AppSettingsUiState(
     val sendSoundEnabled: Boolean = true,
     val inConversationSoundEnabled: Boolean = false,
     val youTubeLinkPreviewsEnabled: Boolean = false,
+    val sendOnEnterEnabled: Boolean = false,
     val isDebugEnabled: Boolean = false,
     val dumpSmsEnabled: Boolean = false,
     val dumpMmsEnabled: Boolean = false,

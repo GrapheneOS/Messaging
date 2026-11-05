@@ -16,6 +16,7 @@ import kotlinx.coroutines.withContext
 internal interface AppSettingsRepository {
     suspend fun getAppSettings(): AppSettings
     suspend fun isYouTubeLinkPreviewsEnabled(): Boolean
+    suspend fun isSendOnEnterEnabled(): Boolean
     suspend fun setBooleanPref(pref: AppBooleanPref, enabled: Boolean)
 }
 
@@ -43,6 +44,7 @@ internal class AppSettingsRepositoryImpl @Inject constructor(
                     resources.getBoolean(R.bool.in_conversation_sound_pref_default),
                 ),
                 youTubeLinkPreviewsEnabled = readYouTubeLinkPreviewsEnabled(),
+                sendOnEnterEnabled = readSendOnEnterEnabled(),
                 isDebugEnabled = debugFeaturesProvider.isEnabled(),
                 dumpSmsEnabled = appPrefs.getBoolean(
                     context.getString(R.string.dump_sms_pref_key),
@@ -62,6 +64,12 @@ internal class AppSettingsRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun isSendOnEnterEnabled(): Boolean {
+        return withContext(ioDispatcher) {
+            readSendOnEnterEnabled()
+        }
+    }
+
     override suspend fun setBooleanPref(
         pref: AppBooleanPref,
         enabled: Boolean,
@@ -78,6 +86,13 @@ internal class AppSettingsRepositoryImpl @Inject constructor(
         return BuglePrefs.getApplicationPrefs().getBoolean(
             context.getString(R.string.youtube_link_previews_pref_key),
             context.resources.getBoolean(R.bool.youtube_link_previews_pref_default),
+        )
+    }
+
+    private fun readSendOnEnterEnabled(): Boolean {
+        return BuglePrefs.getApplicationPrefs().getBoolean(
+            context.getString(R.string.send_on_enter_pref_key),
+            context.resources.getBoolean(R.bool.send_on_enter_pref_default),
         )
     }
 }
