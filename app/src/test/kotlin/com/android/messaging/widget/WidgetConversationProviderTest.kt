@@ -2,8 +2,10 @@ package com.android.messaging.widget
 
 import android.app.Application
 import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.ContentResolver
 import android.content.ContextWrapper
+import android.os.Looper
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.RemoteViews
@@ -16,6 +18,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlin.concurrent.thread
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -24,6 +27,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(RobolectricTestRunner::class)
 class WidgetConversationProviderTest {
@@ -75,7 +79,33 @@ class WidgetConversationProviderTest {
         assertEquals(View.VISIBLE, widget.findViewById<View>(R.id.widget_configuration).visibility)
     }
 
+    @Test
+    fun notifyMessagesChanged_afterProcessRestart_refreshesOnlyThatConversationsWidgets() {
+        WidgetConversationPrefs.saveConversationIdPref(
+            appWidgetId = WIDGET_ID,
+            conversationId = "7",
+        )
+        WidgetConversationPrefs.saveConversationIdPref(
+            appWidgetId = OTHER_WIDGET_ID,
+            conversationId = "8",
+        )
+        val provider = ComponentName(context, WidgetConversationProvider::class.java)
+        every { appWidgetManager.getAppWidgetIds(provider) } returns
+            intArrayOf(WIDGET_ID, OTHER_WIDGET_ID)
+
+        WidgetConversationProvider.notifyMessagesChanged(context, "7")
+        shadowOf(Looper.getMainLooper()).idle()
+
+        verify(exactly = 1) {
+            appWidgetManager.notifyAppWidgetViewDataChanged(WIDGET_ID, R.id.message_list)
+        }
+        verify(exactly = 0) {
+            appWidgetManager.notifyAppWidgetViewDataChanged(OTHER_WIDGET_ID, any<Int>())
+        }
+    }
+
     companion object {
         private const val WIDGET_ID = 3
+        private const val OTHER_WIDGET_ID = 4
     }
 }

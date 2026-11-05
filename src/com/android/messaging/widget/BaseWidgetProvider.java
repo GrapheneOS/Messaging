@@ -21,7 +21,6 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 
 import com.android.messaging.util.LogUtil;
@@ -76,19 +75,6 @@ public abstract class BaseWidgetProvider extends AppWidgetProvider {
         } else {
             super.onReceive(context, intent);
         }
-    }
-
-    @Override
-    public void onEnabled(Context context) {
-        super.onEnabled(context);
-        IntentFilter filter = new IntentFilter(getAction());
-        context.getApplicationContext().registerReceiver(
-                this,
-                filter,
-                null,
-                null,
-                Context.RECEIVER_NOT_EXPORTED
-        );
     }
 
     protected abstract String getAction();
