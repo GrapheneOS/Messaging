@@ -8,6 +8,7 @@ import android.util.TypedValue
 import android.view.ContentInfo
 import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowInsets
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
@@ -126,6 +127,13 @@ private fun createMessageEditText(
         // A real view id makes keyboards treat this as the ordinary text field it is, rather than
         // falling back to workarounds for Compose fields, which have no id.
         id = View.generateViewId()
+        // A text view whose width wraps its content asks for a new layout on every edit, and while
+        // that layout is pending it puts off scrolling to the cursor, so a field at its line limit
+        // falls behind fast typing. The field's width comes from its Compose layout anyway.
+        layoutParams = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+        )
         isSaveEnabled = false
         background = null
         gravity = Gravity.START or Gravity.CENTER_VERTICAL
