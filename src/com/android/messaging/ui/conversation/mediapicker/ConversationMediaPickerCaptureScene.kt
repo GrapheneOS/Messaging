@@ -27,6 +27,11 @@ internal fun ConversationMediaPickerCaptureScene(
     onShowReview: (String) -> Unit,
     onCaptureModeChange: (ConversationCaptureMode) -> Unit,
 ) {
+    val aspectRatio = when (captureMode) {
+        ConversationCaptureMode.Photo -> cameraController.photoAspectRatio
+        ConversationCaptureMode.Video -> cameraController.videoAspectRatio
+    }.collectAsStateWithLifecycle()
+
     Box(
         modifier = modifier
             .fillMaxSize(),
@@ -35,8 +40,8 @@ internal fun ConversationMediaPickerCaptureScene(
             modifier = Modifier
                 .fillMaxSize(),
             cameraController = cameraController,
+            aspectRatio = aspectRatio.value,
             cameraPermissionGranted = cameraPermissionGranted,
-            captureMode = captureMode,
             contentPadding = contentPadding,
             onRequestCameraPermission = onRequestCameraPermission,
         )
@@ -46,6 +51,7 @@ internal fun ConversationMediaPickerCaptureScene(
                 .fillMaxSize()
                 .padding(paddingValues = contentPadding),
             cameraController = cameraController,
+            aspectRatio = aspectRatio.value,
             audioPermissionGranted = audioPermissionGranted,
             captureMode = captureMode,
             cameraPermissionGranted = cameraPermissionGranted,
@@ -63,20 +69,16 @@ internal fun ConversationMediaPickerCaptureScene(
 private fun ConversationMediaCameraPreviewRoute(
     modifier: Modifier = Modifier,
     cameraController: ConversationCameraController,
+    aspectRatio: Float?,
     cameraPermissionGranted: Boolean,
-    captureMode: ConversationCaptureMode,
     contentPadding: PaddingValues,
     onRequestCameraPermission: () -> Unit,
 ) {
     val surfaceRequest = cameraController.surfaceRequest.collectAsStateWithLifecycle()
-    val aspectRatio = when (captureMode) {
-        ConversationCaptureMode.Photo -> cameraController.photoAspectRatio
-        ConversationCaptureMode.Video -> cameraController.videoAspectRatio
-    }.collectAsStateWithLifecycle()
 
     ConversationMediaCameraPreviewSurface(
         modifier = modifier,
-        aspectRatio = aspectRatio.value,
+        aspectRatio = aspectRatio,
         cameraPermissionGranted = cameraPermissionGranted,
         contentPadding = contentPadding,
         surfaceRequest = surfaceRequest.value,
