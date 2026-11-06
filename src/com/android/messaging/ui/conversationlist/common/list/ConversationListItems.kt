@@ -77,7 +77,6 @@ internal fun ConversationListItems(
     KeepViewportStationaryOnPinChange(
         listState = listState,
         items = items,
-        restoredConversationIds = restoredConversationIds,
     )
 
     LazyColumn(
@@ -290,7 +289,6 @@ private fun Modifier.trackPinAnimationBounds(
 private fun KeepViewportStationaryOnPinChange(
     listState: LazyListState,
     items: ImmutableList<Model>,
-    restoredConversationIds: ImmutableSet<ConversationId>,
 ) {
     val previousItemsState = remember { mutableStateOf(items) }
 
@@ -308,7 +306,6 @@ private fun KeepViewportStationaryOnPinChange(
         val scrollRequest = resolvePinChangeScrollRequest(
             previousItems = previousItems,
             currentItems = items,
-            restoredConversationIds = restoredConversationIds,
             firstVisibleConversationId = firstVisibleConversationId,
             firstVisibleItemIndex = listState.firstVisibleItemIndex,
             firstVisibleItemScrollOffset = listState.firstVisibleItemScrollOffset,
@@ -333,21 +330,17 @@ internal data class ConversationListScrollRequest(
 internal fun resolvePinChangeScrollRequest(
     previousItems: List<Model>,
     currentItems: List<Model>,
-    restoredConversationIds: Set<ConversationId>,
     firstVisibleConversationId: ConversationId?,
     firstVisibleItemIndex: Int,
     firstVisibleItemScrollOffset: Int,
 ): ConversationListScrollRequest? {
     val currentItemsById = currentItems.associateBy(Model::conversationId)
-    val previousConversationIds = previousItems.mapTo(HashSet()) { it.conversationId }
     val isAtTop = firstVisibleItemIndex == 0 && firstVisibleItemScrollOffset == 0
-    val currentTopConversationId = currentItems.firstOrNull()?.conversationId
-    val isNewTopConversation = currentTopConversationId != null &&
-        currentTopConversationId !in previousConversationIds &&
-        currentTopConversationId !in restoredConversationIds
+    val hasTopConversationChanged = currentItems.firstOrNull()?.conversationId !=
+        previousItems.firstOrNull()?.conversationId
 
     return when {
-        isAtTop && isNewTopConversation -> {
+        isAtTop && hasTopConversationChanged -> {
             ConversationListScrollRequest(
                 index = 0,
                 scrollOffset = 0,

@@ -16,7 +16,6 @@ class ConversationListItemsTest {
         val result = resolvePinChangeScrollRequest(
             previousItems = items,
             currentItems = items,
-            restoredConversationIds = emptySet(),
             firstVisibleConversationId = ConversationId("b"),
             firstVisibleItemIndex = 1,
             firstVisibleItemScrollOffset = 12,
@@ -33,7 +32,6 @@ class ConversationListItemsTest {
                 item(ConversationId("a"), isPinned = true),
                 item(ConversationId("c"))
             ),
-            restoredConversationIds = emptySet(),
             firstVisibleConversationId = ConversationId("a"),
             firstVisibleItemIndex = 0,
             firstVisibleItemScrollOffset = 0,
@@ -51,7 +49,6 @@ class ConversationListItemsTest {
                 item(ConversationId("a")),
                 item(ConversationId("b"))
             ),
-            restoredConversationIds = emptySet(),
             firstVisibleConversationId = ConversationId("a"),
             firstVisibleItemIndex = 0,
             firstVisibleItemScrollOffset = 0,
@@ -75,7 +72,6 @@ class ConversationListItemsTest {
                 item(ConversationId("a")),
                 item(ConversationId("b"))
             ),
-            restoredConversationIds = emptySet(),
             firstVisibleConversationId = ConversationId("b"),
             firstVisibleItemIndex = 2,
             firstVisibleItemScrollOffset = 10,
@@ -85,15 +81,66 @@ class ConversationListItemsTest {
     }
 
     @Test
-    fun resolvePinChangeScrollRequest_restoredTopItemWhileAtStart_returnsNull() {
+    fun resolvePinChangeScrollRequest_existingItemMovedToTopWhileAtStart_requestsFirstItem() {
         val result = resolvePinChangeScrollRequest(
-            previousItems = listOf(item(ConversationId("a")), item(ConversationId("b"))),
+            previousItems = listOf(
+                item(ConversationId("a")),
+                item(ConversationId("b")),
+                item(ConversationId("c"))
+            ),
             currentItems = listOf(
                 item(ConversationId("c")),
                 item(ConversationId("a")),
                 item(ConversationId("b"))
             ),
-            restoredConversationIds = setOf(ConversationId("c")),
+            firstVisibleConversationId = ConversationId("a"),
+            firstVisibleItemIndex = 0,
+            firstVisibleItemScrollOffset = 0,
+        )
+
+        assertEquals(
+            ConversationListScrollRequest(
+                index = 0,
+                scrollOffset = 0,
+            ),
+            result,
+        )
+    }
+
+    @Test
+    fun resolvePinChangeScrollRequest_existingItemMovedToTopWhileScrolled_returnsNull() {
+        val result = resolvePinChangeScrollRequest(
+            previousItems = listOf(
+                item(ConversationId("a")),
+                item(ConversationId("b")),
+                item(ConversationId("c"))
+            ),
+            currentItems = listOf(
+                item(ConversationId("c")),
+                item(ConversationId("a")),
+                item(ConversationId("b"))
+            ),
+            firstVisibleConversationId = ConversationId("b"),
+            firstVisibleItemIndex = 1,
+            firstVisibleItemScrollOffset = 10,
+        )
+
+        assertNull(result)
+    }
+
+    @Test
+    fun resolvePinChangeScrollRequest_itemMovedBelowPinnedTopWhileAtStart_returnsNull() {
+        val result = resolvePinChangeScrollRequest(
+            previousItems = listOf(
+                item(ConversationId("a"), isPinned = true),
+                item(ConversationId("b")),
+                item(ConversationId("c"))
+            ),
+            currentItems = listOf(
+                item(ConversationId("a"), isPinned = true),
+                item(ConversationId("c")),
+                item(ConversationId("b"))
+            ),
             firstVisibleConversationId = ConversationId("a"),
             firstVisibleItemIndex = 0,
             firstVisibleItemScrollOffset = 0,
@@ -110,7 +157,6 @@ class ConversationListItemsTest {
                 item(ConversationId("b"), isPinned = true),
                 item(ConversationId("a"))
             ),
-            restoredConversationIds = emptySet(),
             firstVisibleConversationId = ConversationId("a"),
             firstVisibleItemIndex = 0,
             firstVisibleItemScrollOffset = 0,
@@ -138,7 +184,6 @@ class ConversationListItemsTest {
                 item(ConversationId("a")),
                 item(ConversationId("c"))
             ),
-            restoredConversationIds = emptySet(),
             firstVisibleConversationId = ConversationId("b"),
             firstVisibleItemIndex = 1,
             firstVisibleItemScrollOffset = 24,
@@ -166,7 +211,6 @@ class ConversationListItemsTest {
                 item(ConversationId("b")),
                 item(ConversationId("c"))
             ),
-            restoredConversationIds = emptySet(),
             firstVisibleConversationId = ConversationId("b"),
             firstVisibleItemIndex = 1,
             firstVisibleItemScrollOffset = 24,
@@ -183,7 +227,6 @@ class ConversationListItemsTest {
                 item(ConversationId("b"), isPinned = true),
                 item(ConversationId("a"))
             ),
-            restoredConversationIds = emptySet(),
             firstVisibleConversationId = null,
             firstVisibleItemIndex = 1,
             firstVisibleItemScrollOffset = 24,
