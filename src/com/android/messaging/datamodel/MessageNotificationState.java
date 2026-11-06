@@ -451,7 +451,6 @@ public class MessageNotificationState {
 
                 HashMap<String, Integer> firstNames = null;
                 String conversationIdForFirstNames = null;
-                String groupConversationName = null;
 
                 do {
                     convMessageData.bind(convMessageCursor);
@@ -494,10 +493,9 @@ public class MessageNotificationState {
                         }
                         final int subId = BugleDatabaseOperations.getSelfSubscriptionId(db,
                                 convData.getSelfId());
-                        groupConversationName = convData.getName();
                         conversation = new Conversation(convId,
                                 convData.getIsGroup(),
-                                groupConversationName,
+                                convData.getName(),
                                 convData.getIncludeEmailAddress(),
                                 timestamp,
                                 convData.getSelfId(),
@@ -530,11 +528,17 @@ public class MessageNotificationState {
                             }
                         }
 
+                        // A sender with no resolved contact name is labelled with this message's
+                        // own conversation name, which for a 1:1 conversation is the sender's
+                        // number (or "Unknown sender"). The name must come from the conversation
+                        // the message belongs to: reading it from a variable shared across the
+                        // messages of every conversation labelled a message with the name of
+                        // whichever conversation had been created most recently.
                         if (authorFullName == null) {
-                            authorFullName = groupConversationName;
+                            authorFullName = conversation.mGroupConversationName;
                         }
                         if (authorFirstName == null) {
-                            authorFirstName = groupConversationName;
+                            authorFirstName = authorFullName;
                         }
                     }
                     final String subjectText = MmsUtils.cleanseMmsSubject(

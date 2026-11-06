@@ -923,8 +923,12 @@ public class ConversationMessageData {
           + " ORDER BY "
           + DatabaseHelper.MESSAGES_TABLE + '.' + MessageColumns.RECEIVED_TIMESTAMP + " DESC";
 
+    // Grouped by the message rather than by parts.message_id, for the same reason as
+    // CONVERSATION_MESSAGES_QUERY_SQL_GROUP_BY: a message with no parts joins to a null part id,
+    // and every such message shares that one null group, so all but one of them never reach the
+    // notification.
     private static final String NOTIFICATION_QUERY_SQL_GROUP_BY =
-            " GROUP BY " + DatabaseHelper.PARTS_TABLE + '.' + PartColumns.MESSAGE_ID
+            " GROUP BY " + DatabaseHelper.MESSAGES_TABLE + '.' + MessageColumns._ID
           + " ORDER BY "
           + DatabaseHelper.MESSAGES_TABLE + '.' + MessageColumns.RECEIVED_TIMESTAMP + " DESC";
 
