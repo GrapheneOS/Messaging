@@ -34,6 +34,8 @@ import com.android.messaging.data.conversation.store.ConversationSelfIdStore
 import com.android.messaging.data.conversation.store.ConversationSelfIdStoreImpl
 import com.android.messaging.data.media.repository.ConversationAttachmentsRepository
 import com.android.messaging.data.media.repository.ConversationAttachmentsRepositoryImpl
+import com.android.messaging.data.satellite.repository.SatelliteConnectionsRepository
+import com.android.messaging.data.satellite.repository.SatelliteConnectionsRepositoryImpl
 import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
 import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepositoryImpl
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
@@ -312,6 +314,12 @@ internal abstract class ConversationBindsModule {
     abstract fun bindSubscriptionsRepository(
         impl: SubscriptionsRepositoryImpl,
     ): SubscriptionsRepository
+
+    @Binds
+    @Reusable
+    abstract fun bindSatelliteConnectionsRepository(
+        impl: SatelliteConnectionsRepositoryImpl,
+    ): SatelliteConnectionsRepository
 
     @Binds
     @Reusable

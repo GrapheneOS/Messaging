@@ -5,6 +5,7 @@ import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerDisabledReason
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
+import com.android.messaging.data.satellite.model.SatelliteConnection
 import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.datamodel.MessageTextStats
@@ -15,6 +16,7 @@ import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecord
 import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecordingUiState
 import com.android.messaging.ui.conversation.composer.model.ComposerAttachmentUiModel
 import com.android.messaging.ui.conversation.composer.model.ConversationDraftState
+import com.android.messaging.ui.conversation.composer.model.ConversationSatelliteNotice
 import com.android.messaging.ui.conversation.composer.model.ConversationSegmentCounterUiState
 import io.mockk.every
 import io.mockk.just
@@ -25,7 +27,9 @@ import io.mockk.runs
 import io.mockk.unmockkConstructor
 import io.mockk.unmockkStatic
 import io.mockk.verify
+import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -621,6 +625,93 @@ internal class ConversationComposerUiStateMapperImplTest {
 
         assertEquals(attachments, uiState.attachments)
     }
+
+    @Test
+    fun map_showsTheSatelliteNoticeForTheSelectedSubscriptionOnly() {
+        val uiState = mapSatelliteNotice(
+            selfParticipantId = ParticipantId(FIRST_SELF_PARTICIPANT_ID),
+            satelliteConnections = persistentMapOf(
+                SubId(SECOND_SUB_ID) to SatelliteConnection(
+                    isSmsAvailable = true,
+                    isMmsAvailable = true,
+                ),
+            ),
+        )
+
+        assertNull(uiState.satelliteNotice)
+    }
+
+    @Test
+    fun map_describesWhatTheSatelliteNetworkOfTheSelectedSubscriptionSupports() {
+        val expectedNotices = mapOf(
+            SatelliteConnection(isSmsAvailable = true, isMmsAvailable = true) to
+                ConversationSatelliteNotice.TextAndMultimedia,
+            SatelliteConnection(isSmsAvailable = true, isMmsAvailable = false) to
+                ConversationSatelliteNotice.TextOnly,
+            SatelliteConnection(isSmsAvailable = false, isMmsAvailable = false) to
+                ConversationSatelliteNotice.MessagingUnavailable,
+        )
+
+        expectedNotices.forEach { (connection, expectedNotice) ->
+            val uiState = mapSatelliteNotice(
+                selfParticipantId = ParticipantId(SECOND_SELF_PARTICIPANT_ID),
+                satelliteConnections = persistentMapOf(SubId(SECOND_SUB_ID) to connection),
+            )
+
+            assertEquals(expectedNotice, uiState.satelliteNotice)
+        }
+    }
+
+    @Test
+    fun map_followsTheDefaultSmsSubscriptionOntoASatelliteWithoutAnExplicitSelection() {
+        val uiState = mapSatelliteNotice(
+            selfParticipantId = null,
+            satelliteConnections = persistentMapOf(
+                SubId(SECOND_SUB_ID) to SatelliteConnection(
+                    isSmsAvailable = true,
+                    isMmsAvailable = false,
+                ),
+            ),
+        )
+
+        assertEquals(ConversationSatelliteNotice.TextOnly, uiState.satelliteNotice)
+    }
+
+    @Test
+    fun map_hidesTheSatelliteNoticeWhenTheComposerIsUnavailable() {
+        val uiState = mapSatelliteNotice(
+            selfParticipantId = ParticipantId(SECOND_SELF_PARTICIPANT_ID),
+            satelliteConnections = persistentMapOf(
+                SubId(SECOND_SUB_ID) to SatelliteConnection(
+                    isSmsAvailable = true,
+                    isMmsAvailable = true,
+                ),
+            ),
+            composerAvailability = ConversationComposerAvailability.Unavailable(
+                reason = ConversationComposerDisabledReason.CONVERSATION_UNAVAILABLE,
+            ),
+        )
+
+        assertNull(uiState.satelliteNotice)
+    }
+
+    private fun mapSatelliteNotice(
+        selfParticipantId: ParticipantId?,
+        satelliteConnections: ImmutableMap<SubId, SatelliteConnection>,
+        composerAvailability: ConversationComposerAvailability =
+            ConversationComposerAvailability.Editable,
+    ) = mapper.map(
+        audioRecording = ConversationAudioRecordingUiState(),
+        draftState = ConversationDraftState(
+            draft = ConversationDraft(selfParticipantId = selfParticipantId),
+        ),
+        attachments = persistentListOf(),
+        composerAvailability = composerAvailability,
+        subscriptions = persistentListOf(firstSubscription(), secondSubscription()),
+        areSubscriptionsLoaded = true,
+        defaultSmsSubscriptionId = SubId(SECOND_SUB_ID),
+        satelliteConnections = satelliteConnections,
+    )
 
     private fun firstSubscription(): Subscription {
         return createSubscription(

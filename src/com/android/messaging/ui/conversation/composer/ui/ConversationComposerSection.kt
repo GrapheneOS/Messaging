@@ -34,6 +34,11 @@ internal fun ConversationComposerSection(
     Column(
         modifier = modifier,
     ) {
+        val satelliteNotice = uiState.satelliteNotice
+        if (satelliteNotice != null) {
+            ConversationSatelliteNoticeBar(notice = satelliteNotice)
+        }
+
         ConversationAttachmentPreview(
             attachments = uiState.attachments,
             onPendingAttachmentRemove = onPendingAttachmentRemove,
