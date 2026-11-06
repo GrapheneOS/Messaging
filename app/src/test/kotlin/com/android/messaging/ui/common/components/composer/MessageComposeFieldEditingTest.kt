@@ -142,6 +142,20 @@ internal class MessageComposeFieldEditingTest {
     }
 
     @Test
+    fun messageComposeField_typingPastItsLineLimitFasterThanFramesAreDrawn_keepsTheCursorInView() {
+        val field = focusedField()
+        val inputConnection = field.inputConnection()
+        inputConnection.commitText("1\n2\n3\n4\n5", 1)
+        composeTestRule.waitForIdle()
+
+        // Fast typing commits key after key with no frame drawn in between.
+        inputConnection.commitText("\n6", 1)
+        inputConnection.commitText("\n7", 1)
+
+        assertTrue(field.isCursorInView())
+    }
+
+    @Test
     fun messageComposeField_showsTextItsOwnerSets() {
         messageText = "Draft"
         val field = focusedField()
@@ -299,6 +313,15 @@ internal class MessageComposeFieldEditingTest {
         inputConnection.commitText("", 1)
         inputConnection.commitText(text, 1)
         inputConnection.endBatchEdit()
+    }
+
+    /** Whether the line the cursor is on shows in the field, rather than being scrolled out of it. */
+    private fun TextView.isCursorInView(): Boolean {
+        val cursorLine = layout.getLineForOffset(selectionEnd)
+        val visibleBottom = scrollY + height - extendedPaddingTop - extendedPaddingBottom
+
+        return layout.getLineTop(cursorLine) >= scrollY &&
+            layout.getLineBottom(cursorLine) <= visibleBottom
     }
 
     /** The platform spell checker that underlines misspelled words, or null if it never started. */
