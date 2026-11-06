@@ -17,6 +17,7 @@ internal data class ConversationComposerUiState(
     val subjectText: String = "",
     val selfParticipantId: ParticipantId? = null,
     val simSelector: ConversationSimSelectorUiState = ConversationSimSelectorUiState(),
+    val satelliteNotice: ConversationSatelliteNotice? = null,
     val isMessageFieldEnabled: Boolean = false,
     val isAttachmentActionEnabled: Boolean = false,
     val isRecordActionEnabled: Boolean = false,

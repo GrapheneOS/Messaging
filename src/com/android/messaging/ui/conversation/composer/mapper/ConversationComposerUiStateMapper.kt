@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.composer.mapper
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
+import com.android.messaging.data.satellite.model.SatelliteConnection
 import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.data.subscription.resolveSelectedSubscription
@@ -14,10 +15,13 @@ import com.android.messaging.ui.conversation.audio.model.ConversationAudioRecord
 import com.android.messaging.ui.conversation.composer.model.ComposerAttachmentUiModel
 import com.android.messaging.ui.conversation.composer.model.ConversationComposerUiState
 import com.android.messaging.ui.conversation.composer.model.ConversationDraftState
+import com.android.messaging.ui.conversation.composer.model.ConversationSatelliteNotice
 import com.android.messaging.ui.conversation.composer.model.ConversationSegmentCounterUiState
 import com.android.messaging.ui.conversation.composer.model.ConversationSimSelectorUiState
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.persistentMapOf
 
 internal interface ConversationComposerUiStateMapper {
     fun map(
@@ -28,6 +32,7 @@ internal interface ConversationComposerUiStateMapper {
         subscriptions: ImmutableList<Subscription>,
         areSubscriptionsLoaded: Boolean,
         defaultSmsSubscriptionId: SubId,
+        satelliteConnections: ImmutableMap<SubId, SatelliteConnection> = persistentMapOf(),
     ): ConversationComposerUiState
 }
 
@@ -42,6 +47,7 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
         subscriptions: ImmutableList<Subscription>,
         areSubscriptionsLoaded: Boolean,
         defaultSmsSubscriptionId: SubId,
+        satelliteConnections: ImmutableMap<SubId, SatelliteConnection>,
     ): ConversationComposerUiState {
         val draft = draftState.draft
         val hasWorkingDraft = draft.hasContent
@@ -73,6 +79,12 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
             subjectText = draft.subjectText,
             selfParticipantId = draft.selfParticipantId,
             simSelector = simSelector,
+            satelliteNotice = buildSatelliteNotice(
+                isComposerEditable = isComposerEditable,
+                connection = simSelector.selectedSubscription?.let { subscription ->
+                    satelliteConnections[subscription.subId]
+                },
+            ),
             isMessageFieldEnabled = isComposerEditable,
             isAttachmentActionEnabled = isComposerInteractionAvailable,
             isRecordActionEnabled = isPrimaryActionAvailable,
@@ -128,6 +140,18 @@ internal class ConversationComposerUiStateMapperImpl @Inject constructor() :
             }
 
             else -> null
+        }
+    }
+
+    private fun buildSatelliteNotice(
+        isComposerEditable: Boolean,
+        connection: SatelliteConnection?,
+    ): ConversationSatelliteNotice? {
+        return when {
+            !isComposerEditable || connection == null -> null
+            !connection.isSmsAvailable -> ConversationSatelliteNotice.MessagingUnavailable
+            !connection.isMmsAvailable -> ConversationSatelliteNotice.TextOnly
+            else -> ConversationSatelliteNotice.TextAndMultimedia
         }
     }
 

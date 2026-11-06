@@ -664,6 +664,12 @@
     <string name="conversation_blocked_banner_message">Unblock to receive messages from this sender</string>
     <!-- Label of the unblock action button on the blocked conversation banner -->
     <string name="conversation_blocked_banner_action">Unblock</string>
+    <!-- Shown above the message field while the SIM used for this conversation is connected to the carrier's satellite network and the carrier supports text and picture messages over it. -->
+    <string name="conversation_satellite_notice_text_and_multimedia">Connected to satellite. Messages may take longer to send.</string>
+    <!-- Shown above the message field while the SIM used for this conversation is connected to the carrier's satellite network and the carrier only supports text messages over it. -->
+    <string name="conversation_satellite_notice_text_only">Connected to satellite. Only text messages can be sent, and they may take longer.</string>
+    <!-- Shown above the message field while the SIM used for this conversation is connected to the carrier's satellite network and the carrier does not support messaging over it. -->
+    <string name="conversation_satellite_notice_messaging_unavailable">Connected to satellite. Your carrier doesn\'t support messaging over this connection.</string>
 
     <!-- Title of the snooze chat dialog -->
     <plurals name="snooze_chat_dialog_title">

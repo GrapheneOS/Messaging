@@ -205,6 +205,7 @@ internal class ConversationViewModel @Inject constructor(
             subscriptions = subscriptionSelectionState.subscriptions,
             areSubscriptionsLoaded = subscriptionSelectionState.areSubscriptionsLoaded,
             defaultSmsSubscriptionId = subscriptionSelectionState.defaultSmsSubscriptionId,
+            satelliteConnections = subscriptionSelectionState.satelliteConnections,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -223,6 +224,7 @@ internal class ConversationViewModel @Inject constructor(
                 subscriptions = subscriptionSelectionState.subscriptions,
                 areSubscriptionsLoaded = subscriptionSelectionState.areSubscriptionsLoaded,
                 defaultSmsSubscriptionId = subscriptionSelectionState.defaultSmsSubscriptionId,
+                satelliteConnections = subscriptionSelectionState.satelliteConnections,
             )
         },
     )

@@ -4,6 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
+import com.android.messaging.data.satellite.model.SatelliteConnection
+import com.android.messaging.data.satellite.repository.SatelliteConnectionsRepository
 import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.data.subscription.repository.ConversationSimSelectionRepository
@@ -292,6 +294,10 @@ internal class ConversationViewModelSimSelectionTest {
     private fun createViewModel(): ConversationViewModel {
         val subscriptionSelectionDelegate = ConversationSubscriptionSelectionDelegateImpl(
             subscriptionsRepository = subscriptionsRepository,
+            satelliteConnectionsRepository = object : SatelliteConnectionsRepository {
+                override fun observeSatelliteConnections(subIds: Collection<SubId>) =
+                    flowOf(persistentMapOf<SubId, SatelliteConnection>())
+            },
             defaultDispatcher = mainDispatcherRule.testDispatcher,
         )
         return ConversationViewModel(
