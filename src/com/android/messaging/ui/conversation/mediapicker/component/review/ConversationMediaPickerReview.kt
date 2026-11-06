@@ -114,10 +114,12 @@ internal fun ConversationMediaReviewScene(
         attachments = attachments,
         conversationTitle = conversationTitle,
         reviewPadding = PaddingValues(
-            start = contentPadding.calculateStartPadding(layoutDirection),
             top = 12.dp,
-            end = contentPadding.calculateEndPadding(layoutDirection),
             bottom = reviewBottomPadding,
+        ),
+        horizontalSafePadding = PaddingValues(
+            start = contentPadding.calculateStartPadding(layoutDirection),
+            end = contentPadding.calculateEndPadding(layoutDirection),
         ),
         reviewPagerState = reviewPagerState,
         isSendActionEnabled = isSendActionEnabled,
@@ -137,6 +139,7 @@ private fun ConversationMediaReviewSceneContent(
     attachments: ImmutableList<ComposerAttachmentUiModel.Resolved.VisualMedia>,
     conversationTitle: String?,
     reviewPadding: PaddingValues,
+    horizontalSafePadding: PaddingValues,
     reviewPagerState: ConversationMediaReviewPagerState,
     isSendActionEnabled: Boolean,
     onAttachmentPreviewClick: (ComposerAttachmentUiModel.Resolved.VisualMedia) -> Unit,
@@ -169,6 +172,7 @@ private fun ConversationMediaReviewSceneContent(
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             ConversationMediaReviewTopBar(
+                modifier = Modifier.padding(paddingValues = horizontalSafePadding),
                 conversationTitle = conversationTitle,
                 onAddMoreClick = onAddMoreClick,
                 onCloseClick = onCloseClick,
@@ -178,6 +182,7 @@ private fun ConversationMediaReviewSceneContent(
                 modifier = Modifier
                     .weight(weight = 1f)
                     .fillMaxWidth(),
+                horizontalSafePadding = horizontalSafePadding,
                 attachmentContentUris = reviewPagerState.attachmentContentUris,
                 attachments = attachments,
                 pagerState = reviewPagerState.pagerState,
@@ -188,6 +193,7 @@ private fun ConversationMediaReviewSceneContent(
             )
 
             ConversationMediaReviewBottomBar(
+                modifier = Modifier.padding(paddingValues = horizontalSafePadding),
                 attachment = reviewPagerState.currentAttachment,
                 isSendActionEnabled = isSendActionEnabled,
                 onCaptionChange = onCaptionChange,
@@ -199,12 +205,13 @@ private fun ConversationMediaReviewSceneContent(
 
 @Composable
 private fun ConversationMediaReviewTopBar(
+    modifier: Modifier = Modifier,
     conversationTitle: String?,
     onAddMoreClick: () -> Unit,
     onCloseClick: () -> Unit,
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .statusBarsPadding(),
@@ -240,6 +247,7 @@ private fun ConversationMediaReviewTopBar(
 @Composable
 private fun ConversationMediaReviewPager(
     modifier: Modifier = Modifier,
+    horizontalSafePadding: PaddingValues,
     attachmentContentUris: ImmutableList<String>,
     attachments: ImmutableList<ComposerAttachmentUiModel.Resolved.VisualMedia>,
     pagerState: PagerState,
@@ -248,11 +256,16 @@ private fun ConversationMediaReviewPager(
     onAttachmentRemove: (String) -> Unit,
     onClearReview: () -> Unit,
 ) {
+    val layoutDirection = LocalLayoutDirection.current
+    val safeStartPadding = horizontalSafePadding.calculateStartPadding(layoutDirection)
+    val safeEndPadding = horizontalSafePadding.calculateEndPadding(layoutDirection)
+
     BoxWithConstraints(
         modifier = modifier,
     ) {
+        val safeAreaWidth = maxWidth - safeStartPadding - safeEndPadding
         val pagerLayout = rememberConversationMediaReviewPagerLayout(
-            maxWidth = maxWidth,
+            maxWidth = safeAreaWidth.coerceAtLeast(minimumValue = 0.dp),
             maxHeight = maxHeight,
         )
 
@@ -261,7 +274,10 @@ private fun ConversationMediaReviewPager(
                 .fillMaxSize()
                 .padding(top = 16.dp),
             state = pagerState,
-            contentPadding = PaddingValues(horizontal = pagerLayout.pageHorizontalInset),
+            contentPadding = PaddingValues(
+                start = safeStartPadding + pagerLayout.pageHorizontalInset,
+                end = safeEndPadding + pagerLayout.pageHorizontalInset,
+            ),
             pageSize = PageSize.Fixed(pagerLayout.pageWidth),
             pageSpacing = 12.dp,
             key = { page ->
@@ -473,13 +489,14 @@ private fun String.toCaptionTextFieldValue(): TextFieldValue {
 
 @Composable
 private fun ConversationMediaReviewBottomBar(
+    modifier: Modifier = Modifier,
     attachment: ComposerAttachmentUiModel.Resolved.VisualMedia,
     isSendActionEnabled: Boolean,
     onCaptionChange: (String, String) -> Unit,
     onSendClick: () -> Unit,
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
