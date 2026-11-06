@@ -4,7 +4,9 @@ import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasSetTextAction
@@ -12,6 +14,7 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.unit.LayoutDirection
 import com.android.messaging.testutil.TEST_WAIT_TIMEOUT_MILLIS
 import com.android.messaging.ui.conversation.composer.model.ComposerAttachmentUiModel
 import com.android.messaging.ui.conversation.conversationMediaReviewPreviewTestTag
@@ -58,6 +61,7 @@ internal abstract class BaseConversationMediaPickerReviewTest {
         photoPickerSourceContentUriByAttachmentContentUri:
         ImmutableMap<String, String> = persistentMapOf(),
         contentPadding: PaddingValues = PaddingValues(),
+        layoutDirection: LayoutDirection = LayoutDirection.Ltr,
     ) {
         setReviewContent(
             attachments = { attachments },
@@ -69,6 +73,7 @@ internal abstract class BaseConversationMediaPickerReviewTest {
                 photoPickerSourceContentUriByAttachmentContentUri
             },
             contentPadding = contentPadding,
+            layoutDirection = layoutDirection,
         )
     }
 
@@ -81,9 +86,10 @@ internal abstract class BaseConversationMediaPickerReviewTest {
         photoPickerSourceContentUriByAttachmentContentUri:
         () -> ImmutableMap<String, String> = { persistentMapOf() },
         contentPadding: PaddingValues = PaddingValues(),
+        layoutDirection: LayoutDirection = LayoutDirection.Ltr,
     ) {
         composeTestRule.setContent {
-            ReviewContent {
+            ReviewContent(layoutDirection = layoutDirection) {
                 ConversationMediaReviewScene(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = contentPadding,
@@ -107,8 +113,13 @@ internal abstract class BaseConversationMediaPickerReviewTest {
     }
 
     @Composable
-    protected fun ReviewContent(content: @Composable () -> Unit) {
-        AppTheme(content = content)
+    protected fun ReviewContent(
+        layoutDirection: LayoutDirection = LayoutDirection.Ltr,
+        content: @Composable () -> Unit,
+    ) {
+        CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
+            AppTheme(content = content)
+        }
     }
 
     protected fun captionTextField(): SemanticsNodeInteraction {
