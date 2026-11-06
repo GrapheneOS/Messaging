@@ -106,6 +106,8 @@ internal abstract class BaseConversationMediaCaptureComponentTest {
     }
 
     protected fun setCaptureContent(
+        modifier: Modifier = Modifier.fillMaxSize(),
+        aspectRatio: Float? = null,
         audioPermissionGranted: Boolean = true,
         captureMode: ConversationCaptureMode = ConversationCaptureMode.Photo,
         cameraPermissionGranted: Boolean = true,
@@ -117,7 +119,8 @@ internal abstract class BaseConversationMediaCaptureComponentTest {
     ) {
         setThemedContent {
             ConversationMediaCaptureContent(
-                modifier = Modifier.fillMaxSize(),
+                modifier = modifier,
+                aspectRatio = aspectRatio,
                 audioPermissionGranted = audioPermissionGranted,
                 captureMode = captureMode,
                 cameraPermissionGranted = cameraPermissionGranted,

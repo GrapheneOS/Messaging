@@ -1,12 +1,18 @@
 package com.android.messaging.ui.conversation.mediapicker.component.capture
 
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertLeftPositionInRootIsEqualTo
+import androidx.compose.ui.test.assertTopPositionInRootIsEqualTo
 import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.conversation.CONVERSATION_MEDIA_CAPTURE_SHUTTER_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.mediapicker.ConversationCaptureMode
@@ -139,9 +145,70 @@ internal class ConversationMediaCaptureContentTest :
         }
     }
 
+    @Test
+    fun topBar_windowTallerThanPreview_keepsPaddingFromTopOfPreview() {
+        setCaptureContent(
+            modifier = Modifier.size(width = 300.dp, height = 460.dp),
+            aspectRatio = PHOTO_ASPECT_RATIO,
+        )
+
+        assertTopBarPosition(
+            top = 42.dp,
+            closeLeft = 16.dp,
+            flashLeft = 236.dp,
+        )
+    }
+
+    @Test
+    fun topBar_windowShorterThanPreview_keepsPaddingFromSidesOfPreview() {
+        setCaptureContent(
+            modifier = Modifier.size(width = 300.dp, height = 300.dp),
+            aspectRatio = PHOTO_ASPECT_RATIO,
+        )
+
+        assertTopBarPosition(
+            top = 12.dp,
+            closeLeft = 53.5.dp,
+            flashLeft = 198.5.dp,
+        )
+    }
+
+    @Test
+    fun topBar_aspectRatioUnknown_keepsPaddingFromWholeArea() {
+        setCaptureContent(
+            modifier = Modifier.size(width = 300.dp, height = 460.dp),
+            aspectRatio = null,
+        )
+
+        assertTopBarPosition(
+            top = 12.dp,
+            closeLeft = 16.dp,
+            flashLeft = 236.dp,
+        )
+    }
+
+    private fun assertTopBarPosition(
+        top: Dp,
+        closeLeft: Dp,
+        flashLeft: Dp,
+    ) {
+        composeTestRule
+            .onNodeWithContentDescription(closeDescription())
+            .assertTopPositionInRootIsEqualTo(expectedTop = top)
+            .assertLeftPositionInRootIsEqualTo(expectedLeft = closeLeft)
+        composeTestRule
+            .onNodeWithContentDescription(flashDescription())
+            .assertTopPositionInRootIsEqualTo(expectedTop = top)
+            .assertLeftPositionInRootIsEqualTo(expectedLeft = flashLeft)
+    }
+
     private fun clickCaptureControl() {
         composeTestRule
             .onNodeWithTag(CONVERSATION_MEDIA_CAPTURE_SHUTTER_BUTTON_TEST_TAG)
             .performClick()
+    }
+
+    private companion object {
+        const val PHOTO_ASPECT_RATIO = 3f / 4f
     }
 }

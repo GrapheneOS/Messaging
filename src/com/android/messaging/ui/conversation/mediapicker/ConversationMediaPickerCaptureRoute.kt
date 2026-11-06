@@ -15,6 +15,7 @@ import com.android.messaging.ui.conversation.mediapicker.component.capture.Conve
 internal fun ConversationMediaCaptureRoute(
     modifier: Modifier = Modifier,
     cameraController: ConversationCameraController,
+    aspectRatio: Float?,
     audioPermissionGranted: Boolean,
     captureMode: ConversationCaptureMode,
     cameraPermissionGranted: Boolean,
@@ -36,6 +37,7 @@ internal fun ConversationMediaCaptureRoute(
 
     ConversationMediaCaptureContent(
         modifier = modifier,
+        aspectRatio = aspectRatio,
         audioPermissionGranted = audioPermissionGranted,
         captureMode = captureMode,
         cameraPermissionGranted = cameraPermissionGranted,
