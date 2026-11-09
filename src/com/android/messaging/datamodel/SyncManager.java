@@ -22,6 +22,7 @@ import android.database.ContentObserver;
 import android.net.Uri;
 import android.provider.Telephony;
 
+import com.android.messaging.datamodel.action.SyncBatchChanges;
 import com.android.messaging.datamodel.action.SyncMessagesAction;
 import com.android.messaging.datamodel.data.ParticipantData;
 import com.android.messaging.sms.MmsUtils;
@@ -98,6 +99,8 @@ public class SyncManager {
      */
     private long mMaxRecentChangeTimestamp = -1L;
 
+    private SyncBatchChanges mCurrentBatchChanges = null;
+
     private final ThreadInfoCache mThreadInfoCache = new ThreadInfoCache();
 
     /**
@@ -135,6 +138,23 @@ public class SyncManager {
         Assert.isTrue(mCurrentUpperBoundTimestamp < 0);
         mCurrentUpperBoundTimestamp = upperBoundTimestamp;
         mMaxRecentChangeTimestamp = -1L;
+        mCurrentBatchChanges = null;
+    }
+
+    public synchronized void setBatchChanges(final long upperBoundTimestamp,
+            final SyncBatchChanges changes) {
+        if (upperBoundTimestamp == mCurrentUpperBoundTimestamp) {
+            mCurrentBatchChanges = changes;
+        }
+    }
+
+    public synchronized SyncBatchChanges takeBatchChanges(final String actionKey) {
+        final SyncBatchChanges changes = mCurrentBatchChanges;
+        if (changes == null || !changes.getActionKey().equals(actionKey)) {
+            return null;
+        }
+        mCurrentBatchChanges = null;
+        return changes;
     }
 
     /**
@@ -156,6 +176,7 @@ public class SyncManager {
 
         mCurrentUpperBoundTimestamp = -1L;
         mMaxRecentChangeTimestamp = -1L;
+        mCurrentBatchChanges = null;
 
         return dirty;
     }
@@ -278,6 +299,9 @@ public class SyncManager {
                     + " marked as complete");
         }
         mSyncInProgressTimestamp = -1L;
+        mCurrentUpperBoundTimestamp = -1L;
+        mMaxRecentChangeTimestamp = -1L;
+        mCurrentBatchChanges = null;
         // Conversation customization only used once
         mCustomization = null;
     }

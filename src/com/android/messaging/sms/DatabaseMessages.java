@@ -42,7 +42,6 @@ import com.android.messaging.util.LogUtil;
 import com.android.messaging.util.MediaMetadataRetrieverWrapper;
 import com.android.messaging.util.PhoneUtils;
 
-import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -537,6 +536,8 @@ public class DatabaseMessages {
      * Part of an MMS message
      */
     public static class MmsPart implements Parcelable {
+        private static final int MAX_BYTES_PER_TEXT_CHAR = 4;
+
         public static final String[] PROJECTION = new String[] {
             Mms.Part._ID,
             Mms.Part.MSG_ID,
@@ -590,11 +591,21 @@ public class DatabaseMessages {
                     } // No need to load audio for parsing
                     mSize = MmsUtils.getMediaFileSize(getDataUri());
                 }
-            } else {
-                // Load text if not media type
+            } else if (isText()) {
                 loadText();
+            } else {
+                loadUnsupportedPartSize();
             }
             mUri = Uri.withAppendedPath(Mms.CONTENT_URI, cursor.getString(INDEX_ID)).toString();
+        }
+
+        private void loadUnsupportedPartSize() {
+            if (isEmbeddedTextType()) {
+                mSize = TextUtils.isEmpty(mText) ? 0 : getStringBytes(mText, mCharset).length;
+            } else {
+                mSize = MmsUtils.getMediaFileSize(getDataUri());
+            }
+            mText = null;
         }
 
         /**
@@ -624,39 +635,36 @@ public class DatabaseMessages {
                 // Embedded text, get from the "text" column
                 if (!TextUtils.isEmpty(mText)) {
                     data = getStringBytes(mText, mCharset);
+                    mSize = data.length;
                 }
             } else {
                 // Not embedded, load from disk
-                final ContentResolver resolver =
-                        Factory.get().getApplicationContext().getContentResolver();
-                final Uri uri = getDataUri();
-                InputStream is = null;
-                final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                try {
-                    is = resolver.openInputStream(uri);
-                    final byte[] buffer = new byte[256];
-                    int len = is.read(buffer);
-                    while (len >= 0) {
-                        baos.write(buffer, 0, len);
-                        len = is.read(buffer);
-                    }
-                } catch (final IOException e) {
-                    LogUtil.e(TAG,
-                            "DatabaseMessages.MmsPart: loading text from file failed: " + e, e);
-                } finally {
-                    if (is != null) {
-                        try {
-                            is.close();
-                        } catch (final IOException e) {
-                            LogUtil.e(TAG, "DatabaseMessages.MmsPart: close file failed: " + e, e);
-                        }
-                    }
-                }
-                data = baos.toByteArray();
+                data = loadTextFile();
             }
             if (data != null && data.length > 0) {
-                mSize = data.length;
-                mText = getDecodedString(data, mCharset);
+                mText = MmsUtils.truncateMmsText(getDecodedString(data, mCharset));
+            }
+        }
+
+        private byte[] loadTextFile() {
+            final ContentResolver resolver =
+                    Factory.get().getApplicationContext().getContentResolver();
+            final Uri uri = getDataUri();
+            final int maxBytes = (int) Math.min(Integer.MAX_VALUE,
+                    (long) MmsUtils.getMmsTextLengthLimit() * MAX_BYTES_PER_TEXT_CHAR);
+            try (AssetFileDescriptor fd = resolver.openAssetFileDescriptor(uri, "r");
+                    InputStream is = fd == null ? null : fd.createInputStream()) {
+                if (is == null) {
+                    LogUtil.e(TAG, "DatabaseMessages.MmsPart: no file for text part " + uri);
+                    return null;
+                }
+                final byte[] data = is.readNBytes(maxBytes);
+                mSize = Math.max(fd.getParcelFileDescriptor().getStatSize(), data.length);
+                return data;
+            } catch (final IOException | SecurityException e) {
+                LogUtil.e(TAG,
+                        "DatabaseMessages.MmsPart: loading text from file failed: " + e, e);
+                return null;
             }
         }
 

@@ -19,6 +19,7 @@ package com.android.messaging.datamodel.action;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Parcel;
 
 import androidx.core.app.JobIntentService;
 
@@ -45,6 +46,9 @@ public class BackgroundWorkerService extends JobIntentService {
      * Unique job ID for this service.
      */
     public static final int JOB_ID = 1001;
+
+    @VisibleForTesting
+    static final int MAX_RESPONSE_SIZE_BYTES = 256 * 1024;
 
     private final ActionService mHost;
 
@@ -138,8 +142,16 @@ public class BackgroundWorkerService extends JobIntentService {
             response = action.doBackgroundWork();
 
             timer.stopAndLog();
+            final int responseSize = getParcelledSize(action, response);
             action.markBackgroundCompletionQueued();
-            mHost.handleResponseFromBackgroundWorker(action, response);
+            if (responseSize > MAX_RESPONSE_SIZE_BYTES) {
+                final String message = action.getClass().getSimpleName() + " response of "
+                        + responseSize + " bytes is too large to deliver";
+                LogUtil.e(TAG, message);
+                mHost.handleFailureFromBackgroundWorker(action, new IllegalStateException(message));
+            } else {
+                mHost.handleResponseFromBackgroundWorker(action, response);
+            }
         } catch (final Exception exception) {
             final boolean retry = false;
             LogUtil.e(TAG, "Error in background worker", exception);
@@ -155,6 +167,17 @@ public class BackgroundWorkerService extends JobIntentService {
                 action.markBackgroundCompletionQueued();
                 mHost.handleFailureFromBackgroundWorker(action, exception);
             }
+        }
+    }
+
+    private static int getParcelledSize(final Action action, final Bundle response) {
+        final Parcel parcel = Parcel.obtain();
+        try {
+            parcel.writeParcelable(action, 0);
+            parcel.writeBundle(response);
+            return parcel.dataSize();
+        } finally {
+            parcel.recycle();
         }
     }
 }

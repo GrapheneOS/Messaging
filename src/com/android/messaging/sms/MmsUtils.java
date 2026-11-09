@@ -1580,20 +1580,26 @@ public class MmsUtils {
         return message;
     }
 
+    public static int getMmsTextLengthLimit() {
+        return BugleGservices.get().getInt(BugleGservicesKeys.MMS_TEXT_LIMIT,
+                BugleGservicesKeys.MMS_TEXT_LIMIT_DEFAULT);
+    }
+
+    public static String truncateMmsText(final String text) {
+        final int limit = getMmsTextLengthLimit();
+        if (text != null && text.length() > limit) {
+            // Limit the text to a reasonable value. We ran into a situation where a vcard
+            // with a photo was sent as plain text. The massive amount of text caused the
+            // app to hang, ANR, and eventually crash in native text code.
+            return text.substring(0, limit);
+        }
+        return text;
+    }
+
     public static MessagePartData createMmsMessagePart(final DatabaseMessages.MmsPart part) {
         MessagePartData messagePart = null;
         if (part.isText()) {
-            final int mmsTextLengthLimit =
-                    BugleGservices.get().getInt(BugleGservicesKeys.MMS_TEXT_LIMIT,
-                            BugleGservicesKeys.MMS_TEXT_LIMIT_DEFAULT);
-            String text = part.mText;
-            if (text != null && text.length() > mmsTextLengthLimit) {
-                // Limit the text to a reasonable value. We ran into a situation where a vcard
-                // with a photo was sent as plain text. The massive amount of text caused the
-                // app to hang, ANR, and eventually crash in native text code.
-                text = text.substring(0, mmsTextLengthLimit);
-            }
-            messagePart = MessagePartData.createTextMessagePart(text);
+            messagePart = MessagePartData.createTextMessagePart(truncateMmsText(part.mText));
         } else if (part.isMedia()) {
             messagePart = MessagePartData.createMediaMessagePart(part.mContentType,
                     part.getDataUri(), MessagePartData.UNSPECIFIED_SIZE,
