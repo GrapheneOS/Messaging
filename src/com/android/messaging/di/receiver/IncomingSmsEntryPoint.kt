@@ -1,6 +1,7 @@
 package com.android.messaging.di.receiver
 
 import com.android.messaging.data.secondaryuser.SecondaryUserMessageResolver
+import com.android.messaging.data.secondaryuser.SecondaryUserNotificationTargetResolver
 import com.android.messaging.data.secondaryuser.SecondaryUserNotifier
 import com.android.messaging.data.sms.IncomingSmsDeliverer
 import com.android.messaging.data.sms.IncomingSmsParser
@@ -19,6 +20,7 @@ internal interface IncomingSmsEntryPoint {
     fun incomingSmsParser(): IncomingSmsParser
     fun incomingSmsDeliverer(): IncomingSmsDeliverer
     fun secondaryUserMessageResolver(): SecondaryUserMessageResolver
+    fun secondaryUserNotificationTargetResolver(): SecondaryUserNotificationTargetResolver
     fun secondaryUserNotifier(): SecondaryUserNotifier
     fun smsReceiverToggle(): SmsReceiverToggle
 
