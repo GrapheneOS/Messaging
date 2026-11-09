@@ -5,6 +5,7 @@ import android.content.Context
 import androidx.core.app.NotificationCompat
 import com.android.messaging.R
 import com.android.messaging.data.secondaryuser.model.SecondaryUserMessageInfo
+import com.android.messaging.data.secondaryuser.model.SecondaryUserNotificationTarget
 import com.android.messaging.domain.notification.usecase.GenerateNotificationId
 import com.android.messaging.ui.UIIntents
 import com.android.messaging.util.LogUtil
@@ -13,7 +14,11 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
 internal interface SecondaryUserNotifier {
-    fun notifyIncomingMessage(info: SecondaryUserMessageInfo?)
+    fun notifyIncomingMessage(
+        info: SecondaryUserMessageInfo?,
+        target: SecondaryUserNotificationTarget,
+    )
+
     fun cancel()
 }
 
@@ -24,7 +29,11 @@ internal class SecondaryUserNotifierImpl @Inject constructor(
     private val generateNotificationId: GenerateNotificationId,
 ) : SecondaryUserNotifier {
 
-    override fun notifyIncomingMessage(info: SecondaryUserMessageInfo?) {
+    override fun notifyIncomingMessage(
+        info: SecondaryUserMessageInfo?,
+        target: SecondaryUserNotificationTarget,
+    ) {
+        val channelId = channelIdFor(target) ?: return
         val fallback = context.getString(R.string.secondary_user_new_message_title)
         val title = info?.sender ?: fallback
         val text = info?.body ?: fallback
@@ -33,10 +42,7 @@ internal class SecondaryUserNotifierImpl @Inject constructor(
             .getPendingIntentForSecondaryUserNewMessageNotification(context)
 
         val notificationId = generateNotificationId()
-        val notification = NotificationCompat.Builder(
-            context,
-            NotificationChannelUtil.INCOMING_MESSAGES,
-        )
+        val notification = NotificationCompat.Builder(context, channelId)
             .setContentTitle(title)
             .setContentText(text)
             .setTicker(context.getString(R.string.secondary_user_new_message_ticker))
@@ -73,6 +79,23 @@ internal class SecondaryUserNotifierImpl @Inject constructor(
                     notification.id,
                 )
             }
+    }
+
+    private fun channelIdFor(target: SecondaryUserNotificationTarget): String? {
+        return when (target) {
+            SecondaryUserNotificationTarget.Silenced -> null
+
+            SecondaryUserNotificationTarget.NoConversation -> {
+                NotificationChannelUtil.INCOMING_MESSAGES
+            }
+
+            is SecondaryUserNotificationTarget.Conversation -> {
+                NotificationChannelUtil.createConversationChannelForRuntime(
+                    conversationId = target.conversationId,
+                    conversationTitle = target.conversationTitle,
+                ).id
+            }
+        }
     }
 
     private fun notificationTag(): String {

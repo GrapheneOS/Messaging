@@ -2,6 +2,8 @@ package com.android.messaging.di.secondaryuser
 
 import com.android.messaging.data.secondaryuser.SecondaryUserMessageResolver
 import com.android.messaging.data.secondaryuser.SecondaryUserMessageResolverImpl
+import com.android.messaging.data.secondaryuser.SecondaryUserNotificationTargetResolver
+import com.android.messaging.data.secondaryuser.SecondaryUserNotificationTargetResolverImpl
 import com.android.messaging.data.secondaryuser.SecondaryUserNotifier
 import com.android.messaging.data.secondaryuser.SecondaryUserNotifierImpl
 import com.android.messaging.data.secondaryuser.SmsContactNameLookup
@@ -21,6 +23,12 @@ internal abstract class SecondaryUserBindsModule {
     abstract fun bindSecondaryUserMessageResolver(
         impl: SecondaryUserMessageResolverImpl,
     ): SecondaryUserMessageResolver
+
+    @Binds
+    @Reusable
+    abstract fun bindSecondaryUserNotificationTargetResolver(
+        impl: SecondaryUserNotificationTargetResolverImpl,
+    ): SecondaryUserNotificationTargetResolver
 
     @Binds
     @Reusable

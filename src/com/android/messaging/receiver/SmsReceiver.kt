@@ -4,7 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.provider.Telephony.Sms
-import com.android.messaging.data.secondaryuser.model.SecondaryUserMessageInfo
+import android.telephony.SubscriptionManager
 import com.android.messaging.di.receiver.IncomingSmsEntryPoint
 import com.android.messaging.sms.MmsUtils
 import com.android.messaging.util.LogUtil
@@ -32,33 +32,45 @@ class SmsReceiver : BroadcastReceiver() {
         intent: Intent,
         entryPoint: IncomingSmsEntryPoint,
     ) {
-        // The contact lookup performs a synchronous query, so resolve off the main thread.
+        // The contact and conversation lookups perform synchronous queries, so resolve off the
+        // main thread.
         val pendingResult = goAsync()
         entryPoint.applicationScope().launch(entryPoint.ioDispatcher()) {
             try {
-                val info = resolveMessage(context, intent, entryPoint)
-                entryPoint.secondaryUserNotifier().notifyIncomingMessage(info)
+                notifyIncomingMessage(context, intent, entryPoint)
             } finally {
                 pendingResult.finish()
             }
         }
     }
 
-    private fun resolveMessage(
+    private fun notifyIncomingMessage(
         context: Context,
         intent: Intent,
         entryPoint: IncomingSmsEntryPoint,
-    ): SecondaryUserMessageInfo? {
-        val messages = entryPoint.incomingSmsParser().parse(intent) ?: return null
-        val values = MmsUtils.parseReceivedSmsMessage(
-            context,
-            messages,
-            SendStatusReceiver.NO_ERROR_CODE,
+    ) {
+        val values = entryPoint.incomingSmsParser().parse(intent)?.let { messages ->
+            MmsUtils.parseReceivedSmsMessage(
+                context,
+                messages,
+                SendStatusReceiver.NO_ERROR_CODE,
+            )
+        }
+        val address = values?.getAsString(Sms.ADDRESS)
+        val subscriptionId = PhoneUtils.getDefault().getEffectiveIncomingSubIdFromSystem(
+            intent,
+            SubscriptionManager.EXTRA_SUBSCRIPTION_INDEX,
         )
 
-        return entryPoint.secondaryUserMessageResolver().resolve(
-            address = values.getAsString(Sms.ADDRESS),
-            body = values.getAsString(Sms.BODY),
+        entryPoint.secondaryUserNotifier().notifyIncomingMessage(
+            info = entryPoint.secondaryUserMessageResolver().resolve(
+                address = address,
+                body = values?.getAsString(Sms.BODY),
+            ),
+            target = entryPoint.secondaryUserNotificationTargetResolver().resolve(
+                address = address,
+                subscriptionId = subscriptionId,
+            ),
         )
     }
 
