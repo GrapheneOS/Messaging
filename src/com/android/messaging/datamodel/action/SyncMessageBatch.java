@@ -41,7 +41,6 @@ import com.android.messaging.sms.MmsUtils;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.LogUtil;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -59,15 +58,15 @@ class SyncMessageBatch {
     private final ThreadInfoCache mCache;
 
     // Set of SMS messages to add
-    private final ArrayList<SmsMessage> mSmsToAdd;
+    private final List<SmsMessage> mSmsToAdd;
     // Set of MMS messages to add
-    private final ArrayList<MmsMessage> mMmsToAdd;
+    private final List<MmsMessage> mMmsToAdd;
     // Set of local messages to delete
-    private final ArrayList<LocalDatabaseMessage> mMessagesToDelete;
+    private final List<LocalDatabaseMessage> mMessagesToDelete;
 
-    SyncMessageBatch(final ArrayList<SmsMessage> smsToAdd,
-            final ArrayList<MmsMessage> mmsToAdd,
-            final ArrayList<LocalDatabaseMessage> messagesToDelete,
+    SyncMessageBatch(final List<SmsMessage> smsToAdd,
+            final List<MmsMessage> mmsToAdd,
+            final List<LocalDatabaseMessage> messagesToDelete,
             final ThreadInfoCache cache) {
         mSmsToAdd = smsToAdd;
         mMmsToAdd = mmsToAdd;

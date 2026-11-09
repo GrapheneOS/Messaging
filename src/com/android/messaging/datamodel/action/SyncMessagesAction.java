@@ -48,6 +48,7 @@ import com.android.messaging.util.BuglePrefsKeys;
 import com.android.messaging.util.ContentType;
 import com.android.messaging.util.LogUtil;
 import com.android.messaging.util.OsUtil;
+import com.google.common.annotations.VisibleForTesting;
 
 import dagger.hilt.android.EntryPointAccessors;
 
@@ -68,9 +69,6 @@ public class SyncMessagesAction extends Action implements Parcelable {
     private static final String KEY_LOWER_BOUND = "lower_bound";
     private static final String KEY_UPPER_BOUND = "upper_bound";
     private static final String BUNDLE_KEY_LAST_TIMESTAMP = "last_timestamp";
-    private static final String BUNDLE_KEY_SMS_MESSAGES = "sms_to_add";
-    private static final String BUNDLE_KEY_MMS_MESSAGES = "mms_to_add";
-    private static final String BUNDLE_KEY_MESSAGES_TO_DELETE = "messages_to_delete";
 
     /**
      * Start a full sync (backed off a few seconds to avoid pulling sending/receiving messages).
@@ -134,7 +132,8 @@ public class SyncMessagesAction extends Action implements Parcelable {
         action.start();
     }
 
-    private SyncMessagesAction(final long lowerBound, final long upperBound,
+    @VisibleForTesting
+    SyncMessagesAction(final long lowerBound, final long upperBound,
             final int maxMessagesToUpdate, final long startTimestamp) {
         actionParameters.putLong(KEY_LOWER_BOUND, lowerBound);
         actionParameters.putLong(KEY_UPPER_BOUND, upperBound);
@@ -249,7 +248,6 @@ public class SyncMessagesAction extends Action implements Parcelable {
         }
         final Bundle response = new Bundle();
 
-        // If comparison succeeds bundle up the changes for processing in ActionService
         if (lastTimestampMillis > SYNC_FAILED) {
             final ArrayList<MmsMessage> mmsToAddList = new ArrayList<MmsMessage>();
             for (int i = 0; i < mmsToAdd.size(); i++) {
@@ -257,9 +255,8 @@ public class SyncMessagesAction extends Action implements Parcelable {
                 mmsToAddList.add(mms);
             }
 
-            response.putParcelableArrayList(BUNDLE_KEY_SMS_MESSAGES, smsToAdd);
-            response.putParcelableArrayList(BUNDLE_KEY_MMS_MESSAGES, mmsToAddList);
-            response.putParcelableArrayList(BUNDLE_KEY_MESSAGES_TO_DELETE, messagesToDelete);
+            syncManager.setBatchChanges(upperBoundTimeMillis, new SyncBatchChanges(actionKey,
+                    smsToAdd, mmsToAddList, messagesToDelete));
         }
         response.putLong(BUNDLE_KEY_LAST_TIMESTAMP, lastTimestampMillis);
 
@@ -371,18 +368,11 @@ public class SyncMessagesAction extends Action implements Parcelable {
             LogUtil.w(TAG, "SyncMessagesAction: Ignoring orphan sync batch for messages from "
                     + lowerBoundTimeMillis + " to " + upperBoundTimeMillis);
         } else {
+            final SyncBatchChanges changes = syncManager.takeBatchChanges(actionKey);
             final boolean dirty = syncManager.isBatchDirty(lastTimestampMillis);
             if (lastTimestampMillis == SYNC_FAILED) {
                 LogUtil.e(TAG, "SyncMessagesAction: Sync failed - terminating");
-
-                // Failed - update last sync times to throttle our failure rate
-                final BuglePrefs prefs = BuglePrefs.getApplicationPrefs();
-                // Save sync completion time so next sync will start from here
-                prefs.putLong(BuglePrefsKeys.LAST_SYNC_TIME, startTimestamp);
-                // Remember last full sync so that don't start background full sync right away
-                prefs.putLong(BuglePrefsKeys.LAST_FULL_SYNC_TIME, startTimestamp);
-
-                syncManager.complete();
+                terminateFailedSync(syncManager, startTimestamp);
             } else if (dirty) {
                 LogUtil.w(TAG, "SyncMessagesAction: Redoing dirty sync batch of messages from "
                         + lowerBoundTimeMillis + " to " + upperBoundTimeMillis);
@@ -394,14 +384,16 @@ public class SyncMessagesAction extends Action implements Parcelable {
 
                 syncManager.startSyncBatch(upperBoundTimeMillis);
                 requestBackgroundWork(nextBatch);
+            } else if (changes == null) {
+                LogUtil.e(TAG, "SyncMessagesAction: Changes of sync batch for messages from "
+                        + lowerBoundTimeMillis + " to " + upperBoundTimeMillis
+                        + " are missing - terminating");
+                terminateFailedSync(syncManager, startTimestamp);
             } else {
                 // Succeeded
-                final ArrayList<SmsMessage> smsToAdd =
-                        response.getParcelableArrayList(BUNDLE_KEY_SMS_MESSAGES);
-                final ArrayList<MmsMessage> mmsToAdd =
-                        response.getParcelableArrayList(BUNDLE_KEY_MMS_MESSAGES);
-                final ArrayList<LocalDatabaseMessage> messagesToDelete =
-                        response.getParcelableArrayList(BUNDLE_KEY_MESSAGES_TO_DELETE);
+                final List<SmsMessage> smsToAdd = changes.getSmsToAdd();
+                final List<MmsMessage> mmsToAdd = changes.getMmsToAdd();
+                final List<LocalDatabaseMessage> messagesToDelete = changes.getMessagesToDelete();
 
                 final int messagesUpdated = smsToAdd.size() + mmsToAdd.size()
                         + messagesToDelete.size();
@@ -510,6 +502,37 @@ public class SyncMessagesAction extends Action implements Parcelable {
         }
 
         return null;
+    }
+
+    @Override
+    protected Object processBackgroundFailure() {
+        final long lowerBoundTimeMillis = actionParameters.getLong(KEY_LOWER_BOUND);
+        final long upperBoundTimeMillis = actionParameters.getLong(KEY_UPPER_BOUND);
+        final long startTimestamp = actionParameters.getLong(KEY_START_TIMESTAMP);
+
+        final SyncManager syncManager = DataModel.get().getSyncManager();
+        if (syncManager.isSyncing(upperBoundTimeMillis)) {
+            LogUtil.e(TAG, "SyncMessagesAction: Sync batch for messages from "
+                    + lowerBoundTimeMillis + " to " + upperBoundTimeMillis
+                    + " failed - terminating");
+            terminateFailedSync(syncManager, startTimestamp);
+        } else {
+            LogUtil.w(TAG, "SyncMessagesAction: Ignoring failure of orphan sync batch for "
+                    + "messages from " + lowerBoundTimeMillis + " to " + upperBoundTimeMillis);
+        }
+        return null;
+    }
+
+    private static void terminateFailedSync(final SyncManager syncManager,
+            final long startTimestamp) {
+        // Failed - update last sync times to throttle our failure rate
+        final BuglePrefs prefs = BuglePrefs.getApplicationPrefs();
+        // Save sync completion time so next sync will start from here
+        prefs.putLong(BuglePrefsKeys.LAST_SYNC_TIME, startTimestamp);
+        // Remember last full sync so that don't start background full sync right away
+        prefs.putLong(BuglePrefsKeys.LAST_FULL_SYNC_TIME, startTimestamp);
+
+        syncManager.complete();
     }
 
     /**
