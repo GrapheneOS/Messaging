@@ -262,6 +262,22 @@ class ParticipantDestinationDatabaseStoreImplTest {
     }
 
     @Test
+    fun theSenderDestinations_leaveOutTheUnknownSender() {
+        val unknownSender = ParticipantData.getUnknownSenderDestination()
+        db.insertParticipant(destination = BARE_NUMBER)
+        db.insert(
+            DatabaseHelper.PARTICIPANTS_TABLE,
+            null,
+            contentValuesOf(
+                ParticipantColumns.SUB_ID to ParticipantData.OTHER_THAN_SELF_SUB_ID,
+                ParticipantColumns.SEND_DESTINATION to unknownSender,
+            ),
+        )
+
+        assertEquals(setOf(BARE_NUMBER), databaseStore.readSenderDestinations())
+    }
+
+    @Test
     fun theLastParticipantId_isTheHighestOne() {
         db.insertParticipant(destination = BARE_NUMBER)
         val lastId = db.insertParticipant(destination = CANONICAL_NUMBER)

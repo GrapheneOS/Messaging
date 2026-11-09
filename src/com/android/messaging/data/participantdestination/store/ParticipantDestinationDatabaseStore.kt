@@ -263,6 +263,7 @@ internal class ParticipantDestinationDatabaseStoreImpl @Inject constructor() :
             SELECT ${ParticipantColumns.NORMALIZED_DESTINATION}
             FROM ${DatabaseHelper.PARTICIPANTS_TABLE}
             WHERE ${ParticipantColumns.SUB_ID} = ${ParticipantData.OTHER_THAN_SELF_SUB_ID}
+                AND ${ParticipantColumns.NORMALIZED_DESTINATION} IS NOT NULL
         """.trimIndent()
 
         private val LAST_PARTICIPANT_ID_SQL = """
