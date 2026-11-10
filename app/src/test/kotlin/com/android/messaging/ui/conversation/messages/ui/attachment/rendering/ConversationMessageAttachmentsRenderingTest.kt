@@ -44,7 +44,7 @@ internal class ConversationMessageAttachmentsRenderingTest :
             .onNodeWithText(targetContext.getString(R.string.audio_attachment_content_description))
             .assertIsDisplayed()
         composeTestRule
-            .onNodeWithText(FILE_TITLE)
+            .onNodeWithText(targetContext.getString(R.string.pdf_attachment))
             .assertIsDisplayed()
         composeTestRule
             .onNodeWithText(VCARD_TITLE)

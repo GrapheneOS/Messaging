@@ -97,6 +97,8 @@ public final class ContentType {
     public static final String APP_DRM_CONTENT   = "application/vnd.oma.drm.content";
     public static final String APP_DRM_MESSAGE   = "application/vnd.oma.drm.message";
 
+    public static final String APPLICATION_PDF    = "application/pdf";
+
     // This class should never be instantiated.
     private ContentType() {
     }
@@ -129,6 +131,14 @@ public final class ContentType {
 
     public static boolean isVCardType(final String contentType) {
         return (null != contentType) && contentType.equalsIgnoreCase(TEXT_VCARD);
+    }
+
+    /**
+     * A PDF document. PDFs (and other non-media file attachments) are delivered
+     * through MMS as generic file parts and must be preserved rather than dropped.
+     */
+    public static boolean isPdfType(final String contentType) {
+        return (null != contentType) && contentType.equalsIgnoreCase(APPLICATION_PDF);
     }
 
     /**
