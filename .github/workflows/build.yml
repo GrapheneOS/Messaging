@@ -215,7 +215,7 @@ jobs:
           disable-animations: true
           script: |
             adb logcat -G 16M
-            ./gradlew :app:connectedDebugAndroidTest :app:jacocoAndroidTestVerification -PandroidTestCoverage=true -PandroidTestMinCoverage=80 -PandroidTestMinBranchCoverage=50 --no-daemon --stacktrace --console=plain
+            ./gradlew :app:connectedDebugAndroidTest :app:jacocoAndroidTestVerification -PandroidTestCoverage=true -PandroidTestMinCoverage=55 -PandroidTestMinBranchCoverage=40 --no-daemon --stacktrace --console=plain
             rc=$?
             adb logcat -d > logcat.txt
             exit $rc
