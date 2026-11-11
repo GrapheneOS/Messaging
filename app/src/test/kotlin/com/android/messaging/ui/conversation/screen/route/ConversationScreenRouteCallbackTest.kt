@@ -145,14 +145,14 @@ internal class ConversationScreenRouteCallbackTest : BaseConversationScreenTest(
     @Test
     fun contactPicker_whenAttachmentCannotStartDoesNotLaunchPicker() {
         val screenModel = createScreenModel().model
-        val contactLauncher = mockk<ActivityResultLauncher<Unit>>(relaxed = true)
+        val contactLauncher = mockk<ActivityResultLauncher<Int>>(relaxed = true)
         val contactCallbackSlot = slot<ActivityResultCallback<List<Uri>>>()
         val registry = mockk<ActivityResultRegistry>()
         every { screenModel.tryStartAddingAttachment() } returns false
         every {
             registry.register(
                 any<String>(),
-                any<ActivityResultContract<Unit, List<Uri>>>(),
+                any<ActivityResultContract<Int, List<Uri>>>(),
                 capture(contactCallbackSlot),
             )
         } returns contactLauncher
@@ -172,7 +172,7 @@ internal class ConversationScreenRouteCallbackTest : BaseConversationScreenTest(
                 screenModel.tryStartAddingAttachment()
             }
             verify(exactly = 0) {
-                contactLauncher.launch(Unit, any())
+                contactLauncher.launch(any(), any())
             }
             verify(exactly = 0) {
                 screenModel.onContactCardsPicked(any())
@@ -181,16 +181,17 @@ internal class ConversationScreenRouteCallbackTest : BaseConversationScreenTest(
     }
 
     @Test
-    fun contactPicker_whenContactsSelectedLaunchesPickerAndForwardsUris() {
+    fun contactPicker_whenContactsSelectedLaunchesPickerLimitedToRemainingSlotsAndForwardsUris() {
         val screenModel = createScreenModel().model
-        val contactLauncher = mockk<ActivityResultLauncher<Unit>>(relaxed = true)
+        val contactLauncher = mockk<ActivityResultLauncher<Int>>(relaxed = true)
         val contactCallbackSlot = slot<ActivityResultCallback<List<Uri>>>()
         val registry = mockk<ActivityResultRegistry>()
         every { screenModel.tryStartAddingAttachment() } returns true
+        every { screenModel.resolveRemainingAttachmentSlots() } returns REMAINING_ATTACHMENT_SLOTS
         every {
             registry.register(
                 any<String>(),
-                any<ActivityResultContract<Unit, List<Uri>>>(),
+                any<ActivityResultContract<Int, List<Uri>>>(),
                 capture(contactCallbackSlot),
             )
         } returns contactLauncher
@@ -212,7 +213,7 @@ internal class ConversationScreenRouteCallbackTest : BaseConversationScreenTest(
 
         composeTestRule.runOnIdle {
             verify(exactly = 1) {
-                contactLauncher.launch(Unit, null)
+                contactLauncher.launch(REMAINING_ATTACHMENT_SLOTS, null)
             }
             verify(exactly = 1) {
                 screenModel.onContactCardsPicked(
@@ -225,14 +226,15 @@ internal class ConversationScreenRouteCallbackTest : BaseConversationScreenTest(
     @Test
     fun contactPicker_whenPickerCanceledForwardsNoUris() {
         val screenModel = createScreenModel().model
-        val contactLauncher = mockk<ActivityResultLauncher<Unit>>(relaxed = true)
+        val contactLauncher = mockk<ActivityResultLauncher<Int>>(relaxed = true)
         val contactCallbackSlot = slot<ActivityResultCallback<List<Uri>>>()
         val registry = mockk<ActivityResultRegistry>()
         every { screenModel.tryStartAddingAttachment() } returns true
+        every { screenModel.resolveRemainingAttachmentSlots() } returns REMAINING_ATTACHMENT_SLOTS
         every {
             registry.register(
                 any<String>(),
-                any<ActivityResultContract<Unit, List<Uri>>>(),
+                any<ActivityResultContract<Int, List<Uri>>>(),
                 capture(contactCallbackSlot),
             )
         } returns contactLauncher
@@ -252,7 +254,7 @@ internal class ConversationScreenRouteCallbackTest : BaseConversationScreenTest(
 
         composeTestRule.runOnIdle {
             verify(exactly = 1) {
-                contactLauncher.launch(Unit, null)
+                contactLauncher.launch(REMAINING_ATTACHMENT_SLOTS, null)
             }
             verify(exactly = 1) {
                 screenModel.onContactCardsPicked(contactUris = emptyList())
@@ -349,5 +351,6 @@ internal class ConversationScreenRouteCallbackTest : BaseConversationScreenTest(
         private const val OPEN_CONTACT_PICKER_BUTTON_TAG = "open_contact_picker"
         private const val CONTACT_URI = "content://contacts/people/11"
         private const val SECOND_CONTACT_URI = "content://contacts/people/12"
+        private const val REMAINING_ATTACHMENT_SLOTS = 4
     }
 }
