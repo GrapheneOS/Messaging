@@ -32,8 +32,9 @@ fun AppTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         shapes = AppShapes,
-        content = content,
-    )
+    ) {
+        ProvideWallClock(content = content)
+    }
 }
 
 internal fun appColorScheme(context: Context, isDarkTheme: Boolean): ColorScheme {

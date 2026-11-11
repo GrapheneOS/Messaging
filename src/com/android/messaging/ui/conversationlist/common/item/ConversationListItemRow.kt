@@ -39,6 +39,7 @@ import com.android.messaging.ui.conversationlist.common.support.previewConversat
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
 import com.android.messaging.ui.conversationlist.model.ConversationListPreviewUiModel
 import com.android.messaging.ui.core.MessagingPreviewColumn
+import com.android.messaging.ui.core.currentWallClockMillis
 import com.android.messaging.util.Dates
 
 @Composable
@@ -201,8 +202,10 @@ private fun ConversationListItemStatusLabel(item: ConversationListItemUiModel) {
         }
 
         else -> {
-            remember(item.timestampMillis) {
-                Dates.getConversationTimeString(item.timestampMillis).toString()
+            val nowMillis = currentWallClockMillis()
+
+            remember(item.timestampMillis, nowMillis) {
+                Dates.getConversationTimeString(item.timestampMillis, nowMillis).toString()
             }
         }
     }

@@ -7,6 +7,7 @@ import androidx.compose.ui.res.stringResource
 import com.android.messaging.R
 import com.android.messaging.data.conversationlist.model.ConversationListMessageStatus
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
+import com.android.messaging.ui.core.currentWallClockMillis
 import com.android.messaging.util.Dates
 
 @Composable
@@ -14,8 +15,12 @@ internal fun conversationListItemContentDescription(
     item: ConversationListItemUiModel,
 ): String {
     val message = conversationListItemContentDescriptionMessage(item)
-    val time = remember(item.timestampMillis) {
-        Dates.getConversationContentDescriptionTimeString(item.timestampMillis).toString()
+    val nowMillis = currentWallClockMillis()
+    val time = remember(item.timestampMillis, nowMillis) {
+        Dates.getConversationContentDescriptionTimeString(
+            item.timestampMillis,
+            nowMillis,
+        ).toString()
     }
     val spec = conversationListItemContentDescriptionSpec(
         item = item,
