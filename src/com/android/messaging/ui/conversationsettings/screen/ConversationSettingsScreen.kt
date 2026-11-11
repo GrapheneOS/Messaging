@@ -553,21 +553,25 @@ private fun GeneralSettingsCard(
             icon = Icons.Default.Notifications,
             title = stringResource(R.string.notifications_enabled_conversation_pref_title),
             onClick = { onAction(Action.NotificationsClicked) },
-            shape = MaterialTheme.groupedMiddleItemShape,
+            shape = when {
+                uiState.canChangeArchiveStatus -> MaterialTheme.groupedMiddleItemShape
+                else -> MaterialTheme.groupedBottomItemShape
+            },
         )
 
-        ConversationSettingsItem(
-            icon = archiveIcon,
-            title = stringResource(archiveTitleRes),
-            onClick = {
-                if (uiState.isArchived) {
-                    onAction(Action.UnarchiveClicked)
-                } else {
-                    onAction(Action.ArchiveClicked)
-                }
-            },
-            shape = MaterialTheme.groupedBottomItemShape,
-        )
+        if (uiState.canChangeArchiveStatus) {
+            ConversationSettingsItem(
+                icon = archiveIcon,
+                title = stringResource(archiveTitleRes),
+                onClick = {
+                    when {
+                        uiState.isArchived -> onAction(Action.UnarchiveClicked)
+                        else -> onAction(Action.ArchiveClicked)
+                    }
+                },
+                shape = MaterialTheme.groupedBottomItemShape,
+            )
+        }
     }
 }
 
@@ -653,6 +657,7 @@ private fun ConversationSettingsContentPreview() {
             uiState = State(
                 conversationId = ConversationId("1"),
                 conversationTitle = "Family",
+                canChangeArchiveStatus = true,
                 participants = persistentListOf(
                     ParticipantUiState(
                         id = ParticipantId("p1"),

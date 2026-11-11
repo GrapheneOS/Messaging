@@ -37,6 +37,21 @@ internal class ArchiveConversationTest : ConversationSettingsTestBase() {
     }
 
     @Test
+    fun archiveSetting_hidden_whenConversationIsNotListed() {
+        renderScreen(oneToOneState(isArchived = false, canChangeArchiveStatus = false))
+
+        composeTestRule
+            .onNodeWithText(string(R.string.action_archive))
+            .assertDoesNotExist()
+        composeTestRule
+            .onNodeWithText(string(R.string.action_unarchive))
+            .assertDoesNotExist()
+        composeTestRule
+            .onNodeWithText(string(R.string.notifications_enabled_conversation_pref_title))
+            .assertIsDisplayed()
+    }
+
+    @Test
     fun archiveClick_dispatchesArchiveClicked() {
         renderScreen(oneToOneState(isArchived = false))
 

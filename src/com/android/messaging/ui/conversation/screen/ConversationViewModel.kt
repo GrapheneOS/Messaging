@@ -286,12 +286,17 @@ internal class ConversationViewModel @Inject constructor(
     ): ConversationScreenScaffoldUiState {
         val isPresent = metadataState is ConversationMetadataUiState.Present
         val presentMetadata = metadataState as? ConversationMetadataUiState.Present
+        val hasMessages = (messagesUiState as? ConversationMessagesUiState.Present)
+            ?.messages
+            ?.isNotEmpty() == true
+
+        val isListed = hasMessages || composerUiState.hasWorkingDraft
 
         return ConversationScreenScaffoldUiState(
             canAddPeople = canAddPeople(metadataState = metadataState),
             canCall = canCall(metadataState = metadataState),
-            canArchive = isPresent && presentMetadata?.isArchived == false,
-            canUnarchive = isPresent && presentMetadata?.isArchived == true,
+            canArchive = isListed && presentMetadata?.isArchived == false,
+            canUnarchive = isListed && presentMetadata?.isArchived == true,
             canAddContact = isAddContactAvailable(metadataState = metadataState),
             canDeleteConversation = isPresent,
             canEditSubject = metadataState.composerAvailability is
