@@ -28,6 +28,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -49,7 +50,8 @@ class RecipientPickerDelegateImplTest {
         every { PhoneUtils.getDefault() } returns phoneUtilsInstance
         every { PhoneUtils.isValidSmsMmsDestination(any()) } answers {
             val raw = firstArg<String>()
-            raw.isNotBlank() && raw.any { character -> character.isDigit() }
+            val isPhone = raw.isNotBlank() && raw.any { character -> character.isDigit() }
+            isPhone || MmsSmsUtils.isEmailAddress(raw)
         }
         every { MmsSmsUtils.isEmailAddress(any()) } answers {
             val raw = firstArg<String>()
@@ -378,6 +380,86 @@ class RecipientPickerDelegateImplTest {
             assertTrue(syntheticItems.isEmpty())
             assertEquals(1, finalState.items.size)
         }
+    }
+
+    @Test
+    fun queryMatchedDestination_queryIsOneOfSeveralContactNumbers_isThatNumber() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher
+        ) {
+            val contactItem = soleContactItemForQuery(query = "+15550002")
+
+            assertEquals("+15550002", contactItem.queryMatchedDestination?.value)
+        }
+    }
+
+    @Test
+    fun queryMatchedDestination_queryIsTheContactEmail_isThatEmail() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher
+        ) {
+            val contactItem = soleContactItemForQuery(query = "Multi@Example.com")
+
+            assertEquals("multi@example.com", contactItem.queryMatchedDestination?.value)
+        }
+    }
+
+    @Test
+    fun queryMatchedDestination_queryIsTheContactName_isNull() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher
+        ) {
+            val contactItem = soleContactItemForQuery(query = "Multi")
+
+            assertNull(contactItem.queryMatchedDestination)
+        }
+    }
+
+    @Test
+    fun queryMatchedDestination_queryIsPartOfAContactNumber_isNull() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher
+        ) {
+            val delegate = createDelegate(
+                initialQuery = "555",
+                pages = mapOf(
+                    searchKey(query = "555", offset = 0) to pageOf(multiDestinationContact()),
+                ),
+            )
+
+            val finalState = bindAndAwait(delegate = delegate)
+
+            val contactItem = finalState.items
+                .filterIsInstance<RecipientPickerListItem.Contact>()
+                .single()
+            assertNull(contactItem.queryMatchedDestination)
+            assertEquals(2, finalState.items.size)
+        }
+    }
+
+    private fun TestScope.soleContactItemForQuery(query: String): RecipientPickerListItem.Contact {
+        val delegate = createDelegate(
+            initialQuery = query,
+            pages = mapOf(
+                searchKey(query = query, offset = 0) to pageOf(multiDestinationContact()),
+            ),
+        )
+
+        val finalState = bindAndAwait(delegate = delegate)
+
+        return finalState.items.single() as RecipientPickerListItem.Contact
+    }
+
+    private fun multiDestinationContact(): Contact {
+        return contact(
+            id = 61L,
+            displayName = "Multi",
+            destinations = listOf(
+                destination(value = "+15550001", contactId = 61L),
+                destination(value = "+15550002", contactId = 61L),
+                destination(value = "multi@example.com", contactId = 61L, isEmail = true),
+            ),
+        )
     }
 
     @Test

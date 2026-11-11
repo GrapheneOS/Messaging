@@ -304,7 +304,12 @@ private fun recipientSelectionUnselectedDestinationOrNull(
     selectedRecipients: ImmutableList<SelectedRecipient>,
 ): String? {
     val destination = when (item) {
-        is RecipientPickerListItem.Contact -> item.destinations.singleOrNull()?.normalizedValue
+        is RecipientPickerListItem.Contact -> {
+            val contactDestination = item.queryMatchedDestination
+                ?: item.destinations.singleOrNull()
+
+            contactDestination?.normalizedValue
+        }
         is RecipientPickerListItem.SyntheticPhone -> item.normalizedDestination
     }
 
