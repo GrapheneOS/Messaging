@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.unit.dp
@@ -19,6 +20,8 @@ import com.android.messaging.ui.conversationlist.common.support.conversationList
 import com.android.messaging.ui.conversationlist.common.support.previewConversationListItem
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel
 import com.android.messaging.ui.core.AppTheme
+import com.android.messaging.ui.core.ProvideWallClock
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -104,6 +107,33 @@ internal class ConversationListItemRowTest {
         assertColorEquals(expected = colorScheme.surfaceContainerLow, actual = rowContainerColor())
     }
 
+    @Test
+    fun timeDescription_wallClockAdvances_followsMinutesSinceMessage() {
+        val wallClockTicks = MutableStateFlow(NOW_MILLIS)
+
+        composeTestRule.setContent {
+            AppTheme {
+                ProvideWallClock(ticks = wallClockTicks) {
+                    ConversationListItemRow(
+                        item = rowItem().copy(timestampMillis = NOW_MILLIS - HALF_MINUTE_MILLIS),
+                        onClick = {},
+                        onLongClick = {},
+                    )
+                }
+            }
+        }
+
+        composeTestRule
+            .onNode(hasContentDescription(value = "Time: Just now.", substring = true))
+            .assertExists()
+
+        wallClockTicks.value = NOW_MILLIS + TWO_MINUTES_MILLIS
+
+        composeTestRule
+            .onNode(hasContentDescription(value = "Time: 2 mins.", substring = true))
+            .assertExists()
+    }
+
     private fun setRow(
         item: ConversationListItemUiModel,
         isListDetailPane: Boolean,
@@ -154,5 +184,8 @@ internal class ConversationListItemRowTest {
     private companion object {
         private val ROW_ID = ConversationId("row")
         private val CONTAINER_SAMPLE_INSET = 4.dp
+        private const val NOW_MILLIS = 1_800_000_000_000L
+        private const val HALF_MINUTE_MILLIS = 30_000L
+        private const val TWO_MINUTES_MILLIS = 120_000L
     }
 }
