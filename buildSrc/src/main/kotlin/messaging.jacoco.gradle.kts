@@ -520,6 +520,8 @@ tasks.register<JacocoCoverageVerification>("jacocoUnitTestVerification") {
 }
 
 tasks.register<JacocoReport>("jacocoAndroidTestReport") {
+    dependsOn("transformDebugClassesWithAsm")
+    mustRunAfter("connectedDebugAndroidTest")
     group = reportingGroup
     description = "Generate Jacoco coverage report for instrumented (Android) tests."
 
