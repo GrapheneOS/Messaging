@@ -1,6 +1,5 @@
 package com.android.messaging.ui.conversationlist.archived
 
-import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -17,7 +16,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -32,7 +30,7 @@ import com.android.messaging.R
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.common.components.contentSurfaceShape
 import com.android.messaging.ui.common.components.snackbar.MessagingSnackbarHost
-import com.android.messaging.ui.common.components.snackbar.showActionSnackbar
+import com.android.messaging.ui.common.components.snackbar.rememberUndoSnackbarState
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListAction as Action
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListEffect as Effect
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListNavEvent as NavEvent
@@ -50,9 +48,8 @@ import com.android.messaging.ui.conversationlist.common.support.previewConversat
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
 import com.android.messaging.ui.core.CollectEvents
 import com.android.messaging.ui.core.MessagingPreviewTheme
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.launch
 
 private val ArchivedSwipeSpec = ConversationListSwipeSpec(
     startToEnd = ConversationSwipeKind.Unarchive,
@@ -138,55 +135,37 @@ private fun ArchivedConversationListEffects(
     onAction: (Action) -> Unit,
 ) {
     val context = LocalContext.current
-    val undoLabel = stringResource(R.string.snack_bar_undo)
-    val snackbarScope = rememberCoroutineScope()
-
-    val currentContext by rememberUpdatedState(context)
     val currentEffectHandler by rememberUpdatedState(effectHandler)
-    val currentUndoLabel by rememberUpdatedState(undoLabel)
-    val currentOnAction by rememberUpdatedState(onAction)
+
+    val undoSnackbarState = rememberUndoSnackbarState<Effect.ConversationsUnarchived>(
+        snackbarHostState = snackbarHostState,
+        merge = ::mergeUnarchivedEffects,
+        message = { effect ->
+            context.getString(R.string.unarchived_toast_message, effect.conversationIds.size)
+        },
+        onUndo = { effect -> onAction(Action.UnarchiveUndoClicked(effect.conversationIds)) },
+        onDismiss = { effect ->
+            onAction(Action.UnarchiveSnackbarDismissed(effect.conversationIds))
+        },
+    )
 
     LaunchedEffect(effects) {
         effects.collect { effect ->
             when (effect) {
-                is Effect.ConversationsUnarchived -> {
-                    snackbarScope.launchUnarchivedSnackbar(
-                        snackbarHostState = snackbarHostState,
-                        context = currentContext,
-                        undoLabel = currentUndoLabel,
-                        effect = effect,
-                        onAction = currentOnAction,
-                    )
-                }
-
+                is Effect.ConversationsUnarchived -> undoSnackbarState.show(undoable = effect)
                 else -> currentEffectHandler.handle(effect)
             }
         }
     }
 }
 
-private fun CoroutineScope.launchUnarchivedSnackbar(
-    snackbarHostState: SnackbarHostState,
-    context: Context,
-    undoLabel: String,
-    effect: Effect.ConversationsUnarchived,
-    onAction: (Action) -> Unit,
-) {
-    launch {
-        val undoClicked = snackbarHostState.showActionSnackbar(
-            message = context.getString(
-                R.string.unarchived_toast_message,
-                effect.conversationIds.size,
-            ),
-            actionLabel = undoLabel,
-        )
-
-        if (undoClicked) {
-            onAction(Action.UnarchiveUndoClicked(effect.conversationIds))
-        } else {
-            onAction(Action.UnarchiveSnackbarDismissed(effect.conversationIds))
-        }
-    }
+private fun mergeUnarchivedEffects(
+    shown: Effect.ConversationsUnarchived,
+    newer: Effect.ConversationsUnarchived,
+): Effect.ConversationsUnarchived {
+    return Effect.ConversationsUnarchived(
+        conversationIds = (shown.conversationIds + newer.conversationIds).toImmutableList(),
+    )
 }
 
 @Composable
