@@ -4,14 +4,20 @@ import android.content.Context
 import android.graphics.drawable.Drawable
 import android.text.InputFilter
 import android.text.InputType
+import android.text.Spannable
+import android.text.method.ArrowKeyMovementMethod
+import android.text.method.MovementMethod
+import android.text.method.Touch
 import android.util.TypedValue
 import android.view.ContentInfo
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
+import android.widget.TextView
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -198,6 +204,53 @@ private class MessageEditText(
 ) : EditText(context) {
 
     /**
+     * The width the text was wrapped at when the user last scrolled it by touch, or null once the
+     * cursor is to be brought back into view.
+     */
+    private var touchScrolledTextWidth: Int? = null
+
+    override fun getDefaultMovementMethod(): MovementMethod {
+        return CursorKeepingMovementMethod(onTouchScrollEnd = ::onTouchScrollEnd)
+    }
+
+    /**
+     * The platform brings the cursor back into view whenever the field is laid out again, such as
+     * when the keyboard hides. Text scrolled by touch stays where it was scrolled to instead, until
+     * the text or the cursor changes, or the text wraps to a new width, which moves the lines that
+     * were scrolled to.
+     */
+    override fun bringPointIntoView(offset: Int, requestRectWithoutFocus: Boolean): Boolean {
+        val textWidth = layout?.width
+        if (textWidth != null && textWidth != touchScrolledTextWidth) {
+            touchScrolledTextWidth = null
+        }
+
+        return when (touchScrolledTextWidth) {
+            null -> super.bringPointIntoView(offset, requestRectWithoutFocus)
+            else -> false
+        }
+    }
+
+    override fun onTextChanged(
+        text: CharSequence?,
+        start: Int,
+        lengthBefore: Int,
+        lengthAfter: Int,
+    ) {
+        super.onTextChanged(text, start, lengthBefore, lengthAfter)
+        touchScrolledTextWidth = null
+    }
+
+    override fun onSelectionChanged(selectionStart: Int, selectionEnd: Int) {
+        super.onSelectionChanged(selectionStart, selectionEnd)
+        touchScrolledTextWidth = null
+    }
+
+    private fun onTouchScrollEnd() {
+        touchScrolledTextWidth = layout?.width
+    }
+
+    /**
      * Pasted and dropped content is taken as plain text: a message is sent as plain text, and
      * formatting such as a centered paragraph would otherwise outlive the text it came with.
      */
@@ -220,6 +273,64 @@ private class MessageEditText(
         if (rootView.findFocus()?.onCheckIsTextEditor() != true) {
             windowInsetsController?.hide(WindowInsets.Type.ime())
         }
+    }
+}
+
+/**
+ * Scrolling through the text leaves the cursor where it is, so typing carries on from there and
+ * brings the cursor back into view. The platform instead moves the cursor onto the lines scrolled
+ * to when the finger lifts.
+ */
+private class CursorKeepingMovementMethod(
+    private val onTouchScrollEnd: () -> Unit,
+) : ArrowKeyMovementMethod() {
+
+    override fun onTouchEvent(widget: TextView, buffer: Spannable, event: MotionEvent): Boolean {
+        val isTouchEnd = event.action == MotionEvent.ACTION_UP ||
+            event.action == MotionEvent.ACTION_CANCEL
+        val isScrollEnd = isTouchEnd && widget.isScrolledSinceTouchDown(buffer = buffer)
+
+        return when {
+            isScrollEnd -> {
+                Touch.onTouchEvent(widget, buffer, event)
+                onTouchScrollEnd()
+                true
+            }
+
+            event.action == MotionEvent.ACTION_MOVE -> {
+                onTouchMove(widget = widget, buffer = buffer, event = event)
+            }
+
+            else -> {
+                super.onTouchEvent(widget, buffer, event)
+            }
+        }
+    }
+
+    /**
+     * A drag through text that overflows the field is a scroll even once the text can't scroll any
+     * further. The platform takes such a drag for a tap, which moves the cursor to where the finger
+     * lifts, or for a long press, which selects a word.
+     */
+    private fun onTouchMove(widget: TextView, buffer: Spannable, event: MotionEvent): Boolean {
+        val isDragging = super.onTouchEvent(widget, buffer, event)
+        if (isDragging && widget.canScrollText()) {
+            widget.cancelLongPress()
+        }
+
+        return isDragging
+    }
+
+    private fun TextView.canScrollText(): Boolean {
+        return canScrollVertically(-1) || canScrollVertically(1)
+    }
+
+    private fun TextView.isScrolledSinceTouchDown(buffer: Spannable): Boolean {
+        val initialScrollX = Touch.getInitialScrollX(this, buffer)
+        val initialScrollY = Touch.getInitialScrollY(this, buffer)
+
+        return (initialScrollX >= 0 && initialScrollX != scrollX) ||
+            (initialScrollY >= 0 && initialScrollY != scrollY)
     }
 }
 
