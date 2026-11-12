@@ -11,6 +11,7 @@ import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.domain.conversation.usecase.action.ArchiveConversation
 import com.android.messaging.domain.conversation.usecase.action.CheckConversationActionRequirements
 import com.android.messaging.domain.conversation.usecase.action.ConversationActionRequirementsResult
+import com.android.messaging.domain.conversation.usecase.action.UnarchiveConversation
 import com.android.messaging.ui.conversation.common.ConversationScreenDelegate
 import com.android.messaging.ui.conversation.metadata.mapper.ConversationMetadataUiStateMapper
 import com.android.messaging.ui.conversation.metadata.model.ConversationMetadataUiState
@@ -26,6 +27,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -36,11 +38,13 @@ internal interface ConversationMetadataDelegate :
     val effects: Flow<ConversationScreenEffect>
     val navigationEvents: Flow<NavEvent>
     val archivedConversations: Flow<ArchivedConversation>
+    val unarchivedConversationIds: Flow<ConversationId>
     val isDeleteConversationConfirmationVisible: StateFlow<Boolean>
 
     fun onArchiveConversationClick()
     fun onUnarchiveConversationClick()
     fun onUndoArchiveClick(archivedConversation: ArchivedConversation)
+    fun onUndoUnarchiveClick(conversationId: ConversationId)
     fun onUnblockConversationClick()
     fun onAddContactClick()
     fun onDeleteConversationClick()
@@ -55,6 +59,7 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
     private val blockedParticipantsRepository: BlockedParticipantsRepository,
     conversationArchiveEvents: ConversationArchiveEvents,
     private val archiveConversation: ArchiveConversation,
+    private val unarchiveConversation: UnarchiveConversation,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
 ) : ConversationMetadataDelegate {
@@ -71,6 +76,11 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
     override val effects = _effects.asSharedFlow()
     override val navigationEvents = _navigationEvents.asSharedFlow()
     override val archivedConversations = conversationArchiveEvents.archivedConversations
+
+    override val unarchivedConversationIds = conversationArchiveEvents
+        .unarchivedConversationIds
+        .filter { conversationId -> conversationId == currentConversationId }
+
     override val state = _state.asStateFlow()
     override val isDeleteConversationConfirmationVisible =
         _isDeleteConversationConfirmationVisible.asStateFlow()
@@ -138,7 +148,8 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
         val conversationId = currentConversationId ?: return
 
         boundScope?.launch(defaultDispatcher) {
-            conversationsRepository.unarchiveConversation(conversationId = conversationId)
+            unarchiveConversation(conversationId = conversationId)
+            _navigationEvents.emit(NavEvent.CloseAfterUnarchive)
         }
     }
 
@@ -151,6 +162,12 @@ internal class ConversationMetadataDelegateImpl @Inject constructor(
             if (archivedConversation.wasPinned) {
                 conversationsRepository.pinConversation(conversationId = conversationId)
             }
+        }
+    }
+
+    override fun onUndoUnarchiveClick(conversationId: ConversationId) {
+        boundScope?.launch(defaultDispatcher) {
+            conversationsRepository.archiveConversation(conversationId = conversationId)
         }
     }
 

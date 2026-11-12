@@ -5,7 +5,6 @@ import com.android.messaging.data.blockedparticipants.repository.BlockedParticip
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.ParticipantId
 import com.android.messaging.data.conversation.model.metadata.ConversationSubscriptionLabel
-import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.data.conversationsettings.model.ConversationSettingsData
 import com.android.messaging.data.conversationsettings.repository.ConversationNotificationRepository
 import com.android.messaging.data.conversationsettings.repository.ConversationSettingsRepository
@@ -13,6 +12,7 @@ import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.data.subscription.repository.SubscriptionsRepository
 import com.android.messaging.domain.conversation.usecase.action.ArchiveConversation
+import com.android.messaging.domain.conversation.usecase.action.UnarchiveConversation
 import com.android.messaging.domain.conversationsettings.usecase.SetConversationSelfParticipantId
 import com.android.messaging.ui.conversationsettings.screen.CONVERSATION_SETTINGS_CONVERSATION_ID_ARG
 import com.android.messaging.ui.conversationsettings.screen.mapper.ConversationSettingsUiStateMapperImpl
@@ -35,8 +35,8 @@ internal class ConversationSettingsDelegateImplTest {
     private val subscriptionsRepository = mockk<SubscriptionsRepository>()
     private val setConversationSelfParticipantId =
         mockk<SetConversationSelfParticipantId>(relaxed = true)
-    private val conversationsRepository = mockk<ConversationsRepository>(relaxed = true)
     private val archiveConversation = mockk<ArchiveConversation>(relaxed = true)
+    private val unarchiveConversation = mockk<UnarchiveConversation>(relaxed = true)
 
     @Test
     fun bind_conversationBoundToDefaultSelf_showsDefaultSmsSubscription() {
@@ -108,21 +108,19 @@ internal class ConversationSettingsDelegateImplTest {
             runCurrent()
 
             coVerify(exactly = 1) { archiveConversation(conversationId = CONVERSATION_ID) }
-            coVerify(exactly = 0) { conversationsRepository.unarchiveConversation(any()) }
+            coVerify(exactly = 0) { unarchiveConversation(conversationId = any()) }
         }
     }
 
     @Test
-    fun setArchived_unarchiving_unarchivesViaRepository() {
+    fun setArchived_unarchiving_unarchivesThroughUseCase() {
         runTest {
             val delegate = createDelegate(applicationScope = backgroundScope)
 
             delegate.setArchived(archived = false)
             runCurrent()
 
-            coVerify(exactly = 1) {
-                conversationsRepository.unarchiveConversation(CONVERSATION_ID)
-            }
+            coVerify(exactly = 1) { unarchiveConversation(conversationId = CONVERSATION_ID) }
             coVerify(exactly = 0) { archiveConversation(conversationId = any()) }
         }
     }
@@ -152,9 +150,9 @@ internal class ConversationSettingsDelegateImplTest {
                 canShowOrAddContact = { _, _, _, _ -> false },
                 isContactSavedUseCase = { _, _ -> false },
             ),
-            conversationsRepository = conversationsRepository,
             blockedParticipantsRepository = mockk<BlockedParticipantsRepository>(relaxed = true),
             archiveConversation = archiveConversation,
+            unarchiveConversation = unarchiveConversation,
             setConversationSelfParticipantId = setConversationSelfParticipantId,
             applicationScope = applicationScope,
             savedStateHandle = SavedStateHandle(

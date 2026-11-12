@@ -11,12 +11,14 @@ internal data class ConversationEntryNavState(
     val model: ConversationEntryScreenModel,
     val isLaunchedFromBubble: Boolean,
     val hasConversationList: Boolean,
+    val hasArchivedConversationList: Boolean,
 )
 
 @Composable
 internal fun ProvideConversationEntryNavState(
     isLaunchedFromBubble: Boolean,
     hasConversationList: Boolean,
+    hasArchivedConversationList: Boolean,
     content: @Composable () -> Unit,
 ) {
     val entryModel: ConversationEntryScreenModel = hiltViewModel<ConversationEntryViewModel>()
@@ -24,6 +26,7 @@ internal fun ProvideConversationEntryNavState(
         model = entryModel,
         isLaunchedFromBubble = isLaunchedFromBubble,
         hasConversationList = hasConversationList,
+        hasArchivedConversationList = hasArchivedConversationList,
     )
 
     CompositionLocalProvider(

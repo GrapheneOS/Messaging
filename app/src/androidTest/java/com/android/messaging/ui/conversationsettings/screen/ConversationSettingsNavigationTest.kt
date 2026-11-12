@@ -50,6 +50,33 @@ internal class ConversationSettingsNavigationTest : ConversationSettingsTestBase
     }
 
     @Test
+    fun closeAfterUnarchive_fromRoot_closesTheConversation() {
+        renderScreen()
+
+        emitNavEvent(ConversationSettingsNavEvent.CloseAfterUnarchive)
+
+        assertEquals(1, onCloseAfterUnarchiveCalls)
+        assertEquals(0, onCloseAfterArchiveCalls)
+        assertEquals(0, onNavigateBackCalls)
+    }
+
+    @Test
+    fun closeAfterUnarchive_fromParticipantRoute_returnsToRoot() {
+        renderScreen()
+        emitNavEvent(
+            ConversationSettingsNavEvent.OpenParticipantInfo(
+                conversationId = PARTICIPANT_CONVERSATION_ID,
+            ),
+        )
+
+        emitNavEvent(ConversationSettingsNavEvent.CloseAfterUnarchive)
+
+        verify(atLeast = 2) { screenModel.setConversationId(ROOT_CONVERSATION_ID) }
+        assertEquals(0, onCloseAfterUnarchiveCalls)
+        assertEquals(0, onNavigateBackCalls)
+    }
+
+    @Test
     fun systemBack_fromParticipantRoute_returnsToRoot() {
         renderScreen()
 

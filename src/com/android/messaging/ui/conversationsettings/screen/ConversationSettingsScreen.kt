@@ -97,6 +97,7 @@ internal fun ConversationSettingsScreen(
     effectHandler: ConversationSettingsEffectHandler,
     onNavigateBack: () -> Unit,
     onCloseAfterArchive: () -> Unit,
+    onCloseAfterUnarchive: () -> Unit,
     onNavigateToConversation: (ConversationId) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -145,6 +146,13 @@ internal fun ConversationSettingsScreen(
             NavEvent.CloseAfterArchive -> {
                 when {
                     isRootRoute() -> onCloseAfterArchive()
+                    else -> navigateUp()
+                }
+            }
+
+            NavEvent.CloseAfterUnarchive -> {
+                when {
+                    isRootRoute() -> onCloseAfterUnarchive()
                     else -> navigateUp()
                 }
             }

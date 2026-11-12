@@ -83,6 +83,7 @@ internal class ConversationSettingsViewModel @Inject constructor(
 
             is Action.UnarchiveClicked -> {
                 delegate.setArchived(false)
+                emitNavigationEvent(NavEvent.CloseAfterUnarchive)
             }
 
             is Action.ArchiveClicked -> {

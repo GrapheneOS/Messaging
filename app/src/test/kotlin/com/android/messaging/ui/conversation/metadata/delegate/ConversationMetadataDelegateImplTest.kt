@@ -12,6 +12,7 @@ import com.android.messaging.data.conversation.repository.ConversationsRepositor
 import com.android.messaging.domain.conversation.usecase.action.ArchiveConversation
 import com.android.messaging.domain.conversation.usecase.action.CheckConversationActionRequirements
 import com.android.messaging.domain.conversation.usecase.action.ConversationActionRequirementsResult
+import com.android.messaging.domain.conversation.usecase.action.UnarchiveConversation
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.testutil.TEST_CALL_ACTION_PHONE_NUMBER
 import com.android.messaging.ui.conversation.metadata.mapper.ConversationMetadataUiStateMapper
@@ -63,7 +64,7 @@ class ConversationMetadataDelegateImplTest {
     }
 
     @Test
-    fun onUnarchiveConversationClick_unarchivesViaRepositoryWithoutClosing() {
+    fun onUnarchiveConversationClick_unarchivesAndEmitsCloseAfterUnarchive() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val harness = createHarness(conversationId = ConversationId("conversation-42"))
 
@@ -72,16 +73,69 @@ class ConversationMetadataDelegateImplTest {
                     harness.delegate.onUnarchiveConversationClick()
                     advanceUntilIdle()
 
-                    expectNoEvents()
+                    assertEquals(
+                        ConversationScreenNavEvent.CloseAfterUnarchive,
+                        awaitItem(),
+                    )
                     cancelAndIgnoreRemainingEvents()
                 }
 
                 coVerify(exactly = 1) {
-                    harness.conversationsRepository
-                        .unarchiveConversation(conversationId = ConversationId("conversation-42"))
+                    harness.unarchiveConversation(
+                        conversationId = ConversationId("conversation-42"),
+                    )
                 }
                 coVerify(exactly = 0) {
+                    harness.conversationsRepository.unarchiveConversation(conversationId = any())
                     harness.conversationsRepository.pinConversation(conversationId = any())
+                }
+            } finally {
+                harness.cancel()
+            }
+        }
+    }
+
+    @Test
+    fun onUndoUnarchiveClick_rearchivesWithoutAnArchiveEvent() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val harness = createHarness(conversationId = ConversationId("conversation-42"))
+
+            try {
+                harness.delegate.onUndoUnarchiveClick(
+                    conversationId = ConversationId("conversation-42"),
+                )
+                advanceUntilIdle()
+
+                coVerify(exactly = 1) {
+                    harness.conversationsRepository
+                        .archiveConversation(conversationId = ConversationId("conversation-42"))
+                }
+                coVerify(exactly = 0) {
+                    harness.archiveConversation(conversationId = any())
+                }
+            } finally {
+                harness.cancel()
+            }
+        }
+    }
+
+    @Test
+    fun unarchivedConversationIds_dropsEventsForOtherConversations() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val harness = createHarness(conversationId = ConversationId("conversation-42"))
+
+            try {
+                harness.delegate.unarchivedConversationIds.test {
+                    harness.conversationArchiveEvents.notifyUnarchived(
+                        conversationId = ConversationId("conversation-7"),
+                    )
+                    harness.conversationArchiveEvents.notifyUnarchived(
+                        conversationId = ConversationId("conversation-42"),
+                    )
+
+                    assertEquals(ConversationId("conversation-42"), awaitItem())
+                    expectNoEvents()
+                    cancelAndIgnoreRemainingEvents()
                 }
             } finally {
                 harness.cancel()
@@ -365,6 +419,8 @@ class ConversationMetadataDelegateImplTest {
                         harness.delegate.isDeleteConversationConfirmationVisible.value,
                     )
                     coVerify(exactly = 0) {
+                        harness.archiveConversation(conversationId = any())
+                        harness.unarchiveConversation(conversationId = any())
                         harness.conversationsRepository.archiveConversation(
                             conversationId = any(),
                         )
@@ -395,6 +451,8 @@ class ConversationMetadataDelegateImplTest {
         val conversationIdFlow = MutableStateFlow(conversationId)
         val metadataFlow = MutableStateFlow<ConversationMetadata?>(value = null)
         val archiveConversation = mockk<ArchiveConversation>(relaxed = true)
+        val unarchiveConversation = mockk<UnarchiveConversation>(relaxed = true)
+        val conversationArchiveEvents = ConversationArchiveEventsImpl()
 
         every {
             conversationsRepository.getConversationMetadata(any())
@@ -425,8 +483,9 @@ class ConversationMetadataDelegateImplTest {
             conversationsRepository = conversationsRepository,
             conversationMetadataUiStateMapper = mapper,
             blockedParticipantsRepository = mockk<BlockedParticipantsRepository>(relaxed = true),
-            conversationArchiveEvents = ConversationArchiveEventsImpl(),
+            conversationArchiveEvents = conversationArchiveEvents,
             archiveConversation = archiveConversation,
+            unarchiveConversation = unarchiveConversation,
             defaultDispatcher = dispatcher,
         )
         delegate.bind(
@@ -438,6 +497,8 @@ class ConversationMetadataDelegateImplTest {
             delegate = delegate,
             conversationsRepository = conversationsRepository,
             archiveConversation = archiveConversation,
+            unarchiveConversation = unarchiveConversation,
+            conversationArchiveEvents = conversationArchiveEvents,
             metadataFlow = metadataFlow,
             scope = scope,
         )
@@ -461,6 +522,8 @@ class ConversationMetadataDelegateImplTest {
         val delegate: ConversationMetadataDelegateImpl,
         val conversationsRepository: ConversationsRepository,
         val archiveConversation: ArchiveConversation,
+        val unarchiveConversation: UnarchiveConversation,
+        val conversationArchiveEvents: ConversationArchiveEventsImpl,
         val metadataFlow: MutableStateFlow<ConversationMetadata?>,
         val scope: TestScope,
     ) {

@@ -52,6 +52,16 @@ private fun conversationSettingsRouteContent(): @Composable (ConversationSetting
                         else -> navigator.back()
                     }
                 },
+                onCloseAfterUnarchive = {
+                    when {
+                        entryNavState.hasArchivedConversationList -> {
+                            navigator.closeConversation(conversationId = navKey.conversationId)
+                        }
+
+                        // The conversation stays open and offers Undo.
+                        else -> navigator.back()
+                    }
+                },
                 onNavigateToConversation = { conversationId ->
                     conversationNavigator.navigateToConversation(conversationId = conversationId)
                 },
