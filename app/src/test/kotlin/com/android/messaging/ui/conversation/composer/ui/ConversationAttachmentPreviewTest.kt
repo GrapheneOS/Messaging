@@ -205,6 +205,30 @@ class ConversationAttachmentPreviewTest {
     }
 
     @Test
+    fun removingAMiddleAttachment_slidesTheNextOneIntoTheGap() {
+        val attachments = setResizableContent(
+            initialAttachments = persistentListOf(
+                pendingAttachment,
+                secondPendingAttachment,
+                thirdPendingAttachment,
+            ),
+        )
+        val removedItemLeft = itemLeft(attachmentKey = SECOND_PENDING_KEY)
+        val followingItemLeft = itemLeft(attachmentKey = THIRD_PENDING_KEY)
+
+        composeTestRule.mainClock.autoAdvance = false
+        attachments.value = persistentListOf(pendingAttachment, thirdPendingAttachment)
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.advanceTimeBy(milliseconds = MID_ANIMATION_MILLIS)
+
+        val midAnimationLeft = itemLeft(attachmentKey = THIRD_PENDING_KEY)
+        assertTrue(
+            "Expected a left between $removedItemLeft and $followingItemLeft, was $midAnimationLeft",
+            midAnimationLeft > removedItemLeft && midAnimationLeft < followingItemLeft,
+        )
+    }
+
+    @Test
     fun switchingAttachmentKinds_keepsTheStripHeight() {
         val attachments = setResizableContent(initialAttachments = persistentListOf())
 
@@ -228,6 +252,13 @@ class ConversationAttachmentPreviewTest {
             "Expected a height between 0 and $expandedHeight, was $height",
             height > 0.dp && height < expandedHeight,
         )
+    }
+
+    private fun itemLeft(attachmentKey: String): Dp {
+        return composeTestRule
+            .onNodeWithTag(conversationAttachmentPreviewItemTestTag(attachmentKey = attachmentKey))
+            .getBoundsInRoot()
+            .left
     }
 
     private fun stripHostHeight(): Dp {
@@ -281,6 +312,8 @@ class ConversationAttachmentPreviewTest {
         private const val MID_ANIMATION_MILLIS = 100L
         private const val STRIP_HOST_TEST_TAG = "attachment_strip_host"
         private const val PENDING_KEY = "pending-1"
+        private const val SECOND_PENDING_KEY = "pending-2"
+        private const val THIRD_PENDING_KEY = "pending-3"
         private const val PENDING_AUDIO_KEY = "pending-audio-1"
         private const val RESOLVED_KEY = "resolved-1"
         private const val RESOLVED_CONTENT_URI = "content://media/resolved/1"
@@ -290,6 +323,14 @@ class ConversationAttachmentPreviewTest {
             contentType = "image/jpeg",
             contentUri = "content://media/pending/1",
             displayName = "pending.jpg",
+        )
+        private val secondPendingAttachment = pendingAttachment.copy(
+            key = SECOND_PENDING_KEY,
+            contentUri = "content://media/pending/2",
+        )
+        private val thirdPendingAttachment = pendingAttachment.copy(
+            key = THIRD_PENDING_KEY,
+            contentUri = "content://media/pending/3",
         )
         private val pendingAudioFinalizingAttachment =
             ComposerAttachmentUiModel.Pending.AudioFinalizing(
