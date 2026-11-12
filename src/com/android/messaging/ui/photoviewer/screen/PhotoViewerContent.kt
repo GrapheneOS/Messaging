@@ -3,8 +3,14 @@ package com.android.messaging.ui.photoviewer.screen
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material3.CircularProgressIndicator
@@ -27,7 +33,6 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.android.messaging.data.media.model.PhotoViewerItem
 import com.android.messaging.ui.common.components.PagerIndicator
-import com.android.messaging.ui.common.components.bottomBarInsets
 import com.android.messaging.ui.common.components.mediapreview.MediaPreviewBackground
 import com.android.messaging.ui.common.components.mediapreview.MediaPreviewItem
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_PAGE_INDICATOR_TEST_TAG
@@ -238,7 +243,7 @@ private fun PhotoViewerMediaContent(
             PagerIndicator(
                 modifier = Modifier
                     .align(alignment = Alignment.BottomCenter)
-                    .windowInsetsPadding(bottomBarInsets())
+                    .windowInsetsPadding(insets = pageIndicatorInsets())
                     .padding(bottom = PhotoViewerPageIndicatorBottomPadding)
                     .testTag(tag = PHOTO_VIEWER_PAGE_INDICATOR_TEST_TAG),
                 pagerState = pagerState,
@@ -263,4 +268,13 @@ private fun PhotoViewerBlurredBackground(
         items = items,
         pagerState = pagerState,
     )
+}
+
+// Horizontal insets are left out: on a centred row, a cutout or navigation bar on one side would
+// push the dots off the centre of the page.
+@Composable
+private fun pageIndicatorInsets(): WindowInsets {
+    return WindowInsets.systemBars
+        .union(insets = WindowInsets.displayCutout)
+        .only(sides = WindowInsetsSides.Bottom)
 }
