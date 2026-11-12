@@ -1,6 +1,6 @@
 package com.android.messaging.ui.photoviewer.component
 
-import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
@@ -11,6 +11,7 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,6 +22,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.lerp
 import com.android.messaging.data.media.model.PhotoViewerItem
 import com.android.messaging.ui.common.components.mediapreview.MediaPreviewItem
 import com.android.messaging.ui.photoviewer.PHOTO_VIEWER_PAGER_TEST_TAG
@@ -108,9 +110,10 @@ internal fun PhotoViewerPager(
             maxWidth = maxWidth,
             maxHeight = maxHeight,
         )
-        val pagerLayout = rememberPhotoViewerPagerLayout(
+        val immersiveProgress = animatePhotoViewerImmersiveProgress(displayMode = displayMode)
+        val pagerLayout = resolvePhotoViewerPagerLayout(
             maxWidth = maxWidth,
-            displayMode = displayMode,
+            immersiveProgress = immersiveProgress.value,
         )
 
         HorizontalPager(
@@ -136,6 +139,7 @@ internal fun PhotoViewerPager(
                 page = page,
                 pagerState = pagerState,
                 displayMode = displayMode,
+                immersiveProgress = { immersiveProgress.value },
                 imageDecodeSize = imageDecodeSize,
                 onToggleDisplayMode = onToggleDisplayMode,
                 onEnterImmersiveMode = onEnterImmersiveMode,
@@ -167,35 +171,34 @@ private fun rememberPhotoViewerImageDecodeSize(maxWidth: Dp, maxHeight: Dp): Int
 }
 
 @Composable
-private fun rememberPhotoViewerPagerLayout(
-    maxWidth: Dp,
-    displayMode: PhotoViewerDisplayMode,
-): PhotoViewerPagerLayout {
-    val targetPageWidth = when (displayMode) {
-        PhotoViewerDisplayMode.Carousel -> maxWidth * PHOTO_VIEWER_CAROUSEL_PAGE_WIDTH_FRACTION
-        PhotoViewerDisplayMode.Immersive -> maxWidth
-    }
-
-    val targetPageSpacing = when (displayMode) {
-        PhotoViewerDisplayMode.Carousel -> PhotoViewerCarouselPageSpacing
-        PhotoViewerDisplayMode.Immersive -> 0.dp
-    }
-
-    val pageWidth by animateDpAsState(
-        targetValue = targetPageWidth,
+private fun animatePhotoViewerImmersiveProgress(displayMode: PhotoViewerDisplayMode): State<Float> {
+    return animateFloatAsState(
+        targetValue = when (displayMode) {
+            PhotoViewerDisplayMode.Carousel -> 0f
+            PhotoViewerDisplayMode.Immersive -> 1f
+        },
         animationSpec = tween(durationMillis = PHOTO_VIEWER_PAGER_LAYOUT_ANIMATION_MILLIS),
-        label = "photoViewerPageWidth",
+        label = "photoViewerImmersiveProgress",
     )
+}
 
-    val pageSpacing by animateDpAsState(
-        targetValue = targetPageSpacing,
-        animationSpec = tween(durationMillis = PHOTO_VIEWER_PAGER_LAYOUT_ANIMATION_MILLIS),
-        label = "photoViewerPageSpacing",
+internal fun resolvePhotoViewerPagerLayout(
+    maxWidth: Dp,
+    immersiveProgress: Float,
+): PhotoViewerPagerLayout {
+    val pageWidth = lerp(
+        start = maxWidth * PHOTO_VIEWER_CAROUSEL_PAGE_WIDTH_FRACTION,
+        stop = maxWidth,
+        fraction = immersiveProgress,
     )
 
     return PhotoViewerPagerLayout(
         pageWidth = pageWidth,
-        pageSpacing = pageSpacing,
+        pageSpacing = lerp(
+            start = PhotoViewerCarouselPageSpacing,
+            stop = 0.dp,
+            fraction = immersiveProgress,
+        ),
         horizontalInset = ((maxWidth - pageWidth) / 2).coerceAtLeast(minimumValue = 0.dp),
     )
 }
@@ -207,7 +210,7 @@ private fun photoViewerPagerItemKey(
     return "$index|${item.contentUri}"
 }
 
-private data class PhotoViewerPagerLayout(
+internal data class PhotoViewerPagerLayout(
     val pageWidth: Dp,
     val pageSpacing: Dp,
     val horizontalInset: Dp,
