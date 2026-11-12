@@ -6,6 +6,8 @@ import kotlinx.collections.immutable.ImmutableList
 
 internal sealed interface ConversationListEffect {
 
+    sealed interface UndoSnackbarEffect : ConversationListEffect
+
     data object OpenDebugOptions : ConversationListEffect
     data object ScrollToTop : ConversationListEffect
 
@@ -13,7 +15,7 @@ internal sealed interface ConversationListEffect {
         val conversationIds: ImmutableList<ConversationId>,
         val pinnedConversationIds: ImmutableList<ConversationId>,
         val isArchived: Boolean,
-    ) : ConversationListEffect
+    ) : UndoSnackbarEffect
 
     data class PreparePinAnimation(
         val conversationIds: ImmutableList<ConversationId>,
@@ -43,5 +45,5 @@ internal sealed interface ConversationListEffect {
         val destination: String,
         val wasPinned: Boolean,
         val success: Boolean,
-    ) : ConversationListEffect
+    ) : UndoSnackbarEffect
 }

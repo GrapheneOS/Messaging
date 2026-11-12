@@ -1,6 +1,5 @@
 package com.android.messaging.ui.conversationlist.chats
 
-import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -44,7 +43,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -62,7 +60,6 @@ import com.android.messaging.ui.common.components.reorder.OverlayReorderAnimatio
 import com.android.messaging.ui.common.components.reorder.OverlayReorderAnimationController
 import com.android.messaging.ui.common.components.reorder.rememberOverlayReorderAnimationController
 import com.android.messaging.ui.common.components.snackbar.MessagingSnackbarHost
-import com.android.messaging.ui.common.components.snackbar.showActionSnackbar
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListEffect as Effect
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState as State
@@ -73,7 +70,6 @@ import com.android.messaging.ui.conversationlist.common.support.previewConversat
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel as Model
 import com.android.messaging.ui.core.MessagingPreviewTheme
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -215,13 +211,13 @@ private fun ConversationListEffects(
     onAction: (Action) -> Unit,
     onConfirmBlock: (conversationId: ConversationId, destination: String) -> Unit,
 ) {
-    val context = LocalContext.current
-    val undoLabel = stringResource(R.string.snack_bar_undo)
     val effectScope = rememberCoroutineScope()
+    val undoSnackbarState = rememberConversationListUndoSnackbarState(
+        snackbarHostState = snackbarHostState,
+        onAction = onAction,
+    )
 
-    val currentContext by rememberUpdatedState(context)
     val currentEffectHandler by rememberUpdatedState(effectHandler)
-    val currentUndoLabel by rememberUpdatedState(undoLabel)
     val currentOnAction by rememberUpdatedState(onAction)
     val currentOnConfirmBlock by rememberUpdatedState(onConfirmBlock)
 
@@ -235,14 +231,14 @@ private fun ConversationListEffects(
                     )
                 }
 
-                is Effect.ArchiveStatusChanged, is Effect.ConversationBlocked -> {
-                    effectScope.launchSnackbarForEffect(
-                        snackbarHostState = snackbarHostState,
-                        context = currentContext,
-                        undoLabel = currentUndoLabel,
-                        effect = effect,
-                        onAction = currentOnAction,
-                    )
+                is Effect.ArchiveStatusChanged -> {
+                    undoSnackbarState.show(undoable = effect)
+                }
+
+                is Effect.ConversationBlocked -> {
+                    if (effect.success) {
+                        undoSnackbarState.show(undoable = effect)
+                    }
                 }
 
                 is Effect.PreparePinAnimation -> {
@@ -289,99 +285,6 @@ private fun preparePinAnimation(
     )
 
     controller.markCommitted()
-}
-
-private fun CoroutineScope.launchSnackbarForEffect(
-    snackbarHostState: SnackbarHostState,
-    context: Context,
-    undoLabel: String,
-    effect: Effect,
-    onAction: (Action) -> Unit,
-) {
-    when (effect) {
-        is Effect.ArchiveStatusChanged -> launchArchivedSnackbar(
-            snackbarHostState = snackbarHostState,
-            context = context,
-            undoLabel = undoLabel,
-            effect = effect,
-            onAction = onAction,
-        )
-
-        is Effect.ConversationBlocked -> launchBlockedSnackbar(
-            snackbarHostState = snackbarHostState,
-            context = context,
-            undoLabel = undoLabel,
-            effect = effect,
-            onAction = onAction,
-        )
-
-        else -> Unit
-    }
-}
-
-private fun CoroutineScope.launchArchivedSnackbar(
-    snackbarHostState: SnackbarHostState,
-    context: Context,
-    undoLabel: String,
-    effect: Effect.ArchiveStatusChanged,
-    onAction: (Action) -> Unit,
-) {
-    val messageResId = when {
-        effect.isArchived -> R.string.archived_toast_message
-        else -> R.string.unarchived_toast_message
-    }
-
-    launch {
-        val undoClicked = snackbarHostState.showActionSnackbar(
-            message = context.getString(messageResId, effect.conversationIds.size),
-            actionLabel = undoLabel,
-        )
-
-        if (undoClicked) {
-            onAction(
-                Action.ArchiveUndoClicked(
-                    conversationIds = effect.conversationIds,
-                    pinnedConversationIds = effect.pinnedConversationIds,
-                    isArchived = effect.isArchived,
-                ),
-            )
-        } else {
-            onAction(
-                Action.ArchiveSnackbarDismissed(
-                    conversationIds = effect.conversationIds,
-                ),
-            )
-        }
-    }
-}
-
-private fun CoroutineScope.launchBlockedSnackbar(
-    snackbarHostState: SnackbarHostState,
-    context: Context,
-    undoLabel: String,
-    effect: Effect.ConversationBlocked,
-    onAction: (Action) -> Unit,
-) {
-    if (!effect.success) {
-        return
-    }
-
-    launch {
-        val undoClicked = snackbarHostState.showActionSnackbar(
-            message = context.getString(R.string.update_destination_blocked),
-            actionLabel = undoLabel,
-        )
-
-        if (undoClicked) {
-            onAction(
-                Action.BlockUndoClicked(
-                    conversationId = effect.conversationId,
-                    destination = effect.destination,
-                    wasPinned = effect.wasPinned,
-                ),
-            )
-        }
-    }
 }
 
 @Composable
