@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversation.mediapicker
 import androidx.activity.ComponentActivity
 import androidx.camera.core.SurfaceRequest
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.BottomSheetScaffoldState
@@ -75,6 +76,7 @@ internal abstract class BaseConversationMediaPickerTest {
     }
 
     protected fun setCaptureRouteContent(
+        aspectRatio: Float? = null,
         audioPermissionGranted: Boolean = true,
         captureMode: ConversationCaptureMode = ConversationCaptureMode.Photo,
         cameraPermissionGranted: Boolean = true,
@@ -83,6 +85,7 @@ internal abstract class BaseConversationMediaPickerTest {
             ConversationMediaCaptureRoute(
                 modifier = Modifier.fillMaxSize(),
                 cameraController = cameraController,
+                aspectRatio = aspectRatio,
                 audioPermissionGranted = audioPermissionGranted,
                 captureMode = captureMode,
                 cameraPermissionGranted = cameraPermissionGranted,
@@ -91,6 +94,30 @@ internal abstract class BaseConversationMediaPickerTest {
                 onAttachmentStartRequest = onAttachmentStartRequest,
                 onShowReview = onShowReview,
                 onCapturedMediaReady = onCapturedMediaReady,
+                onCaptureModeChange = onCaptureModeChange,
+            )
+        }
+    }
+
+    protected fun setCaptureSceneContent(
+        modifier: Modifier = Modifier.fillMaxSize(),
+        captureMode: ConversationCaptureMode = ConversationCaptureMode.Photo,
+        contentPadding: PaddingValues = PaddingValues(),
+    ) {
+        setThemedContent {
+            ConversationMediaPickerCaptureScene(
+                modifier = modifier,
+                cameraController = cameraController,
+                contentPadding = contentPadding,
+                captureMode = captureMode,
+                cameraPermissionGranted = true,
+                audioPermissionGranted = true,
+                onClose = onClose,
+                onRequestAudioPermission = onRequestAudioPermission,
+                onRequestCameraPermission = onRequestCameraPermission,
+                onAttachmentStartRequest = onAttachmentStartRequest,
+                onCapturedMediaReady = onCapturedMediaReady,
+                onShowReview = onShowReview,
                 onCaptureModeChange = onCaptureModeChange,
             )
         }

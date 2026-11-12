@@ -4,6 +4,7 @@ import androidx.camera.compose.CameraXViewfinder
 import androidx.camera.core.SurfaceRequest
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -110,19 +111,37 @@ private fun ConversationMediaCameraViewfinder(
     contentPadding: PaddingValues,
     surfaceRequest: SurfaceRequest,
 ) {
-    Box(
+    ConversationMediaCameraPreviewFrame(
         modifier = Modifier
+            .padding(paddingValues = contentPadding),
+        aspectRatio = aspectRatio,
+    ) {
+        CameraXViewfinder(
+            modifier = Modifier
+                .fillMaxSize(),
+            surfaceRequest = surfaceRequest,
+        )
+    }
+}
+
+@Composable
+private fun ConversationMediaCameraPreviewFrame(
+    modifier: Modifier = Modifier,
+    aspectRatio: Float?,
+    content: @Composable BoxScope.() -> Unit,
+) {
+    Box(
+        modifier = modifier
             .fillMaxSize()
-            .padding(paddingValues = contentPadding)
             .statusBarsPadding(),
         contentAlignment = Alignment.Center,
     ) {
-        CameraXViewfinder(
+        Box(
             modifier = when (aspectRatio) {
                 null -> Modifier.fillMaxSize()
                 else -> Modifier.aspectRatio(ratio = aspectRatio)
             },
-            surfaceRequest = surfaceRequest,
+            content = content,
         )
     }
 }
@@ -130,6 +149,7 @@ private fun ConversationMediaCameraViewfinder(
 @Composable
 internal fun ConversationMediaCaptureContent(
     modifier: Modifier = Modifier,
+    aspectRatio: Float?,
     audioPermissionGranted: Boolean,
     captureMode: ConversationCaptureMode,
     cameraPermissionGranted: Boolean,
@@ -150,20 +170,23 @@ internal fun ConversationMediaCaptureContent(
     Box(
         modifier = modifier,
     ) {
-        ConversationMediaCaptureTopBar(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            captureMode = captureMode,
-            hasFlashUnit = cameraPermissionGranted && hasFlashUnit,
-            isPhotoCaptureInProgress = isPhotoCaptureInProgress,
-            isRecording = isRecording,
-            photoFlashMode = photoFlashMode,
-            onCloseClick = onCloseClick,
-            onFlashClick = onToggleFlashClick,
-        )
+        ConversationMediaCameraPreviewFrame(
+            aspectRatio = aspectRatio,
+        ) {
+            ConversationMediaCaptureTopBar(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                captureMode = captureMode,
+                hasFlashUnit = cameraPermissionGranted && hasFlashUnit,
+                isPhotoCaptureInProgress = isPhotoCaptureInProgress,
+                isRecording = isRecording,
+                photoFlashMode = photoFlashMode,
+                onCloseClick = onCloseClick,
+                onFlashClick = onToggleFlashClick,
+            )
+        }
 
         if (cameraPermissionGranted) {
             ConversationMediaCaptureControls(
@@ -218,6 +241,7 @@ private fun ConversationMediaCaptureContentPreview() {
     MessagingPreviewTheme {
         ConversationMediaCaptureContent(
             modifier = Modifier.fillMaxSize(),
+            aspectRatio = null,
             audioPermissionGranted = true,
             captureMode = ConversationCaptureMode.Video,
             cameraPermissionGranted = true,
