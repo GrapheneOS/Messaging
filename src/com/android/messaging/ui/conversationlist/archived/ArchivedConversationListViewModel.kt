@@ -2,12 +2,14 @@ package com.android.messaging.ui.conversationlist.archived
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.messaging.data.conversation.event.ConversationArchiveEvents
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListItem
 import com.android.messaging.data.conversationlist.model.ConversationListMode
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.data.debug.DebugFeaturesProvider
 import com.android.messaging.di.core.DefaultDispatcher
+import com.android.messaging.di.core.MainDispatcher
 import com.android.messaging.domain.conversation.usecase.participant.ResolveContactAction
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveContactActionResult
 import com.android.messaging.ui.contact.model.AddContactRequest
@@ -22,6 +24,7 @@ import com.android.messaging.ui.conversationlist.delegate.ConversationListSelect
 import com.android.messaging.ui.conversationlist.model.ConversationListAvatarUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
@@ -55,9 +58,12 @@ internal class ArchivedConversationListViewModel @Inject constructor(
     private val selectionDelegate: ConversationListSelectionDelegate,
     uiStateMapper: ArchivedConversationListUiStateMapper,
     private val resolveContactAction: ResolveContactAction,
+    private val conversationArchiveEvents: ConversationArchiveEvents,
     debugFeaturesProvider: DebugFeaturesProvider,
     @param:DefaultDispatcher
     private val defaultDispatcher: CoroutineDispatcher,
+    @param:MainDispatcher
+    private val mainDispatcher: CoroutineDispatcher,
 ) : ViewModel(),
     ArchivedConversationListScreenModel {
 
@@ -113,6 +119,28 @@ internal class ArchivedConversationListViewModel @Inject constructor(
                 .filter { isEmpty -> isEmpty }
                 .collect { onArchiveEmptied() }
         }
+
+        offerUndoForUnarchivesOutsideList()
+    }
+
+    private fun offerUndoForUnarchivesOutsideList() {
+        viewModelScope.launch(mainDispatcher) {
+            conversationArchiveEvents.unarchivedConversationIds.collect { conversationId ->
+                if (isListed(conversationId)) {
+                    val conversationIds = persistentListOf(conversationId)
+
+                    optimisticSnapshotDelegate.remove(conversationIds)
+                    _effects.trySend(Effect.ConversationsUnarchived(conversationIds))
+                }
+            }
+        }
+    }
+
+    private fun isListed(conversationId: ConversationId): Boolean {
+        return snapshot.value
+            ?.items
+            .orEmpty()
+            .any { item -> item.conversationId == conversationId }
     }
 
     private fun onArchiveEmptied() {

@@ -1,12 +1,14 @@
 package com.android.messaging.ui.conversationlist.archived
 
 import app.cash.turbine.test
+import com.android.messaging.data.conversation.event.ConversationArchiveEventsImpl
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversationlist.model.ConversationListSnapshot
 import com.android.messaging.domain.conversation.usecase.participant.model.ResolveContactActionResult
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.ui.conversationlist.archived.mapper.ArchivedConversationListUiStateMapper
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListAction as Action
+import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListEffect as Effect
 import com.android.messaging.ui.conversationlist.archived.model.ArchivedConversationListUiState as State
 import com.android.messaging.ui.conversationlist.conversationItem
 import com.android.messaging.ui.conversationlist.delegate.ConversationListOptimisticSnapshotDelegate
@@ -23,6 +25,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 
@@ -36,6 +39,7 @@ internal class ArchivedConversationListViewModelTest {
     private val optimisticSnapshotDelegate =
         mockk<ConversationListOptimisticSnapshotDelegate>(relaxed = true)
     private val selectionDelegate = mockk<ConversationListSelectionDelegate>(relaxed = true)
+    private val conversationArchiveEvents = ConversationArchiveEventsImpl()
 
     private val snapshotFlow = MutableStateFlow<ConversationListSnapshot?>(
         snapshotOf(conversationItem(conversationId = OPENED_ID, isArchived = true)),
@@ -94,6 +98,43 @@ internal class ArchivedConversationListViewModelTest {
         }
     }
 
+    @Test
+    fun listedConversationUnarchivedElsewhere_hidesRowAndOffersUndo() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val viewModel = createViewModel()
+
+            viewModel.effects.test {
+                conversationArchiveEvents.notifyUnarchived(conversationId = OPENED_ID)
+                advanceUntilIdle()
+
+                assertEquals(
+                    Effect.ConversationsUnarchived(persistentListOf(OPENED_ID)),
+                    awaitItem(),
+                )
+                cancelAndIgnoreRemainingEvents()
+            }
+            verify(exactly = 1) { optimisticSnapshotDelegate.remove(listOf(OPENED_ID)) }
+        }
+    }
+
+    @Test
+    fun unlistedConversationUnarchivedElsewhere_isIgnored() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val viewModel = createViewModel()
+
+            viewModel.effects.test {
+                conversationArchiveEvents.notifyUnarchived(
+                    conversationId = ConversationId("not-archived"),
+                )
+                advanceUntilIdle()
+
+                expectNoEvents()
+                cancelAndIgnoreRemainingEvents()
+            }
+            verify(exactly = 0) { optimisticSnapshotDelegate.remove(any()) }
+        }
+    }
+
     private fun MockKMatcherScope.mapWithOpenedConversation(
         openedConversationId: ConversationId?,
     ): State {
@@ -116,8 +157,10 @@ internal class ArchivedConversationListViewModelTest {
             selectionDelegate = selectionDelegate,
             uiStateMapper = uiStateMapper,
             resolveContactAction = { _, _, _ -> ResolveContactActionResult.Unavailable },
+            conversationArchiveEvents = conversationArchiveEvents,
             debugFeaturesProvider = { false },
             defaultDispatcher = mainDispatcherRule.testDispatcher,
+            mainDispatcher = mainDispatcherRule.testDispatcher,
         )
     }
 

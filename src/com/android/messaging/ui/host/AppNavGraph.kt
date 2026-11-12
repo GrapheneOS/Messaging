@@ -11,6 +11,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.scene.SceneStrategy
 import com.android.messaging.domain.onboarding.usecase.SelfPhoneNumberPermissionPrompt
 import com.android.messaging.ui.conversation.navigation.ProvideConversationEntryNavState
+import com.android.messaging.ui.conversationlist.navigation.ArchivedConversationListNavKey
 import com.android.messaging.ui.conversationlist.navigation.ConversationListNavKey
 import com.android.messaging.ui.navigation.AppNavDisplay
 import com.android.messaging.ui.navigation.LocalNavigator
@@ -46,6 +47,9 @@ internal fun AppNavGraph(
     val hasConversationList by remember(backStack) {
         derivedStateOf { ConversationListNavKey in backStack }
     }
+    val hasArchivedConversationList by remember(backStack) {
+        derivedStateOf { ArchivedConversationListNavKey in backStack }
+    }
 
     AppResumeEffect(
         backStack = backStack,
@@ -69,6 +73,7 @@ internal fun AppNavGraph(
         ProvideConversationEntryNavState(
             isLaunchedFromBubble = isLaunchedFromBubble,
             hasConversationList = hasConversationList,
+            hasArchivedConversationList = hasArchivedConversationList,
         ) {
             AppNavDisplay(
                 backStack = backStack,

@@ -67,6 +67,7 @@ private fun conversationScreenRouteContent(): @Composable (ConversationNavKey) -
                 conversationId = navKey.conversationId,
                 isLaunchedFromBubble = entryNavState.isLaunchedFromBubble,
                 hasConversationList = entryNavState.hasConversationList,
+                hasArchivedConversationList = entryNavState.hasArchivedConversationList,
                 entryModel = entryNavState.model,
                 entryUiState = entryUiState,
             )
@@ -75,10 +76,12 @@ private fun conversationScreenRouteContent(): @Composable (ConversationNavKey) -
 }
 
 @Composable
+@Suppress("LongMethod") // Long arguments list, not too much logic, so it's ok to suppress
 private fun ConversationRoute(
     conversationId: ConversationId,
     isLaunchedFromBubble: Boolean,
     hasConversationList: Boolean,
+    hasArchivedConversationList: Boolean,
     entryModel: ConversationEntryScreenModel,
     entryUiState: ConversationEntryUiState,
 ) {
@@ -90,6 +93,7 @@ private fun ConversationRoute(
         conversationId = conversationId,
         cancelIncomingNotification = !isLaunchedFromBubble,
         offersArchiveUndo = !hasConversationList,
+        offersUnarchiveUndo = !hasArchivedConversationList,
         onAddPeopleClick = {
             navigator.navigateToAddParticipants(conversationId = conversationId)
         },
