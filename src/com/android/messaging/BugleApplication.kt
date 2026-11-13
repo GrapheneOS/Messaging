@@ -29,6 +29,7 @@ import android.util.Log
 import androidx.appcompat.mms.CarrierConfigValuesLoader
 import androidx.appcompat.mms.MmsManager
 import com.android.messaging.di.receiver.IncomingSmsEntryPoint
+import com.android.messaging.domain.media.usecase.DeleteOrphanedScratchFiles
 import com.android.messaging.domain.notification.usecase.DeleteUnlistedConversationChannels
 import com.android.messaging.domain.notification.usecase.MigrateConversationNotificationChannels
 import com.android.messaging.sms.BugleUserAgentInfoLoader
@@ -51,6 +52,9 @@ import kotlinx.coroutines.runBlocking
 open class BugleApplication :
     Application(),
     Thread.UncaughtExceptionHandler {
+
+    @Inject
+    internal lateinit var deleteOrphanedScratchFiles: DeleteOrphanedScratchFiles
 
     @Inject
     internal lateinit var deleteUnlistedConversationChannels: DeleteUnlistedConversationChannels
@@ -116,6 +120,7 @@ open class BugleApplication :
             MmsConfig.load()
             runBlocking {
                 deleteUnlistedConversationChannels().collect()
+                deleteOrphanedScratchFiles().collect()
             }
         }
     }
