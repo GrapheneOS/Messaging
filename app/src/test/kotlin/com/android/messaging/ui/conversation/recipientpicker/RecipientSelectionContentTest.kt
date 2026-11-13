@@ -18,8 +18,14 @@ import com.android.messaging.R
 import com.android.messaging.ui.conversation.RECIPIENT_SELECTION_QUERY_FIELD_TEST_TAG
 import com.android.messaging.ui.conversation.recipientpicker.component.RecipientSelectionContent
 import com.android.messaging.ui.core.AppTheme
+import com.android.messaging.ui.recipientselection.component.row.CONTACT_DISPLAY_NAME
+import com.android.messaging.ui.recipientselection.component.row.HOME_PHONE_DESTINATION
+import com.android.messaging.ui.recipientselection.component.row.HOME_PHONE_NORMALIZED_DESTINATION
 import com.android.messaging.ui.recipientselection.component.row.contactItem
+import com.android.messaging.ui.recipientselection.component.row.homePhoneDestination
+import com.android.messaging.ui.recipientselection.component.row.multiDestinationContactItem
 import com.android.messaging.ui.recipientselection.component.row.recipientRowTestTag
+import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerListItem
 import com.android.messaging.ui.recipientselection.model.picker.RecipientPickerUiState
 import com.android.messaging.ui.recipientselection.model.selection.OnRecipientDestinationAction
 import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionContentUiState
@@ -215,6 +221,28 @@ class RecipientSelectionContentTest {
     }
 
     @Test
+    fun imeAction_withSoleMultiDestinationResultMatchingTheQuery_picksTheMatchedDestination() {
+        val clickedDestinations = clickedDestinationsAfterImeAction(
+            query = HOME_PHONE_DESTINATION,
+            item = multiDestinationContactItem().copy(
+                queryMatchedDestination = homePhoneDestination(),
+            ),
+        )
+
+        assertEquals(listOf(HOME_PHONE_NORMALIZED_DESTINATION), clickedDestinations)
+    }
+
+    @Test
+    fun imeAction_withSoleMultiDestinationResultNotMatchingTheQuery_doesNotPick() {
+        val clickedDestinations = clickedDestinationsAfterImeAction(
+            query = CONTACT_DISPLAY_NAME,
+            item = multiDestinationContactItem(),
+        )
+
+        assertEquals(emptyList<String>(), clickedDestinations)
+    }
+
+    @Test
     fun imeAction_whileResultsLagTheQuery_doesNotPick() {
         val item = contactItem()
         var clickCount = 0
@@ -269,6 +297,34 @@ class RecipientSelectionContentTest {
         )
 
         assertEquals(0, primaryActionClicks)
+    }
+
+    private fun clickedDestinationsAfterImeAction(
+        query: String,
+        item: RecipientPickerListItem,
+    ): List<String> {
+        val clickedDestinations = mutableListOf<String>()
+
+        setContent(
+            uiState = RecipientSelectionContentUiState(
+                picker = RecipientPickerUiState(
+                    query = query,
+                    itemsQuery = query,
+                    items = persistentListOf(item),
+                ),
+            ),
+            onRecipientDestinationClick = { _, destination ->
+                clickedDestinations += destination
+            },
+        )
+
+        composeTestRule
+            .onNodeWithTag(testTag = RECIPIENT_SELECTION_QUERY_FIELD_TEST_TAG)
+            .performImeAction()
+
+        return composeTestRule.runOnIdle {
+            clickedDestinations.toList()
+        }
     }
 
     private fun primaryActionClicksAfterImeAction(

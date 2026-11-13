@@ -439,15 +439,24 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
         contacts: List<ContactUiModel>,
         excludedDestinations: Set<String>,
     ): ImmutableList<RecipientPickerListItem> {
-        val syntheticItem = createSyntheticItemOrNull(
-            query = query,
-            contacts = contacts,
-            excludedDestinations = excludedDestinations,
-        )
+        val candidate = createSyntheticCandidateOrNull(query = query)
 
         val contactItems = contacts
-            .map(RecipientPickerListItem::Contact)
+            .map { contact ->
+                RecipientPickerListItem.Contact(
+                    contact = contact,
+                    queryMatchedDestination = candidate?.matchingDestinationOrNull(
+                        contact = contact,
+                    ),
+                )
+            }
             .toImmutableList()
+
+        val syntheticItem = createSyntheticItemOrNull(
+            candidate = candidate,
+            contactItems = contactItems,
+            excludedDestinations = excludedDestinations,
+        )
 
         return when {
             syntheticItem == null -> contactItems
@@ -459,19 +468,16 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
     }
 
     private fun createSyntheticItemOrNull(
-        query: String,
-        contacts: List<ContactUiModel>,
+        candidate: SyntheticCandidate?,
+        contactItems: List<RecipientPickerListItem.Contact>,
         excludedDestinations: Set<String>,
     ): RecipientPickerListItem.SyntheticPhone? {
-        val candidate = createSyntheticCandidateOrNull(query = query) ?: return null
-
-        val isAlreadyAContactDestination = contacts.any { contact ->
-            contact.destinations.any { destination ->
-                candidate.matchesDestination(destination = destination)
-            }
+        val isAlreadyAContactDestination = contactItems.any { item ->
+            item.queryMatchedDestination != null
         }
 
         return when {
+            candidate == null -> null
             candidate.isExcludedBy(excludedDestinations) -> null
             isAlreadyAContactDestination -> null
             else -> candidate.toListItem(phoneNumberFormatter)
@@ -504,6 +510,14 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
             rawDestination = trimmedDestination,
             normalizedDestination = normalizeDestination(rawDestination = trimmedDestination),
         )
+    }
+
+    private fun SyntheticCandidate.matchingDestinationOrNull(
+        contact: ContactUiModel,
+    ): ContactDestinationUiModel? {
+        return contact.destinations.firstOrNull { destination ->
+            matchesDestination(destination = destination)
+        }
     }
 
     private fun SyntheticCandidate.matchesDestination(
