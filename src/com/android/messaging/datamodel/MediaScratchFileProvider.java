@@ -23,6 +23,7 @@ import android.database.MatrixCursor;
 import android.database.MatrixCursor.RowBuilder;
 import android.net.Uri;
 import android.provider.OpenableColumns;
+import androidx.annotation.NonNull;
 import androidx.collection.SimpleArrayMap;
 import android.text.TextUtils;
 
@@ -110,7 +111,8 @@ public class MediaScratchFileProvider extends FileProvider {
         return filePath;
     }
 
-    private static File getDirectory(final Context context) {
+    @NonNull
+    public static File getDirectory(@NonNull final Context context) {
         return new File(context.getCacheDir(), MEDIA_SCRATCH_SPACE_DIR);
     }
 

@@ -49,6 +49,14 @@ public final class BuglePrefsKeys {
             = -1;
 
     /**
+     * Last time that we deleted orphaned media scratch files (in millis)
+     */
+    public static final String LAST_SCRATCH_FILE_CLEANUP_TIME
+            = "last_scratch_file_cleanup_time_millis";
+    public static final long LAST_SCRATCH_FILE_CLEANUP_TIME_DEFAULT
+            = -1;
+
+    /**
      * Timestamp of the message for which we last did a message notification.
      */
     public static final String LATEST_NOTIFICATION_MESSAGE_TIMESTAMP
