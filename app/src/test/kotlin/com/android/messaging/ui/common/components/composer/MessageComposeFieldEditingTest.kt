@@ -2,8 +2,12 @@ package com.android.messaging.ui.common.components.composer
 
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.os.Looper
+import android.os.SystemClock
 import android.text.style.AlignmentSpan
 import android.text.style.URLSpan
+import android.view.InputDevice
+import android.view.MotionEvent
 import android.view.WindowInsets
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
@@ -14,6 +18,7 @@ import android.view.textservice.SpellCheckerSubtype
 import android.view.textservice.TextInfo
 import android.view.textservice.TextServicesManager
 import android.widget.TextView
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -25,13 +30,16 @@ import io.mockk.every
 import io.mockk.mockk
 import java.util.Locale
 import java.util.concurrent.Executor
+import java.util.concurrent.TimeUnit
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.Implementation
 import org.robolectric.annotation.Implements
@@ -49,6 +57,7 @@ internal class MessageComposeFieldEditingTest {
     private var isFieldEnabled by mutableStateOf(true)
     private var isContentHidden by mutableStateOf(false)
     private var isBarShown by mutableStateOf(true)
+    private var isFieldIconShown by mutableStateOf(false)
     private var onTextChange: (text: String, textRevision: Int) -> Unit = ::takeEditAsOwner
 
     @Test
@@ -153,6 +162,161 @@ internal class MessageComposeFieldEditingTest {
         inputConnection.commitText("\n7", 1)
 
         assertTrue(field.isCursorInView())
+    }
+
+    @Test
+    fun messageComposeField_scrollingBackThroughItsText_leavesTheCursorWhereItWas() {
+        val field = focusedField()
+        field.inputConnection().commitText(TEXT_PAST_THE_LINE_LIMIT, 1)
+        composeTestRule.waitForIdle()
+
+        field.drag(distance = field.height.toFloat())
+        composeTestRule.waitForIdle()
+
+        assertFalse(field.isCursorInView())
+        assertEquals(TEXT_PAST_THE_LINE_LIMIT.length, field.selectionStart)
+        assertEquals(TEXT_PAST_THE_LINE_LIMIT.length, field.selectionEnd)
+    }
+
+    @Test
+    fun messageComposeField_typingAfterScrollingBackThroughItsText_typesAtTheCursorAndShowsIt() {
+        val field = focusedField()
+        val inputConnection = field.inputConnection()
+        inputConnection.commitText(TEXT_PAST_THE_LINE_LIMIT, 1)
+        composeTestRule.waitForIdle()
+        field.drag(distance = field.height.toFloat())
+        composeTestRule.waitForIdle()
+
+        inputConnection.commitText("9", 1)
+        composeTestRule.waitForIdle()
+
+        assertEquals("${TEXT_PAST_THE_LINE_LIMIT}9", field.text.toString())
+        assertTrue(field.isCursorInView())
+    }
+
+    @Test
+    fun messageComposeField_tappingTextAfterScrollingBackThroughIt_movesTheCursorThere() {
+        val field = focusedField()
+        field.inputConnection().commitText(TEXT_PAST_THE_LINE_LIMIT, 1)
+        composeTestRule.waitForIdle()
+        field.drag(distance = field.height.toFloat())
+        composeTestRule.waitForIdle()
+
+        field.tapLine(line = 0)
+        composeTestRule.waitForIdle()
+
+        assertEquals(0, field.layout.getLineForOffset(field.selectionEnd))
+    }
+
+    @Test
+    fun messageComposeField_laidOutAgainAfterScrollingBackThroughItsText_staysScrolledBack() {
+        val field = focusedField()
+        field.inputConnection().commitText(TEXT_PAST_THE_LINE_LIMIT, 1)
+        composeTestRule.waitForIdle()
+        field.drag(distance = field.height.toFloat())
+        composeTestRule.waitForIdle()
+        val scrolledBackY = field.scrollY
+
+        // Hiding the keyboard, for one, lays the field out again.
+        field.requestLayout()
+        composeTestRule.waitForIdle()
+
+        assertEquals(scrolledBackY, field.scrollY)
+        assertFalse(field.isCursorInView())
+    }
+
+    @Test
+    fun messageComposeField_cursorMovedAfterScrollingBackThroughItsText_showsTheCursor() {
+        val field = focusedField()
+        val inputConnection = field.inputConnection()
+        inputConnection.commitText(TEXT_PAST_THE_LINE_LIMIT, 1)
+        composeTestRule.waitForIdle()
+        field.drag(distance = field.height.toFloat())
+        composeTestRule.waitForIdle()
+
+        val beforeLastCharacter = TEXT_PAST_THE_LINE_LIMIT.length - 1
+        inputConnection.setSelection(beforeLastCharacter, beforeLastCharacter)
+        // Robolectric draws no frame when only the cursor moves, so the one a device draws is
+        // drawn here.
+        field.onPreDraw()
+
+        assertTrue(field.isCursorInView())
+    }
+
+    @Test
+    fun messageComposeField_deletingForwardAfterScrollingBackThroughItsText_showsTheCursor() {
+        val field = focusedField()
+        val inputConnection = field.inputConnection()
+        inputConnection.commitText(TEXT_PAST_THE_LINE_LIMIT, 1)
+        val beforeLastCharacter = TEXT_PAST_THE_LINE_LIMIT.length - 1
+        inputConnection.setSelection(beforeLastCharacter, beforeLastCharacter)
+        composeTestRule.waitForIdle()
+        field.drag(distance = field.height.toFloat())
+        composeTestRule.waitForIdle()
+
+        inputConnection.deleteSurroundingText(0, 1)
+        composeTestRule.waitForIdle()
+
+        assertEquals(TEXT_PAST_THE_LINE_LIMIT.dropLast(1), field.text.toString())
+        assertTrue(field.isCursorInView())
+    }
+
+    @Test
+    fun messageComposeField_narrowedAfterScrollingBackThroughItsText_showsTheCursor() {
+        val field = focusedField()
+        field.inputConnection().commitText(TEXT_PAST_THE_LINE_LIMIT, 1)
+        composeTestRule.waitForIdle()
+        field.drag(distance = field.height.toFloat())
+        composeTestRule.waitForIdle()
+
+        isFieldIconShown = true
+        composeTestRule.waitForIdle()
+
+        assertTrue(field.isCursorInView())
+    }
+
+    @Test
+    fun messageComposeField_scrollingBackOnceAtTheStartOfItsText_leavesTheCursorWhereItWas() {
+        val field = focusedField()
+        field.inputConnection().commitText(TEXT_PAST_THE_LINE_LIMIT, 1)
+        composeTestRule.waitForIdle()
+        field.drag(distance = field.height.toFloat())
+        composeTestRule.waitForIdle()
+
+        field.drag(distance = field.height.toFloat())
+        composeTestRule.waitForIdle()
+
+        assertEquals(TEXT_PAST_THE_LINE_LIMIT.length, field.selectionStart)
+        assertEquals(TEXT_PAST_THE_LINE_LIMIT.length, field.selectionEnd)
+    }
+
+    @Test
+    fun messageComposeField_scrollingOnAtTheEndOfItsText_leavesTheCursorWhereItWas() {
+        val field = focusedField()
+        field.inputConnection().commitText(TEXT_PAST_THE_LINE_LIMIT, 1)
+        composeTestRule.waitForIdle()
+
+        field.drag(distance = -field.height.toFloat())
+        composeTestRule.waitForIdle()
+
+        assertEquals(TEXT_PAST_THE_LINE_LIMIT.length, field.selectionStart)
+        assertEquals(TEXT_PAST_THE_LINE_LIMIT.length, field.selectionEnd)
+    }
+
+    @Test
+    fun messageComposeField_laidOutAgainAfterACancelledScrollBack_staysScrolledBack() {
+        val field = focusedField()
+        field.inputConnection().commitText(TEXT_PAST_THE_LINE_LIMIT, 1)
+        composeTestRule.waitForIdle()
+        field.drag(distance = field.height.toFloat(), endAction = MotionEvent.ACTION_CANCEL)
+        composeTestRule.waitForIdle()
+        val scrolledBackY = field.scrollY
+
+        field.requestLayout()
+        composeTestRule.waitForIdle()
+
+        assertEquals(scrolledBackY, field.scrollY)
+        assertFalse(field.isCursorInView())
     }
 
     @Test
@@ -324,6 +488,49 @@ internal class MessageComposeFieldEditingTest {
             layout.getLineBottom(cursorLine) <= visibleBottom
     }
 
+    /**
+     * Drags a finger [distance] pixels down the field, or up for a negative distance, a frame at a
+     * time, then ends the touch with [endAction]. The drag starts long enough after the last touch
+     * not to be taken for a double tap.
+     */
+    private fun TextView.drag(distance: Float, endAction: Int = MotionEvent.ACTION_UP) {
+        shadowOf(Looper.getMainLooper()).idleFor(TOUCH_GAP_MILLIS, TimeUnit.MILLISECONDS)
+        val x = width / 2f
+        val startY = height / 2f
+        val endY = startY + distance
+        val downTime = SystemClock.uptimeMillis()
+
+        dispatchTouch(downTime = downTime, action = MotionEvent.ACTION_DOWN, x = x, y = startY)
+        for (frame in 1..DRAG_FRAME_COUNT) {
+            shadowOf(Looper.getMainLooper()).idleFor(FRAME_MILLIS, TimeUnit.MILLISECONDS)
+            val y = startY + distance * frame / DRAG_FRAME_COUNT
+            dispatchTouch(downTime = downTime, action = MotionEvent.ACTION_MOVE, x = x, y = y)
+        }
+        dispatchTouch(downTime = downTime, action = endAction, x = x, y = endY)
+    }
+
+    /**
+     * Taps the start of [line] where it shows in the field, long enough after the last touch not
+     * to be taken for a double tap.
+     */
+    private fun TextView.tapLine(line: Int) {
+        shadowOf(Looper.getMainLooper()).idleFor(TOUCH_GAP_MILLIS, TimeUnit.MILLISECONDS)
+        val x = totalPaddingLeft.toFloat()
+        val lineCenter = (layout.getLineTop(line) + layout.getLineBottom(line)) / 2f
+        val y = totalPaddingTop - scrollY + lineCenter
+        val downTime = SystemClock.uptimeMillis()
+
+        dispatchTouch(downTime = downTime, action = MotionEvent.ACTION_DOWN, x = x, y = y)
+        dispatchTouch(downTime = downTime, action = MotionEvent.ACTION_UP, x = x, y = y)
+    }
+
+    private fun TextView.dispatchTouch(downTime: Long, action: Int, x: Float, y: Float) {
+        val event = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(), action, x, y, 0)
+        event.source = InputDevice.SOURCE_TOUCHSCREEN
+        dispatchTouchEvent(event)
+        event.recycle()
+    }
+
     /** The platform spell checker that underlines misspelled words, or null if it never started. */
     private fun TextView.spellChecker(): Any? {
         val editor = ReflectionHelpers.getField<Any>(this, "mEditor")
@@ -349,6 +556,8 @@ internal class MessageComposeFieldEditingTest {
     }
 
     private fun showMessageComposeBar() {
+        val fieldIcon: @Composable () -> Unit = {}
+
         composeTestRule.setContent {
             AppTheme {
                 if (isBarShown) {
@@ -362,10 +571,19 @@ internal class MessageComposeFieldEditingTest {
                         fieldStateDescription = null,
                         fieldTestTag = MESSAGE_COMPOSE_FIELD_TEST_TAG,
                         sendAction = {},
+                        trailingContent = fieldIcon.takeIf { isFieldIconShown },
                     )
                 }
             }
         }
+    }
+
+    private companion object {
+        /** Twice as many lines as the field shows, with the cursor after the last one. */
+        const val TEXT_PAST_THE_LINE_LIMIT = "1\n2\n3\n4\n5\n6\n7\n8"
+        const val DRAG_FRAME_COUNT = 10
+        const val FRAME_MILLIS = 16L
+        const val TOUCH_GAP_MILLIS = 1_000L
     }
 }
 
