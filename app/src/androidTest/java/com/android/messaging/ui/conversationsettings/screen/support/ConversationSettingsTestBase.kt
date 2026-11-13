@@ -31,6 +31,7 @@ internal abstract class ConversationSettingsTestBase {
     )
     protected var onNavigateBackCalls = 0
     protected var onCloseAfterArchiveCalls = 0
+    protected var onCloseAfterUnarchiveCalls = 0
     protected val onNavigateToConversationCalls = mutableListOf<ConversationId>()
 
     protected lateinit var screenModel: ConversationSettingsScreenModel
@@ -54,6 +55,7 @@ internal abstract class ConversationSettingsTestBase {
                     effectHandler = effectHandler,
                     onNavigateBack = { onNavigateBackCalls += 1 },
                     onCloseAfterArchive = { onCloseAfterArchiveCalls += 1 },
+                    onCloseAfterUnarchive = { onCloseAfterUnarchiveCalls += 1 },
                     onNavigateToConversation = { onNavigateToConversationCalls += it },
                     screenModel = screenModel,
                 )

@@ -13,4 +13,6 @@ internal sealed interface ConversationSettingsNavEvent {
     ) : ConversationSettingsNavEvent
 
     data object CloseAfterArchive : ConversationSettingsNavEvent
+
+    data object CloseAfterUnarchive : ConversationSettingsNavEvent
 }

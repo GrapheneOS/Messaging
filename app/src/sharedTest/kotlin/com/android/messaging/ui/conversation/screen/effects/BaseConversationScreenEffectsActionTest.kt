@@ -138,6 +138,7 @@ internal abstract class BaseConversationScreenEffectsActionTest {
                                 }
 
                                 ConversationScreenNavEvent.CloseAfterArchive,
+                                ConversationScreenNavEvent.CloseAfterUnarchive,
                                 is ConversationScreenNavEvent.ForwardMessage,
                                 -> Unit
                             }

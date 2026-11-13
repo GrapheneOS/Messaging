@@ -95,6 +95,7 @@ internal fun ConversationScreenRouteEffects(
     conversationId: ConversationId?,
     cancelIncomingNotification: Boolean,
     offersArchiveUndo: Boolean,
+    offersUnarchiveUndo: Boolean,
     pendingLaunchPayload: ConversationPendingLaunchPayload,
     scaffoldUiState: ConversationScreenScaffoldUiState,
     snackbarHostState: SnackbarHostState,
@@ -133,29 +134,24 @@ internal fun ConversationScreenRouteEffects(
         screenModel.dismissMessageSelection()
     }
 
-    CollectEvents(events = screenModel.navigationEvents) { event ->
-        when (event) {
-            ConversationScreenNavEvent.CloseConversation -> onCloseConversation()
-
-            ConversationScreenNavEvent.CloseAfterArchive -> {
-                when {
-                    offersArchiveUndo -> Unit
-                    else -> onCloseConversation()
-                }
-            }
-
-            is ConversationScreenNavEvent.NavigateToMessageDetails -> {
-                onNavigateToMessageDetails(event.messageId)
-            }
-
-            is ConversationScreenNavEvent.ForwardMessage -> {
-                onNavigateToForward(event.messageId)
-            }
-        }
-    }
+    ConversationScreenNavEventEffect(
+        screenModel = screenModel,
+        offersArchiveUndo = offersArchiveUndo,
+        offersUnarchiveUndo = offersUnarchiveUndo,
+        onNavigateToMessageDetails = onNavigateToMessageDetails,
+        onNavigateToForward = onNavigateToForward,
+        onCloseConversation = onCloseConversation,
+    )
 
     if (offersArchiveUndo) {
         ConversationArchiveUndoEffect(
+            screenModel = screenModel,
+            snackbarHostState = snackbarHostState,
+        )
+    }
+
+    if (offersUnarchiveUndo) {
+        ConversationUnarchiveUndoEffect(
             screenModel = screenModel,
             snackbarHostState = snackbarHostState,
         )
@@ -171,6 +167,44 @@ internal fun ConversationScreenRouteEffects(
     )
 }
 
+@Composable
+private fun ConversationScreenNavEventEffect(
+    screenModel: ConversationScreenModel,
+    offersArchiveUndo: Boolean,
+    offersUnarchiveUndo: Boolean,
+    onNavigateToMessageDetails: (messageId: MessageId) -> Unit,
+    onNavigateToForward: (messageId: MessageId) -> Unit,
+    onCloseConversation: () -> Unit,
+) {
+    CollectEvents(events = screenModel.navigationEvents) { event ->
+        when (event) {
+            ConversationScreenNavEvent.CloseConversation -> onCloseConversation()
+
+            ConversationScreenNavEvent.CloseAfterArchive -> {
+                when {
+                    offersArchiveUndo -> Unit
+                    else -> onCloseConversation()
+                }
+            }
+
+            ConversationScreenNavEvent.CloseAfterUnarchive -> {
+                when {
+                    offersUnarchiveUndo -> Unit
+                    else -> onCloseConversation()
+                }
+            }
+
+            is ConversationScreenNavEvent.NavigateToMessageDetails -> {
+                onNavigateToMessageDetails(event.messageId)
+            }
+
+            is ConversationScreenNavEvent.ForwardMessage -> {
+                onNavigateToForward(event.messageId)
+            }
+        }
+    }
+}
+
 // Without an inbox to return to, archiving keeps the conversation open and offers Undo here.
 @Composable
 private fun ConversationArchiveUndoEffect(
@@ -180,18 +214,46 @@ private fun ConversationArchiveUndoEffect(
     val resources = LocalResources.current
 
     CollectEvents(events = screenModel.archivedConversations) { archivedConversation ->
-        // An Indefinite notice (new message) would otherwise hold Undo back.
-        snackbarHostState.currentSnackbarData?.dismiss()
-
-        val undoClicked = snackbarHostState.showActionSnackbar(
+        val undoClicked = snackbarHostState.showUndoSnackbar(
             message = resources.getString(R.string.archived_toast_message, 1),
-            actionLabel = resources.getString(R.string.snack_bar_undo),
+            undoLabel = resources.getString(R.string.snack_bar_undo),
         )
 
         if (undoClicked) {
             screenModel.onUndoArchiveClick(archivedConversation = archivedConversation)
         }
     }
+}
+
+@Composable
+private fun ConversationUnarchiveUndoEffect(
+    screenModel: ConversationScreenModel,
+    snackbarHostState: SnackbarHostState,
+) {
+    val resources = LocalResources.current
+
+    CollectEvents(events = screenModel.unarchivedConversationIds) { conversationId ->
+        val undoClicked = snackbarHostState.showUndoSnackbar(
+            message = resources.getString(R.string.unarchived_toast_message, 1),
+            undoLabel = resources.getString(R.string.snack_bar_undo),
+        )
+
+        if (undoClicked) {
+            screenModel.onUndoUnarchiveClick(conversationId = conversationId)
+        }
+    }
+}
+
+private suspend fun SnackbarHostState.showUndoSnackbar(
+    message: String,
+    undoLabel: String,
+): Boolean {
+    currentSnackbarData?.dismiss()
+
+    return showActionSnackbar(
+        message = message,
+        actionLabel = undoLabel,
+    )
 }
 
 @Composable

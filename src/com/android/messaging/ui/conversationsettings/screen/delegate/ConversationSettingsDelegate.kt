@@ -4,7 +4,6 @@ import androidx.lifecycle.SavedStateHandle
 import com.android.messaging.data.blockedparticipants.repository.BlockedParticipantsRepository
 import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.data.conversation.model.ParticipantId
-import com.android.messaging.data.conversation.repository.ConversationsRepository
 import com.android.messaging.data.conversationsettings.model.SnoozeOption
 import com.android.messaging.data.conversationsettings.repository.ConversationNotificationRepository
 import com.android.messaging.data.conversationsettings.repository.ConversationSettingsRepository
@@ -12,6 +11,7 @@ import com.android.messaging.data.subscription.repository.SubscriptionsRepositor
 import com.android.messaging.datamodel.ParticipantRefresh
 import com.android.messaging.di.core.ApplicationCoroutineScope
 import com.android.messaging.domain.conversation.usecase.action.ArchiveConversation
+import com.android.messaging.domain.conversation.usecase.action.UnarchiveConversation
 import com.android.messaging.domain.conversationsettings.usecase.SetConversationSelfParticipantId
 import com.android.messaging.ui.conversationsettings.common.ConversationSettingsScreenDelegate
 import com.android.messaging.ui.conversationsettings.screen.CONVERSATION_SETTINGS_CONVERSATION_ID_ARG
@@ -46,9 +46,9 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
     private val notificationRepository: ConversationNotificationRepository,
     private val subscriptionsRepository: SubscriptionsRepository,
     private val mapper: ConversationSettingsUiStateMapper,
-    private val conversationsRepository: ConversationsRepository,
     private val blockedParticipantsRepository: BlockedParticipantsRepository,
     private val archiveConversation: ArchiveConversation,
+    private val unarchiveConversation: UnarchiveConversation,
     private val setConversationSelfParticipantId: SetConversationSelfParticipantId,
     @param:ApplicationCoroutineScope private val applicationScope: CoroutineScope,
     savedStateHandle: SavedStateHandle,
@@ -124,7 +124,7 @@ internal class ConversationSettingsDelegateImpl @Inject constructor(
         applicationScope.launch {
             when {
                 archived -> archiveConversation(conversationId = conversationId)
-                else -> conversationsRepository.unarchiveConversation(conversationId)
+                else -> unarchiveConversation(conversationId = conversationId)
             }
         }
     }
