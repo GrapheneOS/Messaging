@@ -1,0 +1,314 @@
+package com.android.messaging.data.conversationlist.matcher
+
+import com.android.messaging.data.conversationlist.model.ConversationListItem
+import com.android.messaging.data.conversationlist.model.ConversationSearchMatch
+import com.android.messaging.data.conversationlist.model.SearchableConversation
+import com.google.i18n.phonenumbers.NumberParseException
+import com.google.i18n.phonenumbers.PhoneNumberUtil
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat
+import java.text.Normalizer
+import javax.inject.Inject
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
+
+internal interface ConversationSearchMatcher {
+
+    fun index(conversations: List<SearchableConversation>): ConversationSearchIndex
+}
+
+internal fun interface ConversationSearchIndex {
+
+    fun match(query: String): ImmutableList<ConversationSearchMatch>
+}
+
+internal class ConversationSearchMatcherImpl @Inject constructor() : ConversationSearchMatcher {
+
+    override fun index(conversations: List<SearchableConversation>): ConversationSearchIndex {
+        // Folding is the costly part, so it runs once per change to the conversations rather
+        // than once per keystroke
+        val entries = conversations.map(::indexConversation)
+
+        return ConversationSearchIndex { query ->
+            matchEntries(
+                entries = entries,
+                query = query,
+            )
+        }
+    }
+
+    private fun indexConversation(conversation: SearchableConversation): IndexedConversation {
+        val names = conversation.participants
+            .flatMap { participant ->
+                listOfNotNull(
+                    participant.fullName,
+                    participant.firstName,
+                    participant.displayDestination,
+                )
+            }
+            .map { name -> foldText(name).text }
+
+        val destinationDigits = conversation.participants
+            .flatMap { participant ->
+                listOfNotNull(
+                    participant.normalizedDestination,
+                    participant.normalizedDestination?.let(::formatNationally),
+                    participant.displayDestination,
+                )
+            }
+            .map { destination -> destination.digits() }
+            .filter(String::isNotEmpty)
+            .distinct()
+
+        return IndexedConversation(
+            item = conversation.item,
+            title = foldText(conversation.item.title.orEmpty()),
+            names = names,
+            destinationDigits = destinationDigits,
+        )
+    }
+
+    private fun formatNationally(destination: String): String? {
+        if (!destination.startsWith(INTERNATIONAL_PREFIX)) {
+            return null
+        }
+
+        val phoneNumberUtil = PhoneNumberUtil.getInstance()
+
+        return try {
+            phoneNumberUtil.format(
+                phoneNumberUtil.parse(destination, null),
+                PhoneNumberFormat.NATIONAL,
+            )
+        } catch (_: NumberParseException) {
+            null
+        }
+    }
+
+    private fun matchEntries(
+        entries: List<IndexedConversation>,
+        query: String,
+    ): ImmutableList<ConversationSearchMatch> {
+        val terms = parseTerms(query)
+
+        if (terms.isEmpty()) {
+            return persistentListOf()
+        }
+
+        return entries
+            .mapNotNull { entry ->
+                matchEntry(
+                    entry = entry,
+                    terms = terms,
+                )
+            }
+            .toImmutableList()
+    }
+
+    private fun parseTerms(query: String): List<QueryTerm> {
+        val words = foldText(query).text
+            .split(WHITESPACE_REGEX)
+            .filter(String::isNotEmpty)
+
+        return when {
+            words.isEmpty() -> emptyList()
+
+            words.all(::isPhoneNumberWord) -> {
+                listOf(QueryTerm.Digits(digits = words.joinToString(separator = "").digits()))
+            }
+
+            else -> {
+                words.map { word ->
+                    when {
+                        isPhoneNumberWord(word) -> QueryTerm.Digits(digits = word.digits())
+                        else -> QueryTerm.Text(text = word)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun isPhoneNumberWord(word: String): Boolean {
+        return word.any(::isAsciiDigit) &&
+            word.all { char -> isAsciiDigit(char) || char in PHONE_NUMBER_SEPARATORS }
+    }
+
+    private fun matchEntry(
+        entry: IndexedConversation,
+        terms: List<QueryTerm>,
+    ): ConversationSearchMatch? {
+        val isMatch = terms.all { term ->
+            when (term) {
+                is QueryTerm.Text -> {
+                    term.text in entry.title.text || entry.names.any { name -> term.text in name }
+                }
+
+                is QueryTerm.Digits -> {
+                    term.digits.length >= MIN_PHONE_QUERY_DIGITS &&
+                        entry.destinationDigits.any { digits -> term.digits in digits }
+                }
+            }
+        }
+
+        if (!isMatch) {
+            return null
+        }
+
+        return ConversationSearchMatch(
+            item = entry.item,
+            titleMatchRanges = entry.title.findSourceRanges(terms),
+        )
+    }
+
+    private fun foldText(text: String): FoldedText {
+        if (text.all { char -> char.code < ASCII_LIMIT }) {
+            return FoldedText(
+                text = text.lowercase(),
+                sourceStarts = null,
+                sourceLength = text.length,
+            )
+        }
+
+        val folded = StringBuilder(text.length)
+        val sourceStarts = ArrayList<Int>(text.length)
+        var index = 0
+
+        // Folding each code point on its own keeps track of where every folded character came
+        // from, so matches can be highlighted in the original text
+        while (index < text.length) {
+            val charCount = Character.charCount(text.codePointAt(index))
+            val foldedCodePoint = Normalizer
+                .normalize(text.substring(index, index + charCount), Normalizer.Form.NFD)
+                .replace(COMBINING_MARKS_REGEX, "")
+                .lowercase()
+
+            foldedCodePoint.forEach { char ->
+                folded.append(char)
+                sourceStarts.add(index)
+            }
+
+            index += charCount
+        }
+
+        return FoldedText(
+            text = folded.toString(),
+            sourceStarts = sourceStarts.toIntArray(),
+            sourceLength = text.length,
+        )
+    }
+
+    private class IndexedConversation(
+        val item: ConversationListItem,
+        val title: FoldedText,
+        val names: List<String>,
+        val destinationDigits: List<String>,
+    )
+
+    private class FoldedText(
+        val text: String,
+        private val sourceStarts: IntArray?,
+        private val sourceLength: Int,
+    ) {
+
+        fun findSourceRanges(terms: List<QueryTerm>): ImmutableList<IntRange> {
+            val ranges = terms
+                .flatMap { term ->
+                    when (term) {
+                        is QueryTerm.Text -> findOccurrences(term = term.text)
+                        is QueryTerm.Digits -> findDigitOccurrences(digits = term.digits)
+                    }
+                }
+                .sortedBy(IntRange::first)
+
+            return mergeRanges(ranges)
+                .map(::toSourceRange)
+                .toImmutableList()
+        }
+
+        private fun findOccurrences(term: String): List<IntRange> {
+            return buildList {
+                var start = text.indexOf(term)
+
+                while (start >= 0) {
+                    add(start until start + term.length)
+                    start = text.indexOf(term, startIndex = start + term.length)
+                }
+            }
+        }
+
+        private fun findDigitOccurrences(digits: String): List<IntRange> {
+            val digitIndices = text.indices.filter { index -> isAsciiDigit(text[index]) }
+            val textDigits = text.digits()
+
+            return buildList {
+                var start = textDigits.indexOf(digits)
+
+                while (start >= 0) {
+                    add(digitIndices[start]..digitIndices[start + digits.length - 1])
+                    start = textDigits.indexOf(digits, startIndex = start + digits.length)
+                }
+            }
+        }
+
+        private fun mergeRanges(sortedRanges: List<IntRange>): List<IntRange> {
+            val merged = ArrayList<IntRange>(sortedRanges.size)
+
+            sortedRanges.forEach { range ->
+                val last = merged.lastOrNull()
+
+                when {
+                    last != null && range.first <= last.last + 1 -> {
+                        merged[merged.lastIndex] = last.first..maxOf(last.last, range.last)
+                    }
+
+                    else -> merged.add(range)
+                }
+            }
+
+            return merged
+        }
+
+        private fun toSourceRange(range: IntRange): IntRange {
+            val starts = sourceStarts ?: return range
+
+            val start = starts[range.first]
+
+            // Ending just before the next folded character's source keeps any combining marks
+            // that trail the last matched character inside the range
+            val end = when {
+                range.last + 1 < starts.size -> starts[range.last + 1] - 1
+                else -> sourceLength - 1
+            }
+
+            return start..maxOf(start, end)
+        }
+    }
+
+    private sealed interface QueryTerm {
+        data class Text(
+            val text: String,
+        ) : QueryTerm
+
+        data class Digits(
+            val digits: String,
+        ) : QueryTerm
+    }
+
+    private companion object {
+        private const val ASCII_LIMIT = 0x80
+        private const val INTERNATIONAL_PREFIX = "+"
+        private const val MIN_PHONE_QUERY_DIGITS = 3
+        private const val PHONE_NUMBER_SEPARATORS = "+-(). "
+
+        private val COMBINING_MARKS_REGEX = Regex("\\p{Mn}+")
+        private val WHITESPACE_REGEX = Regex("\\s+")
+    }
+}
+
+private fun isAsciiDigit(char: Char): Boolean {
+    return char in '0'..'9'
+}
+
+private fun String.digits(): String {
+    return filter(::isAsciiDigit)
+}
