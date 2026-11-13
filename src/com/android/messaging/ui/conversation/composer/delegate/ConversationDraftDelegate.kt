@@ -87,6 +87,8 @@ internal interface ConversationDraftDelegate : ConversationScreenDelegate<Conver
 
     fun tryStartAddingAttachment(): Boolean
 
+    fun resolveRemainingAttachmentSlots(): Int
+
     fun addPendingAttachment(pendingAttachment: ConversationDraftPendingAttachment)
 
     fun removeAttachment(contentUri: String)
@@ -237,6 +239,10 @@ internal class ConversationDraftDelegateImpl @Inject constructor(
         }
 
         return canStartAddingAttachment
+    }
+
+    override fun resolveRemainingAttachmentSlots(): Int {
+        return conversationDraftEditorDelegate.resolveRemainingAttachmentSlots()
     }
 
     override fun addPendingAttachment(pendingAttachment: ConversationDraftPendingAttachment) {

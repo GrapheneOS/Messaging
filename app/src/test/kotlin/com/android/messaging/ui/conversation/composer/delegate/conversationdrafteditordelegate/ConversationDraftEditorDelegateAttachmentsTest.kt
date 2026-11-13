@@ -118,6 +118,34 @@ internal class ConversationDraftEditorDelegateAttachmentsTest :
     }
 
     @Test
+    fun resolveRemainingAttachmentSlots_subtractsAttachedAndPendingAttachmentsFromLimit() {
+        val delegate = loadedDelegate(
+            persistedDraft = draft(attachments = listOf(attachment(contentUri = "content://a/1"))),
+        )
+        delegate.addPendingAttachment(
+            pendingAttachment = pendingAttachment(pendingAttachmentId = "p1"),
+        )
+        givenAttachmentLimit(limit = 5)
+
+        assertEquals(3, delegate.resolveRemainingAttachmentSlots())
+    }
+
+    @Test
+    fun resolveRemainingAttachmentSlots_whenAttachmentsExceedLimit_returnsZero() {
+        val delegate = loadedDelegate(
+            persistedDraft = draft(
+                attachments = listOf(
+                    attachment(contentUri = "content://a/1"),
+                    attachment(contentUri = "content://a/2"),
+                ),
+            ),
+        )
+        givenAttachmentLimit(limit = 1)
+
+        assertEquals(0, delegate.resolveRemainingAttachmentSlots())
+    }
+
+    @Test
     fun addPendingAttachment_addsToVisiblePendingAttachments() {
         val delegate = loadedDelegate()
         val pending = pendingAttachment(pendingAttachmentId = "p1")
