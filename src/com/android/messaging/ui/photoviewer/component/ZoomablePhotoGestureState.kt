@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.unit.IntSize
 
 private const val PHOTO_VIEWER_DOUBLE_TAP_SCALE = 2.5f
@@ -38,18 +39,31 @@ internal class ZoomablePhotoGestureState {
         return scale > 1f + PHOTO_VIEWER_ZOOM_EPSILON
     }
 
-    fun applyTransform(zoomChange: Float, panChange: Offset): Boolean {
+    /**
+     * Applies one step of a pinch or pan gesture. The point under [centroid], in container
+     * coordinates, stays under the fingers while the scale changes. An unspecified [centroid]
+     * zooms around the container center.
+     */
+    fun applyTransform(
+        zoomChange: Float,
+        panChange: Offset,
+        centroid: Offset = Offset.Unspecified,
+    ): Boolean {
         isZoomAnimationEnabled = false
         val nextScale = (scale * zoomChange).coerceIn(
             minimumValue = 1f,
             maximumValue = PHOTO_VIEWER_MAX_SCALE,
         )
 
-        scale = nextScale
         offset = coerceOffset(
-            candidateOffset = offset + panChange,
+            candidateOffset = transformOffset(
+                centroid = centroid,
+                panChange = panChange,
+                nextScale = nextScale,
+            ),
             candidateScale = nextScale,
         )
+        scale = nextScale
 
         return zoomChange != 1f
     }
@@ -92,6 +106,23 @@ internal class ZoomablePhotoGestureState {
                 maximumValue = maxY,
             ),
         )
+    }
+
+    private fun transformOffset(centroid: Offset, panChange: Offset, nextScale: Float): Offset {
+        val containerCenter = Offset(
+            x = containerSize.width / 2f,
+            y = containerSize.height / 2f,
+        )
+        val centroidFromCenter = when {
+            centroid.isSpecified -> centroid - containerCenter
+            else -> Offset.Zero
+        }
+
+        // The content is scaled around the container center and then translated by the offset,
+        // so the content point under the centroid stays put when the distance between it and the
+        // offset grows by the same factor as the scale.
+        return centroidFromCenter + panChange -
+            (centroidFromCenter - offset) * (nextScale / scale)
     }
 
     private fun doubleTapOffset(tapOffset: Offset, nextScale: Float): Offset {
