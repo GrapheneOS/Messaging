@@ -1,7 +1,10 @@
 package com.android.messaging.ui.photoviewer.screen
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -234,10 +237,14 @@ private fun PhotoViewerMediaContent(
             onCloseClick = onCloseClick,
         )
 
-        if (isPageIndicatorVisible) {
+        AnimatedVisibility(
+            visible = isPageIndicatorVisible,
+            modifier = Modifier.align(alignment = Alignment.BottomCenter),
+            enter = fadeIn(),
+            exit = fadeOut(),
+        ) {
             PagerIndicator(
                 modifier = Modifier
-                    .align(alignment = Alignment.BottomCenter)
                     .windowInsetsPadding(bottomBarInsets())
                     .padding(bottom = PhotoViewerPageIndicatorBottomPadding)
                     .testTag(tag = PHOTO_VIEWER_PAGE_INDICATOR_TEST_TAG),

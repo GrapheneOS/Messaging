@@ -8,7 +8,6 @@ import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,6 +42,7 @@ internal fun ZoomablePhotoContainer(
     content: @Composable () -> Unit,
 ) {
     val gestureState = remember(contentKey) { ZoomablePhotoGestureState() }
+    val currentDisplayMode = rememberUpdatedState(newValue = displayMode)
     val currentOnToggleDisplayMode = rememberUpdatedState(newValue = onToggleDisplayMode)
     val currentOnEnterImmersiveMode = rememberUpdatedState(newValue = onEnterImmersiveMode)
     val currentOnCloseClick = rememberUpdatedState(newValue = onCloseClick)
@@ -79,6 +79,7 @@ internal fun ZoomablePhotoContainer(
                 animatedScale = animatedScale,
                 animatedOffset = animatedOffset,
                 dismissDragState = dismissDragState,
+                currentDisplayMode = currentDisplayMode,
                 currentOnToggleDisplayMode = currentOnToggleDisplayMode,
                 currentOnEnterImmersiveMode = currentOnEnterImmersiveMode,
                 currentOnCloseClick = currentOnCloseClick,
@@ -120,6 +121,7 @@ private fun Modifier.photoViewerGestureModifier(
     animatedScale: State<Float>,
     animatedOffset: State<Offset>,
     dismissDragState: PhotoViewerDismissDragState?,
+    currentDisplayMode: State<PhotoViewerDisplayMode>,
     currentOnToggleDisplayMode: State<() -> Unit>,
     currentOnEnterImmersiveMode: State<() -> Unit>,
     currentOnCloseClick: State<() -> Unit>,
@@ -130,6 +132,7 @@ private fun Modifier.photoViewerGestureModifier(
         .photoViewerTapInput(
             contentKey = contentKey,
             gestureState = gestureState,
+            currentDisplayMode = currentDisplayMode,
             currentOnToggleDisplayMode = currentOnToggleDisplayMode,
             currentOnEnterImmersiveMode = currentOnEnterImmersiveMode,
         )
@@ -155,25 +158,6 @@ private fun Modifier.photoViewerGestureModifier(
             translationX = zoomOffset.x
             translationY = zoomOffset.y + dismissDragOffset
         }
-}
-
-private fun Modifier.photoViewerTapInput(
-    contentKey: PhotoViewerContentKey,
-    gestureState: ZoomablePhotoGestureState,
-    currentOnToggleDisplayMode: State<() -> Unit>,
-    currentOnEnterImmersiveMode: State<() -> Unit>,
-): Modifier {
-    return pointerInput(contentKey) {
-        detectTapGestures(
-            onTap = {
-                currentOnToggleDisplayMode.value()
-            },
-            onDoubleTap = { tapOffset ->
-                currentOnEnterImmersiveMode.value()
-                gestureState.applyDoubleTap(tapOffset = tapOffset)
-            },
-        )
-    }
 }
 
 private fun Modifier.photoViewerDismissDragInput(

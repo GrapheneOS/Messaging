@@ -69,7 +69,7 @@ internal class ZoomablePhotoGestureState {
     }
 
     fun resetAll() {
-        isZoomAnimationEnabled = false
+        isZoomAnimationEnabled = true
         scale = 1f
         offset = Offset.Zero
     }
