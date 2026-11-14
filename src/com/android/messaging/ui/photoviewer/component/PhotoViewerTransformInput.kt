@@ -2,6 +2,7 @@ package com.android.messaging.ui.photoviewer.component
 
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculateCentroid
 import androidx.compose.foundation.gestures.calculateCentroidSize
 import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.gestures.calculateZoom
@@ -120,7 +121,13 @@ private fun handlePhotoViewerTransform(
     panChange: Offset,
     currentOnEnterImmersiveMode: State<() -> Unit>,
 ) {
-    if (gestureState.applyTransform(zoomChange = zoomChange, panChange = panChange)) {
+    val isTransformApplied = gestureState.applyTransform(
+        zoomChange = zoomChange,
+        panChange = panChange,
+        centroid = event.calculateCentroid(useCurrent = false),
+    )
+
+    if (isTransformApplied) {
         currentOnEnterImmersiveMode.value()
     }
 
