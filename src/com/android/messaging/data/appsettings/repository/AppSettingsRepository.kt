@@ -4,10 +4,10 @@ import android.content.Context
 import com.android.messaging.R
 import com.android.messaging.data.appsettings.model.AppBooleanPref
 import com.android.messaging.data.appsettings.model.AppSettings
-import com.android.messaging.data.appsettings.model.LinkOpeningMode
 import com.android.messaging.data.appsettings.model.ConversationSwipeOption
 import com.android.messaging.data.appsettings.model.ConversationSwipePref
 import com.android.messaging.data.appsettings.model.ConversationSwipeSettings
+import com.android.messaging.data.appsettings.model.LinkOpeningMode
 import com.android.messaging.data.debug.DebugFeaturesProvider
 import com.android.messaging.di.core.IoDispatcher
 import com.android.messaging.util.BuglePrefs

@@ -42,7 +42,14 @@ internal sealed interface ConversationListItemEvent {
 internal data class ConversationListSwipeSpec(
     val startToEnd: ConversationSwipeKind,
     val endToStart: ConversationSwipeKind,
-)
+) {
+    companion object {
+        val Default = ConversationListSwipeSpec(
+            startToEnd = ConversationSwipeKind.ToggleRead,
+            endToStart = ConversationSwipeKind.Archive,
+        )
+    }
+}
 
 internal fun unsupportedSwipeKind(kind: ConversationSwipeKind): Nothing {
     error("Unsupported swipe kind on this conversation list: $kind")
