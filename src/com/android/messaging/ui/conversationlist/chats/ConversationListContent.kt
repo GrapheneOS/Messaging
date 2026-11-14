@@ -18,16 +18,6 @@ import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.common.components.PrimaryActionButton
 import com.android.messaging.ui.common.components.reorder.OverlayReorderAnimationController
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
-import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.AvatarCallClicked
-import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.AvatarContactClicked
-import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.AvatarInfoClicked
-import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.AvatarMessageClicked
-import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.ConversationClicked
-import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.ConversationLongClicked
-import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.ConversationSwipedToArchive
-import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.ConversationSwipedToDelete
-import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.ConversationSwipedToToggleRead
-import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction.StartChatClicked
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState
 import com.android.messaging.ui.conversationlist.common.item.ConversationSwipeKind
 import com.android.messaging.ui.conversationlist.common.list.ConversationListItemEvent
@@ -71,7 +61,7 @@ internal fun ConversationListContent(
                     actionButton = {
                         PrimaryActionButton(
                             text = stringResource(R.string.conversation_list_start_chat),
-                            onClick = { onAction(StartChatClicked) },
+                            onClick = { onAction(Action.StartChatClicked) },
                             leadingIcon = Icons.AutoMirrored.Rounded.Chat,
                         )
                     },
@@ -98,40 +88,40 @@ internal fun ConversationListContent(
 private fun ConversationListItemEvent.toChatAction(): Action {
     return when (this) {
         is ConversationListItemEvent.Clicked -> {
-            ConversationClicked(conversationId)
+            Action.ConversationClicked(conversationId)
         }
 
         is ConversationListItemEvent.LongClicked -> {
-            ConversationLongClicked(conversationId)
+            Action.ConversationLongClicked(conversationId)
         }
 
         is ConversationListItemEvent.AvatarMessageClicked -> {
-            AvatarMessageClicked(conversationId)
+            Action.AvatarMessageClicked(conversationId)
         }
 
         is ConversationListItemEvent.AvatarCallClicked -> {
-            AvatarCallClicked(destination)
+            Action.AvatarCallClicked(destination)
         }
 
         is ConversationListItemEvent.AvatarContactClicked -> {
-            AvatarContactClicked(item.avatar)
+            Action.AvatarContactClicked(item.avatar)
         }
 
         is ConversationListItemEvent.AvatarInfoClicked -> {
-            AvatarInfoClicked(conversationId)
+            Action.AvatarInfoClicked(conversationId)
         }
 
         is ConversationListItemEvent.Swiped -> when (kind) {
             ConversationSwipeKind.ToggleRead -> {
-                ConversationSwipedToToggleRead(conversationId)
+                Action.ConversationSwipedToToggleRead(conversationId)
             }
 
             ConversationSwipeKind.Archive -> {
-                ConversationSwipedToArchive(conversationId)
+                Action.ConversationSwipedToArchive(conversationId)
             }
 
             ConversationSwipeKind.Delete -> {
-                ConversationSwipedToDelete(conversationId)
+                Action.ConversationSwipedToDelete(conversationId)
             }
 
             ConversationSwipeKind.Unarchive -> unsupportedSwipeKind(kind)

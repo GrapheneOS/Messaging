@@ -1,8 +1,8 @@
 package com.android.messaging.ui.appsettings.general.model
 
 import androidx.compose.runtime.Immutable
-import com.android.messaging.data.appsettings.model.LinkOpeningMode
 import com.android.messaging.data.appsettings.model.ConversationSwipeSettings
+import com.android.messaging.data.appsettings.model.LinkOpeningMode
 
 @Immutable
 internal data class AppSettingsUiState(
