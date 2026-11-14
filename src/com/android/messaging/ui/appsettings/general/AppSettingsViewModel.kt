@@ -53,6 +53,14 @@ internal class AppSettingsViewModel @Inject constructor(
                 appSettingsDelegate.onLinkOpeningModeChanged(action.mode)
             }
 
+            is Action.ConversationSwipeStartToEndOptionChanged -> {
+                appSettingsDelegate.onConversationSwipeStartToEndOptionChanged(action.option)
+            }
+
+            is Action.ConversationSwipeEndToStartOptionChanged -> {
+                appSettingsDelegate.onConversationSwipeEndToStartOptionChanged(action.option)
+            }
+
             is Action.NotificationsClicked -> _effects.trySend(Effect.OpenNotificationSettings)
 
             is Action.DefaultSmsAppClicked -> {

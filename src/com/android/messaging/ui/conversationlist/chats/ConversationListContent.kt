@@ -18,6 +18,7 @@ import com.android.messaging.data.conversation.model.ConversationId
 import com.android.messaging.ui.common.components.PrimaryActionButton
 import com.android.messaging.ui.common.components.reorder.OverlayReorderAnimationController
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState
 import com.android.messaging.ui.conversationlist.common.item.ConversationSwipeKind
 import com.android.messaging.ui.conversationlist.common.list.ConversationListItemEvent
 import com.android.messaging.ui.conversationlist.common.list.ConversationListItems
@@ -30,11 +31,6 @@ import com.android.messaging.ui.conversationlist.model.ConversationListContentUi
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel as Model
 import com.android.messaging.ui.core.MessagingPreviewTheme
 
-private val ChatSwipeSpec = ConversationListSwipeSpec(
-    startToEnd = ConversationSwipeKind.ToggleRead,
-    endToStart = ConversationSwipeKind.Archive,
-)
-
 @Composable
 internal fun ConversationListContent(
     content: ConversationListContentUiState,
@@ -44,6 +40,7 @@ internal fun ConversationListContent(
     isSelectionMode: Boolean,
     fabBottomReserve: Dp,
     pinAnimationController: OverlayReorderAnimationController<Model, ConversationId>?,
+    swipeSpec: ConversationListSwipeSpec,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -80,7 +77,7 @@ internal fun ConversationListContent(
                     scaffoldContentPadding = scaffoldContentPadding,
                     fabBottomReserve = fabBottomReserve,
                     pinAnimationController = pinAnimationController,
-                    swipeSpec = ChatSwipeSpec,
+                    swipeSpec = swipeSpec,
                     onItemEvent = { onAction(it.toChatAction()) },
                 )
             }
@@ -123,6 +120,10 @@ private fun ConversationListItemEvent.toChatAction(): Action {
                 Action.ConversationSwipedToArchive(conversationId)
             }
 
+            ConversationSwipeKind.Delete -> {
+                Action.ConversationSwipedToDelete(conversationId)
+            }
+
             ConversationSwipeKind.Unarchive -> unsupportedSwipeKind(kind)
         }
     }
@@ -140,6 +141,7 @@ private fun ConversationListContentEmptyPreview() {
             isSelectionMode = false,
             fabBottomReserve = 0.dp,
             pinAnimationController = null,
+            swipeSpec = ConversationListUiState().swipeSpec,
         )
     }
 }
@@ -156,6 +158,7 @@ private fun ConversationListContentWaitingForSyncPreview() {
             isSelectionMode = false,
             fabBottomReserve = 0.dp,
             pinAnimationController = null,
+            swipeSpec = ConversationListUiState().swipeSpec,
         )
     }
 }
@@ -174,6 +177,7 @@ private fun ConversationListContentItemsPreview() {
             isSelectionMode = false,
             fabBottomReserve = 0.dp,
             pinAnimationController = null,
+            swipeSpec = ConversationListUiState().swipeSpec,
         )
     }
 }

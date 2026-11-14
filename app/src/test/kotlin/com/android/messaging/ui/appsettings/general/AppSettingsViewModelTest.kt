@@ -1,6 +1,7 @@
 package com.android.messaging.ui.appsettings.general
 
 import app.cash.turbine.test
+import com.android.messaging.data.appsettings.model.ConversationSwipeOption
 import com.android.messaging.data.appsettings.model.LinkOpeningMode
 import com.android.messaging.testutil.MainDispatcherRule
 import com.android.messaging.ui.appsettings.general.delegate.AppSettingsDelegate
@@ -119,6 +120,46 @@ class AppSettingsViewModelTest {
 
             verify(exactly = 1) {
                 delegate.onLinkOpeningModeChanged(mode = LinkOpeningMode.DoNotOpen)
+            }
+        }
+    }
+
+    @Test
+    fun onConversationSwipeStartToEndOptionChanged_delegatesToAppSettings() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val delegate = mockDelegate()
+            val viewModel = createViewModel(delegate = delegate)
+
+            viewModel.onAction(
+                Action.ConversationSwipeStartToEndOptionChanged(
+                    option = ConversationSwipeOption.Delete,
+                ),
+            )
+
+            verify(exactly = 1) {
+                delegate.onConversationSwipeStartToEndOptionChanged(
+                    option = ConversationSwipeOption.Delete,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun onConversationSwipeEndToStartOptionChanged_delegatesToAppSettings() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val delegate = mockDelegate()
+            val viewModel = createViewModel(delegate = delegate)
+
+            viewModel.onAction(
+                Action.ConversationSwipeEndToStartOptionChanged(
+                    option = ConversationSwipeOption.ToggleRead,
+                ),
+            )
+
+            verify(exactly = 1) {
+                delegate.onConversationSwipeEndToStartOptionChanged(
+                    option = ConversationSwipeOption.ToggleRead,
+                )
             }
         }
     }

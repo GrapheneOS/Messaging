@@ -13,11 +13,12 @@ import com.android.messaging.ui.common.components.SnoozeChatDialog
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.common.dialog.ConversationListDeleteDialog
 import com.android.messaging.ui.core.MessagingPreviewTheme
+import kotlinx.collections.immutable.ImmutableList
 
 @Composable
 internal fun ConversationListDialogs(
     selectedCount: Int,
-    isDeleteVisible: Boolean,
+    deleteConversationIds: ImmutableList<ConversationId>?,
     blockConversationId: ConversationId?,
     blockDestination: String?,
     isSnoozeVisible: Boolean,
@@ -30,17 +31,15 @@ internal fun ConversationListDialogs(
 
     DismissSelectionDialogsWithoutSelection(
         selectedCount = selectedCount,
-        isDeleteVisible = isDeleteVisible,
         isSnoozeVisible = isSnoozeVisible,
-        onDismissDelete = onDismissDelete,
         onDismissSnooze = onDismissSnooze,
     )
 
-    if (isDeleteVisible && hasSelectedConversations) {
+    if (deleteConversationIds != null) {
         ConversationListDeleteDialog(
-            selectedCount = selectedCount,
+            selectedCount = deleteConversationIds.size,
             onConfirm = {
-                onAction(Action.DeleteConfirmed)
+                onAction(Action.DeleteConfirmed(deleteConversationIds))
                 onDismissDelete()
             },
             onDismiss = onDismissDelete,
@@ -78,22 +77,15 @@ internal fun ConversationListDialogs(
 @Composable
 private fun DismissSelectionDialogsWithoutSelection(
     selectedCount: Int,
-    isDeleteVisible: Boolean,
     isSnoozeVisible: Boolean,
-    onDismissDelete: () -> Unit,
     onDismissSnooze: () -> Unit,
 ) {
     LaunchedEffect(
         selectedCount,
-        isDeleteVisible,
         isSnoozeVisible,
     ) {
         if (selectedCount > 0) {
             return@LaunchedEffect
-        }
-
-        if (isDeleteVisible) {
-            onDismissDelete()
         }
 
         if (isSnoozeVisible) {

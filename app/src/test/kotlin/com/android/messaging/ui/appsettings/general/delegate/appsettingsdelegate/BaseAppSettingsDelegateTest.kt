@@ -58,6 +58,12 @@ internal abstract class BaseAppSettingsDelegateTest {
             )
         } just Runs
         coEvery { repository.setLinkOpeningMode(mode = any()) } just Runs
+        coEvery {
+            repository.setConversationSwipeOption(
+                pref = any(),
+                option = any(),
+            )
+        } just Runs
     }
 
     protected fun createDelegate(): AppSettingsDelegateImpl {

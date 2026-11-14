@@ -1,6 +1,8 @@
 package com.android.messaging.ui.appsettings.general.delegate.appsettingsdelegate
 
 import com.android.messaging.data.appsettings.model.AppBooleanPref
+import com.android.messaging.data.appsettings.model.ConversationSwipeOption
+import com.android.messaging.data.appsettings.model.ConversationSwipePref
 import com.android.messaging.data.appsettings.model.LinkOpeningMode
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
@@ -108,6 +110,97 @@ internal class AppSettingsDelegatePreferenceTest : BaseAppSettingsDelegateTest()
                 repository.getAppSettings()
             }
             assertEquals(reloadedState, delegate.state.value)
+        }
+    }
+
+    @Test
+    fun onConversationSwipeStartToEndOptionChanged_writesStartToEndPref() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher,
+        ) {
+            val delegate = createBoundDelegate()
+
+            delegate.onConversationSwipeStartToEndOptionChanged(
+                option = ConversationSwipeOption.Delete,
+            )
+            runCurrent()
+
+            coVerify(exactly = 1) {
+                repository.setConversationSwipeOption(
+                    pref = ConversationSwipePref.START_TO_END,
+                    option = ConversationSwipeOption.Delete,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun onConversationSwipeEndToStartOptionChanged_writesEndToStartPref() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher,
+        ) {
+            val delegate = createBoundDelegate()
+
+            delegate.onConversationSwipeEndToStartOptionChanged(
+                option = ConversationSwipeOption.ToggleRead,
+            )
+            runCurrent()
+
+            coVerify(exactly = 1) {
+                repository.setConversationSwipeOption(
+                    pref = ConversationSwipePref.END_TO_START,
+                    option = ConversationSwipeOption.ToggleRead,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun conversationSwipeOptionChange_writesPrefThenRefreshesState() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher,
+        ) {
+            givenSecondLoadProducesReloadedState()
+            val delegate = createBoundDelegate()
+
+            delegate.onConversationSwipeEndToStartOptionChanged(
+                option = ConversationSwipeOption.Delete,
+            )
+            runCurrent()
+
+            coVerifyOrder {
+                repository.setConversationSwipeOption(
+                    pref = ConversationSwipePref.END_TO_START,
+                    option = ConversationSwipeOption.Delete,
+                )
+                repository.getAppSettings()
+            }
+            assertEquals(reloadedState, delegate.state.value)
+        }
+    }
+
+    @Test
+    fun conversationSwipeOptionChange_beforeBind_doesNotWriteOrLoad() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher,
+        ) {
+            val delegate = createDelegate()
+
+            delegate.onConversationSwipeStartToEndOptionChanged(
+                option = ConversationSwipeOption.Archive,
+            )
+            delegate.onConversationSwipeEndToStartOptionChanged(
+                option = ConversationSwipeOption.Archive,
+            )
+            runCurrent()
+
+            coVerify(exactly = 0) {
+                repository.setConversationSwipeOption(
+                    pref = any(),
+                    option = any(),
+                )
+            }
+            coVerify(exactly = 0) { repository.getAppSettings() }
         }
     }
 
