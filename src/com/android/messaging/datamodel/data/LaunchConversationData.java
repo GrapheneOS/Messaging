@@ -51,12 +51,21 @@ public class LaunchConversationData extends BindableData implements
 
     public void getOrCreateConversation(final BindingBase<LaunchConversationData> binding,
             final String[] recipients) {
+        getOrCreateConversation(binding, recipients, ParticipantData.DEFAULT_SELF_SUB_ID);
+    }
+
+    /**
+     * Gets or creates the conversation with {@code recipients}, sending from {@code selfSubId}
+     * when it is an active subscription.
+     */
+    public void getOrCreateConversation(final BindingBase<LaunchConversationData> binding,
+            final String[] recipients, final int selfSubId) {
         final String bindingId = binding.getBindingId();
 
         // Start a new conversation from the list of contacts.
         if (isBound(bindingId) && mMonitor == null) {
             mMonitor = GetOrCreateConversationAction.getOrCreateConversation(recipients,
-                    bindingId, this);
+                    selfSubId, bindingId, this);
         }
     }
 
