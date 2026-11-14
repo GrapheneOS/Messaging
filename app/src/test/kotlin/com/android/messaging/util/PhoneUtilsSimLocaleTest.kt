@@ -90,6 +90,39 @@ class PhoneUtilsSimLocaleTest {
         assertEquals("+37254810029", phoneUtils.getCanonicalBySimLocale("54810029"))
     }
 
+    @Test
+    fun formatNormalizedDestination_whenTheSimCountryCanReadTheNumber_usesTheSimCountry() {
+        assertEquals(
+            "+12015550123",
+            PhoneUtils(SUB_ID).formatNormalizedDestinationUsingSimCountry("2015550123"),
+        )
+    }
+
+    @Test
+    fun formatNormalizedDestination_whenOnlyAnotherCountryCanReadTheNumber_usesThatCountry() {
+        assertEquals(
+            "the suggestion must show the number the composer will send to",
+            "+37254810027",
+            PhoneUtils(SUB_ID).formatNormalizedDestinationUsingSimCountry("54810027"),
+        )
+    }
+
+    @Test
+    fun formatNormalizedDestination_whenNoCountryCanReadTheNumber_keepsItAsTyped() {
+        assertEquals(
+            "a number no country can read must not get the SIM country's code made up for it",
+            "06312345678",
+            PhoneUtils(SUB_ID).formatNormalizedDestinationUsingSimCountry("06312345678"),
+        )
+    }
+
+    @Test
+    fun formatNormalizedDestination_withAnIncompleteInternationalNumber_keepsItsCountryCode() {
+        val formatted = PhoneUtils(SUB_ID).formatNormalizedDestinationUsingSimCountry("+3725481")
+
+        assertEquals("+372 5481", formatted)
+    }
+
     private fun givenSubscriptions(vararg countriesBySubId: Pair<Int, String>) {
         shadowOf(context.getSystemService(SubscriptionManager::class.java))
             .setActiveSubscriptionInfoList(
