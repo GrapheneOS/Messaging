@@ -126,9 +126,19 @@ public class OsUtil {
         return missingArray;
     }
 
-    private static String[] sRequiredPermissions = new String[] {
+    private static final String READ_CELL_BROADCASTS = "android.permission.READ_CELL_BROADCASTS";
+
+    private static final String[] sRequiredPermissions = new String[] {
         // Required to read existing SMS threads
         Manifest.permission.READ_SMS,
+        // The rest of the SMS role's permissions. A permission request grants only what it asks
+        // for, so after the SMS group is revoked, asking for READ_SMS alone leaves incoming
+        // messages undelivered and the app no longer counted as the default SMS app.
+        Manifest.permission.RECEIVE_SMS,
+        Manifest.permission.RECEIVE_MMS,
+        Manifest.permission.RECEIVE_WAP_PUSH,
+        Manifest.permission.SEND_SMS,
+        READ_CELL_BROADCASTS,
         // Required for knowing the phone number, number of SIMs, etc.
         Manifest.permission.READ_PHONE_STATE,
         // This is not strictly required, but simplifies the contact picker scenarios
