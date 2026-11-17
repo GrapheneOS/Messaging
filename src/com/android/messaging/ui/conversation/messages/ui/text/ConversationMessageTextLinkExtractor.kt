@@ -2,6 +2,8 @@ package com.android.messaging.ui.conversation.messages.ui.text
 
 import android.content.Context
 import android.net.Uri
+import android.text.util.Linkify
+import android.util.Patterns
 import android.view.textclassifier.TextClassificationManager
 import android.view.textclassifier.TextClassifier
 import android.view.textclassifier.TextLinks
@@ -40,6 +42,53 @@ internal fun extractConversationTextLinks(
         }
         .sortedBy { it.start }
         .toList()
+}
+
+/**
+ * Finds links where no text classifier runs, in previews and screenshots: URLs, emails and phone
+ * numbers by the platform's patterns, with Linkify's five-digit minimum for phone numbers, but no
+ * addresses. Where matches overlap, the first one wins.
+ */
+internal fun extractPreviewConversationTextLinks(text: String): List<ConversationTextLink> {
+    return PREVIEW_LINK_PATTERNS
+        .flatMap { (entityType, pattern) ->
+            pattern.toRegex()
+                .findAll(text)
+                .filter { match ->
+                    match.isPreviewLinkMatch(entityType = entityType, text = text)
+                }
+                .mapNotNull { match ->
+                    resolveConversationTextLinkUrl(
+                        entityType = entityType,
+                        rawLinkText = match.value,
+                    )?.let { url ->
+                        ConversationTextLink(
+                            start = match.range.first,
+                            end = match.range.last + 1,
+                            url = url,
+                            kind = conversationTextLinkKind(entityType = entityType),
+                            originalText = match.value,
+                        )
+                    }
+                }
+        }
+        .sortedBy { it.start }
+        .fold(emptyList()) { links, link ->
+            when {
+                links.isNotEmpty() && links.last().end > link.start -> links
+                else -> links + link
+            }
+        }
+}
+
+private fun MatchResult.isPreviewLinkMatch(entityType: String, text: String): Boolean {
+    return when (entityType) {
+        TextClassifier.TYPE_PHONE -> {
+            Linkify.sPhoneNumberMatchFilter.acceptMatch(text, range.first, range.last + 1)
+        }
+
+        else -> true
+    }
 }
 
 private fun TextLinks.TextLink.toConversationTextLink(
@@ -139,3 +188,9 @@ private val CONVERSATION_TEXT_LINK_ENTITY_CONFIG = TextClassifier.EntityConfig.B
     )
     .includeTypesFromTextClassifier(false)
     .build()
+
+private val PREVIEW_LINK_PATTERNS = listOf(
+    TextClassifier.TYPE_URL to Patterns.WEB_URL,
+    TextClassifier.TYPE_EMAIL to Patterns.EMAIL_ADDRESS,
+    TextClassifier.TYPE_PHONE to Patterns.PHONE,
+)

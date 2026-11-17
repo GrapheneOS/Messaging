@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.TextStyle
@@ -85,16 +86,26 @@ internal fun ConversationMessageText(
             }
         }
     }
+    // Previews have no text classifier and are captured before background work lands, so they
+    // find links synchronously.
+    val previewLinks = when {
+        LocalInspectionMode.current -> remember(text) {
+            extractPreviewConversationTextLinks(text = text)
+        }
+
+        else -> null
+    }
     LaunchedEffect(applicationContext, text, state) {
-        val links = withContext(Dispatchers.IO) {
+        val links = previewLinks ?: withContext(Dispatchers.IO) {
             extractConversationTextLinks(context = applicationContext, text = text)
         }
         state.updateLinks(detectedLinks = links)
     }
-    val textWithLinks = remember(text, state.links, linksEnabled, linkStyle, linkClick) {
+    val links = previewLinks ?: state.links
+    val textWithLinks = remember(text, links, linksEnabled, linkStyle, linkClick) {
         buildConversationLinkedAnnotatedString(
             text = text,
-            links = state.links,
+            links = links,
             linksEnabled = linksEnabled,
             linkStyle = linkStyle,
             onExternalUriClick = linkClick,

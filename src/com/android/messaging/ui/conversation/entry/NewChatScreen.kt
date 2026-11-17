@@ -119,7 +119,7 @@ internal fun NewChatScreen(
 }
 
 @Composable
-private fun NewChatScreenContent(
+internal fun NewChatScreenContent(
     modifier: Modifier = Modifier,
     autoFocusQueryKey: Any = Unit,
     isCreatingGroup: Boolean = false,

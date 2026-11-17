@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -62,6 +63,8 @@ internal fun MediaThumbnail(
         contentType = contentType,
         useBitmapLoader = useBitmapLoader,
     )
+    // Previews and screenshot tests draw a single frame, so a fade-in would leave the thumbnail invisible.
+    val shouldCrossfade = crossfadeEnabled && !LocalInspectionMode.current
 
     when {
         shouldUseCoilImageLoader -> {
@@ -71,7 +74,7 @@ internal fun MediaThumbnail(
                 contentUri = contentUriAsUri,
                 size = normalizedSize,
                 contentScale = contentScale,
-                crossfadeEnabled = crossfadeEnabled,
+                crossfadeEnabled = shouldCrossfade,
             )
         }
 
@@ -82,7 +85,7 @@ internal fun MediaThumbnail(
                 contentType = contentType,
                 size = normalizedSize,
                 contentScale = contentScale,
-                crossfadeEnabled = crossfadeEnabled,
+                crossfadeEnabled = shouldCrossfade,
                 backgroundColor = resolvedBackgroundColor,
                 softenBitmap = softenBitmap,
                 useBitmapLoader = useBitmapLoader,
