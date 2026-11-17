@@ -148,7 +148,7 @@ internal fun ConversationComposeAttachmentMenu(
 }
 
 @Composable
-private fun ConversationComposeAttachmentMenuContent(
+internal fun ConversationComposeAttachmentMenuContent(
     isAudioRecordActionEnabled: Boolean,
     onMediaPickerClick: () -> Unit,
     onAudioAttachClick: () -> Unit,

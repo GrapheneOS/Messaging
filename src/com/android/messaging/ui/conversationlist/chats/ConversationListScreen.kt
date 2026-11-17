@@ -288,7 +288,7 @@ private fun preparePinAnimation(
 }
 
 @Composable
-private fun ConversationListScaffold(
+internal fun ConversationListScaffold(
     uiState: State,
     listState: LazyListState,
     snackbarHostState: SnackbarHostState,

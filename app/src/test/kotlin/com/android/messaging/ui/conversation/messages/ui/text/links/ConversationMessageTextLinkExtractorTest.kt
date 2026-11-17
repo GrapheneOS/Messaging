@@ -8,6 +8,7 @@ import android.view.textclassifier.TextLinks
 import com.android.messaging.ui.conversation.messages.model.text.ConversationTextLink
 import com.android.messaging.ui.conversation.messages.model.text.ConversationTextLinkKind
 import com.android.messaging.ui.conversation.messages.ui.text.extractConversationTextLinks
+import com.android.messaging.ui.conversation.messages.ui.text.extractPreviewConversationTextLinks
 import io.mockk.CapturingSlot
 import io.mockk.every
 import io.mockk.mockk
@@ -205,6 +206,64 @@ internal class ConversationMessageTextLinkExtractorTest {
         )
 
         assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun extractPreviewConversationTextLinks_findsUrlsEmailsAndPhonesWithoutOverlaps() {
+        val text = "Mail a@example.com, call +31 6 2222 3333 or watch youtu.be/dQw4w9WgXcQ"
+        val emailRange = text.rangeOf("a@example.com")
+        val phoneRange = text.rangeOf("+31 6 2222 3333")
+        val urlRange = text.rangeOf("youtu.be/dQw4w9WgXcQ")
+
+        val result = extractPreviewConversationTextLinks(text = text)
+
+        assertEquals(
+            listOf(
+                ConversationTextLink(
+                    start = emailRange.first,
+                    end = emailRange.last + 1,
+                    url = "mailto:${Uri.encode("a@example.com")}",
+                    kind = ConversationTextLinkKind.Email,
+                    originalText = "a@example.com",
+                ),
+                ConversationTextLink(
+                    start = phoneRange.first,
+                    end = phoneRange.last + 1,
+                    url = "tel:${Uri.encode("+31 6 2222 3333")}",
+                    kind = ConversationTextLinkKind.Phone,
+                    originalText = "+31 6 2222 3333",
+                ),
+                ConversationTextLink(
+                    start = urlRange.first,
+                    end = urlRange.last + 1,
+                    url = "http://youtu.be/dQw4w9WgXcQ",
+                    kind = ConversationTextLinkKind.Web,
+                    originalText = "youtu.be/dQw4w9WgXcQ",
+                ),
+            ),
+            result,
+        )
+    }
+
+    @Test
+    fun extractPreviewConversationTextLinks_skipsPhoneMatchesWithFewerThanFiveDigits() {
+        val text = "Meet at 1600 Amphitheatre Parkway at 10.30 or call 55512."
+        val phoneRange = text.rangeOf("55512")
+
+        val result = extractPreviewConversationTextLinks(text = text)
+
+        assertEquals(
+            listOf(
+                ConversationTextLink(
+                    start = phoneRange.first,
+                    end = phoneRange.last + 1,
+                    url = "tel:55512",
+                    kind = ConversationTextLinkKind.Phone,
+                    originalText = "55512",
+                ),
+            ),
+            result,
+        )
     }
 
     private fun createContextWithClassifier(
