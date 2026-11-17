@@ -1,3 +1,5 @@
+import com.android.compose.screenshot.tasks.PreviewScreenshotUpdateTask
+import com.android.compose.screenshot.tasks.PreviewScreenshotValidationTask
 import dev.detekt.gradle.Detekt
 import java.io.FileInputStream
 import java.util.Properties
@@ -5,6 +7,7 @@ import java.util.Properties
 plugins {
     id("messaging.licenses")
     alias(libs.plugins.android.application)
+    alias(libs.plugins.compose.screenshot)
     alias(libs.plugins.detekt)
     alias(libs.plugins.hilt)
     jacoco
@@ -72,6 +75,8 @@ android {
             version = "3.22.1"
         }
     }
+
+    experimentalProperties["android.experimental.enableScreenshotTest"] = true
 
     buildFeatures {
         buildConfig = true
@@ -183,6 +188,34 @@ android {
     }
 }
 
+// Layoutlib rejects the mnc00 carrier configs (aapt2 stores MNC 00 as 65535), so screenshot
+// tests render with a copy of the resource APK that drops every carrier config (mcc001 is the
+// test network).
+val screenshotResourceApk = tasks.register<Exec>("stripDebugScreenshotTestCarrierConfigs") {
+    val apk = files(tasks.named("packageDebugScreenshotTestForScreenshotTest")).asFileTree
+        .matching { include("**/*.ap_") }
+    val output = layout.buildDirectory
+        .file("intermediates/screenshot_resources/debug/resources.ap_")
+    inputs.files(apk)
+    outputs.file(output)
+    executable = androidComponents.sdkComponents.sdkDirectory.get()
+        .file("build-tools/${android.buildToolsVersion}/aapt2").asFile.path
+    argumentProviders.add {
+        listOf("optimize", "-c", "mcc001", "-o", output.get().asFile.path, apk.singleFile.path)
+    }
+}
+
+// Registered from onVariants so it runs after the screenshot plugin points the tasks at the full APK.
+androidComponents.onVariants(androidComponents.selector().withBuildType("debug")) {
+    val apkFile = layout.file(screenshotResourceApk.map { it.outputs.files.singleFile })
+    tasks.named<PreviewScreenshotUpdateTask>("updateDebugScreenshotTest") {
+        testEngineInput.resourceApkFile.set(apkFile)
+    }
+    tasks.named<PreviewScreenshotValidationTask>("validateDebugScreenshotTest") {
+        testEngineInput.resourceApkFile.set(apkFile)
+    }
+}
+
 dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.camera.camera2)
@@ -232,6 +265,9 @@ dependencies {
 
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+
+    screenshotTestImplementation(libs.androidx.compose.ui.tooling)
+    screenshotTestImplementation(libs.screenshot.validation.api)
 
     testImplementation(platform(libs.androidx.compose.bom))
     testImplementation(libs.androidx.compose.ui.test.junit4)

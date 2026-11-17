@@ -26,6 +26,7 @@ lifecycle = "2.11.0"
 material3-adaptive = "1.3.0"
 navigation3 = "1.2.0"
 photo-picker = "1.0.0-alpha02"
+screenshot = "0.0.1-alpha16"
 
 
 junit4 = "4.13.2"
@@ -85,6 +86,8 @@ kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutine
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
 
+screenshot-validation-api = { module = "com.android.tools.screenshot:screenshot-validation-api", version.ref = "screenshot" }
+
 libphonenumber = { module = "com.googlecode.libphonenumber:libphonenumber", version.ref = "libphonenumber" }
 
 junit4 = { module = "junit:junit", version.ref = "junit4" }
@@ -105,6 +108,7 @@ androidx-test-runner = { module = "androidx.test:runner", version.ref = "android
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
+compose-screenshot = { id = "com.android.compose.screenshot", version.ref = "screenshot" }
 
 detekt = { id = "dev.detekt", version.ref = "detekt" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
