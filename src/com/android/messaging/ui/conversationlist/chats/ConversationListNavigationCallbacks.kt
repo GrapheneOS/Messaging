@@ -3,6 +3,7 @@ package com.android.messaging.ui.conversationlist.chats
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import com.android.messaging.data.conversation.model.ConversationId
+import com.android.messaging.data.conversation.model.MessageId
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListNavEvent as NavEvent
 import com.android.messaging.ui.core.CollectEvents
 import kotlinx.coroutines.flow.Flow
@@ -10,6 +11,7 @@ import kotlinx.coroutines.flow.Flow
 @Stable
 internal class ConversationListNavigationCallbacks(
     val onNavigateToConversation: (ConversationId) -> Unit,
+    val onNavigateToMessage: (ConversationId, MessageId) -> Unit,
     val onNavigateToNewChat: () -> Unit,
     val onNavigateToConversationSettings: (ConversationId) -> Unit,
     val onCloseConversation: (ConversationId) -> Unit,
@@ -33,6 +35,10 @@ internal fun ConversationListNavEvents(
 
                 is NavEvent.OpenConversation -> {
                     onNavigateToConversation(event.conversationId)
+                }
+
+                is NavEvent.OpenMessage -> {
+                    onNavigateToMessage(event.conversationId, event.messageId)
                 }
 
                 is NavEvent.OpenConversationSettings -> {
