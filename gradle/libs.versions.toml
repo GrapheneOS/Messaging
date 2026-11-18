@@ -1,5 +1,5 @@
 [versions]
-agp = "9.5.0"
+agp = "9.5.1"
 detekt = "2.0.0-alpha.6"
 hilt = "2.60.1"
 jacoco = "0.8.16"
