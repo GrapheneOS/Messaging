@@ -8,6 +8,7 @@ import com.android.messaging.data.contact.repository.ContactsRepository
 import com.android.messaging.data.phone.formatter.PhoneNumberFormatter
 import com.android.messaging.di.core.DefaultDispatcher
 import com.android.messaging.domain.contacts.usecase.IsReadContactsPermissionGranted
+import com.android.messaging.sms.MmsSmsUtils
 import com.android.messaging.ui.contact.mapper.ContactUiModelMapper
 import com.android.messaging.ui.contact.model.ContactDestinationUiModel
 import com.android.messaging.ui.contact.model.ContactUiModel
@@ -439,15 +440,24 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
         contacts: List<ContactUiModel>,
         excludedDestinations: Set<String>,
     ): ImmutableList<RecipientPickerListItem> {
-        val syntheticItem = createSyntheticItemOrNull(
-            query = query,
-            contacts = contacts,
-            excludedDestinations = excludedDestinations,
-        )
+        val candidate = createSyntheticCandidateOrNull(query = query)
 
         val contactItems = contacts
-            .map(RecipientPickerListItem::Contact)
+            .map { contact ->
+                RecipientPickerListItem.Contact(
+                    contact = contact,
+                    queryMatchedDestination = candidate?.matchingDestinationOrNull(
+                        contact = contact,
+                    ),
+                )
+            }
             .toImmutableList()
+
+        val syntheticItem = createSyntheticItemOrNull(
+            candidate = candidate,
+            contactItems = contactItems,
+            excludedDestinations = excludedDestinations,
+        )
 
         return when {
             syntheticItem == null -> contactItems
@@ -459,19 +469,16 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
     }
 
     private fun createSyntheticItemOrNull(
-        query: String,
-        contacts: List<ContactUiModel>,
+        candidate: SyntheticCandidate?,
+        contactItems: List<RecipientPickerListItem.Contact>,
         excludedDestinations: Set<String>,
     ): RecipientPickerListItem.SyntheticPhone? {
-        val candidate = createSyntheticCandidateOrNull(query = query) ?: return null
-
-        val isAlreadyAContactDestination = contacts.any { contact ->
-            contact.destinations.any { destination ->
-                candidate.matchesDestination(destination = destination)
-            }
+        val isAlreadyAContactDestination = contactItems.any { item ->
+            item.queryMatchedDestination != null
         }
 
         return when {
+            candidate == null -> null
             candidate.isExcludedBy(excludedDestinations) -> null
             isAlreadyAContactDestination -> null
             else -> candidate.toListItem(phoneNumberFormatter)
@@ -487,13 +494,27 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
             trimmedQuery.isEmpty() -> null
             !PhoneUtils.isValidSmsMmsDestination(trimmedQuery) -> null
             else -> {
+                val destinationIdentity = createDestinationIdentity(rawDestination = trimmedQuery)
+
                 SyntheticCandidate(
                     rawQuery = trimmedQuery,
-                    destinationIdentity = createDestinationIdentity(
-                        rawDestination = trimmedQuery,
+                    destinationIdentity = destinationIdentity,
+                    unresolvedNumberCountry = unresolvedNumberCountryOrNull(
+                        destinationIdentity = destinationIdentity,
                     ),
                 )
             }
+        }
+    }
+
+    private fun unresolvedNumberCountryOrNull(destinationIdentity: DestinationIdentity): String? {
+        val isResolvedNumber = destinationIdentity.normalizedDestination
+            .startsWith(INTERNATIONAL_NUMBER_PREFIX)
+
+        return when {
+            MmsSmsUtils.isEmailAddress(destinationIdentity.rawDestination) -> null
+            isResolvedNumber -> null
+            else -> phoneNumberFormatter.countryCandidates().firstOrNull()
         }
     }
 
@@ -506,12 +527,34 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
         )
     }
 
+    private fun SyntheticCandidate.matchingDestinationOrNull(
+        contact: ContactUiModel,
+    ): ContactDestinationUiModel? {
+        return contact.destinations.firstOrNull { destination ->
+            matchesDestination(destination = destination)
+        } ?: contact.destinations.firstOrNull { destination ->
+            isSameUnresolvedNumber(destination = destination)
+        }
+    }
+
     private fun SyntheticCandidate.matchesDestination(
         destination: ContactDestinationUiModel,
     ): Boolean {
         return destinationIdentity.matches(
             other = createDestinationIdentity(rawDestination = destination.value),
         )
+    }
+
+    private fun SyntheticCandidate.isSameUnresolvedNumber(
+        destination: ContactDestinationUiModel,
+    ): Boolean {
+        return unresolvedNumberCountry != null &&
+            destination.kind == ContactDestinationUiModel.Kind.PHONE &&
+            phoneNumberFormatter.isSameNumber(
+                first = rawQuery,
+                second = destination.value,
+                country = unresolvedNumberCountry,
+            )
     }
 
     private fun normalizeDestination(rawDestination: String): String {
@@ -563,6 +606,7 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
     private data class SyntheticCandidate(
         val rawQuery: String,
         val destinationIdentity: DestinationIdentity,
+        val unresolvedNumberCountry: String?,
     ) {
         fun isExcludedBy(excludedDestinations: Set<String>): Boolean {
             return destinationIdentity.isExcludedBy(excludedDestinations = excludedDestinations)
@@ -589,5 +633,6 @@ internal class RecipientPickerDelegateImpl @Inject constructor(
         private val searchDebounce = 150L.milliseconds
         private const val SEARCH_QUERY_KEY = "search_query"
         private const val SYNTHETIC_RECIPIENT_ID_PREFIX = "synthetic:"
+        private const val INTERNATIONAL_NUMBER_PREFIX = '+'
     }
 }
