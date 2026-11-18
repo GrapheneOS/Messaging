@@ -4,6 +4,7 @@ import androidx.camera.compose.CameraXViewfinder
 import androidx.camera.core.SurfaceRequest
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,8 +19,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import com.android.messaging.R
 import com.android.messaging.ui.conversation.mediapicker.ConversationCaptureMode
@@ -110,19 +113,37 @@ private fun ConversationMediaCameraViewfinder(
     contentPadding: PaddingValues,
     surfaceRequest: SurfaceRequest,
 ) {
-    Box(
+    ConversationMediaCameraPreviewFrame(
         modifier = Modifier
+            .padding(paddingValues = contentPadding),
+        aspectRatio = aspectRatio,
+    ) {
+        CameraXViewfinder(
+            modifier = Modifier
+                .fillMaxSize(),
+            surfaceRequest = surfaceRequest,
+        )
+    }
+}
+
+@Composable
+private fun ConversationMediaCameraPreviewFrame(
+    modifier: Modifier = Modifier,
+    aspectRatio: Float?,
+    content: @Composable BoxScope.() -> Unit,
+) {
+    Box(
+        modifier = modifier
             .fillMaxSize()
-            .padding(paddingValues = contentPadding)
             .statusBarsPadding(),
         contentAlignment = Alignment.Center,
     ) {
-        CameraXViewfinder(
+        Box(
             modifier = when (aspectRatio) {
                 null -> Modifier.fillMaxSize()
                 else -> Modifier.aspectRatio(ratio = aspectRatio)
             },
-            surfaceRequest = surfaceRequest,
+            content = content,
         )
     }
 }
@@ -130,6 +151,7 @@ private fun ConversationMediaCameraViewfinder(
 @Composable
 internal fun ConversationMediaCaptureContent(
     modifier: Modifier = Modifier,
+    aspectRatio: Float?,
     audioPermissionGranted: Boolean,
     captureMode: ConversationCaptureMode,
     cameraPermissionGranted: Boolean,
@@ -150,49 +172,68 @@ internal fun ConversationMediaCaptureContent(
     Box(
         modifier = modifier,
     ) {
-        ConversationMediaCaptureTopBar(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            captureMode = captureMode,
-            hasFlashUnit = cameraPermissionGranted && hasFlashUnit,
-            isPhotoCaptureInProgress = isPhotoCaptureInProgress,
-            isRecording = isRecording,
-            photoFlashMode = photoFlashMode,
-            onCloseClick = onCloseClick,
-            onFlashClick = onToggleFlashClick,
-        )
-
-        if (cameraPermissionGranted) {
-            ConversationMediaCaptureControls(
+        ConversationMediaCameraPreviewFrame(
+            aspectRatio = aspectRatio,
+        ) {
+            ConversationMediaCaptureTopBar(
                 modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(horizontal = 20.dp, vertical = 24.dp),
+                    .align(Alignment.TopStart)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 captureMode = captureMode,
+                hasFlashUnit = cameraPermissionGranted && hasFlashUnit,
                 isPhotoCaptureInProgress = isPhotoCaptureInProgress,
                 isRecording = isRecording,
-                recordingDurationMillis = recordingDurationMillis,
-                onCaptureClick = {
-                    when (captureMode) {
-                        ConversationCaptureMode.Video -> {
-                            when {
-                                !isRecording && !audioPermissionGranted -> {
-                                    onRequestAudioPermission()
-                                }
-
-                                else -> onVideoCaptureClick()
-                            }
-                        }
-
-                        else -> onPhotoCaptureClick()
-                    }
-                },
-                onPhotoModeClick = onPhotoModeClick,
-                onSwitchCameraClick = onSwitchCameraClick,
-                onVideoModeClick = onVideoModeClick,
+                photoFlashMode = photoFlashMode,
+                onCloseClick = onCloseClick,
+                onFlashClick = onToggleFlashClick,
             )
+
+            if (cameraPermissionGranted) {
+                ConversationMediaCaptureControls(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .overflowBoundsToFitContent()
+                        .padding(horizontal = 20.dp, vertical = 24.dp),
+                    captureMode = captureMode,
+                    isPhotoCaptureInProgress = isPhotoCaptureInProgress,
+                    isRecording = isRecording,
+                    recordingDurationMillis = recordingDurationMillis,
+                    onCaptureClick = {
+                        when (captureMode) {
+                            ConversationCaptureMode.Video -> {
+                                when {
+                                    !isRecording && !audioPermissionGranted -> {
+                                        onRequestAudioPermission()
+                                    }
+
+                                    else -> onVideoCaptureClick()
+                                }
+                            }
+
+                            else -> onPhotoCaptureClick()
+                        }
+                    },
+                    onPhotoModeClick = onPhotoModeClick,
+                    onSwitchCameraClick = onSwitchCameraClick,
+                    onVideoModeClick = onVideoModeClick,
+                )
+            }
+        }
+    }
+}
+
+private fun Modifier.overflowBoundsToFitContent(): Modifier {
+    return layout { measurable, constraints ->
+        val contentWidth = measurable.maxIntrinsicWidth(height = constraints.maxHeight)
+        val placeable = measurable.measure(
+            constraints = Constraints(
+                maxWidth = constraints.maxWidth.coerceAtLeast(contentWidth),
+            ),
+        )
+
+        layout(width = placeable.width, height = placeable.height) {
+            placeable.place(x = 0, y = 0)
         }
     }
 }
@@ -218,6 +259,7 @@ private fun ConversationMediaCaptureContentPreview() {
     MessagingPreviewTheme {
         ConversationMediaCaptureContent(
             modifier = Modifier.fillMaxSize(),
+            aspectRatio = null,
             audioPermissionGranted = true,
             captureMode = ConversationCaptureMode.Video,
             cameraPermissionGranted = true,
