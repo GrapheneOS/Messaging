@@ -7,6 +7,7 @@ import com.android.messaging.data.conversation.model.draft.ConversationDraft
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerAvailability
 import com.android.messaging.data.conversation.model.metadata.ConversationComposerDisabledReason
 import com.android.messaging.domain.conversation.usecase.participant.CanAddMoreConversationParticipants
+import com.android.messaging.ui.conversation.composer.mapper.ConversationComposerUiStateMapper
 import com.android.messaging.ui.conversation.composer.model.ConversationComposerUiState
 import com.android.messaging.ui.conversation.composer.model.ConversationDraftState
 import com.android.messaging.ui.conversation.messages.model.message.ConversationMessagesUiState
@@ -15,6 +16,7 @@ import com.android.messaging.ui.conversation.screen.model.ConversationMessageSel
 import com.android.messaging.ui.conversation.screen.model.ConversationScreenScaffoldUiState
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toPersistentList
@@ -294,5 +296,100 @@ internal class ConversationViewModelUiStateTest : BaseConversationViewModelTest(
                 cancelAndIgnoreRemainingEvents()
             }
         }
+    }
+
+    @Test
+    fun scaffoldUiState_offersArchiveOnlyOnceTheConversationWouldBeListed() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val draftDelegate = createDraftDelegateMock()
+            val messagesDelegate = createMessagesDelegateMock()
+            val metadataDelegate = createMetadataDelegateMock()
+            val viewModel = createViewModel(
+                draftDelegate = draftDelegate.mock,
+                messagesDelegate = messagesDelegate.mock,
+                metadataDelegate = metadataDelegate.mock,
+                composerUiStateMapper = createDraftContentComposerUiStateMapper(),
+            )
+            metadataDelegate.stateFlow.value = createOneOnOneMetadataState(isArchived = false)
+            messagesDelegate.stateFlow.value = ConversationMessagesUiState.Present(
+                messages = persistentListOf(),
+            )
+
+            viewModel.scaffoldUiState.test {
+                advanceUntilIdle()
+                assertEquals(false, expectMostRecentItem().canArchive)
+
+                draftDelegate.stateFlow.value = ConversationDraftState(
+                    draft = ConversationDraft(messageText = "Draft text"),
+                )
+                advanceUntilIdle()
+                assertEquals(true, expectMostRecentItem().canArchive)
+
+                draftDelegate.stateFlow.value = ConversationDraftState()
+                advanceUntilIdle()
+                assertEquals(false, expectMostRecentItem().canArchive)
+
+                messagesDelegate.stateFlow.value = ConversationMessagesUiState.Present(
+                    messages = persistentListOf(createMessageUiModel()),
+                )
+                advanceUntilIdle()
+                assertEquals(true, expectMostRecentItem().canArchive)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    @Test
+    fun scaffoldUiState_offersUnarchiveOnlyWhenTheArchivedConversationIsListed() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val draftDelegate = createDraftDelegateMock()
+            val messagesDelegate = createMessagesDelegateMock()
+            val metadataDelegate = createMetadataDelegateMock()
+            val viewModel = createViewModel(
+                draftDelegate = draftDelegate.mock,
+                messagesDelegate = messagesDelegate.mock,
+                metadataDelegate = metadataDelegate.mock,
+                composerUiStateMapper = createDraftContentComposerUiStateMapper(),
+            )
+            metadataDelegate.stateFlow.value = createOneOnOneMetadataState(isArchived = true)
+            messagesDelegate.stateFlow.value = ConversationMessagesUiState.Present(
+                messages = persistentListOf(),
+            )
+
+            viewModel.scaffoldUiState.test {
+                advanceUntilIdle()
+                val emptyUiState = expectMostRecentItem()
+                assertEquals(false, emptyUiState.canUnarchive)
+                assertEquals(false, emptyUiState.canArchive)
+
+                draftDelegate.stateFlow.value = ConversationDraftState(
+                    draft = ConversationDraft(messageText = "Draft text"),
+                )
+                advanceUntilIdle()
+                assertEquals(true, expectMostRecentItem().canUnarchive)
+
+                draftDelegate.stateFlow.value = ConversationDraftState()
+                advanceUntilIdle()
+                assertEquals(false, expectMostRecentItem().canUnarchive)
+
+                messagesDelegate.stateFlow.value = ConversationMessagesUiState.Present(
+                    messages = persistentListOf(createMessageUiModel()),
+                )
+                advanceUntilIdle()
+                assertEquals(true, expectMostRecentItem().canUnarchive)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    private fun createDraftContentComposerUiStateMapper(): ConversationComposerUiStateMapper {
+        val mapper = mockk<ConversationComposerUiStateMapper>()
+        every {
+            mapper.map(any(), any(), any(), any(), any(), any(), any())
+        } answers {
+            val draftState = secondArg<ConversationDraftState>()
+            ConversationComposerUiState(hasWorkingDraft = draftState.draft.hasContent)
+        }
+        return mapper
     }
 }

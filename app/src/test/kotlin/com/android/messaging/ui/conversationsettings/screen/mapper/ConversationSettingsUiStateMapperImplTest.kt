@@ -7,6 +7,7 @@ import com.android.messaging.data.conversationsettings.model.ConversationSetting
 import com.android.messaging.data.subscription.model.SubId
 import com.android.messaging.data.subscription.model.Subscription
 import com.android.messaging.datamodel.data.ParticipantData
+import com.android.messaging.ui.conversationsettings.screen.model.ConversationSettingsUiState
 import com.android.messaging.ui.conversationsettings.screen.model.ParticipantUiState
 import io.mockk.every
 import io.mockk.mockk
@@ -43,6 +44,15 @@ internal class ConversationSettingsUiStateMapperImplTest {
 
         assertEquals(FULL_NAME, participantUiState.displayName)
         assertEquals(DISPLAY_DESTINATION, participantUiState.details)
+    }
+
+    @Test
+    fun map_archiveStatusChangesOnlyForListedConversation() {
+        val listedUiState = mapListedState(isListed = true)
+        val unlistedUiState = mapListedState(isListed = false)
+
+        assertEquals(true, listedUiState.canChangeArchiveStatus)
+        assertEquals(false, unlistedUiState.canChangeArchiveStatus)
     }
 
     @Test
@@ -85,6 +95,17 @@ internal class ConversationSettingsUiStateMapperImplTest {
         )
 
         assertEquals(ParticipantId(DEFAULT_SELF_PARTICIPANT_ID), uiState.selfParticipantId)
+    }
+
+    private fun mapListedState(isListed: Boolean): ConversationSettingsUiState {
+        return mapper.map(
+            data = ConversationSettingsData(
+                conversationId = CONVERSATION_ID,
+                isListed = isListed,
+            ),
+            subscriptions = persistentListOf(),
+            defaultSmsSubscriptionId = SubId(ParticipantData.DEFAULT_SELF_SUB_ID),
+        )
     }
 
     private fun mapParticipant(
