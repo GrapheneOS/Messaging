@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowDropDown
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.SimCard
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -39,7 +40,6 @@ import com.android.messaging.ui.subscription.model.SimSelectorUiState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
-private val ChipAvatarSize = 24.dp
 private val DropdownAvatarSize = 32.dp
 
 @Composable
@@ -119,10 +119,10 @@ private fun SimSelectorChip(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
     ) {
-        SimAvatar(
-            slotLabel = option.slotLabel,
-            accentColor = option.accentColor,
-            size = ChipAvatarSize,
+        Icon(
+            imageVector = Icons.Rounded.SimCard,
+            contentDescription = null,
+            tint = option.accentColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         Text(
