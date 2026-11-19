@@ -51,6 +51,8 @@ internal interface ConversationDraftEditorDelegate {
 
     fun tryStartAddingAttachment(): Boolean
 
+    fun resolveRemainingAttachmentSlots(): Int
+
     fun addPendingAttachment(pendingAttachment: ConversationDraftPendingAttachment)
 
     fun removeAttachment(contentUri: String)
@@ -191,11 +193,16 @@ internal class ConversationDraftEditorDelegateImpl @Inject constructor(
     }
 
     override fun tryStartAddingAttachment(): Boolean {
+        return resolveRemainingAttachmentSlots() > 0
+    }
+
+    override fun resolveRemainingAttachmentSlots(): Int {
         val currentDraftEditorState = draftEditorState.value
         val currentAttachmentCount = currentDraftEditorState.effectiveDraft.attachments.size +
             currentDraftEditorState.pendingAttachments.size
 
-        return currentAttachmentCount < subscriptionsRepository.resolveAttachmentLimit()
+        return (subscriptionsRepository.resolveAttachmentLimit() - currentAttachmentCount)
+            .coerceAtLeast(minimumValue = 0)
     }
 
     override fun addPendingAttachment(pendingAttachment: ConversationDraftPendingAttachment) {
