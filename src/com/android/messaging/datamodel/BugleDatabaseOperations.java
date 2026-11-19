@@ -575,8 +575,10 @@ public class BugleDatabaseOperations {
             values.put(ConversationColumns.ARCHIVE_STATUS, 0);
         }
 
+        // Leave SHOW_DRAFT alone: it follows the draft columns, which only change when the draft
+        // itself is written or cleared, so a pending draft stays visible after new messages.
         final MessageData message = readMessage(dbWrapper, messageId);
-        addSnippetTextAndPreviewToContentValues(message, false /* showDraft */, values);
+        addSnippetTextAndPreviewToContentValues(message, values);
 
         if (shouldAutoSwitchSelfId) {
             addSelfIdAutoSwitchInfoToContentValues(dbWrapper, message, conversationId, values);
@@ -621,8 +623,7 @@ public class BugleDatabaseOperations {
     }
 
     static void addSnippetTextAndPreviewToContentValues(final MessageData message,
-            final boolean showDraft, final ContentValues values) {
-        values.put(ConversationColumns.SHOW_DRAFT, showDraft ? 1 : 0);
+            final ContentValues values) {
         values.put(ConversationColumns.SNIPPET_TEXT, message.getMessageText());
         values.put(ConversationColumns.SUBJECT_TEXT, message.getMmsSubject());
 
@@ -1592,8 +1593,10 @@ public class BugleDatabaseOperations {
             }
 
             if (conversationExists) {
-                updateConversationDraftSnippetAndPreviewInTransaction(
-                        dbWrapper, conversationId, message);
+                // When clearing, "message" only names attachments to keep (e.g. the MMS being
+                // sent), so it must not be shown as the conversation's draft.
+                updateConversationDraftSnippetAndPreviewInTransaction(dbWrapper, conversationId,
+                        updateMode == UPDATE_MODE_ADD_DRAFT ? message : null);
 
                 if (message != null && message.getSelfId() != null) {
                     updateConversationSelfIdInTransaction(dbWrapper, conversationId,
