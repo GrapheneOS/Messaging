@@ -1,10 +1,8 @@
 package com.android.messaging.ui.debug
 
 import android.os.Bundle
-import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.android.messaging.ui.BugleComponentActivity
-import com.android.messaging.ui.core.AppTheme
 import com.android.messaging.ui.debug.screen.DebugMmsConfigScreen
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -20,10 +18,8 @@ class DebugMmsConfigActivity : BugleComponentActivity() {
 
         enableEdgeToEdge()
 
-        setContent {
-            AppTheme {
-                DebugMmsConfigScreen(onNavigateBack = ::finish)
-            }
+        setAppContent {
+            DebugMmsConfigScreen(onNavigateBack = ::finish)
         }
     }
 }

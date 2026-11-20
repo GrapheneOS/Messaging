@@ -109,7 +109,7 @@ internal class MainActivity : ComponentActivity() {
     }
 
     private fun resumeDataModel() {
-        BugleActivityUtil.onActivityResume(this, this)
+        BugleActivityUtil.onActivityResume()
     }
 
     private fun startDestinations(intent: Intent): List<NavKey> {
