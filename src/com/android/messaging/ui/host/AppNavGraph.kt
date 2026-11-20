@@ -58,6 +58,8 @@ internal fun AppNavGraph(
         onAppResumed = onAppResumed,
     )
 
+    DeviceOwnerSmsBlock()
+
     SelfPhoneNumberPermissionEffect(
         backStack = backStack,
         shouldShowOnboarding = shouldShowOnboarding,

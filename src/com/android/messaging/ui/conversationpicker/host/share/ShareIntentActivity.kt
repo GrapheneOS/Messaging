@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -24,7 +23,6 @@ import com.android.messaging.ui.UIIntents
 import com.android.messaging.ui.conversationpicker.ConversationPickerScreen
 import com.android.messaging.ui.conversationpicker.ConversationPickerViewModel
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerLabels
-import com.android.messaging.ui.core.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
@@ -63,38 +61,36 @@ class ShareIntentActivity : BugleComponentActivity() {
 
         enableEdgeToEdge()
 
-        setContent {
-            AppTheme {
-                val shareDraft = rememberShareDraftState()
-                val effectHandler = rememberShareIntentEffectHandler(shareDraft.draft)
+        setAppContent {
+            val shareDraft = rememberShareDraftState()
+            val effectHandler = rememberShareIntentEffectHandler(shareDraft.draft)
 
-                LaunchedEffect(shareDraft) {
-                    if (shareDraft.isLoading) {
-                        return@LaunchedEffect
-                    }
-
-                    when {
-                        shareDraft.draft == null -> {
-                            effectHandler.showNoShareableContentNotice()
-                            finish()
-                        }
-
-                        shareDraft.hasDroppedContent -> {
-                            effectHandler.showDroppedContentNotice()
-                        }
-                    }
+            LaunchedEffect(shareDraft) {
+                if (shareDraft.isLoading) {
+                    return@LaunchedEffect
                 }
 
-                ConversationPickerScreen(
-                    screenModel = hiltViewModel<ConversationPickerViewModel>(),
-                    effectHandler = effectHandler,
-                    onNavigateBack = ::finish,
-                    allowMultiSelect = true,
-                    labels = conversationPickerLabels(),
-                    isInitialDraftLoading = shareDraft.isLoading,
-                    initialDraft = shareDraft.draft,
-                )
+                when {
+                    shareDraft.draft == null -> {
+                        effectHandler.showNoShareableContentNotice()
+                        finish()
+                    }
+
+                    shareDraft.hasDroppedContent -> {
+                        effectHandler.showDroppedContentNotice()
+                    }
+                }
             }
+
+            ConversationPickerScreen(
+                screenModel = hiltViewModel<ConversationPickerViewModel>(),
+                effectHandler = effectHandler,
+                onNavigateBack = ::finish,
+                allowMultiSelect = true,
+                labels = conversationPickerLabels(),
+                isInitialDraftLoading = shareDraft.isLoading,
+                initialDraft = shareDraft.draft,
+            )
         }
     }
 

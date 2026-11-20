@@ -2,14 +2,12 @@ package com.android.messaging.ui.conversationpicker.host.widget
 
 import android.appwidget.AppWidgetManager
 import android.os.Bundle
-import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.android.messaging.ui.BugleComponentActivity
 import com.android.messaging.ui.conversationpicker.ConversationPickerScreen
 import com.android.messaging.ui.conversationpicker.ConversationPickerViewModel
 import com.android.messaging.ui.conversationpicker.model.ConversationPickerLabels
-import com.android.messaging.ui.core.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -39,18 +37,16 @@ class WidgetPickConversationActivity : BugleComponentActivity() {
             appWidgetId = appWidgetId,
         )
 
-        setContent {
-            AppTheme {
-                ConversationPickerScreen(
-                    screenModel = hiltViewModel<ConversationPickerViewModel>(),
-                    effectHandler = effectHandler,
-                    onNavigateBack = ::finish,
-                    allowMultiSelect = false,
-                    labels = ConversationPickerLabels.Widget,
-                    isInitialDraftLoading = false,
-                    initialDraft = null,
-                )
-            }
+        setAppContent {
+            ConversationPickerScreen(
+                screenModel = hiltViewModel<ConversationPickerViewModel>(),
+                effectHandler = effectHandler,
+                onNavigateBack = ::finish,
+                allowMultiSelect = false,
+                labels = ConversationPickerLabels.Widget,
+                isInitialDraftLoading = false,
+                initialDraft = null,
+            )
         }
     }
 
