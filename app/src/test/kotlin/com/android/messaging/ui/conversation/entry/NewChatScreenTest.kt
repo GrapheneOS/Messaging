@@ -1,10 +1,12 @@
 package com.android.messaging.ui.conversation.entry
 
+import androidx.activity.BackEventCompat
 import androidx.activity.ComponentActivity
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.layout.PaneScaffoldDirective
 import androidx.compose.material3.adaptive.navigation.BackNavigationBehavior
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -17,6 +19,7 @@ import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
@@ -34,9 +37,11 @@ import com.android.messaging.ui.conversation.NEW_CHAT_CONTACT_RESOLVING_INDICATO
 import com.android.messaging.ui.conversation.NEW_CHAT_CREATE_GROUP_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.NEW_CHAT_CREATE_GROUP_NEXT_BUTTON_TEST_TAG
 import com.android.messaging.ui.conversation.entry.model.NewChatUiState
+import com.android.messaging.ui.conversation.navigation.ConversationListDetailLayout
 import com.android.messaging.ui.conversation.navigation.NewChatNavKey
 import com.android.messaging.ui.conversation.navigation.conversationDetailPaneMetadata
 import com.android.messaging.ui.conversation.navigation.conversationListPaneMetadata
+import com.android.messaging.ui.conversation.navigation.rememberConversationListDetailLayout
 import com.android.messaging.ui.conversation.newChatContactRowTestTag
 import com.android.messaging.ui.conversationlist.navigation.ConversationListNavKey
 import com.android.messaging.ui.core.AppTheme
@@ -297,19 +302,65 @@ class NewChatScreenTest {
             .assertIsFocused()
     }
 
-    @OptIn(ExperimentalMaterial3AdaptiveApi::class)
     @Config(qualifiers = TABLET_QUALIFIERS)
     @Test
     fun paneCountChange_keepsTheRecipientFieldFocused() {
-        val screenModel = createScreenModel(initialUiState = NewChatUiState())
         val backStack = mutableStateListOf<NavKey>(ConversationListNavKey, NewChatNavKey)
         var showsTwoPanes by mutableStateOf(false)
 
+        setNavDisplayContent(backStack = backStack) {
+            rememberTestListDetailLayout(showsTwoPanes = showsTwoPanes)
+        }
+
+        for (twoPanes in listOf(true, false)) {
+            showsTwoPanes = twoPanes
+
+            composeTestRule
+                .onNode(matcher = hasSetTextAction())
+                .assertIsFocused()
+        }
+    }
+
+    @Config(qualifiers = TABLET_QUALIFIERS)
+    @Test
+    fun backSwipeIntoTwoPanes_focusesTheRecipientFieldOnceTheSwipeCommits() {
+        val backStack = mutableStateListOf<NavKey>(ConversationListNavKey, NewChatNavKey)
+
+        setNavDisplayContent(backStack = backStack) { rememberConversationListDetailLayout() }
+        composeTestRule
+            .onNode(matcher = hasSetTextAction())
+            .assertIsFocused()
+        backStack.add(CoveringNavKey)
+        composeTestRule.waitForIdle()
+
+        swipeBack()
+        composeTestRule
+            .onNode(matcher = hasSetTextAction())
+            .assertExists()
+        composeTestRule
+            .onAllNodes(matcher = isFocused())
+            .assertCountEquals(0)
+
+        dispatch { onBackPressedDispatcher.dispatchOnBackCancelled() }
+        composeTestRule
+            .onAllNodes(matcher = hasSetTextAction())
+            .assertCountEquals(0)
+
+        swipeBack()
+        dispatch { onBackPressedDispatcher.onBackPressed() }
+        composeTestRule
+            .onNode(matcher = hasSetTextAction())
+            .assertIsFocused()
+    }
+
+    private fun setNavDisplayContent(
+        backStack: MutableList<NavKey>,
+        listDetailLayout: @Composable () -> ConversationListDetailLayout,
+    ) {
+        val screenModel = createScreenModel(initialUiState = NewChatUiState())
+
         composeTestRule.setContent {
-            val maxHorizontalPartitions = when {
-                showsTwoPanes -> TWO_PANES
-                else -> SINGLE_PANE
-            }
+            val layout = listDetailLayout()
 
             AppTheme {
                 AppNavDisplay(
@@ -325,30 +376,56 @@ class NewChatScreenTest {
                                 autoFocusQueryKey = LocalNavAnimatedContentScope.current,
                             )
                         }
+                        entry<CoveringNavKey> {}
                     },
-                    onBack = {},
+                    onBack = { backStack.removeLastOrNull() },
                     sceneStrategies = rememberAppSceneStrategies(
-                        additionalStrategies = listOf(
-                            rememberListDetailSceneStrategy(
-                                backNavigationBehavior = BackNavigationBehavior.PopLatest,
-                                directive = PaneScaffoldDirective.Default.copy(
-                                    maxHorizontalPartitions = maxHorizontalPartitions,
-                                ),
-                            ),
-                        ),
+                        additionalStrategies = listOf(layout.sceneStrategy),
                     ),
-                    showsTwoPanes = showsTwoPanes,
+                    showsTwoPanes = layout.showsTwoPanes,
                 )
             }
         }
+    }
 
-        for (twoPanes in listOf(true, false)) {
-            showsTwoPanes = twoPanes
-
-            composeTestRule
-                .onNode(matcher = hasSetTextAction())
-                .assertIsFocused()
+    @OptIn(ExperimentalMaterial3AdaptiveApi::class)
+    @Composable
+    private fun rememberTestListDetailLayout(showsTwoPanes: Boolean): ConversationListDetailLayout {
+        val maxHorizontalPartitions = when {
+            showsTwoPanes -> TWO_PANES
+            else -> SINGLE_PANE
         }
+
+        return ConversationListDetailLayout(
+            sceneStrategy = rememberListDetailSceneStrategy(
+                backNavigationBehavior = BackNavigationBehavior.PopLatest,
+                directive = PaneScaffoldDirective.Default.copy(
+                    maxHorizontalPartitions = maxHorizontalPartitions,
+                ),
+            ),
+            showsTwoPanes = showsTwoPanes,
+        )
+    }
+
+    private fun swipeBack() {
+        dispatch {
+            onBackPressedDispatcher.dispatchOnBackStarted(backEvent(progress = 0f))
+            onBackPressedDispatcher.dispatchOnBackProgressed(backEvent(progress = 0.5f))
+        }
+    }
+
+    private fun dispatch(block: ComponentActivity.() -> Unit) {
+        composeTestRule.runOnUiThread { composeTestRule.activity.block() }
+        composeTestRule.waitForIdle()
+    }
+
+    private fun backEvent(progress: Float): BackEventCompat {
+        return BackEventCompat(
+            touchX = 0f,
+            touchY = 0f,
+            progress = progress,
+            swipeEdge = BackEventCompat.EDGE_LEFT,
+        )
     }
 
     private fun setContent(
@@ -400,6 +477,8 @@ class NewChatScreenTest {
             every { uiState } returns uiStateFlow
         }
     }
+
+    private data object CoveringNavKey : NavKey
 
     private companion object {
         private const val SINGLE_PANE = 1

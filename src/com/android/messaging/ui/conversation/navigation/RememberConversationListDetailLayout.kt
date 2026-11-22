@@ -50,8 +50,22 @@ private fun rememberConversationPaneDirective(): PaneScaffoldDirective {
             )
 
             else -> directive.copy(maxHorizontalPartitions = SINGLE_PARTITION)
-        }
+        }.withoutPaneAutoFocus()
     }
+}
+
+// The scaffold focuses its pane whenever it's composed, so a back swipe would open the keyboard.
+private fun PaneScaffoldDirective.withoutPaneAutoFocus(): PaneScaffoldDirective {
+    return PaneScaffoldDirective(
+        maxHorizontalPartitions = maxHorizontalPartitions,
+        horizontalPartitionSpacerSize = horizontalPartitionSpacerSize,
+        maxVerticalPartitions = maxVerticalPartitions,
+        verticalPartitionSpacerSize = verticalPartitionSpacerSize,
+        defaultPanePreferredWidth = defaultPanePreferredWidth,
+        defaultPanePreferredHeight = defaultPanePreferredHeight,
+        excludedBounds = excludedBounds,
+        shouldAutoFocusCurrentDestination = false,
+    )
 }
 
 private fun fitsTwoPanes(
