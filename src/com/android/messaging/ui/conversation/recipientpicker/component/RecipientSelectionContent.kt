@@ -33,6 +33,10 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.navigationevent.NavigationEventTransitionState.InProgress
+import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import com.android.messaging.R
 import com.android.messaging.ui.conversation.preview.previewSimSelectorUiState
 import com.android.messaging.ui.conversation.recipientpicker.component.simselector.NewChatSimSelectorRow
@@ -51,6 +55,7 @@ import com.android.messaging.ui.recipientselection.model.selection.RecipientSele
 import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionRowDecorators
 import com.android.messaging.ui.recipientselection.model.selection.RecipientSelectionStrings
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.coroutines.flow.first
 
 @Composable
 internal fun RecipientSelectionContent(
@@ -377,7 +382,17 @@ private fun RecipientSelectionAutoFocusEffect(
     focusRequester: FocusRequester,
 ) {
     if (autoFocusQuery) {
+        val lifecycle = LocalLifecycleOwner.current.lifecycle
+        val gestureState = LocalNavigationEventDispatcherOwner
+            .current
+            ?.navigationEventDispatcher
+            ?.transitionState
+
         LaunchedEffect(autoFocusQueryKey) {
+            // A back swipe composes the page it reveals; the keyboard waits until the swipe commits.
+            if (gestureState?.value is InProgress) {
+                lifecycle.currentStateFlow.first { it.isAtLeast(Lifecycle.State.RESUMED) }
+            }
             focusRequester.requestFocus()
         }
     }
