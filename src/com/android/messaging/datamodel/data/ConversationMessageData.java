@@ -909,7 +909,7 @@ public class ConversationMessageData {
             + CONVERSATION_MESSAGE_IDS_PROJECTION_SQL
             + CONVERSATION_MESSAGES_QUERY_FROM_WHERE_SQL;
 
-    // Note that we sort DESC and ConversationData reverses the cursor.  This is a performance
+    // Note that we sort DESC and ConversationsRepository reverses the cursor.  This is a performance
     // issue (improvement) for large cursors.
     //
     // Grouped by the message rather than by parts.message_id, which is the same key for every

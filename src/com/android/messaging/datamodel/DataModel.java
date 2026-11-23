@@ -24,11 +24,8 @@ import com.android.messaging.Factory;
 import com.android.messaging.datamodel.action.Action;
 import com.android.messaging.datamodel.action.ActionService;
 import com.android.messaging.datamodel.action.BackgroundWorker;
-import com.android.messaging.datamodel.data.ConversationData;
-import com.android.messaging.datamodel.data.ConversationData.ConversationDataListener;
 import com.android.messaging.datamodel.data.ConversationListData;
 import com.android.messaging.datamodel.data.ConversationListData.ConversationListDataListener;
-import com.android.messaging.datamodel.data.DraftMessageData;
 import com.android.messaging.datamodel.data.LaunchConversationData;
 import com.android.messaging.datamodel.data.LaunchConversationData.LaunchConversationDataListener;
 import com.android.messaging.util.Assert.DoesNotRunOnMainThread;
@@ -58,13 +55,8 @@ public abstract class DataModel {
     public abstract ConversationListData createConversationListData(final Context context,
             final ConversationListDataListener listener, final boolean archivedMode);
 
-    public abstract ConversationData createConversationData(final Context context,
-            final ConversationDataListener listener, final String conversationId);
-
     public abstract LaunchConversationData createLaunchConversationData(
             LaunchConversationDataListener listener);
-
-    public abstract DraftMessageData createDraftMessageData(String conversationId);
 
     public abstract ActionService getActionService();
 

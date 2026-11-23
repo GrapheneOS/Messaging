@@ -134,8 +134,8 @@ public class InsertNewMessageAction extends Action implements Parcelable {
             return null;
         }
         message.bindSelfId(self.getId());
-        // If the user taps the Send button before the conversation draft is created/loaded by
-        // ReadDraftDataAction (maybe the action service thread was busy), the MessageData may not
+        // If the user taps the Send button before the conversation draft is created/loaded
+        // (maybe the action service thread was busy), the MessageData may not
         // have the participant id set. It should be equal to the self id, so we'll use that.
         if (message.getParticipantId() == null) {
             message.bindParticipantId(self.getId());
