@@ -31,7 +31,7 @@ screenshot = "0.0.1-alpha16"
 
 junit4 = "4.13.2"
 mockk = "1.14.11"
-robolectric = "4.17"
+robolectric = "4.18.1"
 turbine = "1.2.1"
 
 androidx-test-espresso = "3.7.0"
