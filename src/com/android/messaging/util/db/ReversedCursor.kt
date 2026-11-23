@@ -5,7 +5,6 @@ import android.database.CursorWrapper
 
 /**
  * Presents a cursor in reverse row order while preserving standard cursor navigation semantics
- * Will replace [com.android.messaging.datamodel.data.ConversationData.ReversedCursor] in the future
  */
 internal class ReversedCursor(
     cursor: Cursor,

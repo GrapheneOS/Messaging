@@ -25,11 +25,8 @@ import com.android.messaging.datamodel.action.ActionService;
 import com.android.messaging.datamodel.action.BackgroundWorker;
 import com.android.messaging.datamodel.action.FixupMessageStatusOnStartupAction;
 import com.android.messaging.datamodel.action.ProcessPendingMessagesAction;
-import com.android.messaging.datamodel.data.ConversationData;
-import com.android.messaging.datamodel.data.ConversationData.ConversationDataListener;
 import com.android.messaging.datamodel.data.ConversationListData;
 import com.android.messaging.datamodel.data.ConversationListData.ConversationListDataListener;
-import com.android.messaging.datamodel.data.DraftMessageData;
 import com.android.messaging.datamodel.data.LaunchConversationData;
 import com.android.messaging.datamodel.data.LaunchConversationData.LaunchConversationDataListener;
 import com.android.messaging.datamodel.data.ParticipantData;
@@ -69,20 +66,9 @@ public class DataModelImpl extends DataModel {
     }
 
     @Override
-    public ConversationData createConversationData(final Context context,
-            final ConversationDataListener listener, final String conversationId) {
-        return new ConversationData(context, listener, conversationId);
-    }
-
-    @Override
     public LaunchConversationData createLaunchConversationData(
             final LaunchConversationDataListener listener) {
        return new LaunchConversationData(listener);
-    }
-
-    @Override
-    public DraftMessageData createDraftMessageData(String conversationId) {
-        return new DraftMessageData(conversationId);
     }
 
     @Override

@@ -22,9 +22,6 @@ import androidx.annotation.NonNull;
 
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.ContentType;
-import com.android.messaging.util.LogUtil;
-import com.android.messaging.util.SafeAsyncTask;
-import com.android.messaging.util.UriUtil;
 
 /**
  * Represents a "pending" message part that acts as a placeholder for the actual attachment being
@@ -43,8 +40,6 @@ public class PendingAttachmentData extends MessagePartData {
 
     /** The attachment failed to load */
     public static final int STATE_FAILED = 3;
-
-    private static final int LOAD_MEDIA_TIME_LIMIT_MILLIS = 60 * 1000;  // 60s
 
     /** The current state of the pending attachment. Refer to the STATE_* states above */
     private int mCurrentState;
@@ -88,66 +83,6 @@ public class PendingAttachmentData extends MessagePartData {
 
     public int getCurrentState() {
         return mCurrentState;
-    }
-
-    public void loadAttachmentForDraft(final DraftMessageData draftMessageData,
-            final String bindingId) {
-        if (mCurrentState != STATE_PENDING) {
-            return;
-        }
-        mCurrentState = STATE_LOADING;
-
-        // Kick off a SafeAsyncTask to load the content of the media and persist it locally.
-        // Note: we need to persist the media locally even if it's not remote, because we
-        // want to be able to resend the media in case the message failed to send.
-        new SafeAsyncTask<Void, Void, MessagePartData>(LOAD_MEDIA_TIME_LIMIT_MILLIS,
-                true /* cancelExecutionOnTimeout */) {
-            @Override
-            protected MessagePartData doInBackgroundTimed(final Void... params) {
-                final Uri contentUri = getContentUri();
-                final Uri persistedUri = UriUtil.persistContentToScratchSpace(contentUri);
-                if (persistedUri != null) {
-                    return MessagePartData.createMediaMessagePart(
-                            getText(),
-                            getContentType(),
-                            persistedUri,
-                            getWidth(),
-                            getHeight());
-                }
-                return null;
-            }
-
-            @Override
-            protected void onCancelled() {
-                LogUtil.w(LogUtil.BUGLE_TAG, "Timeout while retrieving media");
-                mCurrentState = STATE_FAILED;
-                if (draftMessageData.isBound(bindingId)) {
-                    draftMessageData.removePendingAttachment(PendingAttachmentData.this);
-                }
-            }
-
-            @Override
-            protected void onPostExecute(final MessagePartData attachment) {
-                if (attachment != null) {
-                    mCurrentState = STATE_LOADED;
-                    if (draftMessageData.isBound(bindingId)) {
-                        draftMessageData.updatePendingAttachment(attachment,
-                                PendingAttachmentData.this);
-                    } else {
-                        // The draft message data is no longer bound, drop the loaded attachment.
-                        attachment.destroyAsync();
-                    }
-                } else {
-                    // Media load failed. We already logged in doInBackground() so don't need to
-                    // do that again.
-                    mCurrentState = STATE_FAILED;
-                    if (draftMessageData.isBound(bindingId)) {
-                        draftMessageData.onPendingAttachmentLoadFailed(PendingAttachmentData.this);
-                        draftMessageData.removePendingAttachment(PendingAttachmentData.this);
-                    }
-                }
-            }
-        }.executeOnThreadPool();
     }
 
     protected PendingAttachmentData(final Parcel in) {
