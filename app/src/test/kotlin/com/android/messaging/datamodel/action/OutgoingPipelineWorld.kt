@@ -65,6 +65,7 @@ internal class OutgoingPipelineWorld {
 
     val context: Context = RuntimeEnvironment.getApplication()
     val telephony = FakeTelephony()
+    val incomingMms = FakeIncomingMms(telephony = telephony)
     val actionService = RecordingActionService()
     val backgroundWorker = CapturingBackgroundWorker()
     val runner = OutgoingPipelineActionRunner(
@@ -81,6 +82,7 @@ internal class OutgoingPipelineWorld {
 
     fun setUp() {
         telephony.install()
+        incomingMms.install()
         val factory = createTestFactory(
             context = context,
             dataModel = dataModel,
@@ -112,6 +114,18 @@ internal class OutgoingPipelineWorld {
         worker.start()
         worker.join()
         return requireNotNull(result).getOrThrow()
+    }
+
+    fun <T> withDatabase(block: (DatabaseWrapper) -> T): T {
+        return onWorker { block(database) }
+    }
+
+    fun focusConversation(conversationId: String?) {
+        dataModel.setFocusedConversation(conversationId)
+    }
+
+    fun showConversationListAtNewest(scrolledToNewest: Boolean) {
+        dataModel.setConversationListScrolledToNewestConversation(scrolledToNewest)
     }
 
     fun prefsFor(subId: Int): FakeBuglePrefs {
