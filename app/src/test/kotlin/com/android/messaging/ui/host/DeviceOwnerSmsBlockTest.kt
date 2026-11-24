@@ -11,6 +11,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.android.common.test.helpers.targetContext
 import com.android.messaging.R
+import com.android.messaging.data.devicepolicy.SmsRestrictionCheckerImpl
 import com.android.messaging.testutil.TestLifecycleOwner
 import com.android.messaging.ui.core.AppTheme
 import org.junit.Assert.assertEquals
@@ -26,6 +27,7 @@ internal class DeviceOwnerSmsBlockTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
+    private val userManager = targetContext.getSystemService(UserManager::class.java)
     private val message = targetContext.getString(R.string.requires_sms_permissions_message)
     private val closeText = targetContext.getString(R.string.requires_sms_permissions_close_button)
 
@@ -82,7 +84,6 @@ internal class DeviceOwnerSmsBlockTest {
     }
 
     private fun setSmsDisallowed(isDisallowed: Boolean) {
-        val userManager = targetContext.getSystemService(UserManager::class.java)
         shadowOf(userManager).setUserRestriction(
             Process.myUserHandle(),
             UserManager.DISALLOW_SMS,
@@ -95,10 +96,17 @@ internal class DeviceOwnerSmsBlockTest {
             lifecycleOwner = TestLifecycleOwner(initialState = Lifecycle.State.CREATED)
         }
 
+        val model = DeviceOwnerSmsBlockViewModel(
+            smsRestrictionChecker = SmsRestrictionCheckerImpl(userManager),
+        )
+
         composeTestRule.setContent {
             CompositionLocalProvider(LocalLifecycleOwner provides lifecycleOwner) {
                 AppTheme {
-                    DeviceOwnerSmsBlock(onClose = { closeCount += 1 })
+                    DeviceOwnerSmsBlock(
+                        model = model,
+                        onClose = { closeCount += 1 },
+                    )
                 }
             }
         }

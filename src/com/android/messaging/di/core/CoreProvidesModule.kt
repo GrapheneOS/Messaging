@@ -8,6 +8,7 @@ import android.content.ContentResolver
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.SystemClock
+import android.os.UserManager
 import android.telephony.SubscriptionManager
 import android.telephony.TelephonyManager
 import com.android.messaging.datamodel.DatabaseHelper
@@ -144,6 +145,15 @@ internal class CoreProvidesModule {
         context: Context,
     ): TelephonyManager {
         return context.getSystemService(TelephonyManager::class.java)
+    }
+
+    @Provides
+    @Reusable
+    fun provideUserManager(
+        @ApplicationContext
+        context: Context,
+    ): UserManager {
+        return context.getSystemService(UserManager::class.java)
     }
 
     @Provides
