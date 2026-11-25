@@ -16,13 +16,17 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -311,11 +315,135 @@ class ConversationComposerAttachmentsDelegateImplTest {
         }
     }
 
-    private fun createVCardAttachment(): ComposerAttachmentUiModel.Resolved.VCard {
+    @Test
+    fun bind_keepsLoadedVCardWhenAnotherAttachmentIsRemoved() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher,
+        ) {
+            val dispatcher = mainDispatcherRule.testDispatcher
+            val attachmentMapper = mockk<ConversationComposerAttachmentUiModelMapper>()
+            val vCardUiModelMapper = mockk<ConversationVCardAttachmentUiModelMapper>()
+            val metadataRepository = mockk<ConversationVCardMetadataRepository>()
+            val firstDraftAttachment = ConversationDraftAttachment(
+                contentType = "text/x-vCard",
+                contentUri = "content://attachments/vcard/1",
+            )
+            val secondDraftAttachment = ConversationDraftAttachment(
+                contentType = "text/x-vCard",
+                contentUri = "content://attachments/vcard/2",
+            )
+            every {
+                attachmentMapper.map(any(), any())
+            } answers {
+                firstArg<List<ConversationDraftAttachment>>()
+                    .map { attachment ->
+                        createVCardAttachment(contentUri = attachment.contentUri)
+                    }
+                    .toImmutableList()
+            }
+            every {
+                metadataRepository.observeAttachmentMetadata(
+                    contentUri = any(),
+                    refreshes = any(),
+                )
+            } answers {
+                val contentUri = firstArg<String?>()
+                flow {
+                    emit(ConversationVCardAttachmentMetadata.Loading)
+                    delay(timeMillis = 100)
+                    emit(createLoadedMetadata(displayName = contentUri))
+                }
+            }
+            every {
+                vCardUiModelMapper.map(metadata = any())
+            } answers {
+                when (val metadata = firstArg<ConversationVCardAttachmentMetadata?>()) {
+                    is ConversationVCardAttachmentMetadata.Loaded -> {
+                        createLoadedUiModel(displayName = metadata.singleDisplayName)
+                    }
+
+                    else -> createVCardAttachment().vCardUiModel
+                }
+            }
+            val draftStateFlow = MutableStateFlow(
+                ConversationDraftState(
+                    draft = ConversationDraft(
+                        attachments = persistentListOf(
+                            firstDraftAttachment,
+                            secondDraftAttachment,
+                        ),
+                    ),
+                ),
+            )
+            val delegate = ConversationComposerAttachmentsDelegateImpl(
+                conversationComposerAttachmentUiModelMapper = attachmentMapper,
+                conversationVCardAttachmentUiModelMapper = vCardUiModelMapper,
+                conversationVCardMetadataRepository = metadataRepository,
+                defaultDispatcher = dispatcher,
+            )
+            val boundScope = CoroutineScope(dispatcher + SupervisorJob())
+            val loadedSecondAttachment = createVCardAttachment(
+                contentUri = "content://attachments/vcard/2",
+            ).copy(
+                vCardUiModel = createLoadedUiModel(
+                    displayName = "content://attachments/vcard/2",
+                ),
+            )
+
+            try {
+                delegate.bind(
+                    scope = boundScope,
+                    draftStateFlow = draftStateFlow,
+                )
+                advanceUntilIdle()
+
+                draftStateFlow.value = draftStateFlow.value.copy(
+                    draft = draftStateFlow.value.draft.copy(
+                        attachments = persistentListOf(secondDraftAttachment),
+                    ),
+                )
+                runCurrent()
+
+                assertEquals(persistentListOf(loadedSecondAttachment), delegate.state.value)
+
+                advanceUntilIdle()
+
+                assertEquals(persistentListOf(loadedSecondAttachment), delegate.state.value)
+            } finally {
+                boundScope.cancel()
+            }
+        }
+    }
+
+    private fun createLoadedMetadata(
+        displayName: String?,
+    ): ConversationVCardAttachmentMetadata.Loaded {
+        return ConversationVCardAttachmentMetadata.Loaded(
+            type = ConversationVCardAttachmentType.CONTACT,
+            avatarPhoto = null,
+            entryCount = 1,
+            singleDisplayName = displayName,
+            normalizedDestination = null,
+            locationAddress = null,
+        )
+    }
+
+    private fun createLoadedUiModel(
+        displayName: String?,
+    ): ConversationVCardAttachmentUiModel {
+        return ConversationVCardAttachmentUiModel(
+            type = ConversationVCardAttachmentType.CONTACT,
+            titleText = displayName,
+        )
+    }
+
+    private fun createVCardAttachment(
+        contentUri: String = "content://attachments/vcard/1",
+    ): ComposerAttachmentUiModel.Resolved.VCard {
         return ComposerAttachmentUiModel.Resolved.VCard(
-            key = "content://attachments/vcard/1",
+            key = contentUri,
             contentType = "text/x-vCard",
-            contentUri = "content://attachments/vcard/1",
+            contentUri = contentUri,
             vCardUiModel = ConversationVCardAttachmentUiModel(
                 type = ConversationVCardAttachmentType.CONTACT,
                 titleTextResId = 1,
