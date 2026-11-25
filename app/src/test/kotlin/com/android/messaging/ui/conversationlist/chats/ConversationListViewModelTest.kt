@@ -1,6 +1,9 @@
 package com.android.messaging.ui.conversationlist.chats
 
 import app.cash.turbine.test
+import com.android.messaging.data.appsettings.model.ConversationSwipeOption
+import com.android.messaging.data.appsettings.model.ConversationSwipeSettings
+import com.android.messaging.data.appsettings.repository.AppSettingsRepository
 import com.android.messaging.data.conversation.event.ConversationArchiveEventsImpl
 import com.android.messaging.data.conversation.model.ArchivedConversation
 import com.android.messaging.data.conversation.model.ConversationId
@@ -15,6 +18,9 @@ import com.android.messaging.ui.conversationlist.chats.mapper.ConversationListUi
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListAction as Action
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListEffect as Effect
 import com.android.messaging.ui.conversationlist.chats.model.ConversationListNavEvent as NavEvent
+import com.android.messaging.ui.conversationlist.chats.model.ConversationListUiState
+import com.android.messaging.ui.conversationlist.common.item.ConversationSwipeKind
+import com.android.messaging.ui.conversationlist.common.list.ConversationListSwipeSpec
 import com.android.messaging.ui.conversationlist.conversationItem
 import com.android.messaging.ui.conversationlist.delegate.ConversationListActionsDelegate
 import com.android.messaging.ui.conversationlist.delegate.ConversationListOptimisticSnapshotDelegate
@@ -46,7 +52,8 @@ class ConversationListViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val repository = mockk<ConversationListRepository>()
+    private val conversationListRepository = mockk<ConversationListRepository>()
+    private val appSettingsRepository = mockk<AppSettingsRepository>()
     private val uiStateMapper = mockk<ConversationListUiStateMapper>()
     private val selectionDelegate = mockk<ConversationListSelectionDelegate>()
     private val actionsDelegate = mockk<ConversationListActionsDelegate>()
@@ -218,6 +225,183 @@ class ConversationListViewModelTest {
                 optimisticSnapshotDelegate.markRead(listOf(ConversationId("a")), isRead = true)
             }
             coVerify { actionsDelegate.setRead(listOf(ConversationId("a")), isRead = true) }
+        }
+    }
+
+    @Test
+    fun swipeToggleRead_marksReadConversationUnreadOptimisticallyAndPersists() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            snapshotFlow.value = snapshotOf(conversationItem(ConversationId("a"), isRead = true))
+
+            val viewModel = createViewModel()
+            viewModel.onAction(Action.ConversationSwipedToToggleRead(ConversationId("a")))
+            advanceUntilIdle()
+
+            verify {
+                optimisticSnapshotDelegate.markRead(listOf(ConversationId("a")), isRead = false)
+            }
+            coVerify { actionsDelegate.setRead(listOf(ConversationId("a")), isRead = false) }
+        }
+    }
+
+    @Test
+    fun markUnreadClicked_marksSelectionUnreadAndClearsSelection() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            selectedIdsFlow.value = persistentListOf(ConversationId("a"))
+            snapshotFlow.value = snapshotOf(conversationItem(ConversationId("a"), isRead = true))
+
+            val viewModel = createViewModel()
+            viewModel.onAction(Action.MarkUnreadClicked)
+            advanceUntilIdle()
+
+            verify {
+                optimisticSnapshotDelegate.markRead(listOf(ConversationId("a")), isRead = false)
+            }
+            coVerify { actionsDelegate.setRead(listOf(ConversationId("a")), isRead = false) }
+            verify { selectionDelegate.clear() }
+        }
+    }
+
+    @Test
+    fun swipeToDelete_asksToConfirmDeletingThatConversationOnly() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            snapshotFlow.value = snapshotOf(
+                conversationItem(ConversationId("a")),
+                conversationItem(ConversationId("b")),
+            )
+
+            val viewModel = createViewModel()
+            viewModel.effects.test {
+                viewModel.onAction(Action.ConversationSwipedToDelete(ConversationId("b")))
+
+                assertThat(awaitItem()).isEqualTo(
+                    Effect.ConfirmDelete(conversationIds = persistentListOf(ConversationId("b"))),
+                )
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            verify(exactly = 0) { actionsDelegate.delete(any()) }
+        }
+    }
+
+    @Test
+    fun deleteClicked_asksToConfirmDeletingSelection() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            selectedIdsFlow.value = persistentListOf(ConversationId("a"), ConversationId("b"))
+            snapshotFlow.value = snapshotOf(
+                conversationItem(ConversationId("a")),
+                conversationItem(ConversationId("b")),
+            )
+
+            val viewModel = createViewModel()
+            viewModel.effects.test {
+                viewModel.onAction(Action.DeleteClicked)
+
+                assertThat(awaitItem()).isEqualTo(
+                    Effect.ConfirmDelete(
+                        conversationIds = persistentListOf(
+                            ConversationId("a"),
+                            ConversationId("b"),
+                        ),
+                    ),
+                )
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            verify(exactly = 0) { actionsDelegate.delete(any()) }
+        }
+    }
+
+    @Test
+    fun deleteClicked_withoutSelection_doesNotAskToConfirm() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            snapshotFlow.value = snapshotOf(conversationItem(ConversationId("a")))
+
+            val viewModel = createViewModel()
+            viewModel.effects.test {
+                viewModel.onAction(Action.DeleteClicked)
+
+                expectNoEvents()
+            }
+        }
+    }
+
+    @Test
+    fun deleteConfirmed_deletesConversationsClosesThemAndClearsSelection() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val itemA = conversationItem(ConversationId("a"))
+            val itemB = conversationItem(ConversationId("b"))
+            snapshotFlow.value = snapshotOf(itemA, itemB, conversationItem(ConversationId("c")))
+
+            val viewModel = createViewModel()
+            viewModel.navigationEvents.test {
+                viewModel.onAction(
+                    Action.DeleteConfirmed(
+                        conversationIds = persistentListOf(
+                            ConversationId("a"),
+                            ConversationId("b"),
+                        ),
+                    ),
+                )
+
+                assertEquals(NavEvent.CloseConversation(ConversationId("a")), awaitItem())
+                assertEquals(NavEvent.CloseConversation(ConversationId("b")), awaitItem())
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            verify(exactly = 1) { actionsDelegate.delete(listOf(itemA, itemB)) }
+            verify { selectionDelegate.clear() }
+        }
+    }
+
+    @Test
+    fun deleteConfirmed_forConversationsNoLongerListed_doesNothing() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            snapshotFlow.value = snapshotOf(conversationItem(ConversationId("a")))
+
+            val viewModel = createViewModel()
+            viewModel.navigationEvents.test {
+                viewModel.onAction(
+                    Action.DeleteConfirmed(conversationIds = persistentListOf(ConversationId("z"))),
+                )
+
+                expectNoEvents()
+            }
+
+            verify(exactly = 0) { actionsDelegate.delete(any()) }
+            verify(exactly = 0) { selectionDelegate.clear() }
+        }
+    }
+
+    @Test
+    fun screenResumed_appliesStoredSwipeSettingsToUiState() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            snapshotFlow.value = snapshotOf(conversationItem(ConversationId("a")))
+            every { uiStateMapper.map(any(), any(), any(), any(), any()) } returns
+                ConversationListUiState()
+
+            val viewModel = createViewModel()
+            coEvery { appSettingsRepository.getConversationSwipeSettings() } returns
+                ConversationSwipeSettings(
+                    startToEnd = ConversationSwipeOption.Delete,
+                    endToStart = ConversationSwipeOption.ToggleRead,
+                )
+
+            viewModel.uiState.test {
+                assertEquals(ConversationListSwipeSpec.Default, expectMostRecentItem().swipeSpec)
+
+                viewModel.onAction(Action.ScreenResumed)
+                advanceUntilIdle()
+
+                assertEquals(
+                    ConversationListSwipeSpec(
+                        startToEnd = ConversationSwipeKind.Delete,
+                        endToStart = ConversationSwipeKind.ToggleRead,
+                    ),
+                    expectMostRecentItem().swipeSpec,
+                )
+                cancelAndIgnoreRemainingEvents()
+            }
         }
     }
 
@@ -456,8 +640,8 @@ class ConversationListViewModelTest {
     }
 
     private fun createViewModel(): ConversationListViewModel {
-        every { repository.refresh() } just runs
-        every { repository.setNewestConversationVisible(any()) } just runs
+        every { conversationListRepository.refresh() } just runs
+        every { conversationListRepository.setNewestConversationVisible(any()) } just runs
 
         every { optimisticSnapshotDelegate.snapshot } returns snapshotFlow
         every { optimisticSnapshotDelegate.bind(any(), any()) } just runs
@@ -485,15 +669,18 @@ class ConversationListViewModelTest {
         every { debugFeaturesProvider.isEnabled() } returns false
         every { resolveContactAction(any(), any(), any()) } returns
             ResolveContactActionResult.Unavailable
+        coEvery { appSettingsRepository.getConversationSwipeSettings() } returns
+            ConversationSwipeSettings.Default
 
         return ConversationListViewModel(
-            repository = repository,
+            conversationListRepository = conversationListRepository,
+            appSettingsRepository = appSettingsRepository,
             uiStateMapper = uiStateMapper,
             selectionDelegate = selectionDelegate,
             actionsDelegate = actionsDelegate,
             optimisticSnapshotDelegate = optimisticSnapshotDelegate,
-            debugFeaturesProvider = debugFeaturesProvider,
             resolveContactAction = resolveContactAction,
+            debugFeaturesProvider = debugFeaturesProvider,
             conversationArchiveEvents = conversationArchiveEvents,
             defaultDispatcher = mainDispatcherRule.testDispatcher,
             mainDispatcher = mainDispatcherRule.testDispatcher,

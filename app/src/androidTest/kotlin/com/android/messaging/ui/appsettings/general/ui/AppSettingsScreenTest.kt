@@ -2,13 +2,18 @@ package com.android.messaging.ui.appsettings.general.ui
 
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isDialog
+import androidx.compose.ui.test.isSelectable
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import com.android.messaging.R
+import com.android.messaging.data.appsettings.model.ConversationSwipeOption
+import com.android.messaging.data.appsettings.model.ConversationSwipeSettings
 import com.android.messaging.ui.appsettings.general.model.AppSettingsAction as Action
 import com.android.messaging.ui.appsettings.general.model.AppSettingsUiState
 import com.android.messaging.ui.core.AppTheme
@@ -112,9 +117,11 @@ class AppSettingsScreenTest {
         setContent(appSettings = appSettings)
 
         val debugTitle = composeTestRule.activity.getString(R.string.debug_category_pref_title)
+        scrollToText(text = debugTitle)
         composeTestRule.onNodeWithText(debugTitle).assertIsDisplayed()
 
         val dumpSmsTitle = composeTestRule.activity.getString(R.string.dump_sms_pref_title)
+        scrollToText(text = dumpSmsTitle)
         composeTestRule.onNodeWithText(dumpSmsTitle).assertIsDisplayed()
 
         val dumpMmsTitle = composeTestRule.activity.getString(R.string.dump_mms_pref_title)
@@ -132,6 +139,7 @@ class AppSettingsScreenTest {
         setContent(appSettings = appSettings)
 
         val title = composeTestRule.activity.getString(R.string.dump_sms_pref_title)
+        scrollToText(text = title)
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
@@ -158,10 +166,103 @@ class AppSettingsScreenTest {
     }
 
     @Test
+    fun swipeSection_showsSelectedOptionForEachDirection() {
+        val appSettings = AppSettingsUiState(
+            conversationSwipeSettings = ConversationSwipeSettings(
+                startToEnd = ConversationSwipeOption.Delete,
+                endToStart = ConversationSwipeOption.ToggleRead,
+            ),
+        )
+
+        setContent(appSettings = appSettings)
+
+        val categoryTitle = composeTestRule.activity.getString(R.string.swipe_category_pref_title)
+        scrollToText(text = categoryTitle)
+        composeTestRule.onNodeWithText(categoryTitle).assertIsDisplayed()
+
+        val startToEndTitle = composeTestRule.activity.getString(
+            R.string.swipe_start_to_end_pref_title,
+        )
+        scrollToText(text = startToEndTitle)
+        composeTestRule
+            .onNode(hasText(startToEndTitle) and hasText(string(R.string.action_delete)))
+            .assertIsDisplayed()
+
+        val endToStartTitle = composeTestRule.activity.getString(
+            R.string.swipe_end_to_start_pref_title,
+        )
+        scrollToText(text = endToStartTitle)
+        composeTestRule
+            .onNode(
+                hasText(endToStartTitle) and hasText(string(R.string.swipe_action_toggle_read)),
+            )
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun swipeStartToEndSelection_delegatesToScreenModelAndClosesDialog() {
+        setContent()
+
+        val title = composeTestRule.activity.getString(R.string.swipe_start_to_end_pref_title)
+        scrollToText(text = title)
+        composeTestRule.onNodeWithText(title).performClick()
+
+        composeTestRule.onNode(isDialog()).assertIsDisplayed()
+        composeTestRule
+            .onNode(isSelectable() and hasText(string(R.string.swipe_action_toggle_read)))
+            .assertIsSelected()
+        composeTestRule
+            .onNode(isSelectable() and hasText(string(R.string.action_delete)))
+            .performClick()
+
+        verify(exactly = 1) {
+            onAction(
+                Action.ConversationSwipeStartToEndOptionChanged(ConversationSwipeOption.Delete),
+            )
+        }
+        composeTestRule.onNode(isDialog()).assertDoesNotExist()
+    }
+
+    @Test
+    fun swipeEndToStartSelection_delegatesToScreenModel() {
+        setContent()
+
+        val title = composeTestRule.activity.getString(R.string.swipe_end_to_start_pref_title)
+        scrollToText(text = title)
+        composeTestRule.onNodeWithText(title).performClick()
+
+        composeTestRule
+            .onNode(isSelectable() and hasText(string(R.string.swipe_action_toggle_read)))
+            .performClick()
+
+        verify(exactly = 1) {
+            onAction(
+                Action.ConversationSwipeEndToStartOptionChanged(ConversationSwipeOption.ToggleRead),
+            )
+        }
+    }
+
+    @Test
+    fun swipeOptionDialog_cancelClosesWithoutChangingOption() {
+        setContent()
+
+        val title = composeTestRule.activity.getString(R.string.swipe_end_to_start_pref_title)
+        scrollToText(text = title)
+        composeTestRule.onNodeWithText(title).performClick()
+        composeTestRule.onNodeWithText(string(android.R.string.cancel)).performClick()
+
+        composeTestRule.onNode(isDialog()).assertDoesNotExist()
+        verify(exactly = 0) {
+            onAction(any<Action.ConversationSwipeEndToStartOptionChanged>())
+        }
+    }
+
+    @Test
     fun licensesClick_delegatesToScreenModel() {
         setContent()
 
         val title = composeTestRule.activity.getString(R.string.menu_license)
+        scrollToText(text = title)
         composeTestRule.onNodeWithText(title).performClick()
 
         verify(exactly = 1) {
@@ -238,6 +339,10 @@ class AppSettingsScreenTest {
 
         val advancedTitle = composeTestRule.activity.getString(R.string.advanced_settings)
         composeTestRule.onNodeWithText(advancedTitle).assertDoesNotExist()
+    }
+
+    private fun string(resId: Int): String {
+        return composeTestRule.activity.getString(resId)
     }
 
     private fun scrollToText(text: String) {

@@ -70,12 +70,19 @@ import com.android.messaging.ui.conversationlist.common.support.previewConversat
 import com.android.messaging.ui.conversationlist.model.ConversationListContentUiState
 import com.android.messaging.ui.conversationlist.model.ConversationListItemUiModel as Model
 import com.android.messaging.ui.core.MessagingPreviewTheme
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 private val FabSpacing = 16.dp
 private val FabBottomReserve = 72.dp
+
+private data class PendingBlock(
+    val conversationId: ConversationId,
+    val destination: String,
+)
 
 @Composable
 internal fun ConversationListScreen(
@@ -93,10 +100,8 @@ internal fun ConversationListScreen(
         key = Model::conversationId,
         isSettled = { item, anchorToTop -> item.isPinned == anchorToTop },
     )
-
-    var pendingDelete by remember { mutableStateOf(false) }
-    var pendingBlockConversationId by remember { mutableStateOf<ConversationId?>(null) }
-    var pendingBlockDestination by remember { mutableStateOf<String?>(null) }
+    var pendingDeleteIds by remember { mutableStateOf<ImmutableList<ConversationId>?>(null) }
+    var pendingBlock by remember { mutableStateOf<PendingBlock?>(null) }
     var pendingSnooze by remember { mutableStateOf(false) }
 
     LifecycleResumeEffect(screenModel) {
@@ -121,9 +126,9 @@ internal fun ConversationListScreen(
         pinAnimationController = pinAnimationController,
         onAction = screenModel::onAction,
         onConfirmBlock = { conversationId, destination ->
-            pendingBlockConversationId = conversationId
-            pendingBlockDestination = destination
+            pendingBlock = PendingBlock(conversationId, destination)
         },
+        onConfirmDelete = { pendingDeleteIds = it },
     )
 
     ConversationListScaffoldWithPinOverlay(
@@ -132,23 +137,20 @@ internal fun ConversationListScreen(
         snackbarHostState = snackbarHostState,
         pinAnimationController = pinAnimationController,
         onAction = screenModel::onAction,
-        onDeleteClick = { pendingDelete = true },
+        onDeleteClick = { screenModel.onAction(Action.DeleteClicked) },
         onSnoozeClick = { pendingSnooze = true },
         modifier = modifier.fillMaxSize(),
     )
 
     ConversationListDialogs(
         selectedCount = uiState.selection.selectedCount,
-        isDeleteVisible = pendingDelete,
-        blockConversationId = pendingBlockConversationId,
-        blockDestination = pendingBlockDestination,
+        deleteConversationIds = pendingDeleteIds,
+        blockConversationId = pendingBlock?.conversationId,
+        blockDestination = pendingBlock?.destination,
         isSnoozeVisible = pendingSnooze,
         onAction = screenModel::onAction,
-        onDismissDelete = { pendingDelete = false },
-        onDismissBlock = {
-            pendingBlockConversationId = null
-            pendingBlockDestination = null
-        },
+        onDismissDelete = { pendingDeleteIds = null },
+        onDismissBlock = { pendingBlock = null },
         onDismissSnooze = { pendingSnooze = false },
     )
 }
@@ -210,6 +212,7 @@ private fun ConversationListEffects(
     pinAnimationController: OverlayReorderAnimationController<Model, ConversationId>,
     onAction: (Action) -> Unit,
     onConfirmBlock: (conversationId: ConversationId, destination: String) -> Unit,
+    onConfirmDelete: (conversationIds: ImmutableList<ConversationId>) -> Unit,
 ) {
     val effectScope = rememberCoroutineScope()
     val undoSnackbarState = rememberConversationListUndoSnackbarState(
@@ -220,6 +223,7 @@ private fun ConversationListEffects(
     val currentEffectHandler by rememberUpdatedState(effectHandler)
     val currentOnAction by rememberUpdatedState(onAction)
     val currentOnConfirmBlock by rememberUpdatedState(onConfirmBlock)
+    val currentOnConfirmDelete by rememberUpdatedState(onConfirmDelete)
 
     LaunchedEffect(effects) {
         effects.collect { effect ->
@@ -229,6 +233,10 @@ private fun ConversationListEffects(
                         effect.conversationId,
                         effect.destination,
                     )
+                }
+
+                is Effect.ConfirmDelete -> {
+                    currentOnConfirmDelete(effect.conversationIds)
                 }
 
                 is Effect.ArchiveStatusChanged -> {
@@ -349,6 +357,7 @@ internal fun ConversationListScaffold(
                 isSelectionMode = isSelectionMode,
                 fabBottomReserve = FabBottomReserve,
                 pinAnimationController = pinAnimationController,
+                swipeSpec = uiState.swipeSpec,
             )
 
             ConversationListFabs(
