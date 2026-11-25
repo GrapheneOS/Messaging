@@ -887,8 +887,11 @@ public class PhoneUtils {
      * Format a phone number as a normalized destination, preferring the SIM country and falling
      * back to system locale country when unavailable. Emits E164 (e.g. {@code +37212345678}) when
      * the number is valid; INTERNATIONAL (e.g. {@code +372 1234 5678}) otherwise so the user can
-     * still see country grouping. Used by the recipient picker synthetic row subtitle, mirroring
-     * the {@code getNormalizedDestination()} path in Google Messages.
+     * still see country grouping. A number without a country code that the SIM country can't read
+     * gets no country code made up for it: it is shown the way the countries
+     * {@link #getCanonicalForEnteredPhoneNumber(String)} tries read it, or as typed if none can.
+     * Used by the recipient picker synthetic row subtitle, mirroring the
+     * {@code getNormalizedDestination()} path in Google Messages.
      *
      * @param phoneText The original phone text
      * @return formatted number
@@ -903,10 +906,13 @@ public class PhoneUtils {
         final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
         try {
             final PhoneNumber parsedNumber = phoneNumberUtil.parse(phoneText, country);
-            final PhoneNumberFormat phoneNumberFormat = phoneNumberUtil.isValidNumber(parsedNumber)
-                    ? PhoneNumberFormat.E164
-                    : PhoneNumberFormat.INTERNATIONAL;
-            return phoneNumberUtil.format(parsedNumber, phoneNumberFormat);
+            if (phoneNumberUtil.isValidNumber(parsedNumber)) {
+                return phoneNumberUtil.format(parsedNumber, PhoneNumberFormat.E164);
+            }
+            if (canTryOtherCountries(phoneText)) {
+                return getCanonicalByCountryCandidates(phoneText, getRecentCountryCandidates());
+            }
+            return phoneNumberUtil.format(parsedNumber, PhoneNumberFormat.INTERNATIONAL);
         } catch (NumberParseException e) {
             LogUtil.e(TAG, "PhoneUtils.formatNormalizedDestinationUsingSimCountry: invalid phone "
                     + "number " + LogUtil.sanitizePII(phoneText) + " with country " + country);
