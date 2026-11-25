@@ -153,6 +153,20 @@ class PredictiveBackNavDisplayTest {
         assertEquals(1f - LIGHT_SCRIM_ALPHA, revealedPageBrightness(), TOLERANCE)
     }
 
+    // The revealed page is shifted left until the commit, so the scrim must also cover the strip it
+    // leaves at the right edge.
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Test
+    fun heldSwipe_dimsTheStripLeftByTheRevealedPage() {
+        swipes.start(touchDeltaY = 0f, progress = 1f)
+
+        val revealedPage = checkNotNull(swipes.bounds(FIRST))
+        // Above the closing page and right of the revealed page, where only the background shows.
+        val strip = swipes.pixel(x = revealedPage.right + revealOffsetPx() - 1f, y = 1f)
+
+        assertEquals(1f - LIGHT_SCRIM_ALPHA, strip.red, TOLERANCE)
+    }
+
     @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Test
     fun heldSwipe_growsBackWhenCancelled() {

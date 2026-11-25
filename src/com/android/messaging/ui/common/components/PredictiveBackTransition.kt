@@ -137,6 +137,14 @@ internal fun Modifier.predictiveBackPage(
     val finger = rememberPredictiveBackFinger(gestureState = gestureState, isOpen = isOpen)
 
     return this
+        // Outside the layer, so the scrim also covers the strip the shifted revealed page leaves.
+        .drawWithContent {
+            drawContent()
+            val scrim = scrimAlpha * (1f - settle.value)
+            if (scrim > 0f) {
+                drawRect(color = Color.Black, alpha = scrim)
+            }
+        }
         .graphicsLayer {
             translationX = -revealOffsetPx * (1f - settle.value)
             if (role == PageRole.Closing) {
@@ -156,13 +164,6 @@ internal fun Modifier.predictiveBackPage(
                     progress = progress.value,
                     releaseProgress = releaseProgress.floatValue,
                 )
-            }
-        }
-        .drawWithContent {
-            drawContent()
-            val scrim = scrimAlpha * (1f - settle.value)
-            if (scrim > 0f) {
-                drawRect(color = Color.Black, alpha = scrim)
             }
         }
 }
