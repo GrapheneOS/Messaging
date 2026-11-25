@@ -103,8 +103,10 @@ internal class ConversationComposerAttachmentsDelegateImpl @Inject constructor(
     private fun observeAttachmentUiModels(
         attachmentSource: ComposerAttachmentSource,
     ): Flow<ImmutableList<ComposerAttachmentUiModel>> {
-        val attachmentUiModels = mapAttachmentUiModels(
-            attachmentSource = attachmentSource,
+        val attachmentUiModels = keepShownVCardUiModels(
+            attachments = mapAttachmentUiModels(
+                attachmentSource = attachmentSource,
+            ),
         )
         val vCardContentUris = attachmentUiModels
             .asSequence()
@@ -153,6 +155,36 @@ internal class ConversationComposerAttachmentsDelegateImpl @Inject constructor(
         )
     }
 
+    private fun keepShownVCardUiModels(
+        attachments: ImmutableList<ComposerAttachmentUiModel>,
+    ): ImmutableList<ComposerAttachmentUiModel> {
+        val shownVCardUiModels = _state.value
+            .asSequence()
+            .filterIsInstance<ComposerAttachmentUiModel.Resolved.VCard>()
+            .associate { attachment ->
+                attachment.contentUri to attachment.vCardUiModel
+            }
+
+        if (shownVCardUiModels.isEmpty()) {
+            return attachments
+        }
+
+        return attachments
+            .map { attachment ->
+                when (attachment) {
+                    is ComposerAttachmentUiModel.Resolved.VCard -> {
+                        attachment.copy(
+                            vCardUiModel = shownVCardUiModels[attachment.contentUri]
+                                ?: attachment.vCardUiModel,
+                        )
+                    }
+
+                    else -> attachment
+                }
+            }
+            .toImmutableList()
+    }
+
     private fun updateAttachmentUiModelsWithVCardUiModel(
         attachments: ImmutableList<ComposerAttachmentUiModel>,
         vCardAttachmentMetadata: Map<String, ConversationVCardAttachmentMetadata>,
@@ -187,14 +219,22 @@ internal class ConversationComposerAttachmentsDelegateImpl @Inject constructor(
             }
 
             is ComposerAttachmentUiModel.Resolved.VCard -> {
-                val resolvedVCardMetadata = vCardAttachmentMetadata[attachment.contentUri]
-                    ?: ConversationVCardAttachmentMetadata.Loading
+                when (val metadata = vCardAttachmentMetadata[attachment.contentUri]) {
+                    // Restarted metadata flows emit Loading again; keep the card already shown.
+                    null,
+                    ConversationVCardAttachmentMetadata.Loading,
+                    -> {
+                        attachment
+                    }
 
-                attachment.copy(
-                    vCardUiModel = conversationVCardAttachmentUiModelMapper.map(
-                        metadata = resolvedVCardMetadata,
-                    ),
-                )
+                    else -> {
+                        attachment.copy(
+                            vCardUiModel = conversationVCardAttachmentUiModelMapper.map(
+                                metadata = metadata,
+                            ),
+                        )
+                    }
+                }
             }
         }
     }
