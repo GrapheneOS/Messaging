@@ -38,6 +38,7 @@ internal const val SUB2_SLOT = 2
 internal fun oneToOneState(
     isSnoozed: Boolean = false,
     isArchived: Boolean = false,
+    canChangeArchiveStatus: Boolean = true,
     canCall: Boolean = true,
     canShowContact: Boolean = true,
     isContactSaved: Boolean = false,
@@ -50,6 +51,7 @@ internal fun oneToOneState(
         conversationId = ROOT_CONVERSATION_ID,
         conversationTitle = ONE_TO_ONE_TITLE,
         isArchived = isArchived,
+        canChangeArchiveStatus = canChangeArchiveStatus,
         isSnoozed = isSnoozed,
         participants = persistentListOf(otherParticipant),
         otherParticipant = otherParticipant,

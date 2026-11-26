@@ -132,6 +132,7 @@ internal abstract class BaseConversationViewModelTest {
 
     protected fun createOneOnOneMetadataState(
         phoneNumber: String = TEST_CALL_ACTION_PHONE_NUMBER,
+        isArchived: Boolean = false,
     ): ConversationMetadataUiState.Present {
         return ConversationMetadataUiState.Present(
             title = "Alice",
@@ -144,7 +145,7 @@ internal abstract class BaseConversationViewModelTest {
             otherParticipantDisplayDestination = phoneNumber,
             otherParticipantPhoneNumber = phoneNumber,
             otherParticipantContactLookupKey = null,
-            isArchived = false,
+            isArchived = isArchived,
             isBlocked = false,
             composerAvailability = ConversationComposerAvailability.Editable,
         )

@@ -57,6 +57,7 @@ internal class ConversationSettingsUiStateMapperImpl @Inject constructor(
             conversationId = data.conversationId,
             conversationTitle = data.conversationTitle,
             isArchived = data.isArchived,
+            canChangeArchiveStatus = data.isListed,
             isSnoozed = data.isSnoozed,
             participants = participants,
             otherParticipant = otherParticipant,
