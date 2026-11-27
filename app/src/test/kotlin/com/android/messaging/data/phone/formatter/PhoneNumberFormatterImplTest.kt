@@ -5,6 +5,8 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 internal class PhoneNumberFormatterImplTest {
@@ -67,9 +69,65 @@ internal class PhoneNumberFormatterImplTest {
         }
     }
 
+    @Test
+    fun isSameNumber_invalidNationalNumberSavedWithCountryCode_matches() {
+        assertTrue(
+            formatter.isSameNumber(
+                first = INVALID_NATIONAL_NUMBER,
+                second = "+1 337-123-4567",
+                country = "US",
+            ),
+        )
+    }
+
+    @Test
+    fun isSameNumber_sameDigitsUnderAnotherCountryCode_doesNotMatch() {
+        assertFalse(
+            formatter.isSameNumber(
+                first = INVALID_NATIONAL_NUMBER,
+                second = "+44 337 123 4567",
+                country = "US",
+            ),
+        )
+    }
+
+    @Test
+    fun isSameNumber_numberIsOnlyASuffixOfTheOther_doesNotMatch() {
+        assertFalse(
+            formatter.isSameNumber(
+                first = "1234567",
+                second = "+1 337-123-4567",
+                country = "US",
+            ),
+        )
+    }
+
+    @Test
+    fun isSameNumber_nationalNumberReadUnderAnotherCountry_doesNotMatch() {
+        assertFalse(
+            formatter.isSameNumber(
+                first = INVALID_NATIONAL_NUMBER,
+                second = "+1 337-123-4567",
+                country = "IN",
+            ),
+        )
+    }
+
+    @Test
+    fun isSameNumber_notAPhoneNumber_doesNotMatch() {
+        assertFalse(
+            formatter.isSameNumber(
+                first = "someone@example.com",
+                second = "+1 337-123-4567",
+                country = "US",
+            ),
+        )
+    }
+
     private companion object {
         private const val PHONE_NUMBER = "+15551234"
         private const val FORMATTED_PHONE_NUMBER = "+1 555-1234"
         private const val CANONICAL_NUMBER = "+15551234"
+        private const val INVALID_NATIONAL_NUMBER = "3371234567"
     }
 }

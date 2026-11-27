@@ -12,6 +12,7 @@ internal sealed interface RecipientPickerListItem {
     @Immutable
     data class Contact(
         val contact: ContactUiModel,
+        val queryMatchedDestination: ContactDestinationUiModel? = null,
     ) : RecipientPickerListItem {
         override val id: String = "contact:${contact.id}"
 
