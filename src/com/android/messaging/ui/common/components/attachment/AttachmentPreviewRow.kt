@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
@@ -56,7 +57,9 @@ internal fun <T> AttachmentPreviewRow(
                 items = shownAttachments,
                 key = { item -> key(item) },
             ) { item ->
-                itemContent(item)
+                Box(modifier = Modifier.animateItem()) {
+                    itemContent(item)
+                }
             }
         }
     }
