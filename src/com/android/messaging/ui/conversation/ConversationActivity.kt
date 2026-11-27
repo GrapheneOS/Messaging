@@ -87,7 +87,7 @@ internal class ConversationActivity : ComponentActivity() {
     }
 
     private fun resumeDataModel() {
-        BugleActivityUtil.onActivityResume(this, this)
+        BugleActivityUtil.onActivityResume()
     }
 
     private fun redirectToConversationList() {

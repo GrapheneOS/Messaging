@@ -7,6 +7,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.scene.SceneStrategy
 import com.android.messaging.domain.onboarding.usecase.SelfPhoneNumberPermissionPrompt
@@ -57,6 +58,8 @@ internal fun AppNavGraph(
         shouldShowOnboarding = shouldShowOnboarding,
         onAppResumed = onAppResumed,
     )
+
+    DeviceOwnerSmsBlock(model = hiltViewModel<DeviceOwnerSmsBlockViewModel>())
 
     SelfPhoneNumberPermissionEffect(
         backStack = backStack,
