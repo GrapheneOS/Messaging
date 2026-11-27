@@ -85,11 +85,17 @@ public class Dates {
     }
 
     public static CharSequence getConversationTimeString(final long time) {
-        return getTimeString(time, true /*abbreviated*/, false /*minPeriodToday*/);
+        return getConversationTimeString(time, System.currentTimeMillis());
     }
 
-    public static CharSequence getConversationContentDescriptionTimeString(final long time) {
-        return getTimeString(time, true /*abbreviated*/, false /*minPeriodToday*/,
+    public static CharSequence getConversationTimeString(final long time, final long now) {
+        return getTimeString(time, now, true /*abbreviated*/, false /*minPeriodToday*/,
+                false /*fullWeekday*/);
+    }
+
+    public static CharSequence getConversationContentDescriptionTimeString(final long time,
+            final long now) {
+        return getTimeString(time, now, true /*abbreviated*/, false /*minPeriodToday*/,
                 true /*fullWeekday*/);
     }
 
@@ -116,11 +122,12 @@ public class Dates {
 
     private static CharSequence getTimeString(final long time, final boolean abbreviated,
             final boolean minPeriodToday) {
-        return getTimeString(time, abbreviated, minPeriodToday, false /*fullWeekday*/);
+        return getTimeString(time, System.currentTimeMillis(), abbreviated, minPeriodToday,
+                false /*fullWeekday*/);
     }
 
-    private static CharSequence getTimeString(final long time, final boolean abbreviated,
-            final boolean minPeriodToday, final boolean fullWeekday) {
+    private static CharSequence getTimeString(final long time, final long now,
+            final boolean abbreviated, final boolean minPeriodToday, final boolean fullWeekday) {
         final Context context = getContext();
         int flags;
         if (android.text.format.DateFormat.is24HourFormat(context)) {
@@ -128,7 +135,7 @@ public class Dates {
         } else {
             flags = FORCE_12_HOUR;
         }
-        return getTimestamp(time, System.currentTimeMillis(), abbreviated,
+        return getTimestamp(time, now, abbreviated,
                 context.getResources().getConfiguration().locale, flags, minPeriodToday,
                 fullWeekday);
     }
