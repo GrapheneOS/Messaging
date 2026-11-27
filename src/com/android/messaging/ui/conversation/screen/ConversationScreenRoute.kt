@@ -51,7 +51,7 @@ internal fun rememberOpenContactPickerCallback(
     return remember(screenModel, contactPickerLauncher) {
         {
             if (screenModel.tryStartAddingAttachment()) {
-                contactPickerLauncher.launch(input = Unit)
+                contactPickerLauncher.launch(input = screenModel.resolveRemainingAttachmentSlots())
             }
         }
     }

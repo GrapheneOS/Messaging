@@ -112,6 +112,7 @@ internal interface ConversationScreenModel :
 
     fun onMessageTextChanged(text: String, textRevision: Int)
     fun tryStartAddingAttachment(): Boolean
+    fun resolveRemainingAttachmentSlots(): Int
     fun onAudioRecordingStart(isLocked: Boolean)
     fun onAudioRecordingLock(): Boolean
     fun onAudioRecordingFinish()
@@ -626,6 +627,10 @@ internal class ConversationViewModel @Inject constructor(
 
     override fun tryStartAddingAttachment(): Boolean {
         return conversationDraftDelegate.tryStartAddingAttachment()
+    }
+
+    override fun resolveRemainingAttachmentSlots(): Int {
+        return conversationDraftDelegate.resolveRemainingAttachmentSlots()
     }
 
     override fun onAudioRecordingStart(isLocked: Boolean) {
