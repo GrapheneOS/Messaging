@@ -14,10 +14,12 @@ import com.android.messaging.datamodel.DatabaseHelper
 import com.android.messaging.datamodel.DatabaseHelper.MessageColumns
 import com.android.messaging.datamodel.ParticipantRefresh
 import com.android.messaging.datamodel.data.MessageData
+import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.mmslib.pdu.SendConf
 import com.android.messaging.receiver.SendStatusReceiver
 import com.android.messaging.sms.MmsConfig
 import com.android.messaging.sms.MmsSender
+import com.android.messaging.sms.MmsSmsUtils
 import com.android.messaging.sms.MmsUtils
 import com.android.messaging.sms.SmsSender
 import com.android.messaging.util.PhoneUtils
@@ -69,6 +71,11 @@ internal data class PlatformMmsSend(
     val localStatusAtSend: Int?,
 )
 
+internal data class ConversationNotificationUpdate(
+    val conversationId: String?,
+    val coverage: Int,
+)
+
 /**
  * Fakes the telephony provider and the radio below MmsUtils, SmsSender and MmsSender. SMS part
  * results are delivered through SmsSender.setResult, as SendStatusReceiver does; MMS results
@@ -84,6 +91,8 @@ internal class FakeTelephony {
     val mmsSends: MutableList<PlatformMmsSend> = mutableListOf()
     val emergencyNotifications: MutableList<String> = mutableListOf()
     val errorNotificationUpdates: MutableList<Int> = mutableListOf()
+    val conversationNotificationUpdates: MutableList<ConversationNotificationUpdate> =
+        mutableListOf()
 
     var isDefaultSmsApp: Boolean = true
     var defaultSmsSubscriptionId: Int = SUB_ID_SIM_1
@@ -105,7 +114,12 @@ internal class FakeTelephony {
         every { phoneUtils.isDefaultSmsApp } answers { isDefaultSmsApp }
         every { phoneUtils.defaultSmsSubscriptionId } answers { defaultSmsSubscriptionId }
         every { phoneUtils.activeSubscriptionInfoList } answers { buildSubscriptionInfos() }
-        every { phoneUtils.getEffectiveSubId(any()) } answers { firstArg() }
+        every { phoneUtils.getEffectiveSubId(any()) } answers {
+            when (val subId = firstArg<Int>()) {
+                ParticipantData.DEFAULT_SELF_SUB_ID -> defaultSmsSubscriptionId
+                else -> subId
+            }
+        }
         every { phoneUtils.smsManager } returns smsManager
         every { smsManager.divideMessage(any()) } answers {
             ArrayList(firstArg<String>().chunked(SMS_SEGMENT_LENGTH))
@@ -135,6 +149,7 @@ internal class FakeTelephony {
         mockkStatic(BugleNotifications::class)
         mockkStatic(BugleActionToasts::class)
         mockkStatic(ParticipantRefresh::class)
+        mockkStatic(MmsSmsUtils.Threads::class)
         installMmsUtils()
         installSupportingStatics()
     }
@@ -153,8 +168,18 @@ internal class FakeTelephony {
         }
     }
 
+    fun recipientsForThread(threadId: Long): List<String> {
+        return synchronized(this) {
+            threadIds.entries.firstOrNull { (_, id) -> id == threadId }?.key.orEmpty()
+        }
+    }
+
     fun allocateSmsUri(): Uri {
         return nextUri(authority = "sms")
+    }
+
+    fun allocateMmsUri(): Uri {
+        return nextUri(authority = "mms")
     }
 
     private fun installMmsUtils() {
@@ -163,6 +188,12 @@ internal class FakeTelephony {
         }
         every { MmsUtils.getOrCreateSmsThreadId(any(), any()) } answers {
             threadIdFor(recipients = listOf(secondArg()))
+        }
+        every { MmsSmsUtils.Threads.getOrCreateThreadId(any(), any<String>()) } answers {
+            threadIdFor(recipients = listOf(secondArg()))
+        }
+        every { MmsUtils.getRecipientsByThread(any()) } answers {
+            recipientsForThread(threadId = firstArg())
         }
         every {
             MmsUtils.insertSmsMessage(any(), any(), any(), any(), any(), any(), any(), any(), any())
@@ -224,6 +255,12 @@ internal class FakeTelephony {
         }
         every { BugleNotifications.update(any<Int>()) } answers {
             errorNotificationUpdates += firstArg<Int>()
+        }
+        every { BugleNotifications.update(any<String>(), any()) } answers {
+            conversationNotificationUpdates += ConversationNotificationUpdate(
+                conversationId = firstArg(),
+                coverage = secondArg(),
+            )
         }
         every {
             BugleActionToasts.onSendMessageOrManualDownloadActionCompleted(
