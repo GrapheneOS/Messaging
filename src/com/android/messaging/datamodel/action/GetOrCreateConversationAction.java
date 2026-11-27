@@ -24,6 +24,7 @@ import com.android.messaging.Factory;
 import com.android.messaging.datamodel.BugleDatabaseOperations;
 import com.android.messaging.datamodel.DataModel;
 import com.android.messaging.datamodel.DatabaseWrapper;
+import com.android.messaging.datamodel.MessagingContentProvider;
 import com.android.messaging.datamodel.action.ActionMonitor.ActionCompletedListener;
 import com.android.messaging.datamodel.data.LaunchConversationData;
 import com.android.messaging.datamodel.data.ParticipantData;
@@ -57,14 +58,19 @@ public class GetOrCreateConversationAction extends Action implements Parcelable 
         final GetOrCreateConversationActionMonitor monitor = new
                 GetOrCreateConversationActionMonitor(data, listener);
         final GetOrCreateConversationAction action = new GetOrCreateConversationAction(participants,
-                monitor.getActionKey());
+                ParticipantData.DEFAULT_SELF_SUB_ID, monitor.getActionKey());
         action.start(monitor);
         return monitor;
     }
 
 
+    /**
+     * Gets or creates the conversation with {@code recipients}. When {@code selfSubId} is an active
+     * subscription, the conversation is set to send from it.
+     */
     public static GetOrCreateConversationActionMonitor getOrCreateConversation(
-            final String[] recipients, final Object data, final LaunchConversationData listener) {
+            final String[] recipients, final int selfSubId, final Object data,
+            final LaunchConversationData listener) {
         final ArrayList<ParticipantData> participants = new ArrayList<>();
         for (String recipient : recipients) {
             recipient = recipient.trim();
@@ -74,15 +80,22 @@ public class GetOrCreateConversationAction extends Action implements Parcelable 
                 LogUtil.w(LogUtil.BUGLE_TAG, "getOrCreateConversation hit empty recipient");
             }
         }
-        return getOrCreateConversation(participants, data, listener);
+        final GetOrCreateConversationActionMonitor monitor = new
+                GetOrCreateConversationActionMonitor(data, listener);
+        final GetOrCreateConversationAction action = new GetOrCreateConversationAction(participants,
+                selfSubId, monitor.getActionKey());
+        action.start(monitor);
+        return monitor;
     }
 
     private static final String KEY_PARTICIPANTS_LIST = "participants_list";
+    private static final String KEY_SELF_SUB_ID = "self_sub_id";
 
     private GetOrCreateConversationAction(final ArrayList<ParticipantData> participants,
-            final String actionKey) {
+            final int selfSubId, final String actionKey) {
         super(actionKey);
         actionParameters.putParcelableArrayList(KEY_PARTICIPANTS_LIST, participants);
+        actionParameters.putInt(KEY_SELF_SUB_ID, selfSubId);
     }
 
     /**
@@ -112,7 +125,34 @@ public class GetOrCreateConversationAction extends Action implements Parcelable 
         final String conversationId = BugleDatabaseOperations.getOrCreateConversation(db, threadId,
                 false, participants, false, false, null);
 
+        final int selfSubId =
+                actionParameters.getInt(KEY_SELF_SUB_ID, ParticipantData.DEFAULT_SELF_SUB_ID);
+        if (conversationId != null && selfSubId != ParticipantData.DEFAULT_SELF_SUB_ID) {
+            setConversationSelf(db, conversationId, selfSubId);
+        }
+
         return conversationId;
+    }
+
+    /**
+     * Sets the conversation to send from {@code subId}. Does nothing unless the subscription is
+     * active.
+     */
+    static void setConversationSelf(final DatabaseWrapper db, final String conversationId,
+            final int subId) {
+        final ParticipantData self = BugleDatabaseOperations.getOrCreateSelf(db, subId);
+        if (self == null) {
+            return;
+        }
+        db.beginTransaction();
+        try {
+            BugleDatabaseOperations.updateConversationSelfIdInTransaction(
+                    db, conversationId, self.getId());
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
+        MessagingContentProvider.notifyConversationMetadataChanged(conversationId);
     }
 
     /**
