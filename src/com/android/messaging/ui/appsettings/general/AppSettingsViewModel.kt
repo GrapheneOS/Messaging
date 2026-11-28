@@ -49,6 +49,10 @@ internal class AppSettingsViewModel @Inject constructor(
                 appSettingsDelegate.onYouTubeLinkPreviewsChanged(action.enabled)
             }
 
+            is Action.NamedSenderContactsChanged -> {
+                appSettingsDelegate.onNamedSenderContactsChanged(action.enabled)
+            }
+
             is Action.LinkOpeningModeChanged -> {
                 appSettingsDelegate.onLinkOpeningModeChanged(action.mode)
             }

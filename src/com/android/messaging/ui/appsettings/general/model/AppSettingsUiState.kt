@@ -10,6 +10,7 @@ internal data class AppSettingsUiState(
     val sendSoundEnabled: Boolean = true,
     val inConversationSoundEnabled: Boolean = false,
     val youTubeLinkPreviewsEnabled: Boolean = false,
+    val namedSenderContactsEnabled: Boolean = false,
     val linkOpeningMode: LinkOpeningMode = LinkOpeningMode.AskBeforeOpening,
     val isDebugEnabled: Boolean = false,
     val dumpSmsEnabled: Boolean = false,

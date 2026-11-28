@@ -27,6 +27,10 @@ internal sealed interface AppSettingsAction {
         val enabled: Boolean,
     ) : AppSettingsAction
 
+    data class NamedSenderContactsChanged(
+        val enabled: Boolean,
+    ) : AppSettingsAction
+
     data class LinkOpeningModeChanged(
         val mode: LinkOpeningMode,
     ) : AppSettingsAction
