@@ -82,6 +82,16 @@ internal fun PrivacySettingsScreen(
                     },
                 )
             }
+            item(key = "named_sender_contacts") {
+                SettingsSwitchItem(
+                    title = stringResource(R.string.named_sender_contacts_pref_title),
+                    summary = stringResource(R.string.named_sender_contacts_pref_summary),
+                    checked = appSettings.namedSenderContactsEnabled,
+                    onCheckedChange = {
+                        onAction(Action.NamedSenderContactsChanged(it))
+                    },
+                )
+            }
         }
     }
 

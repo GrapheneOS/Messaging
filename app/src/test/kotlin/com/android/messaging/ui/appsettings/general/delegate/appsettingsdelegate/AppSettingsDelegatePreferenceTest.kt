@@ -71,6 +71,25 @@ internal class AppSettingsDelegatePreferenceTest : BaseAppSettingsDelegateTest()
     }
 
     @Test
+    fun onNamedSenderContactsChanged_writesNamedSenderContactsPref() {
+        runTest(
+            context = mainDispatcherRule.testDispatcher,
+        ) {
+            val delegate = createBoundDelegate()
+
+            delegate.onNamedSenderContactsChanged(enabled = true)
+            runCurrent()
+
+            coVerify(exactly = 1) {
+                repository.setBooleanPref(
+                    pref = AppBooleanPref.NAMED_SENDER_CONTACTS,
+                    enabled = true,
+                )
+            }
+        }
+    }
+
+    @Test
     fun booleanPrefChange_writesPrefThenRefreshesState() {
         runTest(
             context = mainDispatcherRule.testDispatcher,

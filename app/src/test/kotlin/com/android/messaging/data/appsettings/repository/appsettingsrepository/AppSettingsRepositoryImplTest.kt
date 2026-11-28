@@ -8,6 +8,7 @@ import com.android.messaging.data.appsettings.model.AppBooleanPref
 import com.android.messaging.data.appsettings.model.LinkOpeningMode
 import com.android.messaging.data.appsettings.repository.AppSettingsRepositoryImpl
 import com.android.messaging.data.debug.DebugFeaturesProvider
+import com.android.messaging.datamodel.ParticipantRefresh
 import com.android.messaging.datamodel.data.ParticipantData
 import com.android.messaging.util.BugleGservices
 import com.android.messaging.util.BuglePrefs
@@ -19,6 +20,7 @@ import io.mockk.mockkStatic
 import io.mockk.runs
 import io.mockk.unmockkAll
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -74,6 +76,12 @@ internal class AppSettingsRepositoryImplTest {
         every {
             resources.getBoolean(R.bool.youtube_link_previews_pref_default)
         } returns YOUTUBE_LINK_PREVIEWS_DEFAULT
+        every {
+            context.getString(R.string.named_sender_contacts_pref_key)
+        } returns NAMED_SENDER_CONTACTS_PREF_KEY
+        every {
+            resources.getBoolean(R.bool.named_sender_contacts_pref_default)
+        } returns NAMED_SENDER_CONTACTS_DEFAULT
         every { context.getString(R.string.link_opening_pref_key) } returns LINK_OPENING_PREF_KEY
         every {
             context.getString(R.string.link_opening_pref_default)
@@ -116,6 +124,12 @@ internal class AppSettingsRepositoryImplTest {
             every {
                 appPrefs.getString(LINK_OPENING_PREF_KEY, LINK_OPENING_DEFAULT)
             } returns LinkOpeningMode.OpenOnTap.prefValue
+            every {
+                appPrefs.getBoolean(
+                    NAMED_SENDER_CONTACTS_PREF_KEY,
+                    NAMED_SENDER_CONTACTS_DEFAULT,
+                )
+            } returns true
 
             val result = createRepository(
                 ioDispatcher = UnconfinedTestDispatcher(testScheduler),
@@ -126,6 +140,7 @@ internal class AppSettingsRepositoryImplTest {
             assertFalse(result.sendSoundEnabled)
             assertTrue(result.inConversationSoundEnabled)
             assertTrue(result.youTubeLinkPreviewsEnabled)
+            assertTrue(result.namedSenderContactsEnabled)
             assertEquals(LinkOpeningMode.OpenOnTap, result.linkOpeningMode)
             assertTrue(result.isDebugEnabled)
             assertTrue(result.dumpSmsEnabled)
@@ -197,6 +212,64 @@ internal class AppSettingsRepositoryImplTest {
                     true,
                 )
             }
+        }
+    }
+
+    @Test
+    fun setBooleanPref_namedSenderContacts_looksUpExistingSendersAgain() {
+        runTest {
+            every { appPrefs.putBoolean(any(), any()) } just runs
+            mockkStatic(ParticipantRefresh::class)
+            every { ParticipantRefresh.refreshParticipants(any()) } just runs
+
+            createRepository(
+                ioDispatcher = UnconfinedTestDispatcher(testScheduler),
+            ).setBooleanPref(
+                pref = AppBooleanPref.NAMED_SENDER_CONTACTS,
+                enabled = true,
+            )
+
+            verifyOrder {
+                appPrefs.putBoolean(NAMED_SENDER_CONTACTS_PREF_KEY, true)
+                ParticipantRefresh.refreshParticipants(ParticipantRefresh.REFRESH_MODE_FULL)
+            }
+        }
+    }
+
+    @Test
+    fun setBooleanPref_otherPrefs_leaveSendersAlone() {
+        runTest {
+            every { appPrefs.putBoolean(any(), any()) } just runs
+            mockkStatic(ParticipantRefresh::class)
+            every { ParticipantRefresh.refreshParticipants(any()) } just runs
+            val repository = createRepository(
+                ioDispatcher = UnconfinedTestDispatcher(testScheduler),
+            )
+
+            AppBooleanPref.entries
+                .filter { pref -> pref != AppBooleanPref.NAMED_SENDER_CONTACTS }
+                .forEach { pref -> repository.setBooleanPref(pref = pref, enabled = true) }
+
+            verify(exactly = 0) { ParticipantRefresh.refreshParticipants(any()) }
+        }
+    }
+
+    @Test
+    fun namedSenderContacts_defaultsToDisabledFromResources() {
+        runTest {
+            every { appPrefs.getBoolean(any(), any()) } answers { secondArg() }
+            every { appPrefs.getString(any(), any()) } answers { secondArg() }
+            every { phoneUtils.isDefaultSmsApp } returns true
+            every { phoneUtils.defaultSmsAppLabel } returns DEFAULT_SMS_APP_LABEL
+            every { debugFeaturesProvider.isEnabled() } returns false
+
+            val result = AppSettingsRepositoryImpl(
+                context = RuntimeEnvironment.getApplication().applicationContext,
+                ioDispatcher = UnconfinedTestDispatcher(testScheduler),
+                debugFeaturesProvider = debugFeaturesProvider,
+            ).getAppSettings()
+
+            assertFalse(result.namedSenderContactsEnabled)
         }
     }
 
@@ -313,6 +386,8 @@ internal class AppSettingsRepositoryImplTest {
         private const val IN_CONVERSATION_SOUND_PREF_KEY = "in_conversation_sound"
         private const val LINK_OPENING_DEFAULT = "ask"
         private const val LINK_OPENING_PREF_KEY = "link_opening"
+        private const val NAMED_SENDER_CONTACTS_DEFAULT = false
+        private const val NAMED_SENDER_CONTACTS_PREF_KEY = "named_sender_contacts"
         private const val SEND_SOUND_DEFAULT = true
         private const val SEND_SOUND_PREF_KEY = "send_sound"
         private const val YOUTUBE_LINK_PREVIEWS_DEFAULT = false

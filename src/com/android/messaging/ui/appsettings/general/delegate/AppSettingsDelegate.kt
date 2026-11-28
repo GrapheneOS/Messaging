@@ -21,6 +21,7 @@ internal interface AppSettingsDelegate : SettingsScreenDelegate<AppSettingsUiSta
     fun onSendSoundChanged(enabled: Boolean)
     fun onInConversationSoundChanged(enabled: Boolean)
     fun onYouTubeLinkPreviewsChanged(enabled: Boolean)
+    fun onNamedSenderContactsChanged(enabled: Boolean)
     fun onLinkOpeningModeChanged(mode: LinkOpeningMode)
     fun onDumpSmsChanged(enabled: Boolean)
     fun onDumpMmsChanged(enabled: Boolean)
@@ -77,6 +78,13 @@ internal class AppSettingsDelegateImpl @Inject constructor(
     override fun onYouTubeLinkPreviewsChanged(enabled: Boolean) {
         setBooleanPref(
             pref = AppBooleanPref.YOUTUBE_LINK_PREVIEWS,
+            enabled = enabled,
+        )
+    }
+
+    override fun onNamedSenderContactsChanged(enabled: Boolean) {
+        setBooleanPref(
+            pref = AppBooleanPref.NAMED_SENDER_CONTACTS,
             enabled = enabled,
         )
     }

@@ -836,6 +836,12 @@
     <!-- The description for the YouTube link previews setting -->
     <string name="youtube_link_previews_pref_summary">Show video thumbnails for YouTube links in conversations. Enabling this fetches thumbnails from YouTube and may reduce privacy</string>
 
+    <!-- The title for the setting that matches senders using a name instead of a number, such as "MyBank", to contacts -->
+    <string name="named_sender_contacts_pref_title">Contact names for named senders</string>
+
+    <!-- The description for the setting that matches senders using a name instead of a number to contacts -->
+    <string name="named_sender_contacts_pref_summary">Show the contact for senders that use a name instead of a number, such as \"MyBank\", when a contact has that exact name saved as its number. Sender names aren\'t verified, so anyone can send messages that appear to come from that contact</string>
+
     <!-- The title for the setting that controls what tapping a link in a message does -->
     <string name="link_opening_pref_title">Links in messages</string>
 

@@ -47,7 +47,30 @@ class PrivacySettingsScreenTest {
         )
         composeTestRule.onNodeWithText(title).assertIsDisplayed()
         composeTestRule.onNodeWithText(summary).assertIsDisplayed()
-        composeTestRule.onNode(isToggleable()).assertIsOff()
+        composeTestRule.onNode(isToggleable() and hasText(title)).assertIsOff()
+    }
+
+    @Test
+    fun namedSenderContactsToggle_displaysTitleSummaryAndDefaultsToOff() {
+        setContent()
+
+        val title = string(R.string.named_sender_contacts_pref_title)
+        composeTestRule.onNodeWithText(title).assertIsDisplayed()
+        composeTestRule.onNodeWithText(string(R.string.named_sender_contacts_pref_summary))
+            .assertIsDisplayed()
+        composeTestRule.onNode(isToggleable() and hasText(title)).assertIsOff()
+    }
+
+    @Test
+    fun namedSenderContactsToggle_delegatesToScreenModel() {
+        setContent()
+
+        composeTestRule.onNodeWithText(string(R.string.named_sender_contacts_pref_title))
+            .performClick()
+
+        verify(exactly = 1) {
+            onAction(Action.NamedSenderContactsChanged(true))
+        }
     }
 
     @Test

@@ -29,6 +29,7 @@ import android.provider.ContactsContract.Directory;
 import android.provider.ContactsContract.PhoneLookup;
 import android.provider.ContactsContract.Profile;
 
+import com.android.messaging.R;
 import com.android.messaging.datamodel.CursorQueryData;
 import com.android.messaging.sms.MmsSmsUtils;
 import com.google.common.annotations.VisibleForTesting;
@@ -95,6 +96,21 @@ public class ContactUtil {
             // contact id. Also we never show the results directly in a list view so we are not
             // concerned about duplicated _id's (namely, the same contact has two same phone
             // numbers)
+        };
+    }
+
+    /**
+     * Constants for looking up sender names, like "MyBank", saved as a contact's number.
+     */
+    public static class SenderNameLookupQuery {
+        public static final String[] PROJECTION = new String[] {
+            Phone.CONTACT_ID,                   // 0
+            Phone.DISPLAY_NAME_PRIMARY,         // 1
+            Phone.PHOTO_THUMBNAIL_URI,          // 2
+            Phone.NUMBER,                       // 3
+            Phone.TYPE,                         // 4
+            Phone.LABEL,                        // 5
+            Phone.LOOKUP_KEY,                   // 6
         };
     }
 
@@ -176,9 +192,43 @@ public class ContactUtil {
             final String destination) {
         if (MmsSmsUtils.isEmailAddress(destination)) {
             return ContactUtil.lookupEmail(context, destination);
+        } else if (isSenderName(destination) && isNamedSenderContactsEnabled(context)) {
+            return ContactUtil.lookupSenderName(context, destination);
         } else {
             return ContactUtil.lookupPhone(context, destination);
         }
+    }
+
+    /**
+     * Whether the destination is a sender name like "MyBank" rather than a phone number.
+     * PhoneLookup never matches these, as it only compares phone numbers.
+     */
+    private static boolean isSenderName(final String destination) {
+        for (int i = 0; i < destination.length(); i++) {
+            if (Character.isLetter(destination.charAt(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isNamedSenderContactsEnabled(final Context context) {
+        return BuglePrefs.getApplicationPrefs().getBoolean(
+                context.getString(R.string.named_sender_contacts_pref_key),
+                context.getResources().getBoolean(R.bool.named_sender_contacts_pref_default));
+    }
+
+    /**
+     * Lookup the contacts that have a sender name saved as their number. The name has to match
+     * as a whole, ignoring case, since anyone can send under any name.
+     */
+    private static CursorQueryData lookupSenderName(final Context context, final String senderName) {
+        if (!ContactUtil.hasReadContactsPermission()) {
+            return CursorQueryData.getEmptyQueryData();
+        }
+
+        return new CursorQueryData(context, Phone.CONTENT_URI, SenderNameLookupQuery.PROJECTION,
+                Phone.NUMBER + " = ? COLLATE NOCASE", new String[] { senderName }, null);
     }
 
     private static CursorQueryData filterPhonesInternal(final Context context,

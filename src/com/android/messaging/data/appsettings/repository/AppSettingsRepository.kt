@@ -6,6 +6,7 @@ import com.android.messaging.data.appsettings.model.AppBooleanPref
 import com.android.messaging.data.appsettings.model.AppSettings
 import com.android.messaging.data.appsettings.model.LinkOpeningMode
 import com.android.messaging.data.debug.DebugFeaturesProvider
+import com.android.messaging.datamodel.ParticipantRefresh
 import com.android.messaging.di.core.IoDispatcher
 import com.android.messaging.util.BuglePrefs
 import com.android.messaging.util.PhoneUtils
@@ -46,6 +47,10 @@ internal class AppSettingsRepositoryImpl @Inject constructor(
                     resources.getBoolean(R.bool.in_conversation_sound_pref_default),
                 ),
                 youTubeLinkPreviewsEnabled = readYouTubeLinkPreviewsEnabled(),
+                namedSenderContactsEnabled = appPrefs.getBoolean(
+                    context.getString(R.string.named_sender_contacts_pref_key),
+                    resources.getBoolean(R.bool.named_sender_contacts_pref_default),
+                ),
                 linkOpeningMode = readLinkOpeningMode(),
                 isDebugEnabled = debugFeaturesProvider.isEnabled(),
                 dumpSmsEnabled = appPrefs.getBoolean(
@@ -81,6 +86,11 @@ internal class AppSettingsRepositoryImpl @Inject constructor(
                 context.getString(pref.keyResId),
                 enabled,
             )
+            if (pref == AppBooleanPref.NAMED_SENDER_CONTACTS) {
+                // Senders already in conversations keep the contact they were matched to until
+                // they are looked up again
+                ParticipantRefresh.refreshParticipants(ParticipantRefresh.REFRESH_MODE_FULL)
+            }
         }
     }
 

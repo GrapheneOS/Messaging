@@ -110,6 +110,20 @@ class AppSettingsViewModelTest {
     }
 
     @Test
+    fun onNamedSenderContactsChanged_delegatesToAppSettings() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val delegate = mockDelegate()
+            val viewModel = createViewModel(delegate = delegate)
+
+            viewModel.onAction(Action.NamedSenderContactsChanged(enabled = true))
+
+            verify(exactly = 1) {
+                delegate.onNamedSenderContactsChanged(enabled = true)
+            }
+        }
+    }
+
+    @Test
     fun onLinkOpeningModeChanged_delegatesToAppSettings() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val delegate = mockDelegate()
